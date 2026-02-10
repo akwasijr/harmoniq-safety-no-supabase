@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
-import { EMAIL_TO_USER_ID, setActiveUserId, DEFAULT_COMPANY_SLUG, DEFAULT_USER_ID } from "@/mocks/data";
 
 const isSupabaseConfigured =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -30,65 +29,56 @@ function LoginForm() {
   // Auto-redirect if demo mode
   React.useEffect(() => {
     if (isDemo) {
-      router.push(`/${DEFAULT_COMPANY_SLUG}/app`);
+      setError("Demo mode is not available. Please log in with your credentials.");
     }
-  }, [isDemo, router]);
+  }, [isDemo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    if (isSupabaseConfigured) {
-      // Real Supabase auth
-      const supabase = createClient();
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    if (!isSupabaseConfigured) {
+      setError("Authentication service is not configured");
+      setIsLoading(false);
+      return;
+    }
 
-      if (authError) {
-        setError(authError.message);
-        setIsLoading(false);
-        return;
-      }
+    // Real Supabase auth only
+    const supabase = createClient();
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (data.user) {
-        // Fetch user profile to determine redirect
-        const { data: profile } = await supabase
-          .from("users")
-          .select("role, company_id")
-          .eq("id", data.user.id)
-          .single();
+    if (authError) {
+      setError(authError.message);
+      setIsLoading(false);
+      return;
+    }
 
-        // Get company slug for redirect
-        const { data: company } = await supabase
-          .from("companies")
-          .select("slug")
-          .eq("id", profile?.company_id)
-          .single();
+    if (data.user) {
+      // Fetch user profile to determine redirect
+      const { data: profile } = await supabase
+        .from("users")
+        .select("role, company_id")
+        .eq("id", data.user.id)
+        .single();
 
-        const slug = company?.slug || "default";
-        const isEmployeeRole = profile?.role === "employee";
+      // Get company slug for redirect
+      const { data: company } = await supabase
+        .from("companies")
+        .select("slug")
+        .eq("id", profile?.company_id)
+        .single();
 
-        // Use window.location for full reload so AuthProvider reinitializes
-        window.location.href = isEmployeeRole
-          ? `/${slug}/app`
-          : `/${slug}/dashboard`;
-      }
-    } else {
-      // Mock auth fallback
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const slug = company?.slug || "default";
+      const isEmployeeRole = profile?.role === "employee";
 
-      const userId = EMAIL_TO_USER_ID[email.toLowerCase()] || DEFAULT_USER_ID;
-      setActiveUserId(userId);
-      document.cookie = `harmoniq_auth=${userId}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-
-      const companySlug = DEFAULT_COMPANY_SLUG;
-      const isEmployeeEmail = !email.includes("@harmoniq.io") && !email.includes("super") && !email.includes("admin") && !email.includes("manager");
-      window.location.href = isEmployeeEmail
-        ? `/${companySlug}/app`
-        : `/${companySlug}/dashboard`;
+      // Use window.location for full reload so AuthProvider reinitializes
+      window.location.href = isEmployeeRole
+        ? `/${slug}/app`
+        : `/${slug}/dashboard`;
     }
   };
 
@@ -184,8 +174,8 @@ function LoginForm() {
               </div>
 
               {/* Submit */}
-              <Button type="submit" className="w-full" loading={isLoading}>
-                Sign in
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign in"}
               </Button>
 
               {/* Divider */}
@@ -237,21 +227,12 @@ function LoginForm() {
           </CardContent>
         </Card>
 
-        {/* Demo accounts hint */}
-        <div className="mt-6 rounded-lg border bg-card p-4 text-sm">
-          <p className="font-medium">Demo accounts:</p>
-          <ul className="mt-2 space-y-1 text-muted-foreground">
-            <li>
-              <code className="rounded bg-muted px-1">admin@harmoniq.io</code> → Dashboard (Platform Admin)
-            </li>
-            <li>
-              <code className="rounded bg-muted px-1">admin@nexusmfg.com</code> → Company Dashboard
-            </li>
-            <li>
-              <code className="rounded bg-muted px-1">worker@nexusmfg.com</code> → Employee App
-            </li>
-          </ul>
-          <p className="mt-2 text-xs text-muted-foreground">Any password works for demo</p>
+        {/* Info message */}
+        <div className="mt-6 rounded-lg border bg-blue-50 p-4 text-sm dark:bg-blue-950">
+          <p className="font-medium text-blue-900 dark:text-blue-100">Account Required</p>
+          <p className="mt-1 text-blue-800 dark:text-blue-200">
+            Please use your registered email and password to sign in. Contact your administrator if you don't have an account.
+          </p>
         </div>
 
         {/* Back to home */}
