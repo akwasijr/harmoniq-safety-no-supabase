@@ -3,23 +3,14 @@ import type { NextRequest } from "next/server";
 
 /**
  * Middleware for:
- * 1. Server-side route protection (auth cookie check)
+ * 1. Server-side route protection (Supabase session or mock auth fallback)
  * 2. Geo-based locale detection for marketing pages
  */
 
-// Routes that don't require authentication
 const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/contact", "/privacy", "/terms"];
-
-// Marketing routes that get locale detection
 const MARKETING_ROUTES = ["/", "/contact", "/privacy", "/terms"];
-
-// Static asset prefixes to skip
 const STATIC_PREFIXES = ["/_next", "/favicon", "/logo", "/screen-", "/bg-", "/icons", "/api"];
 
-/**
- * Detect locale from Accept-Language header.
- * sv* → sv, nl* → nl, everything else → en
- */
 function detectLocale(acceptLanguage: string | null): string {
   if (!acceptLanguage) return "en";
   const langs = acceptLanguage.toLowerCase().split(",").map((l) => l.split(";")[0].trim());
@@ -30,7 +21,10 @@ function detectLocale(acceptLanguage: string | null): string {
   return "en";
 }
 
-export function middleware(request: NextRequest) {
+const isSupabaseConfigured =
+  !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip static assets
@@ -38,7 +32,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Marketing pages: set locale cookie if not already set
+  // Marketing pages: set locale cookie
   if (MARKETING_ROUTES.includes(pathname)) {
     const response = NextResponse.next();
     if (!request.cookies.get("harmoniq_locale")) {
@@ -52,20 +46,34 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // Other public routes (login, signup, etc.) — no auth needed
+  // Other public routes
   if (PUBLIC_ROUTES.includes(pathname)) {
     return NextResponse.next();
   }
 
-  // Protected routes: check auth cookie
-  const authCookie = request.cookies.get("harmoniq_auth");
-  if (!authCookie?.value) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+  // Protected routes: check auth
+  if (isSupabaseConfigured) {
+    // Supabase auth — refresh session and check user
+    const { updateSession } = await import("@/lib/supabase/middleware");
+    const { user, supabaseResponse } = await updateSession(request);
 
-  return NextResponse.next();
+    if (!user) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    return supabaseResponse;
+  } else {
+    // Mock auth fallback — check cookie
+    const authCookie = request.cookies.get("harmoniq_auth");
+    if (!authCookie?.value) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
+  }
 }
 
 export const config = {
