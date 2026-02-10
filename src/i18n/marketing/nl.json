@@ -1,0 +1,47 @@
+{
+  "hero": {
+    "title": "Harmoniq",
+    "subtitle": "Platform voor Arbeidsveiligheid & Assetbeheer",
+    "description": "Meld incidenten, beheer risico's, volg assets en zorg voor naleving — alles in één krachtig platform gebouwd voor moderne veiligheidsteams.",
+    "cta_start": "Aan de slag",
+    "cta_demo": "Boek een Demo"
+  },
+  "trust": {
+    "statement": "Vertrouwd door veiligheidsteams die duizenden assets en incidenten wereldwijd beheren"
+  },
+  "features": {
+    "heading": "Alles wat je nodig hebt",
+    "subheading": "voor veiligheid & assetbeheer"
+  },
+  "cookie": {
+    "title": "Wij waarderen uw privacy",
+    "description": "We gebruiken cookies om uw ervaring te verbeteren, siteverkeer te analyseren en inhoud te personaliseren. U kunt kiezen welke cookies u accepteert.",
+    "accept_all": "Alles accepteren",
+    "reject_all": "Alles weigeren",
+    "customize": "Aanpassen",
+    "necessary": "Noodzakelijk",
+    "necessary_desc": "Essentieel voor het functioneren van de website",
+    "analytics": "Analyse",
+    "analytics_desc": "Helpen ons begrijpen hoe bezoekers onze site gebruiken",
+    "marketing": "Marketing",
+    "marketing_desc": "Gebruikt om relevante advertenties te tonen",
+    "save_preferences": "Voorkeuren opslaan"
+  },
+  "contact": {
+    "heading": "Neem contact op",
+    "subheading": "Heeft u een vraag? We horen graag van u.",
+    "name": "Volledige naam",
+    "email": "E-mailadres",
+    "company": "Bedrijfsnaam",
+    "message": "Uw bericht",
+    "submit": "Bericht versturen",
+    "success": "Bedankt! We nemen spoedig contact met u op.",
+    "error": "Er ging iets mis. Probeer het opnieuw."
+  },
+  "footer": {
+    "privacy": "Privacybeleid",
+    "terms": "Algemene voorwaarden",
+    "contact": "Contact",
+    "copyright": "© {year} Harmoniq Safety. Alle rechten voorbehouden."
+  }
+}

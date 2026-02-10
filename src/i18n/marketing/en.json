@@ -1,0 +1,47 @@
+{
+  "hero": {
+    "title": "Harmoniq",
+    "subtitle": "Workplace Safety & Asset Management Platform",
+    "description": "Report incidents, manage risks, track assets, and ensure compliance — all in one powerful platform built for modern safety teams.",
+    "cta_start": "Get Started",
+    "cta_demo": "Book a Demo"
+  },
+  "trust": {
+    "statement": "Trusted by safety teams managing thousands of assets and incidents worldwide"
+  },
+  "features": {
+    "heading": "Everything you need",
+    "subheading": "for safety & asset management"
+  },
+  "cookie": {
+    "title": "We value your privacy",
+    "description": "We use cookies to enhance your browsing experience, analyze site traffic, and personalize content. You can choose which cookies to accept.",
+    "accept_all": "Accept All",
+    "reject_all": "Reject All",
+    "customize": "Customize",
+    "necessary": "Necessary",
+    "necessary_desc": "Essential for the website to function properly",
+    "analytics": "Analytics",
+    "analytics_desc": "Help us understand how visitors interact with our site",
+    "marketing": "Marketing",
+    "marketing_desc": "Used to deliver relevant advertisements",
+    "save_preferences": "Save Preferences"
+  },
+  "contact": {
+    "heading": "Get in Touch",
+    "subheading": "Have a question? We'd love to hear from you.",
+    "name": "Full Name",
+    "email": "Email Address",
+    "company": "Company Name",
+    "message": "Your Message",
+    "submit": "Send Message",
+    "success": "Thank you! We'll get back to you shortly.",
+    "error": "Something went wrong. Please try again."
+  },
+  "footer": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact Us",
+    "copyright": "© {year} Harmoniq Safety. All rights reserved."
+  }
+}

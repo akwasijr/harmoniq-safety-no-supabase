@@ -1,0 +1,47 @@
+{
+  "hero": {
+    "title": "Harmoniq",
+    "subtitle": "Plattform för Arbetssäkerhet & Tillgångshantering",
+    "description": "Rapportera incidenter, hantera risker, spåra tillgångar och säkerställ efterlevnad — allt i en kraftfull plattform byggd för moderna säkerhetsteam.",
+    "cta_start": "Kom igång",
+    "cta_demo": "Boka en Demo"
+  },
+  "trust": {
+    "statement": "Betrodd av säkerhetsteam som hanterar tusentals tillgångar och incidenter världen över"
+  },
+  "features": {
+    "heading": "Allt du behöver",
+    "subheading": "för säkerhet & tillgångshantering"
+  },
+  "cookie": {
+    "title": "Vi värnar om din integritet",
+    "description": "Vi använder cookies för att förbättra din upplevelse, analysera trafik och anpassa innehåll. Du kan välja vilka cookies du accepterar.",
+    "accept_all": "Acceptera alla",
+    "reject_all": "Avvisa alla",
+    "customize": "Anpassa",
+    "necessary": "Nödvändiga",
+    "necessary_desc": "Nödvändiga för att webbplatsen ska fungera korrekt",
+    "analytics": "Analys",
+    "analytics_desc": "Hjälper oss förstå hur besökare interagerar med vår webbplats",
+    "marketing": "Marknadsföring",
+    "marketing_desc": "Används för att leverera relevanta annonser",
+    "save_preferences": "Spara inställningar"
+  },
+  "contact": {
+    "heading": "Kontakta oss",
+    "subheading": "Har du en fråga? Vi vill gärna höra från dig.",
+    "name": "Fullständigt namn",
+    "email": "E-postadress",
+    "company": "Företagsnamn",
+    "message": "Ditt meddelande",
+    "submit": "Skicka meddelande",
+    "success": "Tack! Vi återkommer inom kort.",
+    "error": "Något gick fel. Försök igen."
+  },
+  "footer": {
+    "privacy": "Integritetspolicy",
+    "terms": "Användarvillkor",
+    "contact": "Kontakta oss",
+    "copyright": "© {year} Harmoniq Safety. Alla rättigheter förbehållna."
+  }
+}
