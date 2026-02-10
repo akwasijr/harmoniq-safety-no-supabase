@@ -9,7 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/client";
 import { EMAIL_TO_USER_ID, setActiveUserId, DEFAULT_COMPANY_SLUG, DEFAULT_USER_ID } from "@/mocks/data";
+
+const isSupabaseConfigured =
+  !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 function LoginForm() {
   const router = useRouter();
@@ -21,6 +25,8 @@ function LoginForm() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
 
+  const [error, setError] = React.useState("");
+
   // Auto-redirect if demo mode
   React.useEffect(() => {
     if (isDemo) {
@@ -31,31 +37,59 @@ function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
-    // Simulate login - in real app, this would call Supabase Auth
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (isSupabaseConfigured) {
+      // Real Supabase auth
+      const supabase = createClient();
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    // Mock role-based redirect
-    // In production, company slug would come from user's profile after authentication
+      if (authError) {
+        setError(authError.message);
+        setIsLoading(false);
+        return;
+      }
 
-    // Set the mock user based on the email entered
-    const userId = EMAIL_TO_USER_ID[email.toLowerCase()] || DEFAULT_USER_ID;
-    setActiveUserId(userId);
+      if (data.user) {
+        // Fetch user profile to determine redirect
+        const { data: profile } = await supabase
+          .from("users")
+          .select("role, company_id")
+          .eq("id", data.user.id)
+          .single();
 
-    // Set auth cookie so middleware allows access to protected routes
-    document.cookie = `harmoniq_auth=${userId}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+        // Get company slug for redirect
+        const { data: company } = await supabase
+          .from("companies")
+          .select("slug")
+          .eq("id", profile?.company_id)
+          .single();
 
-    // Resolve the user's company slug from the mock user data
-    // In production, this would come from the authenticated user's profile
-    const companySlug = DEFAULT_COMPANY_SLUG;
+        const slug = company?.slug || "default";
+        const isEmployeeRole = profile?.role === "employee";
 
-    // Use window.location.href (not router.push) to force a full page reload
-    // so AuthProvider re-initializes with the correct user from localStorage
-    // Route by role: employees go to the mobile app, all others go to the dashboard
-    const isEmployeeEmail = !email.includes("@harmoniq.io") && !email.includes("super") && !email.includes("admin") && !email.includes("manager");
-    window.location.href = isEmployeeEmail
-      ? `/${companySlug}/app`
-      : `/${companySlug}/dashboard`;
+        // Use window.location for full reload so AuthProvider reinitializes
+        window.location.href = isEmployeeRole
+          ? `/${slug}/app`
+          : `/${slug}/dashboard`;
+      }
+    } else {
+      // Mock auth fallback
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const userId = EMAIL_TO_USER_ID[email.toLowerCase()] || DEFAULT_USER_ID;
+      setActiveUserId(userId);
+      document.cookie = `harmoniq_auth=${userId}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+
+      const companySlug = DEFAULT_COMPANY_SLUG;
+      const isEmployeeEmail = !email.includes("@harmoniq.io") && !email.includes("super") && !email.includes("admin") && !email.includes("manager");
+      window.location.href = isEmployeeEmail
+        ? `/${companySlug}/app`
+        : `/${companySlug}/dashboard`;
+    }
   };
 
   return (
@@ -82,6 +116,11 @@ function LoginForm() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+                  {error}
+                </div>
+              )}
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email address</Label>
