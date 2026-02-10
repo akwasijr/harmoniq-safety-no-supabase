@@ -131,7 +131,6 @@ export const mockUsers: User[] = [
   {
     id: "user_super_admin",
     company_id: "comp_1", // Has a company context but can access all
-    email: "admin@harmoniq.io",
     first_name: "Platform",
     middle_name: null,
     last_name: "Admin",
@@ -156,7 +155,6 @@ export const mockUsers: User[] = [
   {
     id: "user_1",
     company_id: "comp_1",
-    email: "admin@nexusmfg.com",
     first_name: "John",
     middle_name: null,
     last_name: "Smith",
@@ -206,7 +204,6 @@ export const mockUsers: User[] = [
   {
     id: "user_3",
     company_id: "comp_1",
-    email: "worker@nexusmfg.com",
     first_name: "Mike",
     middle_name: null,
     last_name: "Davis",
@@ -3181,17 +3178,7 @@ export const mockDowntimeLogs: DowntimeLog[] = [
 export const CURRENT_USER_ID = "user_super_admin";
 
 // Map login emails to mock user IDs
-export const EMAIL_TO_USER_ID: Record<string, string> = {
-  "admin@harmoniq.io": "user_super_admin",
-  "admin@nexusmfg.com": "user_1",
-  "manager@nexusmfg.com": "user_2",
-  "worker@nexusmfg.com": "user_3",
-  "admin@svenska-fabriken.se": "user_sf_1",
-  "anna@svenska-fabriken.se": "user_sf_2",
-  "lars@svenska-fabriken.se": "user_sf_3",
-  "admin@dutch-safety.nl": "user_ds_1",
-  "maria@dutch-safety.nl": "user_ds_2",
-};
+export const EMAIL_TO_USER_ID: Record<string, string> = {};
 
 // Get the active user ID (from localStorage if available, else default)
 export function getActiveUserId(): string {

@@ -381,7 +381,7 @@ export default function PlatformUsersPage() {
                   id="email"
                   type="email"
                   className="mt-1"
-                  placeholder="admin@harmoniq.io"
+                  placeholder="user@company.com"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
