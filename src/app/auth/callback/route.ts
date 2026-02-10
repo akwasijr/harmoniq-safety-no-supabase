@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// Only this email can sign in
+const ALLOWED_EMAIL = "harmoniq.safety@gmail.com";
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -10,6 +13,15 @@ export async function GET(request: NextRequest) {
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
+      // Only allow the whitelisted email
+      if (data.user.email?.toLowerCase() !== ALLOWED_EMAIL.toLowerCase()) {
+        // Sign them out immediately
+        await supabase.auth.signOut();
+        return NextResponse.redirect(
+          new URL("/?message=Access+denied.+Only+authorized+accounts+can+sign+in.", requestUrl.origin)
+        );
+      }
+
       // Check if user profile exists
       const { data: profile } = await supabase
         .from("users")
@@ -18,15 +30,15 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (!profile) {
-        // Create default user profile
+        // Create super admin user profile for whitelisted email
         await supabase.from("users").insert([
           {
             id: data.user.id,
             email: data.user.email,
-            first_name: data.user.user_metadata?.given_name || "User",
-            last_name: data.user.user_metadata?.family_name || "",
-            company_id: "3b23ad18-7684-45f0-afdc-0dcaad3b19e5", // Default company
-            role: "employee",
+            first_name: data.user.user_metadata?.given_name || "Admin",
+            last_name: data.user.user_metadata?.family_name || "User",
+            company_id: "3b23ad18-7684-45f0-afdc-0dcaad3b19e5",
+            role: "super_admin",
             status: "active",
           },
         ]);
@@ -34,12 +46,11 @@ export async function GET(request: NextRequest) {
 
       // Redirect to dashboard
       return NextResponse.redirect(
-        new URL("/?message=OAuth+sign-in+successful", requestUrl.origin)
+        new URL("/harmoniq/dashboard", requestUrl.origin)
       );
     }
   }
 
-  // Return the user to an error page with instructions
   return NextResponse.redirect(
     new URL("/?message=OAuth+sign-in+failed", requestUrl.origin)
   );
