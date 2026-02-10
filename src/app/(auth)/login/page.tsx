@@ -3,11 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Mail, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 
@@ -16,25 +14,10 @@ const isSupabaseConfigured =
 
 function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const isDemo = searchParams.get("demo") === "true";
-  
-  const [showPassword, setShowPassword] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-
   const [error, setError] = React.useState("");
 
-  // Auto-redirect if demo mode
-  React.useEffect(() => {
-    if (isDemo) {
-      setError("Demo mode is not available. Please log in with your credentials.");
-    }
-  }, [isDemo]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleOAuthSignIn = async (provider: "google" | "microsoft") => {
     setIsLoading(true);
     setError("");
 
@@ -44,41 +27,17 @@ function LoginForm() {
       return;
     }
 
-    // Real Supabase auth only
     const supabase = createClient();
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
 
     if (authError) {
       setError(authError.message);
       setIsLoading(false);
-      return;
-    }
-
-    if (data.user) {
-      // Fetch user profile to determine redirect
-      const { data: profile } = await supabase
-        .from("users")
-        .select("role, company_id")
-        .eq("id", data.user.id)
-        .single();
-
-      // Get company slug for redirect
-      const { data: company } = await supabase
-        .from("companies")
-        .select("slug")
-        .eq("id", profile?.company_id)
-        .single();
-
-      const slug = company?.slug || "default";
-      const isEmployeeRole = profile?.role === "employee";
-
-      // Use window.location for full reload so AuthProvider reinitializes
-      window.location.href = isEmployeeRole
-        ? `/${slug}/app`
-        : `/${slug}/dashboard`;
     }
   };
 
@@ -101,98 +60,28 @@ function LoginForm() {
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Welcome back</CardTitle>
             <CardDescription>
-              Sign in to your account to continue
+              Sign in with your corporate account
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4">
               {error && (
                 <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
                   {error}
                 </div>
               )}
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
-                <div className="relative">
-                  <Mail
-                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@company.com"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                  />
-                </div>
-              </div>
 
-              {/* Password */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm text-muted-foreground hover:text-foreground"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock
-                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    className="pl-10 pr-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit */}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign in"}
-              </Button>
-
-              {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              {/* OAuth buttons */}
-              <div className="grid grid-cols-2 gap-4">
-                <Button type="button" variant="outline" disabled={isLoading}>
+              {/* Google OAuth */}
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full"
+                disabled={isLoading}
+                onClick={() => handleOAuthSignIn("google")}
+              >
+                {isLoading ? (
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -211,29 +100,45 @@ function LoginForm() {
                       fill="#EA4335"
                     />
                   </svg>
-                  Google
-                </Button>
-                <Button type="button" variant="outline" disabled={isLoading}>
+                )}
+                Continue with Google
+              </Button>
+
+              {/* Microsoft OAuth */}
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full"
+                disabled={isLoading}
+                onClick={() => handleOAuthSignIn("microsoft")}
+              >
+                {isLoading ? (
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       fill="currentColor"
                       d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"
                     />
                   </svg>
-                  Microsoft
-                </Button>
+                )}
+                Continue with Microsoft
+              </Button>
+
+              {/* Divider */}
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t" />
+                </div>
               </div>
-            </form>
+
+              {/* Info */}
+              <p className="text-center text-sm text-muted-foreground">
+                Sign in with your work email account
+              </p>
+            </div>
           </CardContent>
         </Card>
-
-        {/* Info message */}
-        <div className="mt-6 rounded-lg border bg-blue-50 p-4 text-sm dark:bg-blue-950">
-          <p className="font-medium text-blue-900 dark:text-blue-100">Account Required</p>
-          <p className="mt-1 text-blue-800 dark:text-blue-200">
-            Please use your registered email and password to sign in. Contact your administrator if you don't have an account.
-          </p>
-        </div>
 
         {/* Back to home */}
         <p className="mt-6 text-center text-sm text-muted-foreground">
