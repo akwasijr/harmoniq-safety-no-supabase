@@ -3,40 +3,35 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Mail, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 
-const isSupabaseConfigured =
-  !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
 function LoginForm() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
 
   const handleOAuthSignIn = async (provider: "google" | "microsoft") => {
-    setIsLoading(true);
-    setError("");
+    try {
+      setIsLoading(true);
+      setError("");
 
-    if (!isSupabaseConfigured) {
-      setError("Authentication service is not configured");
-      setIsLoading(false);
-      return;
-    }
+      const supabase = createClient();
+      
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (authError) {
-      setError(authError.message);
+      if (authError) {
+        setError(`OAuth error: ${authError.message}`);
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      setError(`Error: ${err.message}`);
       setIsLoading(false);
     }
   };
@@ -71,18 +66,17 @@ function LoginForm() {
                 </div>
               )}
 
-              {/* Google OAuth */}
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full"
-                disabled={isLoading}
+              {/* Google OAuth Button */}
+              <button
+                type="button"
                 onClick={() => handleOAuthSignIn("google")}
+                disabled={isLoading}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
               >
                 {isLoading ? (
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader className="h-4 w-4 animate-spin" />
                 ) : (
-                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                       fill="#4285F4"
@@ -102,20 +96,19 @@ function LoginForm() {
                   </svg>
                 )}
                 Continue with Google
-              </Button>
+              </button>
 
-              {/* Microsoft OAuth */}
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full"
-                disabled={isLoading}
+              {/* Microsoft OAuth Button */}
+              <button
+                type="button"
                 onClick={() => handleOAuthSignIn("microsoft")}
+                disabled={isLoading}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
               >
                 {isLoading ? (
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader className="h-4 w-4 animate-spin" />
                 ) : (
-                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       fill="currentColor"
                       d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"
@@ -123,14 +116,7 @@ function LoginForm() {
                   </svg>
                 )}
                 Continue with Microsoft
-              </Button>
-
-              {/* Divider */}
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t" />
-                </div>
-              </div>
+              </button>
 
               {/* Info */}
               <p className="text-center text-sm text-muted-foreground">
