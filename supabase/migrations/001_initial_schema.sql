@@ -428,29 +428,29 @@ ALTER TABLE site_analytics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inquiries ENABLE ROW LEVEL SECURITY;
 
 -- Helper: get current user's company_id
-CREATE OR REPLACE FUNCTION auth.user_company_id()
+CREATE OR REPLACE FUNCTION public.user_company_id()
 RETURNS UUID AS $$
   SELECT company_id FROM public.users WHERE id = auth.uid()
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 -- Helper: check if current user is super_admin
-CREATE OR REPLACE FUNCTION auth.is_super_admin()
+CREATE OR REPLACE FUNCTION public.is_super_admin()
 RETURNS BOOLEAN AS $$
   SELECT EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'super_admin')
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 -- COMPANIES: super admins see all, others see their own
 CREATE POLICY "companies_select" ON companies FOR SELECT USING (
-  auth.is_super_admin() OR id = auth.user_company_id()
+  public.is_super_admin() OR id = public.user_company_id()
 );
-CREATE POLICY "companies_all_super" ON companies FOR ALL USING (auth.is_super_admin());
+CREATE POLICY "companies_all_super" ON companies FOR ALL USING (public.is_super_admin());
 
 -- USERS: see users in your company (super admins see all)
 CREATE POLICY "users_select" ON users FOR SELECT USING (
-  auth.is_super_admin() OR company_id = auth.user_company_id()
+  public.is_super_admin() OR company_id = public.user_company_id()
 );
 CREATE POLICY "users_modify" ON users FOR ALL USING (
-  auth.is_super_admin() OR (company_id = auth.user_company_id() AND id = auth.uid())
+  public.is_super_admin() OR (company_id = public.user_company_id() AND id = auth.uid())
 );
 
 -- COMPANY DATA TABLES: company isolation pattern
@@ -468,15 +468,15 @@ BEGIN
   LOOP
     EXECUTE format(
       'CREATE POLICY "%s_company_isolation" ON %I FOR ALL USING (
-        auth.is_super_admin() OR company_id = auth.user_company_id()
+        public.is_super_admin() OR company_id = public.user_company_id()
       )', tbl, tbl
     );
   END LOOP;
 END $$;
 
 -- SITE ANALYTICS & INQUIRIES: super admins only
-CREATE POLICY "analytics_super_only" ON site_analytics FOR ALL USING (auth.is_super_admin());
-CREATE POLICY "inquiries_super_only" ON inquiries FOR ALL USING (auth.is_super_admin());
+CREATE POLICY "analytics_super_only" ON site_analytics FOR ALL USING (public.is_super_admin());
+CREATE POLICY "inquiries_super_only" ON inquiries FOR ALL USING (public.is_super_admin());
 
 -- Allow anonymous inserts for analytics and inquiries (from website)
 CREATE POLICY "analytics_insert_anon" ON site_analytics FOR INSERT WITH CHECK (true);
