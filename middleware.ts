@@ -7,7 +7,7 @@ import type { NextRequest } from "next/server";
  * 2. Geo-based locale detection for marketing pages
  */
 
-const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/contact", "/privacy", "/terms"];
+const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/contact", "/privacy", "/terms", "/invite"];
 const MARKETING_ROUTES = ["/", "/contact", "/privacy", "/terms"];
 const STATIC_PREFIXES = ["/_next", "/favicon", "/logo", "/screen-", "/bg-", "/icons", "/api"];
 

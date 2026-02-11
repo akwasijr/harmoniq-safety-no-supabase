@@ -2,15 +2,11 @@
 
 import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getCurrentUser } from "@/mocks/data";
 import { ROLE_PERMISSIONS } from "@/types";
 import { useCompanyStore } from "@/stores/company-store";
 import { clearAllHarmoniqStorage } from "@/lib/local-storage";
 import { resetPrimaryColor } from "@/lib/branding";
 import type { User, Company, Permission, UserRole, CompanyRole } from "@/types";
-
-const isSupabaseConfigured =
-  !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 interface AuthContextType {
   // Current user
@@ -35,7 +31,7 @@ interface AuthContextType {
   hasAnyPermission: (permissions: Permission[]) => boolean;
   hasAllPermissions: (permissions: Permission[]) => boolean;
   
-  // Auth actions (for future real auth)
+  // Auth actions
   logout: () => void;
 }
 
@@ -47,71 +43,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [selectedCompanyId, setSelectedCompanyId] = React.useState<string | null>(null);
   const { items: allCompanies } = useCompanyStore();
   
-  // Initialize auth state
+  // Initialize auth state via Supabase
   React.useEffect(() => {
-    if (isSupabaseConfigured) {
-      // Supabase auth: get session then fetch user profile
-      const supabase = createClient();
-      
-      const initAuth = async () => {
-        try {
-          const { data: { user: authUser } } = await supabase.auth.getUser();
-          if (authUser) {
-            // Fetch the user profile from our users table
-            const { data: profile } = await supabase
-              .from("users")
-              .select("*")
-              .eq("id", authUser.id)
-              .single();
-            
-            if (profile) {
-              setUser(profile as User);
-              setSelectedCompanyId(
-                profile.role === "super_admin" ? null : profile.company_id
-              );
-            }
-          }
-        } catch (err) {
-          console.error("[Harmoniq] Auth init error:", err);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      
-      initAuth();
-
-      // Listen for auth state changes (login, logout, token refresh)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (event === "SIGNED_OUT" || !session?.user) {
-            setUser(null);
-            setSelectedCompanyId(null);
-            return;
-          }
-          if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-            const { data: profile } = await supabase
-              .from("users")
-              .select("*")
-              .eq("id", session.user.id)
-              .single();
-            if (profile) {
-              setUser(profile as User);
-              setSelectedCompanyId(
-                profile.role === "super_admin" ? null : profile.company_id
-              );
-            }
+    const supabase = createClient();
+    
+    const initAuth = async () => {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          const { data: profile } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", authUser.id)
+            .single();
+          
+          if (profile) {
+            setUser(profile as User);
+            setSelectedCompanyId(
+              profile.role === "super_admin" ? null : profile.company_id
+            );
           }
         }
-      );
+      } catch (err) {
+        console.error("[Harmoniq] Auth init error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    initAuth();
 
-      return () => { subscription.unsubscribe(); };
-    } else {
-      // Mock auth fallback
-      const currentUser = getCurrentUser();
-      setUser(currentUser);
-      setSelectedCompanyId(currentUser.role === "super_admin" ? null : currentUser.company_id);
-      setIsLoading(false);
-    }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_OUT" || !session?.user) {
+          setUser(null);
+          setSelectedCompanyId(null);
+          return;
+        }
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          const { data: profile } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+          if (profile) {
+            setUser(profile as User);
+            setSelectedCompanyId(
+              profile.role === "super_admin" ? null : profile.company_id
+            );
+          }
+        }
+      }
+    );
+
+    return () => { subscription.unsubscribe(); };
   }, []);
   
   // Role checks
@@ -178,12 +163,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Logout
   const logout = React.useCallback(async () => {
-    if (isSupabaseConfigured) {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-    }
-    // Clear mock auth cookie
-    document.cookie = "harmoniq_auth=; path=/; max-age=0; SameSite=Lax";
+    const supabase = createClient();
+    await supabase.auth.signOut();
     clearAllHarmoniqStorage();
     resetPrimaryColor();
     setUser(null);
