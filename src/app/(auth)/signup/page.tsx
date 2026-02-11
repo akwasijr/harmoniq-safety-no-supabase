@@ -14,7 +14,7 @@ export default function SignupPage() {
     country: "US",
   });
 
-  const handleOAuthSignUp = async (provider: "google" | "microsoft") => {
+  const handleOAuthSignUp = async (provider: "google" | "azure") => {
     try {
       setIsLoading(true);
       setError("");
@@ -146,7 +146,7 @@ export default function SignupPage() {
             </button>
 
             <button
-              onClick={() => handleOAuthSignUp("microsoft")}
+              onClick={() => handleOAuthSignUp("azure")}
               disabled={isLoading}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
             >

@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get("code");
 
   if (code) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
@@ -46,26 +46,30 @@ export async function GET(request: NextRequest) {
       }
 
       // Log auth attempt
-      await supabase.from("audit_logs").insert([{
-        user_id: data.user.id,
-        action: "login_success",
-        resource: "auth",
-        details: { provider: data.user.app_metadata?.provider || "oauth" },
-        ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined,
-      }]).catch(() => {}); // Don't fail if audit log fails
+      try {
+        await supabase.from("audit_logs").insert([{
+          user_id: data.user.id,
+          action: "login_success",
+          resource: "auth",
+          details: { provider: data.user.app_metadata?.provider || "oauth" },
+          ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined,
+        }]);
+      } catch {}  // Don't fail if audit log fails
 
       return NextResponse.redirect(new URL("/harmoniq/dashboard", requestUrl.origin));
     }
 
     // Log failed attempt
     if (data.user) {
-      await supabase.from("audit_logs").insert([{
-        user_id: data.user.id,
-        action: "login_failed",
-        resource: "auth",
-        details: { error: error?.message || "unknown" },
-        ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined,
-      }]).catch(() => {});
+      try {
+        await supabase.from("audit_logs").insert([{
+          user_id: data.user.id,
+          action: "login_failed",
+          resource: "auth",
+          details: { error: error?.message || "unknown" },
+          ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined,
+        }]);
+      } catch {}
     }
   }
 

@@ -13,7 +13,7 @@ function LoginForm() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
 
-  const handleOAuthSignIn = async (provider: "google" | "microsoft") => {
+  const handleOAuthSignIn = async (provider: "google" | "azure") => {
     try {
       setIsLoading(true);
       setError("");
@@ -99,10 +99,10 @@ function LoginForm() {
                 Continue with Google
               </button>
 
-              {/* Microsoft OAuth Button */}
+              {/* Azure OAuth Button */}
               <button
                 type="button"
-                onClick={() => handleOAuthSignIn("microsoft")}
+                onClick={() => handleOAuthSignIn("azure")}
                 disabled={isLoading}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
               >
@@ -116,7 +116,7 @@ function LoginForm() {
                     />
                   </svg>
                 )}
-                Continue with Microsoft
+                Continue with Azure
               </button>
 
               {/* Info */}
