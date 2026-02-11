@@ -48,7 +48,7 @@ function LoginForm() {
 
       const supabase = createClient();
 
-      const { error: authError } = await supabase.auth.signInWithOAuth({
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -56,7 +56,13 @@ function LoginForm() {
       });
 
       if (authError) {
-        setError(`OAuth error: ${authError.message}`);
+        const msg = authError.message.toLowerCase();
+        if (msg.includes("unsupported provider") || msg.includes("oauth secret")) {
+          const name = provider === "google" ? "Google" : "Microsoft";
+          setError(`${name} sign-in is not configured yet. Please use email and password to sign in, or contact your administrator.`);
+        } else {
+          setError(`OAuth error: ${authError.message}`);
+        }
         setIsLoading(false);
       }
     } catch (err: any) {
