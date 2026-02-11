@@ -19,7 +19,7 @@ export default function EmployeeAppRootLayout({
   const company = useCompanyParam();
   const router = useRouter();
   const { user, currentCompany, isLoading } = useAuth();
-  const { items: companies } = useCompanyStore();
+  const { items: companies, isLoading: isCompaniesLoading } = useCompanyStore();
 
   // C5: Validate company slug against known companies
   const isValidCompany = React.useMemo(
@@ -42,7 +42,7 @@ export default function EmployeeAppRootLayout({
     }
   }, [isLoading, user, router]);
 
-  if (isLoading || !user) {
+  if (isLoading || isCompaniesLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
