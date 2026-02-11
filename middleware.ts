@@ -21,9 +21,6 @@ function detectLocale(acceptLanguage: string | null): string {
   return "en";
 }
 
-const isSupabaseConfigured =
-  !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -51,29 +48,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protected routes: check auth
-  if (isSupabaseConfigured) {
-    // Supabase auth — refresh session and check user
-    const { updateSession } = await import("@/lib/supabase/middleware");
-    const { user, supabaseResponse } = await updateSession(request);
+  // Protected routes: check Supabase auth
+  const { updateSession } = await import("@/lib/supabase/middleware");
+  const { user, supabaseResponse } = await updateSession(request);
 
-    if (!user) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-
-    return supabaseResponse;
-  } else {
-    // Mock auth fallback — check cookie
-    const authCookie = request.cookies.get("harmoniq_auth");
-    if (!authCookie?.value) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-    return NextResponse.next();
+  if (!user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
   }
+
+  return supabaseResponse;
 }
 
 export const config = {

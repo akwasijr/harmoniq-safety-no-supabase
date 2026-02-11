@@ -1,5 +1,8 @@
 -- Authentication Overhaul: Invitations, Email Verification, Audit Logs
 
+-- Enable pgcrypto for gen_random_bytes
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+
 -- ============================================================
 -- NEW TABLES
 -- ============================================================
@@ -91,7 +94,7 @@ CREATE POLICY "audit_logs_company_isolation" ON audit_logs FOR SELECT USING (
 
 CREATE OR REPLACE FUNCTION generate_invitation_token()
 RETURNS TEXT AS $$
-  SELECT encode(gen_random_bytes(32), 'hex');
+  SELECT encode(extensions.gen_random_bytes(32), 'hex');
 $$ LANGUAGE sql SECURITY DEFINER;
 
 -- ============================================================
