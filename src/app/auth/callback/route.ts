@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-// Only this email can sign in
 const ALLOWED_EMAIL = "harmoniq.safety@gmail.com";
 
 export async function GET(request: NextRequest) {
@@ -13,9 +12,8 @@ export async function GET(request: NextRequest) {
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
-      // Only allow the whitelisted email
+      // Only allow whitelisted email for main production
       if (data.user.email?.toLowerCase() !== ALLOWED_EMAIL.toLowerCase()) {
-        // Sign them out immediately
         await supabase.auth.signOut();
         return NextResponse.redirect(
           new URL("/?message=Access+denied.+Only+authorized+accounts+can+sign+in.", requestUrl.origin)
@@ -40,14 +38,34 @@ export async function GET(request: NextRequest) {
             company_id: "3b23ad18-7684-45f0-afdc-0dcaad3b19e5",
             role: "super_admin",
             status: "active",
+            email_verified_at: new Date().toISOString(),
+            oauth_provider: data.user.app_metadata?.provider || "google",
+            oauth_id: data.user.id,
           },
         ]);
       }
 
-      // Redirect to dashboard
-      return NextResponse.redirect(
-        new URL("/harmoniq/dashboard", requestUrl.origin)
-      );
+      // Log auth attempt
+      await supabase.from("audit_logs").insert([{
+        user_id: data.user.id,
+        action: "login_success",
+        resource: "auth",
+        details: { provider: data.user.app_metadata?.provider || "oauth" },
+        ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined,
+      }]).catch(() => {}); // Don't fail if audit log fails
+
+      return NextResponse.redirect(new URL("/harmoniq/dashboard", requestUrl.origin));
+    }
+
+    // Log failed attempt
+    if (data.user) {
+      await supabase.from("audit_logs").insert([{
+        user_id: data.user.id,
+        action: "login_failed",
+        resource: "auth",
+        details: { error: error?.message || "unknown" },
+        ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined,
+      }]).catch(() => {});
     }
   }
 
