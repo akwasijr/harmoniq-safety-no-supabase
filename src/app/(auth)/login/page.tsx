@@ -166,62 +166,77 @@ function LoginForm() {
                 </div>
               )}
 
-              {/* Email/Password Form */}
-              <form onSubmit={handleEmailSignIn} className="space-y-3">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com"
-                    required
-                    disabled={isLoading}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
-                  <div className="relative">
-                    <input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                      disabled={isLoading}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                    />
+              {/* Email field — shared between both modes */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  required
+                  disabled={isLoading}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                />
+              </div>
+
+              {loginMode === "password" ? (
+                /* Password mode */
+                <form onSubmit={handleEmailSignIn} className="space-y-3">
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
+                    <div className="relative">
+                      <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        disabled={isLoading}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      tabIndex={-1}
+                      onClick={handleForgotPassword}
+                      className="text-xs text-muted-foreground hover:text-foreground"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      Forgot password?
                     </button>
                   </div>
-                </div>
-                <div className="flex justify-end">
                   <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    className="text-xs text-muted-foreground hover:text-foreground"
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                   >
-                    Forgot password?
+                    {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : null}
+                    Sign in with password
                   </button>
-                </div>
+                </form>
+              ) : (
+                /* Magic link mode */
                 <button
-                  type="submit"
-                  disabled={isLoading}
+                  type="button"
+                  onClick={handleMagicLink}
+                  disabled={isLoading || !email}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                 >
                   {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  Sign in
+                  Send magic link
                 </button>
-              </form>
+              )}
 
               {/* Divider */}
               <div className="relative">
@@ -233,37 +248,16 @@ function LoginForm() {
                 </div>
               </div>
 
-              {/* Magic Link */}
+              {/* Toggle between modes */}
               <button
                 type="button"
-                onClick={(e) => {
-                  if (loginMode === "magic") {
-                    handleMagicLink(e);
-                  } else {
-                    setLoginMode("magic");
-                    setError("");
-                    setSuccess("");
-                  }
-                }}
+                onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
                 disabled={isLoading}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
               >
-                {isLoading && loginMode === "magic" ? (
-                  <Loader className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Mail className="h-4 w-4" />
-                )}
-                {loginMode === "magic" ? "Send magic link" : "Sign in with magic link"}
+                <Mail className="h-4 w-4" />
+                {loginMode === "password" ? "Sign in with magic link instead" : "Sign in with password instead"}
               </button>
-
-              {loginMode === "magic" && (
-                <p className="text-center text-xs text-muted-foreground">
-                  Enter your email above and click &quot;Send magic link&quot; — no password needed.{" "}
-                  <button type="button" onClick={() => { setLoginMode("password"); setSuccess(""); }} className="underline hover:text-foreground">
-                    Use password instead
-                  </button>
-                </p>
-              )}
             </div>
           </CardContent>
         </Card>
