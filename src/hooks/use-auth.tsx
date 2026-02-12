@@ -4,7 +4,7 @@ import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ROLE_PERMISSIONS } from "@/types";
 import { useCompanyStore } from "@/stores/company-store";
-import { clearAllHarmoniqStorage } from "@/lib/local-storage";
+import { clearAllHarmoniqStorage, loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { resetPrimaryColor } from "@/lib/branding";
 import type { User, Company, Permission, UserRole, CompanyRole } from "@/types";
 
@@ -38,6 +38,7 @@ interface AuthContextType {
 const AuthContext = React.createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const SESSION_STORAGE_KEY = "harmoniq_auth_session";
   const [isLoading, setIsLoading] = React.useState(true);
   const [user, setUser] = React.useState<User | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = React.useState<string | null>(null);
@@ -59,17 +60,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       let shouldRetry = false;
       try {
         let authUser: typeof undefined | null | { id: string; email?: string };
+        let sessionData: { access_token?: string; refresh_token?: string; expires_at?: number } | null = null;
         try {
           const {
             data: { session },
           } = await withTimeout(supabase.auth.getSession(), 4_000, "getSession");
           authUser = session?.user ?? null;
+          if (session?.access_token && session?.refresh_token) {
+            saveToStorage(SESSION_STORAGE_KEY, {
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+              expires_at: session.expires_at ?? undefined,
+            });
+          }
         } catch (err) {
           console.warn("[Harmoniq] getSession failed, falling back to getUser:", err);
           const {
             data: { user },
           } = await withTimeout(supabase.auth.getUser(), 6_000, "getUser");
           authUser = user ?? null;
+        }
+
+        if (!authUser) {
+          sessionData = loadFromStorage<{ access_token?: string; refresh_token?: string; expires_at?: number } | null>(
+            SESSION_STORAGE_KEY,
+            null
+          );
+          if (sessionData?.access_token && sessionData?.refresh_token) {
+            const { data } = await supabase.auth.setSession({
+              access_token: sessionData.access_token,
+              refresh_token: sessionData.refresh_token,
+            });
+            authUser = data.user ?? null;
+          }
         }
 
         if (authUser) {
@@ -118,10 +141,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === "SIGNED_OUT" || !session?.user) {
           setUser(null);
           setSelectedCompanyId(null);
+          if (typeof window !== "undefined") {
+            window.localStorage.removeItem(SESSION_STORAGE_KEY);
+          }
           return;
         }
         if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
           try {
+            if (session?.access_token && session?.refresh_token) {
+              saveToStorage(SESSION_STORAGE_KEY, {
+                access_token: session.access_token,
+                refresh_token: session.refresh_token,
+                expires_at: session.expires_at ?? undefined,
+              });
+            }
             const { data: profile } = await supabase
               .from("users")
               .select("*")

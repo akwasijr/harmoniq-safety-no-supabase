@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Mail, Loader, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
+import { saveToStorage } from "@/lib/local-storage";
 
 function LoginForm() {
   const router = useRouter();
@@ -39,6 +40,11 @@ function LoginForm() {
 
       // Ensure session is available for subsequent profile fetches
       if (data.session) {
+        saveToStorage("harmoniq_auth_session", {
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+          expires_at: data.session.expires_at,
+        });
         await supabase.auth.setSession({
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token,
