@@ -82,8 +82,8 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white overflow-x-hidden">
-      {/* Video background — covers top of page, scrolls away */}
-      <div className="absolute top-0 left-0 right-0 h-screen z-0 pointer-events-none overflow-hidden">
+      {/* Video background — desktop only */}
+      <div className="absolute top-0 left-0 right-0 h-screen z-0 pointer-events-none overflow-hidden hidden md:block">
         <video
           autoPlay
           loop
@@ -96,8 +96,11 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/70" />
       </div>
 
-      {/* Purple gradient for below-the-fold */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+      {/* Lightweight mobile background */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-black md:hidden" />
+
+      {/* Purple gradient for below-the-fold (desktop only) */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden hidden md:block">
         <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full blur-[160px] bg-[#8B5CF6] opacity-20" />
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[140px] bg-[#6d28d9] opacity-15" />
       </div>
