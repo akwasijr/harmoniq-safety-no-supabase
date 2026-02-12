@@ -109,7 +109,7 @@ self.addEventListener('fetch', (event) => {
       if (cached) return cached;
       return fetch(request)
         .then((response) => {
-          if (response.ok) {
+          if (response.ok && response.status !== 206) {
             const clone = response.clone();
             caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
           }
