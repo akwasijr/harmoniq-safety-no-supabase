@@ -9,7 +9,7 @@ import type { NextRequest } from "next/server";
 
 const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/contact", "/privacy", "/terms", "/invite", "/auth/callback"];
 const MARKETING_ROUTES = ["/", "/contact", "/privacy", "/terms"];
-const STATIC_PREFIXES = ["/_next", "/favicon", "/logo", "/screen-", "/bg-", "/icons", "/api"];
+const STATIC_PREFIXES = ["/_next", "/favicon", "/logo", "/screen-", "/bg-", "/icons", "/api", "/manifest", "/sw"];
 
 function detectLocale(acceptLanguage: string | null): string {
   if (!acceptLanguage) return "en";
