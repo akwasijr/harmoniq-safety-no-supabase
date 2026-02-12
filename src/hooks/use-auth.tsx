@@ -47,16 +47,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const supabase = createClient();
     
+    const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string) => {
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`${label} timeout`)), ms)
+      );
+      return Promise.race([promise, timeout]) as Promise<T>;
+    };
+
     const initAuth = async () => {
       try {
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Auth session timeout")), 8_000)
-        );
-        const {
-          data: { session },
-        } = await Promise.race([sessionPromise, timeoutPromise]);
-        const authUser = session?.user;
+        let authUser: typeof undefined | null | { id: string; email?: string };
+        try {
+          const {
+            data: { session },
+          } = await withTimeout(supabase.auth.getSession(), 4_000, "getSession");
+          authUser = session?.user ?? null;
+        } catch (err) {
+          console.warn("[Harmoniq] getSession failed, falling back to getUser:", err);
+          const {
+            data: { user },
+          } = await withTimeout(supabase.auth.getUser(), 6_000, "getUser");
+          authUser = user ?? null;
+        }
 
         if (authUser) {
           const controller = new AbortController();
