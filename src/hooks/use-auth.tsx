@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = React.useState<string | null>(null);
   const { items: allCompanies } = useCompanyStore();
+  const authRetryRef = React.useRef(0);
   
   // Initialize auth state via Supabase
   React.useEffect(() => {
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const initAuth = async () => {
+      let shouldRetry = false;
       try {
         let authUser: typeof undefined | null | { id: string; email?: string };
         try {
@@ -93,9 +95,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (err) {
-        console.error("[Harmoniq] Auth init error:", err);
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("timeout") && authRetryRef.current < 2) {
+          authRetryRef.current += 1;
+          shouldRetry = true;
+          console.warn("[Harmoniq] Auth init timeout, retrying...", authRetryRef.current);
+          setTimeout(initAuth, 1500);
+        } else {
+          console.error("[Harmoniq] Auth init error:", err);
+        }
       } finally {
-        setIsLoading(false);
+        if (!shouldRetry) {
+          setIsLoading(false);
+        }
       }
     };
     
