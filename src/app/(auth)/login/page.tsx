@@ -3,12 +3,14 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Mail, Loader, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginForm() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
@@ -64,7 +66,7 @@ function LoginForm() {
 
       const slug = company?.slug || "harmoniq";
       const dest = profile.role === "employee" ? `/${slug}/app` : `/${slug}/dashboard`;
-      window.location.href = dest;
+      router.replace(dest);
     } catch (err: any) {
       setError(`Error: ${err.message}`);
       setIsLoading(false);
