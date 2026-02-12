@@ -42,7 +42,7 @@ export default function EmployeeAppRootLayout({
     }
   }, [isLoading, user, router]);
 
-  if (isLoading || isCompaniesLoading || !user) {
+  if (isLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -50,8 +50,8 @@ export default function EmployeeAppRootLayout({
     );
   }
 
-  // C5: Invalid company slug — trigger Next.js not-found boundary
-  if (!isValidCompany) {
+  // Only check validity after companies have actually loaded
+  if (!isCompaniesLoading && companies.length > 0 && !companies.some((c) => c.slug === company)) {
     notFound();
   }
 

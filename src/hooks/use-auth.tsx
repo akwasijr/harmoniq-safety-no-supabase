@@ -49,21 +49,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const initAuth = async () => {
       try {
+        // 8-second timeout for the entire auth init
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8_000);
+
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (authUser) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from("users")
             .select("*")
             .eq("id", authUser.id)
+            .abortSignal(controller.signal)
             .single();
           
-          if (profile) {
+          if (profileError) {
+            console.error("[Harmoniq] Profile fetch error:", profileError.message);
+          } else if (profile) {
             setUser(profile as User);
             setSelectedCompanyId(
               profile.role === "super_admin" ? null : profile.company_id
             );
           }
         }
+        clearTimeout(timeout);
       } catch (err) {
         console.error("[Harmoniq] Auth init error:", err);
       } finally {
@@ -81,16 +89,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          const { data: profile } = await supabase
-            .from("users")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-          if (profile) {
-            setUser(profile as User);
-            setSelectedCompanyId(
-              profile.role === "super_admin" ? null : profile.company_id
-            );
+          try {
+            const { data: profile } = await supabase
+              .from("users")
+              .select("*")
+              .eq("id", session.user.id)
+              .single();
+            if (profile) {
+              setUser(profile as User);
+              setSelectedCompanyId(
+                profile.role === "super_admin" ? null : profile.company_id
+              );
+            }
+          } catch (err) {
+            console.error("[Harmoniq] Auth state change error:", err);
           }
         }
       }

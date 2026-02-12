@@ -23,10 +23,10 @@ export default function DashboardRootLayout({
   const { items: tickets } = useTicketsStore();
   const { items: companies, isLoading: isCompaniesLoading } = useCompanyStore();
 
-  // C5: Validate company slug against known companies
+  // Validate company slug only after companies have loaded
   const isValidCompany = React.useMemo(
-    () => companies.some((c) => c.slug === company),
-    [companies, company]
+    () => isCompaniesLoading || companies.length === 0 || companies.some((c) => c.slug === company),
+    [companies, company, isCompaniesLoading]
   );
 
   // Apply saved branding color on mount — must be before any early returns to preserve hook order
@@ -52,7 +52,7 @@ export default function DashboardRootLayout({
     }
   }, [isLoading, user, router]);
 
-  if (isLoading || isCompaniesLoading || !user) {
+  if (isLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -69,8 +69,8 @@ export default function DashboardRootLayout({
     );
   }
 
-  // C5: Invalid company slug — trigger Next.js not-found boundary
-  if (!isValidCompany) {
+  // Only check validity after companies have actually loaded
+  if (!isCompaniesLoading && companies.length > 0 && !companies.some((c) => c.slug === company)) {
     notFound();
   }
 

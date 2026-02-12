@@ -56,17 +56,28 @@ export function createEntityStore<T extends IdEntity>(
       const supabase = createClient();
       let isMounted = true;
 
-      // Initial fetch
       const fetchData = async () => {
         try {
-          const { data, error } = await supabase.from(table).select("*");
+          // 10-second timeout to prevent infinite loading
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10_000);
+
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .abortSignal(controller.signal);
+
+          clearTimeout(timeout);
+
           if (error) {
             console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
-            // Fall back to localStorage on error
-            if (isMounted) setItems(loadFromStorage(storageKey, initialData));
           } else if (isMounted) {
             setItems((data || []) as T[]);
           }
+        } catch (err: unknown) {
+          // AbortError = timeout, DOMException = network — both are non-fatal
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn(`[Harmoniq] Fetch ${table} aborted/failed:`, msg);
         } finally {
           if (isMounted) setIsLoading(false);
         }
@@ -74,39 +85,7 @@ export function createEntityStore<T extends IdEntity>(
 
       fetchData();
 
-      // Real-time subscription
-      const channel = supabase
-        .channel(`${table}_changes`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table },
-          (payload) => {
-            if (!isMounted) return;
-            if (payload.eventType === "INSERT") {
-              setItems((prev) => {
-                const newItem = payload.new as T;
-                const exists = prev.some((p) => p.id === newItem.id);
-                return exists ? prev : [...prev, newItem];
-              });
-            } else if (payload.eventType === "UPDATE") {
-              setItems((prev) =>
-                prev.map((item) =>
-                  item.id === (payload.new as T).id ? (payload.new as T) : item
-                )
-              );
-            } else if (payload.eventType === "DELETE") {
-              setItems((prev) =>
-                prev.filter((item) => item.id !== (payload.old as T).id)
-              );
-            }
-          }
-        )
-        .subscribe();
-
-      return () => {
-        isMounted = false;
-        supabase.removeChannel(channel);
-      };
+      return () => { isMounted = false; };
     }, []);
 
     // === LOCALSTORAGE MODE ===
