@@ -53,7 +53,6 @@ export default function DashboardRootLayout({
   }, [isLoading, user, router]);
 
   if (isLoading || !user) {
-    console.log("[Harmoniq] DashboardLayout: showing spinner", { isLoading, hasUser: !!user });
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />

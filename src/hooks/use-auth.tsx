@@ -49,40 +49,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const initAuth = async () => {
       try {
-        // 8-second timeout for the entire auth init
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 8_000);
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const authUser = session?.user;
 
-        console.log("[Harmoniq] Auth init: calling getUser...");
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        console.log("[Harmoniq] Auth init: getUser result:", authUser ? authUser.id : "null");
-        
         if (authUser) {
-          console.log("[Harmoniq] Auth init: fetching profile...");
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 8_000);
+
           const { data: profile, error: profileError } = await supabase
             .from("users")
             .select("*")
             .eq("id", authUser.id)
             .abortSignal(controller.signal)
             .single();
-          
+
+          clearTimeout(timeout);
+
           if (profileError) {
-            console.error("[Harmoniq] Profile fetch error:", profileError.message, profileError.code);
+            console.error("[Harmoniq] Profile fetch error:", profileError.message);
           } else if (profile) {
-            console.log("[Harmoniq] Auth init: profile found, role:", profile.role);
             setUser(profile as User);
             setSelectedCompanyId(
               profile.role === "super_admin" ? null : profile.company_id
             );
-          } else {
-            console.warn("[Harmoniq] Auth init: profile is null/undefined");
           }
         }
-        clearTimeout(timeout);
       } catch (err) {
         console.error("[Harmoniq] Auth init error:", err);
       } finally {
-        console.log("[Harmoniq] Auth init: setting isLoading=false");
         setIsLoading(false);
       }
     };
