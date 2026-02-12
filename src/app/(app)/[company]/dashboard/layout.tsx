@@ -4,7 +4,6 @@ import * as React from "react";
 import { useParams, useRouter, notFound } from "next/navigation";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
-import { useTicketsStore } from "@/stores/tickets-store";
 import { useCompanyStore } from "@/stores/company-store";
 import { applyPrimaryColor } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
@@ -20,7 +19,6 @@ export default function DashboardRootLayout({
   const router = useRouter();
   const company = params.company as string;
   const { user, currentCompany, isSuperAdmin, isEmployee, isLoading } = useAuth();
-  const { items: tickets } = useTicketsStore();
   const { items: companies, isLoading: isCompaniesLoading } = useCompanyStore();
 
   // Validate company slug only after companies have loaded
@@ -74,11 +72,6 @@ export default function DashboardRootLayout({
     notFound();
   }
 
-  // Calculate notification count from open/pending tickets assigned to current user
-  const notificationCount = tickets.filter(
-    t => t.assigned_to === user.id && (t.status === "new" || t.status === "in_progress")
-  ).length;
-
   const displayRole = user.role === "super_admin"
     ? "Platform Admin"
     : user.role === "company_admin"
@@ -95,7 +88,6 @@ export default function DashboardRootLayout({
         companyLogo={currentCompany?.logo_url || null}
         userName={user.full_name}
         userRole={displayRole}
-        notificationCount={notificationCount}
       >
         {children}
       </DashboardLayout>

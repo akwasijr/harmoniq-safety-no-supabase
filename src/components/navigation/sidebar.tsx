@@ -15,7 +15,6 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
-  Bell,
   LogOut,
   Moon,
   Sun,
@@ -35,7 +34,6 @@ interface SidebarProps {
   companyLogo?: string | null;
   userName?: string;
   userRole?: string;
-  notificationCount?: number;
   showPlatformAdmin?: boolean;
 }
 
@@ -141,14 +139,15 @@ export function Sidebar({
   companyLogo = null,
   userName = "User",
   userRole = "Employee",
-  notificationCount = 0,
   showPlatformAdmin = false,
 }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = React.useState(false);
+  const [hovered, setHovered] = React.useState(false);
   const { theme, setTheme } = useTheme();
   const { isSuperAdmin, hasSelectedCompany, logout } = useAuth();
   const { t } = useTranslation();
+  const isCollapsed = collapsed && !hovered;
 
   // Helper to resolve nav item title via i18n
   const getTitle = (item: NavItem) => item.titleKey ? t(item.titleKey) : item.title;
@@ -164,14 +163,18 @@ export function Sidebar({
     <aside
       className={cn(
         "sticky top-0 flex h-screen flex-col border-r bg-sidebar-background text-sidebar-foreground transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+        isCollapsed ? "w-16" : "w-64"
       )}
+      onMouseEnter={() => {
+        if (collapsed) setHovered(true);
+      }}
+      onMouseLeave={() => setHovered(false)}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-sidebar-border px-4">
+      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
         <Link
           href={`/${company}/dashboard`}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 min-w-0"
         >
           {companyLogo ? (
             <img
@@ -182,10 +185,24 @@ export function Sidebar({
           ) : (
             <Shield className="h-6 w-6 shrink-0 text-sidebar-primary" aria-hidden="true" />
           )}
-          {!collapsed && (
-            <span className="text-lg font-semibold">{companyName}</span>
+          {!isCollapsed && (
+            <span className="text-lg font-semibold truncate">{companyName}</span>
           )}
         </Link>
+        <button
+          className="ml-2 rounded-md p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+          onClick={() => {
+            setCollapsed(!collapsed);
+            setHovered(false);
+          }}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </button>
       </div>
 
       {/* Navigation */}
@@ -193,13 +210,13 @@ export function Sidebar({
         {/* Platform Admin section - super admin only */}
         {isSuperAdmin && (
           <div className="mb-3">
-            {!collapsed && (
+            {!isCollapsed && (
               <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
                 <Globe className="h-3.5 w-3.5" aria-hidden="true" />
                 Platform Admin
               </div>
             )}
-            {collapsed && (
+            {isCollapsed && (
               <div className="flex justify-center py-1.5">
                 <Globe className="h-4 w-4 text-sidebar-foreground/50" aria-hidden="true" />
               </div>
@@ -221,12 +238,12 @@ export function Sidebar({
                         isActive
                           ? "bg-primary text-primary-foreground"
                           : "text-sidebar-foreground/70",
-                        collapsed && "justify-center px-2"
+                        isCollapsed && "justify-center px-2"
                       )}
-                      title={collapsed ? getTitle(item) : undefined}
+                      title={isCollapsed ? getTitle(item) : undefined}
                     >
                       <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                      {!collapsed && <span>{getTitle(item)}</span>}
+                      {!isCollapsed && <span>{getTitle(item)}</span>}
                     </Link>
                   </li>
                 );
@@ -270,13 +287,13 @@ export function Sidebar({
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-sidebar-foreground/70",
-                    collapsed && "justify-center px-2"
+                    isCollapsed && "justify-center px-2"
                   )}
-                  title={collapsed ? getTitle(item) : undefined}
+                  title={isCollapsed ? getTitle(item) : undefined}
                 >
                   <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                  {!collapsed && <span>{getTitle(item)}</span>}
-                  {!collapsed && item.badge !== undefined && item.badge > 0 && (
+                  {!isCollapsed && <span>{getTitle(item)}</span>}
+                  {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
                     <span className="ml-auto rounded-full bg-sidebar-primary px-2 py-0.5 text-xs text-sidebar-primary-foreground">
                       {item.badge}
                     </span>
@@ -292,14 +309,14 @@ export function Sidebar({
       <div className="border-t border-sidebar-border p-3">
         <div className={cn(
           "flex items-center",
-          collapsed ? "flex-col gap-3" : "gap-2"
+          isCollapsed ? "flex-col gap-3" : "gap-2"
         )}>
           {/* User avatar with initials */}
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shrink-0">
             {userInitials}
           </div>
           
-          {!collapsed && (
+          {!isCollapsed && (
             <div className="flex-1 min-w-0">
               <p className="truncate text-sm font-medium">{userName}</p>
               <p className="truncate text-xs text-sidebar-foreground/50">{userRole}</p>
@@ -309,22 +326,8 @@ export function Sidebar({
           {/* Icon buttons */}
           <div className={cn(
             "flex items-center",
-            collapsed ? "flex-col gap-1" : "gap-1"
+            isCollapsed ? "flex-col gap-1" : "gap-1"
           )}>
-            {/* Notifications */}
-            <Link
-              href={`/${company}/dashboard/incidents`}
-              className="relative p-2 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-accent-foreground transition-colors"
-              title="Notifications"
-            >
-              <Bell className="h-4 w-4" aria-hidden="true" />
-              {notificationCount > 0 && (
-                <span className="absolute top-1 right-1 flex h-3 w-3 items-center justify-center rounded-full bg-destructive text-[8px] font-medium text-destructive-foreground">
-                  {notificationCount > 9 ? "9+" : notificationCount}
-                </span>
-              )}
-            </Link>
-
             {/* Theme toggle */}
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -351,21 +354,6 @@ export function Sidebar({
             </button>
           </div>
         </div>
-
-        {/* Collapse button */}
-        <button
-          className={cn(
-            "mt-2 w-full flex items-center justify-center p-2 rounded-md text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-          )}
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </button>
       </div>
     </aside>
   );

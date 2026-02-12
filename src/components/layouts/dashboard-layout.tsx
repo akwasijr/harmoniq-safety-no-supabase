@@ -14,7 +14,6 @@ interface DashboardLayoutProps {
   companyLogo?: string | null;
   userName?: string;
   userRole?: string;
-  notificationCount?: number;
 }
 
 export function DashboardLayout({
@@ -24,7 +23,6 @@ export function DashboardLayout({
   companyLogo = null,
   userName = "User",
   userRole = "Employee",
-  notificationCount = 0,
 }: DashboardLayoutProps) {
   const [showMobileMenu, setShowMobileMenu] = React.useState(false);
   const { isSuperAdmin } = useAuth();
@@ -49,7 +47,6 @@ export function DashboardLayout({
           companyLogo={companyLogo}
           userName={userName}
           userRole={userRole}
-          notificationCount={notificationCount}
           showPlatformAdmin={isSuperAdmin}
         />
       </div>
@@ -69,7 +66,6 @@ export function DashboardLayout({
               companyLogo={companyLogo}
               userName={userName}
               userRole={userRole}
-              notificationCount={notificationCount}
               showPlatformAdmin={isSuperAdmin}
             />
           </div>
