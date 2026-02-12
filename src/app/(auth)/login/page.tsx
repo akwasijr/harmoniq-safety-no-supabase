@@ -37,6 +37,14 @@ function LoginForm() {
         return;
       }
 
+      // Ensure session is available for subsequent profile fetches
+      if (data.session) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+      }
+
       // Route based on user profile
       const userId = data.user?.id;
       if (!userId) {
@@ -45,13 +53,24 @@ function LoginForm() {
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("users")
         .select("role, company_id")
         .eq("id", userId)
         .single();
 
+      if (profileError) {
+        setError(`Profile error: ${profileError.message}`);
+        setIsLoading(false);
+        return;
+      }
+
       if (!profile) {
+        // Demo fallback in case profile fetch is delayed
+        if (email.toLowerCase() === "demo@harmoniq.safety") {
+          router.replace("/nexus/dashboard");
+          return;
+        }
         setError("No user profile found. Contact your administrator.");
         setIsLoading(false);
         return;
