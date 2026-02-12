@@ -24,7 +24,7 @@ function LoginForm() {
       setError("");
 
       const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { error: authError, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -35,8 +35,36 @@ function LoginForm() {
         return;
       }
 
-      // Redirect handled by middleware session refresh
-      window.location.href = "/auth/callback?source=email";
+      // Route based on user profile
+      const userId = data.user?.id;
+      if (!userId) {
+        setError("Login succeeded but no user returned.");
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("role, company_id")
+        .eq("id", userId)
+        .single();
+
+      if (!profile) {
+        setError("No user profile found. Contact your administrator.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Get company slug for redirect
+      const { data: company } = await supabase
+        .from("companies")
+        .select("slug")
+        .eq("id", profile.company_id)
+        .single();
+
+      const slug = company?.slug || "harmoniq";
+      const dest = profile.role === "employee" ? `/${slug}/app` : `/${slug}/dashboard`;
+      window.location.href = dest;
     } catch (err: any) {
       setError(`Error: ${err.message}`);
       setIsLoading(false);
