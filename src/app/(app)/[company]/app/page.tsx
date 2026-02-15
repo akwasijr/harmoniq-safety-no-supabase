@@ -41,6 +41,7 @@ import {
   Timer,
   Gauge,
   Hammer,
+  Bell,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useContentStore } from "@/stores/content-store";
@@ -223,6 +224,9 @@ export default function EmployeeAppHomePage() {
     { href: `/${company}/app/checklists?tab=risk-assessment`, icon: ShieldCheck, label: t("app.riskAssessment") },
   ];
 
+  // Notification count: unread items from recent news + pending tasks + open tickets
+  const notificationCount = recentNews.length + pendingChecklists.length + userTickets.filter((t) => t.status === "new").length;
+
   // ── Shared hero section ──
   const HeroSection = () => (
     <div className="relative overflow-hidden px-5 pt-5 pb-8" style={{ minHeight: 160 }}>
@@ -245,10 +249,23 @@ export default function EmployeeAppHomePage() {
       )}
 
       <div className="relative z-10">
-        <p className="text-white/70 text-sm font-medium">{greeting}</p>
-        <h1 className="text-xl font-bold text-white mt-0.5">
-          {user.first_name} {user.last_name}
-        </h1>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-white/70 text-sm font-medium">{greeting}</p>
+            <h1 className="text-xl font-bold text-white mt-0.5">
+              {user.first_name} {user.last_name}
+            </h1>
+          </div>
+          {/* Notification bell */}
+          <div className="relative mt-1">
+            <Bell className="h-5 w-5 text-white/80" aria-label={`${notificationCount} notifications`} />
+            {notificationCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white px-1">
+                {notificationCount > 99 ? "99+" : notificationCount}
+              </span>
+            )}
+          </div>
+        </div>
 
         {/* Stats row */}
         <div className="flex gap-3 mt-4">
@@ -277,9 +294,9 @@ export default function EmployeeAppHomePage() {
     return (
       <div className="mx-4 -mt-4 relative z-10">
         <div className="rounded-xl bg-card shadow-sm p-3.5 flex items-start gap-3">
-          <TipIcon className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
+          <TipIcon className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" aria-hidden="true" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 tracking-widest">{t("app.tipOfTheDay")}</p>
+            <p className="text-[10px] font-bold text-orange-500 tracking-widest">{t("app.tipOfTheDay")}</p>
             <p className="text-sm text-foreground mt-0.5 leading-snug">{todayTip.tip}</p>
           </div>
         </div>
@@ -296,7 +313,7 @@ export default function EmployeeAppHomePage() {
           <Link
             key={action.href}
             href={action.href}
-            className="flex flex-col items-center gap-2 rounded-xl bg-muted/50 p-3.5 transition-all active:scale-95 hover:bg-muted"
+            className="flex flex-col items-center gap-2 rounded-xl bg-primary/10 p-3.5 transition-all active:scale-95 hover:bg-primary/15"
           >
             <action.icon className="h-6 w-6 text-primary" aria-hidden="true" />
             <span className="text-[11px] font-medium text-center leading-tight text-foreground">{action.label}</span>
@@ -325,7 +342,7 @@ export default function EmployeeAppHomePage() {
         <Section
           title={t("app.newsAndUpdates")}
           icon={Newspaper}
-          iconColor="text-secondary"
+          iconColor="text-primary"
           action={
             recentNews.length > 0 ? (
               <Link href={`/${company}/app/news`} className="text-xs text-primary font-medium flex items-center gap-0.5">
@@ -341,7 +358,7 @@ export default function EmployeeAppHomePage() {
                 href={`/${company}/app/news/${item.id}`}
                 className="flex items-start gap-3 rounded-lg p-2.5 transition-colors active:bg-muted/60 hover:bg-muted/40"
               >
-                <FileText className="h-5 w-5 text-secondary shrink-0 mt-0.5" aria-hidden="true" />
+                <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm leading-tight line-clamp-2">{item.title}</p>
                   <div className="flex items-center gap-2 mt-1">
@@ -371,7 +388,7 @@ export default function EmployeeAppHomePage() {
         <Section
           title={t("app.pendingTasks")}
           icon={ClipboardCheck}
-          iconColor="text-warning"
+          iconColor="text-primary"
           action={
             pendingChecklists.length > 0 ? (
               <Link href={`/${company}/app/checklists`} className="text-xs text-primary font-medium flex items-center gap-0.5">
@@ -387,7 +404,7 @@ export default function EmployeeAppHomePage() {
                 href={`/${company}/app/checklists/${checklist.id}`}
                 className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/40"
               >
-                <ClipboardCheck className="h-5 w-5 text-warning shrink-0" aria-hidden="true" />
+                <ClipboardCheck className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm leading-tight">{checklist.name}</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">{checklist.items?.length || 0} {t("app.items")}</p>

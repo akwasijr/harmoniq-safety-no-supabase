@@ -42,43 +42,32 @@ export default function EmployeeNewsPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Header */}
-      <div className="p-4 pb-0">
-        <h1 className="text-xl font-semibold truncate">{t("newsApp.title")}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t("newsApp.stayInformed")}
-        </p>
-      </div>
+      {/* Header + Tabs */}
+      <div className="sticky top-0 z-10 bg-background border-b px-4 pt-4 pb-2">
+        <h1 className="text-lg font-bold mb-3">{t("newsApp.title")}</h1>
 
-      {/* Tabs */}
-      <div className="sticky top-14 z-20 bg-background border-b mt-4">
-        <div className="flex">
+        {/* Sub-tabs — pill style matching Safety Tasks & Assets */}
+        <div className="flex gap-1 bg-muted rounded-lg p-1" role="tablist">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-colors relative",
-                  isActive 
-                    ? "text-primary" 
-                    : "text-muted-foreground hover:text-foreground"
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all",
+                  isActive
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground"
                 )}
               >
-                <Icon className="h-4 w-4" aria-hidden="true" />
-                <span>{tab.label}</span>
+                <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">{tab.label}</span>
                 {tab.count > 0 && (
-                  <span className={cn(
-                    "text-xs rounded-full px-1.5 py-0.5 min-w-[20px]",
-                    isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                  )}>
-                    {tab.count}
-                  </span>
-                )}
-                {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  <span className="ml-1 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">{tab.count}</span>
                 )}
               </button>
             );

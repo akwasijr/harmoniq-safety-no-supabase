@@ -132,7 +132,6 @@ function EmployeeChecklistsPageContent() {
     { id: "checklists" as TabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
     { id: "reports" as TabType, label: t("checklists.tabs.reports"), icon: AlertTriangle },
     { id: "risk-assessment" as TabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
-    { id: "inspection" as TabType, label: t("checklists.tabs.inspections"), icon: Wrench },
   ];
 
   const userSubmissions = user
@@ -219,7 +218,7 @@ function EmployeeChecklistsPageContent() {
 
       {/* Tabs — compact pill style */}
       <div className="sticky top-14 z-20 bg-background border-b px-4 py-2">
-        <div className="flex gap-1 bg-muted rounded-lg p-1" role="tablist">
+        <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -230,7 +229,7 @@ function EmployeeChecklistsPageContent() {
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all",
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-md transition-all whitespace-nowrap",
                   isActive 
                     ? "bg-background text-foreground shadow-sm" 
                     : "text-muted-foreground"
