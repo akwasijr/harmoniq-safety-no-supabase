@@ -6,7 +6,8 @@ import type { RiskEvaluation } from "@/types";
 
 const store = createEntityStore<RiskEvaluation>(
   "harmoniq_risk_evaluations",
-  mockRiskEvaluations
+  mockRiskEvaluations,
+  { stripFields: ["submitter", "location"] }
 );
 
 export const RiskEvaluationsProvider = store.Provider;

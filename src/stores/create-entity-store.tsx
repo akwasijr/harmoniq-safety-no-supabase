@@ -28,19 +28,48 @@ const isSupabaseConfigured =
 /** Debounce delay for localStorage writes (ms) */
 const SAVE_DEBOUNCE_MS = 500;
 
+/** Column mapping: app field name → Supabase column name */
+type ColumnMap = Record<string, string>;
+
+/** Strip fields that don't exist in Supabase and remap names */
+function mapToSupabase<T extends Record<string, unknown>>(
+  item: T,
+  columnMap?: ColumnMap,
+  stripFields?: string[]
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(item)) {
+    if (stripFields?.includes(key)) continue;
+    const mappedKey = columnMap?.[key] || key;
+    result[mappedKey] = value;
+  }
+  return result;
+}
+
+interface StoreOptions {
+  tableName?: string;
+  /** Map app field names to Supabase column names */
+  columnMap?: ColumnMap;
+  /** Fields to strip before sending to Supabase (e.g., joined relations) */
+  stripFields?: string[];
+}
+
 /**
  * Creates an entity store that auto-selects between Supabase and localStorage.
  * @param storageKey - localStorage key (used as fallback and to derive table name)
  * @param initialData - mock data fallback for localStorage mode
- * @param tableName - Supabase table name (optional, derived from storageKey if omitted)
+ * @param optionsOrTableName - StoreOptions or just a table name string
  */
 export function createEntityStore<T extends IdEntity>(
   storageKey: string,
   initialData: T[],
-  tableName?: string
+  optionsOrTableName?: string | StoreOptions
 ) {
+  const opts: StoreOptions = typeof optionsOrTableName === "string"
+    ? { tableName: optionsOrTableName }
+    : optionsOrTableName || {};
   // Derive Supabase table name from storage key: "harmoniq_incidents" → "incidents"
-  const table = tableName || storageKey.replace(/^harmoniq_/, "");
+  const table = opts.tableName || storageKey.replace(/^harmoniq_/, "");
 
   const Context = React.createContext<EntityStore<T> | undefined>(undefined);
 
@@ -163,8 +192,9 @@ export function createEntityStore<T extends IdEntity>(
 
       if (isSupabaseConfigured) {
         const supabase = createClient();
-        supabase.from(table).upsert(item as Record<string, unknown>).then(({ error }) => {
-          if (error) console.error(`[Harmoniq] Error adding to ${table}:`, error.message);
+        const mapped = mapToSupabase(item as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
+        supabase.from(table).upsert(mapped).then(({ error }) => {
+          if (error) console.error(`[Harmoniq] Error adding to ${table}:`, error.message, error.details);
         });
       }
     }, []);
@@ -177,8 +207,9 @@ export function createEntityStore<T extends IdEntity>(
 
       if (isSupabaseConfigured) {
         const supabase = createClient();
-        supabase.from(table).update(updates as Record<string, unknown>).eq("id", id).then(({ error }) => {
-          if (error) console.error(`[Harmoniq] Error updating ${table}:`, error.message);
+        const mapped = mapToSupabase(updates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
+        supabase.from(table).update(mapped).eq("id", id).then(({ error }) => {
+          if (error) console.error(`[Harmoniq] Error updating ${table}:`, error.message, error.details);
         });
       }
     }, []);

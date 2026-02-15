@@ -78,7 +78,7 @@ export default function WorkOrdersPage() {
   const handleCreate = () => {
     if (!form.title.trim() || !form.description.trim()) return;
     const order: WorkOrder = {
-      id: `wo_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: user?.company_id || "",
       asset_id: form.asset_id || null,
       title: form.title.trim(),

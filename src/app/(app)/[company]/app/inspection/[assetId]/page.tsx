@@ -129,7 +129,7 @@ export default function AssetInspectionPage() {
       .trim();
     const mediaUrls = Object.values(photos).flat();
     addInspection({
-      id: `ins_${Date.now()}`,
+      id: crypto.randomUUID(),
       asset_id: asset.id,
       inspector_id: user.id,
       checklist_id: null,

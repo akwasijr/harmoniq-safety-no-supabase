@@ -58,7 +58,7 @@ export default function NewTicketPage() {
     setIsSubmitting(true);
     const now = new Date().toISOString();
     const ticket: Ticket = {
-      id: `tkt_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: company || user?.company_id || "",
       title: formData.title,
       description: formData.description,

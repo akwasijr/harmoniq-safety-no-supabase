@@ -122,7 +122,7 @@ export default function TicketsPage() {
     }
     const now = new Date().toISOString();
     const ticket: TicketType = {
-      id: `tkt_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: company || user?.company_id || "",
       title: newTicket.title,
       description: newTicket.description,

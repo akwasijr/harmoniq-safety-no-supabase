@@ -237,7 +237,7 @@ function ReportIncidentPageContent() {
     const now = new Date();
     const refNumber = `INC-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const incident: Incident = {
-      id: `inc_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: user.company_id || "",
       reference_number: refNumber,
       reporter_id: user.id,

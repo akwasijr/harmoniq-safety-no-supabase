@@ -6,11 +6,13 @@ import type { ChecklistTemplate, ChecklistSubmission } from "@/types";
 
 const templatesStore = createEntityStore<ChecklistTemplate>(
   "harmoniq_checklist_templates",
-  mockChecklistTemplates
+  mockChecklistTemplates,
+  { stripFields: ["creator"] }
 );
 const submissionsStore = createEntityStore<ChecklistSubmission>(
   "harmoniq_checklist_submissions",
-  mockChecklistSubmissions
+  mockChecklistSubmissions,
+  { stripFields: ["template", "submitter", "location"] }
 );
 
 export const ChecklistTemplatesProvider = templatesStore.Provider;

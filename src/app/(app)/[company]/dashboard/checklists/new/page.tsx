@@ -38,7 +38,7 @@ export default function NewChecklistPage() {
     setIsSubmitting(true);
     const now = new Date().toISOString();
     const template: ChecklistTemplate = {
-      id: `ct_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: companyId,
       name: name.trim(),
       description: null,
@@ -47,7 +47,7 @@ export default function NewChecklistPage() {
       recurrence: "daily",
       items: [
         {
-          id: `item_${Date.now()}`,
+          id: crypto.randomUUID(),
           question: "Checklist item 1",
           type: "yes_no_na",
           required: true,

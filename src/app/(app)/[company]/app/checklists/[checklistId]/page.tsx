@@ -142,7 +142,7 @@ export default function ChecklistFormPage() {
     const refNumber = `CHK-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const submission = getSubmissionData();
     addSubmission({
-      id: `sub_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: user.company_id || "",
       created_at: now.toISOString(),
       ...submission,

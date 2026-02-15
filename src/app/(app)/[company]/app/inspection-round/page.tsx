@@ -162,7 +162,7 @@ function InspectionRoundContent() {
     });
 
     const roundData = {
-      id: `round_${Date.now()}`,
+      id: crypto.randomUUID(),
       route_id: route.id,
       company_id: user?.company_id || "",
       inspector_id: user?.id || "",

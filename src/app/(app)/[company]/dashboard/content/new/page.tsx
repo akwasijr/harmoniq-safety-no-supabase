@@ -116,7 +116,7 @@ export default function NewContentPage() {
     setIsSubmitting(true);
     const now = new Date().toISOString();
     const contentItem: Content = {
-      id: `content_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: companyId,
       type: formData.type as Content["type"],
       title: formData.title,
