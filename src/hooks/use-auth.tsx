@@ -316,8 +316,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Logout
   const logout = React.useCallback(async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    try {
+      const supabase = createClient();
+      // Race signOut against a 3s timeout so logout never hangs
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ]);
+    } catch {
+      // Ignore errors — we always want to clear local state
+    }
     clearAllHarmoniqStorage();
     if (typeof window !== "undefined") {
       window.localStorage.removeItem("harmoniq_admin_entry");

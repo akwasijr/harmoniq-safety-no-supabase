@@ -62,8 +62,8 @@ function LoginForm() {
 
   const getAllowedApps = (role: string): AppChoice[] => {
     if (role === "employee") return ["app"];
-    if (role === "super_admin") return ["dashboard"]; // still allow picker value, but we will block platform portal here
-    if (role === "company_admin" || role === "manager") return ["dashboard", "app"];
+    // super_admin, company_admin, manager can access both
+    if (role === "super_admin" || role === "company_admin" || role === "manager") return ["dashboard", "app"];
     return ["dashboard"];
   };
 
@@ -123,7 +123,7 @@ function LoginForm() {
         if (email.toLowerCase() === "demo@harmoniq.safety") {
           const { data: anyCompany } = await supabase.from("companies").select("slug").limit(1).single();
           const s = anyCompany?.slug || "harmoniq";
-          router.replace(appChoice === "app" ? `/${s}/app` : `/${s}/dashboard`);
+          window.location.href = appChoice === "app" ? `/${s}/app` : `/${s}/dashboard`;
           return;
         }
         setError(`Profile error: ${profileError.message}`);
@@ -135,7 +135,7 @@ function LoginForm() {
         if (email.toLowerCase() === "demo@harmoniq.safety") {
           const { data: anyCompany } = await supabase.from("companies").select("slug").limit(1).single();
           const s = anyCompany?.slug || "harmoniq";
-          router.replace(appChoice === "app" ? `/${s}/app` : `/${s}/dashboard`);
+          window.location.href = appChoice === "app" ? `/${s}/app` : `/${s}/dashboard`;
           return;
         }
         setError("No user profile found. Contact your administrator.");
@@ -172,12 +172,12 @@ function LoginForm() {
           if (nonPlatform?.id) {
             saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nonPlatform.id);
           }
-          router.replace(appChoice === "app" ? `/${slug}/app` : `/${slug}/dashboard`);
+          window.location.href = appChoice === "app" ? `/${slug}/app` : `/${slug}/dashboard`;
           return;
         }
 
         // Admin entry: route to platform portal
-        router.replace("/platform/dashboard");
+        window.location.href = "/platform/dashboard";
         return;
       }
 
@@ -212,7 +212,8 @@ function LoginForm() {
       }
 
       const dest = appChoice === "app" ? `/${slug}/app` : `/${slug}/dashboard`;
-      router.replace(dest);
+      // Use full page navigation so middleware can read the new Supabase session cookies
+      window.location.href = dest;
     } catch (err: any) {
       if (err?.message?.includes("abort")) return;
       setError(`Error: ${err.message}`);

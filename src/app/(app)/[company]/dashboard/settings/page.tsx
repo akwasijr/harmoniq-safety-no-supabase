@@ -65,20 +65,43 @@ interface SettingsState {
   passwordPolicy: string;
 }
 
-const buildSettingsFromCompany = (company: Company): SettingsState => ({
-  companyName: company.name,
-  selectedCountry: company.country,
-  language: company.language,
-  dateFormat: company.country === "US" ? "MM/DD/YYYY" : "DD/MM/YYYY",
+const defaultCompany: Company = {
+  id: "default",
+  name: "My Company",
+  slug: "my-company",
+  app_name: "Safety App",
+  country: "US" as any,
+  language: "en" as any,
+  status: "active" as any,
+  logo_url: null,
+  primary_color: "#024E6E",
+  secondary_color: "#029EDB",
+  font_family: "Geist Sans",
+  ui_style: "rounded" as any,
+  tier: "professional" as any,
+  seat_limit: 50,
+  currency: "USD",
+  trial_ends_at: null,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
+const buildSettingsFromCompany = (company: Company | null | undefined): SettingsState => {
+  const c = company ?? defaultCompany;
+  return {
+  companyName: c.name,
+  selectedCountry: c.country,
+  language: c.language,
+  dateFormat: c.country === "US" ? "MM/DD/YYYY" : "DD/MM/YYYY",
   timezone:
-    company.country === "US"
+    c.country === "US"
       ? "America/New_York"
-      : company.country === "NL"
+      : c.country === "NL"
       ? "Europe/Amsterdam"
       : "Europe/Stockholm",
-  primaryColor: company.primary_color || "#024E6E",
-  secondaryColor: company.secondary_color || "#029EDB",
-  logoUrl: company.logo_url,
+  primaryColor: c.primary_color || "#024E6E",
+  secondaryColor: c.secondary_color || "#029EDB",
+  logoUrl: c.logo_url,
   notifCriticalAlerts: true,
   notifDailyDigest: true,
   notifChecklistReminders: false,
@@ -88,23 +111,24 @@ const buildSettingsFromCompany = (company: Company): SettingsState => ({
   ssoEnabled: false,
   sessionTimeout: "30",
   passwordPolicy: "strong",
-});
+  };
+};
 
 const getSettingsKey = (companyId?: string) =>
   companyId ? `harmoniq_settings_${companyId}` : "harmoniq_settings";
 
 export default function SettingsPage() {
   const company = useCompanyParam();
-  const { currentCompany } = useAuth();
+  const { currentCompany, isLoading: isAuthLoading } = useAuth();
   const fallbackCompany = React.useMemo(() => getCurrentCompany(), []);
-  const activeCompany = currentCompany ?? fallbackCompany;
+  const activeCompany = currentCompany ?? fallbackCompany ?? defaultCompany;
   const settingsStorageKey = React.useMemo(
     () => getSettingsKey(activeCompany?.id),
     [activeCompany?.id]
   );
   const [activeTab, setActiveTab] = React.useState<SettingsTabType>("general");
   const [settings, setSettings] = React.useState<SettingsState>(() =>
-    buildSettingsFromCompany(activeCompany)
+    buildSettingsFromCompany(activeCompany ?? defaultCompany)
   );
   const [saved, setSaved] = React.useState(false);
   const [saving, setSaving] = React.useState(false);

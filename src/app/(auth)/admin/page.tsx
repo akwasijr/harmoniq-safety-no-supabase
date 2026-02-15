@@ -103,7 +103,7 @@ export default function AdminLoginPage() {
           window.localStorage.setItem(ADMIN_ENTRY_STORAGE_KEY, "true");
           document.cookie = `${ADMIN_ENTRY_COOKIE}=true; path=/; max-age=3600; samesite=lax`;
         }
-        router.replace(`/${slug}/dashboard/platform/analytics`);
+        window.location.href = `/${slug}/dashboard/platform/analytics`;
         return;
       }
 
@@ -128,9 +128,9 @@ export default function AdminLoginPage() {
       const slug = await fetchSlug(profile.company_id);
       // Super admins go to platform portal; company admins go to regular dashboard
       if (profile.role === "super_admin") {
-        router.replace(`/${slug}/dashboard/platform/analytics`);
+        window.location.href = `/${slug}/dashboard/platform/analytics`;
       } else {
-        router.replace(`/${slug}/dashboard`);
+        window.location.href = `/${slug}/dashboard`;
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
