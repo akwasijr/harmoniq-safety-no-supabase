@@ -153,36 +153,51 @@ function LoginForm() {
         return;
       }
 
-      // Super admins must use a direct link for the platform portal; from the chooser, route them to a real tenant dashboard.
+      // Super admins: from the normal login page, route to a real tenant dashboard (not the platform portal).
+      // The platform portal is only accessible via the direct /admin-login link.
       if (profile.role === "super_admin") {
-        if (searchParams.get("source") !== "admin-link") {
+        const isAdminEntry = searchParams.get("source") === "admin-link";
+
+        if (!isAdminEntry) {
+          // Try to find a real (non-platform) company in Supabase
           const { data: nonPlatform } = await supabase
             .from("companies")
             .select("id, slug")
-             .not("slug", "in", PLATFORM_SLUGS_LIST)
+            .not("slug", "in", PLATFORM_SLUGS_LIST)
             .order("created_at", { ascending: true })
             .limit(1)
             .single();
 
-          if (!nonPlatform?.id || !nonPlatform.slug) {
-            setError("No company available for dashboard access. Contact your administrator.");
-            setIsLoading(false);
-            return;
+          const slug = nonPlatform?.slug || "harmoniq";
+          if (nonPlatform?.id) {
+            saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nonPlatform.id);
           }
-
-          saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nonPlatform.id);
-          router.replace(`/${nonPlatform.slug}/dashboard`);
+          router.replace(appChoice === "app" ? `/${slug}/app` : `/${slug}/dashboard`);
           return;
         }
 
-        // If explicitly coming from the admin link, allow platform portal routing to continue via callback
+        // Admin entry: route to platform portal
+        router.replace("/platform/dashboard");
+        return;
       }
 
       // Pick company for redirect (non-super admins)
+      let slug = "harmoniq"; // safe default
       const storedCompanyId = loadFromStorage<string | null>(SELECTED_COMPANY_STORAGE_KEY, null);
-      let companyId = profile.company_id || storedCompanyId;
+      const companyId = profile.company_id || storedCompanyId;
 
-      if (!companyId) {
+      if (companyId) {
+        const { data: company } = await supabase
+          .from("companies")
+          .select("slug")
+          .eq("id", companyId)
+          .single();
+        if (company?.slug && !isPlatformSlug(company.slug)) {
+          slug = company.slug;
+        }
+        saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
+      } else {
+        // No company_id on profile — try to find one
         const { data: firstCompany } = await supabase
           .from("companies")
           .select("id, slug")
@@ -190,63 +205,12 @@ function LoginForm() {
           .order("created_at", { ascending: true })
           .limit(1)
           .single();
-
-        if (firstCompany?.id) {
-          companyId = firstCompany.id;
-          saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
-        }
-
-        if (!companyId) {
-          setError("No company available. Contact your administrator.");
-          setIsLoading(false);
-          return;
+        if (firstCompany?.slug) {
+          slug = firstCompany.slug;
+          saveToStorage(SELECTED_COMPANY_STORAGE_KEY, firstCompany.id);
         }
       }
 
-      saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
-
-      // Resolve company slug for redirect (avoid platform slugs and avoid falling back to platform defaults)
-      const pickFirstNonPlatform = async () => {
-        const { data: nonPlatform } = await supabase
-          .from("companies")
-          .select("id, slug")
-          .not("slug", "in", PLATFORM_SLUGS_LIST)
-          .order("created_at", { ascending: true })
-          .limit(1)
-          .single();
-        return nonPlatform;
-      };
-
-      let { data: company } = await supabase
-        .from("companies")
-        .select("id, slug")
-        .eq("id", companyId)
-        .single();
-
-      if (!company) {
-        company = await pickFirstNonPlatform();
-        if (!company?.id || !company.slug) {
-          setError("No company available for dashboard access. Contact your administrator.");
-          setIsLoading(false);
-          return;
-        }
-        companyId = company.id;
-        saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
-      }
-
-      if (company.slug && isPlatformSlug(company.slug)) {
-        const nonPlatform = await pickFirstNonPlatform();
-        if (!nonPlatform?.id || !nonPlatform.slug) {
-          setError("No company available for dashboard access. Contact your administrator.");
-          setIsLoading(false);
-          return;
-        }
-        company = nonPlatform;
-        companyId = nonPlatform.id;
-        saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
-      }
-
-      const slug = company.slug;
       const dest = appChoice === "app" ? `/${slug}/app` : `/${slug}/dashboard`;
       router.replace(dest);
     } catch (err: any) {
