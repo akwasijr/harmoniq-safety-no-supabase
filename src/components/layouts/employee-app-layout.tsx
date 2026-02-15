@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Shield } from "lucide-react";
+import { Shield, Bell } from "lucide-react";
 import { BottomTabs } from "@/components/navigation/bottom-tabs";
 
 interface EmployeeAppLayoutProps {
@@ -12,6 +12,7 @@ interface EmployeeAppLayoutProps {
   companyLogo?: string | null;
   showHeader?: boolean;
   headerTitle?: string;
+  notificationCount?: number;
 }
 
 export function EmployeeAppLayout({
@@ -21,6 +22,7 @@ export function EmployeeAppLayout({
   companyLogo = null,
   showHeader = true,
   headerTitle,
+  notificationCount = 0,
 }: EmployeeAppLayoutProps) {
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
@@ -38,6 +40,14 @@ export function EmployeeAppLayout({
               <Shield className="h-5 w-5" aria-hidden="true" />
             )}
             <span className="font-semibold">{headerTitle || companyName}</span>
+          </Link>
+          <Link href={`/${company}/app/notifications`} className="relative" aria-label={`${notificationCount} notifications`}>
+            <Bell className="h-5 w-5 text-muted-foreground" />
+            {notificationCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white px-1">
+                {notificationCount > 99 ? "99+" : notificationCount}
+              </span>
+            )}
           </Link>
         </header>
       )}

@@ -104,8 +104,9 @@ function EmployeeChecklistsPageContent() {
   const getInitialTab = (): TabType => {
     if (tabParam === "inspections" || tabParam === "inspection") return "inspection";
     if (tabParam === "risk-assessment") return "risk-assessment";
+    if (tabParam === "checklists") return "checklists";
     if (tabParam === "reports") return "reports";
-    return "checklists";
+    return "reports";
   };
   
   const [activeTab, setActiveTab] = React.useState<TabType>(getInitialTab());
@@ -129,9 +130,9 @@ function EmployeeChecklistsPageContent() {
   const activeAssets = assets.filter((a) => a.status === "active");
 
   const tabs = [
-    { id: "checklists" as TabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
     { id: "reports" as TabType, label: t("checklists.tabs.reports"), icon: AlertTriangle },
     { id: "risk-assessment" as TabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
+    { id: "checklists" as TabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
   ];
 
   const userSubmissions = user
@@ -332,20 +333,21 @@ function EmployeeChecklistsPageContent() {
         {/* REPORTS TAB */}
         {activeTab === "reports" && (
           <>
-            {/* New Report Button */}
-            <Link
-              href={`/${company}/app/report`}
-              className="flex items-center gap-3 rounded-xl border-2 border-dashed border-primary/30 p-4 transition-colors active:bg-primary/5 hover:bg-primary/5"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <AlertTriangle className="h-5 w-5 text-primary" aria-hidden="true" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">{t("app.reportIncident")}</p>
-                <p className="text-xs text-muted-foreground">{t("app.reportIncidentDesc") || "Submit a new safety incident report"}</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            </Link>
+            {/* New Report Button — same style as New Assessment cards */}
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href={`/${company}/app/report`}
+                className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <AlertTriangle className="h-5 w-5 text-primary" aria-hidden="true" />
+                </div>
+                <div className="text-center">
+                  <p className="font-semibold text-sm text-primary">{t("app.reportIncident")}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{t("app.reportIncidentDesc") || "New incident report"}</p>
+                </div>
+              </Link>
+            </div>
 
             {/* My Submitted Reports */}
             <Section

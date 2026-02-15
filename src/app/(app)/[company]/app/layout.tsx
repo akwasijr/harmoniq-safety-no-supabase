@@ -6,6 +6,9 @@ import { EmployeeAppLayout } from "@/components/layouts/employee-app-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useCompanyStore } from "@/stores/company-store";
+import { useContentStore } from "@/stores/content-store";
+import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
+import { useTicketsStore } from "@/stores/tickets-store";
 import { applyPrimaryColor } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { I18nProvider } from "@/i18n";
@@ -20,6 +23,24 @@ export default function EmployeeAppRootLayout({
   const router = useRouter();
   const { user, currentCompany, isLoading } = useAuth();
   const { items: companies, isLoading: isCompaniesLoading } = useCompanyStore();
+  const { items: contentItems } = useContentStore();
+  const { items: checklistTemplates } = useChecklistTemplatesStore();
+  const { items: checklistSubmissions } = useChecklistSubmissionsStore();
+  const { items: tickets } = useTicketsStore();
+
+  // Compute notification count
+  const notificationCount = React.useMemo(() => {
+    if (!user) return 0;
+    const recentNews = contentItems.filter((item) => item.status === "published" && item.type === "news").length;
+    const completedIds = new Set(
+      checklistSubmissions
+        .filter((s) => s.submitter_id === user.id && s.status === "submitted")
+        .map((s) => s.template_id)
+    );
+    const pendingTasks = checklistTemplates.filter((t) => !completedIds.has(t.id)).length;
+    const openTickets = tickets.filter((t) => t.assigned_to === user.id && t.status === "new").length;
+    return recentNews + pendingTasks + openTickets;
+  }, [user, contentItems, checklistTemplates, checklistSubmissions, tickets]);
 
   // C5: Validate company slug against known companies
   const isValidCompany = React.useMemo(
@@ -63,6 +84,7 @@ export default function EmployeeAppRootLayout({
         company={company}
         companyName={currentCompany?.app_name || currentCompany?.name || "Safety App"}
         companyLogo={currentCompany?.logo_url || null}
+        notificationCount={notificationCount}
       >
         {children}
       </EmployeeAppLayout>

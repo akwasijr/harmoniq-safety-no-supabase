@@ -224,9 +224,6 @@ export default function EmployeeAppHomePage() {
     { href: `/${company}/app/checklists?tab=risk-assessment`, icon: ShieldCheck, label: t("app.riskAssessment") },
   ];
 
-  // Notification count: unread items from recent news + pending tasks + open tickets
-  const notificationCount = recentNews.length + pendingChecklists.length + userTickets.filter((t) => t.status === "new").length;
-
   // ── Shared hero section ──
   const HeroSection = () => (
     <div className="relative overflow-hidden px-5 pt-5 pb-8" style={{ minHeight: 160 }}>
@@ -249,22 +246,11 @@ export default function EmployeeAppHomePage() {
       )}
 
       <div className="relative z-10">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-white/70 text-sm font-medium">{greeting}</p>
-            <h1 className="text-xl font-bold text-white mt-0.5">
-              {user.first_name} {user.last_name}
-            </h1>
-          </div>
-          {/* Notification bell */}
-          <div className="relative mt-1">
-            <Bell className="h-5 w-5 text-white/80" aria-label={`${notificationCount} notifications`} />
-            {notificationCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white px-1">
-                {notificationCount > 99 ? "99+" : notificationCount}
-              </span>
-            )}
-          </div>
+        <div>
+          <p className="text-white/70 text-sm font-medium">{greeting}</p>
+          <h1 className="text-xl font-bold text-white mt-0.5">
+            {user.first_name} {user.last_name}
+          </h1>
         </div>
 
         {/* Stats row */}
