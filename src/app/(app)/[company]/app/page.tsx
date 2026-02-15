@@ -211,6 +211,13 @@ export default function EmployeeAppHomePage() {
   // Stats from computed user data
   const safetyStreak = safeDays;
 
+  // Notification count (unread: recent news + pending checklists + open tickets)
+  const recentNewsCount = contentItems.filter(
+    (item) => item.status === "published" && item.type === "news" && 
+    new Date(item.published_at || item.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  ).length;
+  const notificationCount = recentNewsCount + pendingChecklists.length + userTickets.filter(t => t.status === "new").length;
+
   // Determine if we have enough data for the full feed view
   const hasData = pendingChecklists.length > 0 || recentNews.length > 0;
 
@@ -246,11 +253,25 @@ export default function EmployeeAppHomePage() {
       )}
 
       <div className="relative z-10">
-        <div>
-          <p className="text-white/70 text-sm font-medium">{greeting}</p>
-          <h1 className="text-xl font-bold text-white mt-0.5">
-            {user.first_name} {user.last_name}
-          </h1>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-white/70 text-sm font-medium">{greeting}</p>
+            <h1 className="text-xl font-bold text-white mt-0.5">
+              {user.first_name} {user.last_name}
+            </h1>
+          </div>
+          <Link
+            href={`/${company}/app/notifications`}
+            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm transition-all active:bg-white/25"
+            aria-label="Notifications"
+          >
+            <Bell className="h-5 w-5 text-white" aria-hidden="true" />
+            {notificationCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white min-w-[18px] h-[18px]">
+                {notificationCount > 9 ? "9+" : notificationCount}
+              </span>
+            )}
+          </Link>
         </div>
 
         {/* Stats row */}

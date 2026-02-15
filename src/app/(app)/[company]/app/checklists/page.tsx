@@ -9,14 +9,11 @@ import {
   ChevronDown,
   CheckCircle,
   ShieldAlert,
-  Wrench,
   FileCheck,
   AlertTriangle,
-  Building,
   Clock,
   MapPin,
   X,
-  QrCode,
   Play,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +28,7 @@ import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 
-type TabType = "checklists" | "risk-assessment" | "inspection" | "reports";
+type TabType = "checklists" | "risk-assessment" | "reports";
 type CountryCode = "US" | "NL" | "SE";
 
 // Country-specific risk assessment forms
@@ -102,7 +99,6 @@ function EmployeeChecklistsPageContent() {
   const { t, formatDate } = useTranslation();
 
   const getInitialTab = (): TabType => {
-    if (tabParam === "inspections" || tabParam === "inspection") return "inspection";
     if (tabParam === "risk-assessment") return "risk-assessment";
     if (tabParam === "checklists") return "checklists";
     if (tabParam === "reports") return "reports";
@@ -340,7 +336,7 @@ function EmployeeChecklistsPageContent() {
                 className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                  <AlertTriangle className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <FileCheck className="h-5 w-5 text-primary" aria-hidden="true" />
                 </div>
                 <div className="text-center">
                   <p className="font-semibold text-sm text-primary">{t("app.reportIncident")}</p>
@@ -486,119 +482,6 @@ function EmployeeChecklistsPageContent() {
                   </div>
                 ))
               )}
-            </Section>
-          </>
-        )}
-
-        {/* INSPECTION TAB */}
-        {activeTab === "inspection" && (
-          <>
-            {activeAssets[0] ? (
-              <Link
-                href={`/${company}/app/inspection/${activeAssets[0].id}`}
-                className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-3.5 transition-all active:border-primary active:bg-primary/10"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                  <QrCode className="h-5 w-5 text-primary" aria-hidden="true" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-sm text-primary">{t("checklists.scanQrCode")}</p>
-                  <p className="text-[11px] text-muted-foreground">{t("checklists.quicklyStartInspection")}</p>
-                </div>
-              </Link>
-            ) : (
-              <div className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-muted bg-muted/30 p-3.5 text-muted-foreground">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                  <QrCode className="h-5 w-5" aria-hidden="true" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-sm">{t("checklists.scanQrCode")}</p>
-                  <p className="text-[11px] text-muted-foreground">{t("checklists.noActiveAssetsToInspect")}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="border-t mt-2" />
-
-            <Section 
-              title={t("checklists.dueForInspection")} 
-              icon={AlertTriangle} 
-              iconColor="text-warning"
-              count={activeAssets.length} 
-              countVariant="warning"
-            >
-              {activeAssets.slice(0, 3).map((asset, index) => (
-                <Link
-                  key={asset.id}
-                  href={`/${company}/app/inspection/${asset.id}`}
-                  className="flex items-center gap-3 rounded-lg border border-warning/40 bg-warning/5 p-2.5 active:bg-warning/10"
-                >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-warning/10">
-                    <Wrench className="h-4 w-4 text-warning" aria-hidden="true" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm leading-tight truncate">{asset.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{asset.category}</p>
-                  </div>
-                  <span className="text-[10px] font-medium">
-                    {index === 0 ? t("assets.overdue") : `${index + 1}d`}
-                  </span>
-                </Link>
-              ))}
-            </Section>
-
-            <div className="border-t" />
-
-            <Section 
-              title={t("checklists.allAssets")} 
-              icon={Building} 
-              count={activeAssets.length}
-              defaultOpen={false}
-            >
-              {activeAssets.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-3">{t("checklists.noActiveAssets")}</p>
-              ) : (
-                activeAssets.map((asset) => (
-                  <Link
-                    key={asset.id}
-                    href={`/${company}/app/inspection/${asset.id}`}
-                    className="flex items-center gap-3 rounded-lg p-2.5 active:bg-muted/60 hover:bg-muted/40"
-                  >
-                    <Wrench className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{asset.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{asset.serial_number}</p>
-                    </div>
-                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                  </Link>
-                ))
-              )}
-            </Section>
-
-            <div className="border-t" />
-
-            <Section 
-              title={t("checklists.recent")} 
-              icon={CheckCircle} 
-              iconColor="text-success"
-              count={recentInspections.length}
-              countVariant="success"
-              defaultOpen={false}
-            >
-              {recentInspections.map((inspection) => (
-                <div key={inspection.id} className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-muted/40">
-                  {inspection.result === "pass" ? (
-                    <CheckCircle className="h-4 w-4 text-success shrink-0" aria-hidden="true" />
-                  ) : (
-                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0" aria-hidden="true" />
-                  )}
-                  <span className="flex-1 text-sm font-medium truncate">{inspection.asset}</span>
-                  <span className="text-[10px] font-medium">
-                    {inspection.result}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(new Date(inspection.date))}</span>
-                </div>
-              ))}
             </Section>
           </>
         )}
