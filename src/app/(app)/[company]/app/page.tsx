@@ -214,14 +214,14 @@ export default function EmployeeAppHomePage() {
   // Determine if we have enough data for the full feed view
   const hasData = userIncidents.length >= 2 || pendingChecklists.length > 0 || recentNews.length > 0;
 
-  // Quick action grid items (2-3 per row, 6 total, specific icons, no sub-text)
+  // Quick action grid items (3 per row, 6 total, consistent neutral style)
   const quickActions = [
-    { href: `/${company}/app/report`, icon: AlertTriangle, label: t("app.reportIncident"), color: "bg-destructive/10", iconColor: "text-destructive" },
-    { href: `/${company}/app/checklists`, icon: ClipboardCheck, label: t("app.safetyTasks"), color: "bg-primary/10", iconColor: "text-primary" },
-    { href: `/${company}/app/maintenance`, icon: Wrench, label: t("app.requestFix"), color: "bg-amber-500/10", iconColor: "text-amber-600" },
-    { href: `/${company}/app/assets`, icon: Search, label: t("app.browseAssets"), color: "bg-blue-500/10", iconColor: "text-blue-600" },
-    { href: `/${company}/app/scan`, icon: ScanLine, label: t("app.scanAsset"), color: "bg-violet-500/10", iconColor: "text-violet-600" },
-    { href: `/${company}/app/risk-assessment`, icon: ShieldCheck, label: t("app.riskAssessment"), color: "bg-emerald-500/10", iconColor: "text-emerald-600" },
+    { href: `/${company}/app/report`, icon: AlertTriangle, label: t("app.reportIncident") },
+    { href: `/${company}/app/checklists`, icon: ClipboardCheck, label: t("app.safetyTasks") },
+    { href: `/${company}/app/maintenance`, icon: Wrench, label: t("app.requestFix") },
+    { href: `/${company}/app/assets`, icon: Search, label: t("app.browseAssets") },
+    { href: `/${company}/app/scan`, icon: ScanLine, label: t("app.scanAsset") },
+    { href: `/${company}/app/risk-assessment`, icon: ShieldCheck, label: t("app.riskAssessment") },
   ];
 
   // ── Shared hero section ──
@@ -288,7 +288,7 @@ export default function EmployeeAppHomePage() {
     );
   };
 
-  // ── Quick Actions Grid (2-3 per row, 6 total, no sub-text) ──
+  // ── Quick Actions Grid (3 per row, 6 total, consistent neutral style) ──
   const QuickActionsGrid = () => (
     <div className="px-4 pt-5 pb-1">
       <p className="text-[11px] font-semibold text-muted-foreground mb-3">{t("app.getStarted")}</p>
@@ -297,32 +297,17 @@ export default function EmployeeAppHomePage() {
           <Link
             key={action.href}
             href={action.href}
-            className={cn(
-              "flex flex-col items-center gap-2 rounded-xl p-3.5 transition-all active:scale-95",
-              action.color
-            )}
+            className="flex flex-col items-center gap-2 rounded-xl bg-muted/50 p-3.5 transition-all active:scale-95 hover:bg-muted"
           >
-            <action.icon className={cn("h-6 w-6", action.iconColor)} aria-hidden="true" />
-            <span className="text-[11px] font-medium text-center leading-tight">{action.label}</span>
+            <action.icon className="h-6 w-6 text-primary" aria-hidden="true" />
+            <span className="text-[11px] font-medium text-center leading-tight text-foreground">{action.label}</span>
           </Link>
         ))}
       </div>
     </div>
   );
 
-  // ── Empty state / onboarding view ──
-  if (!hasData) {
-    return (
-      <div className="flex flex-col min-h-full">
-        <HeroSection />
-        <TipCard />
-        <QuickActionsGrid />
-      </div>
-    );
-  }
-
-  // ── Full feed view (existing) ──
-
+  // ── Always show full feed (no early return for empty state) ──
   return (
     <div className="flex flex-col min-h-full">
       {/* ── Hero Section ── */}
