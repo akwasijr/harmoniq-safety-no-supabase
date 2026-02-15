@@ -18,7 +18,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChartCard, AreaChart, BarChart, DonutChart, COLORS } from "@/components/charts";
-import { mockDashboardStats } from "@/mocks/data";
 import { useCompanyStore } from "@/stores/company-store";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
@@ -114,10 +113,28 @@ export default function DashboardPage() {
     );
   }
 
+  const openIncidents = incidents.filter((i) => i.status === "new" || i.status === "in_progress");
+  const resolvedToday = incidents.filter((i) => {
+    if (i.status !== "resolved" && i.status !== "archived") return false;
+    const today = new Date().toISOString().slice(0, 10);
+    return i.updated_at?.slice(0, 10) === today || i.resolved_at?.slice(0, 10) === today;
+  });
+  const avgResolutionHours = (() => {
+    const resolved = incidents.filter(i => i.resolved_at && i.created_at);
+    if (!resolved.length) return 0;
+    const total = resolved.reduce((sum, i) => {
+      return sum + (new Date(i.resolved_at!).getTime() - new Date(i.created_at).getTime()) / 3600000;
+    }, 0);
+    return Math.round(total / resolved.length);
+  })();
+
   const stats = {
-    ...mockDashboardStats,
-    open_incidents: incidents.filter((i) => i.status === "new" || i.status === "in_progress").length,
+    open_incidents: openIncidents.length,
     total_incidents: incidents.length,
+    resolved_today: resolvedToday.length,
+    avg_resolution_time_hours: avgResolutionHours,
+    ltir: incidents.length > 0 ? Math.round((openIncidents.length / Math.max(incidents.length, 1)) * 100) / 10 : 0,
+    compliance_rate: incidents.length > 0 ? Math.round(((incidents.length - openIncidents.length) / Math.max(incidents.length, 1)) * 1000) / 10 : 100,
   };
   const recentIncidents = incidents.slice(0, 5);
 

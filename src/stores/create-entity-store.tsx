@@ -75,7 +75,7 @@ export function createEntityStore<T extends IdEntity>(
 
   function Provider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = React.useState<T[]>(() =>
-      isSupabaseConfigured ? [] : loadFromStorage(storageKey, initialData)
+      loadFromStorage(storageKey, isSupabaseConfigured ? [] : initialData)
     );
     const [isLoading, setIsLoading] = React.useState(false);
     const hasLoadedRef = React.useRef(!isSupabaseConfigured);
@@ -111,13 +111,21 @@ export function createEntityStore<T extends IdEntity>(
 
           if (error) {
             console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
+            // Fallback to localStorage cache
+            const cached = loadFromStorage<T[]>(storageKey, initialData);
+            if (isMountedRef.current && cached.length > 0) setItems(cached);
           } else if (isMountedRef.current) {
-            setItems((data || []) as T[]);
+            const fetched = (data || []) as T[];
+            setItems(fetched);
+            // Cache to localStorage for offline resilience
+            saveToStorage(storageKey, fetched);
           }
         } catch (err: unknown) {
-          // AbortError = timeout, DOMException = network — both are non-fatal
           const msg = err instanceof Error ? err.message : String(err);
           console.warn(`[Harmoniq] Fetch ${table} aborted/failed:`, msg);
+          // Fallback to localStorage cache on network failure
+          const cached = loadFromStorage<T[]>(storageKey, initialData);
+          if (isMountedRef.current && cached.length > 0) setItems(cached);
         } finally {
           if (isMountedRef.current) setIsLoading(false);
           isFetchingRef.current = false;
@@ -187,7 +195,10 @@ export function createEntityStore<T extends IdEntity>(
       // Optimistic update
       setItems((prev) => {
         const exists = prev.some((p) => p.id === item.id);
-        return exists ? prev.map((p) => (p.id === item.id ? item : p)) : [...prev, item];
+        const next = exists ? prev.map((p) => (p.id === item.id ? item : p)) : [...prev, item];
+        // Always cache to localStorage for resilience
+        saveToStorage(storageKey, next);
+        return next;
       });
 
       if (isSupabaseConfigured) {
@@ -201,9 +212,11 @@ export function createEntityStore<T extends IdEntity>(
 
     const update = React.useCallback((id: string, updates: Partial<T>) => {
       // Optimistic update
-      setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
-      );
+      setItems((prev) => {
+        const next = prev.map((item) => (item.id === id ? { ...item, ...updates } : item));
+        saveToStorage(storageKey, next);
+        return next;
+      });
 
       if (isSupabaseConfigured) {
         const supabase = createClient();
@@ -216,7 +229,11 @@ export function createEntityStore<T extends IdEntity>(
 
     const remove = React.useCallback((id: string) => {
       // Optimistic update
-      setItems((prev) => prev.filter((item) => item.id !== id));
+      setItems((prev) => {
+        const next = prev.filter((item) => item.id !== id);
+        saveToStorage(storageKey, next);
+        return next;
+      });
 
       if (isSupabaseConfigured) {
         const supabase = createClient();

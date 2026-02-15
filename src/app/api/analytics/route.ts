@@ -62,11 +62,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    // Origin check: only accept from same origin
-    const origin = request.headers.get("origin") || request.headers.get("referer") || "";
+    // Origin check: only accept from same origin using strict URL parsing
+    const origin = request.headers.get("origin") || "";
     const host = request.headers.get("host") || "";
-    if (origin && !origin.includes(host) && !origin.includes("localhost") && !origin.includes("vercel.app")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (origin) {
+      try {
+        const originHost = new URL(origin).hostname;
+        const isAllowed = originHost === host.split(":")[0] ||
+          originHost === "localhost" ||
+          originHost.endsWith(".vercel.app") ||
+          originHost.endsWith(".harmoniq-safety.vercel.app");
+        if (!isAllowed) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+      } catch {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
     const body = await request.json();
@@ -125,7 +136,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   } catch {
-    // If auth fails (e.g., no Supabase tables), allow access for demo
+    // Fail-closed: if auth check fails, deny access
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const days = parseInt(request.nextUrl.searchParams.get("days") || "30", 10);

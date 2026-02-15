@@ -35,6 +35,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "First name, last name, email, and role are required" }, { status: 400 });
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    }
+
     // Super admin can invite to any company, company admin only to their own
     const targetCompanyId = inviter.role === "super_admin" && company_id
       ? company_id
@@ -48,7 +54,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existingUser) {
-      return NextResponse.json({ error: "User with this email already exists" }, { status: 409 });
+      return NextResponse.json({ error: "Unable to send invitation. Please check the email and try again." }, { status: 409 });
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;

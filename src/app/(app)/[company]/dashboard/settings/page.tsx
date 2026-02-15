@@ -19,7 +19,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { getCurrentCompany } from "@/mocks/data";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import { applyPrimaryColor } from "@/lib/branding";
@@ -121,7 +120,8 @@ const getSettingsKey = (companyId?: string) =>
 export default function SettingsPage() {
   const company = useCompanyParam();
   const { currentCompany, isLoading: isAuthLoading } = useAuth();
-  const fallbackCompany = React.useMemo(() => getCurrentCompany(), []);
+  const { items: companies } = useCompanyStore();
+  const fallbackCompany = React.useMemo(() => companies.find(c => c.slug === company) ?? null, [companies, company]);
   const activeCompany = currentCompany ?? fallbackCompany ?? defaultCompany;
   const settingsStorageKey = React.useMemo(
     () => getSettingsKey(activeCompany?.id),

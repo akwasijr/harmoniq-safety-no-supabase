@@ -1,7 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// Rate limiting: max 10 attempts per IP per minute
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10;
+const WINDOW_MS = 60_000;
+
 export async function GET(request: NextRequest) {
+  // Rate limit by IP
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (entry && entry.resetAt > now) {
+    if (entry.count >= RATE_LIMIT) {
+      return NextResponse.json({ valid: false, error: "Too many requests" }, { status: 429 });
+    }
+    entry.count++;
+  } else {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+  }
+
   const token = request.nextUrl.searchParams.get("token");
 
   if (!token) {
