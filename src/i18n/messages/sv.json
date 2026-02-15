@@ -51,7 +51,8 @@
     "inspections": "Inspektioner",
     "riskAssessments": "Riskbedömningar",
     "qrCodes": "QR-koder",
-    "tickets": "Ärenden"
+    "tickets": "Ärenden",
+    "newsShort": "Nyheter"
   },
   "app": {
     "goodMorning": "God morgon",
@@ -827,7 +828,8 @@
     "tabs": {
       "checklists": "Checklistor",
       "assessments": "Bedömningar",
-      "inspections": "Inspektioner"
+      "inspections": "Inspektioner",
+      "reports": "Rapporter"
     },
     "labels": {
       "pending": "Väntande",

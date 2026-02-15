@@ -202,7 +202,6 @@ export default function EmployeeAppHomePage() {
       .map((submission) => submission.template_id)
   );
   const pendingChecklists = checklistTemplates.filter((template) => !completedTemplateIds.has(template.id)).slice(0, 2);
-  const myRecentIncidents = userIncidents.slice(0, 2);
 
   // Safety tip of the day (rotates daily)
   const todayTip = SAFETY_TIPS[getDayOfYear() % SAFETY_TIPS.length];
@@ -212,7 +211,7 @@ export default function EmployeeAppHomePage() {
   const safetyStreak = safeDays;
 
   // Determine if we have enough data for the full feed view
-  const hasData = userIncidents.length >= 2 || pendingChecklists.length > 0 || recentNews.length > 0;
+  const hasData = pendingChecklists.length > 0 || recentNews.length > 0;
 
   // Quick action grid items (3 per row, 6 total, consistent neutral style)
   const quickActions = [
@@ -221,7 +220,7 @@ export default function EmployeeAppHomePage() {
     { href: `/${company}/app/maintenance`, icon: Wrench, label: t("app.requestFix") },
     { href: `/${company}/app/assets`, icon: Search, label: t("app.browseAssets") },
     { href: `/${company}/app/scan`, icon: ScanLine, label: t("app.scanAsset") },
-    { href: `/${company}/app/risk-assessment`, icon: ShieldCheck, label: t("app.riskAssessment") },
+    { href: `/${company}/app/checklists?tab=risk-assessment`, icon: ShieldCheck, label: t("app.riskAssessment") },
   ];
 
   // ── Shared hero section ──
@@ -322,46 +321,7 @@ export default function EmployeeAppHomePage() {
       {/* ── Content Feed ── */}
       <div className="px-4 pt-3 pb-4 space-y-1">
 
-        {/* Pending Checklists — always visible */}
-        <Section
-          title={t("app.pendingTasks")}
-          icon={ClipboardCheck}
-          iconColor="text-warning"
-          action={
-            pendingChecklists.length > 0 ? (
-              <Link href={`/${company}/app/checklists`} className="text-xs text-primary font-medium flex items-center gap-0.5">
-                {t("common.viewAll")} <ArrowRight className="h-3 w-3" />
-              </Link>
-            ) : undefined
-          }
-        >
-          {pendingChecklists.length > 0 ? (
-            pendingChecklists.map((checklist) => (
-              <Link
-                key={checklist.id}
-                href={`/${company}/app/checklists/${checklist.id}`}
-                className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/40"
-              >
-                <ClipboardCheck className="h-5 w-5 text-warning shrink-0" aria-hidden="true" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm leading-tight">{checklist.name}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{checklist.items?.length || 0} {t("app.items")}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-              </Link>
-            ))
-          ) : (
-            <div className="py-4 text-center">
-              <CheckCircle className="h-6 w-6 text-success/50 mx-auto" aria-hidden="true" />
-              <p className="text-xs font-medium text-success mt-2">{t("app.allCaughtUp")}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{t("app.noPendingTasks")}</p>
-            </div>
-          )}
-        </Section>
-
-        <div className="border-t" />
-
-        {/* News & Updates — always visible */}
+        {/* News & Updates — first */}
         <Section
           title={t("app.newsAndUpdates")}
           icon={Newspaper}
@@ -407,38 +367,39 @@ export default function EmployeeAppHomePage() {
 
         <div className="border-t" />
 
-        {/* My Recent Reports — always visible */}
+        {/* Pending Tasks — below news */}
         <Section
-          title={t("app.myReports")}
-          icon={AlertCircle}
-          iconColor="text-muted-foreground"
-          defaultOpen={false}
+          title={t("app.pendingTasks")}
+          icon={ClipboardCheck}
+          iconColor="text-warning"
+          action={
+            pendingChecklists.length > 0 ? (
+              <Link href={`/${company}/app/checklists`} className="text-xs text-primary font-medium flex items-center gap-0.5">
+                {t("common.viewAll")} <ArrowRight className="h-3 w-3" />
+              </Link>
+            ) : undefined
+          }
         >
-          {myRecentIncidents.length > 0 ? (
-            myRecentIncidents.map((incident) => (
+          {pendingChecklists.length > 0 ? (
+            pendingChecklists.map((checklist) => (
               <Link
-                key={incident.id}
-                href={`/${company}/dashboard/incidents/${incident.id}`}
-                className="flex items-center gap-3 rounded-lg p-2.5 transition-colors active:bg-muted/60 hover:bg-muted/40"
+                key={checklist.id}
+                href={`/${company}/app/checklists/${checklist.id}`}
+                className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/40"
               >
-                <AlertCircle className="h-5 w-5 text-muted-foreground shrink-0" aria-hidden="true" />
+                <ClipboardCheck className="h-5 w-5 text-warning shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm truncate">{incident.reference_number}</p>
-                    <span className="text-[10px] font-medium">{incident.severity}</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {formatDate(new Date(incident.incident_date))} &middot; {incident.building || "Unknown"}
-                  </p>
+                  <p className="font-medium text-sm leading-tight">{checklist.name}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{checklist.items?.length || 0} {t("app.items")}</p>
                 </div>
-                <span className="text-[10px] text-muted-foreground">{incident.status}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
               </Link>
             ))
           ) : (
             <div className="py-4 text-center">
-              <Shield className="h-6 w-6 text-primary/30 mx-auto" aria-hidden="true" />
-              <p className="text-xs font-medium text-muted-foreground mt-2">{t("app.noReports")}</p>
-              <p className="text-[11px] text-muted-foreground/70 mt-0.5">{t("app.noReportsDesc")}</p>
+              <CheckCircle className="h-6 w-6 text-success/50 mx-auto" aria-hidden="true" />
+              <p className="text-xs font-medium text-success mt-2">{t("app.allCaughtUp")}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{t("app.noPendingTasks")}</p>
             </div>
           )}
         </Section>

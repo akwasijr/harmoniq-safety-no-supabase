@@ -51,7 +51,8 @@
     "inspections": "Inspections",
     "riskAssessments": "Risk Assessments",
     "qrCodes": "QR Codes",
-    "tickets": "Tickets"
+    "tickets": "Tickets",
+    "newsShort": "News"
   },
   "app": {
     "goodMorning": "Good morning",
@@ -827,7 +828,8 @@
     "tabs": {
       "checklists": "Checklists",
       "assessments": "Assessments",
-      "inspections": "Inspections"
+      "inspections": "Inspections",
+      "reports": "Reports"
     },
     "labels": {
       "pending": "Pending",

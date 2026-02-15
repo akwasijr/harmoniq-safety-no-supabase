@@ -51,7 +51,8 @@
     "inspections": "Inspecties",
     "riskAssessments": "Risicobeoordeling",
     "qrCodes": "QR-codes",
-    "tickets": "Tickets"
+    "tickets": "Tickets",
+    "newsShort": "Nieuws"
   },
   "app": {
     "goodMorning": "Goedemorgen",
@@ -827,7 +828,8 @@
     "tabs": {
       "checklists": "Checklists",
       "assessments": "Beoordelingen",
-      "inspections": "Inspecties"
+      "inspections": "Inspecties",
+      "reports": "Meldingen"
     },
     "labels": {
       "pending": "In afwachting",

@@ -25,12 +25,13 @@ import { useAssetsStore } from "@/stores/assets-store";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
 import { useAssetInspectionsStore } from "@/stores/inspections-store";
+import { useIncidentsStore } from "@/stores/incidents-store";
 import { cn } from "@/lib/utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 
-type TabType = "checklists" | "risk-assessment" | "inspection";
+type TabType = "checklists" | "risk-assessment" | "inspection" | "reports";
 type CountryCode = "US" | "NL" | "SE";
 
 // Country-specific risk assessment forms
@@ -103,6 +104,7 @@ function EmployeeChecklistsPageContent() {
   const getInitialTab = (): TabType => {
     if (tabParam === "inspections" || tabParam === "inspection") return "inspection";
     if (tabParam === "risk-assessment") return "risk-assessment";
+    if (tabParam === "reports") return "reports";
     return "checklists";
   };
   
@@ -114,6 +116,7 @@ function EmployeeChecklistsPageContent() {
   const { items: locations } = useLocationsStore();
   const { items: riskEvaluations } = useRiskEvaluationsStore();
   const { items: inspections } = useAssetInspectionsStore();
+  const { items: incidents } = useIncidentsStore();
   const { currentCompany, user } = useAuth();
   
   const selectedLocation = locationParam 
@@ -127,6 +130,7 @@ function EmployeeChecklistsPageContent() {
 
   const tabs = [
     { id: "checklists" as TabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
+    { id: "reports" as TabType, label: t("checklists.tabs.reports"), icon: AlertTriangle },
     { id: "risk-assessment" as TabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
     { id: "inspection" as TabType, label: t("checklists.tabs.inspections"), icon: Wrench },
   ];
@@ -321,6 +325,76 @@ function EmployeeChecklistsPageContent() {
                     <span className="text-[10px] text-green-600 dark:text-green-400 font-medium">{t("checklists.done")}</span>
                   </div>
                 ))
+              )}
+            </Section>
+          </>
+        )}
+
+        {/* REPORTS TAB */}
+        {activeTab === "reports" && (
+          <>
+            {/* New Report Button */}
+            <Link
+              href={`/${company}/app/report`}
+              className="flex items-center gap-3 rounded-xl border-2 border-dashed border-primary/30 p-4 transition-colors active:bg-primary/5 hover:bg-primary/5"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <AlertTriangle className="h-5 w-5 text-primary" aria-hidden="true" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">{t("app.reportIncident")}</p>
+                <p className="text-xs text-muted-foreground">{t("app.reportIncidentDesc") || "Submit a new safety incident report"}</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            </Link>
+
+            {/* My Submitted Reports */}
+            <Section
+              title={t("app.myReports") || "My Reports"}
+              icon={AlertTriangle}
+              iconColor="text-warning"
+              count={incidents.filter(i => i.reporter_id === user?.id).length}
+            >
+              {incidents.filter(i => i.reporter_id === user?.id).length > 0 ? (
+                incidents
+                  .filter(i => i.reporter_id === user?.id)
+                  .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())
+                  .slice(0, 10)
+                  .map((incident) => (
+                    <Link
+                      key={incident.id}
+                      href={`/${company}/app/report?view=${incident.id}`}
+                      className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/40"
+                    >
+                      <AlertTriangle className={cn(
+                        "h-5 w-5 shrink-0",
+                        incident.severity === "critical" ? "text-destructive" :
+                        incident.severity === "high" ? "text-orange-500" :
+                        incident.severity === "medium" ? "text-warning" : "text-muted-foreground"
+                      )} aria-hidden="true" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm truncate">{incident.reference_number}</p>
+                          <Badge variant={
+                            incident.status === "resolved" ? "success" :
+                            incident.status === "in_progress" ? "warning" : "secondary"
+                          } className="text-[10px] h-4">
+                            {incident.status}
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {formatDate(new Date(incident.incident_date))} · {incident.building || (typeof incident.location === 'string' ? incident.location : null) || "—"}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    </Link>
+                  ))
+              ) : (
+                <div className="py-6 text-center">
+                  <AlertTriangle className="h-8 w-8 text-muted-foreground/20 mx-auto" aria-hidden="true" />
+                  <p className="text-sm font-medium text-muted-foreground mt-2">{t("app.noReports") || "No reports yet"}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noReportsDesc") || "Reports you submit will appear here"}</p>
+                </div>
               )}
             </Section>
           </>

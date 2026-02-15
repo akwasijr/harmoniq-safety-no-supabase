@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  AlertTriangle,
   ClipboardCheck,
   Package,
+  Newspaper,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,13 +35,6 @@ const tabItems: TabItem[] = [
     exactMatch: true,
   },
   {
-    titleKey: "nav.report",
-    shortTitleKey: "nav.reportShort",
-    fallback: "Report",
-    href: "/app/report",
-    icon: AlertTriangle,
-  },
-  {
     titleKey: "nav.tasks",
     shortTitleKey: "nav.tasksShort",
     fallback: "Tasks",
@@ -54,6 +47,13 @@ const tabItems: TabItem[] = [
     fallback: "Assets",
     href: "/app/assets",
     icon: Package,
+  },
+  {
+    titleKey: "nav.news",
+    shortTitleKey: "nav.newsShort",
+    fallback: "News",
+    href: "/app/news",
+    icon: Newspaper,
   },
   {
     titleKey: "nav.profile",
