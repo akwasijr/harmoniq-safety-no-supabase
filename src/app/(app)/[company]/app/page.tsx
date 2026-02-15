@@ -41,7 +41,6 @@ import {
   Timer,
   Gauge,
   Hammer,
-  Bell,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useContentStore } from "@/stores/content-store";
@@ -211,13 +210,6 @@ export default function EmployeeAppHomePage() {
   // Stats from computed user data
   const safetyStreak = safeDays;
 
-  // Notification count (unread: recent news + pending checklists + open tickets)
-  const recentNewsCount = contentItems.filter(
-    (item) => item.status === "published" && item.type === "news" && 
-    new Date(item.published_at || item.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  ).length;
-  const notificationCount = recentNewsCount + pendingChecklists.length + userTickets.filter(t => t.status === "new").length;
-
   // Determine if we have enough data for the full feed view
   const hasData = pendingChecklists.length > 0 || recentNews.length > 0;
 
@@ -235,22 +227,15 @@ export default function EmployeeAppHomePage() {
   const HeroSection = () => (
     <div className="relative overflow-hidden px-5 pt-5 pb-8" style={{ minHeight: 160 }}>
       {/* Background image with overlay */}
-      {currentCompany?.hero_image_url ? (
-        <>
-          <img
-            src={currentCompany.hero_image_url}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-            aria-hidden="true"
-          />
-          <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
-        </>
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[hsl(var(--secondary))]" aria-hidden="true">
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
-          <div className="absolute -left-4 bottom-0 h-20 w-20 rounded-full bg-white/[0.08]" />
-        </div>
-      )}
+      <>
+        <img
+          src={currentCompany?.hero_image_url || "/home-banner.jpg"}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
+      </>
 
       <div className="relative z-10">
         <div className="flex items-start justify-between">
@@ -260,18 +245,6 @@ export default function EmployeeAppHomePage() {
               {user.first_name} {user.last_name}
             </h1>
           </div>
-          <Link
-            href={`/${company}/app/notifications`}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm transition-all active:bg-white/25"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5 text-white" aria-hidden="true" />
-            {notificationCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white min-w-[18px] h-[18px]">
-                {notificationCount > 9 ? "9+" : notificationCount}
-              </span>
-            )}
-          </Link>
         </div>
 
         {/* Stats row */}
