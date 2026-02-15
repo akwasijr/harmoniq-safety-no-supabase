@@ -131,6 +131,23 @@ export function createEntityStore<T extends IdEntity>(
       };
     }, [storageKey]);
 
+    // Cross-tab sync: listen for storage changes from other tabs/windows
+    React.useEffect(() => {
+      if (isSupabaseConfigured) return;
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === storageKey && e.newValue && isMountedRef.current) {
+          try {
+            const parsed = JSON.parse(e.newValue) as T[];
+            setItems(parsed);
+          } catch {
+            // ignore parse errors
+          }
+        }
+      };
+      window.addEventListener("storage", handleStorageChange);
+      return () => window.removeEventListener("storage", handleStorageChange);
+    }, [storageKey]);
+
     // === SHARED METHODS ===
     const getById = React.useCallback(
       (id: string) => items.find((item) => item.id === id),

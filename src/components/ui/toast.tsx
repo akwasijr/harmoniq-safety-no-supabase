@@ -63,8 +63,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         styles[toast.variant]
       )}
     >
-      <div className={cn("w-1 self-stretch shrink-0", barStyles[toast.variant])} />
-      <Icon className={cn("h-5 w-5 shrink-0 my-3", iconStyles[toast.variant])} />
+      <Icon className={cn("h-5 w-5 shrink-0 my-3 ml-3", iconStyles[toast.variant])} />
       <p className="text-sm font-medium flex-1 py-3 pr-1">{toast.message}</p>
       <button onClick={onDismiss} className="shrink-0 p-3 opacity-40 hover:opacity-100 transition-opacity">
         <X className="h-4 w-4" />

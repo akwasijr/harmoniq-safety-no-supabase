@@ -2,13 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { FileText, ChevronRight, Clock, Tag, Newspaper, Calendar, FolderOpen } from "lucide-react";
+import { FileText, ChevronRight, Clock, Tag, Newspaper, Calendar, FolderOpen, GraduationCap } from "lucide-react";
 import { useContentStore } from "@/stores/content-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 
-type TabType = "news" | "events" | "documents";
+type TabType = "news" | "events" | "documents" | "training";
 
 export default function EmployeeNewsPage() {
   const company = useCompanyParam();
@@ -21,12 +21,14 @@ export default function EmployeeNewsPage() {
   // Group by type
   const news = content.filter((c) => c.type === "news");
   const events = content.filter((c) => c.type === "event");
-  const documents = content.filter((c) => c.type === "document" || c.type === "training");
+  const documents = content.filter((c) => c.type === "document");
+  const training = content.filter((c) => c.type === "training");
 
   const tabs = [
     { id: "news" as TabType, label: t("newsApp.tabs.news"), icon: Newspaper, count: news.length },
     { id: "events" as TabType, label: t("newsApp.tabs.events"), icon: Calendar, count: events.length },
     { id: "documents" as TabType, label: t("newsApp.tabs.documents"), icon: FolderOpen, count: documents.length },
+    { id: "training" as TabType, label: "Training", icon: GraduationCap, count: training.length },
   ];
 
   const getActiveContent = () => {
@@ -34,6 +36,7 @@ export default function EmployeeNewsPage() {
       case "news": return news;
       case "events": return events;
       case "documents": return documents;
+      case "training": return training;
       default: return [];
     }
   };
@@ -101,6 +104,7 @@ export default function EmployeeNewsPage() {
                 {activeTab === "news" && <Newspaper className="h-6 w-6 text-muted-foreground" aria-hidden="true" />}
                 {activeTab === "events" && <Calendar className="h-6 w-6 text-primary" aria-hidden="true" />}
                 {activeTab === "documents" && <FolderOpen className="h-6 w-6 text-muted-foreground" aria-hidden="true" />}
+                {activeTab === "training" && <GraduationCap className="h-6 w-6 text-muted-foreground" aria-hidden="true" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium line-clamp-2">{item.title}</p>

@@ -83,6 +83,30 @@ export default function NewContentPage() {
     all_employees: true,
   });
 
+  const [featuredImage, setFeaturedImage] = React.useState<{ file: File; preview: string } | null>(null);
+  const [attachedFile, setAttachedFile] = React.useState<File | null>(null);
+  const imageInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.size <= 5 * 1024 * 1024) {
+      const preview = URL.createObjectURL(file);
+      setFeaturedImage({ file, preview });
+    } else if (file) {
+      toast("Image must be under 5MB", "error");
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.size <= 10 * 1024 * 1024) {
+      setAttachedFile(file);
+    } else if (file) {
+      toast("File must be under 10MB", "error");
+    }
+  };
+
   const handleFormat = (command: string, value?: string) => {
     document.execCommand(command, false, value);
     editorRef.current?.focus();
@@ -413,13 +437,38 @@ export default function NewContentPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 cursor-pointer hover:bg-muted transition-colors">
-                    <div className="text-center">
-                      <Upload className="mx-auto h-10 w-10 text-muted-foreground" />
-                      <p className="mt-2 text-sm font-medium">Click to upload image</p>
-                      <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                  {featuredImage ? (
+                    <div className="relative rounded-lg overflow-hidden">
+                      <img src={featuredImage.preview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <Button size="sm" variant="secondary" onClick={() => imageInputRef.current?.click()}>
+                          Change
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => { URL.revokeObjectURL(featuredImage.preview); setFeaturedImage(null); }}>
+                          Remove
+                        </Button>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">{featuredImage.file.name} ({(featuredImage.file.size / 1024).toFixed(0)} KB)</p>
                     </div>
-                  </div>
+                  ) : (
+                    <div
+                      onClick={() => imageInputRef.current?.click()}
+                      className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 cursor-pointer hover:bg-muted hover:border-primary/50 transition-colors"
+                    >
+                      <div className="text-center">
+                        <Upload className="mx-auto h-10 w-10 text-muted-foreground" />
+                        <p className="mt-2 text-sm font-medium">Click to upload image</p>
+                        <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -434,13 +483,41 @@ export default function NewContentPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex h-40 items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 cursor-pointer hover:bg-muted transition-colors">
-                    <div className="text-center">
-                      <Upload className="mx-auto h-10 w-10 text-muted-foreground" />
-                      <p className="mt-2 text-sm font-medium">Click to upload file</p>
-                      <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, XLS up to 10MB</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  {attachedFile ? (
+                    <div className="flex items-center gap-3 rounded-lg border p-4">
+                      <FileText className="h-8 w-8 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{attachedFile.name}</p>
+                        <p className="text-xs text-muted-foreground">{(attachedFile.size / 1024).toFixed(0)} KB</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                          Change
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setAttachedFile(null)}>
+                          Remove
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex h-40 items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 cursor-pointer hover:bg-muted hover:border-primary/50 transition-colors"
+                    >
+                      <div className="text-center">
+                        <Upload className="mx-auto h-10 w-10 text-muted-foreground" />
+                        <p className="mt-2 text-sm font-medium">Click to upload file</p>
+                        <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, XLS up to 10MB</p>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
