@@ -56,7 +56,7 @@ export default function ChecklistDetailPage() {
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
-  const { items: templates, add: addTemplate, update: updateTemplate, remove: removeTemplate } = useChecklistTemplatesStore();
+  const { items: templates, isLoading, add: addTemplate, update: updateTemplate, remove: removeTemplate } = useChecklistTemplatesStore();
   const { items: submissions } = useChecklistSubmissionsStore();
   const { items: users } = useUsersStore();
   const { items: locations } = useLocationsStore();
@@ -213,6 +213,13 @@ export default function ChecklistDetailPage() {
 
   // If it's a submission, render submission view
   if (isSubmission) {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      );
+    }
     if (!submission) {
       return (
         <div className="flex items-center justify-center h-64 flex-col gap-4">
@@ -404,6 +411,14 @@ export default function ChecklistDetailPage() {
   }
 
   // Template view (existing code)
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   if (!template) {
     return (
       <div className="flex items-center justify-center h-64 flex-col gap-4">

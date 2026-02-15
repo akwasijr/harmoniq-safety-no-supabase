@@ -18,7 +18,6 @@ import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import type { CompanyRole, UserType, AccountType, Gender, Language, User } from "@/types";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID } from "@/mocks/data";
 
 const ROLES: { value: CompanyRole; label: string }[] = [
   { value: "company_admin", label: "Company Admin" },
@@ -94,7 +93,7 @@ export default function NewUserPage() {
     const now = new Date().toISOString();
     const newUser: User = {
       id: `user_${Date.now()}`,
-      company_id: currentCompany?.id || DEFAULT_COMPANY_ID,
+      company_id: currentCompany?.id || "",
       email: formData.email,
       first_name: formData.first_name,
       middle_name: formData.middle_name || null,

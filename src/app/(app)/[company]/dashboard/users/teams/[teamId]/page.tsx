@@ -44,9 +44,17 @@ export default function TeamDetailPage() {
   const { t, formatDate, formatNumber } = useTranslation();
 
   const { toast } = useToast();
-  const { items: teams, update: updateTeam, remove: removeTeam } = useTeamsStore();
+  const { items: teams, isLoading, update: updateTeam, remove: removeTeam } = useTeamsStore();
   const { items: users, update: updateUser } = useUsersStore();
   const baseTeam = teams.find((t) => t.id === teamId);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   // Team not found — trigger Next.js not-found boundary
   if (!baseTeam) {

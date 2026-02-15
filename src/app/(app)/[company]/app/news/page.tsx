@@ -15,7 +15,7 @@ export default function EmployeeNewsPage() {
   const { t, formatDate } = useTranslation();
   const [activeTab, setActiveTab] = React.useState<TabType>("news");
 
-  const { items: contentItems } = useContentStore();
+  const { items: contentItems , isLoading } = useContentStore();
   const content = contentItems.filter((c) => c.status === "published");
 
   // Group by type

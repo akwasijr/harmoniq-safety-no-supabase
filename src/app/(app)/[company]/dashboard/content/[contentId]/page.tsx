@@ -47,7 +47,7 @@ export default function ContentDetailPage() {
   const [isEditing, setIsEditing] = React.useState(false);
 
   const { toast } = useToast();
-  const { items: contentItems, update: updateContent, remove: removeContent } = useContentStore();
+  const { items: contentItems, isLoading, update: updateContent, remove: removeContent } = useContentStore();
   const { items: users } = useUsersStore();
   const content = contentItems.find((c) => c.id === contentId);
   const author = content?.created_by ? users.find((u) => u.id === content.created_by) : undefined;
@@ -70,7 +70,22 @@ export default function ContentDetailPage() {
     }
   }, [content]);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   if (!content) {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Content not found</p>

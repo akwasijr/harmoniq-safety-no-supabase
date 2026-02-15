@@ -38,7 +38,6 @@ import { useCompanyStore } from "@/stores/company-store";
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID } from "@/mocks/data";
 
 // Location type hierarchy
 const LOCATION_HIERARCHY: Record<string, string[]> = {
@@ -100,7 +99,7 @@ function LocationsPageContent() {
   const { items: users } = useUsersStore();
   const { items: assets } = useAssetsStore();
   const { items: companies } = useCompanyStore();
-  const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || DEFAULT_COMPANY_ID;
+  const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || "";
 
   const [newLocation, setNewLocation] = React.useState({
     name: "",

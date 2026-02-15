@@ -28,7 +28,7 @@ import { useTranslation } from "@/i18n";
 // Mock activity data for the user
 const mockActivity = [
   { id: "1", action: "Logged in", timestamp: "2024-07-20T10:00:00Z", ip: "192.168.1.100" },
-  { id: "2", action: "Viewed company: Nexus Manufacturing", timestamp: "2024-07-20T10:05:00Z", ip: "192.168.1.100" },
+  { id: "2", action: "Viewed company: Harmoniq Safety", timestamp: "2024-07-20T10:05:00Z", ip: "192.168.1.100" },
   { id: "3", action: "Created company: New Corp", timestamp: "2024-07-19T14:30:00Z", ip: "192.168.1.100" },
   { id: "4", action: "Updated platform settings", timestamp: "2024-07-18T09:15:00Z", ip: "192.168.1.100" },
   { id: "5", action: "Deactivated user account", timestamp: "2024-07-17T16:45:00Z", ip: "10.0.0.5" },
@@ -41,7 +41,7 @@ export default function PlatformUserDetailPage() {
   const { toast } = useToast();
   const company = params.company as string;
   const userId = params.userId as string;
-  const { items: users, update: updateUser, remove: removeUser } = useUsersStore();
+  const { items: users, isLoading, update: updateUser, remove: removeUser } = useUsersStore();
   const { t, formatDate } = useTranslation();
 
   const user = users.find((u) => u.id === userId);
@@ -54,7 +54,22 @@ export default function PlatformUserDetailPage() {
     }
   }, [user?.id]);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   if (!user || !editedUser) {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      );
+    }
     return (
       <RoleGuard requireSuperAdmin>
         <div className="py-12 text-center">

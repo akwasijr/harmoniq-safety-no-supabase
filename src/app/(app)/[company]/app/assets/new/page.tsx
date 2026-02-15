@@ -84,6 +84,9 @@ export default function NewAssetPage() {
   const [serialNumber, setSerialNumber] = React.useState("");
   const [manufacturer, setManufacturer] = React.useState("");
   const [model, setModel] = React.useState("");
+  const [assetType, setAssetType] = React.useState<"static" | "movable">("static");
+  const [department, setDepartment] = React.useState("");
+  const [warrantyExpiry, setWarrantyExpiry] = React.useState("");
   const [condition, setCondition] = React.useState<AssetCondition>("good");
   const [criticality, setCriticality] = React.useState<AssetCriticality>("medium");
   const [locationId, setLocationId] = React.useState<string>("");
@@ -171,30 +174,32 @@ export default function NewAssetPage() {
     const assetTag = generateAssetTag();
     const assetId = `asset_${Date.now()}`;
 
-    addAsset({
-      id: assetId,
-      company_id: user.company_id,
-      location_id: locationId || null,
-      parent_asset_id: null,
-      is_system: false,
-      name: name.trim(),
-      asset_tag: assetTag,
-      serial_number: serialNumber.trim() || null,
-      barcode: null,
-      qr_code: `AST-${assetTag}`,
-      category: category as AssetCategory,
-      sub_category: null,
-      criticality,
-      manufacturer: manufacturer.trim() || null,
-      model: model.trim() || null,
-      model_number: null,
-      specifications: notes.trim() || null,
-      manufactured_date: null,
-      purchase_date: null,
-      installation_date: now.split("T")[0],
-      warranty_expiry: null,
-      expected_life_years: null,
-      condition,
+        addAsset({
+          id: assetId,
+          company_id: user.company_id,
+          location_id: locationId || null,
+          parent_asset_id: null,
+          is_system: false,
+          name: name.trim(),
+          asset_tag: assetTag,
+          serial_number: serialNumber.trim() || null,
+          barcode: null,
+          qr_code: `AST-${assetTag}`,
+          category: category as AssetCategory,
+          sub_category: null,
+          asset_type: assetType,
+          criticality,
+          department: department.trim() || null,
+          manufacturer: manufacturer.trim() || null,
+          model: model.trim() || null,
+          model_number: null,
+          specifications: notes.trim() || null,
+          manufactured_date: null,
+          purchase_date: null,
+          installation_date: now.split("T")[0],
+          warranty_expiry: warrantyExpiry || null,
+          expected_life_years: null,
+          condition,
       condition_notes: null,
       last_condition_assessment: now.split("T")[0],
       purchase_cost: null,
@@ -306,6 +311,30 @@ export default function NewAssetPage() {
                   })}
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label>{t("newAsset.assetType")}</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: "static", label: t("newAsset.assetTypeStatic") },
+                    { value: "movable", label: t("newAsset.assetTypeMovable") },
+                  ].map((type) => (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => setAssetType(type.value as "static" | "movable")}
+                      className={cn(
+                        "flex items-center justify-center rounded-lg border-2 p-3 text-sm font-medium transition-all",
+                        assetType === type.value
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/30"
+                      )}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -354,6 +383,26 @@ export default function NewAssetPage() {
                     onChange={(e) => setModel(e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="department">{t("newAsset.department")}</Label>
+                <Input
+                  id="department"
+                  placeholder={t("newAsset.departmentPlaceholder")}
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="warranty">{t("newAsset.warrantyExpiry")}</Label>
+                <Input
+                  id="warranty"
+                  type="date"
+                  value={warrantyExpiry}
+                  onChange={(e) => setWarrantyExpiry(e.target.value)}
+                />
               </div>
 
               {/* Condition */}
@@ -571,6 +620,10 @@ export default function NewAssetPage() {
                     <span className="text-muted-foreground">{t("newAsset.category")}</span>
                     <span className="font-medium capitalize">{category || "—"}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("newAsset.assetType")}</span>
+                    <span className="font-medium capitalize">{assetType}</span>
+                  </div>
                   {serialNumber && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t("newAsset.serialNumber")}</span>
@@ -581,6 +634,18 @@ export default function NewAssetPage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t("newAsset.manufacturer")}</span>
                       <span>{manufacturer} {model || ""}</span>
+                    </div>
+                  )}
+                  {department && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t("newAsset.department")}</span>
+                      <span>{department}</span>
+                    </div>
+                  )}
+                  {warrantyExpiry && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t("newAsset.warrantyExpiry")}</span>
+                      <span>{warrantyExpiry}</span>
                     </div>
                   )}
                   <div className="flex justify-between">

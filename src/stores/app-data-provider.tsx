@@ -16,6 +16,8 @@ import { CorrectiveActionsProvider } from "@/stores/corrective-actions-store";
 import { WorkOrdersProvider } from "@/stores/work-orders-store";
 import { MeterReadingsProvider } from "@/stores/meter-readings-store";
 import { PartsProvider } from "@/stores/parts-store";
+import { InspectionRoutesProvider } from "@/stores/inspection-routes-store";
+import { InspectionRoundsProvider } from "@/stores/inspection-rounds-store";
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
   return (
@@ -31,15 +33,19 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
                       <WorkOrdersProvider>
                         <MeterReadingsProvider>
                           <PartsProvider>
-                            <TicketsStoreProvider>
-                              <ContentStoreProvider>
-                                <ChecklistTemplatesProvider>
-                                  <ChecklistSubmissionsProvider>
-                                    {children}
-                                  </ChecklistSubmissionsProvider>
-                                </ChecklistTemplatesProvider>
-                              </ContentStoreProvider>
-                            </TicketsStoreProvider>
+                            <InspectionRoutesProvider>
+                              <InspectionRoundsProvider>
+                                <TicketsStoreProvider>
+                                  <ContentStoreProvider>
+                                    <ChecklistTemplatesProvider>
+                                      <ChecklistSubmissionsProvider>
+                                        {children}
+                                      </ChecklistSubmissionsProvider>
+                                    </ChecklistTemplatesProvider>
+                                  </ContentStoreProvider>
+                                </TicketsStoreProvider>
+                              </InspectionRoundsProvider>
+                            </InspectionRoutesProvider>
                           </PartsProvider>
                         </MeterReadingsProvider>
                       </WorkOrdersProvider>

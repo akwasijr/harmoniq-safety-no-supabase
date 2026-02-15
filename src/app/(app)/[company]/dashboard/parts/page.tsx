@@ -26,7 +26,7 @@ export default function PartsPage() {
   const company = useCompanyParam();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { items: parts, add, update } = usePartsStore();
+  const { items: parts, add, update , isLoading } = usePartsStore();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showCreate, setShowCreate] = React.useState(false);
   const [form, setForm] = React.useState({

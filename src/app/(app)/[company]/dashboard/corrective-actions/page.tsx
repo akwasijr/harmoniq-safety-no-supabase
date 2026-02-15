@@ -36,7 +36,7 @@ export default function CorrectiveActionsPage() {
   const company = useCompanyParam();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { items: actions, add, update } = useCorrectiveActionsStore();
+  const { items: actions, add, update , isLoading } = useCorrectiveActionsStore();
   const { items: assets } = useAssetsStore();
   const { items: users } = useUsersStore();
   const { add: addWorkOrder } = useWorkOrdersStore();

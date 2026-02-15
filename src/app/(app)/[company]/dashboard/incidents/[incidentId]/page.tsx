@@ -117,7 +117,7 @@ export default function IncidentDetailPage() {
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
-  const { items: incidents, update: updateIncident, remove: removeIncident } = useIncidentsStore();
+  const { items: incidents, isLoading, update: updateIncident, remove: removeIncident } = useIncidentsStore();
   const { items: tickets } = useTicketsStore();
   const { items: users } = useUsersStore();
 
@@ -201,7 +201,22 @@ export default function IncidentDetailPage() {
   const completedActions = actions.filter((a) => a.status === "completed").length;
   const totalActions = actions.length;
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   if (!incident) {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      );
+    }
     return (
       <EmptyState
         icon={AlertCircle}

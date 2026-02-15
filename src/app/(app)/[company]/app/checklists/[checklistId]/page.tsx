@@ -21,7 +21,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
 import type { ChecklistResponse } from "@/types";
-import { DEFAULT_COMPANY_ID } from "@/mocks/data";
 
 export default function ChecklistFormPage() {
   const router = useRouter();
@@ -144,7 +143,7 @@ export default function ChecklistFormPage() {
     const submission = getSubmissionData();
     addSubmission({
       id: `sub_${Date.now()}`,
-      company_id: user.company_id || DEFAULT_COMPANY_ID,
+      company_id: user.company_id || "",
       created_at: now.toISOString(),
       ...submission,
     });

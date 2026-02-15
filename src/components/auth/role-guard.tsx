@@ -6,6 +6,8 @@ import { Loader2, ShieldAlert } from "lucide-react";
 import { useAuth, useRole } from "@/hooks/use-auth";
 import type { Permission, UserRole } from "@/types";
 
+const ADMIN_ENTRY_STORAGE_KEY = "harmoniq_admin_entry";
+
 interface RoleGuardProps {
   children: React.ReactNode;
   
@@ -52,6 +54,20 @@ export function RoleGuard({
   const router = useRouter();
   const { user, isLoading, hasPermission, hasAnyPermission, hasAllPermissions } = useAuth();
   const { isSuperAdmin, role } = useRole();
+  const [hasAdminEntry, setHasAdminEntry] = React.useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(ADMIN_ENTRY_STORAGE_KEY) === "true";
+  });
+
+  React.useEffect(() => {
+    const sync = () => {
+      if (typeof window === "undefined") return;
+      setHasAdminEntry(window.localStorage.getItem(ADMIN_ENTRY_STORAGE_KEY) === "true");
+    };
+    sync();
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
   
   // Loading state
   if (isLoading) {
@@ -72,12 +88,12 @@ export function RoleGuard({
   }
   
   // Check super admin requirement
-  if (requireSuperAdmin && !isSuperAdmin) {
+  if (requireSuperAdmin && (!isSuperAdmin || !hasAdminEntry)) {
     if (redirectTo) {
       router.push(redirectTo);
       return null;
     }
-    return fallback || <AccessDenied message="This section is only accessible to platform administrators." />;
+    return fallback || <AccessDenied message="This section is only accessible via the platform administrator link." />;
   }
   
   // Check allowed roles

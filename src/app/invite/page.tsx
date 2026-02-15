@@ -20,6 +20,8 @@ function InviteForm() {
     role: string;
     company_name: string;
   } | null>(null);
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
 
@@ -56,6 +58,10 @@ function InviteForm() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!firstName || !lastName) {
+      setError("Please enter your first and last name.");
+      return;
+    }
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -72,11 +78,15 @@ function InviteForm() {
       const supabase = createClient();
 
       // Create the auth user
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: inviteInfo!.email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          },
         },
       });
 
@@ -86,20 +96,66 @@ function InviteForm() {
         return;
       }
 
-      // Sign in immediately (email is pre-confirmed via invitation flow)
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      // Sign in immediately
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: inviteInfo!.email,
         password,
       });
 
       if (signInError) {
-        // Might need email confirmation — show success anyway
+        // Email confirmation may be required — show success message
         setState("success");
         return;
       }
 
-      // Redirect through callback to create profile
-      window.location.href = "/auth/callback?source=email";
+      const userId = signInData.user?.id || signUpData.user?.id;
+      if (!userId) {
+        setState("success");
+        return;
+      }
+
+      // Fetch full invitation details to get company_id and role
+      const invRes = await fetch(`/api/invitations/validate?token=${token}`);
+      const invData = await invRes.json();
+
+      if (invRes.ok && invData.valid) {
+        // Create profile directly — don't rely on /auth/callback
+        await supabase.from("users").upsert({
+          id: userId,
+          company_id: invData.invitation.company_id || "",
+          email: inviteInfo!.email.toLowerCase(),
+          first_name: firstName,
+          last_name: lastName,
+          full_name: `${firstName} ${lastName}`.trim(),
+          role: inviteInfo!.role || "employee",
+          user_type: "internal",
+          account_type: "standard",
+          status: "active",
+          language: "en",
+          theme: "system",
+          two_factor_enabled: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+        // Mark invitation as accepted
+        await supabase
+          .from("invitations")
+          .update({ accepted_at: new Date().toISOString() })
+          .eq("token", token);
+      }
+
+      // Get company slug for redirect
+      const { data: company } = await supabase
+        .from("companies")
+        .select("slug")
+        .limit(1)
+        .single();
+
+      const slug = company?.slug || "harmoniq";
+      const role = inviteInfo!.role || "employee";
+      const dest = role === "employee" ? `/${slug}/app` : `/${slug}/dashboard`;
+      window.location.href = dest;
     } catch (err: any) {
       setError(err.message);
       setState("valid");
@@ -153,6 +209,28 @@ function InviteForm() {
                     {error}
                   </div>
                 )}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">First name</label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      required
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Last name</label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Email</label>
                   <input

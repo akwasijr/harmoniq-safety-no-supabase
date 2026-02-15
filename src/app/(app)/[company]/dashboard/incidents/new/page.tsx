@@ -20,7 +20,6 @@ import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import type { Incident, IncidentType, Severity, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID, DEFAULT_USER_ID } from "@/mocks/data";
 
 const INCIDENT_TYPES: { value: IncidentType; label: string }[] = [
   { value: "injury", label: "Injury" },
@@ -107,9 +106,9 @@ export default function NewIncidentPage() {
     const now = new Date();
     const incident: Incident = {
       id: `inc_${Date.now()}`,
-      company_id: company || user?.company_id || DEFAULT_COMPANY_ID,
+      company_id: company || user?.company_id || "",
       reference_number: `INC-${now.getTime().toString().slice(-6)}`,
-      reporter_id: user?.id || DEFAULT_USER_ID,
+      reporter_id: user?.id || "",
       type: formData.type,
       type_other: formData.type === "other" ? formData.type_other || null : null,
       severity: formData.severity,

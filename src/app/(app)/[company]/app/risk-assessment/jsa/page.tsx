@@ -25,7 +25,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import type { RiskEvaluation } from "@/types";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID } from "@/mocks/data";
 
 // JSA Pre-work Checklist Categories
 const CHECKLIST_CATEGORIES = [
@@ -193,7 +192,7 @@ export default function JSAFormPage() {
     const refNumber = `JSA-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const evaluation: RiskEvaluation = {
       id: `eval_${Date.now()}`,
-      company_id: user.company_id || DEFAULT_COMPANY_ID,
+      company_id: user.company_id || "",
       submitter_id: user.id,
       country: "US",
       form_type: "JSA",

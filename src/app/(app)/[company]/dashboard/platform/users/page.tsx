@@ -18,23 +18,20 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
-import { mockUsers, DEFAULT_COMPANY_ID } from "@/mocks/data";
+import { useUsersStore } from "@/stores/users-store";
 import type { User } from "@/types";
 import { useTranslation } from "@/i18n";
-
-// Only show users that are super_admins (platform-level users)
-const getPlatformUsers = () =>
-  mockUsers.filter((u) => u.role === "super_admin");
 
 export default function PlatformUsersPage() {
   const params = useParams();
   const router = useRouter();
   const company = params.company as string;
 
+  const { items: allUsers, add: addUser, update: updateUser, remove: removeUser } = useUsersStore();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [platformUsers, setPlatformUsers] = React.useState(getPlatformUsers);
+  const platformUsers = allUsers.filter((u) => u.role === "super_admin" || u.role === "company_admin");
   const [openMenuId, setOpenMenuId] = React.useState<string | null>(null);
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
@@ -71,7 +68,7 @@ export default function PlatformUsersPage() {
 
     const newUser: User = {
       id: `user_sa_${Date.now()}`,
-      company_id: DEFAULT_COMPANY_ID,
+      company_id: "",
       email: formData.email,
       first_name: formData.first_name,
       middle_name: null,
@@ -95,7 +92,7 @@ export default function PlatformUsersPage() {
       location_id: null,
     };
 
-    setPlatformUsers((prev) => [...prev, newUser]);
+    addUser(newUser);
     setIsSubmitting(false);
     handleCloseModal();
     toast(`Admin "${newUser.full_name}" created successfully`);
@@ -282,13 +279,7 @@ export default function PlatformUsersPage() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setOpenMenuId(null);
-                                  setPlatformUsers((prev) =>
-                                    prev.map((u) =>
-                                      u.id === user.id
-                                        ? { ...u, status: u.status === "active" ? "inactive" : "active" }
-                                        : u
-                                    )
-                                  );
+                                  updateUser(user.id, { status: user.status === "active" ? "inactive" : "active" });
                                   toast(
                                     user.status === "active"
                                       ? `${user.full_name} deactivated`
@@ -304,7 +295,7 @@ export default function PlatformUsersPage() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setOpenMenuId(null);
-                                  setPlatformUsers((prev) => prev.filter((u) => u.id !== user.id));
+                                  removeUser(user.id);
                                   toast(`${user.full_name} has been removed`, "info");
                                 }}
                               >

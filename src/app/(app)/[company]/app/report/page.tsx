@@ -37,7 +37,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import type { Incident, IncidentType, Severity, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID } from "@/mocks/data";
 
 const TOTAL_STEPS = 7;
 
@@ -101,7 +100,7 @@ function ReportIncidentPageContent() {
   const [isGettingLocation, setIsGettingLocation] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { items: locations } = useLocationsStore();
-  const { add: addIncident } = useIncidentsStore();
+  const { add: addIncident } = useIncidentsStore({ skipLoad: true });
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -239,7 +238,7 @@ function ReportIncidentPageContent() {
     const refNumber = `INC-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const incident: Incident = {
       id: `inc_${Date.now()}`,
-      company_id: user.company_id || DEFAULT_COMPANY_ID,
+      company_id: user.company_id || "",
       reference_number: refNumber,
       reporter_id: user.id,
       type: formData.type as IncidentType,
@@ -652,10 +651,10 @@ function ReportIncidentPageContent() {
             {t("report.submitReport")}
           </Button>
         )}
-        {currentStep > 1 && currentStep < TOTAL_STEPS && (
+        {currentStep === 5 && (
           <Button
             variant="ghost"
-            onClick={() => setCurrentStep(TOTAL_STEPS)}
+            onClick={() => setCurrentStep(6)}
             className="mt-2 w-full text-muted-foreground"
           >
             {t("report.skipOptionalSteps")}

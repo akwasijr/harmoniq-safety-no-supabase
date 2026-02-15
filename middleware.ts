@@ -7,9 +7,11 @@ import type { NextRequest } from "next/server";
  * 2. Geo-based locale detection for marketing pages
  */
 
-const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/contact", "/privacy", "/terms", "/invite", "/auth/callback"];
+const PUBLIC_ROUTES = ["/", "/login", "/admin", "/signup", "/forgot-password", "/contact", "/privacy", "/terms", "/invite", "/auth/callback"];
 const MARKETING_ROUTES = ["/", "/contact", "/privacy", "/terms"];
-const STATIC_PREFIXES = ["/_next", "/favicon", "/logo", "/screen-", "/bg-", "/icons", "/api", "/manifest", "/sw"];
+const STATIC_PREFIXES = ["/_next", "/favicon", "/logo", "/screen-", "/bg-", "/icons", "/manifest", "/sw"];
+const PUBLIC_API_ROUTES = ["/api/analytics", "/api/contact", "/api/setup"];
+const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 
 function detectLocale(acceptLanguage: string | null): string {
   if (!acceptLanguage) return "en";
@@ -27,6 +29,15 @@ export async function middleware(request: NextRequest) {
   // Skip static assets
   if (STATIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     return NextResponse.next();
+  }
+
+  // If an admin-entry cookie is present but the user is not on an admin path, clear it.
+  // This prevents the super-admin portal from appearing after using the regular login flow.
+  const isAdminPath = pathname.startsWith("/admin") || pathname.includes("/dashboard/platform");
+  if (!isAdminPath && request.cookies.get(ADMIN_ENTRY_COOKIE)) {
+    const response = NextResponse.next();
+    response.cookies.set(ADMIN_ENTRY_COOKIE, "", { path: "/", maxAge: 0, sameSite: "lax" });
+    return response;
   }
 
   // Marketing pages: set locale cookie
@@ -48,11 +59,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Public API routes (analytics POST, contact) — handle auth internally
+  if (PUBLIC_API_ROUTES.some((r) => pathname.startsWith(r))) {
+    return NextResponse.next();
+  }
+
+  // Platform admin routes require explicit admin entry flag (set by /admin login)
+  if (pathname.includes("/dashboard/platform") && !request.cookies.get(ADMIN_ENTRY_COOKIE)) {
+    const adminUrl = new URL("/admin", request.url);
+    adminUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(adminUrl);
+  }
+
   // Protected routes: check Supabase auth
   const { updateSession } = await import("@/lib/supabase/middleware");
   const { user, supabaseResponse } = await updateSession(request);
 
   if (!user) {
+    // API routes return 401 instead of redirect
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
@@ -62,5 +89,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

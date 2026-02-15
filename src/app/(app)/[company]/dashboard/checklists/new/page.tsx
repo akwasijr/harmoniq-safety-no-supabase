@@ -16,7 +16,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCompanyStore } from "@/stores/company-store";
 import type { ChecklistTemplate } from "@/types";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID } from "@/mocks/data";
 
 export default function NewChecklistPage() {
   const { t } = useTranslation();
@@ -32,7 +31,7 @@ export default function NewChecklistPage() {
   const companyId =
     (companies.find((c) => c.slug === company) || companies[0])?.id ||
     user?.company_id ||
-    DEFAULT_COMPANY_ID;
+    "";
 
   const handleSave = () => {
     if (!name.trim()) return;

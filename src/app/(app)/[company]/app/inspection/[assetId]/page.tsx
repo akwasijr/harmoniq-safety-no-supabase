@@ -45,7 +45,7 @@ export default function AssetInspectionPage() {
   const [showNotes, setShowNotes] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const { items: assets } = useAssetsStore();
+  const { items: assets , isLoading } = useAssetsStore();
   const { add: addInspection } = useAssetInspectionsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -143,6 +143,14 @@ export default function AssetInspectionPage() {
     toast("Inspection submitted");
     router.push(`/${company}/app/report/success?ref=${refNumber}&type=inspection`);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   if (!asset) {
     return (

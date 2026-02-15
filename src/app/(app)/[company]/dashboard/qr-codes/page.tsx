@@ -53,7 +53,7 @@ export default function QRCodesPage() {
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const { items: locations } = useLocationsStore();
-  const { items: allAssets } = useAssetsStore();
+  const { items: allAssets , isLoading } = useAssetsStore();
   const { toast } = useToast();
   const [qrCodes, setQrCodes] = React.useState<QRCodeItem[]>(() =>
     loadFromStorage(STORAGE_KEY, initialQRCodes)

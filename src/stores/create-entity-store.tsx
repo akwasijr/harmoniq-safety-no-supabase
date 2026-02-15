@@ -17,6 +17,7 @@ export interface EntityStore<T extends IdEntity> {
   remove: (id: string) => void;
   /** Returns items filtered by company_id. Only works for entities with company_id field. */
   itemsForCompany: (companyId: string | null | undefined) => T[];
+  ensureLoaded: () => void;
 }
 
 const isSupabaseConfigured =
@@ -47,14 +48,24 @@ export function createEntityStore<T extends IdEntity>(
     const [items, setItems] = React.useState<T[]>(() =>
       isSupabaseConfigured ? [] : loadFromStorage(storageKey, initialData)
     );
-    const [isLoading, setIsLoading] = React.useState(isSupabaseConfigured);
+    const [isLoading, setIsLoading] = React.useState(false);
+    const hasLoadedRef = React.useRef(!isSupabaseConfigured);
+    const isFetchingRef = React.useRef(false);
+    const isMountedRef = React.useRef(true);
 
-    // === SUPABASE MODE ===
     React.useEffect(() => {
+      return () => {
+        isMountedRef.current = false;
+      };
+    }, []);
+
+    const ensureLoaded = React.useCallback(() => {
       if (!isSupabaseConfigured) return;
+      if (hasLoadedRef.current || isFetchingRef.current) return;
+      isFetchingRef.current = true;
+      setIsLoading(true);
 
       const supabase = createClient();
-      let isMounted = true;
 
       const fetchData = async () => {
         try {
@@ -71,7 +82,7 @@ export function createEntityStore<T extends IdEntity>(
 
           if (error) {
             console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
-          } else if (isMounted) {
+          } else if (isMountedRef.current) {
             setItems((data || []) as T[]);
           }
         } catch (err: unknown) {
@@ -79,13 +90,13 @@ export function createEntityStore<T extends IdEntity>(
           const msg = err instanceof Error ? err.message : String(err);
           console.warn(`[Harmoniq] Fetch ${table} aborted/failed:`, msg);
         } finally {
-          if (isMounted) setIsLoading(false);
+          if (isMountedRef.current) setIsLoading(false);
+          isFetchingRef.current = false;
+          hasLoadedRef.current = true;
         }
       };
 
       fetchData();
-
-      return () => { isMounted = false; };
     }, []);
 
     // === LOCALSTORAGE MODE ===
@@ -179,16 +190,21 @@ export function createEntityStore<T extends IdEntity>(
     );
 
     const value = React.useMemo(
-      () => ({ items, isLoading, setItems, getById, add, update, remove, itemsForCompany }),
-      [items, isLoading, getById, add, update, remove, itemsForCompany]
+      () => ({ items, isLoading, setItems, getById, add, update, remove, itemsForCompany, ensureLoaded }),
+      [items, isLoading, getById, add, update, remove, itemsForCompany, ensureLoaded]
     );
 
     return <Context.Provider value={value}>{children}</Context.Provider>;
   }
 
-  function useStore() {
+  function useStore(options?: { skipLoad?: boolean }) {
     const ctx = React.useContext(Context);
     if (!ctx) throw new Error("useStore must be used within a provider");
+    React.useEffect(() => {
+      if (!options?.skipLoad) {
+        ctx.ensureLoaded();
+      }
+    }, [ctx, options?.skipLoad]);
     return ctx;
   }
 

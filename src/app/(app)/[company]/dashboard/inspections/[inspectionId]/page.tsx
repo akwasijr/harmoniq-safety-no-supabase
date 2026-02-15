@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
 import { BarChart } from "@/components/charts";
 import { useTranslation } from "@/i18n";
+import { useAssetInspectionsStore } from "@/stores/inspections-store";
 
 // Mock inspection template data
 const mockInspectionTemplates: Record<string, {
@@ -263,6 +264,7 @@ export default function InspectionDetailPage() {
   const company = routeParams.company as string;
   const inspectionId = routeParams.inspectionId as string;
   const { t, formatDate } = useTranslation();
+  const { isLoading } = useAssetInspectionsStore();
   const [activeTab, setActiveTab] = React.useState("details");
   const [isEditing, setIsEditing] = React.useState(false);
 
@@ -272,6 +274,14 @@ export default function InspectionDetailPage() {
     ? mockInspectionTemplates[inspectionId] 
     : mockInspectionTemplates[mockInspectionSubmission.templateId];
   const submission = !isTemplate ? mockInspectionSubmission : null;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   if (!template) {
     return (

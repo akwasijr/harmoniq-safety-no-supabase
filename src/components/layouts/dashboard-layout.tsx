@@ -5,7 +5,6 @@ import { Menu, X } from "lucide-react";
 import { Sidebar } from "@/components/navigation/sidebar";
 import { Button } from "@/components/ui/button";
 import { CompanySwitcher } from "@/components/auth/company-switcher";
-import { useAuth } from "@/hooks/use-auth";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -25,7 +24,6 @@ export function DashboardLayout({
   userRole = "Employee",
 }: DashboardLayoutProps) {
   const [showMobileMenu, setShowMobileMenu] = React.useState(false);
-  const { isSuperAdmin } = useAuth();
 
   // L18: Close mobile sidebar on Escape key
   React.useEffect(() => {
@@ -47,7 +45,6 @@ export function DashboardLayout({
           companyLogo={companyLogo}
           userName={userName}
           userRole={userRole}
-          showPlatformAdmin={isSuperAdmin}
         />
       </div>
 
@@ -66,7 +63,6 @@ export function DashboardLayout({
               companyLogo={companyLogo}
               userName={userName}
               userRole={userRole}
-              showPlatformAdmin={isSuperAdmin}
             />
           </div>
         </>
@@ -94,9 +90,7 @@ export function DashboardLayout({
             
             {/* Company switcher (super admin) or company name */}
             <CompanySwitcher />
-            {!isSuperAdmin && (
-              <span className="font-semibold lg:hidden">{companyName}</span>
-            )}
+            <span className="font-semibold lg:hidden">{companyName}</span>
           </div>
         </header>
         

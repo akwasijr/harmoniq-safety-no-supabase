@@ -17,7 +17,7 @@ interface EmployeeAppLayoutProps {
 export function EmployeeAppLayout({
   children,
   company,
-  companyName = "Nexus Manufacturing",
+  companyName = "Harmoniq Safety",
   companyLogo = null,
   showHeader = true,
   headerTitle,

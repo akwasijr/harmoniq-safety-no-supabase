@@ -13,6 +13,7 @@ import {
   UserCog,
   Eye,
   UsersRound,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,12 +30,11 @@ import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID } from "@/mocks/data";
 
 const ITEMS_PER_PAGE = 10;
 
 // Tab type
-type TabType = "users" | "teams";
+type TabType = "users" | "invitations" | "teams";
 
 export default function UsersPage() {
   const { t, formatDate, formatNumber } = useTranslation();
@@ -43,6 +43,9 @@ export default function UsersPage() {
   const [activeTab, setActiveTab] = React.useState<TabType>("users");
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [showAddTeamModal, setShowAddTeamModal] = React.useState(false);
+  const [isInviting, setIsInviting] = React.useState(false);
+  const [invitations, setInvitations] = React.useState<any[]>([]);
+  const [isInvitesLoading, setIsInvitesLoading] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [dateRange, setDateRange] = React.useState("all_time");
@@ -73,9 +76,28 @@ export default function UsersPage() {
 
   const { toast } = useToast();
   const { items: companies } = useCompanyStore();
-  const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || DEFAULT_COMPANY_ID;
+  const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || "";
   const { items: users, add: addUser } = useUsersStore();
   const { items: teams, add: addTeam } = useTeamsStore();
+
+  const fetchInvitations = React.useCallback(async () => {
+    try {
+      setIsInvitesLoading(true);
+      const res = await fetch("/api/invitations");
+      const data = await res.json();
+      if (res.ok) {
+        setInvitations(data.invitations || []);
+      }
+    } catch {
+      setInvitations([]);
+    } finally {
+      setIsInvitesLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchInvitations();
+  }, [fetchInvitations]);
 
   // Get unique departments
   const departments = Array.from(new Set(users.map(u => u.department).filter((d): d is string => d !== null && d !== undefined)));
@@ -175,38 +197,75 @@ export default function UsersPage() {
     },
   ];
 
-  const handleAddUser = () => {
-    const newId = `user_new_${Date.now()}`;
-    const newUserData = {
-      id: newId,
-      company_id: companyId,
-      email: newUser.email,
-      first_name: newUser.first_name,
-      middle_name: null,
-      last_name: newUser.last_name,
-      full_name: `${newUser.first_name} ${newUser.last_name}`,
-      role: newUser.role as "company_admin" | "manager" | "employee",
-      user_type: "internal" as const,
-      account_type: "standard" as const,
-      gender: null,
-      department: newUser.department || null,
-      job_title: null,
-      employee_id: `EMP${String(users.length + 1).padStart(3, '0')}`,
-      status: "active" as const,
-      location_id: null,
-      language: "en" as const,
-      theme: "system" as const,
-      two_factor_enabled: false,
-      last_login_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      team_ids: newUser.team_ids,
-    };
+  const handleAddUser = async () => {
+    try {
+      setIsInviting(true);
+      const res = await fetch("/api/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newUser.email,
+          role: newUser.role,
+          company_id: companyId,
+          first_name: newUser.first_name,
+          last_name: newUser.last_name,
+          department: newUser.department,
+          team_ids: newUser.team_ids,
+        }),
+      });
 
-    addUser(newUserData);
-    setShowAddModal(false);
-    setNewUser({ first_name: "", last_name: "", email: "", role: "employee", department: "", team_ids: [] });
-    toast("User added successfully");
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast(data.error || "Failed to create invitation");
+        return;
+      }
+
+      if (data.user) {
+        addUser(data.user);
+      }
+
+      if (data.email_sent) {
+        toast("Invitation email sent.");
+      } else if (data.invitation?.invite_url) {
+        const inviteUrl = data.invitation.invite_url;
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(inviteUrl);
+          toast("Invitation created. Link copied to clipboard.");
+        } else {
+          toast(`Invitation created. Share this link: ${inviteUrl}`);
+        }
+      } else {
+        toast("Invitation created.");
+      }
+
+      setShowAddModal(false);
+      fetchInvitations();
+      setNewUser({ first_name: "", last_name: "", email: "", role: "employee", department: "", team_ids: [] });
+    } catch (err: any) {
+      toast(err?.message || "Failed to create invitation");
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const pendingInvitations = invitations.filter((invitation) => !invitation.accepted_at);
+
+  const handleCopyInvite = async (inviteUrl?: string | null) => {
+    if (!inviteUrl) {
+      toast("Invite link not available.");
+      return;
+    }
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(inviteUrl);
+        toast("Invite link copied to clipboard.");
+      } else {
+        toast(`Invite link: ${inviteUrl}`);
+      }
+    } catch {
+      toast(`Invite link: ${inviteUrl}`);
+    }
   };
 
   const handleAddTeam = () => {
@@ -250,10 +309,13 @@ export default function UsersPage() {
         <Button 
           size="sm" 
           className="gap-2" 
-          onClick={() => activeTab === "users" ? setShowAddModal(true) : setShowAddTeamModal(true)}
+          onClick={() => {
+            if (activeTab === "users" || activeTab === "invitations") setShowAddModal(true);
+            else setShowAddTeamModal(true);
+          }}
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
-          {activeTab === "users" ? t("users.buttons.addUser") : t("users.buttons.createTeam")}
+          {activeTab === "teams" ? t("users.buttons.createTeam") : t("users.buttons.addUser")}
         </Button>
       </div>
 
@@ -272,6 +334,24 @@ export default function UsersPage() {
             <Users className="h-4 w-4 shrink-0" />
             <span className="truncate">{t("users.tabs.users")}</span>
             {activeTab === "users" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+          <button
+            onClick={() => { setActiveTab("invitations"); setCurrentPage(1); setSearchQuery(""); setStatusFilter(""); fetchInvitations(); }}
+            className={cn(
+              "flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative whitespace-nowrap",
+              activeTab === "invitations"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Mail className="h-4 w-4 shrink-0" />
+            <span className="truncate">Invitations</span>
+            {pendingInvitations.length > 0 && (
+              <span className="ml-1 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">{pendingInvitations.length}</span>
+            )}
+            {activeTab === "invitations" && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>
@@ -470,12 +550,75 @@ export default function UsersPage() {
 
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
               <Button variant="outline" onClick={() => setShowAddModal(false)}>{t("common.cancel")}</Button>
-              <Button onClick={handleAddUser} disabled={!newUser.first_name || !newUser.last_name || !newUser.email}>{t("users.buttons.addUser")}</Button>
+              <Button
+                onClick={handleAddUser}
+                disabled={!newUser.first_name || !newUser.last_name || !newUser.email || isInviting}
+              >
+                {t("users.buttons.addUser")}
+              </Button>
             </div>
           </div>
         </div>
       )}
         </>
+      )}
+
+      {/* Invitations Tab Content */}
+      {activeTab === "invitations" && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Pending Invitations</CardTitle>
+              <Button variant="outline" size="sm" onClick={fetchInvitations} disabled={isInvitesLoading}>
+                Refresh
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isInvitesLoading ? (
+              <p className="text-sm text-muted-foreground">Loading invitations...</p>
+            ) : pendingInvitations.length === 0 ? (
+              <div className="text-center py-8">
+                <Mail className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-sm font-medium text-muted-foreground">No pending invitations</p>
+                <p className="text-xs text-muted-foreground mt-1">Invite a user from the Users tab to see pending invitations here.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="pb-3 font-medium">Email</th>
+                      <th className="pb-3 font-medium">Role</th>
+                      <th className="pb-3 font-medium">Expires</th>
+                      <th className="pb-3 font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingInvitations.map((invitation) => (
+                      <tr key={invitation.id} className="border-b last:border-0">
+                        <td className="py-3">{invitation.email}</td>
+                        <td className="py-3 capitalize text-xs">{invitation.role?.replace("_", " ")}</td>
+                        <td className="py-3 text-xs text-muted-foreground">
+                          {invitation.expires_at ? formatDate(invitation.expires_at) : "—"}
+                        </td>
+                        <td className="py-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCopyInvite(invitation.invite_url)}
+                          >
+                            Copy link
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Teams Tab Content */}

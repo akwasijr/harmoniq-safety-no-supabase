@@ -44,7 +44,7 @@ export default function WorkOrdersPage() {
   const company = useCompanyParam();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { items: orders, add, update } = useWorkOrdersStore();
+  const { items: orders, add, update , isLoading } = useWorkOrdersStore();
   const { assets, users, parts } = useCompanyData();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");

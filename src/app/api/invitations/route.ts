@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
@@ -28,10 +29,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, role, company_id } = body;
+    const { email, role, company_id, first_name, last_name, department, team_ids } = body;
 
-    if (!email || !role) {
-      return NextResponse.json({ error: "Email and role are required" }, { status: 400 });
+    if (!email || !role || !first_name || !last_name) {
+      return NextResponse.json({ error: "First name, last name, email, and role are required" }, { status: 400 });
     }
 
     // Super admin can invite to any company, company admin only to their own
@@ -50,7 +51,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User with this email already exists" }, { status: 409 });
     }
 
-    // Check for existing pending invitation
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+    const adminClient = createAdminClient();
+
     const { data: existingInvite } = await supabase
       .from("invitations")
       .select("id")
@@ -64,11 +67,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Pending invitation already exists for this email" }, { status: 409 });
     }
 
-    // Generate invitation token
     const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    // Create invitation
     const { data: invitation, error: insertError } = await supabase
       .from("invitations")
       .insert([{
@@ -86,11 +87,83 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to create invitation" }, { status: 500 });
     }
 
-    // Build invite URL
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
     const inviteUrl = `${siteUrl}/invite?token=${token}`;
 
-    // Get company name for the email
+    if (adminClient) {
+      const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+        email.toLowerCase(),
+        {
+          data: {
+            first_name,
+            last_name,
+            role,
+            company_id: targetCompanyId,
+            invited_by: inviter.id,
+          },
+          redirectTo: `${siteUrl}/auth/callback`,
+        }
+      );
+
+      if (inviteError) {
+        const msg = inviteError.message.toLowerCase();
+        if (msg.includes("already") && msg.includes("registered")) {
+          await supabase.from("invitations").delete().eq("id", invitation.id);
+          return NextResponse.json({ error: "User with this email already exists" }, { status: 409 });
+        }
+      } else if (inviteData?.user?.id) {
+        const now = new Date().toISOString();
+        const { data: createdUser, error: profileError } = await adminClient
+          .from("users")
+          .insert([{
+            id: inviteData.user.id,
+            company_id: targetCompanyId,
+            email: email.toLowerCase(),
+            first_name,
+            middle_name: null,
+            last_name,
+            full_name: `${first_name} ${last_name}`.trim(),
+            role,
+            user_type: "internal",
+            account_type: "standard",
+            gender: null,
+            department: department || null,
+            job_title: null,
+            employee_id: `EMP${Date.now()}`,
+            status: "inactive",
+            email_verified_at: null,
+            oauth_provider: "email",
+            oauth_id: inviteData.user.id,
+            location_id: null,
+            language: "en",
+            theme: "system",
+            two_factor_enabled: false,
+            last_login_at: null,
+            created_at: now,
+            updated_at: now,
+            team_ids: Array.isArray(team_ids) ? team_ids : [],
+          }])
+          .select()
+          .single();
+
+        if (profileError) {
+          return NextResponse.json({ error: "Invitation sent but profile creation failed" }, { status: 500 });
+        }
+
+        return NextResponse.json({
+          success: true,
+          email_sent: true,
+          invitation: {
+            id: invitation.id,
+            email: invitation.email,
+            role: invitation.role,
+            expires_at: invitation.expires_at,
+            invite_url: inviteUrl,
+          },
+          user: createdUser,
+        });
+      }
+    }
+
     const { data: company } = await supabase
       .from("companies")
       .select("name")
@@ -99,6 +172,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      email_sent: false,
       invitation: {
         id: invitation.id,
         email: invitation.email,
@@ -135,7 +209,7 @@ export async function GET(request: NextRequest) {
     // Get invitations for the user's company (or all for super admin)
     let query = supabase
       .from("invitations")
-      .select("*")
+      .select("id,email,role,expires_at,accepted_at,token,company_id,companies(name)")
       .order("created_at", { ascending: false });
 
     if (profile.role !== "super_admin") {
@@ -148,7 +222,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch invitations" }, { status: 500 });
     }
 
-    return NextResponse.json({ invitations });
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+    const invitationsWithLinks = (invitations || []).map((invitation) => ({
+      ...invitation,
+      invite_url: invitation.token ? `${siteUrl}/invite?token=${invitation.token}` : null,
+      company_name: (invitation as any).companies?.name || null,
+    }));
+
+    return NextResponse.json({ invitations: invitationsWithLinks });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

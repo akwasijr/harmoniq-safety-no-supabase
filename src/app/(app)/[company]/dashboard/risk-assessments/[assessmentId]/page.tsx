@@ -735,7 +735,7 @@ export default function RiskAssessmentDetailPage() {
   const { toast } = useToast();
 
   // Connect to stores
-  const { items: riskEvaluations, update: updateRiskEvaluation } = useRiskEvaluationsStore();
+  const { items: riskEvaluations, isLoading, update: updateRiskEvaluation } = useRiskEvaluationsStore();
   const { items: users } = useUsersStore();
   const { items: locations } = useLocationsStore();
 
@@ -779,6 +779,14 @@ export default function RiskAssessmentDetailPage() {
   const templateSubmissions = isTemplate 
     ? Object.values(mockSubmissions).filter(sub => sub.templateId === assessmentId)
     : [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   if (!template) {
     return (

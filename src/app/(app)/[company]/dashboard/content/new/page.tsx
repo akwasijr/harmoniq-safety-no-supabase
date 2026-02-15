@@ -39,7 +39,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCompanyStore } from "@/stores/company-store";
 import type { Content } from "@/types";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID, DEFAULT_USER_ID } from "@/mocks/data";
 
 const contentTypes = [
   { value: "news", label: "News Article", icon: Newspaper, description: "Company news and announcements" },
@@ -69,7 +68,7 @@ export default function NewContentPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { items: companies } = useCompanyStore();
-  const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || DEFAULT_COMPANY_ID;
+  const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || "";
   
   const [formData, setFormData] = React.useState({
     type: "",
@@ -110,7 +109,7 @@ export default function NewContentPage() {
       status: publish ? "published" : "draft",
       published_at: publish ? now : null,
       scheduled_for: !publish && formData.scheduled_date ? formData.scheduled_date : null,
-      created_by: user?.id || DEFAULT_USER_ID,
+      created_by: user?.id || "",
       created_at: now,
       updated_at: now,
     };

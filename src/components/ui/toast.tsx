@@ -31,9 +31,21 @@ const icons: Record<ToastVariant, React.ElementType> = {
 };
 
 const styles: Record<ToastVariant, string> = {
-  success: "border-green-500/30 bg-green-50 text-green-900 dark:bg-green-950/50 dark:text-green-100",
-  error: "border-red-500/30 bg-red-50 text-red-900 dark:bg-red-950/50 dark:text-red-100",
-  info: "border-blue-500/30 bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:text-blue-100",
+  success: "border-green-200 bg-white text-green-800 dark:border-green-700 dark:bg-green-950 dark:text-green-100",
+  error: "border-red-200 bg-white text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-100",
+  info: "border-blue-200 bg-white text-blue-800 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-100",
+};
+
+const iconStyles: Record<ToastVariant, string> = {
+  success: "text-green-500",
+  error: "text-red-500",
+  info: "text-blue-500",
+};
+
+const barStyles: Record<ToastVariant, string> = {
+  success: "bg-green-500",
+  error: "bg-red-500",
+  info: "bg-blue-500",
 };
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
@@ -47,14 +59,15 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
   return (
     <div
       className={cn(
-        "pointer-events-auto flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg transition-all animate-in slide-in-from-top-2 fade-in",
+        "pointer-events-auto flex items-center gap-3 overflow-hidden rounded-lg border shadow-xl transition-all animate-in slide-in-from-top-2 fade-in",
         styles[toast.variant]
       )}
     >
-      <Icon className="h-4 w-4 shrink-0" />
-      <p className="text-sm font-medium flex-1">{toast.message}</p>
-      <button onClick={onDismiss} className="shrink-0 opacity-60 hover:opacity-100">
-        <X className="h-3.5 w-3.5" />
+      <div className={cn("w-1 self-stretch shrink-0", barStyles[toast.variant])} />
+      <Icon className={cn("h-5 w-5 shrink-0 my-3", iconStyles[toast.variant])} />
+      <p className="text-sm font-medium flex-1 py-3 pr-1">{toast.message}</p>
+      <button onClick={onDismiss} className="shrink-0 p-3 opacity-40 hover:opacity-100 transition-opacity">
+        <X className="h-4 w-4" />
       </button>
     </div>
   );
@@ -75,7 +88,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
+      <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none w-96 max-w-[calc(100vw-2rem)]">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onDismiss={() => dismiss(t.id)} />
         ))}

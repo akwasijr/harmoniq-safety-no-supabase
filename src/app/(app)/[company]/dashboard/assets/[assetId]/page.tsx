@@ -32,7 +32,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { mockMaintenanceSchedules, mockDowntimeLogs, DEFAULT_USER_ID } from "@/mocks/data";
+import { mockMaintenanceSchedules, mockDowntimeLogs } from "@/mocks/data";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useTeamsStore } from "@/stores/teams-store";
@@ -42,6 +42,7 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useMeterReadingsStore } from "@/stores/meter-readings-store";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useToast } from "@/components/ui/toast";
+import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { capitalize } from "@/lib/utils";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
@@ -83,8 +84,9 @@ export default function AssetDetailPage() {
   }, []);
 
   const { toast } = useToast();
+  const { user } = useAuth();
   const { t, formatDate } = useTranslation();
-  const { items: assets, update: updateAsset, remove: removeAsset } = useAssetsStore();
+  const { items: assets, update: updateAsset, remove: removeAsset, isLoading: isAssetsLoading } = useAssetsStore();
   const { items: users } = useUsersStore();
   const { items: teams } = useTeamsStore();
   const { items: inspections } = useAssetInspectionsStore();
@@ -100,6 +102,9 @@ export default function AssetDetailPage() {
   const assetsAtSameLocation = asset?.location_id
     ? assets.filter((a) => a.location_id === asset.location_id && a.id !== assetId).length
     : 0;
+  const departmentOptions = Array.from(
+    new Set(users.map((u) => u.department).filter((d): d is string => !!d))
+  );
 
   // Stats computed values
   const totalInspections = assetInspections.length;
@@ -179,9 +184,12 @@ export default function AssetDetailPage() {
     name: asset?.name || "",
     category: asset?.category || "machinery",
     status: asset?.status || "active",
+    asset_type: asset?.asset_type || "static",
+    department: asset?.department || "",
     manufacturer: asset?.manufacturer || "",
     model: asset?.model || "",
     purchase_date: asset?.purchase_date || "",
+    warranty_expiry: asset?.warranty_expiry || "",
   });
 
   React.useEffect(() => {
@@ -190,9 +198,12 @@ export default function AssetDetailPage() {
       name: asset.name,
       category: asset.category,
       status: asset.status,
+      asset_type: asset.asset_type || "static",
+      department: asset.department || "",
       manufacturer: asset.manufacturer || "",
       model: asset.model || "",
       purchase_date: asset.purchase_date || "",
+      warranty_expiry: asset.warranty_expiry || "",
     });
   }, [asset?.id]);
 
@@ -367,6 +378,13 @@ export default function AssetDetailPage() {
   ];
 
   if (!asset) {
+    if (isAssetsLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Asset not found</p>
@@ -406,9 +424,12 @@ export default function AssetDetailPage() {
                       name: editedAsset.name,
                       category: editedAsset.category as typeof asset.category,
                       status: editedAsset.status as typeof asset.status,
+                      asset_type: editedAsset.asset_type as typeof asset.asset_type,
+                      department: editedAsset.department || null,
                       manufacturer: editedAsset.manufacturer || null,
                       model: editedAsset.model || null,
                       purchase_date: editedAsset.purchase_date || null,
+                      warranty_expiry: editedAsset.warranty_expiry || null,
                       updated_at: new Date().toISOString(),
                     });
                     toast("Asset updated");
@@ -477,6 +498,41 @@ export default function AssetDetailPage() {
                   )}
                 </div>
                 <div>
+                  <Label className="text-muted-foreground">{t("assets.labels.assetType")}</Label>
+                  {isEditing ? (
+                    <select
+                      className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={editedAsset.asset_type}
+                      onChange={(e) => setEditedAsset((prev) => ({ ...prev, asset_type: e.target.value as typeof editedAsset.asset_type }))}
+                    >
+                      <option value="static">Static</option>
+                      <option value="movable">Movable</option>
+                    </select>
+                  ) : (
+                    <p className="font-medium capitalize">{asset.asset_type || "—"}</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("assets.labels.department")}</Label>
+                  {isEditing ? (
+                    <>
+                      <Input
+                        value={editedAsset.department}
+                        list="asset-department-options"
+                        onChange={(e) => setEditedAsset((prev) => ({ ...prev, department: e.target.value }))}
+                        className="mt-1"
+                      />
+                      <datalist id="asset-department-options">
+                        {departmentOptions.map((dept) => (
+                          <option key={dept} value={dept} />
+                        ))}
+                      </datalist>
+                    </>
+                  ) : (
+                    <p className="font-medium">{asset.department || "—"}</p>
+                  )}
+                </div>
+                <div>
                   <Label className="text-muted-foreground">{t("assets.labels.status")}</Label>
                   {isEditing ? (
                     <select
@@ -534,6 +590,21 @@ export default function AssetDetailPage() {
                   ) : (
                     <p className="font-medium">
                       {asset.purchase_date ? formatDate(asset.purchase_date) : "—"}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("assets.labels.warrantyExpiry")}</Label>
+                  {isEditing ? (
+                    <Input
+                      type="date"
+                      value={editedAsset.warranty_expiry}
+                      onChange={(e) => setEditedAsset((prev) => ({ ...prev, warranty_expiry: e.target.value }))}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <p className="font-medium">
+                      {asset.warranty_expiry ? formatDate(asset.warranty_expiry) : "—"}
                     </p>
                   )}
                 </div>
@@ -1003,6 +1074,113 @@ export default function AssetDetailPage() {
           </div>
         )}
 
+        {/* Add Schedule Modal */}
+        {showAddSchedule && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <Card className="w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Add Maintenance Schedule</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setShowAddSchedule(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <form
+                  className="space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const form = e.target as HTMLFormElement;
+                    const name = (form.elements.namedItem("sched-name") as HTMLInputElement).value;
+                    const desc = (form.elements.namedItem("sched-desc") as HTMLInputElement).value;
+                    const freqVal = parseInt((form.elements.namedItem("sched-freq-val") as HTMLInputElement).value) || 1;
+                    const freqUnit = (form.elements.namedItem("sched-freq-unit") as HTMLSelectElement).value as MaintenanceSchedule["frequency_unit"];
+                    const priority = (form.elements.namedItem("sched-priority") as HTMLSelectElement).value as MaintenanceSchedule["priority"];
+                    const notify = parseInt((form.elements.namedItem("sched-notify") as HTMLInputElement).value) || 7;
+
+                    if (!name.trim()) return;
+
+                    const today = new Date();
+                    const nextDue = new Date();
+                    switch (freqUnit) {
+                      case "days": nextDue.setDate(today.getDate() + freqVal); break;
+                      case "weeks": nextDue.setDate(today.getDate() + freqVal * 7); break;
+                      case "months": nextDue.setMonth(today.getMonth() + freqVal); break;
+                      case "years": nextDue.setFullYear(today.getFullYear() + freqVal); break;
+                    }
+
+                    const newSchedule: MaintenanceSchedule = {
+                      id: `sched_${Date.now()}`,
+                      asset_id: assetId,
+                      company_id: asset?.company_id || "",
+                      name: name.trim(),
+                      description: desc.trim() || null,
+                      frequency_value: freqVal,
+                      frequency_unit: freqUnit,
+                      last_completed_date: null,
+                      next_due_date: nextDue.toISOString().split("T")[0],
+                      assigned_to_user_id: null,
+                      assigned_to_team_id: null,
+                      priority,
+                      notify_days_before: notify,
+                      is_active: true,
+                      created_at: today.toISOString(),
+                      updated_at: today.toISOString(),
+                    };
+
+                    setSchedules((prev) => [...prev, newSchedule]);
+                    toast("Schedule added");
+                    setShowAddSchedule(false);
+                  }}
+                >
+                  <div>
+                    <Label htmlFor="sched-name">Name *</Label>
+                    <Input id="sched-name" placeholder="e.g., Oil Change, Filter Replacement" className="mt-1" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="sched-desc">Description</Label>
+                    <Input id="sched-desc" placeholder="Optional description..." className="mt-1" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="sched-freq-val">Every</Label>
+                      <Input id="sched-freq-val" type="number" min="1" defaultValue="1" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label htmlFor="sched-freq-unit">Unit</Label>
+                      <select id="sched-freq-unit" className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <option value="days">Days</option>
+                        <option value="weeks">Weeks</option>
+                        <option value="months">Months</option>
+                        <option value="years">Years</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="sched-priority">Priority</Label>
+                    <select id="sched-priority" className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="sched-notify">Notify days before due</Label>
+                    <Input id="sched-notify" type="number" min="1" defaultValue="7" className="mt-1" />
+                  </div>
+                  <div className="flex gap-2 justify-end pt-2">
+                    <Button type="button" variant="outline" onClick={() => setShowAddSchedule(false)}>Cancel</Button>
+                    <Button type="submit">
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Schedule
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Meter Readings Tab */}
         {activeTab === "readings" && (
           <div className="space-y-4">
@@ -1088,7 +1266,7 @@ export default function AssetDetailPage() {
                           meter_type: readingForm.meter_type.trim(),
                           unit: readingForm.unit,
                           value: parseFloat(readingForm.value),
-                          recorded_by: DEFAULT_USER_ID,
+                          recorded_by: user?.id || "",
                           recorded_at: new Date().toISOString(),
                           notes: readingForm.notes.trim() || null,
                           created_at: new Date().toISOString(),

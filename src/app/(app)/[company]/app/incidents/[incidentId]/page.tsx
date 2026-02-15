@@ -47,7 +47,7 @@ export default function EmployeeIncidentDetailPage() {
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
 
-  const { items: incidents } = useIncidentsStore();
+  const { items: incidents, isLoading } = useIncidentsStore();
   const { items: locations } = useLocationsStore();
   const { items: users } = useUsersStore();
 
@@ -58,7 +58,22 @@ export default function EmployeeIncidentDetailPage() {
   // Ensure this is the user's own incident for read-only view
   const isOwner = incident?.reporter_id === user?.id;
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   if (!incident) {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />

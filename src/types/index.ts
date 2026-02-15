@@ -465,6 +465,8 @@ export type AssetCategory =
   | "ppe"
   | "other";
 
+export type AssetType = "static" | "movable";
+
 // Asset Criticality (for risk-based maintenance)
 export type AssetCriticality = "critical" | "high" | "medium" | "low";
 
@@ -490,7 +492,9 @@ export interface Asset {
   // Classification
   category: AssetCategory;
   sub_category: string | null;
+  asset_type: AssetType;
   criticality: AssetCriticality;
+  department: string | null;
   
   // Technical Specifications
   manufacturer: string | null;
@@ -1184,4 +1188,85 @@ export interface PartUsage {
   used_by: string;
   used_at: string;
   notes: string | null;
+}
+
+// ============================================
+// INSPECTION ROUNDS
+// ============================================
+
+export type InspectionCheckType = "visual" | "auditory" | "measurement" | "functional" | "safety";
+
+export interface InspectionCheckpoint {
+  id: string;
+  asset_id: string;
+  order: number;
+  label: string;
+  check_type: InspectionCheckType;
+  acceptable_min: number | null;
+  acceptable_max: number | null;
+  unit: string | null;
+  instructions: string | null;
+  required: boolean;
+}
+
+export type InspectionRouteStatus = "active" | "inactive" | "draft";
+
+export interface InspectionRoute {
+  id: string;
+  company_id: string;
+  name: string;
+  description: string | null;
+  status: InspectionRouteStatus;
+  recurrence: "daily" | "weekly" | "monthly" | "once";
+  assigned_to_user_id: string | null;
+  assigned_to_team_id: string | null;
+  checkpoints: InspectionCheckpoint[];
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type CheckpointResult = "pass" | "fail" | "needs_attention";
+
+export interface InspectionCheckpointResult {
+  checkpoint_id: string;
+  asset_id: string;
+  result: CheckpointResult;
+  measured_value: number | null;
+  out_of_range: boolean;
+  photo_url: string | null;
+  notes: string | null;
+}
+
+export type InspectionRoundStatus = "in_progress" | "completed" | "synced";
+
+export interface InspectionRound {
+  id: string;
+  route_id: string;
+  company_id: string;
+  inspector_id: string;
+  status: InspectionRoundStatus;
+  started_at: string;
+  completed_at: string | null;
+  checkpoint_results: InspectionCheckpointResult[];
+  alerts_created: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// OFFLINE SYNC
+// ============================================
+
+export type SyncItemType = "inspection_round" | "work_order" | "photo";
+export type SyncItemStatus = "pending" | "syncing" | "synced" | "conflict";
+
+export interface SyncQueueItem {
+  id: string;
+  type: SyncItemType;
+  payload: Record<string, unknown>;
+  status: SyncItemStatus;
+  created_at: string;
+  synced_at: string | null;
+  error: string | null;
 }

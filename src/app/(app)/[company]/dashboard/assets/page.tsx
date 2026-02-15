@@ -35,6 +35,7 @@ import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { commonFilterOptions } from "@/components/ui/filter-panel";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useLocationsStore } from "@/stores/locations-store";
+import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -44,7 +45,6 @@ import CorrectiveActionsContent from "@/app/(app)/[company]/dashboard/corrective
 import WorkOrdersContent from "@/app/(app)/[company]/dashboard/work-orders/page";
 import PartsContent from "@/app/(app)/[company]/dashboard/parts/page";
 import type { Asset, Alert } from "@/types";
-import { DEFAULT_COMPANY_ID } from "@/mocks/data";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -73,16 +73,24 @@ export default function AssetsPage() {
     model: "",
     location_id: "",
     purchase_date: "",
+    asset_type: "static",
+    department: "",
+    warranty_expiry: "",
   });
 
   const { items: assets, add: addAsset } = useAssetsStore();
   const { items: locations } = useLocationsStore();
+  const { items: users } = useUsersStore();
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
 
+  const departmentOptions = Array.from(
+    new Set(users.map((u) => u.department).filter((d): d is string => !!d))
+  );
+
   // CSV export
   const handleExportCSV = () => {
-    const headers = ["name","asset_tag","serial_number","category","status","condition","manufacturer","model","location_id","purchase_date","purchase_cost","warranty_expiry"];
+    const headers = ["name","asset_tag","serial_number","category","asset_type","department","status","condition","manufacturer","model","location_id","purchase_date","purchase_cost","warranty_expiry"];
     const rows = assets.map(a => headers.map(h => {
       const val = a[h as keyof typeof a];
       return val !== null && val !== undefined ? `"${String(val).replace(/"/g, '""')}"` : "";
@@ -117,7 +125,7 @@ export default function AssetsPage() {
         if (!row.name) continue;
         addAsset({
           id: `asset_import_${Date.now()}_${i}`,
-          company_id: DEFAULT_COMPANY_ID,
+          company_id: "",
           location_id: row.location_id || null,
           parent_asset_id: null,
           is_system: false,
@@ -127,7 +135,9 @@ export default function AssetsPage() {
           barcode: null, qr_code: null,
           category: (row.category as Asset["category"]) || "other",
           sub_category: null,
+          asset_type: (row.asset_type as Asset["asset_type"]) || "static",
           criticality: "medium",
+          department: row.department || null,
           manufacturer: row.manufacturer || null,
           model: row.model || null, model_number: null,
           specifications: null, manufactured_date: null,
@@ -358,7 +368,7 @@ export default function AssetsPage() {
     const now = new Date().toISOString();
     const asset: Asset = {
       id: `asset_${Date.now()}`,
-      company_id: company || DEFAULT_COMPANY_ID,
+      company_id: company || "",
       location_id: newAsset.location_id || null,
       parent_asset_id: null,
       is_system: false,
@@ -369,7 +379,9 @@ export default function AssetsPage() {
       qr_code: null,
       category: newAsset.category as Asset["category"],
       sub_category: null,
+      asset_type: newAsset.asset_type as Asset["asset_type"],
       criticality: "medium",
+      department: newAsset.department || null,
       manufacturer: newAsset.manufacturer || null,
       model: newAsset.model || null,
       model_number: null,
@@ -377,7 +389,7 @@ export default function AssetsPage() {
       manufactured_date: null,
       purchase_date: newAsset.purchase_date || null,
       installation_date: null,
-      warranty_expiry: null,
+      warranty_expiry: newAsset.warranty_expiry || null,
       expected_life_years: null,
       condition: "good",
       condition_notes: null,
@@ -413,6 +425,9 @@ export default function AssetsPage() {
       model: "",
       location_id: "",
       purchase_date: "",
+      asset_type: "static",
+      department: "",
+      warranty_expiry: "",
     });
     setCurrentPage(1);
   };
@@ -886,6 +901,21 @@ export default function AssetsPage() {
                 </select>
               </div>
 
+              <div>
+                <Label htmlFor="asset_type">{t("assets.labels.assetType")}</Label>
+                <select
+                  id="asset_type"
+                  title="Select asset type"
+                  aria-label="Select asset type"
+                  value={newAsset.asset_type}
+                  onChange={(e) => setNewAsset({ ...newAsset, asset_type: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="static">Static</option>
+                  <option value="movable">Movable</option>
+                </select>
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="manufacturer">{t("assets.labels.manufacturer")}</Label>
@@ -930,12 +960,40 @@ export default function AssetsPage() {
               </div>
 
               <div>
+                <Label htmlFor="department">{t("assets.labels.department")}</Label>
+                <Input
+                  id="department"
+                  list="asset-departments"
+                  value={newAsset.department}
+                  onChange={(e) => setNewAsset({ ...newAsset, department: e.target.value })}
+                  placeholder="e.g., Operations"
+                  className="mt-1"
+                />
+                <datalist id="asset-departments">
+                  {departmentOptions.map((dept) => (
+                    <option key={dept} value={dept} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div>
                 <Label htmlFor="purchase_date">{t("assets.labels.purchaseDate")}</Label>
                 <Input
                   id="purchase_date"
                   type="date"
                   value={newAsset.purchase_date}
                   onChange={(e) => setNewAsset({ ...newAsset, purchase_date: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="warranty_expiry">{t("assets.labels.warrantyExpiry")}</Label>
+                <Input
+                  id="warranty_expiry"
+                  type="date"
+                  value={newAsset.warranty_expiry}
+                  onChange={(e) => setNewAsset({ ...newAsset, warranty_expiry: e.target.value })}
                   className="mt-1"
                 />
               </div>

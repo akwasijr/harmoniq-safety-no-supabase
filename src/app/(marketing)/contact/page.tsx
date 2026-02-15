@@ -184,7 +184,7 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
           value={formData.company}
           onChange={(e) => setFormData((f) => ({ ...f, company: e.target.value }))}
           className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-zinc-500 transition focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
-          placeholder="Nexus Manufacturing"
+          placeholder="Your Company"
         />
       </div>
 

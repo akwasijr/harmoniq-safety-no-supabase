@@ -24,7 +24,6 @@ import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import type { Ticket } from "@/types";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID, DEFAULT_USER_ID } from "@/mocks/data";
 
 const priorities = [
   { value: "low", label: "Low", color: "bg-green-100 text-green-800" },
@@ -60,7 +59,7 @@ export default function NewTicketPage() {
     const now = new Date().toISOString();
     const ticket: Ticket = {
       id: `tkt_${Date.now()}`,
-      company_id: company || user?.company_id || DEFAULT_COMPANY_ID,
+      company_id: company || user?.company_id || "",
       title: formData.title,
       description: formData.description,
       priority: formData.priority as Ticket["priority"],
@@ -69,7 +68,7 @@ export default function NewTicketPage() {
       assigned_to: formData.assigned_to || null,
       assigned_groups: [],
       incident_ids: formData.incident_id ? [formData.incident_id] : [],
-      created_by: user?.id || users[0]?.id || DEFAULT_USER_ID,
+      created_by: user?.id || users[0]?.id || "",
       created_at: now,
       updated_at: now,
     };

@@ -41,7 +41,6 @@ import { downloadCsv } from "@/lib/csv";
 import { useAuth } from "@/hooks/use-auth";
 import type { Incident } from "@/types";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID, DEFAULT_USER_ID } from "@/mocks/data";
 
 type SubTabType = "incidents" | "tickets";
 
@@ -178,9 +177,9 @@ export default function IncidentsPage() {
     const now = new Date();
     const incident: Incident = {
       id: `inc_${Date.now()}`,
-      company_id: company || user?.company_id || DEFAULT_COMPANY_ID,
+      company_id: company || user?.company_id || "",
       reference_number: `INC-${now.getTime().toString().slice(-6)}`,
-      reporter_id: user?.id || DEFAULT_USER_ID,
+      reporter_id: user?.id || "",
       type: newIncident.type as Incident["type"],
       type_other: newIncident.type === "other" ? "Other" : null,
       severity: newIncident.severity as Incident["severity"],

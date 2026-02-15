@@ -26,7 +26,7 @@ export default function PlatformCompanyDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const { items: companies, getById: getCompany, update: updateCompany } = useCompanyStore();
+  const { items: companies, isLoading, getById: getCompany, update: updateCompany } = useCompanyStore();
   const { items: users } = useUsersStore();
   const { items: incidents } = useIncidentsStore();
   const company = params.company as string;
@@ -43,7 +43,22 @@ export default function PlatformCompanyDetailPage() {
     }
   }, [targetCompany]);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   if (!targetCompany || !editedCompany) {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      );
+    }
     return (
       <RoleGuard requireSuperAdmin>
         <div className="py-12 text-center">

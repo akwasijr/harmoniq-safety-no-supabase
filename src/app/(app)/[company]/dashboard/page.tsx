@@ -24,6 +24,15 @@ import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 
+const PLATFORM_SLUGS =
+  (process.env.NEXT_PUBLIC_PLATFORM_SLUGS || "platform,admin,superadmin")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+const isPlatformSlug = (slug?: string | null) =>
+  !!slug &&
+  (PLATFORM_SLUGS.includes(slug.toLowerCase()) || slug.toLowerCase().includes("platform"));
+
 // Helper to get date N months ago
 function getMonthsAgo(n: number): Date {
   const date = new Date();
@@ -73,56 +82,34 @@ export default function DashboardPage() {
   const [severityFilter, setSeverityFilter] = React.useState("");
   const [departmentFilter, setDepartmentFilter] = React.useState("");
 
-  const { isSuperAdmin, hasSelectedCompany } = useAuth();
+  const { isSuperAdmin, hasSelectedCompany, switchCompany } = useAuth();
   const { items: allCompanies } = useCompanyStore();
   const { incidents, locations, users, assets: allAssets } = useCompanyData();
 
-  // Super admin without a company selected → show platform overview
+  // Ensure super admin respects the URL company slug (avoid platform overview when a tenant slug is present).
+  React.useEffect(() => {
+    if (!isSuperAdmin || !company || isPlatformSlug(company)) return;
+    const match = allCompanies.find((c) => c.slug === company);
+    if (match) {
+      switchCompany(match.id);
+    }
+  }, [isSuperAdmin, company, allCompanies, switchCompany]);
+
+  // For super admins hitting the generic dashboard route, never fall back to platform overview.
+  // Instead, auto-select the first non-platform company (or any company) and show a lightweight loading state.
+  React.useEffect(() => {
+    if (!isSuperAdmin || hasSelectedCompany) return;
+    if (!allCompanies.length) return;
+    const fallback = allCompanies.find((c) => !isPlatformSlug(c.slug)) ?? allCompanies[0];
+    if (fallback?.id) {
+      switchCompany(fallback.id);
+    }
+  }, [isSuperAdmin, hasSelectedCompany, allCompanies, switchCompany]);
+
   if (isSuperAdmin && !hasSelectedCompany) {
-    const activeCompanies = allCompanies.filter((c) => c.status === "active").length;
-    const trialCompanies = allCompanies.filter((c) => c.status === "trial").length;
-    const totalUsers = users.length;
-    const superAdmins = users.filter((u) => u.role === "super_admin").length;
-
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-semibold">Platform Overview</h1>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <KPICard title="Total Companies" value={allCompanies.length} icon={Building2} />
-          <KPICard title="Active Companies" value={activeCompanies} icon={Users} />
-          <KPICard title="Trial Companies" value={trialCompanies} icon={ClipboardCheck} />
-          <KPICard title="Super Admins" value={superAdmins} icon={TrendingUp} />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {allCompanies.map((comp) => (
-            <Card key={comp.id} className="hover:border-primary/50 transition-colors">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">{comp.name}</CardTitle>
-                  <Badge variant={comp.status === "active" ? "success" : comp.status === "trial" ? "warning" : "secondary"}>
-                    {comp.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>Country: {comp.country}</p>
-                  <p>Seats: {comp.seat_limit}</p>
-                  <p>Plan: {comp.tier}</p>
-                </div>
-                <Link href={`/${company || comp.slug}/dashboard/platform/companies/${comp.id}`}>
-                  <Button variant="outline" size="sm" className="mt-3 w-full gap-1">
-                    Manage <ArrowRight className="h-3 w-3" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-sm text-muted-foreground">Selecting a company workspace…</div>
       </div>
     );
   }

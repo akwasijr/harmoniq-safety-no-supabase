@@ -42,8 +42,16 @@ export default function TicketDetailPage() {
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
-  const { items: tickets, update: updateTicket, remove: removeTicket } = useTicketsStore();
+  const { items: tickets, isLoading, update: updateTicket, remove: removeTicket } = useTicketsStore();
   const ticket = tickets.find((t) => t.id === ticketId);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   // Ticket not found — trigger Next.js not-found boundary
   if (!ticket) {
@@ -97,6 +105,13 @@ export default function TicketDetailPage() {
   };
 
   if (!ticket) {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Ticket not found</p>

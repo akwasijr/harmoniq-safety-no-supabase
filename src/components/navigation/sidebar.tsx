@@ -93,7 +93,7 @@ const navItems: NavItem[] = [
     titleKey: "nav.assets",
     href: "/dashboard/assets",
     icon: Package,
-    additionalPaths: ["/dashboard/corrective-actions", "/dashboard/work-orders", "/dashboard/parts"],
+    additionalPaths: ["/dashboard/corrective-actions", "/dashboard/work-orders", "/dashboard/parts", "/dashboard/inspection-routes"],
   },
   {
     title: "Content",
@@ -115,6 +115,11 @@ const platformNavItems: NavItem[] = [
     href: "/dashboard",
     icon: LayoutDashboard,
     exactMatch: true,
+  },
+  {
+    title: "Analytics & Privacy",
+    href: "/dashboard/platform/analytics",
+    icon: BarChart3,
   },
   {
     title: "Companies",
@@ -144,10 +149,25 @@ export function Sidebar({
   const pathname = usePathname();
   const [collapsed, setCollapsed] = React.useState(false);
   const [hovered, setHovered] = React.useState(false);
+  const [allowPlatform, setAllowPlatform] = React.useState(showPlatformAdmin);
   const { theme, setTheme } = useTheme();
   const { isSuperAdmin, hasSelectedCompany, logout } = useAuth();
   const { t } = useTranslation();
   const isCollapsed = collapsed && !hovered;
+
+  React.useEffect(() => {
+    if (showPlatformAdmin) {
+      setAllowPlatform(true);
+      return;
+    }
+    if (typeof window !== "undefined") {
+      const flag = window.localStorage.getItem("harmoniq_admin_entry") === "true";
+      const hasCookie = document.cookie.split(";").some((c) => c.trim().startsWith("harmoniq_admin_entry="));
+      setAllowPlatform(flag && hasCookie);
+    }
+  }, [showPlatformAdmin]);
+
+  const showPlatformNav = isSuperAdmin && allowPlatform;
 
   // Helper to resolve nav item title via i18n
   const getTitle = (item: NavItem) => item.titleKey ? t(item.titleKey) : item.title;
@@ -207,8 +227,8 @@ export function Sidebar({
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-2">
-        {/* Platform Admin section - super admin only */}
-        {isSuperAdmin && (
+        {/* Platform Admin section - super admin and company admin */}
+        {showPlatformNav && (
           <div className="mb-3">
             {!isCollapsed && (
               <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">

@@ -35,7 +35,7 @@ export default function EmployeeIncidentsPage() {
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
 
-  const { items: incidents } = useIncidentsStore();
+  const { items: incidents , isLoading } = useIncidentsStore();
   const { items: locations } = useLocationsStore();
 
   const [searchQuery, setSearchQuery] = React.useState("");

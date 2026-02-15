@@ -28,7 +28,7 @@ export default function NewsDetailPage() {
   const [showShareSuccess, setShowShareSuccess] = React.useState(false);
   const [showDownloadSuccess, setShowDownloadSuccess] = React.useState(false);
   const { t, formatDate } = useTranslation();
-  const { items: contentItems } = useContentStore();
+  const { items: contentItems , isLoading } = useContentStore();
   const { toast } = useToast();
 
   // Load bookmark state from localStorage
@@ -57,7 +57,15 @@ export default function NewsDetailPage() {
   };
 
   const handleShare = async () => {
-    if (!article) return;
+      if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!article) return;
     if (navigator.share) {
       try {
         await navigator.share({

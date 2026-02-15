@@ -1,6 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY;
+
+// Rate limiter: 5 contact submissions per IP per 10 minutes
+const contactLimiter = new Map<string, { count: number; reset: number }>();
 
 interface ContactPayload {
   name: string;
@@ -10,8 +13,20 @@ interface ContactPayload {
   turnstileToken: string;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const now = Date.now();
+    const entry = contactLimiter.get(ip);
+    if (entry && now < entry.reset && entry.count >= 5) {
+      return NextResponse.json({ error: "Too many submissions. Please try again later." }, { status: 429 });
+    }
+    if (!entry || now > (entry?.reset || 0)) {
+      contactLimiter.set(ip, { count: 1, reset: now + 600000 });
+    } else {
+      entry.count++;
+    }
+
     const body: ContactPayload = await request.json();
     const { name, email, message, company, turnstileToken } = body;
 

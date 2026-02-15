@@ -8,6 +8,14 @@ import { clearAllHarmoniqStorage, loadFromStorage, saveToStorage } from "@/lib/l
 import { resetPrimaryColor } from "@/lib/branding";
 import type { User, Company, Permission, UserRole, CompanyRole } from "@/types";
 
+const ADMIN_ENTRY_STORAGE_KEY = "harmoniq_admin_entry";
+const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
+const PLATFORM_SLUGS =
+  (process.env.NEXT_PUBLIC_PLATFORM_SLUGS || "platform,admin,superadmin")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+
 interface AuthContextType {
   // Current user
   user: User | null;
@@ -39,11 +47,36 @@ const AuthContext = React.createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const SESSION_STORAGE_KEY = "harmoniq_auth_session";
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [user, setUser] = React.useState<User | null>(null);
-  const [selectedCompanyId, setSelectedCompanyId] = React.useState<string | null>(null);
+  const PROFILE_STORAGE_KEY = "harmoniq_auth_profile";
+  const SELECTED_COMPANY_STORAGE_KEY = "harmoniq_selected_company";
+  const initialProfile = loadFromStorage<User | null>(PROFILE_STORAGE_KEY, null);
+  const initialSelectedCompany = loadFromStorage<string | null>(
+    SELECTED_COMPANY_STORAGE_KEY,
+    initialProfile?.company_id ?? null
+  );
+  const [isLoading, setIsLoading] = React.useState(!initialProfile);
+  const [user, setUser] = React.useState<User | null>(initialProfile);
+  const [selectedCompanyId, setSelectedCompanyId] = React.useState<string | null>(
+    initialProfile
+      ? initialProfile.role === "super_admin"
+        ? initialSelectedCompany
+        : initialProfile.company_id
+      : null
+  );
   const { items: allCompanies } = useCompanyStore();
   const authRetryRef = React.useRef(0);
+
+  // Ensure the platform admin entry flag is cleared on standard entry paths
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const path = window.location.pathname;
+    const search = window.location.search || "";
+    const isAdminEntry = path.startsWith("/admin") || search.includes("admin-link") || path.includes("/dashboard/platform");
+    if (!isAdminEntry) {
+      window.localStorage.removeItem(ADMIN_ENTRY_STORAGE_KEY);
+      document.cookie = `${ADMIN_ENTRY_COOKIE}=; path=/; max-age=0; samesite=lax`;
+    }
+  }, []);
   
   // Initialize auth state via Supabase
   React.useEffect(() => {
@@ -108,13 +141,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           clearTimeout(timeout);
 
-          if (profileError) {
-            console.error("[Harmoniq] Profile fetch error:", profileError.message);
-          } else if (profile) {
-            setUser(profile as User);
-            setSelectedCompanyId(
-              profile.role === "super_admin" ? null : profile.company_id
-            );
+           if (profileError) {
+             console.error("[Harmoniq] Profile fetch error:", profileError.message);
+           } else if (profile) {
+             setUser(profile as User);
+             const storedCompanyId = loadFromStorage<string | null>(
+               SELECTED_COMPANY_STORAGE_KEY,
+               profile.company_id ?? null
+             );
+             const nextCompanyId = profile.role === "super_admin" ? storedCompanyId : profile.company_id;
+             setSelectedCompanyId(nextCompanyId);
+             saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nextCompanyId);
+             saveToStorage(PROFILE_STORAGE_KEY, profile);
+           }
+         } else {
+          setUser(null);
+          setSelectedCompanyId(null);
+          if (typeof window !== "undefined") {
+            window.localStorage.removeItem(PROFILE_STORAGE_KEY);
           }
         }
       } catch (err) {
@@ -143,35 +187,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSelectedCompanyId(null);
           if (typeof window !== "undefined") {
             window.localStorage.removeItem(SESSION_STORAGE_KEY);
+            window.localStorage.removeItem(PROFILE_STORAGE_KEY);
           }
           return;
         }
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          try {
-            if (session?.access_token && session?.refresh_token) {
-              saveToStorage(SESSION_STORAGE_KEY, {
+           if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+             try {
+               if (session?.access_token && session?.refresh_token) {
+                 saveToStorage(SESSION_STORAGE_KEY, {
                 access_token: session.access_token,
                 refresh_token: session.refresh_token,
                 expires_at: session.expires_at ?? undefined,
               });
             }
-            const { data: profile } = await supabase
-              .from("users")
-              .select("*")
-              .eq("id", session.user.id)
-              .single();
-            if (profile) {
-              setUser(profile as User);
-              setSelectedCompanyId(
-                profile.role === "super_admin" ? null : profile.company_id
-              );
-            }
-          } catch (err) {
-            console.error("[Harmoniq] Auth state change error:", err);
-          }
-        }
-      }
-    );
+             const { data: profile } = await supabase
+               .from("users")
+               .select("*")
+               .eq("id", session.user.id)
+               .single();
+             if (profile) {
+               setUser(profile as User);
+               const storedCompanyId = loadFromStorage<string | null>(
+                 SELECTED_COMPANY_STORAGE_KEY,
+                 profile.company_id ?? null
+               );
+               const nextCompanyId = profile.role === "super_admin" ? storedCompanyId : profile.company_id;
+               setSelectedCompanyId(nextCompanyId);
+               saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nextCompanyId);
+               saveToStorage(PROFILE_STORAGE_KEY, profile);
+             }
+           } catch (err) {
+             console.error("[Harmoniq] Auth state change error:", err);
+           }
+         }
+       }
+     );
 
     return () => { subscription.unsubscribe(); };
   }, []);
@@ -192,7 +242,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, isSuperAdmin, selectedCompanyId, allCompanies]);
   
   // Whether a company is currently selected (for showing company nav)
-  const hasSelectedCompany = currentCompany !== null;
+  // For super admins, honor the stored company selection even before the company list finishes loading.
+  const hasSelectedCompany = isSuperAdmin ? Boolean(selectedCompanyId) : currentCompany !== null;
+
+  // Super admin: if no company is selected yet, auto-select the first non-platform company to avoid landing on platform screens
+  React.useEffect(() => {
+    if (!isSuperAdmin || selectedCompanyId) return;
+    const nonPlatform = allCompanies.find((c) => !PLATFORM_SLUGS.includes(c.slug?.toLowerCase?.() || ""));
+    const fallback = nonPlatform ?? allCompanies[0];
+    if (fallback?.id) {
+      setSelectedCompanyId(fallback.id);
+      saveToStorage(SELECTED_COMPANY_STORAGE_KEY, fallback.id);
+    }
+  }, [isSuperAdmin, selectedCompanyId, allCompanies]);
+
+  // If the stored selection points to a platform slug, move to a real tenant
+  React.useEffect(() => {
+    if (!isSuperAdmin || !selectedCompanyId) return;
+    const selected = allCompanies.find((c) => c.id === selectedCompanyId);
+    if (selected && PLATFORM_SLUGS.includes(selected.slug?.toLowerCase?.() || "")) {
+      const nonPlatform = allCompanies.find((c) => !PLATFORM_SLUGS.includes(c.slug?.toLowerCase?.() || ""));
+      if (nonPlatform?.id) {
+        setSelectedCompanyId(nonPlatform.id);
+        saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nonPlatform.id);
+      }
+    }
+  }, [isSuperAdmin, selectedCompanyId, allCompanies]);
   
   // Available companies (only super admin can switch)
   const availableCompanies = React.useMemo(() => {
@@ -204,6 +279,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const switchCompany = React.useCallback((companyId: string | null) => {
     if (!isSuperAdmin) return;
     setSelectedCompanyId(companyId);
+    saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
   }, [isSuperAdmin]);
   
   // Get effective permissions
@@ -243,6 +319,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const supabase = createClient();
     await supabase.auth.signOut();
     clearAllHarmoniqStorage();
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("harmoniq_admin_entry");
+      document.cookie = `${ADMIN_ENTRY_COOKIE}=; path=/; max-age=0; samesite=lax`;
+    }
     resetPrimaryColor();
     setUser(null);
     setSelectedCompanyId(null);

@@ -17,7 +17,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import type { Country, RiskEvaluation } from "@/types";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID } from "@/mocks/data";
 
 // Form configurations by type
 const formConfigs: Record<string, { title: string; description: string; sections: Array<{ title: string; questions: Array<{ id: string; question: string; type: "yesno" | "rating" | "text" | "select"; options?: string[] }> }> }> = {
@@ -281,7 +280,7 @@ export default function RiskAssessmentFormPage() {
     const refNumber = `RA-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const evaluation: RiskEvaluation = {
       id: `eval_${Date.now()}`,
-      company_id: user.company_id || DEFAULT_COMPANY_ID,
+      company_id: user.company_id || "",
       submitter_id: user.id,
       country,
       form_type: formType,

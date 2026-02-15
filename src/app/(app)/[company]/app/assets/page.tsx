@@ -16,12 +16,14 @@ import {
   Plus,
   List,
   Wrench,
+  ClipboardCheck,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { useInspectionRoutesStore } from "@/stores/inspection-routes-store";
 import { useTranslation } from "@/i18n";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -31,7 +33,7 @@ const STATUS_CONFIG: Record<string, { color: string; icon: React.ComponentType<{
   retired: { color: "text-destructive", icon: AlertTriangle },
 };
 
-type SubTab = "find" | "browse" | "work";
+type SubTab = "find" | "browse" | "rounds" | "work";
 
 export default function EmployeeAssetsPage() {
   const company = useCompanyParam();
@@ -39,6 +41,7 @@ export default function EmployeeAssetsPage() {
   const { items: assets } = useAssetsStore();
   const { items: locations } = useLocationsStore();
   const { items: workOrders } = useWorkOrdersStore();
+  const { items: inspectionRoutes } = useInspectionRoutesStore();
   const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = React.useState<SubTab>("find");
@@ -85,9 +88,12 @@ export default function EmployeeAssetsPage() {
     return Array.from(cats).sort();
   }, [assets]);
 
+  const activeRoutes = inspectionRoutes.filter(r => r.status === "active");
+
   const tabs = [
     { id: "find" as SubTab, label: t("common.search"), icon: Search },
     { id: "browse" as SubTab, label: t("assets.tabs.assets"), icon: List },
+    { id: "rounds" as SubTab, label: t("inspectionRounds.title"), icon: ClipboardCheck, count: activeRoutes.length },
     { id: "work" as SubTab, label: t("workOrders.title"), icon: Wrench, count: myOpenWorkOrders.length },
   ];
 
@@ -323,6 +329,43 @@ export default function EmployeeAssetsPage() {
               })
             )}
           </div>
+        </div>
+      )}
+
+      {/* ====== INSPECTION ROUNDS TAB ====== */}
+      {activeTab === "rounds" && (
+        <div className="px-4 pt-4 space-y-3">
+          {activeRoutes.length === 0 ? (
+            <div className="text-center py-12">
+              <ClipboardCheck className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+              <p className="text-sm font-medium text-muted-foreground">{t("inspectionRounds.noRoutes")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("inspectionRounds.noRoutesDesc")}</p>
+            </div>
+          ) : (
+            activeRoutes.map((route) => (
+              <Link key={route.id} href={`/${company}/app/inspection-round?route=${route.id}`}>
+                <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                        <ClipboardCheck className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{route.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {route.checkpoints.length} {t("inspectionRounds.checkpoints")} • {t(`inspectionRounds.recurrence.${route.recurrence}`)}
+                        </p>
+                        {route.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{route.description}</p>
+                        )}
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))
+          )}
         </div>
       )}
 

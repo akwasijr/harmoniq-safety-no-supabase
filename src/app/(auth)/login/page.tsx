@@ -3,15 +3,23 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Mail, Loader, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
-import { saveToStorage } from "@/lib/local-storage";
+import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
+
+type AppChoice = "dashboard" | "app";
+const APP_CHOICE_STORAGE_KEY = "harmoniq_app_choice";
+const APP_CHOICE_COOKIE = "harmoniq_app_choice";
+const ADMIN_ENTRY_STORAGE_KEY = "harmoniq_admin_entry";
+const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
+const SELECTED_COMPANY_STORAGE_KEY = "harmoniq_selected_company";
 
 function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
@@ -19,6 +27,45 @@ function LoginForm() {
   const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const [loginMode, setLoginMode] = React.useState<"password" | "magic">("password");
+  const [appChoice, setAppChoice] = React.useState<AppChoice>(() => {
+    if (typeof window === "undefined") return "dashboard";
+    const stored = window.localStorage.getItem(APP_CHOICE_STORAGE_KEY);
+    return stored === "app" || stored === "dashboard" ? stored : "dashboard";
+  });
+
+  React.useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      setError(errorParam);
+    }
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    // Regular login should never keep the platform admin entry flag
+    window.localStorage.removeItem(ADMIN_ENTRY_STORAGE_KEY);
+    document.cookie = `${ADMIN_ENTRY_COOKIE}=; path=/; max-age=0; samesite=lax`;
+    window.localStorage.setItem(APP_CHOICE_STORAGE_KEY, appChoice);
+    document.cookie = `${APP_CHOICE_COOKIE}=${appChoice}; path=/; max-age=2592000; samesite=lax`;
+  }, [appChoice]);
+
+  const PLATFORM_SLUGS =
+    (process.env.NEXT_PUBLIC_PLATFORM_SLUGS || "platform,admin,superadmin")
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+  // Supabase .not("col","in","(val1,val2)") requires NO quotes around values
+  const PLATFORM_SLUGS_LIST = `(${PLATFORM_SLUGS.join(",")})`;
+  const isPlatformSlug = (slug?: string | null) =>
+    !!slug &&
+    (PLATFORM_SLUGS.includes(slug.toLowerCase()) || slug.toLowerCase() === "platform");
+
+  const getAllowedApps = (role: string): AppChoice[] => {
+    if (role === "employee") return ["app"];
+    if (role === "super_admin") return ["dashboard"]; // still allow picker value, but we will block platform portal here
+    if (role === "company_admin" || role === "manager") return ["dashboard", "app"];
+    return ["dashboard"];
+  };
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +121,9 @@ function LoginForm() {
 
       if (profileError) {
         if (email.toLowerCase() === "demo@harmoniq.safety") {
-          router.replace("/nexus/dashboard");
+          const { data: anyCompany } = await supabase.from("companies").select("slug").limit(1).single();
+          const s = anyCompany?.slug || "harmoniq";
+          router.replace(appChoice === "app" ? `/${s}/app` : `/${s}/dashboard`);
           return;
         }
         setError(`Profile error: ${profileError.message}`);
@@ -83,9 +132,10 @@ function LoginForm() {
       }
 
       if (!profile) {
-        // Demo fallback in case profile fetch is delayed
         if (email.toLowerCase() === "demo@harmoniq.safety") {
-          router.replace("/nexus/dashboard");
+          const { data: anyCompany } = await supabase.from("companies").select("slug").limit(1).single();
+          const s = anyCompany?.slug || "harmoniq";
+          router.replace(appChoice === "app" ? `/${s}/app` : `/${s}/dashboard`);
           return;
         }
         setError("No user profile found. Contact your administrator.");
@@ -93,17 +143,114 @@ function LoginForm() {
         return;
       }
 
-      // Get company slug for redirect
-      const { data: company } = await supabase
+      saveToStorage("harmoniq_auth_profile", profile);
+
+      const allowedApps = getAllowedApps(profile.role);
+      if (!allowedApps.includes(appChoice)) {
+        await supabase.auth.signOut();
+        setError("Access denied for the selected app. Please choose a permitted app.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Super admins must use a direct link for the platform portal; from the chooser, route them to a real tenant dashboard.
+      if (profile.role === "super_admin") {
+        if (searchParams.get("source") !== "admin-link") {
+          const { data: nonPlatform } = await supabase
+            .from("companies")
+            .select("id, slug")
+             .not("slug", "in", PLATFORM_SLUGS_LIST)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .single();
+
+          if (!nonPlatform?.id || !nonPlatform.slug) {
+            setError("No company available for dashboard access. Contact your administrator.");
+            setIsLoading(false);
+            return;
+          }
+
+          saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nonPlatform.id);
+          router.replace(`/${nonPlatform.slug}/dashboard`);
+          return;
+        }
+
+        // If explicitly coming from the admin link, allow platform portal routing to continue via callback
+      }
+
+      // Pick company for redirect (non-super admins)
+      const storedCompanyId = loadFromStorage<string | null>(SELECTED_COMPANY_STORAGE_KEY, null);
+      let companyId = profile.company_id || storedCompanyId;
+
+      if (!companyId) {
+        const { data: firstCompany } = await supabase
+          .from("companies")
+          .select("id, slug")
+          .not("slug", "in", PLATFORM_SLUGS_LIST)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .single();
+
+        if (firstCompany?.id) {
+          companyId = firstCompany.id;
+          saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
+        }
+
+        if (!companyId) {
+          setError("No company available. Contact your administrator.");
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
+
+      // Resolve company slug for redirect (avoid platform slugs and avoid falling back to platform defaults)
+      const pickFirstNonPlatform = async () => {
+        const { data: nonPlatform } = await supabase
+          .from("companies")
+          .select("id, slug")
+          .not("slug", "in", PLATFORM_SLUGS_LIST)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .single();
+        return nonPlatform;
+      };
+
+      let { data: company } = await supabase
         .from("companies")
-        .select("slug")
-        .eq("id", profile.company_id)
+        .select("id, slug")
+        .eq("id", companyId)
         .single();
 
-      const slug = company?.slug || "harmoniq";
-      const dest = profile.role === "employee" ? `/${slug}/app` : `/${slug}/dashboard`;
+      if (!company) {
+        company = await pickFirstNonPlatform();
+        if (!company?.id || !company.slug) {
+          setError("No company available for dashboard access. Contact your administrator.");
+          setIsLoading(false);
+          return;
+        }
+        companyId = company.id;
+        saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
+      }
+
+      if (company.slug && isPlatformSlug(company.slug)) {
+        const nonPlatform = await pickFirstNonPlatform();
+        if (!nonPlatform?.id || !nonPlatform.slug) {
+          setError("No company available for dashboard access. Contact your administrator.");
+          setIsLoading(false);
+          return;
+        }
+        company = nonPlatform;
+        companyId = nonPlatform.id;
+        saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
+      }
+
+      const slug = company.slug;
+      const dest = appChoice === "app" ? `/${slug}/app` : `/${slug}/dashboard`;
       router.replace(dest);
     } catch (err: any) {
+      if (err?.message?.includes("abort")) return;
       setError(`Error: ${err.message}`);
       setIsLoading(false);
     }
@@ -231,6 +378,36 @@ function LoginForm() {
                   {success}
                 </div>
               )}
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Choose app</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAppChoice("dashboard")}
+                    disabled={isLoading}
+                    className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                      appChoice === "dashboard"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAppChoice("app")}
+                    disabled={isLoading}
+                    className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                      appChoice === "app"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                  >
+                    Mobile App
+                  </button>
+                </div>
+              </div>
 
               {/* Email field — shared between both modes */}
               <div>

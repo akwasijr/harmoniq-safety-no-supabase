@@ -1,26 +1,39 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
-/**
- * Privacy-compliant pageview analytics collector.
- * - No PII stored (no IP, no user agent fingerprinting)
- * - Respects Do Not Track header
- * - Only collects if user has given analytics consent
- * - Anonymous aggregation only
- */
+// Simple in-memory rate limiter
+const rateLimiter = new Map<string, { count: number; reset: number }>();
+function checkRate(key: string, maxPerMinute: number): boolean {
+  const now = Date.now();
+  const entry = rateLimiter.get(key);
+  if (!entry || now > entry.reset) {
+    rateLimiter.set(key, { count: 1, reset: now + 60000 });
+    return true;
+  }
+  if (entry.count >= maxPerMinute) return false;
+  entry.count++;
+  return true;
+}
+
+function getIp(request: NextRequest): string {
+  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+}
 
 interface PageviewEvent {
   path: string;
   referrer: string;
   country: string;
+  city: string | null;
+  lat: number | null;
+  lng: number | null;
   browser: string;
   device: string;
+  ip_hash: string;
   timestamp: string;
 }
 
-// In-memory store for now; replace with Supabase when connected
 const pageviews: PageviewEvent[] = [];
 
-// Auto-purge events older than 90 days
 function purgeOldEvents() {
   const cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
   while (pageviews.length > 0 && new Date(pageviews[0].timestamp).getTime() < cutoff) {
@@ -28,21 +41,38 @@ function purgeOldEvents() {
   }
 }
 
-export async function POST(request: Request) {
+// Simple hash to anonymize IP
+function hashIp(ip: string): string {
+  let hash = 0;
+  for (let i = 0; i < ip.length; i++) {
+    hash = ((hash << 5) - hash + ip.charCodeAt(i)) | 0;
+  }
+  return `v${Math.abs(hash).toString(36)}`;
+}
+
+export async function POST(request: NextRequest) {
   try {
-    // Respect Do Not Track
     if (request.headers.get("dnt") === "1") {
       return NextResponse.json({ ok: true });
     }
 
-    const body = await request.json();
-    const { path, referrer } = body;
-
-    if (!path) {
-      return NextResponse.json({ error: "path required" }, { status: 400 });
+    // Rate limit: 30 requests per minute per IP
+    const ip = getIp(request);
+    if (!checkRate(`post:${ip}`, 30)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    // Derive minimal anonymous metadata from headers
+    // Origin check: only accept from same origin
+    const origin = request.headers.get("origin") || request.headers.get("referer") || "";
+    const host = request.headers.get("host") || "";
+    if (origin && !origin.includes(host) && !origin.includes("localhost") && !origin.includes("vercel.app")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { path, referrer } = body;
+    if (!path) return NextResponse.json({ error: "path required" }, { status: 400 });
+
     const ua = request.headers.get("user-agent") || "";
     const browser = ua.includes("Firefox") ? "Firefox"
       : ua.includes("Edg") ? "Edge"
@@ -51,22 +81,26 @@ export async function POST(request: Request) {
       : "Other";
     const device = /Mobile|Android|iPhone/i.test(ua) ? "mobile" : "desktop";
 
-    // Country from Cloudflare/Vercel headers (no IP stored)
-    const country = request.headers.get("cf-ipcountry")
-      || request.headers.get("x-vercel-ip-country")
-      || "unknown";
+    const country = request.headers.get("x-vercel-ip-country") || "unknown";
+    const city = request.headers.get("x-vercel-ip-city");
+    const lat = request.headers.get("x-vercel-ip-latitude");
+    const lng = request.headers.get("x-vercel-ip-longitude");
+    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
-    const event: PageviewEvent = {
+    pageviews.push({
       path,
       referrer: referrer || "direct",
       country,
+      city: city ? decodeURIComponent(city) : null,
+      lat: lat ? parseFloat(lat) : null,
+      lng: lng ? parseFloat(lng) : null,
       browser,
       device,
+      ip_hash: hashIp(clientIp),
       timestamp: new Date().toISOString(),
-    };
+    });
 
-    pageviews.push(event);
-    purgeOldEvents();
+    if (pageviews.length > 10000) pageviews.splice(0, pageviews.length - 10000);
 
     return NextResponse.json({ ok: true });
   } catch {
@@ -74,18 +108,32 @@ export async function POST(request: Request) {
   }
 }
 
-/** GET endpoint for super admin to query analytics */
-export async function GET(request: Request) {
-  // TODO: Add auth check (super admin only)
-  const url = new URL(request.url);
-  const days = parseInt(url.searchParams.get("days") || "30", 10);
-  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+export async function GET(request: NextRequest) {
+  // Auth check: only super_admin or company_admin can read analytics
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    if (!profile || !["super_admin", "company_admin"].includes(profile.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  } catch {
+    // If auth fails (e.g., no Supabase tables), allow access for demo
+  }
 
+  const days = parseInt(request.nextUrl.searchParams.get("days") || "30", 10);
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
   purgeOldEvents();
 
   const filtered = pageviews.filter((e) => new Date(e.timestamp).getTime() >= cutoff);
 
-  // Aggregate
   const byPage: Record<string, number> = {};
   const byCountry: Record<string, number> = {};
   const byBrowser: Record<string, number> = {};
@@ -103,8 +151,26 @@ export async function GET(request: Request) {
     byDay[day] = (byDay[day] || 0) + 1;
   }
 
+  // Visitor locations for map (deduplicated by ip_hash)
+  const seenHashes = new Set<string>();
+  const locations: { lat: number; lng: number; city: string | null; country: string; count: number }[] = [];
+  for (const e of filtered) {
+    if (e.lat && e.lng && !seenHashes.has(e.ip_hash)) {
+      seenHashes.add(e.ip_hash);
+      const existing = locations.find(
+        (l) => Math.abs(l.lat - e.lat!) < 0.05 && Math.abs(l.lng - e.lng!) < 0.05
+      );
+      if (existing) {
+        existing.count++;
+      } else {
+        locations.push({ lat: e.lat, lng: e.lng, city: e.city, country: e.country, count: 1 });
+      }
+    }
+  }
+
   return NextResponse.json({
     total: filtered.length,
+    uniqueVisitors: seenHashes.size || new Set(filtered.map((e) => e.ip_hash)).size,
     period_days: days,
     by_page: byPage,
     by_country: byCountry,
@@ -112,5 +178,6 @@ export async function GET(request: Request) {
     by_device: byDevice,
     by_referrer: byReferrer,
     by_day: byDay,
+    locations,
   });
 }

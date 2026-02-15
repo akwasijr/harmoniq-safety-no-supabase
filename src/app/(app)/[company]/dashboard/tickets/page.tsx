@@ -32,7 +32,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import type { Ticket as TicketType } from "@/types";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_COMPANY_ID, DEFAULT_USER_ID } from "@/mocks/data";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -124,7 +123,7 @@ export default function TicketsPage() {
     const now = new Date().toISOString();
     const ticket: TicketType = {
       id: `tkt_${Date.now()}`,
-      company_id: company || user?.company_id || DEFAULT_COMPANY_ID,
+      company_id: company || user?.company_id || "",
       title: newTicket.title,
       description: newTicket.description,
       priority: newTicket.priority as TicketType["priority"],
@@ -133,7 +132,7 @@ export default function TicketsPage() {
       assigned_to: newTicket.assigned_to || null,
       assigned_groups: [],
       incident_ids: newTicket.incident_id ? [newTicket.incident_id] : [],
-      created_by: user?.id || users[0]?.id || DEFAULT_USER_ID,
+      created_by: user?.id || users[0]?.id || "",
       created_at: now,
       updated_at: now,
     };

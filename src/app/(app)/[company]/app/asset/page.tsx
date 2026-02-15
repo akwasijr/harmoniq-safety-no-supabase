@@ -27,7 +27,7 @@ function AssetQuickViewPageContent() {
   const company = useCompanyParam();
   const searchParams = useSearchParams();
   const assetId = searchParams.get("id") || "";
-  const { items: assets } = useAssetsStore();
+  const { items: assets, isLoading } = useAssetsStore();
   const { items: inspections } = useAssetInspectionsStore();
   const { items: locations } = useLocationsStore();
 
@@ -36,6 +36,14 @@ function AssetQuickViewPageContent() {
   const assetInspections = inspections.filter((i) => i.asset_id === assetId);
   const lastInspection = [...assetInspections].sort((a, b) => new Date(b.inspected_at).getTime() - new Date(a.inspected_at).getTime())[0];
   const location = asset?.location_id ? locations.find((l) => l.id === asset.location_id) : null;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   if (!asset) {
     return (
@@ -97,16 +105,32 @@ function AssetQuickViewPageContent() {
                 <Wrench className="h-4 w-4 text-muted-foreground" />
                 <span>{asset.manufacturer || t("assets.unknown")} {asset.model || ""}</span>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">{t("assets.labels.assetType")}:</span>
+                <span className="capitalize">{asset.asset_type || "—"}</span>
+              </div>
               {location && (
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span>{location.name}</span>
                 </div>
               )}
+              {asset.department && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{t("assets.labels.department")}:</span>
+                  <span>{asset.department}</span>
+                </div>
+              )}
               {asset.serial_number && (
                 <div className="flex items-center gap-2 col-span-2">
                   <span className="text-muted-foreground">S/N:</span>
                   <span className="font-mono">{asset.serial_number}</span>
+                </div>
+              )}
+              {asset.warranty_expiry && (
+                <div className="flex items-center gap-2 col-span-2">
+                  <span className="text-muted-foreground">{t("assets.labels.warrantyExpiry")}:</span>
+                  <span>{formatDate(asset.warranty_expiry)}</span>
                 </div>
               )}
             </div>
