@@ -76,7 +76,7 @@
     "allCaughtUp": "Allt klart!",
     "noPendingTasks": "Inga väntande uppgifter just nu.",
     "items": "objekt",
-    "welcomeDesc": "Din arbetsplats säkerhetsportal — så här kommer du igång.",
+    "welcomeDesc": "Din arbetsplatssäkerhetshubb.",
     "getStarted": "Kom igång",
     "reportIncidentDesc": "Ser du något osäkert? Meddela teamet direkt.",
     "safetyTasksDesc": "Fyll i dagliga checklistor och inspektioner.",
@@ -84,7 +84,8 @@
     "requestFixDesc": "Rapportera trasig utrustning eller begär underhåll.",
     "browseAssets": "Bläddra tillgångar",
     "browseAssetsDesc": "Sök utrustning, skanna QR-koder eller kontrollera status.",
-    "newsDesc": "Håll dig uppdaterad med företagets säkerhetsnyheter och policyer."
+    "newsDesc": "Håll dig uppdaterad med företagets säkerhetsnyheter och policyer.",
+    "riskAssessment": "Riskbedömning"
   },
   "report": {
     "title": "Rapportera incident",

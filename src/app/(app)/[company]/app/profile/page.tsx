@@ -117,11 +117,11 @@ export default function EmployeeProfilePage() {
     : [];
 
   const user = {
-    firstName: currentUser.first_name,
-    lastName: currentUser.last_name,
-    email: currentUser.email,
+    firstName: currentUser.first_name || "",
+    lastName: currentUser.last_name || "",
+    email: currentUser.email || "",
     phone: currentUser.employee_id ? `Ext. ${currentUser.employee_id}` : "Not set",
-    role: currentUser.role,
+    role: currentUser.role || "employee",
     location: userLocation?.name || "Not assigned",
     teams: userTeams.map(t => t.name),
     joinedAt: currentUser.created_at,
@@ -153,8 +153,8 @@ export default function EmployeeProfilePage() {
             />
           ) : (
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-3xl font-semibold text-primary-foreground">
-              {user.firstName[0]}
-              {user.lastName[0]}
+              {(user.firstName?.[0] || "").toUpperCase()}
+              {(user.lastName?.[0] || "").toUpperCase()}
             </div>
           )}
           <button

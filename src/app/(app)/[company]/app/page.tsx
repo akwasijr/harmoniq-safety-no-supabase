@@ -11,7 +11,7 @@ import {
   AlertCircle,
   Shield,
   Flame,
-  Lightbulb,
+  Zap,
   Sparkles,
   Heart,
   Megaphone,
@@ -19,6 +19,28 @@ import {
   ChevronDown,
   ArrowRight,
   Wrench,
+  Search,
+  ScanLine,
+  Newspaper,
+  HardHat,
+  Eye,
+  Thermometer,
+  Lock,
+  Ear,
+  Footprints,
+  Siren,
+  HandMetal,
+  BookOpen,
+  Activity,
+  Stethoscope,
+  BellRing,
+  Users,
+  ShieldCheck,
+  Truck,
+  RefreshCw,
+  Timer,
+  Gauge,
+  Hammer,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useContentStore } from "@/stores/content-store";
@@ -30,16 +52,42 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 
-// Safety tips — always-present engaging content
+// 30 safety tips that cycle daily
 const SAFETY_TIPS = [
   { tip: "Always inspect your PPE before starting a shift.", icon: Shield },
-  { tip: "Report near-misses \u2014 they prevent real incidents.", icon: AlertTriangle },
-  { tip: "Know your emergency exits and assembly points.", icon: Megaphone },
-  { tip: "Take regular breaks to stay alert and focused.", icon: Heart },
+  { tip: "Report near-misses — they prevent real incidents.", icon: AlertTriangle },
+  { tip: "Know your emergency exits and assembly points.", icon: Siren },
+  { tip: "Take regular breaks to stay alert and focused.", icon: Timer },
   { tip: "Good housekeeping prevents slips, trips & falls.", icon: Sparkles },
-  { tip: "Never bypass safety guards on equipment.", icon: Shield },
-  { tip: "Communication saves lives \u2014 speak up about hazards.", icon: Megaphone },
+  { tip: "Never bypass safety guards on equipment.", icon: Lock },
+  { tip: "Communication saves lives — speak up about hazards.", icon: Megaphone },
+  { tip: "Wear appropriate footwear for your work environment.", icon: Footprints },
+  { tip: "Keep fire extinguishers accessible and know how to use them.", icon: Flame },
+  { tip: "Always follow lockout/tagout procedures.", icon: Lock },
+  { tip: "Lift with your legs, not your back.", icon: Activity },
+  { tip: "Store chemicals in labelled containers with SDS available.", icon: Thermometer },
+  { tip: "Keep walkways and emergency exits clear at all times.", icon: ArrowRight },
+  { tip: "Report damaged electrical cords or outlets immediately.", icon: Zap },
+  { tip: "Use hearing protection in high-noise areas.", icon: Ear },
+  { tip: "Wash your hands regularly, especially before eating.", icon: HandMetal },
+  { tip: "Know the location of first aid kits on your floor.", icon: Stethoscope },
+  { tip: "Never operate machinery you haven't been trained on.", icon: Gauge },
+  { tip: "Stay hydrated — dehydration reduces focus and reaction time.", icon: Heart },
+  { tip: "Secure loose clothing and hair near moving equipment.", icon: ShieldCheck },
+  { tip: "Report any spills immediately and clean them up.", icon: AlertCircle },
+  { tip: "Use the buddy system for high-risk tasks.", icon: Users },
+  { tip: "Check ladders for damage before climbing.", icon: Eye },
+  { tip: "Follow speed limits when driving forklifts or vehicles on-site.", icon: Truck },
+  { tip: "Stretch before physically demanding tasks.", icon: RefreshCw },
+  { tip: "Ensure proper ventilation when working with fumes.", icon: Activity },
+  { tip: "Attend all scheduled safety training sessions.", icon: BookOpen },
+  { tip: "Use the right tool for the job — improvising causes injuries.", icon: Hammer },
+  { tip: "Review risk assessments before starting unfamiliar work.", icon: ClipboardCheck },
+  { tip: "If in doubt, stop and ask your supervisor.", icon: BellRing },
 ];
+
+// Rotating tip icons to keep it visually fresh
+const TIP_ICONS = [Zap, Flame, Shield, Eye, Activity, Sparkles, Heart];
 
 function getGreetingKey(): string {
   if (typeof window === "undefined") return "app.goodMorning"; // SSR default
@@ -110,7 +158,7 @@ function Section({
 
 export default function EmployeeAppHomePage() {
   const company = useCompanyParam();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { items: contentItems } = useContentStore();
   const { items: checklistTemplates } = useChecklistTemplatesStore();
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
@@ -166,117 +214,109 @@ export default function EmployeeAppHomePage() {
   // Determine if we have enough data for the full feed view
   const hasData = userIncidents.length >= 2 || pendingChecklists.length > 0 || recentNews.length > 0;
 
+  // Quick action grid items (2-3 per row, 6 total, specific icons, no sub-text)
+  const quickActions = [
+    { href: `/${company}/app/report`, icon: AlertTriangle, label: t("app.reportIncident"), color: "bg-destructive/10", iconColor: "text-destructive" },
+    { href: `/${company}/app/checklists`, icon: ClipboardCheck, label: t("app.safetyTasks"), color: "bg-primary/10", iconColor: "text-primary" },
+    { href: `/${company}/app/maintenance`, icon: Wrench, label: t("app.requestFix"), color: "bg-amber-500/10", iconColor: "text-amber-600" },
+    { href: `/${company}/app/assets`, icon: Search, label: t("app.browseAssets"), color: "bg-blue-500/10", iconColor: "text-blue-600" },
+    { href: `/${company}/app/scan`, icon: ScanLine, label: t("app.scanAsset"), color: "bg-violet-500/10", iconColor: "text-violet-600" },
+    { href: `/${company}/app/risk-assessment`, icon: ShieldCheck, label: t("app.riskAssessment"), color: "bg-emerald-500/10", iconColor: "text-emerald-600" },
+  ];
+
+  // ── Shared hero section ──
+  const HeroSection = () => (
+    <div className="relative overflow-hidden px-5 pt-5 pb-8" style={{ minHeight: 160 }}>
+      {/* Background image with overlay */}
+      {currentCompany?.hero_image_url ? (
+        <>
+          <img
+            src={currentCompany.hero_image_url}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[hsl(var(--secondary))]" aria-hidden="true">
+          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
+          <div className="absolute -left-4 bottom-0 h-20 w-20 rounded-full bg-white/[0.08]" />
+        </div>
+      )}
+
+      <div className="relative z-10">
+        <p className="text-white/70 text-sm font-medium">{greeting}</p>
+        <h1 className="text-xl font-bold text-white mt-0.5">
+          {user.first_name} {user.last_name}
+        </h1>
+
+        {/* Stats row */}
+        <div className="flex gap-3 mt-4">
+          <div className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1">
+            <Flame className="h-4 w-4 text-orange-300" aria-hidden="true" />
+            <div>
+              <p className="text-[11px] text-white/70 leading-none">{t("app.safeDays")}</p>
+              <p className="text-sm font-bold text-white mt-0.5">{safetyStreak}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1">
+            <CheckCircle className="h-4 w-4 text-emerald-300" aria-hidden="true" />
+            <div>
+              <p className="text-[11px] text-white/70 leading-none">{t("app.thisWeek")}</p>
+              <p className="text-sm font-bold text-white mt-0.5">{completedThisWeek} {t("app.tasks")}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Tip of the Day card ──
+  const TipCard = () => {
+    const TipIcon = todayTip.icon;
+    return (
+      <div className="mx-4 -mt-4 relative z-10">
+        <div className="rounded-xl bg-card shadow-sm p-3.5 flex items-start gap-3">
+          <TipIcon className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 tracking-widest">{t("app.tipOfTheDay")}</p>
+            <p className="text-sm text-foreground mt-0.5 leading-snug">{todayTip.tip}</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── Quick Actions Grid (2-3 per row, 6 total, no sub-text) ──
+  const QuickActionsGrid = () => (
+    <div className="px-4 pt-5 pb-1">
+      <p className="text-[11px] font-semibold text-muted-foreground mb-3">{t("app.getStarted")}</p>
+      <div className="grid grid-cols-3 gap-2.5">
+        {quickActions.map((action) => (
+          <Link
+            key={action.href}
+            href={action.href}
+            className={cn(
+              "flex flex-col items-center gap-2 rounded-xl p-3.5 transition-all active:scale-95",
+              action.color
+            )}
+          >
+            <action.icon className={cn("h-6 w-6", action.iconColor)} aria-hidden="true" />
+            <span className="text-[11px] font-medium text-center leading-tight">{action.label}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+
   // ── Empty state / onboarding view ──
   if (!hasData) {
     return (
       <div className="flex flex-col min-h-full">
-        {/* Hero — same greeting but simpler */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-[hsl(var(--secondary))] px-5 pt-5 pb-8">
-          <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-            <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
-            <div className="absolute -left-4 bottom-0 h-20 w-20 rounded-full bg-white/[0.08]" />
-          </div>
-          <div className="relative z-10">
-            <p className="text-primary-foreground/70 text-sm font-medium">{greeting}</p>
-            <h1 className="text-xl font-bold text-primary-foreground mt-0.5">
-              {user.first_name} {user.last_name}
-            </h1>
-            <p className="text-primary-foreground/60 text-sm mt-2">{t("app.welcomeDesc")}</p>
-          </div>
-        </div>
-
-        {/* Tip card overlapping hero */}
-        <div className="mx-4 -mt-4 relative z-10">
-          <div className="rounded-xl bg-card shadow-sm p-3.5 flex items-start gap-3">
-            <Lightbulb className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{t("app.tipOfTheDay")}</p>
-              <p className="text-sm text-foreground mt-0.5 leading-snug">{todayTip.tip}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Getting started actions */}
-        <div className="px-4 pt-5 pb-4 space-y-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("app.getStarted")}</p>
-
-          <div className="space-y-3">
-            {/* Report an Incident */}
-            <Link
-              href={`/${company}/app/report`}
-              className="flex items-center gap-4 rounded-xl border p-4 transition-colors active:bg-muted/50 hover:bg-muted/30"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-destructive/10">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{t("app.reportIncident")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("app.reportIncidentDesc")}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </Link>
-
-            {/* Complete a Safety Checklist */}
-            <Link
-              href={`/${company}/app/checklists`}
-              className="flex items-center gap-4 rounded-xl border p-4 transition-colors active:bg-muted/50 hover:bg-muted/30"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                <ClipboardCheck className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{t("app.safetyTasks")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("app.safetyTasksDesc")}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </Link>
-
-            {/* Request a Repair */}
-            <Link
-              href={`/${company}/app/maintenance`}
-              className="flex items-center gap-4 rounded-xl border p-4 transition-colors active:bg-muted/50 hover:bg-muted/30"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-warning/10">
-                <Wrench className="h-5 w-5 text-warning" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{t("app.requestFix")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("app.requestFixDesc")}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </Link>
-
-            {/* Browse Assets */}
-            <Link
-              href={`/${company}/app/assets`}
-              className="flex items-center gap-4 rounded-xl border p-4 transition-colors active:bg-muted/50 hover:bg-muted/30"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted">
-                <Shield className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{t("app.browseAssets")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("app.browseAssetsDesc")}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </Link>
-
-            {/* Read News */}
-            <Link
-              href={`/${company}/app/news`}
-              className="flex items-center gap-4 rounded-xl border p-4 transition-colors active:bg-muted/50 hover:bg-muted/30"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary/10">
-                <Megaphone className="h-5 w-5 text-secondary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{t("app.newsAndUpdates")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("app.newsDesc")}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </Link>
-          </div>
-        </div>
+        <HeroSection />
+        <TipCard />
+        <QuickActionsGrid />
       </div>
     );
   }
@@ -286,80 +326,13 @@ export default function EmployeeAppHomePage() {
   return (
     <div className="flex flex-col min-h-full">
       {/* ── Hero Section ── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-[hsl(var(--secondary))] px-5 pt-5 pb-6">
-        {/* Decorative circles */}
-        <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
-          <div className="absolute -left-4 bottom-0 h-20 w-20 rounded-full bg-white/[0.08]" />
-          <div className="absolute right-12 bottom-4 h-12 w-12 rounded-full bg-white/5" />
-        </div>
+      <HeroSection />
 
-        <div className="relative z-10">
-          <p className="text-primary-foreground/70 text-sm font-medium">{greeting}</p>
-          <h1 className="text-xl font-bold text-primary-foreground mt-0.5">
-            {user.first_name} {user.last_name}
-          </h1>
-
-          {/* Stats row */}
-          <div className="flex gap-3 mt-4">
-            <div className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1">
-              <Flame className="h-4 w-4 text-orange-300" aria-hidden="true" />
-              <div>
-                <p className="text-[11px] text-primary-foreground/70 leading-none">{t("app.safeDays")}</p>
-                <p className="text-sm font-bold text-primary-foreground mt-0.5">{safetyStreak}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1">
-              <CheckCircle className="h-4 w-4 text-emerald-300" aria-hidden="true" />
-              <div>
-                <p className="text-[11px] text-primary-foreground/70 leading-none">{t("app.thisWeek")}</p>
-                <p className="text-sm font-bold text-primary-foreground mt-0.5">{completedThisWeek} {t("app.tasks")}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Safety Tip Card — overlaps hero ── */}
-      <div className="mx-4 -mt-3 relative z-10">
-        <div className="rounded-xl bg-card shadow-sm p-3.5 flex items-start gap-3">
-          <Lightbulb className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{t("app.tipOfTheDay")}</p>
-            <p className="text-sm text-foreground mt-0.5 leading-snug">{todayTip.tip}</p>
-          </div>
-        </div>
-      </div>
+      {/* ── Tip of the Day ── */}
+      <TipCard />
 
       {/* ── Quick Actions ── */}
-      <div className="px-4 pt-5 pb-1">
-        <p className="text-[11px] font-semibold text-muted-foreground mb-3">{t("app.quickActions")}</p>
-        <div className="grid grid-cols-3 gap-2.5">
-          <Link
-            href={`/${company}/app/report`}
-            className="flex flex-col items-center gap-2 rounded-xl bg-destructive/5 p-3.5 transition-all active:scale-95 active:bg-destructive/10"
-          >
-            <AlertTriangle className="h-6 w-6 text-destructive" aria-hidden="true" />
-            <span className="text-[11px] font-medium text-center leading-tight">{t("app.reportIncident")}</span>
-          </Link>
-
-          <Link
-            href={`/${company}/app/checklists`}
-            className="flex flex-col items-center gap-2 rounded-xl bg-primary/5 p-3.5 transition-all active:scale-95 active:bg-primary/10"
-          >
-            <ClipboardCheck className="h-6 w-6 text-primary" aria-hidden="true" />
-            <span className="text-[11px] font-medium text-center leading-tight">{t("app.safetyTasks")}</span>
-          </Link>
-
-          <Link
-            href={`/${company}/app/maintenance`}
-            className="flex flex-col items-center gap-2 rounded-xl bg-warning/5 p-3.5 transition-all active:scale-95 active:bg-warning/10"
-          >
-            <Wrench className="h-6 w-6 text-warning" aria-hidden="true" />
-            <span className="text-[11px] font-medium text-center leading-tight">Request Fix</span>
-          </Link>
-        </div>
-      </div>
+      <QuickActionsGrid />
 
       {/* ── Content Feed ── */}
       <div className="px-4 pt-3 pb-4 space-y-1">
@@ -406,7 +379,7 @@ export default function EmployeeAppHomePage() {
         {/* News & Updates — always visible */}
         <Section
           title={t("app.newsAndUpdates")}
-          icon={Megaphone}
+          icon={Newspaper}
           iconColor="text-secondary"
           action={
             recentNews.length > 0 ? (
@@ -440,7 +413,7 @@ export default function EmployeeAppHomePage() {
             ))
           ) : (
             <div className="py-4 text-center">
-              <Megaphone className="h-6 w-6 text-muted-foreground/30 mx-auto" aria-hidden="true" />
+              <Newspaper className="h-6 w-6 text-muted-foreground/30 mx-auto" aria-hidden="true" />
               <p className="text-xs font-medium text-muted-foreground mt-2">{t("app.noNewsYet")}</p>
               <p className="text-[11px] text-muted-foreground/70 mt-0.5">{t("app.noNewsDesc")}</p>
             </div>

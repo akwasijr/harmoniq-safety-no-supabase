@@ -422,6 +422,7 @@ export default function PlatformCompaniesPage() {
                       font_family: "Inter",
                       ui_style: newUiStyle,
                       logo_url: null,
+                      hero_image_url: null,
                       trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
                       created_at: new Date().toISOString(),
                       updated_at: new Date().toISOString(),

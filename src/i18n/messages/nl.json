@@ -65,7 +65,7 @@
     "quickActions": "Snelle acties",
     "reportIncident": "Incident melden",
     "safetyTasks": "Veiligheidstaken",
-    "scanAsset": "Middel scannen",
+    "scanAsset": "Asset scannen",
     "pendingTasks": "Openstaande taken",
     "newsAndUpdates": "Nieuws & updates",
     "myReports": "Mijn meldingen",
@@ -76,15 +76,16 @@
     "allCaughtUp": "Alles bijgewerkt!",
     "noPendingTasks": "Geen openstaande taken op dit moment.",
     "items": "items",
-    "welcomeDesc": "Uw werkplekveiligheidsportaal — zo kunt u beginnen.",
+    "welcomeDesc": "Uw veiligheidshub op de werkplek.",
     "getStarted": "Aan de slag",
     "reportIncidentDesc": "Iets onveiligs gezien? Laat het team het direct weten.",
     "safetyTasksDesc": "Vul dagelijkse checklists en inspecties in.",
     "requestFix": "Reparatie aanvragen",
     "requestFixDesc": "Meld defecte apparatuur of vraag onderhoud aan.",
-    "browseAssets": "Middelen bekijken",
+    "browseAssets": "Assets bekijken",
     "browseAssetsDesc": "Zoek apparatuur op, scan QR-codes of controleer de status.",
-    "newsDesc": "Blijf op de hoogte van bedrijfsveiligheidsnieuws en beleid."
+    "newsDesc": "Blijf op de hoogte van bedrijfsveiligheidsnieuws en beleid.",
+    "riskAssessment": "Risicobeoordeling"
   },
   "report": {
     "title": "Incident melden",

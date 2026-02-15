@@ -74,6 +74,7 @@ const defaultCompany: Company = {
   language: "en" as any,
   status: "active" as any,
   logo_url: null,
+  hero_image_url: null,
   primary_color: "#024E6E",
   secondary_color: "#029EDB",
   font_family: "Geist Sans",

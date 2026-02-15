@@ -174,6 +174,7 @@ export interface Company {
 
   // Branding
   logo_url: string | null;
+  hero_image_url: string | null;
   primary_color: string;
   secondary_color: string;
   font_family: string;
