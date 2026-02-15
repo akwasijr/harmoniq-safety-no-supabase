@@ -9,6 +9,7 @@ import { useCompanyStore } from "@/stores/company-store";
 import { useContentStore } from "@/stores/content-store";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useTicketsStore } from "@/stores/tickets-store";
+import { useNotificationsStore } from "@/stores/notifications-store";
 import { applyPrimaryColor } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { I18nProvider } from "@/i18n";
@@ -27,11 +28,16 @@ export default function EmployeeAppRootLayout({
   const { items: checklistTemplates } = useChecklistTemplatesStore();
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { items: tickets } = useTicketsStore();
+  const { items: dbNotifications } = useNotificationsStore();
 
-  // Compute notification count
+  // Compute notification count from real DB notifications + derived
   const notificationCount = React.useMemo(() => {
     if (!user) return 0;
-    const recentNews = contentItems.filter((item) => item.status === "published" && item.type === "news").length;
+    // Count unread DB notifications
+    const unreadDb = dbNotifications.filter(
+      (n) => !n.read && (n.user_id === null || n.user_id === user.id)
+    ).length;
+    // Count pending tasks not covered by DB notifications
     const completedIds = new Set(
       checklistSubmissions
         .filter((s) => s.submitter_id === user.id && s.status === "submitted")
@@ -39,8 +45,8 @@ export default function EmployeeAppRootLayout({
     );
     const pendingTasks = checklistTemplates.filter((t) => !completedIds.has(t.id)).length;
     const openTickets = tickets.filter((t) => t.assigned_to === user.id && t.status === "new").length;
-    return recentNews + pendingTasks + openTickets;
-  }, [user, contentItems, checklistTemplates, checklistSubmissions, tickets]);
+    return unreadDb + pendingTasks + openTickets;
+  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets]);
 
   // C5: Validate company slug against known companies
   const isValidCompany = React.useMemo(

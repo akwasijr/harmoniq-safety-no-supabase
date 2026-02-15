@@ -19,6 +19,7 @@ import { useContentStore } from "@/stores/content-store";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
+import { useNotificationsStore } from "@/stores/notifications-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -44,40 +45,52 @@ export default function NotificationsPage() {
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { items: incidents } = useIncidentsStore();
   const { items: tickets } = useTicketsStore();
+  const { items: dbNotifications, update: updateNotification } = useNotificationsStore();
   const { t, formatDate } = useTranslation();
 
   const notifications = React.useMemo<NotificationItem[]>(() => {
     if (!user) return [];
     const items: NotificationItem[] = [];
 
-    // News notifications
-    contentItems
-      .filter((item) => item.status === "published" && item.type === "news")
-      .forEach((item) => {
+    // Real DB notifications (from triggers)
+    dbNotifications
+      .filter((n) => n.user_id === null || n.user_id === user.id)
+      .forEach((n) => {
+        const iconMap: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
+          content: { icon: Newspaper, color: "text-blue-500 bg-blue-50" },
+          incident: { icon: AlertTriangle, color: "text-orange-500 bg-orange-50" },
+          checklist: { icon: ClipboardCheck, color: "text-primary bg-primary/10" },
+          task: { icon: Wrench, color: "text-purple-500 bg-purple-50" },
+        };
+        const { icon, color } = iconMap[n.source || "content"] || iconMap.content;
         items.push({
-          id: `news-${item.id}`,
-          type: "news",
-          title: item.title,
-          description: item.category || "Company news",
-          timestamp: new Date(item.published_at || item.created_at),
-          read: false,
-          href: `/${company}/app/news/${item.id}`,
-          icon: Newspaper,
-          iconColor: "text-blue-500 bg-blue-50",
+          id: n.id,
+          type: (n.source as NotificationItem["type"]) || "news",
+          title: n.title,
+          description: n.message,
+          timestamp: new Date(n.created_at),
+          read: n.read,
+          href: n.source_id ? `/${company}/app/${n.source === "content" ? "news" : n.source === "incident" ? "incidents" : "tasks"}` : `/${company}/app`,
+          icon,
+          iconColor: color,
         });
       });
 
+    // Also include derived notifications from stores (for items without triggers)
     // Pending checklist tasks
     const completedIds = new Set(
       checklistSubmissions
         .filter((s) => s.submitter_id === user.id && s.status === "submitted")
         .map((s) => s.template_id)
     );
+    const dbIds = new Set(items.map((n) => n.id));
     checklistTemplates
       .filter((template) => !completedIds.has(template.id))
       .forEach((template) => {
+        const derivedId = `task-${template.id}`;
+        if (dbIds.has(derivedId)) return;
         items.push({
-          id: `task-${template.id}`,
+          id: derivedId,
           type: "task",
           title: template.name,
           description: `${template.items?.length || 0} items to complete`,
@@ -89,30 +102,14 @@ export default function NotificationsPage() {
         });
       });
 
-    // Recent incidents reported by user
-    incidents
-      .filter((inc) => inc.reporter_id === user.id)
-      .slice(0, 5)
-      .forEach((inc) => {
-        items.push({
-          id: `incident-${inc.id}`,
-          type: "incident",
-          title: inc.title || "Incident report",
-          description: `Status: ${inc.status}`,
-          timestamp: new Date(inc.incident_date),
-          read: true,
-          href: `/${company}/app/incidents/${inc.id}`,
-          icon: AlertTriangle,
-          iconColor: "text-orange-500 bg-orange-50",
-        });
-      });
-
     // Assigned tickets
     tickets
       .filter((ticket) => ticket.assigned_to === user.id && ticket.status === "new")
       .forEach((ticket) => {
+        const derivedId = `ticket-${ticket.id}`;
+        if (dbIds.has(derivedId)) return;
         items.push({
-          id: `ticket-${ticket.id}`,
+          id: derivedId,
           type: "ticket",
           title: ticket.title || "Work order",
           description: `Priority: ${ticket.priority || "normal"}`,
@@ -127,9 +124,15 @@ export default function NotificationsPage() {
     // Sort by newest first
     items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     return items;
-  }, [user, contentItems, checklistTemplates, checklistSubmissions, incidents, tickets, company]);
+  }, [user, dbNotifications, contentItems, checklistTemplates, checklistSubmissions, incidents, tickets, company]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const handleNotificationClick = (notification: NotificationItem) => {
+    if (!notification.read && !notification.id.startsWith("task-") && !notification.id.startsWith("ticket-")) {
+      updateNotification(notification.id, { read: true } as Partial<import("@/stores/notifications-store").Notification>);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-full">
@@ -168,6 +171,7 @@ export default function NotificationsPage() {
               <li key={notification.id}>
                 <Link
                   href={notification.href}
+                  onClick={() => handleNotificationClick(notification)}
                   className={cn(
                     "flex items-start gap-3 px-4 py-3.5 transition-colors active:bg-muted/50 hover:bg-muted/30",
                     !notification.read && "bg-primary/[0.03]"

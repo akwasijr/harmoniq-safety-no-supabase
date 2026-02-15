@@ -18,6 +18,7 @@ import { MeterReadingsProvider } from "@/stores/meter-readings-store";
 import { PartsProvider } from "@/stores/parts-store";
 import { InspectionRoutesProvider } from "@/stores/inspection-routes-store";
 import { InspectionRoundsProvider } from "@/stores/inspection-rounds-store";
+import { NotificationsStoreProvider } from "@/stores/notifications-store";
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
   return (
@@ -39,7 +40,9 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
                                   <ContentStoreProvider>
                                     <ChecklistTemplatesProvider>
                                       <ChecklistSubmissionsProvider>
-                                        {children}
+                                        <NotificationsStoreProvider>
+                                          {children}
+                                        </NotificationsStoreProvider>
                                       </ChecklistSubmissionsProvider>
                                     </ChecklistTemplatesProvider>
                                   </ContentStoreProvider>
