@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { 
   ClipboardCheck, 
   ChevronRight, 
@@ -15,13 +15,23 @@ import {
   MapPin,
   X,
   Play,
+  Plus,
+  ListChecks,
+  History,
+  BookTemplate,
+  Star,
+  Camera,
+  MessageSquare,
+  Percent,
+  ArrowLeft,
+  Save,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
-import { useAssetInspectionsStore } from "@/stores/inspections-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { cn } from "@/lib/utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
@@ -89,6 +99,517 @@ function Section({
   );
 }
 
+// ---------- Checklist Tab with Sub-tabs ----------
+
+type ChecklistSubTab = "my" | "templates" | "completed";
+
+function ChecklistsTabContent({
+  company,
+  templates,
+  pendingTemplates,
+  userSubmissions,
+  completedToday,
+  user,
+  t,
+  formatDate,
+}: {
+  company: string;
+  templates: any[];
+  pendingTemplates: any[];
+  userSubmissions: any[];
+  completedToday: any[];
+  user: any;
+  t: (key: string) => string;
+  formatDate: (date: Date, opts?: any) => string;
+}) {
+  const [subTab, setSubTab] = React.useState<ChecklistSubTab>("my");
+  const [showCreateTemplate, setShowCreateTemplate] = React.useState(false);
+  const [newTemplate, setNewTemplate] = React.useState({ name: "", description: "", items: [{ question: "", type: "pass_fail" as const }] });
+
+  const completedSubmissions = userSubmissions.filter(s => s.status === "submitted");
+  const draftSubmissions = userSubmissions.filter(s => s.status === "draft");
+
+  // Admin-pushed templates (have assignment field or company_id)
+  const adminTemplates = templates.filter(t => t.assignment === "all" || t.assignment === "department" || t.assignment === "role");
+  // User-created templates (no assignment or created by this user)
+  const userTemplates = templates.filter(t => !t.assignment || t.assignment === undefined);
+
+  const subTabs = [
+    { id: "my" as ChecklistSubTab, label: "My checklists", icon: ListChecks },
+    { id: "templates" as ChecklistSubTab, label: "Templates", icon: BookTemplate },
+    { id: "completed" as ChecklistSubTab, label: "Completed", icon: History },
+  ];
+
+  // Calculate score for a submission
+  const getScore = (submission: any) => {
+    if (!submission.responses || submission.responses.length === 0) return null;
+    const total = submission.responses.length;
+    const passed = submission.responses.filter((r: any) => 
+      r.value === true || r.value === "pass" || r.value === "yes"
+    ).length;
+    const na = submission.responses.filter((r: any) => 
+      r.value === "na" || r.value === "n/a"
+    ).length;
+    const applicable = total - na;
+    if (applicable === 0) return 100;
+    return Math.round((passed / applicable) * 100);
+  };
+
+  if (showCreateTemplate) {
+    return (
+      <div className="space-y-4">
+        <button
+          onClick={() => setShowCreateTemplate(false)}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to checklists
+        </button>
+        
+        <h2 className="text-lg font-semibold">Create checklist template</h2>
+        
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Template name</label>
+            <input
+              type="text"
+              value={newTemplate.name}
+              onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g. Daily Safety Walk"
+              className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Description (optional)</label>
+            <input
+              type="text"
+              value={newTemplate.description}
+              onChange={(e) => setNewTemplate(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Brief description of this checklist"
+              className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-medium text-muted-foreground">Checklist items</label>
+              <span className="text-[10px] text-muted-foreground">{newTemplate.items.length} items</span>
+            </div>
+            <div className="space-y-2">
+              {newTemplate.items.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground w-5 shrink-0">{idx + 1}.</span>
+                  <input
+                    type="text"
+                    value={item.question}
+                    onChange={(e) => {
+                      const updated = [...newTemplate.items];
+                      updated[idx] = { ...updated[idx], question: e.target.value };
+                      setNewTemplate(prev => ({ ...prev, items: updated }));
+                    }}
+                    placeholder="Check item description..."
+                    className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <select
+                    value={item.type}
+                    onChange={(e) => {
+                      const updated = [...newTemplate.items];
+                      updated[idx] = { ...updated[idx], type: e.target.value as any };
+                      setNewTemplate(prev => ({ ...prev, items: updated }));
+                    }}
+                    className="rounded-lg border bg-background px-2 py-2 text-xs focus:outline-none"
+                  >
+                    <option value="pass_fail">Pass/Fail</option>
+                    <option value="yes_no_na">Yes/No/N/A</option>
+                    <option value="text">Text</option>
+                    <option value="rating">Rating</option>
+                  </select>
+                  {newTemplate.items.length > 1 && (
+                    <button
+                      onClick={() => {
+                        setNewTemplate(prev => ({
+                          ...prev,
+                          items: prev.items.filter((_, i) => i !== idx),
+                        }));
+                      }}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setNewTemplate(prev => ({
+                ...prev,
+                items: [...prev.items, { question: "", type: "pass_fail" }],
+              }))}
+              className="mt-2 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add item
+            </button>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={() => {
+                // In production this would save to Supabase
+                setShowCreateTemplate(false);
+                setNewTemplate({ name: "", description: "", items: [{ question: "", type: "pass_fail" }] });
+              }}
+              disabled={!newTemplate.name || newTemplate.items.every(i => !i.question)}
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground py-2.5 text-sm font-medium disabled:opacity-50"
+            >
+              <Save className="h-4 w-4" />
+              Save template
+            </button>
+            <button
+              onClick={() => setShowCreateTemplate(false)}
+              className="px-4 rounded-lg border text-sm text-muted-foreground hover:bg-muted"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Sub-tab pills */}
+      <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5 mb-3">
+        {subTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = subTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setSubTab(tab.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1 py-1.5 px-2 text-[11px] font-medium rounded-md transition-all",
+                isActive
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Icon className="h-3 w-3 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+              {tab.id === "my" && pendingTemplates.length > 0 && (
+                <Badge variant="warning" className="text-[9px] h-4 min-w-4 justify-center ml-0.5">
+                  {pendingTemplates.length}
+                </Badge>
+              )}
+              {tab.id === "completed" && completedSubmissions.length > 0 && (
+                <Badge variant="success" className="text-[9px] h-4 min-w-4 justify-center ml-0.5">
+                  {completedSubmissions.length}
+                </Badge>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* MY CHECKLISTS sub-tab */}
+      {subTab === "my" && (
+        <>
+          {/* Assigned / pending checklists */}
+          {pendingTemplates.length > 0 && (
+            <Section
+              title="Assigned to you"
+              icon={AlertTriangle}
+              iconColor="text-warning"
+              count={pendingTemplates.length}
+              countVariant="warning"
+            >
+              {pendingTemplates.map((template) => (
+                <Link
+                  key={template.id}
+                  href={`/${company}/app/checklists/${template.id}`}
+                  className="flex items-center gap-3 rounded-lg border border-warning/40 bg-warning/5 p-3 transition-colors active:bg-warning/10"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning/10">
+                    <ClipboardCheck className="h-4 w-4 text-warning" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm leading-tight">{template.name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {template.items?.length || 0} items · {template.recurrence || "once"}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </Link>
+              ))}
+            </Section>
+          )}
+
+          {/* Drafts / in-progress */}
+          {draftSubmissions.length > 0 && (
+            <>
+              <div className="border-t" />
+              <Section
+                title="In progress"
+                icon={Clock}
+                iconColor="text-blue-500"
+                count={draftSubmissions.length}
+              >
+                {draftSubmissions.map((submission) => {
+                  const tpl = templates.find(t => t.id === submission.template_id);
+                  const progress = submission.responses?.length
+                    ? Math.round((submission.responses.length / (tpl?.items?.length || 1)) * 100)
+                    : 0;
+                  return (
+                    <Link
+                      key={submission.id}
+                      href={`/${company}/app/checklists/${submission.template_id}?draft=${submission.id}`}
+                      className="flex items-center gap-3 rounded-lg border p-3 active:bg-muted/50"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                        <Play className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden">
+                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${progress}%` }} />
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">{progress}%</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Resume</span>
+                    </Link>
+                  );
+                })}
+              </Section>
+            </>
+          )}
+
+          {/* Completed today */}
+          {completedToday.length > 0 && (
+            <>
+              <div className="border-t" />
+              <Section
+                title="Completed today"
+                icon={CheckCircle}
+                iconColor="text-success"
+                count={completedToday.length}
+                countVariant="success"
+                defaultOpen={false}
+              >
+                {completedToday.map((submission) => {
+                  const score = getScore(submission);
+                  return (
+                    <div key={submission.id} className="flex items-center gap-3 rounded-lg p-2.5 bg-success/5">
+                      <CheckCircle className="h-4 w-4 text-success shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">
+                          {templates.find(t => t.id === submission.template_id)?.name || "Checklist"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {formatDate(new Date(submission.submitted_at || submission.created_at), { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      {score !== null && (
+                        <div className="flex items-center gap-1">
+                          <Percent className="h-3 w-3 text-success" />
+                          <span className="text-xs font-semibold text-success">{score}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </Section>
+            </>
+          )}
+
+          {pendingTemplates.length === 0 && draftSubmissions.length === 0 && completedToday.length === 0 && (
+            <div className="py-8 text-center">
+              <ClipboardCheck className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+              <p className="text-sm font-medium text-muted-foreground mt-2">No checklists assigned</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Start one from a template or create your own</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* TEMPLATES sub-tab */}
+      {subTab === "templates" && (
+        <>
+          {/* Action buttons */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <button
+              onClick={() => setShowCreateTemplate(true)}
+              className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Plus className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-center">
+                <p className="font-semibold text-sm text-primary">Create new</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Build your own checklist</p>
+              </div>
+            </button>
+            <Link
+              href={`/${company}/app/checklists?subTab=my`}
+              className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Play className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-center">
+                <p className="font-semibold text-sm text-primary">Start checklist</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">From a template below</p>
+              </div>
+            </Link>
+          </div>
+
+          {/* Admin templates */}
+          {adminTemplates.length > 0 && (
+            <Section
+              title="Company templates"
+              icon={ShieldAlert}
+              iconColor="text-primary"
+              count={adminTemplates.length}
+            >
+              {adminTemplates.map((template) => (
+                <Link
+                  key={template.id}
+                  href={`/${company}/app/checklists/${template.id}`}
+                  className="flex items-center gap-3 rounded-lg border p-3 active:bg-muted/50 hover:bg-muted/40"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <ClipboardCheck className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{template.name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {template.items?.length || 0} items · {template.recurrence || "once"}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </Link>
+              ))}
+            </Section>
+          )}
+
+          {/* User / personal templates */}
+          <div className="border-t" />
+          <Section
+            title="My templates"
+            icon={Star}
+            iconColor="text-amber-500"
+            count={userTemplates.length}
+          >
+            {userTemplates.length > 0 ? (
+              userTemplates.map((template) => (
+                <Link
+                  key={template.id}
+                  href={`/${company}/app/checklists/${template.id}`}
+                  className="flex items-center gap-3 rounded-lg border p-3 active:bg-muted/50 hover:bg-muted/40"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                    <Star className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{template.name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{template.items?.length || 0} items</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </Link>
+              ))
+            ) : (
+              <div className="py-4 text-center">
+                <p className="text-xs text-muted-foreground">No personal templates yet</p>
+                <button
+                  onClick={() => setShowCreateTemplate(true)}
+                  className="mt-1 text-xs text-primary hover:underline"
+                >
+                  Create your first template
+                </button>
+              </div>
+            )}
+          </Section>
+        </>
+      )}
+
+      {/* COMPLETED sub-tab */}
+      {subTab === "completed" && (
+        <>
+          {completedSubmissions.length > 0 ? (
+            <div className="space-y-2">
+              {completedSubmissions
+                .sort((a, b) => new Date(b.submitted_at || b.created_at).getTime() - new Date(a.submitted_at || a.created_at).getTime())
+                .map((submission) => {
+                  const tpl = templates.find(t => t.id === submission.template_id);
+                  const score = getScore(submission);
+                  const passCount = submission.responses?.filter((r: any) => r.value === true || r.value === "pass" || r.value === "yes").length || 0;
+                  const failCount = submission.responses?.filter((r: any) => r.value === false || r.value === "fail" || r.value === "no").length || 0;
+                  const naCount = submission.responses?.filter((r: any) => r.value === "na" || r.value === "n/a").length || 0;
+                  const hasNotes = submission.responses?.some((r: any) => r.comment);
+                  const hasPhotos = submission.responses?.some((r: any) => r.photo_urls?.length > 0);
+
+                  return (
+                    <div key={submission.id} className="rounded-lg border p-3 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {formatDate(new Date(submission.submitted_at || submission.created_at))}
+                          </p>
+                        </div>
+                        {score !== null && (
+                          <div className={cn(
+                            "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
+                            score >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                            score >= 50 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" :
+                            "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          )}>
+                            {score}%
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Pass/Fail/N/A summary bar */}
+                      <div className="flex items-center gap-3 text-[10px]">
+                        <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                          <CheckCircle className="h-3 w-3" /> {passCount} pass
+                        </span>
+                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                          <X className="h-3 w-3" /> {failCount} fail
+                        </span>
+                        {naCount > 0 && (
+                          <span className="text-muted-foreground">{naCount} N/A</span>
+                        )}
+                        {hasNotes && (
+                          <span className="flex items-center gap-0.5 text-muted-foreground">
+                            <MessageSquare className="h-3 w-3" /> Notes
+                          </span>
+                        )}
+                        {hasPhotos && (
+                          <span className="flex items-center gap-0.5 text-muted-foreground">
+                            <Camera className="h-3 w-3" /> Photos
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <History className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+              <p className="text-sm font-medium text-muted-foreground mt-2">No completed checklists</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Completed checklists with scores will appear here</p>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
 function EmployeeChecklistsPageContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -112,7 +633,6 @@ function EmployeeChecklistsPageContent() {
   const { items: assets } = useAssetsStore();
   const { items: locations } = useLocationsStore();
   const { items: riskEvaluations } = useRiskEvaluationsStore();
-  const { items: inspections } = useAssetInspectionsStore();
   const { items: incidents } = useIncidentsStore();
   const { currentCompany, user } = useAuth();
   
@@ -183,18 +703,6 @@ function EmployeeChecklistsPageContent() {
       };
     });
 
-  const recentInspections = inspections.slice(0, 3).map((inspection) => {
-    const asset = assets.find((item) => item.id === inspection.asset_id);
-    const result =
-      inspection.result === "needs_attention" ? "fail" : inspection.result;
-    return {
-      id: inspection.id,
-      asset: asset?.name || "Asset",
-      result: result as "pass" | "fail",
-      date: inspection.inspected_at,
-    };
-  });
-
   return (
     <div className="flex flex-col min-h-full">
       {/* Header */}
@@ -245,85 +753,16 @@ function EmployeeChecklistsPageContent() {
 
         {/* CHECKLISTS TAB */}
         {activeTab === "checklists" && (
-          <>
-            <Section 
-              title={t("checklists.labels.pending")} 
-              icon={AlertTriangle} 
-              iconColor="text-warning"
-              count={pendingTemplates.length} 
-              countVariant="warning"
-            >
-              {pendingTemplates.slice(0, 2).map((template) => (
-                <Link
-                  key={template.id}
-                  href={`/${company}/app/checklists/${template.id}`}
-                  className="flex items-center gap-3 rounded-lg border border-warning/40 bg-warning/5 p-3 transition-colors active:bg-warning/10"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning/10">
-                    <ClipboardCheck className="h-4 w-4 text-warning" aria-hidden="true" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm leading-tight">{template.name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{template.items?.length || 0} items</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                </Link>
-              ))}
-            </Section>
-
-            <div className="border-t" />
-
-            <Section 
-              title={t("checklists.allChecklists")} 
-              icon={ClipboardCheck} 
-              count={templates.length}
-              defaultOpen={false}
-            >
-              {templates.map((template) => (
-                <Link
-                  key={template.id}
-                  href={`/${company}/app/checklists/${template.id}`}
-                  className="flex items-center gap-3 rounded-lg p-2.5 transition-colors active:bg-muted/60 hover:bg-muted/40"
-                >
-                  <ClipboardCheck className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                  <span className="flex-1 text-sm font-medium truncate">{template.name}</span>
-                  <span className="text-[10px] text-muted-foreground">{template.items?.length || 0}</span>
-                </Link>
-              ))}
-            </Section>
-
-            <div className="border-t" />
-
-            <Section 
-              title={t("checklists.labels.completedToday")} 
-              icon={CheckCircle} 
-              iconColor="text-success"
-              count={completedToday.length} 
-              countVariant="success"
-              defaultOpen={false}
-            >
-              {completedToday.length === 0 ? (
-                <div className="py-3 text-center text-xs text-muted-foreground">
-                  {t("checklists.noSubmissionsToday")}
-                </div>
-              ) : (
-                completedToday.map((submission) => (
-                  <div key={submission.id} className="flex items-center gap-3 rounded-lg p-2.5 bg-success/5">
-                    <CheckCircle className="h-4 w-4 text-success shrink-0" aria-hidden="true" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">
-                        {templates.find((template) => template.id === submission.template_id)?.name || "Checklist"}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {formatDate(new Date(submission.submitted_at || submission.created_at), { hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    </div>
-                    <span className="text-[10px] text-green-600 dark:text-green-400 font-medium">{t("checklists.done")}</span>
-                  </div>
-                ))
-              )}
-            </Section>
-          </>
+          <ChecklistsTabContent
+            company={company}
+            templates={templates}
+            pendingTemplates={pendingTemplates}
+            userSubmissions={userSubmissions}
+            completedToday={completedToday}
+            user={user}
+            t={t}
+            formatDate={formatDate}
+          />
         )}
 
         {/* REPORTS TAB */}
