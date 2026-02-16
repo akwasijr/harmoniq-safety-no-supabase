@@ -320,7 +320,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const supabase = createClient();
       // Race signOut against a 3s timeout so logout never hangs
       await Promise.race([
-        supabase.auth.signOut(),
+        supabase.auth.signOut({ scope: "local" }),
         new Promise((resolve) => setTimeout(resolve, 3000)),
       ]);
     } catch {
@@ -329,7 +329,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAllHarmoniqStorage();
     if (typeof window !== "undefined") {
       window.localStorage.removeItem("harmoniq_admin_entry");
-      document.cookie = `${ADMIN_ENTRY_COOKIE}=; path=/; max-age=0; samesite=lax`;
+      // Clear all Supabase-related cookies
+      document.cookie.split(";").forEach((c) => {
+        const name = c.trim().split("=")[0];
+        if (name.startsWith("sb-") || name === ADMIN_ENTRY_COOKIE) {
+          document.cookie = `${name}=; path=/; max-age=0; samesite=lax`;
+        }
+      });
+      // Clear Supabase session storage keys
+      Object.keys(window.localStorage).forEach((key) => {
+        if (key.startsWith("sb-")) window.localStorage.removeItem(key);
+      });
     }
     resetPrimaryColor();
     setUser(null);

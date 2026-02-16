@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { sanitizeHtml } from "@/lib/sanitize";
 import {
@@ -59,7 +59,12 @@ export default function NewContentPage() {
   const { t, formatDate } = useTranslation();
   const router = useRouter();
   const company = useCompanyParam();
-  const [currentStep, setCurrentStep] = React.useState(1);
+  const searchParams = useSearchParams();
+  const preselectedType = searchParams.get("type") || "";
+  const validTypes = ["news", "document", "faq", "training", "event"];
+  const initialType = validTypes.includes(preselectedType) ? preselectedType : "";
+  
+  const [currentStep, setCurrentStep] = React.useState(initialType ? 2 : 1);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showLinkInput, setShowLinkInput] = React.useState(false);
   const [linkUrl, setLinkUrl] = React.useState("");
@@ -71,7 +76,7 @@ export default function NewContentPage() {
   const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || "";
   
   const [formData, setFormData] = React.useState({
-    type: "",
+    type: initialType,
     title: "",
     content: "",
     category: "",
