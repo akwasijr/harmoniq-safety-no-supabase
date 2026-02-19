@@ -1,5 +1,5 @@
-import { LoadingPage } from "@/components/ui/loading";
+import { HomeSkeleton } from "@/components/ui/loading";
 
 export default function AppLoading() {
-  return <LoadingPage />;
+  return <HomeSkeleton />;
 }

@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
             department: department || null,
             job_title: null,
             employee_id: `EMP${Date.now()}`,
-            status: "inactive",
+            status: "pending_activation",
             email_verified_at: null,
             oauth_provider: "email",
             oauth_id: inviteData.user.id,

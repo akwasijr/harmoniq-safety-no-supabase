@@ -64,7 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       : null
   );
   const { items: allCompanies } = useCompanyStore();
-  const authRetryRef = React.useRef(0);
 
   // Ensure the platform admin entry flag is cleared on standard entry paths
   React.useEffect(() => {
@@ -82,99 +81,88 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const supabase = createClient();
     
-    const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string) => {
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`${label} timeout`)), ms)
-      );
-      return Promise.race([promise, timeout]) as Promise<T>;
-    };
-
     const initAuth = async () => {
-      let shouldRetry = false;
       try {
-        let authUser: typeof undefined | null | { id: string; email?: string };
-        let sessionData: { access_token?: string; refresh_token?: string; expires_at?: number } | null = null;
-        try {
-          const {
-            data: { session },
-          } = await withTimeout(supabase.auth.getSession(), 4_000, "getSession");
-          authUser = session?.user ?? null;
-          if (session?.access_token && session?.refresh_token) {
-            saveToStorage(SESSION_STORAGE_KEY, {
-              access_token: session.access_token,
-              refresh_token: session.refresh_token,
-              expires_at: session.expires_at ?? undefined,
-            });
+        // Primary: get session from Supabase (reads cookies set by middleware)
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // Save session tokens for resilience
+          saveToStorage(SESSION_STORAGE_KEY, {
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+            expires_at: session.expires_at ?? undefined,
+          });
+          
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+          
+          if (profile) {
+            setUser(profile as User);
+            const storedCompanyId = loadFromStorage<string | null>(
+              SELECTED_COMPANY_STORAGE_KEY,
+              profile.company_id ?? null
+            );
+            const nextCompanyId = profile.role === "super_admin" ? storedCompanyId : profile.company_id;
+            setSelectedCompanyId(nextCompanyId);
+            saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nextCompanyId);
+            saveToStorage(PROFILE_STORAGE_KEY, profile);
           }
-        } catch (err) {
-          console.warn("[Harmoniq] getSession failed, falling back to getUser:", err);
-          const {
-            data: { user },
-          } = await withTimeout(supabase.auth.getUser(), 6_000, "getUser");
-          authUser = user ?? null;
-        }
-
-        if (!authUser) {
-          sessionData = loadFromStorage<{ access_token?: string; refresh_token?: string; expires_at?: number } | null>(
+        } else {
+          // No active session — try to restore from cached tokens
+          const cached = loadFromStorage<{ access_token?: string; refresh_token?: string } | null>(
             SESSION_STORAGE_KEY,
             null
           );
-          if (sessionData?.access_token && sessionData?.refresh_token) {
+          if (cached?.access_token && cached?.refresh_token) {
             const { data } = await supabase.auth.setSession({
-              access_token: sessionData.access_token,
-              refresh_token: sessionData.refresh_token,
+              access_token: cached.access_token,
+              refresh_token: cached.refresh_token,
             });
-            authUser = data.user ?? null;
-          }
-        }
-
-        if (authUser) {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 8_000);
-
-          const { data: profile, error: profileError } = await supabase
-            .from("users")
-            .select("*")
-            .eq("id", authUser.id)
-            .abortSignal(controller.signal)
-            .single();
-
-          clearTimeout(timeout);
-
-           if (profileError) {
-             console.error("[Harmoniq] Profile fetch error:", profileError.message);
-           } else if (profile) {
-             setUser(profile as User);
-             const storedCompanyId = loadFromStorage<string | null>(
-               SELECTED_COMPANY_STORAGE_KEY,
-               profile.company_id ?? null
-             );
-             const nextCompanyId = profile.role === "super_admin" ? storedCompanyId : profile.company_id;
-             setSelectedCompanyId(nextCompanyId);
-             saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nextCompanyId);
-             saveToStorage(PROFILE_STORAGE_KEY, profile);
-           }
-         } else {
-          setUser(null);
-          setSelectedCompanyId(null);
-          if (typeof window !== "undefined") {
+            if (data.user) {
+              const { data: profile } = await supabase
+                .from("users")
+                .select("*")
+                .eq("id", data.user.id)
+                .single();
+              if (profile) {
+                setUser(profile as User);
+                const storedCompanyId = loadFromStorage<string | null>(
+                  SELECTED_COMPANY_STORAGE_KEY,
+                  profile.company_id ?? null
+                );
+                const nextCompanyId = profile.role === "super_admin" ? storedCompanyId : profile.company_id;
+                setSelectedCompanyId(nextCompanyId);
+                saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nextCompanyId);
+                saveToStorage(PROFILE_STORAGE_KEY, profile);
+              }
+            } else {
+              // Cached tokens are invalid — clear them
+              window.localStorage.removeItem(SESSION_STORAGE_KEY);
+              window.localStorage.removeItem(PROFILE_STORAGE_KEY);
+              setUser(null);
+              setSelectedCompanyId(null);
+            }
+          } else {
+            // No session, no cache — user is not logged in
+            setUser(null);
+            setSelectedCompanyId(null);
             window.localStorage.removeItem(PROFILE_STORAGE_KEY);
           }
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("timeout") && authRetryRef.current < 2) {
-          authRetryRef.current += 1;
-          shouldRetry = true;
-          console.warn("[Harmoniq] Auth init timeout, retrying...", authRetryRef.current);
-          setTimeout(initAuth, 1500);
-        } else {
-          console.error("[Harmoniq] Auth init error:", err);
+        console.error("[Harmoniq] Auth init error:", err);
+        // Fall back to cached profile if available
+        const cached = loadFromStorage<User | null>(PROFILE_STORAGE_KEY, null);
+        if (cached) {
+          setUser(cached);
         }
       } finally {
-        if (!shouldRetry) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     };
     
@@ -316,35 +304,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Logout
   const logout = React.useCallback(async () => {
+    // Clear state first to prevent UI from showing stale data
+    setUser(null);
+    setSelectedCompanyId(null);
+    
     try {
       const supabase = createClient();
-      // Race signOut against a 3s timeout so logout never hangs
+      // Use "global" scope to invalidate server-side session too
       await Promise.race([
-        supabase.auth.signOut({ scope: "local" }),
+        supabase.auth.signOut({ scope: "global" }),
         new Promise((resolve) => setTimeout(resolve, 3000)),
       ]);
     } catch {
       // Ignore errors — we always want to clear local state
     }
+    
     clearAllHarmoniqStorage();
     if (typeof window !== "undefined") {
       window.localStorage.removeItem("harmoniq_admin_entry");
-      // Clear all Supabase-related cookies
+      // Clear ALL cookies that could hold session data
       document.cookie.split(";").forEach((c) => {
         const name = c.trim().split("=")[0];
-        if (name.startsWith("sb-") || name === ADMIN_ENTRY_COOKIE) {
+        if (name.startsWith("sb-") || name.startsWith("harmoniq")) {
           document.cookie = `${name}=; path=/; max-age=0; samesite=lax`;
         }
       });
-      // Clear Supabase session storage keys
+      // Clear all Supabase localStorage keys
       Object.keys(window.localStorage).forEach((key) => {
         if (key.startsWith("sb-")) window.localStorage.removeItem(key);
       });
     }
     resetPrimaryColor();
-    setUser(null);
-    setSelectedCompanyId(null);
-    window.location.href = "/login";
+    // Force a full page reload to clear any in-memory state (React context, stores, etc.)
+    window.location.replace("/login");
   }, []);
   
   const value: AuthContextType = {

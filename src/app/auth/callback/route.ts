@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get("code");
   const source = requestUrl.searchParams.get("source");
   const type = requestUrl.searchParams.get("type");
+  const inviteToken = requestUrl.searchParams.get("invite_token");
   const isAdminLink = source === "admin-link";
 
   const supabase = await createClient();
@@ -75,6 +76,13 @@ export async function GET(request: NextRequest) {
         new URL("/login?error=OAuth+sign-in+failed", requestUrl.origin)
       );
     }
+
+    // If this OAuth callback came from an invite flow, handle invite acceptance
+    if (inviteToken) {
+      const accepted = await acceptInviteIfPending(supabase, data.user, inviteToken, request, requestUrl);
+      if (accepted) return accepted;
+    }
+
     return await routeAuthenticatedUser(supabase, data.user, request, requestUrl);
   }
 
@@ -97,6 +105,85 @@ export async function GET(request: NextRequest) {
   return NextResponse.redirect(
     new URL("/login?error=Invalid+callback", requestUrl.origin)
   );
+}
+
+async function acceptInviteIfPending(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  user: { id: string; email?: string; user_metadata?: Record<string, any>; app_metadata?: Record<string, any> },
+  inviteToken: string,
+  request: NextRequest,
+  requestUrl: URL
+): Promise<NextResponse | null> {
+  const email = user.email?.toLowerCase() || "";
+
+  // Validate the invite token
+  const { data: invitation } = await supabase
+    .from("invitations")
+    .select("*")
+    .eq("token", inviteToken)
+    .eq("email", email)
+    .is("accepted_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .single();
+
+  if (!invitation) return null; // No valid invite — fall through to normal routing
+
+  // Check if user profile already exists
+  const { data: existingProfile } = await supabase
+    .from("users")
+    .select("id")
+    .eq("id", user.id)
+    .single();
+
+  if (!existingProfile) {
+    // Create user profile from invite data
+    await supabase.from("users").insert([{
+      id: user.id,
+      email: email,
+      first_name: user.user_metadata?.given_name || user.user_metadata?.first_name || email.split("@")[0],
+      last_name: user.user_metadata?.family_name || user.user_metadata?.last_name || "",
+      full_name: `${user.user_metadata?.given_name || user.user_metadata?.first_name || email.split("@")[0]} ${user.user_metadata?.family_name || user.user_metadata?.last_name || ""}`.trim(),
+      company_id: invitation.company_id,
+      role: invitation.role,
+      user_type: "internal",
+      account_type: "standard",
+      status: "active",
+      email_verified_at: new Date().toISOString(),
+      oauth_provider: user.app_metadata?.provider || "email",
+      oauth_id: user.id,
+      language: "en",
+      theme: "system",
+      two_factor_enabled: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }]);
+  } else {
+    // Activate existing profile
+    await supabase.from("users").update({
+      status: "active",
+      email_verified_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq("id", user.id);
+  }
+
+  // Mark invitation as accepted
+  await supabase
+    .from("invitations")
+    .update({ accepted_at: new Date().toISOString() })
+    .eq("id", invitation.id);
+
+  await logAudit(supabase, user.id, "invite_accepted", request);
+
+  // Redirect to company app
+  const { data: company } = await supabase
+    .from("companies")
+    .select("slug")
+    .eq("id", invitation.company_id)
+    .single();
+
+  const slug = company?.slug || "harmoniq";
+  const dest = invitation.role === "employee" ? `/${slug}/app` : `/${slug}/dashboard`;
+  return NextResponse.redirect(new URL(dest, requestUrl.origin));
 }
 
 async function routeAuthenticatedUser(

@@ -10,6 +10,9 @@ import { useContentStore } from "@/stores/content-store";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { useNotificationsStore } from "@/stores/notifications-store";
+import { useAssetsStore } from "@/stores/assets-store";
+import { useIncidentsStore } from "@/stores/incidents-store";
+import { useLocationsStore } from "@/stores/locations-store";
 import { applyPrimaryColor } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { I18nProvider } from "@/i18n";
@@ -29,6 +32,10 @@ export default function EmployeeAppRootLayout({
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { items: tickets } = useTicketsStore();
   const { items: dbNotifications } = useNotificationsStore();
+  // Prefetch additional stores so tab switching is instant
+  useAssetsStore();
+  useIncidentsStore();
+  useLocationsStore();
 
   // Compute notification count from real DB notifications + derived
   const notificationCount = React.useMemo(() => {
