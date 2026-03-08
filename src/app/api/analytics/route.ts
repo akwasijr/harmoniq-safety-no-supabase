@@ -1,23 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createRateLimiter, getClientIp } from "@/lib/rate-limit";
 
-// Simple in-memory rate limiter
-const rateLimiter = new Map<string, { count: number; reset: number }>();
-function checkRate(key: string, maxPerMinute: number): boolean {
-  const now = Date.now();
-  const entry = rateLimiter.get(key);
-  if (!entry || now > entry.reset) {
-    rateLimiter.set(key, { count: 1, reset: now + 60000 });
-    return true;
-  }
-  if (entry.count >= maxPerMinute) return false;
-  entry.count++;
-  return true;
-}
-
-function getIp(request: NextRequest): string {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-}
+// 30 analytics events per IP per minute
+const analyticsLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "analytics" });
 
 interface PageviewEvent {
   path: string;
@@ -57,10 +43,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate limit: 30 requests per minute per IP
-    const ip = getIp(request);
-    if (!checkRate(`post:${ip}`, 30)) {
-      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-    }
+    const rl = analyticsLimiter.check(request);
+    if (!rl.allowed) return rl.response;
 
     // Origin check: only accept from same origin using strict URL parsing
     const origin = request.headers.get("origin") || "";

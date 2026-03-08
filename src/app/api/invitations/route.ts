@@ -2,9 +2,15 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+// 10 invitation creates per IP per minute
+const inviteLimiter = createRateLimiter({ limit: 10, windowMs: 60_000, prefix: "invitations" });
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = inviteLimiter.check(request);
+    if (!rl.allowed) return rl.response;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 

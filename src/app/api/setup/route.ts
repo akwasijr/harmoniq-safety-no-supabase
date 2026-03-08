@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+// 5 setup attempts per IP per 10 minutes
+const setupLimiter = createRateLimiter({ limit: 5, windowMs: 600_000, prefix: "setup" });
 
 /**
  * First-time setup: creates the first company + super admin.
@@ -9,6 +13,8 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function POST(request: NextRequest) {
   try {
+    const rl = setupLimiter.check(request);
+    if (!rl.allowed) return rl.response;
     const adminClient = createAdminClient();
     if (!adminClient) {
       return NextResponse.json(
