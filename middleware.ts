@@ -3,8 +3,9 @@ import type { NextRequest } from "next/server";
 
 /**
  * Middleware for:
- * 1. Server-side route protection (Supabase session or mock auth fallback)
- * 2. Geo-based locale detection for marketing pages
+ * 1. CSRF protection — verify Origin header on state-changing requests
+ * 2. Server-side route protection (Supabase session)
+ * 3. Geo-based locale detection for marketing pages
  */
 
 const PUBLIC_ROUTES = ["/", "/login", "/admin", "/signup", "/forgot-password", "/contact", "/privacy", "/terms", "/invite", "/auth/callback"];
@@ -12,6 +13,7 @@ const MARKETING_ROUTES = ["/", "/contact", "/privacy", "/terms"];
 const STATIC_PREFIXES = ["/_next", "/favicon", "/logo", "/screen-", "/bg-", "/icons", "/manifest", "/sw"];
 const PUBLIC_API_ROUTES = ["/api/analytics", "/api/contact", "/api/setup"];
 const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
+const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 function detectLocale(acceptLanguage: string | null): string {
   if (!acceptLanguage) return "en";
@@ -29,6 +31,22 @@ export async function middleware(request: NextRequest) {
   // Skip static assets
   if (STATIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     return NextResponse.next();
+  }
+
+  // CSRF protection: verify Origin header on state-changing requests
+  if (STATE_CHANGING_METHODS.has(request.method)) {
+    const origin = request.headers.get("origin");
+    const host = request.headers.get("host");
+    if (origin && host) {
+      try {
+        const originHost = new URL(origin).host;
+        if (originHost !== host) {
+          return NextResponse.json({ error: "Forbidden — origin mismatch" }, { status: 403 });
+        }
+      } catch {
+        return NextResponse.json({ error: "Forbidden — invalid origin" }, { status: 403 });
+      }
+    }
   }
 
   // If an admin-entry cookie is present but the user is not on an admin path, clear it.
