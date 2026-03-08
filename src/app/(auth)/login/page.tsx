@@ -74,10 +74,29 @@ function LoginForm() {
       setError("");
 
       const supabase = createClient();
-      const { error: authError, data } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+
+      // Timeout after 15s to avoid infinite hang (e.g. paused Supabase project)
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15_000);
+
+      let authResult;
+      try {
+        authResult = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+      } catch (abortErr: any) {
+        clearTimeout(timeout);
+        if (abortErr?.name === "AbortError" || controller.signal.aborted) {
+          setError("Login timed out. The server may be starting up — please try again in a moment.");
+          setIsLoading(false);
+          return;
+        }
+        throw abortErr;
+      }
+      clearTimeout(timeout);
+
+      const { error: authError, data } = authResult;
 
       if (authError) {
         setError(authError.message);
@@ -98,7 +117,7 @@ function LoginForm() {
         });
       }
 
-      // Route based on user profile
+      // Route based on user profile — wrap in a 10s timeout to prevent infinite spinner
       const userId = data.user?.id;
       if (!userId) {
         setError("Login succeeded but no user returned.");
@@ -106,12 +125,19 @@ function LoginForm() {
         return;
       }
 
+      const profileTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Profile lookup timed out")), 10_000)
+      );
+
       const fetchProfile = () =>
-        supabase
-          .from("users")
-          .select("role, company_id")
-          .eq("id", userId)
-          .single();
+        Promise.race([
+          supabase
+            .from("users")
+            .select("role, company_id")
+            .eq("id", userId)
+            .single(),
+          profileTimeout.then(() => ({ data: null, error: { message: "Profile lookup timed out" } })),
+        ]);
 
       let { data: profile, error: profileError } = await fetchProfile();
       if (profileError?.message?.toLowerCase().includes("aborted")) {
@@ -216,7 +242,10 @@ function LoginForm() {
       window.location.href = dest;
     } catch (err: any) {
       if (err?.message?.includes("abort")) return;
-      setError(`Error: ${err.message}`);
+      setError(err?.message?.includes("timed out")
+        ? "Connection timed out. The server may be starting up — please try again in a moment."
+        : `Error: ${err.message}`);
+      setIsLoading(false);
       setIsLoading(false);
     }
   };
