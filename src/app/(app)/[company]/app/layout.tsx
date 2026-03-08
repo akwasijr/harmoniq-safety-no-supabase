@@ -37,6 +37,14 @@ export default function EmployeeAppRootLayout({
   useIncidentsStore();
   useLocationsStore();
 
+  // Prefetch all tab routes so JS chunks are ready before user navigates
+  React.useEffect(() => {
+    if (!company) return;
+    const tabs = ["checklists", "assets", "news", "profile"];
+    tabs.forEach((tab) => router.prefetch(`/${company}/app/${tab}`));
+    router.prefetch(`/${company}/app`);
+  }, [company, router]);
+
   // Compute notification count from real DB notifications + derived
   const notificationCount = React.useMemo(() => {
     if (!user) return 0;
