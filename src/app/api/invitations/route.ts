@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { sanitizeText, isValidEmail, isValidRole, isValidUUID, validateUUIDArray } from "@/lib/validation";
 
 // 10 invitation creates per IP per minute
 const inviteLimiter = createRateLimiter({ limit: 10, windowMs: 60_000, prefix: "invitations" });
@@ -35,16 +36,28 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, role, company_id, first_name, last_name, department, team_ids } = body;
+    const email = sanitizeText(body.email, 254).toLowerCase();
+    const role = sanitizeText(body.role, 30);
+    const first_name = sanitizeText(body.first_name, 100);
+    const last_name = sanitizeText(body.last_name, 100);
+    const department = sanitizeText(body.department || "", 100) || null;
+    const company_id = body.company_id ? sanitizeText(body.company_id, 36) : null;
+    const team_ids = validateUUIDArray(body.team_ids) || [];
 
-    if (!email || !role || !first_name || !last_name) {
+    if (!first_name || !last_name || !email || !role) {
       return NextResponse.json({ error: "First name, last name, email, and role are required" }, { status: 400 });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!isValidEmail(email)) {
       return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    }
+
+    if (!isValidRole(role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+
+    if (company_id && !isValidUUID(company_id)) {
+      return NextResponse.json({ error: "Invalid company ID" }, { status: 400 });
     }
 
     // Super admin can invite to any company, company admin only to their own
@@ -152,7 +165,7 @@ export async function POST(request: NextRequest) {
             last_login_at: null,
             created_at: now,
             updated_at: now,
-            team_ids: Array.isArray(team_ids) ? team_ids : [],
+            team_ids: team_ids,
           }])
           .select()
           .single();

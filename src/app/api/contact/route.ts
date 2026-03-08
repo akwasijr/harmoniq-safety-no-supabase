@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { sanitizeText, isValidEmail } from "@/lib/validation";
 
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY;
 
@@ -20,15 +21,17 @@ export async function POST(request: NextRequest) {
     if (!rl.allowed) return rl.response;
 
     const body: ContactPayload = await request.json();
-    const { name, email, message, company, turnstileToken } = body;
+    const name = sanitizeText(body.name, 100);
+    const email = sanitizeText(body.email, 254).toLowerCase();
+    const message = sanitizeText(body.message, 2000);
+    const company = sanitizeText(body.company || "", 200);
+    const turnstileToken = body.turnstileToken;
 
-    // Basic validation
     if (!name || !email || !message) {
       return NextResponse.json({ error: "Name, email, and message are required" }, { status: 400 });
     }
 
-    // Email format check
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!isValidEmail(email)) {
       return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
     }
 

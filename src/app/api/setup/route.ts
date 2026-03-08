@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { sanitizeText, isValidEmail, validatePassword } from "@/lib/validation";
 
 // 5 setup attempts per IP per 10 minutes
 const setupLimiter = createRateLimiter({ limit: 5, windowMs: 600_000, prefix: "setup" });
@@ -36,7 +37,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, password, company_name, country } = body;
+    const email = sanitizeText(body.email, 254).toLowerCase();
+    const password = typeof body.password === "string" ? body.password : "";
+    const company_name = sanitizeText(body.company_name, 200);
+    const country = sanitizeText(body.country || "US", 10);
 
     if (!email || !password || !company_name) {
       return NextResponse.json(
@@ -45,8 +49,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (password.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    }
+
+    const pwCheck = validatePassword(password);
+    if (!pwCheck.valid) {
+      return NextResponse.json({ error: pwCheck.reason }, { status: 400 });
     }
 
     // 1. Create the company
@@ -57,7 +66,7 @@ export async function POST(request: NextRequest) {
         name: company_name,
         slug: slug || "harmoniq",
         app_name: company_name,
-        country: country || "US",
+        country: country,
         language: "en",
         status: "active",
         tier: "enterprise",
