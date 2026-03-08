@@ -288,15 +288,15 @@ export default function EmployeeAppHomePage() {
   const QuickActionsGrid = () => (
     <div className="px-4 pt-5 pb-1">
       <p className="text-[11px] font-semibold text-muted-foreground mb-3">{t("app.getStarted")}</p>
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-3 gap-2">
         {quickActions.map((action) => (
           <Link
             key={action.href}
             href={action.href}
-            className="flex flex-col items-center gap-2 rounded-xl bg-primary/10 p-3.5 transition-all active:scale-95 hover:bg-primary/15"
+            className="flex flex-col items-center gap-2 rounded-lg bg-primary/10 p-4 transition-all active:scale-95 hover:bg-primary/15"
           >
-            <action.icon className="h-6 w-6 text-primary" aria-hidden="true" />
-            <span className="text-[11px] font-medium text-center leading-tight text-foreground">{action.label}</span>
+            <action.icon className="h-8 w-8 text-primary" aria-hidden="true" />
+            <span className="text-xs font-medium text-center leading-tight text-foreground">{action.label}</span>
           </Link>
         ))}
       </div>
@@ -362,44 +362,7 @@ export default function EmployeeAppHomePage() {
           )}
         </Section>
 
-        <div className="border-t" />
 
-        {/* Pending Tasks — below news */}
-        <Section
-          title={t("app.pendingTasks")}
-          icon={ClipboardCheck}
-          iconColor="text-primary"
-          action={
-            pendingChecklists.length > 0 ? (
-              <Link href={`/${company}/app/checklists`} className="text-xs text-primary font-medium flex items-center gap-0.5">
-                {t("common.viewAll")} <ArrowRight className="h-3 w-3" />
-              </Link>
-            ) : undefined
-          }
-        >
-          {pendingChecklists.length > 0 ? (
-            pendingChecklists.map((checklist) => (
-              <Link
-                key={checklist.id}
-                href={`/${company}/app/checklists/${checklist.id}`}
-                className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/40"
-              >
-                <ClipboardCheck className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm leading-tight">{checklist.name}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{checklist.items?.length || 0} {t("app.items")}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-              </Link>
-            ))
-          ) : (
-            <div className="py-4 text-center">
-              <CheckCircle className="h-6 w-6 text-success/50 mx-auto" aria-hidden="true" />
-              <p className="text-xs font-medium text-success mt-2">{t("app.allCaughtUp")}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{t("app.noPendingTasks")}</p>
-            </div>
-          )}
-        </Section>
       </div>
     </div>
   );
