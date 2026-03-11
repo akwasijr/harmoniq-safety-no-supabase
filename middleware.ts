@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { sanitizeRelativePath } from "@/lib/navigation";
 
 /**
  * Middleware for:
@@ -8,12 +9,29 @@ import type { NextRequest } from "next/server";
  * 3. Geo-based locale detection for marketing pages
  */
 
-const PUBLIC_ROUTES = ["/", "/login", "/admin", "/signup", "/forgot-password", "/contact", "/privacy", "/terms", "/invite", "/auth/callback"];
-const MARKETING_ROUTES = ["/", "/contact", "/privacy", "/terms"];
+const PUBLIC_ROUTES = [
+  "/",
+  "/login",
+  "/admin",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/contact",
+  "/privacy",
+  "/terms",
+  "/gdpr",
+  "/cookies",
+  "/invite",
+  "/auth/callback",
+  "/robots.txt",
+  "/sitemap.xml",
+];
+const MARKETING_ROUTES = ["/", "/contact", "/privacy", "/terms", "/gdpr", "/cookies"];
 const STATIC_PREFIXES = ["/_next", "/favicon", "/logo", "/screen-", "/bg-", "/icons", "/manifest", "/sw"];
-const PUBLIC_API_ROUTES = ["/api/analytics", "/api/contact", "/api/setup"];
+const PUBLIC_API_ROUTES = ["/api/analytics", "/api/contact", "/api/health", "/api/setup"];
 const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+const SAME_SITE_FETCH_CONTEXTS = new Set(["same-origin", "same-site", "none"]);
 
 function detectLocale(acceptLanguage: string | null): string {
   if (!acceptLanguage) return "en";
@@ -27,6 +45,7 @@ function detectLocale(acceptLanguage: string | null): string {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isSecure = request.nextUrl.protocol === "https:";
 
   // Skip static assets
   if (STATIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
@@ -36,10 +55,18 @@ export async function middleware(request: NextRequest) {
   // CSRF protection: verify Origin header on state-changing requests
   if (STATE_CHANGING_METHODS.has(request.method)) {
     const origin = request.headers.get("origin");
+    const referer = request.headers.get("referer");
     const host = request.headers.get("host");
-    if (origin && host) {
+    const source = origin ?? referer;
+    const fetchSite = request.headers.get("sec-fetch-site");
+
+    if (!source) {
+      if (!fetchSite || !SAME_SITE_FETCH_CONTEXTS.has(fetchSite)) {
+        return NextResponse.json({ error: "Forbidden — missing origin context" }, { status: 403 });
+      }
+    } else if (host) {
       try {
-        const originHost = new URL(origin).host;
+        const originHost = new URL(source).host;
         if (originHost !== host) {
           return NextResponse.json({ error: "Forbidden — origin mismatch" }, { status: 403 });
         }
@@ -54,7 +81,12 @@ export async function middleware(request: NextRequest) {
   const isAdminPath = pathname.startsWith("/admin") || pathname.includes("/dashboard/platform");
   if (!isAdminPath && request.cookies.get(ADMIN_ENTRY_COOKIE)) {
     const response = NextResponse.next();
-    response.cookies.set(ADMIN_ENTRY_COOKIE, "", { path: "/", maxAge: 0, sameSite: "lax" });
+    response.cookies.set(ADMIN_ENTRY_COOKIE, "", {
+      path: "/",
+      maxAge: 0,
+      sameSite: "lax",
+      secure: isSecure,
+    });
     return response;
   }
 
@@ -67,6 +99,7 @@ export async function middleware(request: NextRequest) {
         path: "/",
         maxAge: 60 * 60 * 24 * 365,
         sameSite: "lax",
+        secure: isSecure,
       });
     }
     return response;
@@ -85,7 +118,7 @@ export async function middleware(request: NextRequest) {
   // Platform admin routes require explicit admin entry flag (set by /admin login)
   if (pathname.includes("/dashboard/platform") && !request.cookies.get(ADMIN_ENTRY_COOKIE)) {
     const adminUrl = new URL("/admin", request.url);
-    adminUrl.searchParams.set("redirect", pathname);
+    adminUrl.searchParams.set("redirect", sanitizeRelativePath(pathname));
     return NextResponse.redirect(adminUrl);
   }
 
@@ -99,7 +132,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
+    loginUrl.searchParams.set("redirect", sanitizeRelativePath(pathname));
     return NextResponse.redirect(loginUrl);
   }
 

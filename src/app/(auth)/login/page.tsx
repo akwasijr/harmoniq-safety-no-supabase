@@ -3,31 +3,36 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Mail, Loader, Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
+import { clearClientCookie, setClientCookie } from "@/lib/client-cookies";
+import { type AppChoice, buildCompanyDestination, buildPlatformAnalyticsDestination } from "@/lib/navigation";
+import { getPlatformSlugFilterList, isPlatformSlug } from "@/lib/platform-config";
 
-type AppChoice = "dashboard" | "app";
 const APP_CHOICE_STORAGE_KEY = "harmoniq_app_choice";
 const APP_CHOICE_COOKIE = "harmoniq_app_choice";
-const ADMIN_ENTRY_STORAGE_KEY = "harmoniq_admin_entry";
 const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 const SELECTED_COMPANY_STORAGE_KEY = "harmoniq_selected_company";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [emailError, setEmailError] = React.useState("");
+  const [passwordError, setPasswordError] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const [loginMode, setLoginMode] = React.useState<"password" | "magic">("password");
-  const [appChoice, setAppChoice] = React.useState<AppChoice>(() => {
+  const [appChoice, setAppChoice] = React.useState<"dashboard" | "app">(() => {
     if (typeof window === "undefined") return "dashboard";
     const stored = window.localStorage.getItem(APP_CHOICE_STORAGE_KEY);
     return stored === "app" || stored === "dashboard" ? stored : "dashboard";
@@ -43,22 +48,13 @@ function LoginForm() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     // Regular login should never keep the platform admin entry flag
-    window.localStorage.removeItem(ADMIN_ENTRY_STORAGE_KEY);
-    document.cookie = `${ADMIN_ENTRY_COOKIE}=; path=/; max-age=0; samesite=lax`;
+    clearClientCookie(ADMIN_ENTRY_COOKIE);
     window.localStorage.setItem(APP_CHOICE_STORAGE_KEY, appChoice);
-    document.cookie = `${APP_CHOICE_COOKIE}=${appChoice}; path=/; max-age=2592000; samesite=lax`;
+    setClientCookie(APP_CHOICE_COOKIE, appChoice, 60 * 60 * 24 * 30);
   }, [appChoice]);
 
-  const PLATFORM_SLUGS =
-    (process.env.NEXT_PUBLIC_PLATFORM_SLUGS || "platform,admin,superadmin")
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean);
   // Supabase .not("col","in","(val1,val2)") requires NO quotes around values
-  const PLATFORM_SLUGS_LIST = `(${PLATFORM_SLUGS.join(",")})`;
-  const isPlatformSlug = (slug?: string | null) =>
-    !!slug &&
-    (PLATFORM_SLUGS.includes(slug.toLowerCase()) || slug.toLowerCase() === "platform");
+  const PLATFORM_SLUGS_LIST = getPlatformSlugFilterList();
 
   const getAllowedApps = (role: string): AppChoice[] => {
     if (role === "employee") return ["app"];
@@ -72,6 +68,9 @@ function LoginForm() {
     try {
       setIsLoading(true);
       setError("");
+      setSuccess("");
+      setEmailError("");
+      setPasswordError("");
 
       const supabase = createClient();
 
@@ -85,9 +84,9 @@ function LoginForm() {
           email,
           password,
         });
-      } catch (abortErr: any) {
+      } catch (abortErr: unknown) {
         clearTimeout(timeout);
-        if (abortErr?.name === "AbortError" || controller.signal.aborted) {
+        if ((abortErr instanceof Error && abortErr.name === "AbortError") || controller.signal.aborted) {
           setError("Login timed out. The server may be starting up — please try again in a moment.");
           setIsLoading(false);
           return;
@@ -99,23 +98,21 @@ function LoginForm() {
       const { error: authError, data } = authResult;
 
       if (authError) {
-        setError(authError.message);
+        if (authError.message.toLowerCase().includes("invalid login credentials")) {
+          setPasswordError("Email or password is incorrect.");
+        } else {
+          setError(authError.message);
+        }
         setIsLoading(false);
         return;
       }
 
-      // Ensure session is available for subsequent profile fetches
-      if (data.session) {
-        saveToStorage("harmoniq_auth_session", {
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-          expires_at: data.session.expires_at,
-        });
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        });
-      }
+        if (data.session) {
+          await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          });
+        }
 
       // Route based on user profile — wrap in a 10s timeout to prevent infinite spinner
       const userId = data.user?.id;
@@ -145,31 +142,27 @@ function LoginForm() {
         ({ data: profile, error: profileError } = await fetchProfile());
       }
 
-      if (profileError) {
-        if (email.toLowerCase() === "demo@harmoniq.safety") {
-          const { data: anyCompany } = await supabase.from("companies").select("slug").limit(1).single();
-          const s = anyCompany?.slug || "harmoniq";
-          window.location.href = appChoice === "app" ? `/${s}/app` : `/${s}/dashboard`;
+        if (profileError) {
+          if (email.toLowerCase() === "demo@harmoniq.safety") {
+            const { data: anyCompany } = await supabase.from("companies").select("slug").limit(1).single();
+            window.location.href = buildCompanyDestination(anyCompany?.slug, appChoice);
+            return;
+          }
+          setError("We signed you in, but couldn’t load your profile. Please try again or contact your administrator.");
+          setIsLoading(false);
           return;
         }
-        setError(`Profile error: ${profileError.message}`);
-        setIsLoading(false);
-        return;
-      }
 
-      if (!profile) {
-        if (email.toLowerCase() === "demo@harmoniq.safety") {
-          const { data: anyCompany } = await supabase.from("companies").select("slug").limit(1).single();
-          const s = anyCompany?.slug || "harmoniq";
-          window.location.href = appChoice === "app" ? `/${s}/app` : `/${s}/dashboard`;
+        if (!profile) {
+          if (email.toLowerCase() === "demo@harmoniq.safety") {
+            const { data: anyCompany } = await supabase.from("companies").select("slug").limit(1).single();
+            window.location.href = buildCompanyDestination(anyCompany?.slug, appChoice);
+            return;
+          }
+          setError("No user profile found. Contact your administrator.");
+          setIsLoading(false);
           return;
         }
-        setError("No user profile found. Contact your administrator.");
-        setIsLoading(false);
-        return;
-      }
-
-      saveToStorage("harmoniq_auth_profile", profile);
 
       const allowedApps = getAllowedApps(profile.role);
       if (!allowedApps.includes(appChoice)) {
@@ -198,12 +191,19 @@ function LoginForm() {
           if (nonPlatform?.id) {
             saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nonPlatform.id);
           }
-          window.location.href = appChoice === "app" ? `/${slug}/app` : `/${slug}/dashboard`;
+          window.location.href = buildCompanyDestination(slug, appChoice);
           return;
         }
 
         // Admin entry: route to platform portal
-        window.location.href = "/platform/dashboard";
+        const { data: adminCompany } = await supabase
+          .from("companies")
+          .select("slug")
+          .not("slug", "in", PLATFORM_SLUGS_LIST)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .single();
+        window.location.href = buildPlatformAnalyticsDestination(adminCompany?.slug);
         return;
       }
 
@@ -237,46 +237,15 @@ function LoginForm() {
         }
       }
 
-      const dest = appChoice === "app" ? `/${slug}/app` : `/${slug}/dashboard`;
+      const dest = buildCompanyDestination(slug, appChoice);
       // Use full page navigation so middleware can read the new Supabase session cookies
       window.location.href = dest;
-    } catch (err: any) {
-      if (err?.message?.includes("abort")) return;
-      setError(err?.message?.includes("timed out")
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("abort")) return;
+      setError(message.includes("timed out")
         ? "Connection timed out. The server may be starting up — please try again in a moment."
-        : `Error: ${err.message}`);
-      setIsLoading(false);
-      setIsLoading(false);
-    }
-  };
-
-  const handleOAuthSignIn = async (provider: "google" | "azure") => {
-    try {
-      setIsLoading(true);
-      setError("");
-      setSuccess("");
-
-      const supabase = createClient();
-
-      const { data, error: authError } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (authError) {
-        const msg = authError.message.toLowerCase();
-        if (msg.includes("unsupported provider") || msg.includes("oauth secret")) {
-          const name = provider === "google" ? "Google" : "Microsoft";
-          setError(`${name} sign-in is not configured yet. Please use email and password to sign in, or contact your administrator.`);
-        } else {
-          setError(`OAuth error: ${authError.message}`);
-        }
-        setIsLoading(false);
-      }
-    } catch (err: any) {
-      setError(`Error: ${err.message}`);
+        : `Error: ${message}`);
       setIsLoading(false);
     }
   };
@@ -284,6 +253,7 @@ function LoginForm() {
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
+      setEmailError("Enter your email address to receive a magic link.");
       setError("Please enter your email address.");
       return;
     }
@@ -291,6 +261,7 @@ function LoginForm() {
       setIsLoading(true);
       setError("");
       setSuccess("");
+      setEmailError("");
 
       const supabase = createClient();
       const { error: magicError } = await supabase.auth.signInWithOtp({
@@ -305,8 +276,9 @@ function LoginForm() {
       } else {
         setSuccess("Magic link sent! Check your email inbox and click the link to sign in.");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -314,24 +286,27 @@ function LoginForm() {
 
   const handleForgotPassword = async () => {
     if (!email) {
+      setEmailError("Enter your email address first.");
       setError("Enter your email address first, then click Forgot password.");
       return;
     }
     try {
       setIsLoading(true);
       setError("");
+      setSuccess("");
       const supabase = createClient();
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (resetError) {
         setError(resetError.message);
       } else {
         setError("");
-        alert("Password reset email sent. Check your inbox.");
+        setSuccess("Password reset email sent. Check your inbox for the secure reset link.");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -374,47 +349,47 @@ function LoginForm() {
               )}
 
               <div>
-                <label className="block text-sm font-medium mb-1">Choose app</label>
+                <Label>Choose app</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setAppChoice("dashboard")}
                     disabled={isLoading}
-                    className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-                      appChoice === "dashboard"
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                    }`}
+                    variant={appChoice === "dashboard" ? "default" : "outline"}
+                    className="w-full"
                   >
                     Dashboard
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => setAppChoice("app")}
                     disabled={isLoading}
-                    className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-                      appChoice === "app"
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                    }`}
+                    variant={appChoice === "app" ? "default" : "outline"}
+                    className="w-full"
                   >
                     Mobile App
-                  </button>
+                  </Button>
                 </div>
               </div>
 
               {/* Email field — shared between both modes */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-                <input
+                <Label htmlFor="email" required error={Boolean(emailError)}>
+                  Email
+                </Label>
+                <Input
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailError("");
+                  }}
                   placeholder="you@company.com"
+                  error={Boolean(emailError)}
+                  errorMessage={emailError}
                   required
                   disabled={isLoading}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                 />
               </div>
 
@@ -422,23 +397,31 @@ function LoginForm() {
                 /* Password mode */
                 <form onSubmit={handleEmailSignIn} className="space-y-3">
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
+                    <Label htmlFor="password" required error={Boolean(passwordError)}>
+                      Password
+                    </Label>
                     <div className="relative">
-                      <input
+                      <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setPasswordError("");
+                        }}
                         placeholder="••••••••"
                         required
                         disabled={isLoading}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                        error={Boolean(passwordError)}
+                        errorMessage={passwordError}
+                        className="pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        className="absolute right-3 top-4 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         tabIndex={-1}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -453,26 +436,26 @@ function LoginForm() {
                       Forgot password?
                     </button>
                   </div>
-                  <button
+                  <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                    className="w-full"
+                    loading={isLoading}
                   >
-                    {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : null}
                     Sign in with password
-                  </button>
+                  </Button>
                 </form>
               ) : (
                 /* Magic link mode */
-                <button
+                <Button
                   type="button"
                   onClick={handleMagicLink}
                   disabled={isLoading || !email}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  className="w-full"
                 >
                   {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
                   Send magic link
-                </button>
+                </Button>
               )}
 
               {/* Divider */}
@@ -486,15 +469,16 @@ function LoginForm() {
               </div>
 
               {/* Toggle between modes */}
-              <button
+              <Button
                 type="button"
                 onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
                 disabled={isLoading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                variant="outline"
+                className="w-full"
               >
                 <Mail className="h-4 w-4" />
                 {loginMode === "password" ? "Sign in with magic link instead" : "Sign in with password instead"}
-              </button>
+              </Button>
             </div>
           </CardContent>
         </Card>

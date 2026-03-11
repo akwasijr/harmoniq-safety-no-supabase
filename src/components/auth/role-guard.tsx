@@ -4,9 +4,10 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { useAuth, useRole } from "@/hooks/use-auth";
+import { hasClientCookie } from "@/lib/client-cookies";
 import type { Permission, UserRole } from "@/types";
 
-const ADMIN_ENTRY_STORAGE_KEY = "harmoniq_admin_entry";
+const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -54,19 +55,19 @@ export function RoleGuard({
   const router = useRouter();
   const { user, isLoading, hasPermission, hasAnyPermission, hasAllPermissions } = useAuth();
   const { isSuperAdmin, role } = useRole();
-  const [hasAdminEntry, setHasAdminEntry] = React.useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(ADMIN_ENTRY_STORAGE_KEY) === "true";
-  });
+  const [hasAdminEntry, setHasAdminEntry] = React.useState(false);
 
   React.useEffect(() => {
     const sync = () => {
-      if (typeof window === "undefined") return;
-      setHasAdminEntry(window.localStorage.getItem(ADMIN_ENTRY_STORAGE_KEY) === "true");
+      setHasAdminEntry(hasClientCookie(ADMIN_ENTRY_COOKIE, "true"));
     };
     sync();
-    window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    window.addEventListener("focus", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      window.removeEventListener("focus", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
   }, []);
   
   // Loading state

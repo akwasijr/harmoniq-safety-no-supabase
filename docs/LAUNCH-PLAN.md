@@ -576,15 +576,17 @@ VALUES (
 -- Run after the demo user signs up via /login
 ```
 
-### Task 1.4: Vercel Environment Variables
+### Task 1.4: Hosting Environment Variables
 
-Set in Vercel Dashboard → Settings → Environment Variables:
+Set in your hosting provider's environment variable settings:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://pvcykszmsaavrnjwuqrw.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>  (no trailing newline!)
-SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
-NEXT_PUBLIC_SITE_URL=https://harmoniq-safety.vercel.app
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key-or-sb_publishable-key>  (legacy name; no trailing newline!)
+# Or use NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY for newer Supabase projects
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key-or-sb_secret-key>   (legacy name)
+# Or use SUPABASE_SECRET_KEY for newer Supabase projects
+NEXT_PUBLIC_SITE_URL=https://app.sevalla.com
 ```
 
 ---
@@ -751,7 +753,7 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /admin
-Sitemap: https://harmoniq-safety.vercel.app/sitemap.xml
+Sitemap: https://app.sevalla.com/sitemap.xml
 ```
 
 ### Task 7.4: Performance Audit
@@ -984,7 +986,7 @@ await fetch(`/api/invitations/accept`, { method: "POST", body: JSON.stringify({ 
 
 ```
 # Required for email invitations:
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...   # or SUPABASE_SECRET_KEY=sb_secret_...
 
 # Required in Supabase Dashboard:
 Auth → SMTP Settings → Configure provider (Resend/SendGrid/Postmark)

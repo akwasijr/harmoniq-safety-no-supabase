@@ -1,11 +1,17 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Loader, CheckCircle, XCircle, Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import { buildCompanyDestination } from "@/lib/navigation";
+import { validatePassword } from "@/lib/validation";
 
 type InviteState = "loading" | "valid" | "invalid" | "signing_up" | "success" | "error";
 
@@ -44,7 +50,7 @@ function InviteForm() {
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
-  const [authMode, setAuthMode] = React.useState<"password" | "sso">("password");
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
 
   // Validate token on mount
   React.useEffect(() => {
@@ -66,11 +72,6 @@ function InviteForm() {
         }
 
         setInviteInfo(data.invitation);
-        // Auto-detect SSO capability
-        const ssoProvider = getSSOProvider(data.invitation.email);
-        if (ssoProvider) {
-          setAuthMode("sso");
-        }
         setState("valid");
       } catch {
         setState("invalid");
@@ -114,11 +115,10 @@ function InviteForm() {
       .from("companies")
       .select("slug")
       .eq("id", inviteInfo!.company_id)
-      .single();
+      .maybeSingle();
 
-    const slug = company?.slug || "harmoniq";
     const role = inviteInfo!.role || "employee";
-    return role === "employee" ? `/${slug}/app` : `/${slug}/dashboard`;
+    return buildCompanyDestination(company?.slug, role === "employee" ? "app" : "dashboard");
   };
 
   const handleSSOSignIn = async (provider: "google" | "azure") => {
@@ -144,37 +144,46 @@ function InviteForm() {
         const msg = authError.message.toLowerCase();
         if (msg.includes("unsupported provider") || msg.includes("oauth secret")) {
           setError(`${provider === "google" ? "Google" : "Microsoft"} sign-in is not configured. Please use password instead.`);
-          setAuthMode("password");
         } else {
           setError(authError.message);
         }
         setState("valid");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
       setState("valid");
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nextFieldErrors: Record<string, string> = {};
 
-    if (!firstName || !lastName) {
-      setError("Please enter your first and last name.");
-      return;
+    if (!firstName.trim()) {
+      nextFieldErrors.firstName = "First name is required.";
     }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
+    if (!lastName.trim()) {
+      nextFieldErrors.lastName = "Last name is required.";
+    }
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) {
+      nextFieldErrors.password = passwordCheck.reason || "Enter a stronger password.";
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      nextFieldErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setFieldErrors(nextFieldErrors);
+      setError("");
       return;
     }
 
     try {
       setState("signing_up");
       setError("");
+      setFieldErrors({});
 
       const supabase = createClient();
 
@@ -218,8 +227,9 @@ function InviteForm() {
 
       const dest = await completeInviteAcceptance(userId);
       window.location.href = dest;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
       setState("valid");
     }
   };
@@ -236,7 +246,7 @@ function InviteForm() {
           <CardHeader className="text-center">
             <CardTitle className="text-xl">
               {state === "loading" && "Verifying invitation..."}
-              {state === "valid" && "You're invited!"}
+              {state === "valid" && "You are invited!"}
               {state === "signing_up" && "Creating your account..."}
               {state === "success" && "Account created!"}
               {state === "invalid" && "Invalid invitation"}
@@ -244,7 +254,7 @@ function InviteForm() {
             </CardTitle>
             {inviteInfo && state === "valid" && (
               <CardDescription>
-                You've been invited to join <strong>{inviteInfo.company_name}</strong> as a{" "}
+                You have been invited to join <strong>{inviteInfo.company_name}</strong> as a{" "}
                 <strong>{inviteInfo.role.replace("_", " ")}</strong>.
               </CardDescription>
             )}
@@ -260,7 +270,7 @@ function InviteForm() {
               <div className="flex flex-col items-center gap-4 py-4">
                 <XCircle className="h-12 w-12 text-red-500" />
                 <p className="text-sm text-muted-foreground text-center">{error}</p>
-                <a href="/login" className="text-sm text-primary hover:underline">Go to login</a>
+                <Link href="/login" className="text-sm text-primary hover:underline">Go to login</Link>
               </div>
             )}
 
@@ -274,22 +284,23 @@ function InviteForm() {
 
                 {/* Email display */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Email</label>
-                  <input
+                  <Label htmlFor="invite-email">Email</Label>
+                  <Input
+                    id="invite-email"
                     type="email"
                     value={inviteInfo?.email || ""}
                     disabled
-                    className="w-full rounded-md border border-input bg-muted px-3 py-2 text-sm opacity-60"
+                    className="bg-muted opacity-60"
                   />
                 </div>
 
                 {/* SSO option */}
                 {ssoProvider && (
                   <>
-                    <button
+                    <Button
                       type="button"
                       onClick={() => handleSSOSignIn(ssoProvider)}
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                      className="w-full"
                     >
                       {ssoProvider === "google" ? (
                         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
@@ -297,7 +308,7 @@ function InviteForm() {
                         <svg className="h-4 w-4" viewBox="0 0 21 21" fill="currentColor"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
                       )}
                       Continue with {ssoProvider === "google" ? "Google" : "Microsoft"}
-                    </button>
+                    </Button>
 
                     <div className="relative">
                       <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
@@ -312,67 +323,95 @@ function InviteForm() {
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-sm font-medium mb-1">First name</label>
-                      <input
+                      <Label htmlFor="invite-first-name" required error={Boolean(fieldErrors.firstName)}>
+                        First name
+                      </Label>
+                      <Input
+                        id="invite-first-name"
                         type="text"
                         value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
+                        onChange={(e) => {
+                          setFirstName(e.target.value);
+                          setFieldErrors((prev) => ({ ...prev, firstName: "" }));
+                        }}
                         required
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        error={Boolean(fieldErrors.firstName)}
+                        errorMessage={fieldErrors.firstName}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Last name</label>
-                      <input
+                      <Label htmlFor="invite-last-name" required error={Boolean(fieldErrors.lastName)}>
+                        Last name
+                      </Label>
+                      <Input
+                        id="invite-last-name"
                         type="text"
                         value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
+                        onChange={(e) => {
+                          setLastName(e.target.value);
+                          setFieldErrors((prev) => ({ ...prev, lastName: "" }));
+                        }}
                         required
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        error={Boolean(fieldErrors.lastName)}
+                        errorMessage={fieldErrors.lastName}
                       />
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
+                    <Label htmlFor="password" required error={Boolean(fieldErrors.password)}>
+                      Password
+                    </Label>
                     <div className="relative">
-                      <input
+                      <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="At least 8 characters"
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setFieldErrors((prev) => ({ ...prev, password: "" }));
+                        }}
+                        placeholder="At least 12 characters"
                         required
-                        minLength={8}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        minLength={12}
+                        className="pr-10"
+                        error={Boolean(fieldErrors.password)}
+                        errorMessage={fieldErrors.password}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        className="absolute right-3 top-4 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         tabIndex={-1}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="confirm" className="block text-sm font-medium mb-1">Confirm password</label>
-                    <input
+                    <Label htmlFor="confirm" required error={Boolean(fieldErrors.confirmPassword)}>
+                      Confirm password
+                    </Label>
+                    <Input
                       id="confirm"
                       type="password"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        setFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                      }}
                       placeholder="Confirm your password"
                       required
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      error={Boolean(fieldErrors.confirmPassword)}
+                      errorMessage={fieldErrors.confirmPassword}
                     />
                   </div>
-                  <button
+                  <Button
                     type="submit"
-                    className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-full"
                   >
                     Create account
-                  </button>
+                  </Button>
                 </form>
               </div>
             )}
@@ -389,7 +428,7 @@ function InviteForm() {
                 <p className="text-sm text-muted-foreground text-center">
                   Your account has been created. Check your email to verify, then sign in.
                 </p>
-                <a href="/login" className="text-sm text-primary hover:underline">Go to login</a>
+                <Link href="/login" className="text-sm text-primary hover:underline">Go to login</Link>
               </div>
             )}
           </CardContent>

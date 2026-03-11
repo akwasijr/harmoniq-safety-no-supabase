@@ -112,7 +112,7 @@ No unit tests, integration tests, or E2E tests exist. At minimum need:
 | D13 | Company settings may not persist | 1 hour |
 
 ### 7. Email Infrastructure
-- Invitation emails require `SUPABASE_SERVICE_ROLE_KEY` in Vercel
+- Invitation emails require `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY` in the hosting environment
 - SMTP needs configuration in Supabase Auth settings
 - Email templates not customized (using Supabase defaults)
 - Password reset flow works but email delivery unverified
@@ -177,7 +177,7 @@ No unit tests, integration tests, or E2E tests exist. At minimum need:
 ### Phase 1: Data Layer (Week 1)
 1. Create all 18 Supabase tables from TypeScript types
 2. Add RLS policies for tenant isolation
-3. Set `SUPABASE_SERVICE_ROLE_KEY` in Vercel
+3. Set `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY` in the hosting environment
 4. Configure SMTP in Supabase for invitation emails
 5. Test end-to-end: create company → invite user → user accepts → login → create incident
 

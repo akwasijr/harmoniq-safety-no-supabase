@@ -27,7 +27,7 @@ export default function ContactPage() {
 
 function ContactFormWrapper() {
   // Read locale from cookie for translations
-  const [translations, setTranslations] = React.useState({
+  const translations = {
     heading: "Get in Touch",
     subheading: "Have a question? We'd love to hear from you.",
     name: "Full Name",
@@ -37,7 +37,7 @@ function ContactFormWrapper() {
     submit: "Send Message",
     success: "Thank you! We'll get back to you shortly.",
     error: "Something went wrong. Please try again.",
-  });
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -75,9 +75,15 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
     email: "",
     company: "",
     message: "",
+    website: "",
   });
   const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
   const turnstileRef = React.useRef<HTMLDivElement>(null);
+  const startedAtRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    startedAtRef.current = Date.now();
+  }, []);
 
   // Load Turnstile script if site key is provided
   React.useEffect(() => {
@@ -113,13 +119,15 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          startedAt: startedAtRef.current,
           turnstileToken: turnstileToken || "no-captcha",
         }),
       });
 
       if (res.ok) {
         setStatus("success");
-        setFormData({ name: "", email: "", company: "", message: "" });
+        setFormData({ name: "", email: "", company: "", message: "", website: "" });
+        startedAtRef.current = Date.now();
       } else {
         setStatus("error");
       }
@@ -175,6 +183,23 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
             placeholder="jane@company.com"
           />
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="contact-website" className="sr-only">
+          Leave this field empty
+        </label>
+        <input
+          id="contact-website"
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={formData.website}
+          onChange={(e) => setFormData((f) => ({ ...f, website: e.target.value }))}
+          className="sr-only"
+          aria-hidden="true"
+        />
       </div>
 
       <div>

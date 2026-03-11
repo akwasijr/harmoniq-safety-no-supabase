@@ -3,6 +3,7 @@
 import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
+import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
 
 type IdEntity = { id: string };
 type CompanyEntity = IdEntity & { company_id: string };
@@ -10,6 +11,7 @@ type CompanyEntity = IdEntity & { company_id: string };
 export interface EntityStore<T extends IdEntity> {
   items: T[];
   isLoading: boolean;
+  error: string | null;
   setItems: React.Dispatch<React.SetStateAction<T[]>>;
   getById: (id: string) => T | undefined;
   add: (item: T) => void;
@@ -18,12 +20,12 @@ export interface EntityStore<T extends IdEntity> {
   /** Returns items filtered by company_id. Only works for entities with company_id field. */
   itemsForCompany: (companyId: string | null | undefined) => T[];
   ensureLoaded: () => void;
+  clearError: () => void;
 }
 
 const isSupabaseConfigured =
   typeof window !== "undefined" &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  hasSupabasePublicEnv();
 
 /** Debounce delay for localStorage writes (ms) */
 const SAVE_DEBOUNCE_MS = 500;
@@ -78,6 +80,7 @@ export function createEntityStore<T extends IdEntity>(
       loadFromStorage(storageKey, isSupabaseConfigured ? [] : initialData)
     );
     const [isLoading, setIsLoading] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
     const hasLoadedRef = React.useRef(!isSupabaseConfigured);
     const isFetchingRef = React.useRef(false);
     const isMountedRef = React.useRef(true);
@@ -93,6 +96,7 @@ export function createEntityStore<T extends IdEntity>(
       if (hasLoadedRef.current || isFetchingRef.current) return;
       isFetchingRef.current = true;
       setIsLoading(true);
+      setError(null);
 
       const supabase = createClient();
 
@@ -111,6 +115,7 @@ export function createEntityStore<T extends IdEntity>(
 
           if (error) {
             console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
+            if (isMountedRef.current) setError(error.message);
             // Fallback to localStorage cache
             const cached = loadFromStorage<T[]>(storageKey, initialData);
             if (isMountedRef.current && cached.length > 0) setItems(cached);
@@ -123,6 +128,7 @@ export function createEntityStore<T extends IdEntity>(
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
           console.warn(`[Harmoniq] Fetch ${table} aborted/failed:`, msg);
+          if (isMountedRef.current) setError(msg);
           // Fallback to localStorage cache on network failure
           const cached = loadFromStorage<T[]>(storageKey, initialData);
           if (isMountedRef.current && cached.length > 0) setItems(cached);
@@ -150,7 +156,7 @@ export function createEntityStore<T extends IdEntity>(
       return () => {
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       };
-    }, [items, storageKey]);
+    }, [items]);
 
     React.useEffect(() => {
       if (isSupabaseConfigured) return;
@@ -166,7 +172,7 @@ export function createEntityStore<T extends IdEntity>(
         window.removeEventListener("beforeunload", flushPendingSave);
         flushPendingSave();
       };
-    }, [storageKey]);
+    }, []);
 
     // Cross-tab sync: listen for storage changes from other tabs/windows
     React.useEffect(() => {
@@ -183,7 +189,7 @@ export function createEntityStore<T extends IdEntity>(
       };
       window.addEventListener("storage", handleStorageChange);
       return () => window.removeEventListener("storage", handleStorageChange);
-    }, [storageKey]);
+    }, []);
 
     // === SHARED METHODS ===
     const getById = React.useCallback(
@@ -191,55 +197,85 @@ export function createEntityStore<T extends IdEntity>(
       [items]
     );
 
+    const clearError = React.useCallback(() => {
+      setError(null);
+    }, []);
+
     const add = React.useCallback((item: T) => {
+      setError(null);
+      const previous = itemsRef.current;
+      const exists = previous.some((existing) => existing.id === item.id);
+      const next = exists ? previous.map((existing) => (existing.id === item.id ? item : existing)) : [...previous, item];
+      itemsRef.current = next;
       // Optimistic update
-      setItems((prev) => {
-        const exists = prev.some((p) => p.id === item.id);
-        const next = exists ? prev.map((p) => (p.id === item.id ? item : p)) : [...prev, item];
-        // Always cache to localStorage for resilience
-        saveToStorage(storageKey, next);
-        return next;
-      });
+      setItems(next);
+      saveToStorage(storageKey, next);
 
       if (isSupabaseConfigured) {
-        const supabase = createClient();
-        const mapped = mapToSupabase(item as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
-        supabase.from(table).upsert(mapped).then(({ error }) => {
-          if (error) console.error(`[Harmoniq] Error adding to ${table}:`, error.message, error.details);
-        });
+        void (async () => {
+          const supabase = createClient();
+          const mapped = mapToSupabase(item as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
+          const { error: persistError } = await supabase.from(table).upsert(mapped);
+          if (persistError) {
+            console.error(`[Harmoniq] Error adding to ${table}:`, persistError.message, persistError.details);
+            if (!isMountedRef.current) return;
+            itemsRef.current = previous;
+            setItems(previous);
+            saveToStorage(storageKey, previous);
+            setError(persistError.message);
+          }
+        })();
       }
     }, []);
 
     const update = React.useCallback((id: string, updates: Partial<T>) => {
+      setError(null);
+      const previous = itemsRef.current;
+      const next = previous.map((item) => (item.id === id ? { ...item, ...updates } : item));
+      itemsRef.current = next;
       // Optimistic update
-      setItems((prev) => {
-        const next = prev.map((item) => (item.id === id ? { ...item, ...updates } : item));
-        saveToStorage(storageKey, next);
-        return next;
-      });
+      setItems(next);
+      saveToStorage(storageKey, next);
 
       if (isSupabaseConfigured) {
-        const supabase = createClient();
-        const mapped = mapToSupabase(updates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
-        supabase.from(table).update(mapped).eq("id", id).then(({ error }) => {
-          if (error) console.error(`[Harmoniq] Error updating ${table}:`, error.message, error.details);
-        });
+        void (async () => {
+          const supabase = createClient();
+          const mapped = mapToSupabase(updates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
+          const { error: persistError } = await supabase.from(table).update(mapped).eq("id", id);
+          if (persistError) {
+            console.error(`[Harmoniq] Error updating ${table}:`, persistError.message, persistError.details);
+            if (!isMountedRef.current) return;
+            itemsRef.current = previous;
+            setItems(previous);
+            saveToStorage(storageKey, previous);
+            setError(persistError.message);
+          }
+        })();
       }
     }, []);
 
     const remove = React.useCallback((id: string) => {
+      setError(null);
+      const previous = itemsRef.current;
+      const next = previous.filter((item) => item.id !== id);
+      itemsRef.current = next;
       // Optimistic update
-      setItems((prev) => {
-        const next = prev.filter((item) => item.id !== id);
-        saveToStorage(storageKey, next);
-        return next;
-      });
+      setItems(next);
+      saveToStorage(storageKey, next);
 
       if (isSupabaseConfigured) {
-        const supabase = createClient();
-        supabase.from(table).delete().eq("id", id).then(({ error }) => {
-          if (error) console.error(`[Harmoniq] Error deleting from ${table}:`, error.message);
-        });
+        void (async () => {
+          const supabase = createClient();
+          const { error: persistError } = await supabase.from(table).delete().eq("id", id);
+          if (persistError) {
+            console.error(`[Harmoniq] Error deleting from ${table}:`, persistError.message);
+            if (!isMountedRef.current) return;
+            itemsRef.current = previous;
+            setItems(previous);
+            saveToStorage(storageKey, previous);
+            setError(persistError.message);
+          }
+        })();
       }
     }, []);
 
@@ -255,8 +291,8 @@ export function createEntityStore<T extends IdEntity>(
     );
 
     const value = React.useMemo(
-      () => ({ items, isLoading, setItems, getById, add, update, remove, itemsForCompany, ensureLoaded }),
-      [items, isLoading, getById, add, update, remove, itemsForCompany, ensureLoaded]
+      () => ({ items, isLoading, error, setItems, getById, add, update, remove, itemsForCompany, ensureLoaded, clearError }),
+      [items, isLoading, error, getById, add, update, remove, itemsForCompany, ensureLoaded, clearError]
     );
 
     return <Context.Provider value={value}>{children}</Context.Provider>;

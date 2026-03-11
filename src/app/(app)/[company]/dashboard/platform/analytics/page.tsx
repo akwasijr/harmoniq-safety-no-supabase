@@ -13,11 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { buildSiteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 import {
   BarChart3, Users, Building2, Globe, Shield, AlertTriangle, Package,
-  Eye, FileText, CheckCircle, MapPin, Activity, Monitor, Smartphone,
-  RefreshCw, TrendingUp, Clock,
+  CheckCircle, MapPin, Activity, Monitor, Smartphone, RefreshCw, TrendingUp,
 } from "lucide-react";
 
 const LeafletMap = dynamic(() => import("@/components/shared/leaflet-map"), { ssr: false });
@@ -84,12 +84,12 @@ export default function PlatformAnalyticsPage() {
   const unique = analyticsData?.uniqueVisitors || 0;
   const maxDaily = Math.max(...dailyData.map((d) => d.views), 1);
 
-  const [gdpr, setGdpr] = React.useState({
+  const [gdpr, setGdpr] = React.useState(() => ({
     cookieConsent: true, rightToErasure: true, dataExport: true, anonymizeIp: true,
     retentionDays: 365, dpoEmail: "privacy@harmoniq.safety",
-    privacyUrl: "https://harmoniq-safety.vercel.app/privacy",
-    cookieUrl: "https://harmoniq-safety.vercel.app/cookies",
-  });
+    privacyUrl: buildSiteUrl("/privacy"),
+    cookieUrl: buildSiteUrl("/cookies"),
+  }));
 
   const tabs: { id: SubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
@@ -99,21 +99,6 @@ export default function PlatformAnalyticsPage() {
     { id: "compliance", label: "Compliance", icon: Shield },
   ];
 
-  const PeriodSelector = () => (
-    <div className="flex items-center gap-2">
-      <div className="flex gap-1">
-        {(["7d", "30d", "90d"] as const).map((p) => (
-          <Button key={p} variant={trafficPeriod === p ? "default" : "outline"} size="sm" onClick={() => setTrafficPeriod(p)}>
-            {p === "7d" ? "7d" : p === "30d" ? "30d" : "90d"}
-          </Button>
-        ))}
-      </div>
-      <Button variant="ghost" size="icon" onClick={fetchData} disabled={isLoading} className="h-8 w-8">
-        <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-      </Button>
-    </div>
-  );
-
   return (
     <RoleGuard allowedRoles={["super_admin", "company_admin"]}>
       <div className="space-y-6">
@@ -122,7 +107,18 @@ export default function PlatformAnalyticsPage() {
             <h1 className="text-2xl font-semibold">Observability</h1>
             <p className="text-sm text-muted-foreground mt-1">Platform analytics, visitor intelligence, and compliance</p>
           </div>
-          <PeriodSelector />
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {(["7d", "30d", "90d"] as const).map((p) => (
+                <Button key={p} variant={trafficPeriod === p ? "default" : "outline"} size="sm" onClick={() => setTrafficPeriod(p)}>
+                  {p === "7d" ? "7d" : p === "30d" ? "30d" : "90d"}
+                </Button>
+              ))}
+            </div>
+            <Button variant="ghost" size="icon" onClick={fetchData} disabled={isLoading} className="h-8 w-8">
+              <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            </Button>
+          </div>
         </div>
 
         <div className="border-b overflow-x-auto">

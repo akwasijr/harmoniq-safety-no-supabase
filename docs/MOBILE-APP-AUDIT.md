@@ -461,7 +461,7 @@
 ## ℹ️ Info (Security — Working Well)
 
 ### S11 — Service role key server-only ✅
-- The `SUPABASE_SERVICE_ROLE_KEY` is only used in `src/lib/supabase/admin.ts` (server-side). Never exposed to the client bundle.
+- The `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_SECRET_KEY` is only used in `src/lib/supabase/admin.ts` (server-side). Never exposed to the client bundle.
 
 ### S12 — XSS sanitization with DOMPurify ✅
 - All `dangerouslySetInnerHTML` usage goes through `sanitizeHtml()` which uses DOMPurify with a strict allowlist.

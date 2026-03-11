@@ -1,22 +1,26 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { buildCompanyDestination } from "@/lib/navigation";
+import { getPlatformSlugFilterList, getPlatformSlugs, isPlatformSlug } from "@/lib/platform-config";
+import { getSuperAdminEmails } from "@/lib/server-config";
 
-const DEMO_COMPANY_SLUG = "harmoniq";
-const DEMO_COMPANY_ID = "d0000000-0000-0000-0000-000000000001";
 const APP_CHOICE_COOKIE = "harmoniq_app_choice";
-const PLATFORM_SLUGS = (process.env.NEXT_PUBLIC_PLATFORM_SLUGS || "platform,admin,superadmin")
-  .split(",")
-  .map((s) => s.trim().toLowerCase())
-  .filter(Boolean);
-const PLATFORM_SLUGS_LIST = `(${PLATFORM_SLUGS.map((s) => `'${s}'`).join(",")})`;
-const isPlatformSlug = (slug?: string | null) =>
-  !!slug && (PLATFORM_SLUGS.includes(slug.toLowerCase()) || slug.toLowerCase().includes("platform"));
+const PLATFORM_SLUGS = getPlatformSlugs();
+const PLATFORM_SLUGS_LIST = getPlatformSlugFilterList({ quoteValues: true });
 type AppChoice = "dashboard" | "app";
-
-function getSuperAdminEmails(): string[] {
-  const raw = process.env.SUPER_ADMIN_EMAILS || "";
-  return raw.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-}
+type CallbackUser = {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    given_name?: string;
+    first_name?: string;
+    family_name?: string;
+    last_name?: string;
+  };
+  app_metadata?: {
+    provider?: string;
+  };
+};
 
 async function getFirstNonPlatformSlug(
   supabase: Awaited<ReturnType<typeof createClient>>
@@ -27,12 +31,8 @@ async function getFirstNonPlatformSlug(
     .not("slug", "in", PLATFORM_SLUGS_LIST)
     .order("created_at", { ascending: true })
     .limit(1)
-    .single();
+    .maybeSingle();
   return company?.slug || null;
-}
-
-function isDemoEmail(email: string): boolean {
-  return email.toLowerCase() === "demo@harmoniq.safety";
 }
 
 function normalizeAppChoice(choice?: string | null): AppChoice | null {
@@ -58,13 +58,18 @@ function isChoiceAllowed(role: string, choice: AppChoice): boolean {
   return getAllowedApps(role).includes(choice);
 }
 
+function redirectToLoginError(requestUrl: URL, message: string) {
+  return NextResponse.redirect(
+    new URL(`/login?error=${encodeURIComponent(message)}`, requestUrl.origin)
+  );
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const source = requestUrl.searchParams.get("source");
   const type = requestUrl.searchParams.get("type");
   const inviteToken = requestUrl.searchParams.get("invite_token");
-  const isAdminLink = source === "admin-link";
 
   const supabase = await createClient();
 
@@ -99,7 +104,7 @@ export async function GET(request: NextRequest) {
 
   // Handle password recovery
   if (type === "recovery") {
-    return NextResponse.redirect(new URL("/login", requestUrl.origin));
+    return NextResponse.redirect(new URL("/reset-password", requestUrl.origin));
   }
 
   return NextResponse.redirect(
@@ -109,7 +114,7 @@ export async function GET(request: NextRequest) {
 
 async function acceptInviteIfPending(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  user: { id: string; email?: string; user_metadata?: Record<string, any>; app_metadata?: Record<string, any> },
+  user: CallbackUser,
   inviteToken: string,
   request: NextRequest,
   requestUrl: URL
@@ -124,7 +129,7 @@ async function acceptInviteIfPending(
     .eq("email", email)
     .is("accepted_at", null)
     .gt("expires_at", new Date().toISOString())
-    .single();
+    .maybeSingle();
 
   if (!invitation) return null; // No valid invite — fall through to normal routing
 
@@ -133,7 +138,7 @@ async function acceptInviteIfPending(
     .from("users")
     .select("id")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   if (!existingProfile) {
     // Create user profile from invite data
@@ -179,16 +184,15 @@ async function acceptInviteIfPending(
     .from("companies")
     .select("slug")
     .eq("id", invitation.company_id)
-    .single();
+    .maybeSingle();
 
-  const slug = company?.slug || "harmoniq";
-  const dest = invitation.role === "employee" ? `/${slug}/app` : `/${slug}/dashboard`;
+  const dest = buildCompanyDestination(company?.slug, invitation.role === "employee" ? "app" : "dashboard");
   return NextResponse.redirect(new URL(dest, requestUrl.origin));
 }
 
 async function routeAuthenticatedUser(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  user: { id: string; email?: string; user_metadata?: Record<string, any>; app_metadata?: Record<string, any> },
+  user: CallbackUser,
   request: NextRequest,
   requestUrl: URL
 ) {
@@ -196,12 +200,12 @@ async function routeAuthenticatedUser(
   const isAdminLink = requestUrl.searchParams.get("source") === "admin-link";
   const superAdminEmails = getSuperAdminEmails();
   const isSuperAdmin = isAdminLink && superAdminEmails.includes(email);
-  const isDemo = isDemoEmail(email);
   const appChoiceCookie = request.cookies.get(APP_CHOICE_COOKIE)?.value;
   const denyAccess = async () => {
     await supabase.auth.signOut();
-    return NextResponse.redirect(
-      new URL("/login?error=Access+denied+for+the+selected+app.+Please+choose+a+permitted+app.", requestUrl.origin)
+    return redirectToLoginError(
+      requestUrl,
+      "Access denied for the selected app. Please choose a permitted app."
     );
   };
 
@@ -210,7 +214,7 @@ async function routeAuthenticatedUser(
     .from("users")
     .select("*")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   if (!profile) {
     // Auto-create profile for super admins
@@ -221,7 +225,7 @@ async function routeAuthenticatedUser(
         .select("id")
         .in("slug", PLATFORM_SLUGS)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       let companyId = platformCompany?.id;
       if (!companyId) {
@@ -238,7 +242,7 @@ async function routeAuthenticatedUser(
             seat_limit: 999,
           }])
           .select("id")
-          .single();
+          .maybeSingle();
         companyId = newCompany?.id;
       }
 
@@ -269,7 +273,7 @@ async function routeAuthenticatedUser(
         .not("slug", "in", PLATFORM_SLUGS_LIST)
         .order("created_at", { ascending: true })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (!tenantCompany?.slug) {
         return NextResponse.redirect(
@@ -277,7 +281,7 @@ async function routeAuthenticatedUser(
         );
       }
 
-      const dest = requestedApp === "app" ? `/${tenantCompany.slug}/app` : `/${tenantCompany.slug}/dashboard`;
+      const dest = buildCompanyDestination(tenantCompany.slug, requestedApp);
       return NextResponse.redirect(new URL(dest, requestUrl.origin));
     }
 
@@ -289,7 +293,7 @@ async function routeAuthenticatedUser(
       .eq("email", email)
       .is("accepted_at", null)
       .gt("expires_at", new Date().toISOString())
-      .single();
+      .maybeSingle();
 
     if (invitation) {
       // Accept invitation — create user profile
@@ -319,14 +323,13 @@ async function routeAuthenticatedUser(
         .from("companies")
         .select("slug")
         .eq("id", invitation.company_id)
-        .single();
+        .maybeSingle();
 
-      const slug = company?.slug || "harmoniq";
       const requestedApp = resolveAppChoice(invitation.role, appChoiceCookie);
       if (!isChoiceAllowed(invitation.role, requestedApp)) {
         return await denyAccess();
       }
-      const dest = requestedApp === "app" ? `/${slug}/app` : `/${slug}/dashboard`;
+      const dest = buildCompanyDestination(company?.slug, requestedApp);
       return NextResponse.redirect(new URL(dest, requestUrl.origin));
     }
 
@@ -371,7 +374,7 @@ async function routeAuthenticatedUser(
         .not("slug", "in", PLATFORM_SLUGS_LIST)
         .order("created_at", { ascending: true })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (!tenantCompany?.slug) {
         return NextResponse.redirect(
@@ -379,7 +382,7 @@ async function routeAuthenticatedUser(
         );
       }
 
-      const dest = `/${tenantCompany.slug}/dashboard`;
+      const dest = buildCompanyDestination(tenantCompany.slug, "dashboard");
       return NextResponse.redirect(new URL(dest, requestUrl.origin));
     }
 
@@ -389,7 +392,7 @@ async function routeAuthenticatedUser(
       .not("slug", "in", PLATFORM_SLUGS_LIST)
       .order("created_at", { ascending: true })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (!tenantCompany?.slug) {
       return NextResponse.redirect(
@@ -397,7 +400,7 @@ async function routeAuthenticatedUser(
       );
     }
 
-    const dest = `/${tenantCompany.slug}/dashboard`;
+    const dest = buildCompanyDestination(tenantCompany.slug, "dashboard");
     return NextResponse.redirect(new URL(dest, requestUrl.origin));
   }
 
@@ -406,7 +409,7 @@ async function routeAuthenticatedUser(
     .from("companies")
     .select("slug")
     .eq("id", profile.company_id)
-    .single();
+    .maybeSingle();
 
   let slug = company?.slug || null;
 
@@ -422,7 +425,7 @@ async function routeAuthenticatedUser(
     slug = fallback;
   }
 
-  const dest = requestedApp === "app" ? `/${slug}/app` : `/${slug}/dashboard`;
+  const dest = buildCompanyDestination(slug, requestedApp);
   return NextResponse.redirect(new URL(dest, requestUrl.origin));
 }
 
@@ -439,5 +442,7 @@ async function logAudit(
       resource: "auth",
       ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined,
     }]);
-  } catch {}
+  } catch (error) {
+    console.error("[Auth Callback] Failed to write audit log:", error);
+  }
 }

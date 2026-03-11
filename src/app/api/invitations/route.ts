@@ -65,12 +65,16 @@ export async function POST(request: NextRequest) {
       ? company_id
       : inviter.company_id;
 
+    if (!targetCompanyId) {
+      return NextResponse.json({ error: "A target company is required to send invitations." }, { status: 400 });
+    }
+
     // Check if user already exists
     const { data: existingUser } = await supabase
       .from("users")
       .select("id")
       .eq("email", email.toLowerCase())
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       return NextResponse.json({ error: "Unable to send invitation. Please check the email and try again." }, { status: 409 });
@@ -86,7 +90,7 @@ export async function POST(request: NextRequest) {
       .eq("company_id", targetCompanyId)
       .is("accepted_at", null)
       .gt("expires_at", new Date().toISOString())
-      .single();
+      .maybeSingle();
 
     if (existingInvite) {
       return NextResponse.json({ error: "Pending invitation already exists for this email" }, { status: 409 });
@@ -109,6 +113,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
+      console.error("[Invitations API] Failed to create invitation record:", insertError);
       return NextResponse.json({ error: "Failed to create invitation" }, { status: 500 });
     }
 
@@ -135,6 +140,9 @@ export async function POST(request: NextRequest) {
           await supabase.from("invitations").delete().eq("id", invitation.id);
           return NextResponse.json({ error: "User with this email already exists" }, { status: 409 });
         }
+        console.error("[Invitations API] Failed to send invitation email:", inviteError);
+        await supabase.from("invitations").delete().eq("id", invitation.id);
+        return NextResponse.json({ error: "Invitation created, but the email could not be sent. Please try again." }, { status: 500 });
       } else if (inviteData?.user?.id) {
         const now = new Date().toISOString();
         const { data: createdUser, error: profileError } = await adminClient
@@ -171,7 +179,13 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (profileError) {
-          return NextResponse.json({ error: "Invitation sent but profile creation failed" }, { status: 500 });
+          console.error("[Invitations API] Failed to create invited user profile:", profileError);
+          await supabase.from("invitations").delete().eq("id", invitation.id);
+          await adminClient.auth.admin.deleteUser(inviteData.user.id);
+          return NextResponse.json(
+            { error: "Invitation email was sent, but the user profile could not be prepared. Please retry the invitation." },
+            { status: 500 }
+          );
         }
 
         return NextResponse.json({
@@ -193,7 +207,7 @@ export async function POST(request: NextRequest) {
       .from("companies")
       .select("name")
       .eq("id", targetCompanyId)
-      .single();
+      .maybeSingle();
 
     return NextResponse.json({
       success: true,
@@ -207,8 +221,9 @@ export async function POST(request: NextRequest) {
         company_name: company?.name,
       },
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("[Invitations API] Unexpected invitation error:", err);
+    return NextResponse.json({ error: "Unable to process the invitation request." }, { status: 500 });
   }
 }
 
@@ -235,7 +250,8 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("invitations")
       .select("id,email,role,expires_at,accepted_at,token,company_id,companies(name)")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(250);
 
     if (profile.role !== "super_admin") {
       query = query.eq("company_id", profile.company_id);
@@ -255,7 +271,8 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({ invitations: invitationsWithLinks });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("[Invitations API] Unexpected invitation listing error:", err);
+    return NextResponse.json({ error: "Unable to fetch invitations." }, { status: 500 });
   }
 }

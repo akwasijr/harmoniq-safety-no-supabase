@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { sanitizeText, isValidEmail, validatePassword } from "@/lib/validation";
 
@@ -18,16 +17,22 @@ export async function POST(request: NextRequest) {
     if (!rl.allowed) return rl.response;
     const adminClient = createAdminClient();
     if (!adminClient) {
+      console.error("[Setup API] Admin client unavailable for setup request.");
       return NextResponse.json(
-        { error: "SUPABASE_SERVICE_ROLE_KEY not configured. Set it in Vercel environment variables." },
+        { error: "Setup is unavailable on this deployment." },
         { status: 500 }
       );
     }
 
     // Check if any companies exist
-    const { count } = await adminClient
+    const { count, error: companyCountError } = await adminClient
       .from("companies")
       .select("id", { count: "exact", head: true });
+
+    if (companyCountError) {
+      console.error("[Setup API] Failed to count companies:", companyCountError);
+      return NextResponse.json({ error: "Unable to verify setup state." }, { status: 500 });
+    }
 
     if (count && count > 0) {
       return NextResponse.json(
@@ -76,7 +81,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (companyError) {
-      return NextResponse.json({ error: `Failed to create company: ${companyError.message}` }, { status: 500 });
+      console.error("[Setup API] Failed to create company:", companyError);
+      return NextResponse.json({ error: "Failed to create the initial company." }, { status: 500 });
     }
 
     // 2. Create the auth user
@@ -89,7 +95,8 @@ export async function POST(request: NextRequest) {
     if (authError) {
       // Clean up company
       await adminClient.from("companies").delete().eq("id", company.id);
-      return NextResponse.json({ error: `Failed to create auth user: ${authError.message}` }, { status: 500 });
+      console.error("[Setup API] Failed to create auth user:", authError);
+      return NextResponse.json({ error: "Failed to provision the initial administrator." }, { status: 500 });
     }
 
     // 3. Create the profile
@@ -112,7 +119,10 @@ export async function POST(request: NextRequest) {
       });
 
     if (profileError) {
-      return NextResponse.json({ error: `Failed to create profile: ${profileError.message}` }, { status: 500 });
+      console.error("[Setup API] Failed to create admin profile:", profileError);
+      await adminClient.auth.admin.deleteUser(authData.user.id);
+      await adminClient.from("companies").delete().eq("id", company.id);
+      return NextResponse.json({ error: "Failed to finalize the initial administrator profile." }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -123,8 +133,8 @@ export async function POST(request: NextRequest) {
       login_url: `/admin`,
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    console.error("[Setup API] Unexpected setup error:", err);
+    return NextResponse.json({ error: "Setup failed. Please try again." }, { status: 500 });
   }
 }
 
@@ -133,7 +143,7 @@ export async function GET() {
   try {
     const adminClient = createAdminClient();
     if (!adminClient) {
-      return NextResponse.json({ needs_setup: true, reason: "service_role_key_missing" });
+      return NextResponse.json({ needs_setup: true, reason: "admin_key_missing" });
     }
 
     const { count } = await adminClient

@@ -31,6 +31,18 @@ export function saveToStorage<T>(key: string, value: T) {
   }
 }
 
+export function loadOptionalStringFromStorage(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "string" && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Clear all Harmoniq data from localStorage.
  * Called on logout to prevent data leaking between sessions.

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { validateEnv } from "@/lib/env";
+import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 // Validate env vars once at startup (server-only, runs during module init)
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Harmoniq Safety" }],
   creator: "Harmoniq Safety",
   publisher: "Harmoniq Safety",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://harmoniqsafety.com"),
+  metadataBase: new URL(getSiteUrl()),
   openGraph: {
     type: "website",
     locale: "en_US",

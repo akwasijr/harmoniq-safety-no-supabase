@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
+import { hasClientCookie } from "@/lib/client-cookies";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 
@@ -161,12 +162,7 @@ export function Sidebar({
       return;
     }
     if (typeof window !== "undefined") {
-      // Only show platform nav when BOTH the localStorage flag AND the cookie are present.
-      // The normal login page explicitly clears both, so this only survives
-      // when the user entered via /admin-login.
-      const flag = window.localStorage.getItem("harmoniq_admin_entry") === "true";
-      const hasCookie = document.cookie.split(";").some((c) => c.trim().startsWith("harmoniq_admin_entry=true"));
-      setAllowPlatform(flag && hasCookie);
+      setAllowPlatform(hasClientCookie("harmoniq_admin_entry", "true"));
     }
   }, [showPlatformAdmin]);
 

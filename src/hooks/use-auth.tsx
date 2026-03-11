@@ -4,17 +4,16 @@ import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ROLE_PERMISSIONS } from "@/types";
 import { useCompanyStore } from "@/stores/company-store";
-import { clearAllHarmoniqStorage, loadFromStorage, saveToStorage } from "@/lib/local-storage";
+import { clearAllHarmoniqStorage, loadOptionalStringFromStorage, saveToStorage } from "@/lib/local-storage";
 import { resetPrimaryColor } from "@/lib/branding";
+import { clearClientCookie } from "@/lib/client-cookies";
+import { getPlatformSlugs } from "@/lib/platform-config";
 import type { User, Company, Permission, UserRole, CompanyRole } from "@/types";
 
-const ADMIN_ENTRY_STORAGE_KEY = "harmoniq_admin_entry";
 const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
-const PLATFORM_SLUGS =
-  (process.env.NEXT_PUBLIC_PLATFORM_SLUGS || "platform,admin,superadmin")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
+const LEGACY_SESSION_STORAGE_KEY = "harmoniq_auth_session";
+const LEGACY_PROFILE_STORAGE_KEY = "harmoniq_auth_profile";
+const PLATFORM_SLUGS = getPlatformSlugs();
 
 interface AuthContextType {
   // Current user
@@ -46,24 +45,60 @@ interface AuthContextType {
 const AuthContext = React.createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const SESSION_STORAGE_KEY = "harmoniq_auth_session";
-  const PROFILE_STORAGE_KEY = "harmoniq_auth_profile";
   const SELECTED_COMPANY_STORAGE_KEY = "harmoniq_selected_company";
-  const initialProfile = loadFromStorage<User | null>(PROFILE_STORAGE_KEY, null);
-  const initialSelectedCompany = loadFromStorage<string | null>(
-    SELECTED_COMPANY_STORAGE_KEY,
-    initialProfile?.company_id ?? null
-  );
-  const [isLoading, setIsLoading] = React.useState(!initialProfile);
-  const [user, setUser] = React.useState<User | null>(initialProfile);
-  const [selectedCompanyId, setSelectedCompanyId] = React.useState<string | null>(
-    initialProfile
-      ? initialProfile.role === "super_admin"
-        ? initialSelectedCompany
-        : initialProfile.company_id
-      : null
-  );
+  const initialSelectedCompany = loadOptionalStringFromStorage(SELECTED_COMPANY_STORAGE_KEY);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [user, setUser] = React.useState<User | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = React.useState<string | null>(initialSelectedCompany);
   const { items: allCompanies } = useCompanyStore();
+
+  const clearLegacyAuthCache = React.useCallback(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.removeItem(LEGACY_SESSION_STORAGE_KEY);
+    window.localStorage.removeItem(LEGACY_PROFILE_STORAGE_KEY);
+  }, []);
+
+  const clearStoredAuthState = React.useCallback(() => {
+    if (typeof window === "undefined") return;
+    clearLegacyAuthCache();
+    window.localStorage.removeItem(SELECTED_COMPANY_STORAGE_KEY);
+  }, [clearLegacyAuthCache]);
+
+  const hydrateProfile = React.useCallback(
+    async (userId: string) => {
+      const supabase = createClient();
+      const { data: profile, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!profile) {
+        setUser(null);
+        setSelectedCompanyId(null);
+        clearStoredAuthState();
+        return null;
+      }
+
+      clearLegacyAuthCache();
+      const nextUser = profile as User;
+      setUser(nextUser);
+      const storedCompanyId = loadOptionalStringFromStorage(SELECTED_COMPANY_STORAGE_KEY);
+      const nextCompanyId = nextUser.role === "super_admin" ? storedCompanyId ?? nextUser.company_id : nextUser.company_id;
+      setSelectedCompanyId(nextCompanyId);
+
+      if (nextCompanyId) {
+        saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nextCompanyId);
+      } else if (typeof window !== "undefined") {
+        window.localStorage.removeItem(SELECTED_COMPANY_STORAGE_KEY);
+      }
+
+      return nextUser;
+    },
+    [clearLegacyAuthCache, clearStoredAuthState]
+  );
 
   // Ensure the platform admin entry flag is cleared on standard entry paths
   React.useEffect(() => {
@@ -72,8 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const search = window.location.search || "";
     const isAdminEntry = path.startsWith("/admin") || search.includes("admin-link") || path.includes("/dashboard/platform");
     if (!isAdminEntry) {
-      window.localStorage.removeItem(ADMIN_ENTRY_STORAGE_KEY);
-      document.cookie = `${ADMIN_ENTRY_COOKIE}=; path=/; max-age=0; samesite=lax`;
+      clearClientCookie(ADMIN_ENTRY_COOKIE);
     }
   }, []);
   
@@ -87,80 +121,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Save session tokens for resilience
-          saveToStorage(SESSION_STORAGE_KEY, {
-            access_token: session.access_token,
-            refresh_token: session.refresh_token,
-            expires_at: session.expires_at ?? undefined,
-          });
-          
-          // Fetch user profile
-          const { data: profile } = await supabase
-            .from("users")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-          
-          if (profile) {
-            setUser(profile as User);
-            const storedCompanyId = loadFromStorage<string | null>(
-              SELECTED_COMPANY_STORAGE_KEY,
-              profile.company_id ?? null
-            );
-            const nextCompanyId = profile.role === "super_admin" ? storedCompanyId : profile.company_id;
-            setSelectedCompanyId(nextCompanyId);
-            saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nextCompanyId);
-            saveToStorage(PROFILE_STORAGE_KEY, profile);
-          }
+          await hydrateProfile(session.user.id);
         } else {
-          // No active session — try to restore from cached tokens
-          const cached = loadFromStorage<{ access_token?: string; refresh_token?: string } | null>(
-            SESSION_STORAGE_KEY,
-            null
-          );
-          if (cached?.access_token && cached?.refresh_token) {
-            const { data } = await supabase.auth.setSession({
-              access_token: cached.access_token,
-              refresh_token: cached.refresh_token,
-            });
-            if (data.user) {
-              const { data: profile } = await supabase
-                .from("users")
-                .select("*")
-                .eq("id", data.user.id)
-                .single();
-              if (profile) {
-                setUser(profile as User);
-                const storedCompanyId = loadFromStorage<string | null>(
-                  SELECTED_COMPANY_STORAGE_KEY,
-                  profile.company_id ?? null
-                );
-                const nextCompanyId = profile.role === "super_admin" ? storedCompanyId : profile.company_id;
-                setSelectedCompanyId(nextCompanyId);
-                saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nextCompanyId);
-                saveToStorage(PROFILE_STORAGE_KEY, profile);
-              }
-            } else {
-              // Cached tokens are invalid — clear them
-              window.localStorage.removeItem(SESSION_STORAGE_KEY);
-              window.localStorage.removeItem(PROFILE_STORAGE_KEY);
-              setUser(null);
-              setSelectedCompanyId(null);
-            }
-          } else {
-            // No session, no cache — user is not logged in
-            setUser(null);
-            setSelectedCompanyId(null);
-            window.localStorage.removeItem(PROFILE_STORAGE_KEY);
-          }
+          setUser(null);
+          setSelectedCompanyId(null);
+          clearStoredAuthState();
         }
       } catch (err) {
         console.error("[Harmoniq] Auth init error:", err);
-        // Fall back to cached profile if available
-        const cached = loadFromStorage<User | null>(PROFILE_STORAGE_KEY, null);
-        if (cached) {
-          setUser(cached);
-        }
+        setUser(null);
+        setSelectedCompanyId(null);
+        clearStoredAuthState();
       } finally {
         setIsLoading(false);
       }
@@ -173,46 +144,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === "SIGNED_OUT" || !session?.user) {
           setUser(null);
           setSelectedCompanyId(null);
-          if (typeof window !== "undefined") {
-            window.localStorage.removeItem(SESSION_STORAGE_KEY);
-            window.localStorage.removeItem(PROFILE_STORAGE_KEY);
-          }
+          clearStoredAuthState();
           return;
         }
-           if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-             try {
-               if (session?.access_token && session?.refresh_token) {
-                 saveToStorage(SESSION_STORAGE_KEY, {
-                access_token: session.access_token,
-                refresh_token: session.refresh_token,
-                expires_at: session.expires_at ?? undefined,
-              });
-            }
-             const { data: profile } = await supabase
-               .from("users")
-               .select("*")
-               .eq("id", session.user.id)
-               .single();
-             if (profile) {
-               setUser(profile as User);
-               const storedCompanyId = loadFromStorage<string | null>(
-                 SELECTED_COMPANY_STORAGE_KEY,
-                 profile.company_id ?? null
-               );
-               const nextCompanyId = profile.role === "super_admin" ? storedCompanyId : profile.company_id;
-               setSelectedCompanyId(nextCompanyId);
-               saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nextCompanyId);
-               saveToStorage(PROFILE_STORAGE_KEY, profile);
-             }
-           } catch (err) {
-             console.error("[Harmoniq] Auth state change error:", err);
-           }
-         }
-       }
-     );
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          try {
+            await hydrateProfile(session.user.id);
+          } catch (err) {
+            console.error("[Harmoniq] Auth state change error:", err);
+            setUser(null);
+            setSelectedCompanyId(null);
+            clearStoredAuthState();
+          }
+        }
+      }
+    );
 
     return () => { subscription.unsubscribe(); };
-  }, []);
+  }, [clearStoredAuthState, hydrateProfile]);
   
   // Role checks
   const isSuperAdmin = user?.role === "super_admin";
@@ -237,10 +186,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (!isSuperAdmin || selectedCompanyId) return;
     const nonPlatform = allCompanies.find((c) => !PLATFORM_SLUGS.includes(c.slug?.toLowerCase?.() || ""));
-    const fallback = nonPlatform ?? allCompanies[0];
-    if (fallback?.id) {
-      setSelectedCompanyId(fallback.id);
-      saveToStorage(SELECTED_COMPANY_STORAGE_KEY, fallback.id);
+      const fallback = nonPlatform ?? allCompanies[0];
+      if (fallback?.id) {
+        setSelectedCompanyId(fallback.id);
+        saveToStorage(SELECTED_COMPANY_STORAGE_KEY, fallback.id);
     }
   }, [isSuperAdmin, selectedCompanyId, allCompanies]);
 
@@ -267,7 +216,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const switchCompany = React.useCallback((companyId: string | null) => {
     if (!isSuperAdmin) return;
     setSelectedCompanyId(companyId);
-    saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
+    if (companyId) {
+      saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
+    } else if (typeof window !== "undefined") {
+      window.localStorage.removeItem(SELECTED_COMPANY_STORAGE_KEY);
+    }
   }, [isSuperAdmin]);
   
   // Get effective permissions
@@ -321,12 +274,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     clearAllHarmoniqStorage();
     if (typeof window !== "undefined") {
-      window.localStorage.removeItem("harmoniq_admin_entry");
+      clearClientCookie(ADMIN_ENTRY_COOKIE);
       // Clear ALL cookies that could hold session data
       document.cookie.split(";").forEach((c) => {
         const name = c.trim().split("=")[0];
         if (name.startsWith("sb-") || name.startsWith("harmoniq")) {
-          document.cookie = `${name}=; path=/; max-age=0; samesite=lax`;
+          clearClientCookie(name);
         }
       });
       // Clear all Supabase localStorage keys

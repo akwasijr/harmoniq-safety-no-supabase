@@ -1,30 +1,28 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
-import { Loader, Eye, EyeOff, Shield } from "lucide-react";
+import { Eye, EyeOff, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { saveToStorage } from "@/lib/local-storage";
+import { clearClientCookie, setClientCookie } from "@/lib/client-cookies";
+import { buildCompanyDestination, buildPlatformAnalyticsDestination } from "@/lib/navigation";
+import { getPlatformSlugFilterList, isPlatformSlug } from "@/lib/platform-config";
 
-const ADMIN_ENTRY_STORAGE_KEY = "harmoniq_admin_entry";
 const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
-const PLATFORM_SLUGS =
-  (process.env.NEXT_PUBLIC_PLATFORM_SLUGS || "platform,admin,superadmin")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
 // Supabase .not("col","in","(val1,val2)") requires NO quotes around values
-const PLATFORM_SLUGS_LIST = `(${PLATFORM_SLUGS.join(",")})`;
+const PLATFORM_SLUGS_LIST = getPlatformSlugFilterList();
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [emailError, setEmailError] = React.useState("");
+  const [passwordError, setPasswordError] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -32,6 +30,8 @@ export default function AdminLoginPage() {
     try {
       setIsLoading(true);
       setError("");
+      setEmailError("");
+      setPasswordError("");
 
       const supabase = createClient();
       const { error: authError, data } = await supabase.auth.signInWithPassword({
@@ -40,17 +40,16 @@ export default function AdminLoginPage() {
       });
 
       if (authError) {
-        setError(authError.message);
+        if (authError.message.toLowerCase().includes("invalid login credentials")) {
+          setPasswordError("Email or password is incorrect.");
+        } else {
+          setError(authError.message);
+        }
         setIsLoading(false);
         return;
       }
 
       if (data.session) {
-        saveToStorage("harmoniq_auth_session", {
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-          expires_at: data.session.expires_at,
-        });
         await supabase.auth.setSession({
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token,
@@ -77,7 +76,7 @@ export default function AdminLoginPage() {
         try {
           if (companyId) {
             const { data: c } = await supabase.from("companies").select("slug").eq("id", companyId).single();
-            if (c?.slug && !PLATFORM_SLUGS.includes(c.slug.toLowerCase()) && !c.slug.toLowerCase().includes("platform")) return c.slug;
+            if (c?.slug && !isPlatformSlug(c.slug)) return c.slug;
           }
           // Pick the first non-platform company
           const { data: c } = await supabase
@@ -98,12 +97,10 @@ export default function AdminLoginPage() {
       // Demo fallback
       if (email.toLowerCase() === "demo@harmoniq.safety") {
         const slug = await fetchSlug(profile?.company_id);
-        saveToStorage("harmoniq_auth_profile", profile || { role: "super_admin", company_id: "" });
         if (typeof window !== "undefined") {
-          window.localStorage.setItem(ADMIN_ENTRY_STORAGE_KEY, "true");
-          document.cookie = `${ADMIN_ENTRY_COOKIE}=true; path=/; max-age=3600; samesite=lax`;
+          setClientCookie(ADMIN_ENTRY_COOKIE, "true", 60 * 60);
         }
-        window.location.href = `/${slug}/dashboard/platform/analytics`;
+        window.location.href = buildPlatformAnalyticsDestination(slug);
         return;
       }
 
@@ -120,17 +117,16 @@ export default function AdminLoginPage() {
         return;
       }
 
-      saveToStorage("harmoniq_auth_profile", profile);
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(ADMIN_ENTRY_STORAGE_KEY, "true");
-        document.cookie = `${ADMIN_ENTRY_COOKIE}=true; path=/; max-age=3600; samesite=lax`;
+        clearClientCookie(ADMIN_ENTRY_COOKIE);
+        setClientCookie(ADMIN_ENTRY_COOKIE, "true", 60 * 60);
       }
       const slug = await fetchSlug(profile.company_id);
       // Super admins go to platform portal; company admins go to regular dashboard
       if (profile.role === "super_admin") {
-        window.location.href = `/${slug}/dashboard/platform/analytics`;
+        window.location.href = buildPlatformAnalyticsDestination(slug);
       } else {
-        window.location.href = `/${slug}/dashboard`;
+        window.location.href = buildCompanyDestination(slug, "dashboard");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -170,51 +166,66 @@ export default function AdminLoginPage() {
               )}
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-                <input
+                <Label htmlFor="email" required error={Boolean(emailError)}>
+                  Email
+                </Label>
+                <Input
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailError("");
+                  }}
                   placeholder="admin@harmoniq.safety"
                   required
                   disabled={isLoading}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                  error={Boolean(emailError)}
+                  errorMessage={emailError}
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
+                <Label htmlFor="password" required error={Boolean(passwordError)}>
+                  Password
+                </Label>
                 <div className="relative">
-                  <input
+                  <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setPasswordError("");
+                    }}
                     placeholder="••••••••"
                     required
                     disabled={isLoading}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                    error={Boolean(passwordError)}
+                    errorMessage={passwordError}
+                    className="pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-4 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                className="w-full"
+                loading={isLoading}
               >
-                {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+                {!isLoading ? <Shield className="h-4 w-4" /> : null}
                 Sign in as Administrator
-              </button>
+              </Button>
             </form>
           </CardContent>
         </Card>

@@ -20,46 +20,33 @@ import { InspectionRoutesProvider } from "@/stores/inspection-routes-store";
 import { InspectionRoundsProvider } from "@/stores/inspection-rounds-store";
 import { NotificationsStoreProvider } from "@/stores/notifications-store";
 
+type DataProvider = React.ComponentType<{ children: React.ReactNode }>;
+
+const APP_DATA_PROVIDERS: DataProvider[] = [
+  CompanyStoreProvider,
+  UsersStoreProvider,
+  TeamsStoreProvider,
+  LocationsStoreProvider,
+  AssetsStoreProvider,
+  IncidentsStoreProvider,
+  AssetInspectionsProvider,
+  RiskEvaluationsProvider,
+  CorrectiveActionsProvider,
+  WorkOrdersProvider,
+  MeterReadingsProvider,
+  PartsProvider,
+  InspectionRoutesProvider,
+  InspectionRoundsProvider,
+  TicketsStoreProvider,
+  ContentStoreProvider,
+  ChecklistTemplatesProvider,
+  ChecklistSubmissionsProvider,
+  NotificationsStoreProvider,
+];
+
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <CompanyStoreProvider>
-      <UsersStoreProvider>
-        <TeamsStoreProvider>
-          <LocationsStoreProvider>
-            <AssetsStoreProvider>
-              <IncidentsStoreProvider>
-                <AssetInspectionsProvider>
-                  <RiskEvaluationsProvider>
-                    <CorrectiveActionsProvider>
-                      <WorkOrdersProvider>
-                        <MeterReadingsProvider>
-                          <PartsProvider>
-                            <InspectionRoutesProvider>
-                              <InspectionRoundsProvider>
-                                <TicketsStoreProvider>
-                                  <ContentStoreProvider>
-                                    <ChecklistTemplatesProvider>
-                                      <ChecklistSubmissionsProvider>
-                                        <NotificationsStoreProvider>
-                                          {children}
-                                        </NotificationsStoreProvider>
-                                      </ChecklistSubmissionsProvider>
-                                    </ChecklistTemplatesProvider>
-                                  </ContentStoreProvider>
-                                </TicketsStoreProvider>
-                              </InspectionRoundsProvider>
-                            </InspectionRoutesProvider>
-                          </PartsProvider>
-                        </MeterReadingsProvider>
-                      </WorkOrdersProvider>
-                    </CorrectiveActionsProvider>
-                  </RiskEvaluationsProvider>
-                </AssetInspectionsProvider>
-              </IncidentsStoreProvider>
-            </AssetsStoreProvider>
-          </LocationsStoreProvider>
-        </TeamsStoreProvider>
-      </UsersStoreProvider>
-    </CompanyStoreProvider>
+  return APP_DATA_PROVIDERS.reduceRight<React.ReactNode>(
+    (tree, Provider) => <Provider>{tree}</Provider>,
+    children
   );
 }
