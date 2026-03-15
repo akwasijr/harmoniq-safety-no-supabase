@@ -33,7 +33,7 @@ const SAVE_DEBOUNCE_MS = 500;
 /** Column mapping: app field name → Supabase column name */
 type ColumnMap = Record<string, string>;
 
-/** Strip fields that don't exist in Supabase and remap names */
+/** Strip fields that don't exist in Supabase and remap names (TS → DB) */
 function mapToSupabase<T extends Record<string, unknown>>(
   item: T,
   columnMap?: ColumnMap,
@@ -46,6 +46,25 @@ function mapToSupabase<T extends Record<string, unknown>>(
     result[mappedKey] = value;
   }
   return result;
+}
+
+/** Reverse-map Supabase column names back to app field names (DB → TS) */
+function mapFromSupabase<T>(
+  row: Record<string, unknown>,
+  columnMap?: ColumnMap
+): T {
+  if (!columnMap) return row as T;
+  // Build reverse map: DB column → TS field
+  const reverse: Record<string, string> = {};
+  for (const [tsKey, dbCol] of Object.entries(columnMap)) {
+    reverse[dbCol] = tsKey;
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) {
+    const mappedKey = reverse[key] || key;
+    result[mappedKey] = value;
+  }
+  return result as T;
 }
 
 interface StoreOptions {
@@ -116,11 +135,15 @@ export function createEntityStore<T extends IdEntity>(
           if (error) {
             console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
             if (isMountedRef.current) setError(error.message);
-            // Fallback to localStorage cache
-            const cached = loadFromStorage<T[]>(storageKey, initialData);
+            // Fallback to localStorage cache only (never mock data in Supabase mode)
+            const cached = loadFromStorage<T[]>(storageKey, []);
             if (isMountedRef.current && cached.length > 0) setItems(cached);
           } else if (isMountedRef.current) {
-            const fetched = (data || []) as T[];
+            const raw = (data || []) as Record<string, unknown>[];
+            // Reverse-map DB column names → TS field names
+            const fetched = opts.columnMap
+              ? raw.map((row) => mapFromSupabase<T>(row, opts.columnMap))
+              : (raw as T[]);
             setItems(fetched);
             // Cache to localStorage for offline resilience
             saveToStorage(storageKey, fetched);
@@ -129,8 +152,8 @@ export function createEntityStore<T extends IdEntity>(
           const msg = err instanceof Error ? err.message : String(err);
           console.warn(`[Harmoniq] Fetch ${table} aborted/failed:`, msg);
           if (isMountedRef.current) setError(msg);
-          // Fallback to localStorage cache on network failure
-          const cached = loadFromStorage<T[]>(storageKey, initialData);
+          // Fallback to localStorage cache only (never mock data in Supabase mode)
+          const cached = loadFromStorage<T[]>(storageKey, []);
           if (isMountedRef.current && cached.length > 0) setItems(cached);
         } finally {
           if (isMountedRef.current) setIsLoading(false);

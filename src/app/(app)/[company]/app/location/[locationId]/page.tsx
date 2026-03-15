@@ -23,10 +23,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { mockLocationEmergencyContacts, mockLocationSafetyNotices } from "@/mocks/data";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
-import { LocationType } from "@/types";
+import { LocationType, LocationEmergencyContact, LocationSafetyNotice } from "@/types";
 import { useTranslation } from "@/i18n";
 
 // Location type configurations (matching dashboard)
@@ -63,63 +62,52 @@ export default function LocationLandingPage() {
     ? locations.find((l) => l.id === location.parent_id) 
     : null;
 
-  // Get emergency contacts for this location (or inherit from parent/default)
-  const getEmergencyContacts = () => {
-    // Try to get contacts for this location
-    let contacts = mockLocationEmergencyContacts.filter(c => c.location_id === locationId);
-    
-    // If no contacts, try parent location
-    if (contacts.length === 0 && location?.parent_id) {
-      contacts = mockLocationEmergencyContacts.filter(c => c.location_id === location.parent_id);
+  // Get emergency contacts from location JSONB data (inherit from parents if needed)
+  const getEmergencyContacts = (): LocationEmergencyContact[] => {
+    const locContacts = (location?.emergency_contacts || []) as LocationEmergencyContact[];
+    if (locContacts.length > 0) return locContacts;
+
+    // Inherit from parent
+    if (parentLocation) {
+      const parentContacts = (parentLocation.emergency_contacts || []) as LocationEmergencyContact[];
+      if (parentContacts.length > 0) return parentContacts;
+
+      // Try grandparent
+      if (parentLocation.parent_id) {
+        const grandparent = locations.find(l => l.id === parentLocation.parent_id);
+        const gpContacts = (grandparent?.emergency_contacts || []) as LocationEmergencyContact[];
+        if (gpContacts.length > 0) return gpContacts;
+      }
     }
-    
-    // If still no contacts, try grandparent (e.g., get campus contacts for a zone)
-    if (contacts.length === 0 && parentLocation?.parent_id) {
-      contacts = mockLocationEmergencyContacts.filter(c => c.location_id === parentLocation.parent_id);
-    }
-    
-    // Default contacts if none found
-    if (contacts.length === 0) {
-      return [
-        { id: "default_1", location_id: locationId, name: "Emergency Services", role: "Emergency", phone: "911", is_primary: true },
-      ];
-    }
-    
-    return contacts;
+
+    // Default fallback
+    return [
+      { id: "default_1", location_id: locationId, name: "Emergency Services", role: "Emergency", phone: "911", is_primary: true },
+    ];
   };
-  
+
   const emergencyContacts = getEmergencyContacts();
 
-  // Get safety notices for this location (or inherit from parent)
-  const getSafetyNotices = () => {
-    // Get notices for this location
-    let notices = mockLocationSafetyNotices.filter(n => 
-      n.location_id === locationId && n.is_active
-    );
-    
-    // Also get notices from parent locations (they apply to children too)
-    if (location?.parent_id) {
-      const parentNotices = mockLocationSafetyNotices.filter(n => 
-        n.location_id === location.parent_id && n.is_active
-      );
+  // Get safety notices from location JSONB data (aggregate from parents)
+  const getSafetyNotices = (): LocationSafetyNotice[] => {
+    const locNotices = ((location?.safety_notices || []) as LocationSafetyNotice[]).filter(n => n.is_active);
+    let notices = [...locNotices];
+
+    if (parentLocation) {
+      const parentNotices = ((parentLocation.safety_notices || []) as LocationSafetyNotice[]).filter(n => n.is_active);
       notices = [...notices, ...parentNotices];
+
+      if (parentLocation.parent_id) {
+        const grandparent = locations.find(l => l.id === parentLocation.parent_id);
+        const gpNotices = ((grandparent?.safety_notices || []) as LocationSafetyNotice[]).filter(n => n.is_active);
+        notices = [...notices, ...gpNotices];
+      }
     }
-    
-    if (parentLocation?.parent_id) {
-      const grandparentNotices = mockLocationSafetyNotices.filter(n => 
-        n.location_id === parentLocation.parent_id && n.is_active
-      );
-      notices = [...notices, ...grandparentNotices];
-    }
-    
-    // Remove duplicates by id
-    const uniqueNotices = notices.filter((n, i, arr) => 
-      arr.findIndex(x => x.id === n.id) === i
-    );
-    
-    return uniqueNotices;
+
+    // Deduplicate by id
+    return notices.filter((n, i, arr) => arr.findIndex(x => x.id === n.id) === i);
   };
-  
+
   const safetyNotices = getSafetyNotices();
   
   // Calculate days without incident for this location

@@ -5,6 +5,9 @@ import { mockTeams } from "@/mocks/data";
 import type { Team } from "@/types";
 
 const store = createEntityStore<Team>("harmoniq_teams", mockTeams, {
+  columnMap: {
+    leader_id: "lead_id",
+  },
   stripFields: ["incidents"],
 });
 
