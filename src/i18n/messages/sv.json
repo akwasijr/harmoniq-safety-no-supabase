@@ -35,7 +35,10 @@
     "notifications": "Aviseringar",
     "goBack": "Gå tillbaka",
     "unread": "Oläst",
-    "completionProgress": "Slutförandeförlopp"
+    "completionProgress": "Slutförandeförlopp",
+    "dismiss": "Stäng",
+    "noPermission": "Du har inte behörighet att utföra denna åtgärd",
+    "noEditPermission": "Du har inte behörighet att redigera inställningar. Kontakta din administratör för åtkomst."
   },
   "nav": {
     "home": "Hem",
@@ -1603,5 +1606,46 @@
     "newAssignmentMessage": "\"{title}\" tilldelades dig av {assignedBy}",
     "criticalIncident": "Kritisk incident rapporterad",
     "criticalIncidentMessage": "En kritisk incident \"{title}\" har rapporterats"
+  },
+  "onboarding": {
+    "title": "Kom igång",
+    "description": "Slutför dessa steg för att konfigurera din arbetsyta",
+    "completed": "slutförda",
+    "addLocation": "Lägg till din första plats",
+    "addLocationDesc": "Ställ in de fysiska platser där ditt team arbetar",
+    "inviteTeam": "Bjud in teammedlemmar",
+    "inviteTeamDesc": "Lägg till kollegor för att börja samarbeta",
+    "addAsset": "Registrera en tillgång",
+    "addAssetDesc": "Spåra utrustning och maskiner",
+    "createChecklist": "Skapa en säkerhetschecklista",
+    "createChecklistDesc": "Bygg inspektionsmallar för ditt team",
+    "customizeSettings": "Anpassa dina inställningar",
+    "customizeSettingsDesc": "Varumärk din arbetsyta och ange preferenser"
+  },
+  "invite": {
+    "title": "Du har blivit inbjuden",
+    "loading": "Validerar inbjudan...",
+    "joinCompany": "Gå med i {company}",
+    "role": "Roll",
+    "invitedBy": "Inbjuden av",
+    "accept": "Acceptera inbjudan",
+    "expired": "Denna inbjudan har gått ut",
+    "expiredDescription": "Inbjudningslänken du följde är inte längre giltig. Be personen som bjöd in dig att skicka en ny inbjudan.",
+    "invalid": "Ogiltig inbjudningslänk",
+    "invalidDescription": "Denna inbjudningslänk är inte giltig. Kontrollera länken och försök igen, eller kontakta din administratör.",
+    "alreadyAccepted": "Denna inbjudan har redan accepterats",
+    "alreadyAcceptedDescription": "Denna inbjudan har redan använts. Du kan logga in på ditt konto."
+  },
+  "forgotPassword": {
+    "title": "Glömt lösenord",
+    "description": "Ange din e-post så skickar vi en återställningslänk",
+    "send": "Skicka återställningslänk",
+    "sent": "Kontrollera din e-post",
+    "sentDescription": "Om ett konto finns med den e-postadressen har vi skickat en länk för lösenordsåterställning.",
+    "backToLogin": "Tillbaka till inloggning",
+    "rateLimited": "För många försök. Försök igen senare."
+  },
+  "validation": {
+    "invalidEmail": "Ange en giltig e-postadress"
   }
 }

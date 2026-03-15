@@ -25,6 +25,7 @@ import { useTeamsStore } from "@/stores/teams-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
 
 const tabs: Tab[] = [
   { id: "overview", label: "Overview", icon: Info },
@@ -44,6 +45,10 @@ export default function TeamDetailPage() {
   const { t, formatDate, formatNumber } = useTranslation();
 
   const { toast } = useToast();
+  const { hasPermission: currentUserCan } = useAuth();
+  const canEditTeams = currentUserCan("teams.edit");
+  const canDeleteTeams = currentUserCan("teams.delete");
+  const canManageMembers = currentUserCan("teams.manage_members");
   const { items: teams, isLoading, update: updateTeam, remove: removeTeam } = useTeamsStore();
   const { items: users, update: updateUser } = useUsersStore();
   const baseTeam = teams.find((t) => t.id === teamId);
@@ -193,17 +198,21 @@ export default function TeamDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          {isEditing ? (
+          {canEditTeams && (
             <>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>{t("common.cancel")}</Button>
-              <Button className="gap-2" onClick={handleSave}>
-                <Save className="h-4 w-4" /> {t("common.save")}
-              </Button>
+              {isEditing ? (
+                <>
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>{t("common.cancel")}</Button>
+                  <Button className="gap-2" onClick={handleSave}>
+                    <Save className="h-4 w-4" /> {t("common.save")}
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => setIsEditing(true)} className="gap-2">
+                  <Edit className="h-4 w-4" /> {t("common.edit")}
+                </Button>
+              )}
             </>
-          ) : (
-            <Button onClick={() => setIsEditing(true)} className="gap-2">
-              <Edit className="h-4 w-4" /> {t("common.edit")}
-            </Button>
           )}
         </div>
       </div>
@@ -362,9 +371,11 @@ export default function TeamDetailPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">{t("users.members")} ({formatNumber(teamMembers.length)})</h2>
-            <Button size="sm" className="gap-2" onClick={() => setShowAddMemberModal(true)}>
-              <UserPlus className="h-4 w-4" /> Add Member
-            </Button>
+            {canManageMembers && (
+              <Button size="sm" className="gap-2" onClick={() => setShowAddMemberModal(true)}>
+                <UserPlus className="h-4 w-4" /> Add Member
+              </Button>
+            )}
           </div>
 
           <Card>
@@ -390,7 +401,7 @@ export default function TeamDetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="capitalize">{member.role}</Badge>
-                      {member.id !== team.leader_id && (
+                      {member.id !== team.leader_id && canManageMembers && (
                         <>
                           <Button
                             variant="ghost"
@@ -417,9 +428,11 @@ export default function TeamDetailPage() {
                   <div className="p-8 text-center text-muted-foreground">
                     <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>{t("users.noMembersYet")}</p>
-                    <Button size="sm" className="mt-4 gap-2" onClick={() => setShowAddMemberModal(true)}>
-                      <UserPlus className="h-4 w-4" /> Add First Member
-                    </Button>
+                    {canManageMembers && (
+                      <Button size="sm" className="mt-4 gap-2" onClick={() => setShowAddMemberModal(true)}>
+                        <UserPlus className="h-4 w-4" /> Add First Member
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -431,11 +444,19 @@ export default function TeamDetailPage() {
       {/* Settings Tab */}
       {activeTab === "settings" && (
         <div className="max-w-2xl space-y-6">
+          {!canEditTeams && !canDeleteTeams ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                {t("common.noPermission")}
+              </CardContent>
+            </Card>
+          ) : (
           <Card>
             <CardHeader>
               <CardTitle className="text-base text-destructive">{t("users.dangerZone")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {canEditTeams && (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{t("users.deactivateTeam")}</p>
@@ -443,6 +464,8 @@ export default function TeamDetailPage() {
                 </div>
                 <Button variant="outline">{t("users.deactivate")}</Button>
               </div>
+              )}
+              {canDeleteTeams && (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{t("users.deleteTeam")}</p>
@@ -456,8 +479,10 @@ export default function TeamDetailPage() {
                   <Trash2 className="h-4 w-4" /> Delete
                 </Button>
               </div>
+              )}
             </CardContent>
           </Card>
+          )}
         </div>
       )}
 

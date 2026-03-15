@@ -111,7 +111,8 @@ const getSettingsKey = (companyId?: string) =>
 
 export default function SettingsPage() {
   const company = useCompanyParam();
-  const { currentCompany, isLoading: isAuthLoading } = useAuth();
+  const { currentCompany, isLoading: isAuthLoading, hasPermission: currentUserCan } = useAuth();
+  const canEditSettings = currentUserCan("settings.edit");
   const { items: companies } = useCompanyStore();
   const fallbackCompany = React.useMemo(() => companies.find(c => c.slug === company) ?? null, [companies, company]);
   const activeCompany = currentCompany ?? fallbackCompany ?? defaultCompany;
@@ -193,6 +194,7 @@ export default function SettingsPage() {
   };
 
   const updateSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
+    if (!canEditSettings) return;
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -240,11 +242,17 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">{t("settings.title")}</h1>
-        <Button onClick={handleSave} disabled={saving} className="gap-2">
+        <Button onClick={handleSave} disabled={saving || !canEditSettings} className="gap-2">
           {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
           {saving ? t("settings.saving") : saved ? t("settings.saved") : t("settings.saveChanges")}
         </Button>
       </div>
+
+      {!canEditSettings && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-4 text-sm text-amber-800 dark:text-amber-200">
+          {t("common.noEditPermission")}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="border-b">

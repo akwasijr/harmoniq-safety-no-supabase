@@ -35,7 +35,10 @@
     "notifications": "Meldingen",
     "goBack": "Ga terug",
     "unread": "Ongelezen",
-    "completionProgress": "Voortgang voltooiing"
+    "completionProgress": "Voortgang voltooiing",
+    "dismiss": "Sluiten",
+    "noPermission": "U heeft geen toestemming om deze actie uit te voeren",
+    "noEditPermission": "U heeft geen toestemming om instellingen te bewerken. Neem contact op met uw beheerder voor toegang."
   },
   "nav": {
     "home": "Startpagina",
@@ -1603,5 +1606,46 @@
     "newAssignmentMessage": "\"{title}\" is aan u toegewezen door {assignedBy}",
     "criticalIncident": "Kritiek incident gemeld",
     "criticalIncidentMessage": "Een kritiek incident \"{title}\" is gemeld"
+  },
+  "onboarding": {
+    "title": "Aan de slag",
+    "description": "Voltooi deze stappen om uw werkruimte in te richten",
+    "completed": "voltooid",
+    "addLocation": "Voeg uw eerste locatie toe",
+    "addLocationDesc": "Stel de fysieke locaties in waar uw team werkt",
+    "inviteTeam": "Nodig teamleden uit",
+    "inviteTeamDesc": "Voeg collega's toe om samen te werken",
+    "addAsset": "Registreer een asset",
+    "addAssetDesc": "Houd apparatuur en machines bij",
+    "createChecklist": "Maak een veiligheidschecklist",
+    "createChecklistDesc": "Bouw inspectiesjablonen voor uw team",
+    "customizeSettings": "Pas uw instellingen aan",
+    "customizeSettingsDesc": "Merk uw werkruimte en stel voorkeuren in"
+  },
+  "invite": {
+    "title": "U bent uitgenodigd",
+    "loading": "Uitnodiging valideren...",
+    "joinCompany": "Sluit aan bij {company}",
+    "role": "Rol",
+    "invitedBy": "Uitgenodigd door",
+    "accept": "Uitnodiging accepteren",
+    "expired": "Deze uitnodiging is verlopen",
+    "expiredDescription": "De uitnodigingslink die u heeft gevolgd is niet meer geldig. Vraag de persoon die u heeft uitgenodigd om een nieuwe uitnodiging te sturen.",
+    "invalid": "Ongeldige uitnodigingslink",
+    "invalidDescription": "Deze uitnodigingslink is niet geldig. Controleer de link en probeer het opnieuw, of neem contact op met uw beheerder.",
+    "alreadyAccepted": "Deze uitnodiging is al geaccepteerd",
+    "alreadyAcceptedDescription": "Deze uitnodiging is al gebruikt. U kunt inloggen op uw account."
+  },
+  "forgotPassword": {
+    "title": "Wachtwoord vergeten",
+    "description": "Voer uw e-mail in en we sturen u een herstellink",
+    "send": "Herstellink versturen",
+    "sent": "Controleer uw e-mail",
+    "sentDescription": "Als er een account bestaat met dat e-mailadres, hebben we een link voor het opnieuw instellen van het wachtwoord gestuurd.",
+    "backToLogin": "Terug naar inloggen",
+    "rateLimited": "Te veel pogingen. Probeer het later opnieuw."
+  },
+  "validation": {
+    "invalidEmail": "Voer een geldig e-mailadres in"
   }
 }

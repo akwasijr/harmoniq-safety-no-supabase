@@ -66,6 +66,8 @@ export default function UserDetailPage() {
     ? locations.find(l => l.id === baseUser.location_id)
     : null;
   
+  const canManageRoles = currentUserCan("users.manage_roles");
+
   // Editable user state
   const [editedUser, setEditedUser] = React.useState({
     first_name: baseUser?.first_name || "",
@@ -75,6 +77,8 @@ export default function UserDetailPage() {
     job_title: baseUser?.job_title || "",
     phone: "",
     location_id: baseUser?.location_id || "",
+    role: baseUser?.role || "employee",
+    status: baseUser?.status || "active",
   });
   
   // Update edited user when base user changes
@@ -88,6 +92,8 @@ export default function UserDetailPage() {
       job_title: baseUser.job_title || "",
       phone: "",
       location_id: baseUser.location_id || "",
+      role: baseUser.role,
+      status: baseUser.status || "active",
     });
   }, [baseUser]);
   
@@ -104,7 +110,7 @@ export default function UserDetailPage() {
   
   const handleSave = () => {
     if (!baseUser) return;
-    updateUser(baseUser.id, {
+    const updates: Record<string, unknown> = {
       first_name: editedUser.first_name,
       last_name: editedUser.last_name,
       email: editedUser.email,
@@ -113,7 +119,11 @@ export default function UserDetailPage() {
       location_id: editedUser.location_id || null,
       full_name: `${editedUser.first_name} ${editedUser.last_name}`,
       updated_at: new Date().toISOString(),
-    });
+    };
+    if (canManageRoles && editedUser.role !== baseUser.role) {
+      updates.role = editedUser.role;
+    }
+    updateUser(baseUser.id, updates);
     toast("User updated successfully");
     setIsEditing(false);
   };
@@ -437,13 +447,24 @@ export default function UserDetailPage() {
                   <select 
                     title="Select role"
                     aria-label="Select role"
-                    className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    defaultValue={user.role}
+                    className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    value={editedUser.role}
+                    disabled={!canManageRoles}
+                    onChange={(e) => {
+                      setEditedUser((prev) => ({ ...prev, role: e.target.value as import("@/types").UserRole }));
+                      if (!isEditing) {
+                        updateUser(baseUser!.id, { role: e.target.value as import("@/types").UserRole, updated_at: new Date().toISOString() });
+                        toast("Role updated successfully");
+                      }
+                    }}
                   >
                     <option value="employee">Employee</option>
                     <option value="manager">Manager</option>
                     <option value="company_admin">Company Admin</option>
                   </select>
+                  {!canManageRoles && (
+                    <p className="text-xs text-muted-foreground mt-1">{t("common.noPermission")}</p>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {t("users.roleDescription")}
@@ -610,7 +631,22 @@ export default function UserDetailPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label>{t("users.labels.status")}</Label>
-                <select title="Select status" aria-label="Select status" className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select
+                  title="Select status"
+                  aria-label="Select status"
+                  className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={user.status === "active" ? "active" : "inactive"}
+                  onChange={(e) => {
+                    if (!baseUser) return;
+                    const newStatus = e.target.value as "active" | "inactive";
+                    updateUser(baseUser.id, {
+                      status: newStatus,
+                      updated_at: new Date().toISOString(),
+                    });
+                    setEditedUser((prev) => ({ ...prev, status: newStatus }));
+                    toast(newStatus === "active" ? "User activated" : "User deactivated", "info");
+                  }}
+                >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>

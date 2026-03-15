@@ -35,7 +35,10 @@
     "notifications": "Notifications",
     "goBack": "Go back",
     "unread": "Unread",
-    "completionProgress": "Completion progress"
+    "completionProgress": "Completion progress",
+    "dismiss": "Dismiss",
+    "noPermission": "You don't have permission to perform this action",
+    "noEditPermission": "You don't have permission to edit settings. Contact your administrator for access."
   },
   "nav": {
     "home": "Home",
@@ -1603,5 +1606,46 @@
     "newAssignmentMessage": "\"{title}\" was assigned to you by {assignedBy}",
     "criticalIncident": "Critical incident reported",
     "criticalIncidentMessage": "A critical incident \"{title}\" has been reported"
+  },
+  "onboarding": {
+    "title": "Getting Started",
+    "description": "Complete these steps to set up your workspace",
+    "completed": "completed",
+    "addLocation": "Add your first location",
+    "addLocationDesc": "Set up the physical locations your team works at",
+    "inviteTeam": "Invite team members",
+    "inviteTeamDesc": "Add colleagues to start collaborating",
+    "addAsset": "Register an asset",
+    "addAssetDesc": "Track equipment and machinery",
+    "createChecklist": "Create a safety checklist",
+    "createChecklistDesc": "Build inspection templates for your team",
+    "customizeSettings": "Customize your settings",
+    "customizeSettingsDesc": "Brand your workspace and set preferences"
+  },
+  "invite": {
+    "title": "You've Been Invited",
+    "loading": "Validating invitation...",
+    "joinCompany": "Join {company}",
+    "role": "Role",
+    "invitedBy": "Invited by",
+    "accept": "Accept Invitation",
+    "expired": "This invitation has expired",
+    "expiredDescription": "The invitation link you followed is no longer valid. Please ask the person who invited you to send a new invitation.",
+    "invalid": "Invalid invitation link",
+    "invalidDescription": "This invitation link is not valid. Please check the link and try again, or contact your administrator.",
+    "alreadyAccepted": "This invitation has already been accepted",
+    "alreadyAcceptedDescription": "This invitation has already been used. You can sign in to your account."
+  },
+  "forgotPassword": {
+    "title": "Forgot Password",
+    "description": "Enter your email and we'll send you a reset link",
+    "send": "Send Reset Link",
+    "sent": "Check your email",
+    "sentDescription": "If an account exists with that email, we've sent a password reset link.",
+    "backToLogin": "Back to login",
+    "rateLimited": "Too many attempts. Please try again later."
+  },
+  "validation": {
+    "invalidEmail": "Please enter a valid email address"
   }
 }
