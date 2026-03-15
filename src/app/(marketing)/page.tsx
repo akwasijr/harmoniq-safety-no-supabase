@@ -82,7 +82,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white overflow-x-hidden">
-      {/* Video background — desktop only */}
+      {/* Video background, desktop only */}
       <div className="absolute top-0 left-0 right-0 h-screen z-0 pointer-events-none overflow-hidden hidden md:block">
         <video
           autoPlay
@@ -228,12 +228,12 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* ── Features — Floating Pills Layout ── */}
+      {/* ── Features: Floating Pills Layout ── */}
       <section id="features" className="py-24 lg:py-40 relative z-10 overflow-hidden">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="relative max-w-6xl mx-auto min-h-[600px] lg:min-h-[700px] flex items-center justify-center">
 
-            {/* Floating feature pills — parallax fly-in from off-screen */}
+            {/* Floating feature pills, parallax fly-in from off-screen */}
             {features.map((feature, i) => {
               const isLeft = i % 2 === 0;
               const isTop = i < 4;
@@ -322,7 +322,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-br from-zinc-700/30 to-zinc-900/50" />
                 <div className="relative z-10 flex items-end h-full p-8 lg:p-10">
                   <blockquote className="text-2xl lg:text-3xl font-medium text-white leading-snug">
-                    &ldquo;Harmoniq transformed our workplace safety — incident reporting went from days to minutes.&rdquo;
+                    &ldquo;Harmoniq transformed our workplace safety. Incident reporting went from days to minutes.&rdquo;
                   </blockquote>
                 </div>
               </div>
@@ -349,7 +349,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Services Card 1 — Analytics ── */}
+      {/* ── Services Card 1: Analytics ── */}
       <section id="services" className="py-24 lg:py-32 relative z-10">
         <div className="container mx-auto px-4 lg:px-8">
           <motion.h2
@@ -412,7 +412,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Services Card 2 — Tracking ── */}
+      {/* ── Services Card 2: Tracking ── */}
       <section className="pb-24 lg:pb-32 relative z-10">
         <div className="container mx-auto px-4 lg:px-8">
           <motion.div
@@ -453,7 +453,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl lg:text-3xl font-bold mb-4">Incident & Asset Tracking</h3>
                 <p className="text-zinc-400 leading-relaxed mb-6">
-                  Track every incident from report to resolution. Manage asset lifecycles, inspections, maintenance schedules, and work orders — all connected in one system.
+                  Track every incident from report to resolution. Manage asset lifecycles, inspections, maintenance schedules, and work orders, all connected in one system.
                 </p>
                 <Link href="/login" className="inline-flex items-center gap-2 text-[#8B5CF6] font-medium hover:underline">
                   Read More <ArrowRight className="h-4 w-4" />
@@ -479,7 +479,7 @@ export default function Home() {
                 Safety & assets in your pocket
               </h2>
               <p className="text-zinc-400 text-lg leading-relaxed mb-8">
-                Empower workers with a mobile app for instant incident reporting, asset inspections, QR code scanning, and real-time alerts — even offline.
+                Empower workers with a mobile app for instant incident reporting, asset inspections, QR code scanning, and real-time alerts, even offline.
               </p>
               <div className="space-y-4">
                 {[
@@ -672,7 +672,7 @@ export default function Home() {
                   <span className="text-[#8B5CF6]">seriously</span>
                 </h2>
                 <p className="text-zinc-400 leading-relaxed mb-8">
-                  Whether you have 10 employees or 10,000, Harmoniq scales with your organization — managing safety incidents, asset lifecycles, and compliance in one place.
+                  Whether you have 10 employees or 10,000, Harmoniq scales with your organization, managing safety incidents, asset lifecycles, and compliance in one place.
                 </p>
                 <div className="space-y-3">
                   {[
@@ -856,7 +856,7 @@ const features = [
 const faqs = [
   {
     q: "How quickly can we get started?",
-    a: "Most teams are up and running within minutes. Create your company, invite your team, and start reporting — no complex setup required.",
+    a: "Most teams are up and running within minutes. Create your company, invite your team, and start reporting. No complex setup required.",
   },
   {
     q: "Which compliance standards do you support?",
@@ -868,7 +868,7 @@ const faqs = [
   },
   {
     q: "What languages are supported?",
-    a: "Currently available in English, Dutch, and Swedish — with locale-aware dates, numbers, and compliance forms for each region.",
+    a: "Currently available in English, Dutch, and Swedish, with locale-aware dates, numbers, and compliance forms for each region.",
   },
 ];
 

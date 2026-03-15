@@ -247,7 +247,7 @@ export default function NewsDetailPage() {
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content || "") }}
             />
 
-            {/* Key Points — extracted from content sentences */}
+            {/* Key Points, extracted from content sentences */}
             {article.content && article.content.length > 50 && (() => {
               // Strip HTML tags before extracting sentences
               const plainText = article.content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();

@@ -61,7 +61,7 @@ export default function TeamDetailPage() {
     );
   }
 
-  // Team not found — trigger Next.js not-found boundary
+  // Team not found. Trigger Next.js not-found boundary
   if (!baseTeam) {
     notFound();
   }

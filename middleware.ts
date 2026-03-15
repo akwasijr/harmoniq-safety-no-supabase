@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 import { sanitizeRelativePath } from "@/lib/navigation";
 import type { UserRole } from "@/types";
 
+const MOCK_MODE = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 /**
  * Middleware for:
  * 1. CSRF protection — verify Origin header on state-changing requests
@@ -148,6 +150,11 @@ export async function middleware(request: NextRequest) {
     const adminUrl = new URL("/admin", request.url);
     adminUrl.searchParams.set("redirect", sanitizeRelativePath(pathname));
     return NextResponse.redirect(adminUrl);
+  }
+
+  // In mock mode (no Supabase), skip server-side auth — client handles it via localStorage
+  if (MOCK_MODE) {
+    return NextResponse.next();
   }
 
   // Protected routes: check Supabase auth

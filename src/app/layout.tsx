@@ -26,7 +26,7 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "Harmoniq Safety — Workplace Safety & Asset Management Platform",
+    default: "Harmoniq Safety: Workplace Safety & Asset Management Platform",
     template: "%s | Harmoniq Safety",
   },
   description:
@@ -51,8 +51,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Harmoniq Safety",
-    title: "Harmoniq Safety — Workplace Safety & Asset Management Platform",
-    description: "Report incidents, manage risks, track assets, and ensure compliance — all in one platform.",
+    title: "Harmoniq Safety: Workplace Safety & Asset Management Platform",
+    description: "Report incidents, manage risks, track assets, and ensure compliance, all in one platform.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Harmoniq Safety Platform" }],
   },
   twitter: {

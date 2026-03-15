@@ -64,8 +64,7 @@
     "riskAssessments": "Risk Assessments",
     "qrCodes": "QR Codes",
     "tickets": "Tickets",
-    "newsShort": "News",
-    "auditLog": "Audit Log"
+    "newsShort": "News"
   },
   "app": {
     "goodMorning": "Good morning",
@@ -302,7 +301,7 @@
     "dataLoadFailed": "Couldn't load data",
     "dataLoadFailedDesc": "We had trouble loading this information. This could be a temporary issue.",
     "saveFailed": "Couldn't save changes",
-    "saveFailedDesc": "Your changes couldn't be saved. They've been kept locally — try again in a moment.",
+    "saveFailedDesc": "Your changes couldn't be saved. They've been kept locally, try again in a moment.",
     "timeout": "Request timed out",
     "timeoutDesc": "The server is taking too long to respond. Please try again.",
     "rateLimited": "Too many requests",
@@ -512,7 +511,19 @@
       "lastInspectedDesc": "Days since the last inspection was performed"
     },
     "showAllIncidents": "Show all {count} incidents",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "healthScore": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor",
+      "howCalculated": "How this score is calculated",
+      "inspections": "Inspection Pass Rate",
+      "maintenance": "Maintenance Compliance",
+      "condition": "Condition Rating",
+      "downtime": "Downtime Impact",
+      "age": "Asset Age Factor"
+    }
   },
   "incidents": {
     "title": "Incidents",
@@ -1391,7 +1402,7 @@
     "needsAttention": "Needs Attention",
     "measuredValue": "Measured Value",
     "acceptableRange": "Acceptable range",
-    "outOfRange": "Value is out of acceptable range — alert will be created",
+    "outOfRange": "Value is out of acceptable range, alert will be created",
     "photo": "Photo (if abnormality found)",
     "takePhoto": "Take Photo",
     "notes": "Notes",
@@ -1653,22 +1664,6 @@
       "nameAndCheckpointRequired": "Name and at least one checkpoint are required"
     }
   },
-  "auditLog": {
-    "title": "Audit Log",
-    "description": "Track all changes made across the platform for OSHA/Arbowet compliance",
-    "noEntries": "No audit entries found",
-    "filterByType": "Filter by type",
-    "filterByUser": "Filter by user",
-    "allTypes": "All types",
-    "allUsers": "All users",
-    "actions": {
-      "create": "Created",
-      "update": "Updated",
-      "delete": "Deleted",
-      "status_change": "Status changed",
-      "assign": "Assigned"
-    }
-  },
   "notificationTriggers": {
     "overdueTicket": "Overdue ticket",
     "overdueTicketMessage": "Ticket \"{title}\" is past due",
@@ -1728,5 +1723,13 @@
     "longitude": "Longitude",
     "clickToPlace": "Click map to set location",
     "clear": "Clear"
+  },
+  "teams": {
+    "table": {
+      "team": "Team",
+      "leader": "Leader",
+      "members": "Members",
+      "status": "Status"
+    }
   }
 }

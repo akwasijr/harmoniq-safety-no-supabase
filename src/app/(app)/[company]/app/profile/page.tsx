@@ -93,7 +93,7 @@ export default function EmployeeProfilePage() {
     e.target.value = "";
   };
 
-  // Never fall back to users[0] — that would expose another user's data.
+  // Never fall back to users[0]. That would expose another user's data.
   // If authUser is null the user is not authenticated.
   if (!authUser) {
     return (
@@ -430,7 +430,7 @@ export default function EmployeeProfilePage() {
               </Button>
             </div>
             <div className="space-y-4 p-4 max-h-[60vh] overflow-y-auto">
-              {/* Password change — coming soon */}
+              {/* Password change (coming soon) */}
               <div>
                 <p className="font-medium mb-2">Change Password</p>
                 <div className="rounded-lg border border-dashed border-muted-foreground/25 bg-muted/50 px-4 py-6 text-center">

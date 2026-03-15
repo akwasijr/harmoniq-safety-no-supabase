@@ -57,7 +57,7 @@ export default function TicketDetailPage() {
     );
   }
 
-  // Ticket not found — trigger Next.js not-found boundary
+  // Ticket not found. Trigger Next.js not-found boundary
   if (!ticket) {
     notFound();
   }

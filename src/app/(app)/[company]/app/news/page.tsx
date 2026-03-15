@@ -57,7 +57,7 @@ export default function EmployeeNewsPage() {
       <div className="sticky top-0 z-10 bg-background border-b px-4 pt-4 pb-2">
         <h1 className="text-lg font-bold mb-3">{t("newsApp.title")}</h1>
 
-        {/* Sub-tabs — pill style matching Safety Tasks & Assets */}
+        {/* Sub-tabs, pill style matching Safety Tasks & Assets */}
         <div className="flex gap-1 bg-muted rounded-lg p-1" role="tablist">
           {tabs.map((tab) => {
             const Icon = tab.icon;

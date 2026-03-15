@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 /**
  * Lightweight analytics tracker.
- * Collects anonymous page views (no PII stored — IPs are hashed server-side).
+ * Collects anonymous page views (no PII stored, IPs are hashed server-side).
  * Respects Do Not Track browser setting.
  */
 export function AnalyticsTracker() {

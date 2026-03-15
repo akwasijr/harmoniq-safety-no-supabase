@@ -64,8 +64,7 @@
     "riskAssessments": "Riskbedömningar",
     "qrCodes": "QR-koder",
     "tickets": "Ärenden",
-    "newsShort": "Nyheter",
-    "auditLog": "Granskningslogg"
+    "newsShort": "Nyheter"
   },
   "app": {
     "goodMorning": "God morgon",
@@ -302,7 +301,7 @@
     "dataLoadFailed": "Kunde inte ladda data",
     "dataLoadFailedDesc": "Det uppstod problem med att ladda denna information. Det kan vara ett tillfälligt problem.",
     "saveFailed": "Kunde inte spara ändringar",
-    "saveFailedDesc": "Dina ändringar kunde inte sparas. De har bevarats lokalt — försök igen om en stund.",
+    "saveFailedDesc": "Dina ändringar kunde inte sparas. De har bevarats lokalt, försök igen om en stund.",
     "timeout": "Begäran avbröts",
     "timeoutDesc": "Servern svarar för långsamt. Försök igen.",
     "rateLimited": "För många begäranden",
@@ -512,7 +511,19 @@
       "lastInspectedDesc": "Dagar sedan senaste inspektionen"
     },
     "showAllIncidents": "Visa alla {count} incidenter",
-    "showLess": "Visa färre"
+    "showLess": "Visa färre",
+    "healthScore": {
+      "excellent": "Utmärkt",
+      "good": "Bra",
+      "fair": "Acceptabel",
+      "poor": "Dålig",
+      "howCalculated": "Hur detta betyg beräknas",
+      "inspections": "Inspektionens godkännandegrad",
+      "maintenance": "Underhållsefterlevnad",
+      "condition": "Tillståndsbetyg",
+      "downtime": "Driftstoppseffekt",
+      "age": "Åldersfaktor"
+    }
   },
   "incidents": {
     "title": "Incidenter",
@@ -1391,7 +1402,7 @@
     "needsAttention": "Behöver uppmärksamhet",
     "measuredValue": "Uppmätt värde",
     "acceptableRange": "Acceptabelt intervall",
-    "outOfRange": "Värdet ligger utanför acceptabelt intervall — varning skapas",
+    "outOfRange": "Värdet ligger utanför acceptabelt intervall, varning skapas",
     "photo": "Foto (vid avvikelse)",
     "takePhoto": "Ta foto",
     "notes": "Anteckningar",
@@ -1653,22 +1664,6 @@
       "nameAndCheckpointRequired": "Namn och minst en kontrollpunkt krävs"
     }
   },
-  "auditLog": {
-    "title": "Granskningslogg",
-    "description": "Spåra alla ändringar som gjorts på plattformen för OSHA/Arbowet-efterlevnad",
-    "noEntries": "Inga granskningsposter hittades",
-    "filterByType": "Filtrera efter typ",
-    "filterByUser": "Filtrera efter användare",
-    "allTypes": "Alla typer",
-    "allUsers": "Alla användare",
-    "actions": {
-      "create": "Skapad",
-      "update": "Uppdaterad",
-      "delete": "Borttagen",
-      "status_change": "Status ändrad",
-      "assign": "Tilldelad"
-    }
-  },
   "notificationTriggers": {
     "overdueTicket": "Förfallet ärende",
     "overdueTicketMessage": "Ärende \"{title}\" har passerat förfallodatum",
@@ -1728,5 +1723,13 @@
     "longitude": "Longitud",
     "clickToPlace": "Klicka på kartan för att ställa in plats",
     "clear": "Rensa"
+  },
+  "teams": {
+    "table": {
+      "team": "Team",
+      "leader": "Ledare",
+      "members": "Medlemmar",
+      "status": "Status"
+    }
   }
 }

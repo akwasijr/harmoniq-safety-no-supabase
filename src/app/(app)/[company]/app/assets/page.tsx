@@ -103,7 +103,7 @@ export default function EmployeeAssetsPage() {
       <div className="sticky top-0 z-10 bg-background border-b px-4 pt-4 pb-2">
         <h1 className="text-lg font-bold mb-3">{t("nav.assets")}</h1>
 
-        {/* Sub-tabs — pill style matching Safety Tasks */}
+        {/* Sub-tabs, pill style matching Safety Tasks */}
         <div className="flex gap-1 bg-muted rounded-lg p-1" role="tablist">
           {tabs.map(tab => {
             const Icon = tab.icon;
@@ -249,7 +249,7 @@ export default function EmployeeAssetsPage() {
                 onChange={e => setStatusFilter(e.target.value)}
                 className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="all">{t("common.all")} — {t("incidents.labels.status")}</option>
+                <option value="all">{t("common.all")}: {t("incidents.labels.status")}</option>
                 {["active", "maintenance", "inactive", "retired"].map(s => (
                   <option key={s} value={s}>{t(`assets.statuses.${s}`)}</option>
                 ))}
@@ -261,7 +261,7 @@ export default function EmployeeAssetsPage() {
                 onChange={e => setCategoryFilter(e.target.value)}
                 className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="all">{t("common.all")} — {t("incidents.labels.type")}</option>
+                <option value="all">{t("common.all")}: {t("incidents.labels.type")}</option>
                 {categories.map(c => (
                   <option key={c} value={c}>{c.replace(/_/g, " ")}</option>
                 ))}

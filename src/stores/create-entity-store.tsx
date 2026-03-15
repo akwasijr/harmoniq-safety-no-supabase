@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
-import { logAudit } from "@/stores/audit-helpers";
+
 
 type IdEntity = { id: string };
 type CompanyEntity = IdEntity & { company_id: string };
@@ -215,16 +215,6 @@ export function createEntityStore<T extends IdEntity>(
         setItems(next);
         saveToStorage(storageKey, next);
 
-        logAudit({
-          user_id: "system",
-          user_name: "System",
-          company_id: (item as Record<string, unknown>).company_id as string ?? "",
-          action: "create",
-          entity_type: table as "incident" | "ticket" | "work_order" | "corrective_action" | "asset" | "location" | "user" | "checklist" | "risk_assessment" | "content",
-          entity_id: item.id,
-          entity_title: (item as Record<string, unknown>).title as string ?? (item as Record<string, unknown>).name as string ?? item.id,
-          details: `Created ${table} record`,
-        });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`[Harmoniq] Error in add for ${table}:`, msg);
@@ -263,17 +253,6 @@ export function createEntityStore<T extends IdEntity>(
         setItems(next);
         saveToStorage(storageKey, next);
 
-        const existing = previous.find((item) => item.id === id);
-        logAudit({
-          user_id: "system",
-          user_name: "System",
-          company_id: (existing as Record<string, unknown> | undefined)?.company_id as string ?? "",
-          action: "update",
-          entity_type: table as "incident" | "ticket" | "work_order" | "corrective_action" | "asset" | "location" | "user" | "checklist" | "risk_assessment" | "content",
-          entity_id: id,
-          entity_title: (existing as Record<string, unknown> | undefined)?.title as string ?? (existing as Record<string, unknown> | undefined)?.name as string ?? id,
-          details: `Updated ${table} record`,
-        });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`[Harmoniq] Error in update for ${table}:`, msg);
@@ -313,16 +292,7 @@ export function createEntityStore<T extends IdEntity>(
         setItems(next);
         saveToStorage(storageKey, next);
 
-        logAudit({
-          user_id: "system",
-          user_name: "System",
-          company_id: (removed as Record<string, unknown> | undefined)?.company_id as string ?? "",
-          action: "delete",
-          entity_type: table as "incident" | "ticket" | "work_order" | "corrective_action" | "asset" | "location" | "user" | "checklist" | "risk_assessment" | "content",
-          entity_id: id,
-          entity_title: (removed as Record<string, unknown> | undefined)?.title as string ?? (removed as Record<string, unknown> | undefined)?.name as string ?? id,
-          details: `Deleted ${table} record`,
-        });
+
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`[Harmoniq] Error in remove for ${table}:`, msg);
@@ -351,7 +321,7 @@ export function createEntityStore<T extends IdEntity>(
 
     const itemsForCompany = React.useCallback(
       (companyId: string | null | undefined) => {
-        // With Supabase, RLS already filters by company — but filter client-side too for safety
+        // With Supabase, RLS already filters by company, but filter client-side too for safety
         if (!companyId) return items;
         return items.filter(
           (item) => "company_id" in item && (item as unknown as CompanyEntity).company_id === companyId

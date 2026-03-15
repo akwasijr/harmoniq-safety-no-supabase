@@ -17,6 +17,8 @@ import { type AppChoice, buildCompanyDestination, buildPlatformAnalyticsDestinat
 import { getPlatformSlugFilterList, isPlatformSlug } from "@/lib/platform-config";
 import { AuthTabs } from "@/components/auth/auth-tabs";
 import { useTranslation } from "@/i18n";
+import { mockLogin, IS_MOCK_MODE } from "@/hooks/use-auth";
+import { DEFAULT_COMPANY_SLUG } from "@/mocks/data";
 
 const APP_CHOICE_STORAGE_KEY = "harmoniq_app_choice";
 const APP_CHOICE_COOKIE = "harmoniq_app_choice";
@@ -145,6 +147,30 @@ function LoginForm() {
       setEmailError("");
       setPasswordError("");
 
+      // Mock mode: authenticate against local mock users (password: demo123)
+      if (IS_MOCK_MODE) {
+        if (password !== "demo123") {
+          recordFailedAttempt();
+          setPasswordError("Invalid password. Use 'demo123' for mock mode.");
+          setIsLoading(false);
+          return;
+        }
+        const mockUser = mockLogin(email);
+        if (!mockUser) {
+          setError("No mock user found with that email.");
+          setIsLoading(false);
+          return;
+        }
+        clearLoginAttempts();
+        const allowedApps = getAllowedApps(mockUser.role);
+        const dest = allowedApps.includes(appChoice) ? appChoice : allowedApps[0];
+        setClientCookie(APP_CHOICE_COOKIE, dest, 30);
+        saveToStorage(APP_CHOICE_STORAGE_KEY, dest);
+        const slug = DEFAULT_COMPANY_SLUG;
+        window.location.href = buildCompanyDestination(slug, dest);
+        return;
+      }
+
       const supabase = createClient();
 
       // Timeout after 15s to avoid infinite hang (e.g. paused Supabase project)
@@ -160,7 +186,7 @@ function LoginForm() {
       } catch (abortErr: unknown) {
         clearTimeout(timeout);
         if ((abortErr instanceof Error && abortErr.name === "AbortError") || controller.signal.aborted) {
-          setError("Login timed out. The server may be starting up — please try again in a moment.");
+          setError("Login timed out. The server may be starting up, please try again in a moment.");
           setIsLoading(false);
           return;
         }
@@ -181,7 +207,7 @@ function LoginForm() {
         return;
       }
 
-      // Successful auth — clear lockout tracking
+      // Successful auth, clear lockout tracking
       clearLoginAttempts();
       setFailedAttempts(0);
 
@@ -192,7 +218,7 @@ function LoginForm() {
           });
         }
 
-      // Route based on user profile — wrap in a 10s timeout to prevent infinite spinner
+      // Route based on user profile. Wrap in a 10s timeout to prevent infinite spinner
       const userId = data.user?.id;
       if (!userId) {
         setError("Login succeeded but no user returned.");
@@ -301,7 +327,7 @@ function LoginForm() {
         }
         saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
       } else {
-        // No company_id on profile — try to find one
+        // No company_id on profile, try to find one
         const { data: firstCompany } = await supabase
           .from("companies")
           .select("id, slug")
@@ -322,7 +348,7 @@ function LoginForm() {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes("abort")) return;
       setError(message.includes("timed out")
-        ? "Connection timed out. The server may be starting up — please try again in a moment."
+        ? "Connection timed out. The server may be starting up, please try again in a moment."
         : `Error: ${message}`);
       setIsLoading(false);
     }
@@ -468,7 +494,7 @@ function LoginForm() {
                 </div>
               </div>
 
-              {/* Email field — shared between both modes */}
+              {/* Email field, shared between both modes */}
               <div>
                 <Label htmlFor="email" required error={Boolean(emailError)}>
                   {t("auth.email")}

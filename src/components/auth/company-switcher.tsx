@@ -19,7 +19,7 @@ export function CompanySwitcher() {
   const [isOpen, setIsOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
 
-  // Close on click outside — must be called before any early returns to preserve hook order
+  // Close on click outside. Must be called before any early returns to preserve hook order
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (ref.current && !ref.current.contains(event.target as Node)) {

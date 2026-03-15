@@ -22,7 +22,6 @@ import {
   Globe,
   Building2,
   UserCog,
-  ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -108,12 +107,6 @@ const navItems: NavItem[] = [
     titleKey: "nav.settings",
     href: "/dashboard/settings",
     icon: Settings,
-  },
-  {
-    title: "Audit Log",
-    titleKey: "nav.auditLog",
-    href: "/dashboard/audit-log",
-    icon: ScrollText,
   },
 ];
 

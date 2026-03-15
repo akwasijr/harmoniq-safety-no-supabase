@@ -154,7 +154,7 @@ function AssetQuickViewPageContent() {
                   <p className="font-medium capitalize">{lastInspection.result}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatDate(new Date(lastInspection.inspected_at))}
-                    {lastInspection.notes && ` — ${lastInspection.notes}`}
+                    {lastInspection.notes && `: ${lastInspection.notes}`}
                   </p>
                 </div>
               </div>

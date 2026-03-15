@@ -654,69 +654,59 @@ export default function UsersPage() {
             showDateRange={false}
           />
 
-          {/* Teams grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Teams table */}
+          <div className="rounded-md border">
             {paginatedTeams.length === 0 ? (
-              <Card className="col-span-full">
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  {t("users.noTeamsFound")}
-                </CardContent>
-              </Card>
+              <div className="py-8 text-center text-muted-foreground">
+                {t("users.noTeamsFound")}
+              </div>
             ) : (
-              paginatedTeams.map((team) => {
-                const leader = team.leader_id ? getUserById(team.leader_id) : null;
-                return (
-                  <Card 
-                    key={team.id}
-                    className="cursor-pointer hover:border-primary/50 transition-colors"
-                    onClick={() => router.push(`/${company}/dashboard/users/teams/${team.id}`)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="h-10 w-10 rounded-lg flex items-center justify-center text-white font-semibold"
-                            style={{ backgroundColor: team.color }}
-                          >
-                            {team.name.slice(0, 2).toUpperCase()}
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("teams.table.team") || "Team"}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("teams.table.leader") || "Leader"}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("teams.table.members") || "Members"}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("teams.table.status") || "Status"}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedTeams.map((team) => {
+                    const leader = team.leader_id ? getUserById(team.leader_id) : null;
+                    return (
+                      <tr
+                        key={team.id}
+                        className="border-b cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => router.push(`/${company}/dashboard/users/teams/${team.id}`)}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                              style={{ backgroundColor: team.color || '#6366f1' }}
+                            >
+                              {team.name.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{team.name}</p>
+                              {team.description && <p className="text-xs text-muted-foreground line-clamp-1">{team.description}</p>}
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-base">{team.name}</CardTitle>
-                            <p className="text-xs text-muted-foreground">{formatNumber(team.member_count)} {team.member_count !== 1 ? t("users.members") : t("users.member")}</p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{team.status}</span>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                        {team.description || t("users.noDescription")}
-                      </p>
-                      {leader && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <UserCog className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">{t("users.leader")}:</span>
-                          <span>{leader.full_name}</span>
-                        </div>
-                      )}
-                      {team.permissions && team.permissions.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-3">
-                          {team.permissions.slice(0, 3).map((perm) => (
-                            <span key={perm} className="text-xs text-muted-foreground">
-                              {perm.replace(/_/g, " ")}
-                            </span>
-                          ))}
-                          {team.permissions.length > 3 && (
-                            <span className="text-xs text-muted-foreground">
-                              +{team.permissions.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })
+                        </td>
+                        <td className="px-4 py-3 text-sm">{leader?.full_name || "—"}</td>
+                        <td className="px-4 py-3 text-sm">{formatNumber(team.member_count)}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            team.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                          }`}>
+                            {team.status || 'active'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
 

@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     recordAttempt();
 
-    // Simulate API call — no-supabase version
+    // Simulate API call, no-supabase version
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
     setSubmitted(true);

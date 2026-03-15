@@ -406,6 +406,21 @@ export default function IncidentDetailPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">{incident.description}</p>
+                {incident.media_urls && incident.media_urls.length > 0 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <Image className="h-4 w-4 text-muted-foreground" />
+                      Photos & Media ({incident.media_urls.length})
+                    </p>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                      {incident.media_urls.map((url, idx) => (
+                        <div key={url || idx} className="aspect-square rounded-lg bg-muted border flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary cursor-pointer">
+                          <Image className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -601,26 +616,6 @@ export default function IncidentDetailPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Quick Stats</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Days Open</span>
-                  <span className="font-medium">{Math.floor((Date.now() - new Date(incident.incident_date).getTime()) / 86400000)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Related Tickets</span>
-                  <span className="font-medium">{relatedTickets.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Comments</span>
-                  <span className="font-medium">{comments.length}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
                 <CardTitle className="text-base">Assigned To</CardTitle>
               </CardHeader>
               <CardContent>
@@ -767,7 +762,7 @@ export default function IncidentDetailPage() {
                         </div>
                       )}
 
-                      {/* Notes / Comments — open field */}
+                      {/* Notes / Comments, open field */}
                       <div>
                         <Label className="text-muted-foreground">Notes & Comments</Label>
                         <Textarea
@@ -779,7 +774,7 @@ export default function IncidentDetailPage() {
                         />
                       </div>
 
-                      {/* Attachments — images & PDFs */}
+                      {/* Attachments, images & PDFs */}
                       <div>
                         <Label className="text-muted-foreground">Attachments</Label>
                         <div className="mt-2 space-y-3">

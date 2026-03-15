@@ -57,12 +57,12 @@ import { useTranslation } from "@/i18n";
 // 30 safety tips that cycle daily
 const SAFETY_TIPS = [
   { tip: "Always inspect your PPE before starting a shift.", icon: Shield },
-  { tip: "Report near-misses — they prevent real incidents.", icon: AlertTriangle },
+  { tip: "Report near-misses. They prevent real incidents.", icon: AlertTriangle },
   { tip: "Know your emergency exits and assembly points.", icon: Siren },
   { tip: "Take regular breaks to stay alert and focused.", icon: Timer },
   { tip: "Good housekeeping prevents slips, trips & falls.", icon: Sparkles },
   { tip: "Never bypass safety guards on equipment.", icon: Lock },
-  { tip: "Communication saves lives — speak up about hazards.", icon: Megaphone },
+  { tip: "Communication saves lives. Speak up about hazards.", icon: Megaphone },
   { tip: "Wear appropriate footwear for your work environment.", icon: Footprints },
   { tip: "Keep fire extinguishers accessible and know how to use them.", icon: Flame },
   { tip: "Always follow lockout/tagout procedures.", icon: Lock },
@@ -74,7 +74,7 @@ const SAFETY_TIPS = [
   { tip: "Wash your hands regularly, especially before eating.", icon: HandMetal },
   { tip: "Know the location of first aid kits on your floor.", icon: Stethoscope },
   { tip: "Never operate machinery you haven't been trained on.", icon: Gauge },
-  { tip: "Stay hydrated — dehydration reduces focus and reaction time.", icon: Heart },
+  { tip: "Stay hydrated. Dehydration reduces focus and reaction time.", icon: Heart },
   { tip: "Secure loose clothing and hair near moving equipment.", icon: ShieldCheck },
   { tip: "Report any spills immediately and clean them up.", icon: AlertCircle },
   { tip: "Use the buddy system for high-risk tasks.", icon: Users },
@@ -83,7 +83,7 @@ const SAFETY_TIPS = [
   { tip: "Stretch before physically demanding tasks.", icon: RefreshCw },
   { tip: "Ensure proper ventilation when working with fumes.", icon: Activity },
   { tip: "Attend all scheduled safety training sessions.", icon: BookOpen },
-  { tip: "Use the right tool for the job — improvising causes injuries.", icon: Hammer },
+  { tip: "Use the right tool for the job. Improvising causes injuries.", icon: Hammer },
   { tip: "Review risk assessments before starting unfamiliar work.", icon: ClipboardCheck },
   { tip: "If in doubt, stop and ask your supervisor.", icon: BellRing },
 ];
@@ -338,7 +338,7 @@ export default function EmployeeAppHomePage() {
       {/* ── Content Feed ── */}
       <div className="px-4 pt-3 pb-4 space-y-1">
 
-        {/* News & Updates — first */}
+        {/* News & Updates, first */}
         <Section
           title={t("app.newsAndUpdates")}
           icon={Newspaper}

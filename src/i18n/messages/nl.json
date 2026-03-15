@@ -64,8 +64,7 @@
     "riskAssessments": "Risicobeoordeling",
     "qrCodes": "QR-codes",
     "tickets": "Tickets",
-    "newsShort": "Nieuws",
-    "auditLog": "Auditlogboek"
+    "newsShort": "Nieuws"
   },
   "app": {
     "goodMorning": "Goedemorgen",
@@ -302,7 +301,7 @@
     "dataLoadFailed": "Kan gegevens niet laden",
     "dataLoadFailedDesc": "Er was een probleem bij het laden van deze informatie. Dit kan een tijdelijk probleem zijn.",
     "saveFailed": "Kan wijzigingen niet opslaan",
-    "saveFailedDesc": "Uw wijzigingen konden niet worden opgeslagen. Ze zijn lokaal bewaard — probeer het zo opnieuw.",
+    "saveFailedDesc": "Uw wijzigingen konden niet worden opgeslagen. Ze zijn lokaal bewaard, probeer het zo opnieuw.",
     "timeout": "Verzoek verlopen",
     "timeoutDesc": "De server reageert te langzaam. Probeer het opnieuw.",
     "rateLimited": "Te veel verzoeken",
@@ -512,7 +511,19 @@
       "lastInspectedDesc": "Dagen sinds de laatste inspectie"
     },
     "showAllIncidents": "Toon alle {count} incidenten",
-    "showLess": "Toon minder"
+    "showLess": "Toon minder",
+    "healthScore": {
+      "excellent": "Uitstekend",
+      "good": "Goed",
+      "fair": "Redelijk",
+      "poor": "Slecht",
+      "howCalculated": "Hoe deze score is berekend",
+      "inspections": "Inspectie slagingspercentage",
+      "maintenance": "Onderhoudsnaleving",
+      "condition": "Conditiescore",
+      "downtime": "Stilstandsimpact",
+      "age": "Ouderdomsfactor"
+    }
   },
   "incidents": {
     "title": "Incidenten",
@@ -1391,7 +1402,7 @@
     "needsAttention": "Aandacht nodig",
     "measuredValue": "Gemeten waarde",
     "acceptableRange": "Acceptabel bereik",
-    "outOfRange": "Waarde buiten acceptabel bereik — waarschuwing wordt aangemaakt",
+    "outOfRange": "Waarde buiten acceptabel bereik, waarschuwing wordt aangemaakt",
     "photo": "Foto (bij afwijking)",
     "takePhoto": "Foto maken",
     "notes": "Notities",
@@ -1653,22 +1664,6 @@
       "nameAndCheckpointRequired": "Naam en minstens één controlepunt zijn vereist"
     }
   },
-  "auditLog": {
-    "title": "Auditlogboek",
-    "description": "Volg alle wijzigingen op het platform voor OSHA/Arbowet-naleving",
-    "noEntries": "Geen auditlogboekgegevens gevonden",
-    "filterByType": "Filteren op type",
-    "filterByUser": "Filteren op gebruiker",
-    "allTypes": "Alle typen",
-    "allUsers": "Alle gebruikers",
-    "actions": {
-      "create": "Aangemaakt",
-      "update": "Bijgewerkt",
-      "delete": "Verwijderd",
-      "status_change": "Status gewijzigd",
-      "assign": "Toegewezen"
-    }
-  },
   "notificationTriggers": {
     "overdueTicket": "Achterstallig ticket",
     "overdueTicketMessage": "Ticket \"{title}\" is verlopen",
@@ -1728,5 +1723,13 @@
     "longitude": "Lengtegraad",
     "clickToPlace": "Klik op de kaart om locatie in te stellen",
     "clear": "Wissen"
+  },
+  "teams": {
+    "table": {
+      "team": "Team",
+      "leader": "Leider",
+      "members": "Leden",
+      "status": "Status"
+    }
   }
 }

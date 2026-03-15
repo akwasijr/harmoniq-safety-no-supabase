@@ -91,7 +91,7 @@ export function CookieConsentBanner({ translations: t }: CookieConsentBannerProp
 
         {showDetails && (
           <div className="mt-4 space-y-3">
-            {/* Necessary — always on */}
+            {/* Necessary, always on */}
             <label className="flex items-center justify-between rounded-lg bg-white/5 px-4 py-3">
               <div>
                 <span className="text-sm font-medium text-white">{t.necessary}</span>

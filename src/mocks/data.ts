@@ -22,7 +22,7 @@ import type {
 import { loadFromStorage } from "@/lib/local-storage";
 
 // ============================================
-// MOCK DEFAULTS — Single source of truth for all fallback values.
+// MOCK DEFAULTS: Single source of truth for all fallback values.
 // When a real backend is connected, these constants will be removed
 // and replaced with actual API responses.
 // ============================================
@@ -30,14 +30,14 @@ import { loadFromStorage } from "@/lib/local-storage";
 /** Default company slug used for demo / fallback routing */
 export const DEFAULT_COMPANY_SLUG = "harmoniq";
 
-/** Default company ID — first company in the mock list */
+/** Default company ID: first company in the mock list */
 export const DEFAULT_COMPANY_ID = "comp_1";
 
-/** Default user ID — platform super admin */
+/** Default user ID: platform super admin */
 export const DEFAULT_USER_ID = "user_super_admin";
 
 // ============================================
-// MOCK NOTIFICATIONS — placeholder data shown in the header dropdown.
+// MOCK NOTIFICATIONS: placeholder data shown in the header dropdown.
 // Replace with real notification API data when backend is connected.
 // ============================================
 export interface MockNotification {
@@ -853,7 +853,7 @@ export const mockLocations: Location[] = [
     asset_count: 16,
   },
 
-  // ===== SVENSKA FABRIKEN AB (comp_2) — Stockholm Plant =====
+  // ===== SVENSKA FABRIKEN AB (comp_2): Stockholm Plant =====
   {
     id: "loc_sf_1",
     company_id: "comp_2",
@@ -900,7 +900,7 @@ export const mockLocations: Location[] = [
     asset_count: 8,
   },
 
-  // ===== DUTCH SAFETY BV (comp_3) — Rotterdam Office =====
+  // ===== DUTCH SAFETY BV (comp_3): Rotterdam Office =====
   {
     id: "loc_ds_1",
     company_id: "comp_3",

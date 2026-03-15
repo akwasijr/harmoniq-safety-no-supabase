@@ -2,13 +2,18 @@
 
 import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
+import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { ROLE_PERMISSIONS } from "@/types";
 import { useCompanyStore } from "@/stores/company-store";
 import { clearAllHarmoniqStorage, loadOptionalStringFromStorage, saveToStorage } from "@/lib/local-storage";
 import { resetPrimaryColor } from "@/lib/branding";
 import { clearClientCookie } from "@/lib/client-cookies";
 import { getPlatformSlugs } from "@/lib/platform-config";
+import { mockUsers } from "@/mocks/data";
 import type { User, Company, Permission, UserRole, CompanyRole } from "@/types";
+
+const MOCK_AUTH_KEY = "harmoniq_mock_user_email";
+const IS_MOCK_MODE = !hasSupabasePublicEnv();
 
 const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 const LEGACY_SESSION_STORAGE_KEY = "harmoniq_auth_session";
@@ -111,13 +116,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
   
-  // Initialize auth state via Supabase
+  // Initialize auth state, mock mode (no Supabase) or real Supabase
   React.useEffect(() => {
+    if (IS_MOCK_MODE) {
+      // Mock auth: check localStorage for a previously logged-in mock user
+      const storedEmail = typeof window !== "undefined" ? window.localStorage.getItem(MOCK_AUTH_KEY) : null;
+      if (storedEmail) {
+        const mockUser = mockUsers.find((u) => u.email === storedEmail) as User | undefined;
+        if (mockUser) {
+          setUser(mockUser);
+          const cid = mockUser.company_id;
+          setSelectedCompanyId(cid);
+          if (cid) saveToStorage(SELECTED_COMPANY_STORAGE_KEY, cid);
+        }
+      }
+      setIsLoading(false);
+      return;
+    }
+
     const supabase = createClient();
     
     const initAuth = async () => {
       try {
-        // Primary: get session from Supabase (reads cookies set by middleware)
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
@@ -257,32 +277,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Logout
   const logout = React.useCallback(async () => {
-    // Clear state first to prevent UI from showing stale data
     setUser(null);
     setSelectedCompanyId(null);
-    
-    try {
-      const supabase = createClient();
-      // Use "global" scope to invalidate server-side session too
-      await Promise.race([
-        supabase.auth.signOut({ scope: "global" }),
-        new Promise((resolve) => setTimeout(resolve, 3000)),
-      ]);
-    } catch {
-      // Ignore errors — we always want to clear local state
+
+    if (IS_MOCK_MODE) {
+      if (typeof window !== "undefined") window.localStorage.removeItem(MOCK_AUTH_KEY);
+    } else {
+      try {
+        const supabase = createClient();
+        await Promise.race([
+          supabase.auth.signOut({ scope: "global" }),
+          new Promise((resolve) => setTimeout(resolve, 3000)),
+        ]);
+      } catch {
+        // Ignore errors. We always want to clear local state
+      }
     }
     
     clearAllHarmoniqStorage();
     if (typeof window !== "undefined") {
       clearClientCookie(ADMIN_ENTRY_COOKIE);
-      // Clear ALL cookies that could hold session data
       document.cookie.split(";").forEach((c) => {
         const name = c.trim().split("=")[0];
         if (name.startsWith("sb-") || name.startsWith("harmoniq")) {
           clearClientCookie(name);
         }
       });
-      // Clear all Supabase localStorage keys
       Object.keys(window.localStorage).forEach((key) => {
         if (key.startsWith("sb-")) window.localStorage.removeItem(key);
       });
@@ -336,3 +356,14 @@ export function useRole() {
   const { isSuperAdmin, isCompanyAdmin, isManager, isEmployee, role } = useAuth();
   return { isSuperAdmin, isCompanyAdmin, isManager, isEmployee, role };
 }
+
+/** Mock login: stores email in localStorage and reloads. Password: "demo123" for all users. */
+export function mockLogin(email: string): User | null {
+  if (!IS_MOCK_MODE) return null;
+  const found = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase()) as User | undefined;
+  if (!found) return null;
+  window.localStorage.setItem(MOCK_AUTH_KEY, found.email);
+  return found;
+}
+
+export { IS_MOCK_MODE };

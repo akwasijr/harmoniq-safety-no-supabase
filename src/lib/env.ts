@@ -62,6 +62,6 @@ export function validateEnv() {
   }
 
   if (!env.hasSupabaseAdminKey) {
-    console.warn("[ENV] SUPABASE_SERVICE_ROLE_KEY / SUPABASE_SECRET_KEY not set — admin features (setup, invitations) will be unavailable.");
+    console.warn("[ENV] SUPABASE_SERVICE_ROLE_KEY / SUPABASE_SECRET_KEY not set. Admin features (setup, invitations) will be unavailable.");
   }
 }

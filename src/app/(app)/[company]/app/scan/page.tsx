@@ -136,7 +136,7 @@ export default function ScanAssetPage() {
               }
               return; // Stop scanning
             } else {
-              // QR code found but not matching any asset — keep scanning
+              // QR code found but not matching any asset, keep scanning
             }
           }
           
@@ -464,7 +464,7 @@ export default function ScanAssetPage() {
             <div className="absolute bottom-6 left-0 right-0 text-center">
               {lastScannedCode ? (
                 <p className="text-white text-sm font-medium bg-warning/80 inline-block px-4 py-2 rounded-full">
-                  Code detected: {lastScannedCode.substring(0, 20)}{lastScannedCode.length > 20 ? "..." : ""} — No matching asset
+                  Code detected: {lastScannedCode.substring(0, 20)}{lastScannedCode.length > 20 ? "..." : ""}. No matching asset
                 </p>
               ) : (
                 <p className="text-white text-sm font-medium bg-black/40 inline-block px-4 py-2 rounded-full">

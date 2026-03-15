@@ -83,6 +83,7 @@ export default function AssetDetailPage() {
   const [maintenanceSubTab, setMaintenanceSubTab] = React.useState<"schedules" | "history">("schedules");
   const [mounted, setMounted] = React.useState(false);
   const [showAllIncidents, setShowAllIncidents] = React.useState(false);
+  const [showScoreBreakdown, setShowScoreBreakdown] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -132,6 +133,8 @@ export default function AssetDetailPage() {
   // Timeline filter state
   const [timelineFilter, setTimelineFilter] = React.useState<string>("all");
   const [docsSubTab, setDocsSubTab] = React.useState<"certifications" | "documents" | "images">("certifications");
+  const [previewDoc, setPreviewDoc] = React.useState<{url: string; name: string} | null>(null);
+  const [previewImage, setPreviewImage] = React.useState<{url: string; name: string} | null>(null);
 
   // Document upload
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -158,6 +161,23 @@ export default function AssetDetailPage() {
       ]
     )
   );
+
+  const getFileType = (name: string) => {
+    const ext = name.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return 'pdf';
+    if (['jpg','jpeg','png','gif','webp','svg'].includes(ext || '')) return 'image';
+    if (['doc','docx'].includes(ext || '')) return 'word';
+    if (['xls','xlsx'].includes(ext || '')) return 'excel';
+    return 'other';
+  };
+
+  React.useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setPreviewDoc(null); setPreviewImage(null); }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, kind: "document" | "image") => {
     const file = e.target.files?.[0];
@@ -326,7 +346,7 @@ export default function AssetDetailPage() {
     ? Math.round((schedules.filter((s) => !s.is_active || !isOverdue(s.next_due_date)).length / schedules.length) * 100)
     : 100;
 
-  // Health Score (0–100) — computed from inspections, maintenance, age, condition
+  // Health Score (0-100), computed from inspections, maintenance, age, condition
   const healthScore = React.useMemo(() => {
     if (!asset) return 0;
     let score = 100;
@@ -351,6 +371,46 @@ export default function AssetDetailPage() {
       else if (ageYears > expectedLife * 0.8) score -= 10;
     }
     return Math.max(0, Math.min(100, Math.round(score)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asset, totalInspections, passRate, schedules, totalDowntimeHours]);
+
+  // Individual health score factors for breakdown display
+  const healthScoreFactors = React.useMemo(() => {
+    if (!asset) return { inspection: 100, maintenance: 100, condition: 100, downtime: 100, age: 100 };
+
+    // Inspection score: 100 minus penalty (failRate * 30, capped at 100)
+    const inspectionScore = totalInspections > 0
+      ? Math.round(Math.max(0, 100 - (1 - passRate / 100) * 30 / 30 * 100))
+      : 100;
+
+    // Maintenance score: based on overdue ratio
+    const overdueSchedules = schedules.filter(s => s.is_active && isOverdue(s.next_due_date)).length;
+    const activeSchedules = schedules.filter(s => s.is_active).length;
+    const maintenanceScore = activeSchedules > 0
+      ? Math.round(Math.max(0, 100 - (overdueSchedules / activeSchedules) * 100))
+      : 100;
+
+    // Condition score
+    const conditionScoreMap: Record<string, number> = { excellent: 100, good: 83, fair: 60, poor: 30, critical: 0 };
+    const conditionScore = conditionScoreMap[asset.condition] ?? 100;
+
+    // Downtime score
+    let downtimeScore = 100;
+    if (totalDowntimeHours > 100) downtimeScore = 25;
+    else if (totalDowntimeHours > 40) downtimeScore = 50;
+    else if (totalDowntimeHours > 10) downtimeScore = 75;
+
+    // Age score
+    let ageScore = 100;
+    if (asset.purchase_date) {
+      const ageYears = (Date.now() - new Date(asset.purchase_date).getTime()) / (365.25 * 86400000);
+      const expectedLife = asset.expected_life_years || 10;
+      if (ageYears > expectedLife) ageScore = 20;
+      else if (ageYears > expectedLife * 0.8) ageScore = 50;
+      else ageScore = Math.round(Math.max(0, 100 - (ageYears / expectedLife) * 60));
+    }
+
+    return { inspection: inspectionScore, maintenance: maintenanceScore, condition: conditionScore, downtime: downtimeScore, age: ageScore };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asset, totalInspections, passRate, schedules, totalDowntimeHours]);
 
@@ -639,7 +699,7 @@ export default function AssetDetailPage() {
                       onChange={(e) => setEditedAsset((prev) => ({ ...prev, location_id: e.target.value }))}
                       className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <option value="">{t("common.none")} — {t("assets.labels.notAssigned")}</option>
+                      <option value="">{t("common.none")}, {t("assets.labels.notAssigned")}</option>
                       {locations.map((loc) => (
                         <option key={loc.id} value={loc.id}>
                           {loc.name} ({loc.type})
@@ -738,16 +798,73 @@ export default function AssetDetailPage() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-6">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-border">
+                  <div className={`flex h-20 w-20 items-center justify-center rounded-full border-4 ${
+                    healthScore >= 90 ? "border-green-500" : healthScore >= 80 ? "border-blue-500" : healthScore >= 50 ? "border-amber-500" : "border-red-500"
+                  }`}>
                     <span className="text-3xl font-bold">{healthScore}</span>
                   </div>
-                  <div>
-                    <p className="font-semibold text-lg">{t("assets.sections.healthScore")}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {healthScore >= 80 ? "Good condition — continue regular maintenance" : healthScore >= 50 ? "Fair condition — attention needed" : "Poor condition — immediate action required"}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <p className="font-semibold text-lg">{t("assets.sections.healthScore")}</p>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        healthScore >= 90
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                          : healthScore >= 80
+                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                          : healthScore >= 50
+                          ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                      }`}>
+                        {healthScore >= 90
+                          ? (t("assets.healthScore.excellent") || "Excellent")
+                          : healthScore >= 80
+                          ? (t("assets.healthScore.good") || "Good")
+                          : healthScore >= 50
+                          ? (t("assets.healthScore.fair") || "Fair")
+                          : (t("assets.healthScore.poor") || "Poor")}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowScoreBreakdown(!showScoreBreakdown)}
+                        className="inline-flex items-center justify-center rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        aria-label="Toggle score breakdown"
+                      >
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {healthScore >= 90 ? "Excellent condition. Continue regular maintenance" : healthScore >= 80 ? "Good condition. Continue regular maintenance" : healthScore >= 50 ? "Fair condition. Attention needed" : "Poor condition. Immediate action required"}
                     </p>
                   </div>
                 </div>
+
+                {showScoreBreakdown && (
+                  <div className="mt-4 rounded-lg border bg-muted/30 p-4">
+                    <p className="text-sm font-medium mb-3">{t("assets.healthScore.howCalculated") || "How this score is calculated"}</p>
+                    <div className="space-y-3">
+                      {[
+                        { label: t("assets.healthScore.inspections") || "Inspection Pass Rate", value: healthScoreFactors.inspection },
+                        { label: t("assets.healthScore.maintenance") || "Maintenance Compliance", value: healthScoreFactors.maintenance },
+                        { label: t("assets.healthScore.condition") || "Condition Rating", value: healthScoreFactors.condition },
+                        { label: t("assets.healthScore.downtime") || "Downtime Impact", value: healthScoreFactors.downtime },
+                        { label: t("assets.healthScore.age") || "Asset Age Factor", value: healthScoreFactors.age },
+                      ].map((factor) => (
+                        <div key={factor.label} className="flex items-center gap-3">
+                          <span className="text-sm text-muted-foreground w-44 shrink-0">{factor.label}</span>
+                          <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${
+                                factor.value >= 80 ? "bg-green-500" : factor.value >= 50 ? "bg-amber-500" : "bg-red-500"
+                              }`}
+                              style={{ width: `${factor.value}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-medium tabular-nums w-12 text-right">{factor.value}/100</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -1595,9 +1712,19 @@ export default function AssetDetailPage() {
                           </p>
                         </div>
                       </div>
-                      <Badge className={`${statusColor} border-0 text-xs`}>
-                        {t(`assets.certStatus.${cert.status}`)}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const matchingDoc = storedDocuments.find(d => d.name.toLowerCase().includes(cert.name.toLowerCase().split(" ")[0]));
+                          return matchingDoc?.dataUrl ? (
+                            <Button variant="ghost" size="sm" title="View document" onClick={() => setPreviewDoc({ url: matchingDoc.dataUrl!, name: matchingDoc.name })}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          ) : null;
+                        })()}
+                        <Badge className={`${statusColor} border-0 text-xs`}>
+                          {t(`assets.certStatus.${cert.status}`)}
+                        </Badge>
+                      </div>
                     </div>
                     );
                   })}
@@ -1645,7 +1772,9 @@ export default function AssetDetailPage() {
                         }}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" title="View" onClick={() => {
+                          if (doc.dataUrl) setPreviewDoc({ url: doc.dataUrl, name: doc.name });
+                        }}>
                           <Eye className="h-4 w-4" />
                         </Button>
                       </div>
@@ -1674,7 +1803,7 @@ export default function AssetDetailPage() {
                       key={img.id}
                       className="group relative aspect-square rounded-lg border bg-muted overflow-hidden cursor-pointer"
                       onClick={() => {
-                        if (img.dataUrl) window.open(img.dataUrl, "_blank");
+                        if (img.dataUrl) setPreviewImage({ url: img.dataUrl, name: img.name });
                       }}
                     >
                       {img.dataUrl ? (
@@ -1762,6 +1891,35 @@ export default function AssetDetailPage() {
           </Card>
         )}
       </div>
+
+      {/* Document / Image Preview Modal */}
+      {(previewDoc || previewImage) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => { setPreviewDoc(null); setPreviewImage(null); }}>
+          <div className="relative bg-background rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h3 className="font-medium text-sm truncate">{(previewDoc || previewImage)?.name}</h3>
+              <button onClick={() => { setPreviewDoc(null); setPreviewImage(null); }} className="p-1 rounded hover:bg-muted">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4 flex items-center justify-center">
+              {previewImage ? (
+                <img src={previewImage.url} alt={previewImage.name} className="max-h-[75vh] max-w-full object-contain" />
+              ) : previewDoc && getFileType(previewDoc.name) === 'pdf' ? (
+                <iframe src={previewDoc.url} className="w-full h-[75vh] border-0" />
+              ) : previewDoc && getFileType(previewDoc.name) === 'image' ? (
+                <img src={previewDoc.url} alt={previewDoc.name} className="max-h-[75vh] max-w-full object-contain" />
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>Preview not available for this file type</p>
+                  <p className="text-sm mt-1">Click download to view the file</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

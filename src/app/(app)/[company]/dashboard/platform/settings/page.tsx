@@ -43,7 +43,6 @@ export default function PlatformSettingsPage() {
 
     // Data Retention
     retentionYears: 5,
-    auditLogRetention: "indefinite",
 
     // Session
     superAdminSessionHours: 8,

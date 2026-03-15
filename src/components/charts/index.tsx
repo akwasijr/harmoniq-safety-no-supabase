@@ -19,7 +19,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Color palette — uses CSS custom properties so charts respond to theme changes
+// Color palette: uses CSS custom properties so charts respond to theme changes
 const COLORS = {
   primary: "hsl(var(--primary))",
   secondary: "hsl(var(--chart-2, 199 98% 43%))",
@@ -69,7 +69,7 @@ export function LineChart({
   showGrid = true,
   xAxisInterval,
 }: LineChartProps) {
-  // Auto-compute interval if not specified — skip labels when data is dense
+  // Auto-compute interval if not specified. Skip labels when data is dense
   const interval = xAxisInterval ?? (data.length > 12 ? Math.ceil(data.length / 8) - 1 : 0);
 
   return (

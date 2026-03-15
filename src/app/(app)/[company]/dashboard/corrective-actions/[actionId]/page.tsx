@@ -221,7 +221,7 @@ export default function CorrectiveActionDetailPage() {
             <div className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-4 w-4" />
               <span className="text-sm font-medium">
-                {t("correctiveActions.detail.overdue")} — {t("correctiveActions.labels.dueDate")}: {formatDate(action.due_date)}
+                {t("correctiveActions.detail.overdue")}: {t("correctiveActions.labels.dueDate")}: {formatDate(action.due_date)}
               </span>
             </div>
           </CardContent>

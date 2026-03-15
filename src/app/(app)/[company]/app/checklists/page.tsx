@@ -723,7 +723,7 @@ function EmployeeChecklistsPageContent() {
         </div>
       </div>
 
-      {/* Tabs — compact pill style */}
+      {/* Tabs, compact pill style */}
       <div className="sticky top-14 z-20 bg-background border-b px-4 py-2">
         <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist">
           {tabs.map((tab) => {
@@ -770,7 +770,7 @@ function EmployeeChecklistsPageContent() {
         {/* REPORTS TAB */}
         {activeTab === "reports" && (
           <>
-            {/* New Report Button — same style as New Assessment cards */}
+            {/* New Report Button, same style as New Assessment cards */}
             <div className="grid grid-cols-2 gap-2">
               <Link
                 href={`/${company}/app/report`}

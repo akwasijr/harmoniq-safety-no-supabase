@@ -82,7 +82,7 @@ export function NoResultsEmptyState({
   );
 }
 
-// Empty collection — "No X yet" pattern
+// Empty collection: "No X yet" pattern
 export function NoDataEmptyState({
   entityName,
   onAdd,
@@ -124,7 +124,7 @@ export function OfflineEmptyState({ onRetry }: { onRetry?: () => void }) {
   );
 }
 
-// Data load failure — inline card variant
+// Data load failure: inline card variant
 export function LoadFailedEmptyState({ onRetry }: { onRetry?: () => void }) {
   return (
     <EmptyState

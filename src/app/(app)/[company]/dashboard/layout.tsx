@@ -36,7 +36,7 @@ export default function DashboardRootLayout({
     [companies, company, isCompaniesLoading]
   );
 
-  // Apply saved branding color on mount — must be before any early returns to preserve hook order
+  // Apply saved branding color on mount. Must be before any early returns to preserve hook order
   React.useEffect(() => {
     applyPrimaryColor(currentCompany?.primary_color);
   }, [currentCompany?.primary_color]);
@@ -45,7 +45,7 @@ export default function DashboardRootLayout({
     applyDocumentLanguage(currentCompany?.language ?? user?.language);
   }, [currentCompany?.language, user?.language]);
 
-  // C3: Redirect employees away from dashboard — they should use the employee app
+  // C3: Redirect employees away from dashboard. They should use the employee app
   React.useEffect(() => {
     if (!isLoading && user && isEmployee) {
       router.replace(`/${company}/app`);

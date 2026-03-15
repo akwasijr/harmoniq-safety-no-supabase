@@ -42,7 +42,7 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh the session — this is critical for keeping the user logged in.
+  // Refresh the session. This is critical for keeping the user logged in.
   // Do NOT remove this getUser() call.
   const {
     data: { user },

@@ -52,7 +52,7 @@ export function Header({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // L12: Get page title from pathname — handles dynamic segments properly
+  // L12: Get page title from pathname. Handles dynamic segments properly
   const getPageTitle = () => {
     const segments = pathname.split("/").filter(Boolean);
     // Remove the company slug (first segment)
@@ -96,7 +96,7 @@ export function Header({
       "app/risk-assessment/osa": "OSA Assessment",
     };
 
-    // Dynamic segment patterns — check from most specific to least
+    // Dynamic segment patterns, check from most specific to least
     const dynamicPatterns: [RegExp, string][] = [
       [/^dashboard\/users\/teams\/[^/]+$/, "Team Details"],
       [/^dashboard\/incidents\/[^/]+$/, "Incident Details"],

@@ -923,7 +923,7 @@ export default function AssetsPage() {
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mb-5">
-              {t("assets.wizard.step", { current: String(wizardStep + 1), total: String(wizardSteps.length) })} — {t(wizardSteps[wizardStep].descKey)}
+              {t("assets.wizard.step", { current: String(wizardStep + 1), total: String(wizardSteps.length) })}: {t(wizardSteps[wizardStep].descKey)}
             </p>
 
             {/* Progress indicator */}

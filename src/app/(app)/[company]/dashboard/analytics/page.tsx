@@ -63,7 +63,7 @@ export default function AnalyticsPage() {
     [locations]
   );
 
-  // Build months array — for "all_time", cap to earliest incident date instead of epoch
+  // Build months array. For "all_time", cap to earliest incident date instead of epoch
   const { months, spansMultipleYears } = React.useMemo(() => {
     const range = getDateRangeFromValue(dateRange as DateRangeValue);
     let effectiveStart = range.start;
@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
       }, new Date());
       effectiveStart = earliestDate;
     } else if (dateRange === "all_time") {
-      // No incidents — show last 12 months
+      // No incidents, show last 12 months
       effectiveStart = new Date();
       effectiveStart.setMonth(effectiveStart.getMonth() - 12);
     }

@@ -22,13 +22,13 @@ import { useTranslation } from "@/i18n";
 
 export type ErrorVariant =
   | "network"         // No internet / fetch failed
-  | "access-denied"   // 403 — user doesn't have permission
-  | "not-found"       // 404 — resource doesn't exist
-  | "session-expired" // 401 — token expired, need re-login
+  | "access-denied"   // 403, user doesn't have permission
+  | "not-found"       // 404, resource doesn't exist
+  | "session-expired" // 401, token expired, need re-login
   | "timeout"         // Request timed out
-  | "server-error"    // 500 — server-side failure
+  | "server-error"    // 500, server-side failure
   | "maintenance"     // Planned downtime
-  | "rate-limit"      // 429 — too many requests
+  | "rate-limit"      // 429, too many requests
   | "generic";        // Catch-all
 
 interface ErrorVariantConfig {
@@ -132,7 +132,7 @@ interface ErrorStateProps {
   /** Show compact inline variant instead of full-page */
   inline?: boolean;
   className?: string;
-  /** HTTP status code — used to auto-detect variant */
+  /** HTTP status code, used to auto-detect variant */
   statusCode?: number;
   /** Show error details in dev mode */
   errorDetails?: string;
@@ -194,7 +194,7 @@ export function ErrorState({
     variant === "access-denied" || variant === "not-found" ? ArrowLeft :
     RefreshCw;
 
-  // Inline variant — smaller, embeddable in cards
+  // Inline variant, smaller, embeddable in cards
   if (inline) {
     return (
       <div className={cn("flex flex-col items-center justify-center py-8 text-center", className)}>
@@ -234,7 +234,7 @@ export function ErrorState({
         {displayDesc}
       </p>
 
-      {/* Error details — dev/debug only */}
+      {/* Error details, dev/debug only */}
       {errorDetails && process.env.NODE_ENV === "development" && (
         <details className="mt-4 max-w-md text-left">
           <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">

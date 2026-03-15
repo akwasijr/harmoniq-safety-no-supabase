@@ -131,7 +131,7 @@ export default function AdminLoginPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("abort")) {
-        // Abort errors are non-fatal during navigation — ignore
+        // Abort errors are non-fatal during navigation, ignore
         return;
       }
       setError(`Error: ${msg}`);

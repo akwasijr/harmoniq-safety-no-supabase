@@ -184,7 +184,7 @@ export default function PlatformCompaniesPage() {
         )}
       </div>
 
-      {/* Add Company Modal — multi-step */}
+      {/* Add Company Modal, multi-step */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-lg bg-background shadow-lg max-h-[90vh] flex flex-col">
@@ -192,7 +192,7 @@ export default function PlatformCompaniesPage() {
               <div>
                 <h2 className="text-lg font-semibold">{t("companies.addCompany")}</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {formStep === "general" ? `Step 1 of 3 — ${t("companies.general")}` : formStep === "localization" ? `Step 2 of 3 — ${t("companies.localization")}` : `Step 3 of 3 — ${t("companies.branding")}`}
+                  {formStep === "general" ? `Step 1 of 3: ${t("companies.general")}` : formStep === "localization" ? `Step 2 of 3: ${t("companies.localization")}` : `Step 3 of 3: ${t("companies.branding")}`}
                 </p>
               </div>
               <Button variant="ghost" size="icon" onClick={() => { setShowAddModal(false); setFormStep("general"); }}>
@@ -238,7 +238,7 @@ export default function PlatformCompaniesPage() {
                     <Label>{t("companies.plan")}</Label>
                     <select title="Plan" className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm" value={newCompanyTier} onChange={(e) => setNewCompanyTier(e.target.value)}>
                       {PRICING_TIERS.map((tier) => (
-                        <option key={tier.value} value={tier.value}>{tier.label} — {tier.description}</option>
+                        <option key={tier.value} value={tier.value}>{tier.label}: {tier.description}</option>
                       ))}
                     </select>
                   </div>

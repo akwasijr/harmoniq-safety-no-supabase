@@ -1011,7 +1011,7 @@ export default function RiskAssessmentDetailPage() {
       {submission && submission.hazards.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t("riskAssessment.riskScoreLabel")} — {t("riskAssessment.riskMatrix")}</CardTitle>
+            <CardTitle className="text-base">{t("riskAssessment.riskScoreLabel")}: {t("riskAssessment.riskMatrix")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
