@@ -342,7 +342,7 @@ export default function NewContentPage() {
                         <div className="absolute top-full left-0 z-10 mt-1 flex gap-1 rounded-md border bg-background p-2 shadow-md">
                           <input
                             type="url"
-                            placeholder="https://..."
+                            placeholder={t("content.placeholders.linkUrl")}
                             value={linkUrl}
                             onChange={(e) => setLinkUrl(e.target.value)}
                             onKeyDown={(e) => {
@@ -395,7 +395,7 @@ export default function NewContentPage() {
                     id="category"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="e.g., Safety, Training, Policy"
+                    placeholder={t("content.placeholders.category")}
                     className="mt-1"
                   />
                 </div>

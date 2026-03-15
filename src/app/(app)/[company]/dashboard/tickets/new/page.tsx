@@ -50,6 +50,28 @@ export default function NewTicketPage() {
     due_date: "",
     incident_id: "",
   });
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  const validateField = (field: string, value: string) => {
+    const next = { ...errors };
+    if (field === "title") {
+      if (!value.trim()) {
+        next.title = t("validation.required");
+      } else if (value.trim().length < 3) {
+        next.title = t("validation.minLength", { min: "3" });
+      } else {
+        delete next.title;
+      }
+    }
+    if (field === "description") {
+      if (value.trim().length > 0 && value.trim().length < 10) {
+        next.description = t("validation.minLength", { min: "10" });
+      } else {
+        delete next.description;
+      }
+    }
+    setErrors(next);
+  };
 
   const assignees = users.filter((u) => u.role === "company_admin" || u.role === "manager");
   const openIncidents = incidents.filter((i) => i.status !== "resolved");
@@ -90,7 +112,7 @@ export default function NewTicketPage() {
             Create a new work ticket for follow-up actions
           </p>
         </div>
-        <Button onClick={handleSubmit} disabled={isSubmitting || !formData.title}>
+        <Button onClick={handleSubmit} disabled={isSubmitting || Object.keys(errors).length > 0 || !formData.title}>
           <Save className="h-4 w-4 mr-2" />
           {t("tickets.createTicket")}
         </Button>
@@ -109,10 +131,15 @@ export default function NewTicketPage() {
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Brief description of the task"
-                  className="mt-1"
+                  onChange={(e) => {
+                    setFormData({ ...formData, title: e.target.value });
+                    if (errors.title) validateField("title", e.target.value);
+                  }}
+                  onBlur={(e) => validateField("title", e.target.value)}
+                  placeholder={t("tickets.placeholders.briefDescription")}
+                  className={cn("mt-1", errors.title && "border-red-500")}
                 />
+                {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
               </div>
 
               <div>
@@ -120,11 +147,16 @@ export default function NewTicketPage() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Detailed description of what needs to be done..."
+                  onChange={(e) => {
+                    setFormData({ ...formData, description: e.target.value });
+                    if (errors.description) validateField("description", e.target.value);
+                  }}
+                  onBlur={(e) => validateField("description", e.target.value)}
+                  placeholder={t("tickets.placeholders.detailedDescription")}
                   rows={6}
-                  className="mt-1"
+                  className={cn("mt-1", errors.description && "border-red-500")}
                 />
+                {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description}</p>}
               </div>
             </CardContent>
           </Card>

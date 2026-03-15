@@ -337,7 +337,7 @@ export default function QRCodesPage() {
                 <Label htmlFor="qr-name">{t("qrCodes.labels.name")}</Label>
                 <Input
                   id="qr-name"
-                  placeholder="e.g., Main Entrance"
+                  placeholder={t("qrCodes.placeholders.name")}
                   className="mt-1"
                   value={formData.name}
                   onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
@@ -363,7 +363,7 @@ export default function QRCodesPage() {
                 <Label htmlFor="qr-desc">{t("qrCodes.labels.description")}</Label>
                 <Input
                   id="qr-desc"
-                  placeholder="Short description for this QR code"
+                  placeholder={t("qrCodes.placeholders.description")}
                   className="mt-1"
                   value={formData.description}
                   onChange={(event) => setFormData((prev) => ({ ...prev, description: event.target.value }))}

@@ -89,7 +89,7 @@ export default function NewChecklistPage() {
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
-              placeholder="Daily forklift inspection"
+              placeholder={t("checklists.placeholders.checklistName")}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />

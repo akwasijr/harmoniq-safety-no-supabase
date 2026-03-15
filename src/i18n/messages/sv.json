@@ -26,7 +26,16 @@
     "optional": "Valfritt",
     "all": "Alla",
     "home": "Hem",
-    "continue": "Fortsätt"
+    "continue": "Fortsätt",
+    "none": "Ingen",
+    "comingSoon": "Kommer snart",
+    "uploadPhoto": "Ladda upp foto",
+    "uploadPhotos": "Ladda upp foton",
+    "changeProfilePhoto": "Ändra profilbild",
+    "notifications": "Aviseringar",
+    "goBack": "Gå tillbaka",
+    "unread": "Oläst",
+    "completionProgress": "Slutförandeförlopp"
   },
   "nav": {
     "home": "Hem",
@@ -219,7 +228,8 @@
     "language_changed": "Språk uppdaterat",
     "appVersion": "Harmoniq Safety v1.0.0",
     "offline": "Offlineläge",
-    "offlineDesc": "Vissa funktioner kräver internetanslutning"
+    "offlineDesc": "Vissa funktioner kräver internetanslutning",
+    "privacySecurity": "Integritet och säkerhet"
   },
   "dashboard": {
     "openIncidents": "Öppna incidenter",
@@ -367,7 +377,8 @@
       "qrCode": "QR-kod",
       "warrantyExpiry": "Garantiutgång",
       "nextCalibration": "Nästa kalibrering",
-      "nextMaintenance": "Nästa underhåll"
+      "nextMaintenance": "Nästa underhåll",
+      "notAssigned": "Inte tilldelad"
     },
     "statuses": {
       "active": "Aktiv",
@@ -398,7 +409,17 @@
     },
     "placeholders": {
       "searchAssets": "Sök tillgångar...",
-      "searchByNameSerialTag": "Sök på namn, serienummer eller tagg..."
+      "searchByNameSerialTag": "Sök på namn, serienummer eller tagg...",
+      "assetName": "t.ex. Gaffeltruck #12",
+      "serialNumber": "t.ex. SN-12345",
+      "manufacturer": "t.ex. Toyota",
+      "model": "t.ex. 8FGU25",
+      "department": "t.ex. Drift",
+      "completionNotes": "Lägg till eventuella kommentarer om utfört arbete...",
+      "scheduleName": "t.ex. Oljebyte, Filterbyte",
+      "optionalDescription": "Valfri beskrivning...",
+      "meterType": "t.ex. Motortimmar, Mätarställning",
+      "notes": "Eventuella anteckningar"
     },
     "empty": {
       "noAssets": "Inga tillgångar",
@@ -502,11 +523,33 @@
     "placeholders": {
       "searchIncidents": "Sök incidenter...",
       "briefDescription": "Kort beskrivning...",
-      "describeWhatHappened": "Beskriv vad som hände..."
+      "describeWhatHappened": "Beskriv vad som hände...",
+      "describeType": "Beskriv typ",
+      "selectLocation": "Välj en plats",
+      "building": "Byggnad A",
+      "floor": "2:a våningen",
+      "zone": "Lastkaj",
+      "room": "Rum 203",
+      "locationDescription": "Ytterligare detaljer om den exakta platsen…",
+      "selectAsset": "Välj en tillgång",
+      "locationDetails": "t.ex. Vid huvudentrén, bredvid maskin #3",
+      "addNotes": "Lägg till dina anteckningar, observationer eller kommentarer här…",
+      "lessonsLearned": "Ange lärdomar från denna incident...",
+      "witnessName": "Fullständigt namn på vittne",
+      "witnessStatement": "Vad observerade vittnet?",
+      "pleaseSpecify": "Vänligen specificera…",
+      "rootCauseDetail": "Beskriv grundorsaken i detalj...",
+      "shareLessons": "Vilka lärdomar kan delas för att förhindra liknande incidenter?",
+      "additionalNotes": "Lägg till eventuella ytterligare anteckningar eller kommentarer…",
+      "actionRequired": "Vad behöver göras?",
+      "additionalDetails": "Ytterligare detaljer...",
+      "addComment": "Lägg till en kommentar..."
     },
     "empty": {
       "noIncidents": "Inga incidenter rapporterade"
-    }
+    },
+    "locked": "Denna incidentrapport är låst och kan inte redigeras",
+    "lockedShort": "Låst"
   },
   "tickets": {
     "title": "Ärenden",
@@ -535,7 +578,9 @@
     "placeholders": {
       "searchTickets": "Sök ärenden...",
       "briefDescription": "Kort beskrivning...",
-      "detailedDescription": "Detaljerad beskrivning..."
+      "detailedDescription": "Detaljerad beskrivning av vad som behöver göras...",
+      "addTask": "Lägg till en ny uppgift...",
+      "addComment": "Lägg till en kommentar..."
     },
     "empty": {
       "noTickets": "Inga ärenden"
@@ -570,7 +615,10 @@
     },
     "placeholders": {
       "searchUsers": "Sök användare...",
-      "searchTeams": "Sök team..."
+      "searchTeams": "Sök team...",
+      "department": "t.ex. Drift, Säkerhet",
+      "teamName": "t.ex. Säkerhetskommitté",
+      "teamDescription": "Kort beskrivning av teamets syfte"
     },
     "admins": "Administratörs",
     "managers": "Chefs",
@@ -705,6 +753,7 @@
   },
   "locations": {
     "types": {
+      "site": "Campus",
       "campus": "Campus",
       "building": "Byggnad",
       "floor": "Våning",
@@ -794,7 +843,11 @@
     "assetInspectionDesc": "Inspektera utrustning på denna plats",
     "emergencyContacts": "Nödsituation Kontakts",
     "locationInfo": "Plats Info",
-    "workers": "Arbetare"
+    "workers": "Arbetare",
+    "emergency": {
+      "services": "Räddningstjänst",
+      "role": "Nödsituation"
+    }
   },
   "analytics": {
     "title": "Analys",
@@ -881,7 +934,10 @@
     "submitting": "Skickar in...",
     "completeChecklist": "Slutför checklista",
     "nextItem": "Nästa Item",
-    "enterResponse": "Ange ditt svar..."
+    "enterResponse": "Ange ditt svar...",
+    "placeholders": {
+      "checklistName": "Daglig gaffeltruckinspektion"
+    }
   },
   "content": {
     "title": "Innehåll",
@@ -899,7 +955,9 @@
       "create": "Skapa"
     },
     "placeholders": {
-      "searchContent": "Sök innehåll..."
+      "searchContent": "Sök innehåll...",
+      "linkUrl": "https://...",
+      "category": "t.ex. Säkerhet, Utbildning, Policy"
     }
   },
   "qrCodes": {
@@ -927,7 +985,9 @@
     },
     "placeholders": {
       "searchQrCodes": "Sök QR-koder...",
-      "qrCodeName": "QR-kodnamn..."
+      "qrCodeName": "QR-kodnamn...",
+      "name": "t.ex. Huvudentré",
+      "description": "Kort beskrivning för denna QR-kod"
     }
   },
   "workOrders": {
@@ -959,7 +1019,12 @@
       "create": "Skapa"
     },
     "placeholders": {
-      "searchWorkOrders": "Sök arbetsordrar..."
+      "searchWorkOrders": "Sök arbetsordrar...",
+      "title": "Arbetsordertitel",
+      "description": "Beskriv det arbete som behövs",
+      "selectAsset": "Välj tillgång",
+      "selectUser": "Välj användare",
+      "estimatedHours": "t.ex. 2,5"
     }
   },
   "correctiveActions": {
@@ -986,7 +1051,9 @@
     },
     "placeholders": {
       "searchActions": "Sök åtgärder...",
-      "whatNeedsCorrected": "Vad behöver korrigeras..."
+      "whatNeedsCorrected": "Vad behöver korrigeras...",
+      "selectAsset": "Välj tillgång",
+      "selectUser": "Välj användare"
     }
   },
   "parts": {
@@ -1007,7 +1074,10 @@
       "addPart": "Lägg till del"
     },
     "placeholders": {
-      "searchParts": "Sök delar..."
+      "searchParts": "Sök delar...",
+      "partName": "t.ex. Hydraulfilter",
+      "partNumber": "t.ex. HF-2045-A",
+      "supplier": "Leverantörsnamn"
     }
   },
   "maintenance": {
@@ -1326,5 +1396,157 @@
     "osaTitle": "OSA - Organisatorisk och Social Arbetsmiljö",
     "rieTitle": "RI&E (Risico-Inventarisatie en -Evaluatie)",
     "samTitle": "SAM - Systematiskt Arbetsmiljöarbete"
+  },
+  "auth": {
+    "welcomeBack": "Välkommen tillbaka",
+    "signInToAccount": "Logga in på ditt konto",
+    "createAccount": "Skapa ditt konto",
+    "signUpCorporate": "Registrera dig med ditt företagskonto",
+    "email": "E-post",
+    "password": "Lösenord",
+    "emailPlaceholder": "namn@foretag.se",
+    "passwordPlaceholder": "Ange ditt lösenord",
+    "signIn": "Logga in",
+    "signUp": "Registrera",
+    "signingIn": "Loggar in…",
+    "forgotPassword": "Glömt lösenord?",
+    "forgotPasswordTitle": "Återställ ditt lösenord",
+    "forgotPasswordDesc": "Ange din e-post så skickar vi en återställningslänk",
+    "sendResetLink": "Skicka återställningslänk",
+    "sendingResetLink": "Skickar…",
+    "resetLinkSent": "Kontrollera din e-post för en lösenordsåterställningslänk",
+    "resetPassword": "Återställ lösenord",
+    "resetPasswordTitle": "Ange nytt lösenord",
+    "newPassword": "Nytt lösenord",
+    "confirmPassword": "Bekräfta lösenord",
+    "updatePassword": "Uppdatera lösenord",
+    "updatingPassword": "Uppdaterar…",
+    "passwordUpdated": "Lösenordet har uppdaterats",
+    "magicLink": "Logga in med magic link istället",
+    "passwordMode": "Logga in med lösenord istället",
+    "sendMagicLink": "Skicka magic link",
+    "sendingMagicLink": "Skickar…",
+    "magicLinkSent": "Kontrollera din e-post för en magic link",
+    "chooseApp": "Välj app",
+    "dashboard": "Dashboard",
+    "mobileApp": "Mobilapp",
+    "signUpGoogle": "Registrera med Google",
+    "signUpMicrosoft": "Registrera med Microsoft",
+    "alreadyHaveAccount": "Har du redan ett konto?",
+    "logIn": "Logga in",
+    "backToHome": "← Tillbaka till startsidan",
+    "companyName": "Företagsnamn",
+    "country": "Land"
+  },
+  "tasks": {
+    "title": "Mina Uppgifter",
+    "all": "Alla",
+    "tickets": "Ärenden",
+    "workOrders": "Arbetsorder",
+    "actions": "Åtgärder",
+    "empty": "Inga uppgifter tilldelade dig",
+    "emptyTickets": "Inga ärenden tilldelade",
+    "emptyWorkOrders": "Inga arbetsorder",
+    "emptyActions": "Inga korrigerande åtgärder",
+    "assignedBy": "Tilldelad av",
+    "requestedBy": "Begärd av",
+    "due": "Förfaller",
+    "overdue": "Försenad",
+    "relatedAsset": "Tillgång",
+    "viewAll": "Visa alla uppgifter"
+  },
+  "app.pending": "Väntande",
+  "errors.network": "Nätverksfel",
+  "errors.networkDesc": "Kontrollera din internetanslutning och försök igen.",
+  "errors.notFound": "Sidan hittades inte",
+  "errors.notFoundDesc": "Sidan du letar efter finns inte eller har flyttats.",
+  "errors.permission": "Åtkomst nekad",
+  "errors.permissionDesc": "Du har inte behörighet att visa denna sida.",
+  "errors.timeout": "Begäran tidsgräns",
+  "errors.timeoutDesc": "Servern svarade för långsamt. Försök igen.",
+  "errors.server": "Serverfel",
+  "errors.serverDesc": "Något gick fel på vår sida. Försök igen senare.",
+  "errors.maintenance": "Underhåll",
+  "errors.maintenanceDesc": "Vi utför planerat underhåll. Kom tillbaka snart.",
+  "errors.rateLimit": "För många förfrågningar",
+  "errors.rateLimitDesc": "Vänta en stund innan du försöker igen.",
+  "errors.generic": "Något gick fel",
+  "errors.genericDesc": "Ett oväntat fel uppstod. Försök igen.",
+  "errors.tryAgain": "Försök igen",
+  "errors.goBack": "Gå tillbaka",
+  "errors.goHome": "Gå till startsidan",
+  "errors.refresh": "Uppdatera sidan",
+  "errors.sessionExpired": "Sessionen har löpt ut",
+  "errors.sessionExpiredDesc": "Din session har löpt ut. Logga in igen för att fortsätta.",
+  "errors.signIn": "Logga in",
+  "common.filters": "Filter",
+  "common.clearAll": "Rensa alla",
+  "common.apply": "Tillämpa",
+  "validation.required": "Detta fält är obligatoriskt",
+  "validation.minLength": "Måste vara minst {min} tecken",
+  "validation.invalidDate": "Ange ett giltigt datum",
+  "validation.selectOption": "Välj ett alternativ",
+  "inspectionRoutes": {
+    "title": "Inspektionsrutter",
+    "createRoute": "Skapa rutt",
+    "createInspectionRoute": "Skapa inspektionsrutt",
+    "checkpoints": "Kontrollpunkter",
+    "checkpoint": "Kontrollpunkt",
+    "completed": "slutförda",
+    "unknownAsset": "Okänd tillgång",
+    "activate": "Aktivera",
+    "deactivate": "Inaktivera",
+    "addCheckpoint": "Lägg till kontrollpunkt",
+    "kpi": {
+      "activeRoutes": "Aktiva rutter",
+      "totalRoutes": "Totalt rutter",
+      "completedRounds": "Slutförda rundor"
+    },
+    "empty": {
+      "title": "Inga inspektionsrutter ännu",
+      "description": "Skapa en rutt för att starta schemalagda inspektioner."
+    },
+    "labels": {
+      "routeName": "Ruttnamn",
+      "description": "Beskrivning",
+      "recurrence": "Upprepning",
+      "asset": "Tillgång",
+      "checkType": "Kontrolltyp",
+      "whatToCheck": "Vad ska kontrolleras",
+      "instructions": "Instruktioner",
+      "min": "Min",
+      "max": "Max",
+      "unit": "Enhet"
+    },
+    "recurrence": {
+      "daily": "Dagligen",
+      "weekly": "Veckovis",
+      "monthly": "Månadsvis",
+      "once": "Engångs"
+    },
+    "checkTypes": {
+      "visual": "Visuell",
+      "auditory": "Auditiv",
+      "measurement": "Mätning",
+      "functional": "Funktionell",
+      "safety": "Säkerhet"
+    },
+    "placeholders": {
+      "routeName": "t.ex. Morgonens säkerhetsrunda",
+      "description": "Beskriv inspektionsrutten...",
+      "selectAsset": "Välj tillgång...",
+      "whatToCheck": "t.ex. Kontrollera remspänning",
+      "instructions": "Detaljerade instruktioner...",
+      "unit": "t.ex. °C, psi"
+    },
+    "toast": {
+      "routeCreated": "Inspektionsrutt skapad",
+      "routeActivated": "Rutt aktiverad",
+      "routeDeactivated": "Rutt inaktiverad",
+      "routeDeleted": "Rutt borttagen"
+    },
+    "validation": {
+      "nameAndCheckpointRequired": "Namn och minst en kontrollpunkt krävs"
+    }
   }
 }

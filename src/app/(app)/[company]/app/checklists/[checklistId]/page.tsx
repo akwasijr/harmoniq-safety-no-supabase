@@ -183,7 +183,7 @@ export default function ChecklistFormPage() {
           </div>
         </div>
         {/* Progress bar */}
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentItem + 1) / items.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentItem + 1) / items.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentItem + 1) / items.length) * 100}%` }}
@@ -335,7 +335,7 @@ export default function ChecklistFormPage() {
           accept="image/*"
           onChange={handlePhotoUpload}
           className="hidden"
-          aria-label="Upload photo"
+          aria-label={t("common.uploadPhoto")}
         />
         
         {/* Photo previews */}

@@ -317,7 +317,7 @@ export default function TicketsPage() {
                   id="title"
                   value={newTicket.title}
                   onChange={(e) => setNewTicket({ ...newTicket, title: e.target.value })}
-                  placeholder="Brief description of the issue"
+                  placeholder={t("tickets.placeholders.briefDescription")}
                   className="mt-1"
                 />
               </div>
@@ -328,7 +328,7 @@ export default function TicketsPage() {
                   id="description"
                   value={newTicket.description}
                   onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
-                  placeholder="Detailed description..."
+                  placeholder={t("tickets.placeholders.detailedDescription")}
                   rows={3}
                   className="mt-1"
                 />

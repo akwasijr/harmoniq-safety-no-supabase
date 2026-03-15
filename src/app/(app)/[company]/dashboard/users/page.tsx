@@ -544,7 +544,7 @@ export default function UsersPage() {
               </div>
               <div>
                 <Label htmlFor="department">{t("users.labels.department")}</Label>
-                <Input id="department" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} placeholder="e.g., Operations, Safety" className="mt-1" />
+                <Input id="department" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} placeholder={t("users.placeholders.department")} className="mt-1" />
               </div>
             </div>
 
@@ -763,7 +763,7 @@ export default function UsersPage() {
                       id="team_name" 
                       value={newTeam.name} 
                       onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })} 
-                      placeholder="e.g., Safety Committee"
+                      placeholder={t("users.placeholders.teamName")}
                       className="mt-1" 
                     />
                   </div>
@@ -773,7 +773,7 @@ export default function UsersPage() {
                       id="team_description" 
                       value={newTeam.description} 
                       onChange={(e) => setNewTeam({ ...newTeam, description: e.target.value })} 
-                      placeholder="Brief description of team's purpose"
+                      placeholder={t("users.placeholders.teamDescription")}
                       className="mt-1" 
                     />
                   </div>

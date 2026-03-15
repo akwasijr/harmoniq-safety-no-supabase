@@ -171,7 +171,7 @@ export default function NewIncidentPage() {
               <Label htmlFor="title">{t("incidents.labels.title")} *</Label>
               <Input 
                 id="title" 
-                placeholder="Brief description of the incident"
+                placeholder={t("incidents.placeholders.briefDescription")}
                 value={formData.title}
                 onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
               />
@@ -198,7 +198,7 @@ export default function NewIncidentPage() {
                   <Label htmlFor="type_other">Specify type</Label>
                   <Input
                     id="type_other"
-                    placeholder="Describe type"
+                    placeholder={t("incidents.placeholders.describeType")}
                     value={formData.type_other}
                     onChange={(e) => setFormData((prev) => ({ ...prev, type_other: e.target.value }))}
                   />
@@ -261,7 +261,7 @@ export default function NewIncidentPage() {
               <Label htmlFor="description">{t("incidents.labels.description")} *</Label>
               <Textarea
                 id="description"
-                placeholder="Describe what happened, who was involved, and any immediate actions taken…"
+                placeholder={t("incidents.placeholders.describeWhatHappened")}
                 rows={5}
                 value={formData.description}
                 onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
@@ -320,7 +320,7 @@ export default function NewIncidentPage() {
                   value={formData.location_id} 
                   onValueChange={(v) => setFormData((prev) => ({ ...prev, location_id: v }))}
                 >
-                  <SelectTrigger><SelectValue placeholder="Select a location" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("incidents.placeholders.selectLocation")} /></SelectTrigger>
                   <SelectContent>
                     {locations.map((loc) => (
                       <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
@@ -334,7 +334,7 @@ export default function NewIncidentPage() {
                   <Label htmlFor="building">Building</Label>
                   <Input
                     id="building"
-                    placeholder="Building A"
+                    placeholder={t("incidents.placeholders.building")}
                     value={formData.building}
                     onChange={(e) => setFormData((prev) => ({ ...prev, building: e.target.value }))}
                   />
@@ -343,7 +343,7 @@ export default function NewIncidentPage() {
                   <Label htmlFor="floor">Floor</Label>
                   <Input
                     id="floor"
-                    placeholder="2nd Floor"
+                    placeholder={t("incidents.placeholders.floor")}
                     value={formData.floor}
                     onChange={(e) => setFormData((prev) => ({ ...prev, floor: e.target.value }))}
                   />
@@ -352,7 +352,7 @@ export default function NewIncidentPage() {
                   <Label htmlFor="zone">Zone</Label>
                   <Input
                     id="zone"
-                    placeholder="Loading dock"
+                    placeholder={t("incidents.placeholders.zone")}
                     value={formData.zone}
                     onChange={(e) => setFormData((prev) => ({ ...prev, zone: e.target.value }))}
                   />
@@ -361,7 +361,7 @@ export default function NewIncidentPage() {
                   <Label htmlFor="room">Room</Label>
                   <Input
                     id="room"
-                    placeholder="Room 203"
+                    placeholder={t("incidents.placeholders.room")}
                     value={formData.room}
                     onChange={(e) => setFormData((prev) => ({ ...prev, room: e.target.value }))}
                   />
@@ -372,7 +372,7 @@ export default function NewIncidentPage() {
                 <Label htmlFor="location_description">Location description</Label>
                 <Textarea
                   id="location_description"
-                  placeholder="Additional details about the exact location…"
+                  placeholder={t("incidents.placeholders.locationDescription")}
                   rows={2}
                   value={formData.location_description}
                   onChange={(e) => setFormData((prev) => ({ ...prev, location_description: e.target.value }))}
@@ -392,7 +392,7 @@ export default function NewIncidentPage() {
                 value={formData.asset_id} 
                 onValueChange={(v) => setFormData((prev) => ({ ...prev, asset_id: v }))}
               >
-                <SelectTrigger><SelectValue placeholder="Select an asset" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("incidents.placeholders.selectAsset")} /></SelectTrigger>
                 <SelectContent>
                   {allAssets.filter(a => a.status !== "retired").map((asset) => (
                     <SelectItem key={asset.id} value={asset.id}>

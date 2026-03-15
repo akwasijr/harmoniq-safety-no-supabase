@@ -870,7 +870,7 @@ export default function AssetsPage() {
                     id="name"
                     value={newAsset.name}
                     onChange={(e) => setNewAsset({ ...newAsset, name: e.target.value })}
-                    placeholder="e.g., Forklift #12"
+                    placeholder={t("assets.placeholders.assetName")}
                     className="mt-1"
                   />
                 </div>
@@ -880,7 +880,7 @@ export default function AssetsPage() {
                     id="serial"
                     value={newAsset.serial_number}
                     onChange={(e) => setNewAsset({ ...newAsset, serial_number: e.target.value })}
-                    placeholder="e.g., SN-12345"
+                    placeholder={t("assets.placeholders.serialNumber")}
                     className="mt-1"
                   />
                 </div>
@@ -924,7 +924,7 @@ export default function AssetsPage() {
                     id="manufacturer"
                     value={newAsset.manufacturer}
                     onChange={(e) => setNewAsset({ ...newAsset, manufacturer: e.target.value })}
-                    placeholder="e.g., Toyota"
+                    placeholder={t("assets.placeholders.manufacturer")}
                     className="mt-1"
                   />
                 </div>
@@ -934,7 +934,7 @@ export default function AssetsPage() {
                     id="model"
                     value={newAsset.model}
                     onChange={(e) => setNewAsset({ ...newAsset, model: e.target.value })}
-                    placeholder="e.g., 8FGU25"
+                    placeholder={t("assets.placeholders.model")}
                     className="mt-1"
                   />
                 </div>
@@ -967,7 +967,7 @@ export default function AssetsPage() {
                   list="asset-departments"
                   value={newAsset.department}
                   onChange={(e) => setNewAsset({ ...newAsset, department: e.target.value })}
-                  placeholder="e.g., Operations"
+                  placeholder={t("assets.placeholders.department")}
                   className="mt-1"
                 />
                 <datalist id="asset-departments">

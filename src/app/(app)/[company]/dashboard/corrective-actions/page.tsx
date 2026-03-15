@@ -241,7 +241,7 @@ export default function CorrectiveActionsPage() {
               <div>
                 <Label>{t("correctiveActions.labels.asset")} *</Label>
                 <Select value={form.asset_id} onValueChange={(v) => setForm((p) => ({ ...p, asset_id: v }))}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select asset" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t("correctiveActions.placeholders.selectAsset")} /></SelectTrigger>
                   <SelectContent>
                     {assets.filter((a) => a.status !== "retired").map((a) => (
                       <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
@@ -273,7 +273,7 @@ export default function CorrectiveActionsPage() {
               <div>
                 <Label>{t("correctiveActions.labels.assignTo")}</Label>
                 <Select value={form.assigned_to} onValueChange={(v) => setForm((p) => ({ ...p, assigned_to: v }))}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select user" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t("correctiveActions.placeholders.selectUser")} /></SelectTrigger>
                   <SelectContent>
                     {users.filter((u) => u.role !== "super_admin").map((u) => (
                       <SelectItem key={u.id} value={u.id}>{u.first_name} {u.last_name}</SelectItem>

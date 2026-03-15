@@ -79,7 +79,7 @@ export default function PartsPage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <KPICard title={t("parts.title")} value={totalParts} icon={Package} />
-        <KPICard title={t("parts.labels.inventoryValue")} value={`$${totalValue.toLocaleString()}`} icon={Package} />
+        <KPICard title={t("parts.labels.inventoryValue")} value={`$${formatNumber(totalValue)}`} icon={Package} />
         <KPICard title={t("parts.labels.lowStock")} value={lowStockCount} icon={AlertTriangle} />
       </div>
 
@@ -146,11 +146,11 @@ export default function PartsPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label>{t("parts.labels.partName")}</Label>
-                <Input className="mt-1" placeholder="e.g. Hydraulic Filter" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
+                <Input className="mt-1" placeholder={t("parts.placeholders.partName")} value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
               </div>
               <div>
                 <Label>{t("parts.labels.partNumber")}</Label>
-                <Input className="mt-1" placeholder="e.g. HF-2045-A" value={form.part_number} onChange={(e) => setForm(p => ({ ...p, part_number: e.target.value }))} />
+                <Input className="mt-1" placeholder={t("parts.placeholders.partNumber")} value={form.part_number} onChange={(e) => setForm(p => ({ ...p, part_number: e.target.value }))} />
               </div>
               <div className="grid gap-4 grid-cols-2">
                 <div>
@@ -169,7 +169,7 @@ export default function PartsPage() {
                 </div>
                 <div>
                   <Label>{t("parts.labels.supplier")}</Label>
-                  <Input className="mt-1" placeholder="Supplier name" value={form.supplier} onChange={(e) => setForm(p => ({ ...p, supplier: e.target.value }))} />
+                  <Input className="mt-1" placeholder={t("parts.placeholders.supplier")} value={form.supplier} onChange={(e) => setForm(p => ({ ...p, supplier: e.target.value }))} />
                 </div>
               </div>
               <div className="flex gap-2 justify-end">

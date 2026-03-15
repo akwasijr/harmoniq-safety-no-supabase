@@ -457,7 +457,7 @@ export default function NewAssetPage() {
                   capture="environment"
                   onChange={handlePhotoUpload}
                   className="hidden"
-                  aria-label="Upload photo"
+                  aria-label={t("common.uploadPhoto")}
                 />
                 {photos.length > 0 && (
                   <div className="flex gap-2 mb-2">

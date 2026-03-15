@@ -764,7 +764,7 @@ export default function IncidentsPage() {
                   id="title"
                   value={newIncident.title}
                   onChange={(e) => setNewIncident({ ...newIncident, title: e.target.value })}
-                  placeholder="Brief description of the incident"
+                  placeholder={t("incidents.placeholders.briefDescription")}
                   className="mt-1"
                 />
               </div>
@@ -776,7 +776,7 @@ export default function IncidentsPage() {
                   id="description"
                   value={newIncident.description}
                   onChange={(e) => setNewIncident({ ...newIncident, description: e.target.value })}
-                  placeholder="Describe what happened in detail..."
+                  placeholder={t("incidents.placeholders.describeWhatHappened")}
                   rows={4}
                   className="mt-1"
                 />
@@ -807,7 +807,7 @@ export default function IncidentsPage() {
                   id="location_desc"
                   value={newIncident.location_description}
                   onChange={(e) => setNewIncident({ ...newIncident, location_description: e.target.value })}
-                  placeholder="e.g., Near the main entrance, by machine #3"
+                  placeholder={t("incidents.placeholders.locationDetails")}
                   className="mt-1"
                 />
               </div>

@@ -40,7 +40,7 @@ const STATUS_FLOW: Record<string, string[]> = {
 };
 
 export default function WorkOrdersPage() {
-  const { t, formatDate } = useTranslation();
+  const { t, formatDate, formatNumber } = useTranslation();
   const company = useCompanyParam();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -179,7 +179,7 @@ export default function WorkOrdersPage() {
         <KPICard title="Open" value={openCount} icon={ClipboardList} />
         <KPICard title={t("workOrders.statuses.inProgress")} value={inProgressCount} icon={Clock} />
         <KPICard title={t("workOrders.statuses.completed")} value={completedCount} icon={CheckCircle} />
-        <KPICard title={t("workOrders.labels.totalCost")} value={`$${totalCost.toLocaleString()}`} icon={DollarSign} />
+        <KPICard title={t("workOrders.labels.totalCost")} value={`$${formatNumber(totalCost)}`} icon={DollarSign} />
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -300,16 +300,16 @@ export default function WorkOrdersPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label>{t("workOrders.labels.title")} *</Label>
-                <Input className="mt-1" placeholder="Work order title" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} />
+                <Input className="mt-1" placeholder={t("workOrders.placeholders.title")} value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} />
               </div>
               <div>
                 <Label>{t("workOrders.labels.description")} *</Label>
-                <Textarea className="mt-1" placeholder="Describe the work needed" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
+                <Textarea className="mt-1" placeholder={t("workOrders.placeholders.description")} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
               </div>
               <div>
                 <Label>{t("workOrders.labels.asset")}</Label>
                 <Select value={form.asset_id} onValueChange={(v) => setForm((p) => ({ ...p, asset_id: v }))}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select asset" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t("workOrders.placeholders.selectAsset")} /></SelectTrigger>
                   <SelectContent>
                     {assets.filter((a) => a.status !== "retired").map((a) => (
                       <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
@@ -338,7 +338,7 @@ export default function WorkOrdersPage() {
                 <div>
                   <Label>{t("workOrders.labels.assignTo")}</Label>
                   <Select value={form.assigned_to} onValueChange={(v) => setForm((p) => ({ ...p, assigned_to: v }))}>
-                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select user" /></SelectTrigger>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder={t("workOrders.placeholders.selectUser")} /></SelectTrigger>
                     <SelectContent>
                       {users.filter((u) => u.role !== "super_admin").map((u) => (
                         <SelectItem key={u.id} value={u.id}>{u.first_name} {u.last_name}</SelectItem>
@@ -348,7 +348,7 @@ export default function WorkOrdersPage() {
                 </div>
                 <div>
                   <Label>{t("workOrders.labels.estimatedHours")}</Label>
-                  <Input type="number" min="0" step="0.5" className="mt-1" placeholder="e.g. 2.5" value={form.estimated_hours} onChange={(e) => setForm((p) => ({ ...p, estimated_hours: e.target.value }))} />
+                  <Input type="number" min="0" step="0.5" className="mt-1" placeholder={t("workOrders.placeholders.estimatedHours")} value={form.estimated_hours} onChange={(e) => setForm((p) => ({ ...p, estimated_hours: e.target.value }))} />
                 </div>
               </div>
               <div className="flex gap-2 justify-end">

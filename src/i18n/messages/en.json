@@ -26,7 +26,16 @@
     "optional": "Optional",
     "all": "All",
     "home": "Home",
-    "continue": "Continue"
+    "continue": "Continue",
+    "none": "None",
+    "comingSoon": "Coming soon",
+    "uploadPhoto": "Upload photo",
+    "uploadPhotos": "Upload photos",
+    "changeProfilePhoto": "Change profile photo",
+    "notifications": "Notifications",
+    "goBack": "Go back",
+    "unread": "Unread",
+    "completionProgress": "Completion progress"
   },
   "nav": {
     "home": "Home",
@@ -219,7 +228,8 @@
     "language_changed": "Language updated",
     "appVersion": "Harmoniq Safety v1.0.0",
     "offline": "Offline mode",
-    "offlineDesc": "Some features require an internet connection"
+    "offlineDesc": "Some features require an internet connection",
+    "privacySecurity": "Privacy and Security"
   },
   "dashboard": {
     "openIncidents": "Open incidents",
@@ -367,7 +377,8 @@
       "qrCode": "QR Code",
       "warrantyExpiry": "Warranty Expiry",
       "nextCalibration": "Next Calibration",
-      "nextMaintenance": "Next Maintenance"
+      "nextMaintenance": "Next Maintenance",
+      "notAssigned": "Not assigned"
     },
     "statuses": {
       "active": "Active",
@@ -398,7 +409,17 @@
     },
     "placeholders": {
       "searchAssets": "Search assets...",
-      "searchByNameSerialTag": "Search by name, serial number, or tag..."
+      "searchByNameSerialTag": "Search by name, serial number, or tag...",
+      "assetName": "e.g., Forklift #12",
+      "serialNumber": "e.g., SN-12345",
+      "manufacturer": "e.g., Toyota",
+      "model": "e.g., 8FGU25",
+      "department": "e.g., Operations",
+      "completionNotes": "Add any notes about the work done...",
+      "scheduleName": "e.g., Oil Change, Filter Replacement",
+      "optionalDescription": "Optional description...",
+      "meterType": "e.g., Engine Hours, Odometer",
+      "notes": "Any notes"
     },
     "empty": {
       "noAssets": "No assets",
@@ -502,11 +523,33 @@
     "placeholders": {
       "searchIncidents": "Search incidents...",
       "briefDescription": "Brief description...",
-      "describeWhatHappened": "Describe what happened..."
+      "describeWhatHappened": "Describe what happened...",
+      "describeType": "Describe type",
+      "selectLocation": "Select a location",
+      "building": "Building A",
+      "floor": "2nd Floor",
+      "zone": "Loading dock",
+      "room": "Room 203",
+      "locationDescription": "Additional details about the exact location…",
+      "selectAsset": "Select an asset",
+      "locationDetails": "e.g., Near the main entrance, by machine #3",
+      "addNotes": "Add your notes, observations, or comments here…",
+      "lessonsLearned": "Enter lessons learned from this incident...",
+      "witnessName": "Full name of witness",
+      "witnessStatement": "What did the witness observe?",
+      "pleaseSpecify": "Please specify…",
+      "rootCauseDetail": "Describe the root cause in detail...",
+      "shareLessons": "What lessons can be shared to prevent similar incidents?",
+      "additionalNotes": "Add any additional notes or comments…",
+      "actionRequired": "What needs to be done?",
+      "additionalDetails": "Additional details...",
+      "addComment": "Add a comment..."
     },
     "empty": {
       "noIncidents": "No incidents reported"
-    }
+    },
+    "locked": "This incident report is locked and cannot be edited",
+    "lockedShort": "Locked"
   },
   "tickets": {
     "title": "Tickets",
@@ -535,7 +578,9 @@
     "placeholders": {
       "searchTickets": "Search tickets...",
       "briefDescription": "Brief description...",
-      "detailedDescription": "Detailed description..."
+      "detailedDescription": "Detailed description of what needs to be done...",
+      "addTask": "Add a new task...",
+      "addComment": "Add a comment..."
     },
     "empty": {
       "noTickets": "No tickets"
@@ -570,7 +615,10 @@
     },
     "placeholders": {
       "searchUsers": "Search users...",
-      "searchTeams": "Search teams..."
+      "searchTeams": "Search teams...",
+      "department": "e.g., Operations, Safety",
+      "teamName": "e.g., Safety Committee",
+      "teamDescription": "Brief description of team's purpose"
     },
     "admins": "Admins",
     "managers": "Managers",
@@ -705,6 +753,7 @@
   },
   "locations": {
     "types": {
+      "site": "Campus",
       "campus": "Campus",
       "building": "Building",
       "floor": "Floor",
@@ -794,7 +843,11 @@
     "assetInspectionDesc": "Inspect equipment at this location",
     "emergencyContacts": "Emergency Contacts",
     "locationInfo": "Location Info",
-    "workers": "Workers"
+    "workers": "Workers",
+    "emergency": {
+      "services": "Emergency Services",
+      "role": "Emergency"
+    }
   },
   "analytics": {
     "title": "Analytics",
@@ -881,7 +934,10 @@
     "submitting": "Submitting...",
     "completeChecklist": "Complete Checklist",
     "nextItem": "Next Item",
-    "enterResponse": "Enter your response..."
+    "enterResponse": "Enter your response...",
+    "placeholders": {
+      "checklistName": "Daily forklift inspection"
+    }
   },
   "content": {
     "title": "Content",
@@ -899,7 +955,9 @@
       "create": "Create"
     },
     "placeholders": {
-      "searchContent": "Search content..."
+      "searchContent": "Search content...",
+      "linkUrl": "https://...",
+      "category": "e.g., Safety, Training, Policy"
     }
   },
   "qrCodes": {
@@ -927,7 +985,9 @@
     },
     "placeholders": {
       "searchQrCodes": "Search QR codes...",
-      "qrCodeName": "QR code name..."
+      "qrCodeName": "QR code name...",
+      "name": "e.g., Main Entrance",
+      "description": "Short description for this QR code"
     }
   },
   "workOrders": {
@@ -959,7 +1019,12 @@
       "create": "Create"
     },
     "placeholders": {
-      "searchWorkOrders": "Search work orders..."
+      "searchWorkOrders": "Search work orders...",
+      "title": "Work order title",
+      "description": "Describe the work needed",
+      "selectAsset": "Select asset",
+      "selectUser": "Select user",
+      "estimatedHours": "e.g. 2.5"
     }
   },
   "correctiveActions": {
@@ -986,7 +1051,9 @@
     },
     "placeholders": {
       "searchActions": "Search actions...",
-      "whatNeedsCorrected": "What needs to be corrected..."
+      "whatNeedsCorrected": "What needs to be corrected...",
+      "selectAsset": "Select asset",
+      "selectUser": "Select user"
     }
   },
   "parts": {
@@ -1007,7 +1074,10 @@
       "addPart": "Add Part"
     },
     "placeholders": {
-      "searchParts": "Search parts..."
+      "searchParts": "Search parts...",
+      "partName": "e.g., Hydraulic Filter",
+      "partNumber": "e.g., HF-2045-A",
+      "supplier": "Supplier name"
     }
   },
   "maintenance": {
@@ -1326,5 +1396,157 @@
     "osaTitle": "OSA - Organisatorisk och Social Arbetsmiljö",
     "rieTitle": "RI&E (Risico-Inventarisatie en -Evaluatie)",
     "samTitle": "SAM - Systematiskt Arbetsmiljöarbete"
+  },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "signInToAccount": "Sign in to your account",
+    "createAccount": "Create your account",
+    "signUpCorporate": "Sign up with your corporate account",
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "name@company.com",
+    "passwordPlaceholder": "Enter your password",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signingIn": "Signing in…",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Reset your password",
+    "forgotPasswordDesc": "Enter your email and we'll send you a reset link",
+    "sendResetLink": "Send reset link",
+    "sendingResetLink": "Sending…",
+    "resetLinkSent": "Check your email for a password reset link",
+    "resetPassword": "Reset password",
+    "resetPasswordTitle": "Set new password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "updatePassword": "Update password",
+    "updatingPassword": "Updating…",
+    "passwordUpdated": "Password updated successfully",
+    "magicLink": "Sign in with magic link instead",
+    "passwordMode": "Sign in with password instead",
+    "sendMagicLink": "Send magic link",
+    "sendingMagicLink": "Sending…",
+    "magicLinkSent": "Check your email for a magic link",
+    "chooseApp": "Choose app",
+    "dashboard": "Dashboard",
+    "mobileApp": "Mobile App",
+    "signUpGoogle": "Sign up with Google",
+    "signUpMicrosoft": "Sign up with Microsoft",
+    "alreadyHaveAccount": "Already have an account?",
+    "logIn": "Log in",
+    "backToHome": "← Back to home",
+    "companyName": "Company name",
+    "country": "Country"
+  },
+  "tasks": {
+    "title": "My Tasks",
+    "all": "All",
+    "tickets": "Tickets",
+    "workOrders": "Work Orders",
+    "actions": "Actions",
+    "empty": "No tasks assigned to you",
+    "emptyTickets": "No tickets assigned",
+    "emptyWorkOrders": "No work orders",
+    "emptyActions": "No corrective actions",
+    "assignedBy": "Assigned by",
+    "requestedBy": "Requested by",
+    "due": "Due",
+    "overdue": "Overdue",
+    "relatedAsset": "Asset",
+    "viewAll": "View all tasks"
+  },
+  "app.pending": "Pending",
+  "errors.network": "Network error",
+  "errors.networkDesc": "Please check your internet connection and try again.",
+  "errors.notFound": "Page not found",
+  "errors.notFoundDesc": "The page you're looking for doesn't exist or has been moved.",
+  "errors.permission": "Access denied",
+  "errors.permissionDesc": "You don't have permission to view this page.",
+  "errors.timeout": "Request timed out",
+  "errors.timeoutDesc": "The server took too long to respond. Please try again.",
+  "errors.server": "Server error",
+  "errors.serverDesc": "Something went wrong on our end. Please try again later.",
+  "errors.maintenance": "Under maintenance",
+  "errors.maintenanceDesc": "We're performing scheduled maintenance. Please check back soon.",
+  "errors.rateLimit": "Too many requests",
+  "errors.rateLimitDesc": "Please wait a moment before trying again.",
+  "errors.generic": "Something went wrong",
+  "errors.genericDesc": "An unexpected error occurred. Please try again.",
+  "errors.tryAgain": "Try again",
+  "errors.goBack": "Go back",
+  "errors.goHome": "Go to homepage",
+  "errors.refresh": "Refresh page",
+  "errors.sessionExpired": "Session expired",
+  "errors.sessionExpiredDesc": "Your session has expired. Please sign in again to continue.",
+  "errors.signIn": "Sign in",
+  "common.filters": "Filters",
+  "common.clearAll": "Clear all",
+  "common.apply": "Apply",
+  "validation.required": "This field is required",
+  "validation.minLength": "Must be at least {min} characters",
+  "validation.invalidDate": "Please enter a valid date",
+  "validation.selectOption": "Please select an option",
+  "inspectionRoutes": {
+    "title": "Inspection Routes",
+    "createRoute": "Create Route",
+    "createInspectionRoute": "Create Inspection Route",
+    "checkpoints": "Checkpoints",
+    "checkpoint": "Checkpoint",
+    "completed": "completed",
+    "unknownAsset": "Unknown asset",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "addCheckpoint": "Add Checkpoint",
+    "kpi": {
+      "activeRoutes": "Active Routes",
+      "totalRoutes": "Total Routes",
+      "completedRounds": "Completed Rounds"
+    },
+    "empty": {
+      "title": "No inspection routes yet",
+      "description": "Create a route to start scheduled inspections."
+    },
+    "labels": {
+      "routeName": "Route Name",
+      "description": "Description",
+      "recurrence": "Recurrence",
+      "asset": "Asset",
+      "checkType": "Check Type",
+      "whatToCheck": "What to check",
+      "instructions": "Instructions",
+      "min": "Min",
+      "max": "Max",
+      "unit": "Unit"
+    },
+    "recurrence": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "once": "One-time"
+    },
+    "checkTypes": {
+      "visual": "Visual",
+      "auditory": "Auditory",
+      "measurement": "Measurement",
+      "functional": "Functional",
+      "safety": "Safety"
+    },
+    "placeholders": {
+      "routeName": "e.g., Morning Safety Walk",
+      "description": "Describe the inspection route...",
+      "selectAsset": "Select asset...",
+      "whatToCheck": "e.g., Check belt tension",
+      "instructions": "Detailed instructions...",
+      "unit": "e.g., °C, psi"
+    },
+    "toast": {
+      "routeCreated": "Inspection route created",
+      "routeActivated": "Route activated",
+      "routeDeactivated": "Route deactivated",
+      "routeDeleted": "Route deleted"
+    },
+    "validation": {
+      "nameAndCheckpointRequired": "Name and at least one checkpoint are required"
+    }
   }
 }

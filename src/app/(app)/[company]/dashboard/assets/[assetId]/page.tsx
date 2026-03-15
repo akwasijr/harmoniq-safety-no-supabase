@@ -190,6 +190,7 @@ export default function AssetDetailPage() {
     model: asset?.model || "",
     purchase_date: asset?.purchase_date || "",
     warranty_expiry: asset?.warranty_expiry || "",
+    location_id: asset?.location_id || "",
   });
 
   React.useEffect(() => {
@@ -204,6 +205,7 @@ export default function AssetDetailPage() {
       model: asset.model || "",
       purchase_date: asset.purchase_date || "",
       warranty_expiry: asset.warranty_expiry || "",
+      location_id: asset.location_id || "",
     });
   }, [asset?.id]);
 
@@ -430,6 +432,7 @@ export default function AssetDetailPage() {
                       model: editedAsset.model || null,
                       purchase_date: editedAsset.purchase_date || null,
                       warranty_expiry: editedAsset.warranty_expiry || null,
+                      location_id: editedAsset.location_id || null,
                       updated_at: new Date().toISOString(),
                     });
                     toast("Asset updated");
@@ -610,7 +613,20 @@ export default function AssetDetailPage() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t("assets.labels.location")}</Label>
-                  {assetLocation ? (
+                  {isEditing ? (
+                    <select
+                      value={editedAsset.location_id}
+                      onChange={(e) => setEditedAsset((prev) => ({ ...prev, location_id: e.target.value }))}
+                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="">{t("common.none")} — {t("assets.labels.notAssigned")}</option>
+                      {locations.map((loc) => (
+                        <option key={loc.id} value={loc.id}>
+                          {loc.name} ({loc.type})
+                        </option>
+                      ))}
+                    </select>
+                  ) : assetLocation ? (
                     <div className="flex items-center gap-2 mt-0.5">
                       <Link
                         href={`/${company}/dashboard/locations?selected=${assetLocation.id}`}
@@ -624,7 +640,7 @@ export default function AssetDetailPage() {
                       )}
                     </div>
                   ) : (
-                    <p className="font-medium text-muted-foreground">Not assigned</p>
+                    <p className="font-medium text-muted-foreground">{t("assets.labels.notAssigned")}</p>
                   )}
                 </div>
                 <div>
@@ -846,7 +862,7 @@ export default function AssetDetailPage() {
           // Group by day
           const grouped: Record<string, TimelineEvent[]> = {};
           sorted.forEach((ev) => {
-            const day = new Date(ev.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+            const day = formatDate(ev.date, { year: "numeric", month: "long", day: "numeric" });
             if (!grouped[day]) grouped[day] = [];
             grouped[day].push(ev);
           });
@@ -902,7 +918,7 @@ export default function AssetDetailPage() {
                                   <p className="font-medium text-sm">{ev.title}</p>
                                   <p className="text-xs text-muted-foreground">{ev.description}</p>
                                   <p className="text-xs text-muted-foreground mt-0.5">
-                                    {new Date(ev.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                    {formatDate(ev.date, { hour: "2-digit", minute: "2-digit" })}
                                   </p>
                                 </div>
                               </div>
@@ -1057,7 +1073,7 @@ export default function AssetDetailPage() {
                 </p>
                 <div>
                   <Label>Notes (optional)</Label>
-                  <Input id="complete-notes" placeholder="Add any notes about the work done..." className="mt-1" />
+                  <Input id="complete-notes" placeholder={t("assets.placeholders.completionNotes")} className="mt-1" />
                 </div>
                 <div className="flex gap-2 justify-end">
                   <Button variant="outline" onClick={() => setShowCompleteModal(null)}>Cancel</Button>
@@ -1134,11 +1150,11 @@ export default function AssetDetailPage() {
                 >
                   <div>
                     <Label htmlFor="sched-name">Name *</Label>
-                    <Input id="sched-name" placeholder="e.g., Oil Change, Filter Replacement" className="mt-1" required />
+                    <Input id="sched-name" placeholder={t("assets.placeholders.scheduleName")} className="mt-1" required />
                   </div>
                   <div>
                     <Label htmlFor="sched-desc">Description</Label>
-                    <Input id="sched-desc" placeholder="Optional description..." className="mt-1" />
+                    <Input id="sched-desc" placeholder={t("assets.placeholders.optionalDescription")} className="mt-1" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -1237,7 +1253,7 @@ export default function AssetDetailPage() {
                   <CardContent className="space-y-4">
                     <div>
                       <Label>Meter Type *</Label>
-                      <Input className="mt-1" placeholder="e.g. Engine Hours, Odometer" value={readingForm.meter_type} onChange={(e) => setReadingForm(p => ({ ...p, meter_type: e.target.value }))} />
+                      <Input className="mt-1" placeholder={t("assets.placeholders.meterType")} value={readingForm.meter_type} onChange={(e) => setReadingForm(p => ({ ...p, meter_type: e.target.value }))} />
                     </div>
                     <div className="grid gap-4 grid-cols-2">
                       <div>
@@ -1255,7 +1271,7 @@ export default function AssetDetailPage() {
                     </div>
                     <div>
                       <Label>Notes (optional)</Label>
-                      <Input className="mt-1" placeholder="Any notes" value={readingForm.notes} onChange={(e) => setReadingForm(p => ({ ...p, notes: e.target.value }))} />
+                      <Input className="mt-1" placeholder={t("assets.placeholders.notes")} value={readingForm.notes} onChange={(e) => setReadingForm(p => ({ ...p, notes: e.target.value }))} />
                     </div>
                     <div className="flex gap-2 justify-end">
                       <Button variant="outline" onClick={() => setShowAddReading(false)}>Cancel</Button>

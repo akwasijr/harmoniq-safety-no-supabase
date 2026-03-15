@@ -27,6 +27,7 @@ import {
   Ticket,
   ExternalLink,
   Upload,
+  Lock,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +40,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
+import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -118,10 +120,12 @@ export default function IncidentDetailPage() {
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
   const { items: incidents, isLoading, update: updateIncident, remove: removeIncident } = useIncidentsStore();
-  const { items: tickets } = useTicketsStore();
+  const { items: tickets, add: addTicket } = useTicketsStore();
+  const { add: addCorrectiveAction } = useCorrectiveActionsStore();
   const { items: users } = useUsersStore();
 
   const incident = incidents.find((i) => i.id === incidentId);
+  const isLocked = incident?.status === "resolved" || incident?.status === "archived";
   
   // Read investigation and actions from store (persisted)
   const investigation = incident?.investigation ?? null;
@@ -252,6 +256,43 @@ export default function IncidentDetailPage() {
     };
     
     setActions([...actions, action]);
+
+    // Create actual ticket in store so it appears in tickets list and mobile tasks
+    addTicket({
+      id: ticketId,
+      company_id: incident.company_id,
+      title: newAction.title,
+      description: newAction.description || `${newAction.actionType === "corrective" ? "Corrective" : "Preventive"} action from incident`,
+      priority: newAction.priority as any,
+      status: "new",
+      due_date: newAction.dueDate || null,
+      assigned_to: newAction.assignee || null,
+      assigned_groups: [],
+      incident_ids: [incidentId],
+      created_by: incident.reporter_id || "",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    // Sync corrective actions to the corrective actions store
+    if (newAction.actionType === "corrective") {
+      addCorrectiveAction({
+        id: `ca-${Date.now()}`,
+        company_id: incident.company_id,
+        description: newAction.description || newAction.title,
+        severity: newAction.priority === "urgent" ? "critical" : newAction.priority === "high" ? "high" : newAction.priority === "low" ? "low" : "medium",
+        assigned_to: newAction.assignee || null,
+        asset_id: "",
+        inspection_id: null,
+        due_date: newAction.dueDate || new Date().toISOString(),
+        status: "open",
+        resolution_notes: null,
+        completed_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+
     setShowAddActionModal(false);
     setNewAction({ title: "", description: "", priority: "medium", dueDate: "", assignee: "", actionType: "corrective" });
     toast(`${action.actionType === 'corrective' ? 'Corrective' : 'Preventive'} action created.`, "success");
@@ -344,8 +385,16 @@ export default function IncidentDetailPage() {
         </div>
       </div>
 
+      {/* Locked banner */}
+      {isLocked && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900/50 dark:bg-amber-900/20">
+          <Lock className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">{t("incidents.locked")}</p>
+        </div>
+      )}
+
       {/* Tabs */}
-      <DetailTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <DetailTabs tabs={isLocked ? tabs.filter((tab) => tab.id !== "settings") : tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Tab Content */}
       {activeTab === "details" && (
@@ -722,7 +771,7 @@ export default function IncidentDetailPage() {
                       <div>
                         <Label className="text-muted-foreground">Notes & Comments</Label>
                         <Textarea
-                          placeholder="Add your notes, observations, or comments here…"
+                          placeholder={t("incidents.placeholders.addNotes")}
                           value={investigation.notes}
                           onChange={(e) => setInvestigation({ ...investigation, notes: e.target.value })}
                           rows={4}
@@ -840,7 +889,7 @@ export default function IncidentDetailPage() {
                   {showLessonsInput && !investigation.lessonsLearned ? (
                     <div className="space-y-3">
                       <Textarea
-                        placeholder="Enter lessons learned from this incident..."
+                        placeholder={t("incidents.placeholders.lessonsLearned")}
                         value={lessonsInputValue}
                         onChange={(e) => setLessonsInputValue(e.target.value)}
                         rows={3}
@@ -929,7 +978,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Witness Name *</Label>
                     <Input 
-                      placeholder="Full name of witness"
+                      placeholder={t("incidents.placeholders.witnessName")}
                       value={newWitness.name}
                       onChange={(e) => setNewWitness({ ...newWitness, name: e.target.value })}
                     />
@@ -937,7 +986,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Statement *</Label>
                     <Textarea 
-                      placeholder="What did the witness observe?"
+                      placeholder={t("incidents.placeholders.witnessStatement")}
                       value={newWitness.statement}
                       onChange={(e) => setNewWitness({ ...newWitness, statement: e.target.value })}
                       rows={4}
@@ -983,7 +1032,7 @@ export default function IncidentDetailPage() {
                     </select>
                     {investigation.rootCauseCategory === "other" && (
                       <Input
-                        placeholder="Please specify…"
+                        placeholder={t("incidents.placeholders.pleaseSpecify")}
                         value={investigation.rootCauseOther}
                         onChange={(e) => setInvestigation({ ...investigation, rootCauseOther: e.target.value })}
                         className="mt-2"
@@ -993,7 +1042,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Root Cause Description</Label>
                     <Textarea 
-                      placeholder="Describe the root cause in detail..."
+                      placeholder={t("incidents.placeholders.rootCauseDetail")}
                       value={investigation.rootCauseDescription}
                       onChange={(e) => setInvestigation({ ...investigation, rootCauseDescription: e.target.value })}
                       rows={3}
@@ -1024,7 +1073,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Lessons Learned</Label>
                     <Textarea 
-                      placeholder="What lessons can be shared to prevent similar incidents?"
+                      placeholder={t("incidents.placeholders.shareLessons")}
                       value={investigation.lessonsLearned}
                       onChange={(e) => setInvestigation({ ...investigation, lessonsLearned: e.target.value })}
                       rows={3}
@@ -1036,7 +1085,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Notes & Comments</Label>
                     <Textarea
-                      placeholder="Add any additional notes or comments…"
+                      placeholder={t("incidents.placeholders.additionalNotes")}
                       value={investigation.notes}
                       onChange={(e) => setInvestigation({ ...investigation, notes: e.target.value })}
                       rows={3}
@@ -1276,7 +1325,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Action Title *</Label>
                     <Input 
-                      placeholder="What needs to be done?"
+                      placeholder={t("incidents.placeholders.actionRequired")}
                       value={newAction.title}
                       onChange={(e) => setNewAction({ ...newAction, title: e.target.value })}
                     />
@@ -1284,7 +1333,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Description</Label>
                     <Textarea 
-                      placeholder="Additional details..."
+                      placeholder={t("incidents.placeholders.additionalDetails")}
                       value={newAction.description}
                       onChange={(e) => setNewAction({ ...newAction, description: e.target.value })}
                       rows={3}
@@ -1379,7 +1428,7 @@ export default function IncidentDetailPage() {
                   You
                 </div>
                 <div className="flex-1 space-y-2">
-                  <Textarea placeholder="Add a comment..." value={newComment} onChange={(e) => setNewComment(e.target.value)} rows={3} />
+                  <Textarea placeholder={t("incidents.placeholders.addComment")} value={newComment} onChange={(e) => setNewComment(e.target.value)} rows={3} />
                   <Button 
                     size="sm" 
                     disabled={!newComment.trim()}
@@ -1470,7 +1519,7 @@ export default function IncidentDetailPage() {
         </div>
       )}
 
-      {activeTab === "settings" && (
+      {activeTab === "settings" && !isLocked && (
         <div className="space-y-6">
           <Card>
             <CardHeader>

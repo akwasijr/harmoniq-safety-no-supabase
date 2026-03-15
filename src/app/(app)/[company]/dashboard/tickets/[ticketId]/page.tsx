@@ -29,6 +29,7 @@ import { useTicketsStore } from "@/stores/tickets-store";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function TicketDetailPage() {
   const router = useRouter();
@@ -39,9 +40,12 @@ export default function TicketDetailPage() {
   const [activeTab, setActiveTab] = React.useState<string>("info");
   const [newComment, setNewComment] = React.useState("");
   const [newTask, setNewTask] = React.useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
+  const { hasPermission } = useAuth();
+  const canDeleteTicket = hasPermission("incidents.delete");
   const { items: tickets, isLoading, update: updateTicket, remove: removeTicket } = useTicketsStore();
   const ticket = tickets.find((t) => t.id === ticketId);
 
@@ -64,20 +68,52 @@ export default function TicketDetailPage() {
     if (ticket) setEditedDescription(ticket.description);
   }, [ticket?.id]);
 
-  // Mock tasks
-  const [tasks, setTasks] = React.useState([
+  type TicketTask = { id: string; title: string; completed: boolean };
+  const TASKS_KEY = `harmoniq_ticket_tasks_${ticketId}`;
+  const defaultTasks: TicketTask[] = [
     { id: "t1", title: "Review incident report", completed: true },
     { id: "t2", title: "Contact witness", completed: true },
     { id: "t3", title: "Order replacement parts", completed: false },
     { id: "t4", title: "Schedule follow-up inspection", completed: false },
-  ]);
+  ];
+  const [tasks, setTasks] = React.useState<TicketTask[]>(() => {
+    if (typeof window === "undefined") return defaultTasks;
+    try {
+      const stored = window.localStorage.getItem(TASKS_KEY);
+      return stored ? JSON.parse(stored) : defaultTasks;
+    } catch { return defaultTasks; }
+  });
 
-  // Mock comments
-  const [comments, setComments] = React.useState([
+  type TicketComment = { id: string; author: string; text: string; date: string; avatar: string };
+  const COMMENTS_KEY = `harmoniq_ticket_comments_${ticketId}`;
+  const defaultComments: TicketComment[] = [
     { id: "c1", author: "John Doe", text: "Started investigation", date: "2024-01-28 09:30", avatar: "JD" },
     { id: "c2", author: "Jane Smith", text: "Parts ordered, ETA 3 days", date: "2024-01-28 14:15", avatar: "JS" },
     { id: "c3", author: "Mike Johnson", text: "Confirmed with supplier - delivery on track", date: "2024-01-29 10:00", avatar: "MJ" },
-  ]);
+  ];
+  const [comments, setComments] = React.useState<TicketComment[]>(() => {
+    if (typeof window === "undefined") return defaultComments;
+    try {
+      const stored = window.localStorage.getItem(COMMENTS_KEY);
+      return stored ? JSON.parse(stored) : defaultComments;
+    } catch { return defaultComments; }
+  });
+
+  // Persist comments to localStorage
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
+    } catch { /* storage full */ }
+  }, [comments, COMMENTS_KEY]);
+
+  // Persist tasks to localStorage
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+    } catch { /* storage full */ }
+  }, [tasks, TASKS_KEY]);
 
   // Mock documents
   const documents = [
@@ -102,6 +138,14 @@ export default function TicketDetailPage() {
       setTasks([...tasks, { id: `t${Date.now()}`, title: newTask, completed: false }]);
       setNewTask("");
     }
+  };
+
+  const handleDeleteTicket = () => {
+    if (!ticket) return;
+    removeTicket(ticket.id);
+    toast("Ticket deleted", "info");
+    setShowDeleteConfirm(false);
+    router.push(`/${company}/dashboard/tickets`);
   };
 
   if (!ticket) {
@@ -168,6 +212,12 @@ export default function TicketDetailPage() {
                 </Button>
               )}
             </>
+          )}
+          {canDeleteTicket && (
+            <Button variant="destructive" className="gap-2" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
           )}
         </div>
       </div>
@@ -292,7 +342,7 @@ export default function TicketDetailPage() {
                 <Input
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
-                  placeholder="Add a new task..."
+                  placeholder={t("tickets.placeholders.addTask")}
                   onKeyDown={(e) => e.key === "Enter" && addTask()}
                 />
                 <Button onClick={addTask} disabled={!newTask.trim()}>
@@ -367,7 +417,7 @@ export default function TicketDetailPage() {
                 </div>
                 <div className="flex-1">
                   <Textarea
-                    placeholder="Add a comment..."
+                    placeholder={t("tickets.placeholders.addComment")}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     rows={2}
@@ -472,6 +522,7 @@ export default function TicketDetailPage() {
                   Close Ticket
                 </Button>
               </div>
+              {canDeleteTicket && (
               <div className="flex items-center justify-between rounded-lg border border-destructive/50 p-4 bg-destructive/5">
                 <div>
                   <p className="font-medium text-destructive">Delete Ticket</p>
@@ -482,21 +533,48 @@ export default function TicketDetailPage() {
                 <Button
                   variant="destructive"
                   className="gap-2"
-                  onClick={() => {
-                    if (!ticket) return;
-                    removeTicket(ticket.id);
-                    toast("Ticket deleted", "info");
-                    router.push(`/${company}/dashboard/tickets`);
-                  }}
+                  onClick={() => setShowDeleteConfirm(true)}
                 >
                   <Trash2 className="h-4 w-4" />
                   Delete
                 </Button>
               </div>
+              )}
             </CardContent>
           </Card>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="relative z-50 w-full max-w-md rounded-lg bg-background p-6 shadow-xl mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="rounded-full bg-destructive/10 p-3">
+                <Trash2 className="h-6 w-6 text-destructive" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Delete Ticket</h2>
+                <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
+              </div>
+            </div>
+            
+            <p className="text-sm mb-4">
+              Are you sure you want to delete <strong>{ticket.title}</strong>? 
+              All associated data will be permanently removed.
+            </p>
+            
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setShowDeleteConfirm(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button variant="destructive" className="flex-1" onClick={handleDeleteTicket}>
+                Delete Ticket
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

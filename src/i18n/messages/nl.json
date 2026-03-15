@@ -26,7 +26,16 @@
     "optional": "Optioneel",
     "all": "Alle",
     "home": "Startpagina",
-    "continue": "Doorgaan"
+    "continue": "Doorgaan",
+    "none": "Geen",
+    "comingSoon": "Binnenkort beschikbaar",
+    "uploadPhoto": "Foto uploaden",
+    "uploadPhotos": "Foto's uploaden",
+    "changeProfilePhoto": "Profielfoto wijzigen",
+    "notifications": "Meldingen",
+    "goBack": "Ga terug",
+    "unread": "Ongelezen",
+    "completionProgress": "Voortgang voltooiing"
   },
   "nav": {
     "home": "Startpagina",
@@ -219,7 +228,8 @@
     "language_changed": "Taal bijgewerkt",
     "appVersion": "Harmoniq Safety v1.0.0",
     "offline": "Offline modus",
-    "offlineDesc": "Sommige functies vereisen een internetverbinding"
+    "offlineDesc": "Sommige functies vereisen een internetverbinding",
+    "privacySecurity": "Privacy en beveiliging"
   },
   "dashboard": {
     "openIncidents": "Open incidenten",
@@ -367,7 +377,8 @@
       "qrCode": "QR-code",
       "warrantyExpiry": "Garantie vervaldatum",
       "nextCalibration": "Volgende kalibratie",
-      "nextMaintenance": "Volgend onderhoud"
+      "nextMaintenance": "Volgend onderhoud",
+      "notAssigned": "Niet toegewezen"
     },
     "statuses": {
       "active": "Actief",
@@ -398,7 +409,17 @@
     },
     "placeholders": {
       "searchAssets": "Middelen zoeken...",
-      "searchByNameSerialTag": "Zoeken op naam, serienummer of tag..."
+      "searchByNameSerialTag": "Zoeken op naam, serienummer of tag...",
+      "assetName": "bijv. Heftruck #12",
+      "serialNumber": "bijv. SN-12345",
+      "manufacturer": "bijv. Toyota",
+      "model": "bijv. 8FGU25",
+      "department": "bijv. Operaties",
+      "completionNotes": "Voeg opmerkingen toe over het uitgevoerde werk...",
+      "scheduleName": "bijv. Olieverversing, Filtervervanging",
+      "optionalDescription": "Optionele beschrijving...",
+      "meterType": "bijv. Motoruren, Kilometerteller",
+      "notes": "Eventuele opmerkingen"
     },
     "empty": {
       "noAssets": "Geen middelen",
@@ -502,11 +523,33 @@
     "placeholders": {
       "searchIncidents": "Incidenten zoeken...",
       "briefDescription": "Korte beschrijving...",
-      "describeWhatHappened": "Beschrijf wat er is gebeurd..."
+      "describeWhatHappened": "Beschrijf wat er is gebeurd...",
+      "describeType": "Beschrijf type",
+      "selectLocation": "Selecteer een locatie",
+      "building": "Gebouw A",
+      "floor": "2e verdieping",
+      "zone": "Laadperron",
+      "room": "Kamer 203",
+      "locationDescription": "Aanvullende details over de exacte locatie…",
+      "selectAsset": "Selecteer een asset",
+      "locationDetails": "bijv. Bij de hoofdingang, naast machine #3",
+      "addNotes": "Voeg uw notities, observaties of opmerkingen toe…",
+      "lessonsLearned": "Voer geleerde lessen van dit incident in...",
+      "witnessName": "Volledige naam van getuige",
+      "witnessStatement": "Wat heeft de getuige waargenomen?",
+      "pleaseSpecify": "Gelieve te specificeren…",
+      "rootCauseDetail": "Beschrijf de grondoorzaak in detail...",
+      "shareLessons": "Welke lessen kunnen worden gedeeld om soortgelijke incidenten te voorkomen?",
+      "additionalNotes": "Voeg eventuele aanvullende notities of opmerkingen toe…",
+      "actionRequired": "Wat moet er gedaan worden?",
+      "additionalDetails": "Aanvullende details...",
+      "addComment": "Reactie toevoegen..."
     },
     "empty": {
       "noIncidents": "Geen incidenten gemeld"
-    }
+    },
+    "locked": "Dit incidentrapport is vergrendeld en kan niet worden bewerkt",
+    "lockedShort": "Vergrendeld"
   },
   "tickets": {
     "title": "Tickets",
@@ -535,7 +578,9 @@
     "placeholders": {
       "searchTickets": "Tickets zoeken...",
       "briefDescription": "Korte beschrijving...",
-      "detailedDescription": "Gedetailleerde beschrijving..."
+      "detailedDescription": "Gedetailleerde beschrijving van wat er gedaan moet worden...",
+      "addTask": "Nieuwe taak toevoegen...",
+      "addComment": "Reactie toevoegen..."
     },
     "empty": {
       "noTickets": "Geen tickets"
@@ -570,7 +615,10 @@
     },
     "placeholders": {
       "searchUsers": "Gebruikers zoeken...",
-      "searchTeams": "Teams zoeken..."
+      "searchTeams": "Teams zoeken...",
+      "department": "bijv. Operaties, Veiligheid",
+      "teamName": "bijv. Veiligheidscommissie",
+      "teamDescription": "Korte beschrijving van het doel van het team"
     },
     "admins": "Beheerders",
     "managers": "Managers",
@@ -705,11 +753,12 @@
   },
   "locations": {
     "types": {
+      "site": "Campus",
       "campus": "Campus",
       "building": "Gebouw",
       "floor": "Verdieping",
       "zone": "Zone",
-      "room": "Ruimte"
+      "room": "Kamer"
     },
     "labels": {
       "name": "Naam",
@@ -794,7 +843,11 @@
     "assetInspectionDesc": "Inspecteer apparatuur op deze locatie",
     "emergencyContacts": "Noodgeval Contacts",
     "locationInfo": "Locatie Info",
-    "workers": "Medewerkers"
+    "workers": "Medewerkers",
+    "emergency": {
+      "services": "Hulpdiensten",
+      "role": "Noodgeval"
+    }
   },
   "analytics": {
     "title": "Analyse",
@@ -881,7 +934,10 @@
     "submitting": "Indienen...",
     "completeChecklist": "Checklist voltooien",
     "nextItem": "Volgende Item",
-    "enterResponse": "Voer uw antwoord in..."
+    "enterResponse": "Voer uw antwoord in...",
+    "placeholders": {
+      "checklistName": "Dagelijkse heftruckinspectie"
+    }
   },
   "content": {
     "title": "Inhoud",
@@ -899,7 +955,9 @@
       "create": "Aanmaken"
     },
     "placeholders": {
-      "searchContent": "Inhoud zoeken..."
+      "searchContent": "Inhoud zoeken...",
+      "linkUrl": "https://...",
+      "category": "bijv. Veiligheid, Training, Beleid"
     }
   },
   "qrCodes": {
@@ -927,7 +985,9 @@
     },
     "placeholders": {
       "searchQrCodes": "QR-codes zoeken...",
-      "qrCodeName": "QR-codenaam..."
+      "qrCodeName": "QR-codenaam...",
+      "name": "bijv. Hoofdingang",
+      "description": "Korte beschrijving voor deze QR-code"
     }
   },
   "workOrders": {
@@ -959,7 +1019,12 @@
       "create": "Aanmaken"
     },
     "placeholders": {
-      "searchWorkOrders": "Werkorders zoeken..."
+      "searchWorkOrders": "Werkorders zoeken...",
+      "title": "Titel werkorder",
+      "description": "Beschrijf het benodigde werk",
+      "selectAsset": "Selecteer asset",
+      "selectUser": "Selecteer gebruiker",
+      "estimatedHours": "bijv. 2,5"
     }
   },
   "correctiveActions": {
@@ -986,7 +1051,9 @@
     },
     "placeholders": {
       "searchActions": "Maatregelen zoeken...",
-      "whatNeedsCorrected": "Wat moet worden gecorrigeerd..."
+      "whatNeedsCorrected": "Wat moet worden gecorrigeerd...",
+      "selectAsset": "Selecteer asset",
+      "selectUser": "Selecteer gebruiker"
     }
   },
   "parts": {
@@ -1007,7 +1074,10 @@
       "addPart": "Onderdeel toevoegen"
     },
     "placeholders": {
-      "searchParts": "Onderdelen zoeken..."
+      "searchParts": "Onderdelen zoeken...",
+      "partName": "bijv. Hydraulisch filter",
+      "partNumber": "bijv. HF-2045-A",
+      "supplier": "Naam leverancier"
     }
   },
   "maintenance": {
@@ -1326,5 +1396,157 @@
     "osaTitle": "OSA - Organisatorisk och Social Arbetsmiljö",
     "rieTitle": "RI&E (Risico-Inventarisatie en -Evaluatie)",
     "samTitle": "SAM - Systematiskt Arbetsmiljöarbete"
+  },
+  "auth": {
+    "welcomeBack": "Welkom terug",
+    "signInToAccount": "Log in op uw account",
+    "createAccount": "Maak uw account aan",
+    "signUpCorporate": "Meld u aan met uw zakelijke account",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "emailPlaceholder": "naam@bedrijf.com",
+    "passwordPlaceholder": "Voer uw wachtwoord in",
+    "signIn": "Inloggen",
+    "signUp": "Registreren",
+    "signingIn": "Bezig met inloggen…",
+    "forgotPassword": "Wachtwoord vergeten?",
+    "forgotPasswordTitle": "Wachtwoord herstellen",
+    "forgotPasswordDesc": "Voer uw e-mail in en we sturen u een herstelkoppeling",
+    "sendResetLink": "Herstelkoppeling versturen",
+    "sendingResetLink": "Verzenden…",
+    "resetLinkSent": "Controleer uw e-mail voor een wachtwoord herstelkoppeling",
+    "resetPassword": "Wachtwoord herstellen",
+    "resetPasswordTitle": "Nieuw wachtwoord instellen",
+    "newPassword": "Nieuw wachtwoord",
+    "confirmPassword": "Bevestig wachtwoord",
+    "updatePassword": "Wachtwoord bijwerken",
+    "updatingPassword": "Bijwerken…",
+    "passwordUpdated": "Wachtwoord succesvol bijgewerkt",
+    "magicLink": "Inloggen met magic link",
+    "passwordMode": "Inloggen met wachtwoord",
+    "sendMagicLink": "Magic link versturen",
+    "sendingMagicLink": "Verzenden…",
+    "magicLinkSent": "Controleer uw e-mail voor een magic link",
+    "chooseApp": "Kies app",
+    "dashboard": "Dashboard",
+    "mobileApp": "Mobiele app",
+    "signUpGoogle": "Registreren met Google",
+    "signUpMicrosoft": "Registreren met Microsoft",
+    "alreadyHaveAccount": "Heeft u al een account?",
+    "logIn": "Inloggen",
+    "backToHome": "← Terug naar home",
+    "companyName": "Bedrijfsnaam",
+    "country": "Land"
+  },
+  "tasks": {
+    "title": "Mijn Taken",
+    "all": "Alles",
+    "tickets": "Tickets",
+    "workOrders": "Werkorders",
+    "actions": "Acties",
+    "empty": "Geen taken aan u toegewezen",
+    "emptyTickets": "Geen tickets toegewezen",
+    "emptyWorkOrders": "Geen werkorders",
+    "emptyActions": "Geen corrigerende acties",
+    "assignedBy": "Toegewezen door",
+    "requestedBy": "Aangevraagd door",
+    "due": "Deadline",
+    "overdue": "Te laat",
+    "relatedAsset": "Asset",
+    "viewAll": "Bekijk alle taken"
+  },
+  "app.pending": "Openstaand",
+  "errors.network": "Netwerkfout",
+  "errors.networkDesc": "Controleer uw internetverbinding en probeer het opnieuw.",
+  "errors.notFound": "Pagina niet gevonden",
+  "errors.notFoundDesc": "De pagina die u zoekt bestaat niet of is verplaatst.",
+  "errors.permission": "Toegang geweigerd",
+  "errors.permissionDesc": "U heeft geen toestemming om deze pagina te bekijken.",
+  "errors.timeout": "Verzoek verlopen",
+  "errors.timeoutDesc": "De server reageerde te langzaam. Probeer het opnieuw.",
+  "errors.server": "Serverfout",
+  "errors.serverDesc": "Er ging iets mis aan onze kant. Probeer het later opnieuw.",
+  "errors.maintenance": "Onderhoud",
+  "errors.maintenanceDesc": "We voeren gepland onderhoud uit. Kom later terug.",
+  "errors.rateLimit": "Te veel verzoeken",
+  "errors.rateLimitDesc": "Wacht even voordat u het opnieuw probeert.",
+  "errors.generic": "Er ging iets mis",
+  "errors.genericDesc": "Er is een onverwachte fout opgetreden. Probeer het opnieuw.",
+  "errors.tryAgain": "Opnieuw proberen",
+  "errors.goBack": "Ga terug",
+  "errors.goHome": "Ga naar startpagina",
+  "errors.refresh": "Pagina vernieuwen",
+  "errors.sessionExpired": "Sessie verlopen",
+  "errors.sessionExpiredDesc": "Uw sessie is verlopen. Meld u opnieuw aan om door te gaan.",
+  "errors.signIn": "Inloggen",
+  "common.filters": "Filters",
+  "common.clearAll": "Alles wissen",
+  "common.apply": "Toepassen",
+  "validation.required": "Dit veld is verplicht",
+  "validation.minLength": "Moet minimaal {min} tekens bevatten",
+  "validation.invalidDate": "Voer een geldige datum in",
+  "validation.selectOption": "Selecteer een optie",
+  "inspectionRoutes": {
+    "title": "Inspectieroutes",
+    "createRoute": "Route aanmaken",
+    "createInspectionRoute": "Inspectieroute aanmaken",
+    "checkpoints": "Controlepunten",
+    "checkpoint": "Controlepunt",
+    "completed": "voltooid",
+    "unknownAsset": "Onbekend asset",
+    "activate": "Activeren",
+    "deactivate": "Deactiveren",
+    "addCheckpoint": "Controlepunt toevoegen",
+    "kpi": {
+      "activeRoutes": "Actieve routes",
+      "totalRoutes": "Totaal routes",
+      "completedRounds": "Voltooide rondes"
+    },
+    "empty": {
+      "title": "Nog geen inspectieroutes",
+      "description": "Maak een route aan om geplande inspecties te starten."
+    },
+    "labels": {
+      "routeName": "Routenaam",
+      "description": "Beschrijving",
+      "recurrence": "Herhaling",
+      "asset": "Asset",
+      "checkType": "Type controle",
+      "whatToCheck": "Wat te controleren",
+      "instructions": "Instructies",
+      "min": "Min",
+      "max": "Max",
+      "unit": "Eenheid"
+    },
+    "recurrence": {
+      "daily": "Dagelijks",
+      "weekly": "Wekelijks",
+      "monthly": "Maandelijks",
+      "once": "Eenmalig"
+    },
+    "checkTypes": {
+      "visual": "Visueel",
+      "auditory": "Auditief",
+      "measurement": "Meting",
+      "functional": "Functioneel",
+      "safety": "Veiligheid"
+    },
+    "placeholders": {
+      "routeName": "bijv. Ochtend veiligheidsronde",
+      "description": "Beschrijf de inspectieroute...",
+      "selectAsset": "Selecteer asset...",
+      "whatToCheck": "bijv. Controleer riemspanning",
+      "instructions": "Gedetailleerde instructies...",
+      "unit": "bijv. °C, psi"
+    },
+    "toast": {
+      "routeCreated": "Inspectieroute aangemaakt",
+      "routeActivated": "Route geactiveerd",
+      "routeDeactivated": "Route gedeactiveerd",
+      "routeDeleted": "Route verwijderd"
+    },
+    "validation": {
+      "nameAndCheckpointRequired": "Naam en minstens één controlepunt zijn vereist"
+    }
   }
 }

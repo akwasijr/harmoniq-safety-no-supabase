@@ -141,7 +141,7 @@ export default function NotificationsPage() {
         <button
           onClick={() => router.back()}
           className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
-          aria-label="Go back"
+          aria-label={t("common.goBack")}
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -186,7 +186,7 @@ export default function NotificationsPage() {
                         {notification.title}
                       </p>
                       {!notification.read && (
-                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />
+                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label={t("common.unread")} />
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">{notification.description}</p>

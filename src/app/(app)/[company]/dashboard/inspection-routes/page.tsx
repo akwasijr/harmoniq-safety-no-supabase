@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslation } from "@/i18n";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useInspectionRoutesStore } from "@/stores/inspection-routes-store";
 import { useAssetsStore } from "@/stores/assets-store";
@@ -34,15 +35,18 @@ import type {
   InspectionRouteStatus,
 } from "@/types";
 
-const CHECK_TYPES: { value: InspectionCheckType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { value: "visual", label: "Visual", icon: Eye },
-  { value: "auditory", label: "Auditory", icon: Ear },
-  { value: "measurement", label: "Measurement", icon: Ruler },
-  { value: "functional", label: "Functional", icon: Wrench },
-  { value: "safety", label: "Safety", icon: Shield },
-];
+const CHECK_TYPE_ICONS: Record<InspectionCheckType, React.ComponentType<{ className?: string }>> = {
+  visual: Eye,
+  auditory: Ear,
+  measurement: Ruler,
+  functional: Wrench,
+  safety: Shield,
+};
+
+const CHECK_TYPE_KEYS: InspectionCheckType[] = ["visual", "auditory", "measurement", "functional", "safety"];
 
 export default function InspectionRoutesPage() {
+  const { t } = useTranslation();
   const company = useCompanyParam();
   const { items: routes, add: addRoute, update: updateRoute, remove: removeRoute } = useInspectionRoutesStore();
   const { items: assets } = useAssetsStore();
@@ -90,7 +94,7 @@ export default function InspectionRoutesPage() {
 
   const handleCreate = () => {
     if (!formName.trim() || formCheckpoints.length === 0) {
-      toast("Name and at least one checkpoint are required");
+      toast(t("inspectionRoutes.validation.nameAndCheckpointRequired"));
       return;
     }
 
@@ -111,7 +115,7 @@ export default function InspectionRoutesPage() {
     };
 
     addRoute(route);
-    toast("Inspection route created");
+    toast(t("inspectionRoutes.toast.routeCreated"));
     setShowCreateModal(false);
     setFormName("");
     setFormDescription("");
@@ -122,24 +126,24 @@ export default function InspectionRoutesPage() {
   const toggleRouteStatus = (route: InspectionRoute) => {
     const next: InspectionRouteStatus = route.status === "active" ? "inactive" : "active";
     updateRoute(route.id, { status: next, updated_at: new Date().toISOString() });
-    toast(`Route ${next === "active" ? "activated" : "deactivated"}`);
+    toast(next === "active" ? t("inspectionRoutes.toast.routeActivated") : t("inspectionRoutes.toast.routeDeactivated"));
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">Inspection Routes</h1>
+        <h1 className="text-2xl font-semibold">{t("inspectionRoutes.title")}</h1>
         <Button size="sm" className="gap-2" onClick={() => setShowCreateModal(true)}>
           <Plus className="h-4 w-4" />
-          Create Route
+          {t("inspectionRoutes.createRoute")}
         </Button>
       </div>
 
       {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <KPICard title="Active Routes" value={activeRoutes.length} icon={ClipboardCheck} />
-        <KPICard title="Total Routes" value={routes.length} icon={ClipboardCheck} />
-        <KPICard title="Completed Rounds" value={completedRounds.length} icon={CheckCircle} />
+        <KPICard title={t("inspectionRoutes.kpi.activeRoutes")} value={activeRoutes.length} icon={ClipboardCheck} />
+        <KPICard title={t("inspectionRoutes.kpi.totalRoutes")} value={routes.length} icon={ClipboardCheck} />
+        <KPICard title={t("inspectionRoutes.kpi.completedRounds")} value={completedRounds.length} icon={CheckCircle} />
       </div>
 
       {/* Routes list */}
@@ -148,8 +152,8 @@ export default function InspectionRoutesPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <ClipboardCheck className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-              <p className="font-medium text-muted-foreground">No inspection routes yet</p>
-              <p className="text-sm text-muted-foreground mt-1">Create a route to start scheduled inspections.</p>
+              <p className="font-medium text-muted-foreground">{t("inspectionRoutes.empty.title")}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t("inspectionRoutes.empty.description")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -168,7 +172,7 @@ export default function InspectionRoutesPage() {
                       <div>
                         <CardTitle className="text-base">{route.name}</CardTitle>
                         <p className="text-xs text-muted-foreground">
-                          {route.checkpoints.length} checkpoints • {route.recurrence} • {routeRounds.length} completed
+                          {route.checkpoints.length} {t("inspectionRoutes.checkpoints")} • {t(`inspectionRoutes.recurrence.${route.recurrence}`)} • {routeRounds.length} {t("inspectionRoutes.completed")}
                         </p>
                       </div>
                     </div>
@@ -187,13 +191,13 @@ export default function InspectionRoutesPage() {
                     )}
 
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">Checkpoints</p>
+                      <p className="text-sm font-medium">{t("inspectionRoutes.checkpoints")}</p>
                       <div className="space-y-1.5">
                         {route.checkpoints
                           .sort((a, b) => a.order - b.order)
                           .map((cp, i) => {
                             const asset = assets.find((a) => a.id === cp.asset_id);
-                            const TypeIcon = CHECK_TYPES.find((t) => t.value === cp.check_type)?.icon || Eye;
+                            const TypeIcon = CHECK_TYPE_ICONS[cp.check_type] || Eye;
                             return (
                               <div key={cp.id} className="flex items-center gap-3 rounded-lg border p-2.5 text-sm">
                                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium">
@@ -203,7 +207,7 @@ export default function InspectionRoutesPage() {
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium truncate">{cp.label}</p>
                                   <p className="text-xs text-muted-foreground">
-                                    {asset?.name || "Unknown asset"}
+                                    {asset?.name || t("inspectionRoutes.unknownAsset")}
                                     {cp.acceptable_min !== null || cp.acceptable_max !== null
                                       ? ` • Range: ${cp.acceptable_min ?? "—"}–${cp.acceptable_max ?? "—"} ${cp.unit || ""}`
                                       : ""}
@@ -221,7 +225,7 @@ export default function InspectionRoutesPage() {
                         size="sm"
                         onClick={() => toggleRouteStatus(route)}
                       >
-                        {route.status === "active" ? "Deactivate" : "Activate"}
+                        {route.status === "active" ? t("inspectionRoutes.deactivate") : t("inspectionRoutes.activate")}
                       </Button>
                       <Button
                         variant="outline"
@@ -229,11 +233,11 @@ export default function InspectionRoutesPage() {
                         className="text-destructive"
                         onClick={() => {
                           removeRoute(route.id);
-                          toast("Route deleted");
+                          toast(t("inspectionRoutes.toast.routeDeleted"));
                         }}
                       >
                         <Trash2 className="h-3.5 w-3.5 mr-1" />
-                        Delete
+                        {t("common.delete")}
                       </Button>
                     </div>
                   </CardContent>
@@ -250,7 +254,7 @@ export default function InspectionRoutesPage() {
           <div className="fixed inset-0 bg-black/50" onClick={() => setShowCreateModal(false)} />
           <div className="relative z-50 w-full max-w-2xl rounded-xl bg-background p-6 shadow-xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Create Inspection Route</h2>
+              <h2 className="text-xl font-semibold">{t("inspectionRoutes.createInspectionRoute")}</h2>
               <Button variant="ghost" size="icon" onClick={() => setShowCreateModal(false)}>
                 <X className="h-5 w-5" />
               </Button>
@@ -258,65 +262,65 @@ export default function InspectionRoutesPage() {
 
             <div className="space-y-4">
               <div>
-                <Label>Route Name *</Label>
+                <Label>{t("inspectionRoutes.labels.routeName")} *</Label>
                 <Input
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g., Morning Safety Walk"
+                  placeholder={t("inspectionRoutes.placeholders.routeName")}
                   className="mt-1"
                 />
               </div>
               <div>
-                <Label>Description</Label>
+                <Label>{t("inspectionRoutes.labels.description")}</Label>
                 <Textarea
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Describe the inspection route..."
+                  placeholder={t("inspectionRoutes.placeholders.description")}
                   className="mt-1"
                   rows={2}
                 />
               </div>
               <div>
-                <Label>Recurrence</Label>
+                <Label>{t("inspectionRoutes.labels.recurrence")}</Label>
                 <select
                   value={formRecurrence}
                   onChange={(e) => setFormRecurrence(e.target.value as typeof formRecurrence)}
                   className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="once">One-time</option>
+                  <option value="daily">{t("inspectionRoutes.recurrence.daily")}</option>
+                  <option value="weekly">{t("inspectionRoutes.recurrence.weekly")}</option>
+                  <option value="monthly">{t("inspectionRoutes.recurrence.monthly")}</option>
+                  <option value="once">{t("inspectionRoutes.recurrence.once")}</option>
                 </select>
               </div>
 
               {/* Checkpoints */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label>Checkpoints ({formCheckpoints.length})</Label>
+                  <Label>{t("inspectionRoutes.checkpoints")} ({formCheckpoints.length})</Label>
                   <Button variant="outline" size="sm" onClick={addCheckpoint} className="gap-1">
                     <Plus className="h-3.5 w-3.5" />
-                    Add Checkpoint
+                    {t("inspectionRoutes.addCheckpoint")}
                   </Button>
                 </div>
                 <div className="space-y-3">
                   {formCheckpoints.map((cp, i) => (
                     <div key={cp.id} className="rounded-lg border p-3 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground">Checkpoint {i + 1}</span>
+                        <span className="text-xs font-medium text-muted-foreground">{t("inspectionRoutes.checkpoint")} {i + 1}</span>
                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeCheckpoint(i)}>
                           <X className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div>
-                          <Label className="text-xs">Asset *</Label>
+                          <Label className="text-xs">{t("inspectionRoutes.labels.asset")} *</Label>
                           <select
                             value={cp.asset_id}
                             onChange={(e) => updateCheckpoint(i, { asset_id: e.target.value })}
                             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                           >
-                            <option value="">Select asset...</option>
+                            <option value="">{t("inspectionRoutes.placeholders.selectAsset")}</option>
                             {assets
                               .filter((a) => a.status !== "retired")
                               .map((a) => (
@@ -327,40 +331,40 @@ export default function InspectionRoutesPage() {
                           </select>
                         </div>
                         <div>
-                          <Label className="text-xs">Check Type</Label>
+                          <Label className="text-xs">{t("inspectionRoutes.labels.checkType")}</Label>
                           <select
                             value={cp.check_type}
                             onChange={(e) => updateCheckpoint(i, { check_type: e.target.value as InspectionCheckType })}
                             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                           >
-                            {CHECK_TYPES.map((t) => (
-                              <option key={t.value} value={t.value}>{t.label}</option>
+                            {CHECK_TYPE_KEYS.map((val) => (
+                              <option key={val} value={val}>{t(`inspectionRoutes.checkTypes.${val}`)}</option>
                             ))}
                           </select>
                         </div>
                       </div>
                       <div>
-                        <Label className="text-xs">What to check *</Label>
+                        <Label className="text-xs">{t("inspectionRoutes.labels.whatToCheck")} *</Label>
                         <Input
                           value={cp.label}
                           onChange={(e) => updateCheckpoint(i, { label: e.target.value })}
-                          placeholder="e.g., Check belt tension"
+                          placeholder={t("inspectionRoutes.placeholders.whatToCheck")}
                           className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Instructions</Label>
+                        <Label className="text-xs">{t("inspectionRoutes.labels.instructions")}</Label>
                         <Input
                           value={cp.instructions || ""}
                           onChange={(e) => updateCheckpoint(i, { instructions: e.target.value || null })}
-                          placeholder="Detailed instructions..."
+                          placeholder={t("inspectionRoutes.placeholders.instructions")}
                           className="mt-1"
                         />
                       </div>
                       {(cp.check_type === "measurement") && (
                         <div className="grid gap-3 sm:grid-cols-3">
                           <div>
-                            <Label className="text-xs">Min</Label>
+                            <Label className="text-xs">{t("inspectionRoutes.labels.min")}</Label>
                             <Input
                               type="number"
                               value={cp.acceptable_min ?? ""}
@@ -369,7 +373,7 @@ export default function InspectionRoutesPage() {
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Max</Label>
+                            <Label className="text-xs">{t("inspectionRoutes.labels.max")}</Label>
                             <Input
                               type="number"
                               value={cp.acceptable_max ?? ""}
@@ -378,11 +382,11 @@ export default function InspectionRoutesPage() {
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Unit</Label>
+                            <Label className="text-xs">{t("inspectionRoutes.labels.unit")}</Label>
                             <Input
                               value={cp.unit || ""}
                               onChange={(e) => updateCheckpoint(i, { unit: e.target.value || null })}
-                              placeholder="e.g., °C, psi"
+                              placeholder={t("inspectionRoutes.placeholders.unit")}
                               className="mt-1"
                             />
                           </div>
@@ -396,14 +400,14 @@ export default function InspectionRoutesPage() {
 
             <div className="flex gap-3 mt-6 pt-4 border-t">
               <Button variant="outline" className="flex-1" onClick={() => setShowCreateModal(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 className="flex-1"
                 onClick={handleCreate}
                 disabled={!formName.trim() || formCheckpoints.length === 0}
               >
-                Create Route
+                {t("inspectionRoutes.createRoute")}
               </Button>
             </div>
           </div>

@@ -18,9 +18,8 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useToast } from "@/components/ui/toast";
@@ -160,7 +159,7 @@ export default function EmployeeProfilePage() {
           <button
             onClick={() => photoInputRef.current?.click()}
             className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border bg-card shadow-sm hover:bg-muted transition-colors"
-            aria-label="Change profile photo"
+            aria-label={t("common.changeProfilePhoto")}
           >
             <Camera className="h-4 w-4" />
           </button>
@@ -176,7 +175,7 @@ export default function EmployeeProfilePage() {
       {/* Contact info */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Contact information</CardTitle>
+          <CardTitle className="text-base">{t("profile.contactInfo")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3">
@@ -245,9 +244,9 @@ export default function EmployeeProfilePage() {
               <Bell className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             </div>
             <div className="flex-1">
-              <p className="font-medium">Notifications</p>
+              <p className="font-medium">{t("profile.notifications")}</p>
               <p className="text-sm text-muted-foreground">
-                Manage push and email notifications
+                {t("profile.notificationsDesc")}
               </p>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
@@ -274,7 +273,7 @@ export default function EmployeeProfilePage() {
               <Globe className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             </div>
             <div className="flex-1">
-              <p className="font-medium">Language</p>
+              <p className="font-medium">{t("profile.language")}</p>
               <p className="text-sm text-muted-foreground">
                 {localeConfig.flag} {localeConfig.name}
               </p>
@@ -290,7 +289,7 @@ export default function EmployeeProfilePage() {
               <Shield className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             </div>
             <div className="flex-1">
-              <p className="font-medium">Privacy and security</p>
+              <p className="font-medium">{t("profile.security")}</p>
               <p className="text-sm text-muted-foreground">
                 Password and account settings
               </p>
@@ -317,28 +316,28 @@ export default function EmployeeProfilePage() {
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
           role="dialog"
           aria-modal="true"
-          aria-label="Notifications"
+          aria-label={t("common.notifications")}
           onKeyDown={(e) => { if (e.key === "Escape") setShowNotifications(false); }}
         >
           <div className="w-full sm:max-w-md rounded-t-2xl sm:rounded-lg bg-background shadow-lg">
             <div className="flex items-center justify-between border-b p-4">
-              <h2 className="text-lg font-semibold">Notifications</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowNotifications(false)} aria-label="Close">
+              <h2 className="text-lg font-semibold">{t("profile.notifications")}</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowNotifications(false)} aria-label={t("common.close")}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
             <div className="space-y-4 p-4 max-h-[60vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Push Notifications</p>
-                  <p className="text-sm text-muted-foreground">Receive alerts on your device</p>
+                  <p className="font-medium">{t("profile.pushNotifications")}</p>
+                  <p className="text-sm text-muted-foreground">{t("profile.pushNotificationsDesc")}</p>
                 </div>
                 <Switch checked={notifPrefs.push} onCheckedChange={(v) => handleNotifPrefChange("push", v)} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Email Notifications</p>
-                  <p className="text-sm text-muted-foreground">Receive updates via email</p>
+                  <p className="font-medium">{t("profile.emailNotifications")}</p>
+                  <p className="text-sm text-muted-foreground">{t("profile.emailNotificationsDesc")}</p>
                 </div>
                 <Switch checked={notifPrefs.email} onCheckedChange={(v) => handleNotifPrefChange("email", v)} />
               </div>
@@ -377,13 +376,13 @@ export default function EmployeeProfilePage() {
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
           role="dialog"
           aria-modal="true"
-          aria-label="Language"
+          aria-label={t("profile.language")}
           onKeyDown={(e) => { if (e.key === "Escape") setShowLanguage(false); }}
         >
           <div className="w-full sm:max-w-md rounded-t-2xl sm:rounded-lg bg-background shadow-lg">
             <div className="flex items-center justify-between border-b p-4">
               <h2 className="text-lg font-semibold">Language</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowLanguage(false)} aria-label="Close">
+              <Button variant="ghost" size="icon" onClick={() => setShowLanguage(false)} aria-label={t("common.close")}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -420,28 +419,23 @@ export default function EmployeeProfilePage() {
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
           role="dialog"
           aria-modal="true"
-          aria-label="Privacy and Security"
+          aria-label={t("profile.privacySecurity")}
           onKeyDown={(e) => { if (e.key === "Escape") setShowSecurity(false); }}
         >
           <div className="w-full sm:max-w-md rounded-t-2xl sm:rounded-lg bg-background shadow-lg">
             <div className="flex items-center justify-between border-b p-4">
               <h2 className="text-lg font-semibold">Privacy & Security</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowSecurity(false)} aria-label="Close">
+              <Button variant="ghost" size="icon" onClick={() => setShowSecurity(false)} aria-label={t("common.close")}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
             <div className="space-y-4 p-4 max-h-[60vh] overflow-y-auto">
+              {/* Password change — coming soon */}
               <div>
-                <Label>Current Password</Label>
-                <Input type="password" placeholder="Enter current password" className="mt-1" />
-              </div>
-              <div>
-                <Label>New Password</Label>
-                <Input type="password" placeholder="Enter new password" className="mt-1" />
-              </div>
-              <div>
-                <Label>Confirm New Password</Label>
-                <Input type="password" placeholder="Confirm new password" className="mt-1" />
+                <p className="font-medium mb-2">Change Password</p>
+                <div className="rounded-lg border border-dashed border-muted-foreground/25 bg-muted/50 px-4 py-6 text-center">
+                  <p className="text-sm text-muted-foreground">{t("common.comingSoon")}</p>
+                </div>
               </div>
               <hr />
               <div className="flex items-center justify-between">
@@ -449,18 +443,18 @@ export default function EmployeeProfilePage() {
                   <p className="font-medium">Two-Factor Authentication</p>
                   <p className="text-sm text-muted-foreground">Add extra security to your account</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => toast("2FA setup is not available in the demo")}>Enable</Button>
+                <Badge variant="outline" className="text-xs text-muted-foreground">{t("common.comingSoon")}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Active Sessions</p>
                   <p className="text-sm text-muted-foreground">Manage logged-in devices</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => toast("Session management is not available in the demo")}>View</Button>
+                <Badge variant="outline" className="text-xs text-muted-foreground">{t("common.comingSoon")}</Badge>
               </div>
             </div>
             <div className="border-t p-4">
-              <Button className="w-full" onClick={() => { setShowSecurity(false); toast("Security settings saved"); }}>Save Changes</Button>
+              <Button className="w-full" onClick={() => setShowSecurity(false)}>Close</Button>
             </div>
           </div>
         </div>

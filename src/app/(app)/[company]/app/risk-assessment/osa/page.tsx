@@ -276,7 +276,7 @@ export default function OSAFormPage() {
           </div>
           <span className="text-xs text-muted-foreground">SE</span>
         </div>
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSectionIndex + 1) / sections.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSectionIndex + 1) / sections.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentSectionIndex + 1) / sections.length) * 100}%` }}

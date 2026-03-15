@@ -226,7 +226,7 @@ export default function TeamDetailPage() {
                     <Input
                       value={editedTeam.description}
                       onChange={(e) => setEditedTeam({ ...editedTeam, description: e.target.value })}
-                      placeholder="Team description..."
+                      placeholder={t("users.placeholders.teamDescription")}
                       className="mt-1"
                     />
                   ) : (

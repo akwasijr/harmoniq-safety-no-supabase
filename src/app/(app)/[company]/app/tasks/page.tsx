@@ -423,7 +423,7 @@ export default function TasksPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center" role="status" aria-label="Loading tasks">
+      <div className="flex min-h-[400px] items-center justify-center" role="status" aria-label={t("common.loading")}>
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
