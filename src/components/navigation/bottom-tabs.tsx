@@ -84,20 +84,23 @@ export function BottomTabs({ company }: BottomTabsProps) {
               <Link
                 href={href}
                 className={cn(
-                  "flex min-h-[44px] flex-col items-center justify-center gap-1 px-2 py-2",
+                  "flex min-h-[44px] flex-col items-center justify-center px-2 py-1.5",
                   "transition-colors",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  isActive ? "text-primary" : "text-muted-foreground"
+                  isActive ? "text-[#2D1B69]" : "text-muted-foreground"
                 )}
               >
+                {isActive && (
+                  <div className="h-0.5 w-5 rounded-full bg-[#2D1B69] mx-auto mb-1" />
+                )}
                 <item.icon
-                  className={cn("h-5 w-5", isActive && "fill-primary/20")}
+                  className={cn("h-5 w-5", isActive && "fill-[#2D1B69]/20")}
                   aria-hidden="true"
                 />
                 <span
                   className={cn(
-                    "text-xs max-w-[4.5rem] truncate text-center",
-                    isActive ? "font-medium" : "font-normal"
+                    "text-xs max-w-[4.5rem] truncate text-center mt-0.5",
+                    isActive ? "font-semibold text-[#2D1B69]" : "font-normal"
                   )}
                 >
                   {t(item.shortTitleKey)}

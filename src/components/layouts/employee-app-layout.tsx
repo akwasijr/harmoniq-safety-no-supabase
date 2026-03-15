@@ -25,10 +25,10 @@ export function EmployeeAppLayout({
   notificationCount = 0,
 }: EmployeeAppLayoutProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-muted/30">
+    <div className="flex min-h-screen flex-col bg-[#f0eff5]">
       {/* Header */}
       {showHeader && (
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background px-4">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-[#2D1B69] px-4">
           <Link href={`/${company}/app`} className="flex items-center gap-2">
             {companyLogo ? (
               <img
@@ -37,14 +37,14 @@ export function EmployeeAppLayout({
                 className="h-6 w-6 rounded object-contain"
               />
             ) : (
-              <Shield className="h-5 w-5" aria-hidden="true" />
+              <Shield className="h-5 w-5 text-white/80" aria-hidden="true" />
             )}
-            <span className="font-semibold">{headerTitle || companyName}</span>
+            <span className="font-semibold text-sm text-white">{headerTitle || companyName}</span>
           </Link>
-          <Link href={`/${company}/app/notifications`} className="relative" aria-label={`${notificationCount} notifications`}>
-            <Bell className="h-5 w-5 text-muted-foreground" />
+          <Link href={`/${company}/app/notifications`} className="relative p-2" aria-label={`${notificationCount} notifications`}>
+            <Bell className="h-5 w-5 text-white/80" />
             {notificationCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white px-1">
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                 {notificationCount > 99 ? "99+" : notificationCount}
               </span>
             )}

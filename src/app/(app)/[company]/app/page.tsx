@@ -41,6 +41,7 @@ import {
   Timer,
   Gauge,
   Hammer,
+  Lightbulb,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useContentStore } from "@/stores/content-store";
@@ -226,97 +227,72 @@ export default function EmployeeAppHomePage() {
   // Determine if we have enough data for the full feed view
   const hasData = pendingChecklists.length > 0 || recentNews.length > 0;
 
-  // Quick action grid items (3 per row, 6 total, consistent neutral style)
+  // Quick action grid items (2 per row, 6 total, Heathrow-style colored icon blocks)
   const quickActions = [
-    { href: `/${company}/app/report`, icon: AlertTriangle, label: t("app.reportIncident") },
-    { href: `/${company}/app/tasks`, icon: ClipboardCheck, label: t("tasks.title") || "My Tasks" },
-    { href: `/${company}/app/maintenance`, icon: Wrench, label: t("app.requestFix") },
-    { href: `/${company}/app/assets`, icon: Search, label: t("app.browseAssets") },
-    { href: `/${company}/app/scan`, icon: ScanLine, label: t("app.scanAsset") },
-    { href: `/${company}/app/checklists?tab=risk-assessment`, icon: ShieldCheck, label: t("app.riskAssessment") },
+    { href: `/${company}/app/report`, labelKey: "app.reportIncident", label: "Report Incident", icon: AlertTriangle, bgColor: "bg-red-100 dark:bg-red-950", iconColor: "text-red-600" },
+    { href: `/${company}/app/tasks`, labelKey: "app.myTasks", label: "My Tasks", icon: ClipboardCheck, bgColor: "bg-blue-100 dark:bg-blue-950", iconColor: "text-blue-600" },
+    { href: `/${company}/app/assets`, labelKey: "app.browseAssets", label: "Browse Assets", icon: Search, bgColor: "bg-emerald-100 dark:bg-emerald-950", iconColor: "text-emerald-600" },
+    { href: `/${company}/app/report`, labelKey: "app.requestFix", label: "Request Fix", icon: Wrench, bgColor: "bg-amber-100 dark:bg-amber-950", iconColor: "text-amber-600" },
+    { href: `/${company}/app/assets`, labelKey: "app.scanAsset", label: "Scan Asset", icon: ScanLine, bgColor: "bg-violet-100 dark:bg-violet-950", iconColor: "text-violet-600" },
+    { href: `/${company}/app/report`, labelKey: "app.riskAssessment", label: "Risk Check", icon: ShieldCheck, bgColor: "bg-cyan-100 dark:bg-cyan-950", iconColor: "text-cyan-600" },
   ];
 
   // ── Shared hero section ──
   const HeroSection = () => (
-    <div className="relative overflow-hidden px-5 pt-5 pb-8" style={{ minHeight: 160 }}>
-      {/* Background image with overlay */}
-      <>
-        <img
-          src={currentCompany?.hero_image_url || "/home-banner.jpg"}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
-      </>
+    <div className="bg-gradient-to-br from-[#2D1B69] to-[#1a1145] px-5 pt-6 pb-8">
+      <p className="text-white/60 text-sm">{greeting}</p>
+      <h1 className="text-2xl font-bold text-white mt-1">
+        {user?.first_name || t("app.welcome")}
+      </h1>
+      <p className="text-white/50 text-xs mt-1">{currentCompany?.name}</p>
 
-      <div className="relative z-10">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-white/70 text-sm font-medium">{greeting}</p>
-            <h1 className="text-xl font-bold text-white mt-0.5">
-              {user.first_name} {user.last_name}
-            </h1>
-          </div>
+      {/* Stats row - white/glass cards */}
+      <div className="grid grid-cols-3 gap-3 mt-5">
+        <div className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
+          <p className="text-2xl font-bold text-white">{safeDays}</p>
+          <p className="text-[11px] text-white/60 mt-0.5">{t("app.safeDays")}</p>
         </div>
-
-        {/* Stats row */}
-        <div className="flex gap-3 mt-4">
-          <div className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1">
-            <Flame className="h-4 w-4 text-orange-300" aria-hidden="true" />
-            <div>
-              <p className="text-[11px] text-white/70 leading-none">{t("app.safeDays")}</p>
-              <p className="text-sm font-bold text-white mt-0.5">{safetyStreak}</p>
-            </div>
-          </div>
-          <Link href={`/${company}/app/tasks`} className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1 hover:bg-white/25 transition-colors">
-            <ClipboardCheck className="h-4 w-4 text-blue-300" aria-hidden="true" />
-            <div>
-              <p className="text-[11px] text-white/70 leading-none">{t("app.pending") || "Pending"}</p>
-              <p className="text-sm font-bold text-white mt-0.5">{pendingTaskCount} {t("app.tasks")}</p>
-            </div>
-          </Link>
-          <div className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1">
-            <CheckCircle className="h-4 w-4 text-emerald-300" aria-hidden="true" />
-            <div>
-              <p className="text-[11px] text-white/70 leading-none">{t("app.thisWeek")}</p>
-              <p className="text-sm font-bold text-white mt-0.5">{completedThisWeek} {t("app.tasks")}</p>
-            </div>
-          </div>
+        <Link href={`/${company}/app/tasks`} className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
+          <p className="text-2xl font-bold text-white">{pendingTaskCount}</p>
+          <p className="text-[11px] text-white/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
+        </Link>
+        <div className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
+          <p className="text-2xl font-bold text-white">{completedThisWeek}</p>
+          <p className="text-[11px] text-white/60 mt-0.5">{t("app.completedWeek") || "This Week"}</p>
         </div>
       </div>
     </div>
   );
 
   // ── Tip of the Day card ──
-  const TipCard = () => {
-    const TipIcon = todayTip.icon;
-    return (
-      <div className="mx-4 -mt-4 relative z-10">
-        <div className="rounded-xl bg-card shadow-sm p-3.5 flex items-start gap-3">
-          <TipIcon className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" aria-hidden="true" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold text-orange-500 tracking-widest">{t("app.tipOfTheDay")}</p>
-            <p className="text-sm text-foreground mt-0.5 leading-snug">{todayTip.tip}</p>
-          </div>
+  const TipCard = () => (
+    <div className="mx-4 -mt-4 relative z-10">
+      <div className="rounded-xl bg-card shadow-sm border border-border/50 px-4 py-3 flex items-start gap-3">
+        <div className="h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-950 flex items-center justify-center shrink-0 mt-0.5">
+          <Lightbulb className="h-4 w-4 text-amber-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-amber-600 tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{todayTip.tip}</p>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
 
-  // ── Quick Actions Grid (3 per row, 6 total, consistent neutral style) ──
+  // ── Quick Actions Grid (2 per row, 6 total, Heathrow-style colored icon blocks) ──
   const QuickActionsGrid = () => (
-    <div className="px-4 pt-5 pb-1">
-      <p className="text-[11px] font-semibold text-muted-foreground mb-3">{t("app.getStarted")}</p>
-      <div className="grid grid-cols-3 gap-2">
+    <div className="px-4 mt-5">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-semibold">{t("app.quickActions") || "Quick Actions"}</h2>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
         {quickActions.map((action) => (
-          <Link
-            key={action.href}
-            href={action.href}
-            className="flex flex-col items-center gap-2 rounded-lg bg-primary/10 p-4 transition-all active:scale-95 hover:bg-primary/15"
-          >
-            <action.icon className="h-8 w-8 text-primary" aria-hidden="true" />
-            <span className="text-xs font-medium text-center leading-tight text-foreground">{action.label}</span>
+          <Link key={action.href + action.labelKey} href={action.href}
+            className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm border border-border/50 active:scale-[0.98] transition-transform">
+            <div className={`h-12 w-12 rounded-xl ${action.bgColor} flex items-center justify-center shrink-0`}>
+              <action.icon className={`h-6 w-6 ${action.iconColor}`} />
+            </div>
+            <span className="text-sm font-medium">{t(action.labelKey) || action.label}</span>
           </Link>
         ))}
       </div>
@@ -325,7 +301,7 @@ export default function EmployeeAppHomePage() {
 
   // ── Always show full feed (no early return for empty state) ──
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full bg-muted/30">
       {/* ── Hero Section ── */}
       <HeroSection />
 
@@ -336,9 +312,10 @@ export default function EmployeeAppHomePage() {
       <QuickActionsGrid />
 
       {/* ── Content Feed ── */}
-      <div className="px-4 pt-3 pb-4 space-y-1">
+      <div className="px-4 pt-5 pb-4 space-y-1">
 
-        {/* News & Updates, first */}
+        {/* News & Updates */}
+        <div className="rounded-xl bg-card shadow-sm border border-border/50 px-4 py-2">
         <Section
           title={t("app.newsAndUpdates")}
           icon={Newspaper}
@@ -381,7 +358,7 @@ export default function EmployeeAppHomePage() {
             </div>
           )}
         </Section>
-
+        </div>
 
       </div>
     </div>

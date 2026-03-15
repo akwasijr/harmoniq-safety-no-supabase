@@ -16,10 +16,11 @@ import {
   Check,
   Briefcase,
   Users,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useToast } from "@/components/ui/toast";
@@ -131,7 +132,7 @@ export default function EmployeeProfilePage() {
   const languages = SUPPORTED_LOCALES;
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="-mt-0">
       {/* Hidden file input for photo upload */}
       <input
         ref={photoInputRef}
@@ -140,173 +141,181 @@ export default function EmployeeProfilePage() {
         className="hidden"
         onChange={handlePhotoUpload}
       />
-      
-      {/* Profile header */}
-      <div className="flex flex-col items-center text-center">
-        <div className="relative">
+
+      {/* Profile header - deep purple continuation */}
+      <div className="bg-[#2D1B69] px-5 pt-4 pb-8 text-center">
+        <div className="relative inline-block">
           {currentUser.avatar_url ? (
             <img
               src={currentUser.avatar_url}
               alt={`${user.firstName} ${user.lastName}`}
-              className="h-24 w-24 rounded-full object-cover"
+              className="h-20 w-20 rounded-full border-[3px] border-white/30 object-cover mx-auto"
             />
           ) : (
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-3xl font-semibold text-primary-foreground">
+            <div className="h-20 w-20 rounded-full border-[3px] border-white/30 bg-white/10 flex items-center justify-center text-xl font-bold text-white mx-auto">
               {(user.firstName?.[0] || "").toUpperCase()}
               {(user.lastName?.[0] || "").toUpperCase()}
             </div>
           )}
           <button
             onClick={() => photoInputRef.current?.click()}
-            className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border bg-card shadow-sm hover:bg-muted transition-colors"
+            className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm hover:bg-gray-100 transition-colors"
             aria-label={t("common.changeProfilePhoto")}
           >
-            <Camera className="h-4 w-4" />
+            <Camera className="h-3.5 w-3.5 text-[#2D1B69]" />
           </button>
         </div>
-        <h1 className="mt-4 text-xl font-semibold">
+        <h1 className="mt-3 text-lg font-bold text-white">
           {user.firstName} {user.lastName}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground capitalize">
-          {user.role}
-        </p>
+        <p className="text-sm text-white/50 capitalize">{user.role}</p>
       </div>
 
-      {/* Contact info */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">{t("profile.contactInfo")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <Mail className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{user.email}</p>
+      {/* Contact Info section */}
+      <div className="px-4 mt-5">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
+          {t("profile.contactInfo") || "Contact Info"}
+        </h3>
+        <div className="rounded-xl bg-card overflow-hidden shadow-sm">
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <Mail className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="text-sm font-medium truncate">{user.email}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <Phone className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Phone</p>
-              <p className="font-medium">{user.phone}</p>
+          <div className="border-t border-border/50 mx-4" />
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <Phone className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground">Phone</p>
+              <p className="text-sm font-medium">{user.phone}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <MapPin className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Location</p>
-              <p className="font-medium">{user.location}</p>
+          <div className="border-t border-border/50 mx-4" />
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <MapPin className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground">Location</p>
+              <p className="text-sm font-medium">{user.location}</p>
             </div>
           </div>
           {user.department && (
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                <Briefcase className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <>
+              <div className="border-t border-border/50 mx-4" />
+              <div className="flex items-center gap-3 px-4 py-3.5">
+                <Briefcase className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Department</p>
+                  <p className="text-sm font-medium">{user.department}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Department</p>
-                <p className="font-medium">{user.department}</p>
-              </div>
-            </div>
+            </>
           )}
           {user.teams.length > 0 && (
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                <Users className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <>
+              <div className="border-t border-border/50 mx-4" />
+              <div className="flex items-center gap-3 px-4 py-3.5">
+                <Users className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Teams</p>
+                  <p className="text-sm font-medium">{user.teams.join(", ")}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Teams</p>
-                <p className="font-medium">{user.teams.join(", ")}</p>
-              </div>
-            </div>
+            </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Settings */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <button 
-            className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted"
+      {/* Settings section */}
+      <div className="px-4 mt-5">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
+          {t("profile.settings") || "Settings"}
+        </h3>
+        <div className="rounded-xl bg-card overflow-hidden shadow-sm">
+          <button
+            className="flex items-center gap-3 px-4 py-3.5 w-full text-left transition-colors hover:bg-muted/50"
             onClick={() => setShowNotifications(true)}
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <Bell className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <Bell className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">{t("profile.notifications")}</p>
+              <p className="text-xs text-muted-foreground">{t("profile.notificationsDesc")}</p>
             </div>
-            <div className="flex-1">
-              <p className="font-medium">{t("profile.notifications")}</p>
-              <p className="text-sm text-muted-foreground">
-                {t("profile.notificationsDesc")}
-              </p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
           </button>
 
-          <div className="flex items-center gap-3 rounded-lg p-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <Moon className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium">Appearance</p>
-              <p className="text-sm text-muted-foreground">
-                Light, dark, or system theme
-              </p>
+          <div className="border-t border-border/50 mx-4" />
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <Moon className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Appearance</p>
+              <p className="text-xs text-muted-foreground">Light, dark, or system</p>
             </div>
             <ThemeToggle />
           </div>
 
-          <button 
-            className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted"
+          <div className="border-t border-border/50 mx-4" />
+          <button
+            className="flex items-center gap-3 px-4 py-3.5 w-full text-left transition-colors hover:bg-muted/50"
             onClick={() => setShowLanguage(true)}
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <Globe className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <Globe className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">{t("profile.language")}</p>
+              <p className="text-xs text-muted-foreground">{localeConfig.flag} {localeConfig.name}</p>
             </div>
-            <div className="flex-1">
-              <p className="font-medium">{t("profile.language")}</p>
-              <p className="text-sm text-muted-foreground">
-                {localeConfig.flag} {localeConfig.name}
-              </p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
           </button>
 
-          <button 
-            className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted"
+          <div className="border-t border-border/50 mx-4" />
+          <button
+            className="flex items-center gap-3 px-4 py-3.5 w-full text-left transition-colors hover:bg-muted/50"
             onClick={() => setShowSecurity(true)}
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <Shield className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <Shield className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">{t("profile.security")}</p>
+              <p className="text-xs text-muted-foreground">Password and account</p>
             </div>
-            <div className="flex-1">
-              <p className="font-medium">{t("profile.security")}</p>
-              <p className="text-sm text-muted-foreground">
-                Password and account settings
-              </p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
           </button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* About section */}
+      <div className="px-4 mt-5">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
+          About
+        </h3>
+        <div className="rounded-xl bg-card overflow-hidden shadow-sm">
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <FileText className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <p className="text-sm flex-1">Terms & Conditions</p>
+            <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+          </div>
+          <div className="border-t border-border/50 mx-4" />
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <Shield className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <p className="text-sm flex-1">Privacy Policy</p>
+            <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+          </div>
+        </div>
+      </div>
 
       {/* Sign out */}
-      <Button variant="outline" className="w-full gap-2 text-destructive" onClick={logout}>
-        <LogOut className="h-4 w-4" aria-hidden="true" />
-        Sign out
-      </Button>
+      <div className="px-4 mt-5 mb-4">
+        <button
+          onClick={logout}
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-card shadow-sm py-3.5 text-red-600 font-medium text-sm transition-colors hover:bg-red-50"
+        >
+          <LogOut className="h-4 w-4" aria-hidden="true" />
+          {t("profile.signOut") || "Sign Out"}
+        </button>
+      </div>
 
       {/* App info */}
-      <p className="text-center text-xs text-muted-foreground">
+      <p className="text-center text-xs text-muted-foreground mb-6">
         Harmoniq Safety v1.0.0
       </p>
 
