@@ -17,6 +17,8 @@ import {
   Eye,
   FileText,
   Users,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +31,7 @@ import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stor
 import { useUsersStore } from "@/stores/users-store";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useToast } from "@/components/ui/toast";
+import { useAuth } from "@/hooks/use-auth";
 import type { ChecklistItem } from "@/types";
 import { useTranslation } from "@/i18n";
 
@@ -57,9 +60,11 @@ export default function ChecklistDetailPage() {
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
   const { items: templates, isLoading, add: addTemplate, update: updateTemplate, remove: removeTemplate } = useChecklistTemplatesStore();
-  const { items: submissions } = useChecklistSubmissionsStore();
+  const { items: submissions, update: updateSubmission } = useChecklistSubmissionsStore();
   const { items: users } = useUsersStore();
   const { items: locations } = useLocationsStore();
+  const { isSuperAdmin, isCompanyAdmin, isManager } = useAuth();
+  const canApprove = isSuperAdmin || isCompanyAdmin || isManager;
 
   const submission = submissions.find((item) => item.id === checklistId);
   const isSubmission = Boolean(submission);
@@ -121,7 +126,7 @@ export default function ChecklistDetailPage() {
       id: item.id,
       user: submitter?.full_name || "Unknown",
       date: formatDate(new Date(item.submitted_at || item.created_at)),
-      status: item.status === "submitted" ? "complete" : "incomplete",
+      status: item.status as string,
       score,
     };
   });
@@ -273,9 +278,15 @@ export default function ChecklistDetailPage() {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-semibold">{template?.name || "Checklist"}</h1>
-                <span className="text-sm text-muted-foreground">
-                  {statusLabel.replace("_", " ")}
-                </span>
+                <Badge variant={
+                  submission.status === "approved" ? "success" :
+                  submission.status === "rejected" ? "destructive" :
+                  submission.status === "submitted" ? "outline" : "warning"
+                }>
+                  {submission.status === "approved" ? t("checklists.approved") :
+                   submission.status === "rejected" ? t("checklists.rejected") :
+                   statusLabel.replace("_", " ")}
+                </Badge>
                 {failCount > 0 && (
                   <span className="text-sm text-destructive">{failCount} issue{failCount > 1 ? "s" : ""}</span>
                 )}
@@ -286,6 +297,43 @@ export default function ChecklistDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {canApprove && submission.status === "submitted" && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={() => {
+                    updateSubmission(submission.id, { status: "rejected" });
+                    toast(t("checklists.rejected"), "info");
+                  }}
+                >
+                  <XCircle className="h-4 w-4" />
+                  {t("checklists.reject")}
+                </Button>
+                <Button
+                  size="sm"
+                  className="gap-1"
+                  onClick={() => {
+                    updateSubmission(submission.id, { status: "approved" });
+                    toast(t("checklists.approved"), "success");
+                  }}
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  {t("checklists.approve")}
+                </Button>
+              </>
+            )}
+            {submission.status === "approved" && (
+              <Badge variant="success" className="gap-1 py-1.5 px-3">
+                <CheckCircle className="h-3 w-3" /> {t("checklists.approved")}
+              </Badge>
+            )}
+            {submission.status === "rejected" && (
+              <Badge variant="destructive" className="gap-1 py-1.5 px-3">
+                <XCircle className="h-3 w-3" /> {t("checklists.rejected")}
+              </Badge>
+            )}
             <Button variant="outline" size="sm" onClick={() => window.print()}>
               <Copy className="h-4 w-4 mr-2" />
               Export PDF
@@ -665,16 +713,17 @@ export default function ChecklistDetailPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-3 font-medium">User</th>
+                    <th className="pb-3 font-medium">{t("checklists.submittedBy")}</th>
                     <th className="pb-3 font-medium">Date</th>
                     <th className="pb-3 font-medium">Score</th>
                     <th className="pb-3 font-medium">Status</th>
+                    {canApprove && <th className="pb-3 font-medium">Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {recentSubmissions.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-6 text-center text-muted-foreground">
+                      <td colSpan={canApprove ? 5 : 4} className="py-6 text-center text-muted-foreground">
                         {t("checklists.empty.noSubmissions")}
                       </td>
                     </tr>
@@ -689,10 +738,59 @@ export default function ChecklistDetailPage() {
                         <td className="py-3 text-muted-foreground">{sub.date}</td>
                         <td className="py-3">{sub.score}</td>
                         <td className="py-3">
-                          <Badge variant={sub.status === "complete" ? "success" : "warning"}>
-                            {sub.status}
+                          <Badge variant={
+                            sub.status === "approved" ? "success" :
+                            sub.status === "rejected" ? "destructive" :
+                            sub.status === "submitted" ? "outline" : "warning"
+                          }>
+                            {sub.status === "approved" ? t("checklists.approved") :
+                             sub.status === "rejected" ? t("checklists.rejected") :
+                             sub.status === "submitted" ? t("checklists.labels.completed") :
+                             sub.status}
                           </Badge>
                         </td>
+                        {canApprove && (
+                          <td className="py-3">
+                            {sub.status === "submitted" && (
+                              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+                                  onClick={() => {
+                                    updateSubmission(sub.id, { status: "rejected" });
+                                    toast(t("checklists.rejected"), "info");
+                                  }}
+                                >
+                                  <XCircle className="h-3 w-3" />
+                                  {t("checklists.reject")}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 gap-1 text-xs text-success hover:text-success"
+                                  onClick={() => {
+                                    updateSubmission(sub.id, { status: "approved" });
+                                    toast(t("checklists.approved"), "success");
+                                  }}
+                                >
+                                  <CheckCircle className="h-3 w-3" />
+                                  {t("checklists.approve")}
+                                </Button>
+                              </div>
+                            )}
+                            {sub.status === "approved" && (
+                              <span className="text-xs text-success flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3" /> {t("checklists.approved")}
+                              </span>
+                            )}
+                            {sub.status === "rejected" && (
+                              <span className="text-xs text-destructive flex items-center gap-1">
+                                <XCircle className="h-3 w-3" /> {t("checklists.rejected")}
+                              </span>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     ))
                   )}

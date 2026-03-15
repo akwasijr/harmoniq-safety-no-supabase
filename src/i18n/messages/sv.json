@@ -943,7 +943,12 @@
     "enterResponse": "Ange ditt svar...",
     "placeholders": {
       "checklistName": "Daglig gaffeltruckinspektion"
-    }
+    },
+    "approve": "Godkänn",
+    "reject": "Avvisa",
+    "approved": "Godkänd",
+    "rejected": "Avvisad",
+    "submittedBy": "Inskickad av"
   },
   "content": {
     "title": "Innehåll",
@@ -1427,7 +1432,16 @@
     "jhaTitle": "Job Hazard Analysis (JHA)",
     "osaTitle": "OSA - Organisatorisk och Social Arbetsmiljö",
     "rieTitle": "RI&E (Risico-Inventarisatie en -Evaluatie)",
-    "samTitle": "SAM - Systematiskt Arbetsmiljöarbete"
+    "samTitle": "SAM - Systematiskt Arbetsmiljöarbete",
+    "riskScoreLabel": "Riskpoäng",
+    "riskLevelLabel": "Risknivå",
+    "likelihood": "Sannolikhet",
+    "severity": "Allvarlighetsgrad",
+    "low": "Låg",
+    "medium": "Medel",
+    "high": "Hög",
+    "critical": "Kritisk",
+    "riskMatrix": "Riskmatris"
   },
   "auth": {
     "welcomeBack": "Välkommen tillbaka",
@@ -1489,7 +1503,13 @@
     "due": "Förfaller",
     "overdue": "Försenad",
     "relatedAsset": "Tillgång",
-    "viewAll": "Visa alla uppgifter"
+    "viewAll": "Visa alla uppgifter",
+    "startWork": "Starta arbete",
+    "markComplete": "Markera som klar",
+    "start": "Starta",
+    "resolve": "Lös",
+    "complete": "Slutför",
+    "statusUpdated": "Status uppdaterad"
   },
   "app.pending": "Väntande",
   "errors.network": "Nätverksfel",

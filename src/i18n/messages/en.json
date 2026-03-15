@@ -943,7 +943,12 @@
     "enterResponse": "Enter your response...",
     "placeholders": {
       "checklistName": "Daily forklift inspection"
-    }
+    },
+    "approve": "Approve",
+    "reject": "Reject",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "submittedBy": "Submitted by"
   },
   "content": {
     "title": "Content",
@@ -1427,7 +1432,16 @@
     "jhaTitle": "Job Hazard Analysis (JHA)",
     "osaTitle": "OSA - Organisatorisk och Social Arbetsmiljö",
     "rieTitle": "RI&E (Risico-Inventarisatie en -Evaluatie)",
-    "samTitle": "SAM - Systematiskt Arbetsmiljöarbete"
+    "samTitle": "SAM - Systematiskt Arbetsmiljöarbete",
+    "riskScoreLabel": "Risk Score",
+    "riskLevelLabel": "Risk Level",
+    "likelihood": "Likelihood",
+    "severity": "Severity",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical",
+    "riskMatrix": "Risk Matrix"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -1489,7 +1503,13 @@
     "due": "Due",
     "overdue": "Overdue",
     "relatedAsset": "Asset",
-    "viewAll": "View all tasks"
+    "viewAll": "View all tasks",
+    "startWork": "Start Work",
+    "markComplete": "Mark Complete",
+    "start": "Start",
+    "resolve": "Resolve",
+    "complete": "Complete",
+    "statusUpdated": "Status updated"
   },
   "app.pending": "Pending",
   "errors.network": "Network error",

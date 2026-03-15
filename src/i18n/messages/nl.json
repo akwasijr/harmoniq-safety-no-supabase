@@ -943,7 +943,12 @@
     "enterResponse": "Voer uw antwoord in...",
     "placeholders": {
       "checklistName": "Dagelijkse heftruckinspectie"
-    }
+    },
+    "approve": "Goedkeuren",
+    "reject": "Afwijzen",
+    "approved": "Goedgekeurd",
+    "rejected": "Afgewezen",
+    "submittedBy": "Ingediend door"
   },
   "content": {
     "title": "Inhoud",
@@ -1427,7 +1432,16 @@
     "jhaTitle": "Job Hazard Analysis (JHA)",
     "osaTitle": "OSA - Organisatorisk och Social Arbetsmiljö",
     "rieTitle": "RI&E (Risico-Inventarisatie en -Evaluatie)",
-    "samTitle": "SAM - Systematiskt Arbetsmiljöarbete"
+    "samTitle": "SAM - Systematiskt Arbetsmiljöarbete",
+    "riskScoreLabel": "Risicoscore",
+    "riskLevelLabel": "Risiconiveau",
+    "likelihood": "Waarschijnlijkheid",
+    "severity": "Ernst",
+    "low": "Laag",
+    "medium": "Gemiddeld",
+    "high": "Hoog",
+    "critical": "Kritiek",
+    "riskMatrix": "Risicomatrix"
   },
   "auth": {
     "welcomeBack": "Welkom terug",
@@ -1489,7 +1503,13 @@
     "due": "Deadline",
     "overdue": "Te laat",
     "relatedAsset": "Asset",
-    "viewAll": "Bekijk alle taken"
+    "viewAll": "Bekijk alle taken",
+    "startWork": "Werk starten",
+    "markComplete": "Markeren als voltooid",
+    "start": "Starten",
+    "resolve": "Oplossen",
+    "complete": "Voltooien",
+    "statusUpdated": "Status bijgewerkt"
   },
   "app.pending": "Openstaand",
   "errors.network": "Netwerkfout",

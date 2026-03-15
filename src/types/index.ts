@@ -874,7 +874,7 @@ export interface ChecklistSubmission {
   responses: ChecklistResponse[];
   general_comments: string | null;
 
-  status: "draft" | "submitted";
+  status: "draft" | "submitted" | "approved" | "rejected";
   submitted_at: string | null;
   created_at: string;
 

@@ -711,6 +711,35 @@ const submissionTabs: Tab[] = [
   { id: "controls", label: "Controls", icon: ShieldAlert },
 ];
 
+// Risk score calculation helper
+function calculateRiskScore(likelihood: number, severity: number): { score: number; level: string; color: string } {
+  const score = likelihood * severity;
+  if (score >= 16) return { score, level: "critical", color: "red" };
+  if (score >= 10) return { score, level: "high", color: "orange" };
+  if (score >= 5) return { score, level: "medium", color: "yellow" };
+  return { score, level: "low", color: "green" };
+}
+
+// Compute overall risk from an array of hazards
+function computeOverallRisk(hazards: { severity: number; probability: number; riskScore: number }[]): { score: number; level: string; color: string; maxSeverity: number; maxLikelihood: number } {
+  if (hazards.length === 0) return { score: 0, level: "low", color: "green", maxSeverity: 0, maxLikelihood: 0 };
+  const maxScore = Math.max(...hazards.map(h => h.riskScore));
+  const maxSeverity = Math.max(...hazards.map(h => h.severity));
+  const maxLikelihood = Math.max(...hazards.map(h => h.probability));
+  const { level, color } = calculateRiskScore(maxLikelihood, maxSeverity);
+  return { score: maxScore, level, color, maxSeverity, maxLikelihood };
+}
+
+// Risk level color mapping for Tailwind classes
+function getRiskColorClasses(color: string): { bg: string; text: string; border: string; badgeVariant: "destructive" | "warning" | "success" | "outline" } {
+  switch (color) {
+    case "red": return { bg: "bg-destructive/10", text: "text-destructive", border: "border-destructive/50", badgeVariant: "destructive" };
+    case "orange": return { bg: "bg-orange-500/10", text: "text-orange-600 dark:text-orange-400", border: "border-orange-500/50", badgeVariant: "destructive" };
+    case "yellow": return { bg: "bg-warning/10", text: "text-warning", border: "border-warning/50", badgeVariant: "warning" };
+    default: return { bg: "bg-success/10", text: "text-success", border: "border-success/50", badgeVariant: "success" };
+  }
+}
+
 // Helper to get readable form type name
 function getFormTypeName(formType: string): string {
   const names: Record<string, string> = {
@@ -769,6 +798,20 @@ export default function RiskAssessmentDetailPage() {
     responses: storeEvaluation.responses,
     _storeData: storeEvaluation, // Keep reference to store data
   } : mockSubmissions[assessmentId]) : null;
+
+  // Compute risk score from hazards when available
+  const overallRisk = submission
+    ? computeOverallRisk(submission.hazards)
+    : { score: 0, level: "low", color: "green", maxSeverity: 0, maxLikelihood: 0 };
+  const riskColors = getRiskColorClasses(overallRisk.color);
+  // Use computed risk for display (prefer computed over hardcoded mock values)
+  const displayRiskScore = submission ? (submission.hazards.length > 0 ? overallRisk.score : submission.riskScore) : 0;
+  const displayRiskLevel = submission ? (submission.hazards.length > 0 ? overallRisk.level : submission.riskLevel) : "low";
+  const displayRiskColor = submission ? (submission.hazards.length > 0 ? overallRisk.color : (
+    submission.riskLevel === "high" || submission.riskLevel === "critical" ? "red" :
+    submission.riskLevel === "medium" ? "yellow" : "green"
+  )) : "green";
+  const displayColors = getRiskColorClasses(displayRiskColor);
   
   // Get the template - either directly for template view, or via submission's templateId
   const template = isTemplate 
@@ -930,32 +973,79 @@ export default function RiskAssessmentDetailPage() {
         </div>
       </div>
 
-      {/* Submission Status Card */}
+      {/* Risk Score Summary Card */}
       {submission && (
-        <Card className={submission.riskLevel === "high" ? "border-destructive/50" : submission.riskLevel === "medium" ? "border-warning/50" : "border-success/50"}>
+        <Card className={displayColors.border}>
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-full ${submission.riskLevel === "high" ? "bg-destructive/10" : submission.riskLevel === "medium" ? "bg-warning/10" : "bg-success/10"}`}>
-                  <ShieldAlert className={`h-6 w-6 ${submission.riskLevel === "high" ? "text-destructive" : submission.riskLevel === "medium" ? "text-warning" : "text-success"}`} />
+                <div className={`p-3 rounded-full ${displayColors.bg}`}>
+                  <ShieldAlert className={`h-6 w-6 ${displayColors.text}`} />
                 </div>
                 <div>
-                  <p className="font-medium">Risk Assessment Result</p>
+                  <p className="font-medium">{t("riskAssessment.riskScoreLabel")}</p>
                   <p className="text-sm text-muted-foreground">{submission.hazards.length} hazards identified</p>
                 </div>
               </div>
               <div className="flex items-center gap-6">
                 <div className="text-center">
-                  <p className="text-2xl font-bold">{submission.riskScore}</p>
-                  <p className="text-xs text-muted-foreground">Risk Score</p>
+                  <p className={`text-2xl font-bold ${displayColors.text}`}>{displayRiskScore}</p>
+                  <p className="text-xs text-muted-foreground">{t("riskAssessment.riskScoreLabel")}</p>
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  {submission.riskLevel.toUpperCase()} RISK
-                </span>
+                <div className="text-center">
+                  <Badge variant={displayColors.badgeVariant} className="text-sm px-3 py-1">
+                    {t(`riskAssessment.${displayRiskLevel}`)}
+                  </Badge>
+                  <p className="text-xs text-muted-foreground mt-1">{t("riskAssessment.riskLevelLabel")}</p>
+                </div>
                 <span className="text-sm text-muted-foreground">
                   {submission.status === "completed" ? t("checklists.labels.completed") : submission.status === "in_progress" ? t("checklists.labels.inProgress") : t("checklists.labels.pending")}
                 </span>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Risk Matrix Summary */}
+      {submission && submission.hazards.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t("riskAssessment.riskScoreLabel")} — {t("riskAssessment.riskMatrix")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+              {submission.hazards.map((hazard, idx) => {
+                const hazardRisk = calculateRiskScore(hazard.probability, hazard.severity);
+                const hColors = getRiskColorClasses(hazardRisk.color);
+                return (
+                  <div key={idx} className={`p-4 rounded-lg border ${hColors.border}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium truncate flex-1">{hazard.step}</span>
+                      <Badge variant={hColors.badgeVariant} className="ml-2">{hazardRisk.score}</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                      <div>
+                        <span>{t("riskAssessment.likelihood")}</span>
+                        <p className="font-medium text-foreground">{hazard.probability}/5</p>
+                      </div>
+                      <div>
+                        <span>{t("riskAssessment.severity")}</span>
+                        <p className="font-medium text-foreground">{hazard.severity}/5</p>
+                      </div>
+                    </div>
+                    <p className={`text-xs font-medium mt-2 ${hColors.text}`}>{t(`riskAssessment.${hazardRisk.level}`)}</p>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Risk level legend */}
+            <div className="flex items-center gap-4 pt-4 border-t text-xs">
+              <span className="text-muted-foreground">{t("riskAssessment.riskLevelLabel")}:</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-success inline-block" /> {t("riskAssessment.low")} (1-4)</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-warning inline-block" /> {t("riskAssessment.medium")} (5-9)</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-500 inline-block" /> {t("riskAssessment.high")} (10-15)</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-destructive inline-block" /> {t("riskAssessment.critical")} (16-25)</span>
             </div>
           </CardContent>
         </Card>
@@ -1010,8 +1100,11 @@ export default function RiskAssessmentDetailPage() {
       {/* Submission View - Hazards */}
       {submission && activeTab === "hazards" && (
         <div className="space-y-4">
-          {submission.hazards.map((hazard, idx) => (
-            <Card key={idx} className={hazard.riskScore >= 12 ? "border-destructive/50" : hazard.riskScore >= 6 ? "border-warning/50" : ""}>
+          {submission.hazards.map((hazard, idx) => {
+            const hazardRisk = calculateRiskScore(hazard.probability, hazard.severity);
+            const hColors = getRiskColorClasses(hazardRisk.color);
+            return (
+            <Card key={idx} className={hColors.border}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -1023,24 +1116,29 @@ export default function RiskAssessmentDetailPage() {
                       <p className="text-sm text-muted-foreground">{hazard.hazard}</p>
                     </div>
                   </div>
-                  <Badge variant={hazard.riskScore >= 12 ? "destructive" : hazard.riskScore >= 6 ? "warning" : "success"} className="text-lg px-4 py-1">
-                    {hazard.riskScore}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={hColors.badgeVariant} className="text-lg px-4 py-1">
+                      {hazardRisk.score}
+                    </Badge>
+                    <Badge variant="outline" className={hColors.text}>
+                      {t(`riskAssessment.${hazardRisk.level}`)}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-3 mb-4">
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <p className="text-xs text-muted-foreground">{t("incidents.labels.severity")}</p>
+                    <p className="text-xs text-muted-foreground">{t("riskAssessment.severity")}</p>
                     <p className="text-xl font-bold">{hazard.severity}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <p className="text-xs text-muted-foreground">Probability</p>
+                    <p className="text-xs text-muted-foreground">{t("riskAssessment.likelihood")}</p>
                     <p className="text-xl font-bold">{hazard.probability}</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <p className="text-xs text-muted-foreground">Risk Score</p>
-                    <p className="text-xl font-bold">{hazard.severity} × {hazard.probability} = {hazard.riskScore}</p>
+                  <div className={`p-3 rounded-lg text-center ${hColors.bg}`}>
+                    <p className="text-xs text-muted-foreground">{t("riskAssessment.riskScoreLabel")}</p>
+                    <p className={`text-xl font-bold ${hColors.text}`}>{hazard.severity} × {hazard.probability} = {hazardRisk.score}</p>
                   </div>
                 </div>
                 <div>
@@ -1049,7 +1147,8 @@ export default function RiskAssessmentDetailPage() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
