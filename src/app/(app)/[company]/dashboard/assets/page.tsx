@@ -830,8 +830,9 @@ export default function AssetsPage() {
                           <td className="py-2 capitalize">{alert.severity}</td>
                           <td className="py-2">
                             <Link
-                              href={alert.asset_id ? `/${company}/dashboard/assets/${alert.asset_id}` : "#"}
-                              className="text-primary hover:underline flex items-center gap-1"
+                              href={`/${company}/dashboard/assets/${alert.asset_id}`}
+                              className={`text-primary hover:underline flex items-center gap-1 ${!alert.asset_id ? "pointer-events-none opacity-50" : ""}`}
+                              aria-disabled={!alert.asset_id}
                             >
                               <Eye className="h-4 w-4" />
                               View

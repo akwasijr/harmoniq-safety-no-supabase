@@ -10,8 +10,6 @@ export function ServiceWorkerRegistration() {
         navigator.serviceWorker
           .register("/sw.js")
           .then((registration) => {
-            console.log("[App] Service Worker registered with scope:", registration.scope);
-            
             // Check for updates periodically
             setInterval(() => {
               registration.update();
@@ -23,8 +21,7 @@ export function ServiceWorkerRegistration() {
               if (newWorker) {
                 newWorker.addEventListener("statechange", () => {
                   if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                    // New content is available, could show a notification here
-                    console.log("[App] New version available");
+                    // New content is available
                   }
                 });
               }

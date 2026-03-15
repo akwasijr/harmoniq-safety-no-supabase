@@ -136,9 +136,7 @@ export default function ScanAssetPage() {
               }
               return; // Stop scanning
             } else {
-              // QR code found but not matching any asset
-              // Keep scanning but show a brief indicator
-              console.log("QR code detected but no matching asset:", scannedData);
+              // QR code found but not matching any asset — keep scanning
             }
           }
           
@@ -187,10 +185,7 @@ export default function ScanAssetPage() {
     
     // Check if torch is supported
     const capabilities = track.getCapabilities?.() as MediaTrackCapabilities & { torch?: boolean };
-    if (!capabilities?.torch) {
-      console.log("Torch not supported on this device");
-      return;
-    }
+    if (!capabilities?.torch) return;
     
     // Apply torch constraint
     track.applyConstraints({

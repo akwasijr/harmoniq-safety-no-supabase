@@ -414,7 +414,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-base font-medium">{t("dashboard.recentIncidents")}</CardTitle>
-              <Link href={company ? `/${company}/dashboard/incidents` : "#"}>
+              <Link href={`/${company}/dashboard/incidents`}>
                 <Button variant="ghost" size="sm" className="gap-1">
                   {t("common.viewAll")} <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -427,7 +427,7 @@ export default function DashboardPage() {
                 ) : recentFilteredIncidents.map((incident) => (
                   <Link
                     key={incident.id}
-                    href={company ? `/${company}/dashboard/incidents/${incident.id}` : "#"}
+                    href={`/${company}/dashboard/incidents/${incident.id}`}
                     className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
                   >
                     <div className="space-y-1">
