@@ -137,22 +137,22 @@ export default function NotificationsPage() {
   return (
     <div className="flex flex-col min-h-full">
       {/* Header */}
-      <div className="sticky top-14 z-20 flex items-center gap-3 border-b bg-background px-4 py-3">
-        <button
-          onClick={() => router.back()}
-          className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
-          aria-label={t("common.goBack")}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-lg font-semibold">Notifications</h1>
+      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
+            aria-label={t("common.goBack")}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-lg font-bold flex-1">Notifications</h1>
+          {unreadCount > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              {unreadCount} new
+            </Badge>
+          )}
         </div>
-        {unreadCount > 0 && (
-          <Badge variant="secondary" className="text-xs">
-            {unreadCount} new
-          </Badge>
-        )}
       </div>
 
       {/* Notification list */}

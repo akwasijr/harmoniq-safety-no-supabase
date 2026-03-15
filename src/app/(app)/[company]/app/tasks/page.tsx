@@ -532,16 +532,13 @@ export default function TasksPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Header */}
-      <header className="bg-primary px-5 pt-5 pb-4">
-        <h1 className="text-lg font-bold text-white">{t("tasks.title") || "My Tasks"}</h1>
+      {/* Header + Tabs */}
+      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
+        <h1 className="text-lg font-bold mb-3">{t("tasks.title") || "My Tasks"}</h1>
         {allTasks.length > 0 && (
-          <p className="text-sm text-white/60 mt-0.5">{allTasks.length} {t("tasks.total") || "total tasks"}</p>
+          <p className="text-xs text-muted-foreground -mt-2 mb-3">{allTasks.length} {t("tasks.total") || "total tasks"}</p>
         )}
-      </header>
 
-      {/* Tabs */}
-      <div className="sticky top-14 z-20 bg-[#f0eff5] px-4 py-2">
         <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist" aria-label={t("tasks.title") || "Task categories"}>
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -555,7 +552,7 @@ export default function TasksPage() {
                 aria-controls={`tabpanel-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-md transition-all whitespace-nowrap",
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all whitespace-nowrap",
                   isActive
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground",

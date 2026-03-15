@@ -707,10 +707,10 @@ function EmployeeChecklistsPageContent() {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Header */}
-      <div className="px-4 pt-4 pb-2">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold truncate">{t("checklists.safetyTasks")}</h1>
+      {/* Header + Tabs */}
+      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-lg font-bold truncate">{t("checklists.safetyTasks")}</h1>
           {selectedLocation && (
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <MapPin className="h-3 w-3" />
@@ -721,10 +721,7 @@ function EmployeeChecklistsPageContent() {
             </span>
           )}
         </div>
-      </div>
 
-      {/* Tabs, compact pill style */}
-      <div className="sticky top-14 z-20 bg-background border-b px-4 py-2">
         <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -736,7 +733,7 @@ function EmployeeChecklistsPageContent() {
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-md transition-all whitespace-nowrap",
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all whitespace-nowrap",
                   isActive 
                     ? "bg-background text-foreground shadow-sm" 
                     : "text-muted-foreground"

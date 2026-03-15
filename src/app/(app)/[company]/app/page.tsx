@@ -301,7 +301,7 @@ export default function EmployeeAppHomePage() {
 
   // ── Always show full feed (no early return for empty state) ──
   return (
-    <div className="flex flex-col min-h-full bg-muted/30">
+    <div className="flex flex-col min-h-full">
       {/* ── Hero Section ── */}
       <HeroSection />
 

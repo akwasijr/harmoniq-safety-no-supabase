@@ -132,7 +132,7 @@ export default function EmployeeProfilePage() {
   const languages = SUPPORTED_LOCALES;
 
   return (
-    <div className="-mt-0">
+    <div className="flex flex-col min-h-full">
       {/* Hidden file input for photo upload */}
       <input
         ref={photoInputRef}
