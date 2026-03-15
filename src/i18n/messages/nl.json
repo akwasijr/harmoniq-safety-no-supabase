@@ -553,7 +553,9 @@
       "noIncidents": "Geen incidenten gemeld"
     },
     "locked": "Dit incidentrapport is vergrendeld en kan niet worden bewerkt",
-    "lockedShort": "Vergrendeld"
+    "lockedShort": "Vergrendeld",
+    "viewReport": "Rapport bekijken",
+    "reportAnother": "Nog een melden"
   },
   "tickets": {
     "title": "Tickets",
@@ -1466,7 +1468,11 @@
     "logIn": "Inloggen",
     "backToHome": "← Terug naar home",
     "companyName": "Bedrijfsnaam",
-    "country": "Land"
+    "country": "Land",
+    "accountLocked": "Account tijdelijk vergrendeld",
+    "attemptsRemaining": "pogingen resterend",
+    "tryAgainIn": "Probeer opnieuw over",
+    "minutes": "minuten"
   },
   "tasks": {
     "title": "Mijn Taken",

@@ -5,7 +5,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Mail, Loader, Eye, EyeOff } from "lucide-react";
+import { Mail, Loader, Eye, EyeOff, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,32 @@ const APP_CHOICE_STORAGE_KEY = "harmoniq_app_choice";
 const APP_CHOICE_COOKIE = "harmoniq_app_choice";
 const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 const SELECTED_COMPANY_STORAGE_KEY = "harmoniq_selected_company";
+const LOGIN_ATTEMPTS_KEY = "harmoniq_login_attempts";
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+interface LoginAttemptData {
+  count: number;
+  lockedUntil: number | null;
+}
+
+function getLoginAttempts(): LoginAttemptData {
+  try {
+    const raw = sessionStorage.getItem(LOGIN_ATTEMPTS_KEY);
+    if (!raw) return { count: 0, lockedUntil: null };
+    return JSON.parse(raw);
+  } catch {
+    return { count: 0, lockedUntil: null };
+  }
+}
+
+function setLoginAttempts(data: LoginAttemptData) {
+  sessionStorage.setItem(LOGIN_ATTEMPTS_KEY, JSON.stringify(data));
+}
+
+function clearLoginAttempts() {
+  sessionStorage.removeItem(LOGIN_ATTEMPTS_KEY);
+}
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -35,6 +61,8 @@ function LoginForm() {
   const [passwordError, setPasswordError] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const [loginMode, setLoginMode] = React.useState<"password" | "magic">("password");
+  const [lockoutRemaining, setLockoutRemaining] = React.useState(0);
+  const [failedAttempts, setFailedAttempts] = React.useState(0);
   const [appChoice, setAppChoice] = React.useState<"dashboard" | "app">(() => {
     if (typeof window === "undefined") return "dashboard";
     const stored = window.localStorage.getItem(APP_CHOICE_STORAGE_KEY);
@@ -59,6 +87,47 @@ function LoginForm() {
   // Supabase .not("col","in","(val1,val2)") requires NO quotes around values
   const PLATFORM_SLUGS_LIST = getPlatformSlugFilterList();
 
+  // Check lockout state on mount and run countdown timer
+  React.useEffect(() => {
+    const checkLockout = () => {
+      const attempts = getLoginAttempts();
+      setFailedAttempts(attempts.count);
+      if (attempts.lockedUntil && attempts.lockedUntil > Date.now()) {
+        setLockoutRemaining(Math.ceil((attempts.lockedUntil - Date.now()) / 1000));
+      } else if (attempts.lockedUntil && attempts.lockedUntil <= Date.now()) {
+        clearLoginAttempts();
+        setFailedAttempts(0);
+        setLockoutRemaining(0);
+      }
+    };
+    checkLockout();
+    const interval = setInterval(() => {
+      const attempts = getLoginAttempts();
+      if (attempts.lockedUntil && attempts.lockedUntil > Date.now()) {
+        setLockoutRemaining(Math.ceil((attempts.lockedUntil - Date.now()) / 1000));
+      } else if (attempts.lockedUntil) {
+        clearLoginAttempts();
+        setFailedAttempts(0);
+        setLockoutRemaining(0);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const isLockedOut = lockoutRemaining > 0;
+  const attemptsRemaining = MAX_ATTEMPTS - failedAttempts;
+
+  const recordFailedAttempt = () => {
+    const attempts = getLoginAttempts();
+    const newCount = attempts.count + 1;
+    const lockedUntil = newCount >= MAX_ATTEMPTS ? Date.now() + LOCKOUT_DURATION_MS : null;
+    setLoginAttempts({ count: newCount, lockedUntil });
+    setFailedAttempts(newCount);
+    if (lockedUntil) {
+      setLockoutRemaining(Math.ceil(LOCKOUT_DURATION_MS / 1000));
+    }
+  };
+
   const getAllowedApps = (role: string): AppChoice[] => {
     if (role === "employee") return ["app"];
     // super_admin, company_admin, manager can access both
@@ -68,6 +137,7 @@ function LoginForm() {
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLockedOut) return;
     try {
       setIsLoading(true);
       setError("");
@@ -102,6 +172,7 @@ function LoginForm() {
 
       if (authError) {
         if (authError.message.toLowerCase().includes("invalid login credentials")) {
+          recordFailedAttempt();
           setPasswordError("Email or password is incorrect.");
         } else {
           setError(authError.message);
@@ -109,6 +180,10 @@ function LoginForm() {
         setIsLoading(false);
         return;
       }
+
+      // Successful auth — clear lockout tracking
+      clearLoginAttempts();
+      setFailedAttempts(0);
 
         if (data.session) {
           await supabase.auth.setSession({
@@ -341,6 +416,22 @@ function LoginForm() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {isLockedOut && (
+                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300 flex items-center gap-2">
+                  <Lock className="h-4 w-4 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">{t("auth.accountLocked") || "Account temporarily locked"}</p>
+                    <p>{t("auth.tryAgainIn") || "Try again in"} {Math.ceil(lockoutRemaining / 60)} {t("auth.minutes") || "minutes"}</p>
+                  </div>
+                </div>
+              )}
+
+              {!isLockedOut && failedAttempts >= 3 && attemptsRemaining > 0 && (
+                <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  {attemptsRemaining} {t("auth.attemptsRemaining") || "attempts remaining"}
+                </div>
+              )}
+
               {error && (
                 <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
                   {error}
@@ -443,7 +534,7 @@ function LoginForm() {
                   </div>
                   <Button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || isLockedOut}
                     className="w-full"
                     loading={isLoading}
                   >

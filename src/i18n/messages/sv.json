@@ -553,7 +553,9 @@
       "noIncidents": "Inga incidenter rapporterade"
     },
     "locked": "Denna incidentrapport är låst och kan inte redigeras",
-    "lockedShort": "Låst"
+    "lockedShort": "Låst",
+    "viewReport": "Visa rapport",
+    "reportAnother": "Rapportera en till"
   },
   "tickets": {
     "title": "Ärenden",
@@ -1466,7 +1468,11 @@
     "logIn": "Logga in",
     "backToHome": "← Tillbaka till startsidan",
     "companyName": "Företagsnamn",
-    "country": "Land"
+    "country": "Land",
+    "accountLocked": "Konto tillfälligt låst",
+    "attemptsRemaining": "försök kvar",
+    "tryAgainIn": "Försök igen om",
+    "minutes": "minuter"
   },
   "tasks": {
     "title": "Mina Uppgifter",

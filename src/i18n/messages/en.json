@@ -553,7 +553,9 @@
       "noIncidents": "No incidents reported"
     },
     "locked": "This incident report is locked and cannot be edited",
-    "lockedShort": "Locked"
+    "lockedShort": "Locked",
+    "viewReport": "View Report",
+    "reportAnother": "Report Another"
   },
   "tickets": {
     "title": "Tickets",
@@ -1466,7 +1468,11 @@
     "logIn": "Log in",
     "backToHome": "← Back to home",
     "companyName": "Company name",
-    "country": "Country"
+    "country": "Country",
+    "accountLocked": "Account temporarily locked",
+    "attemptsRemaining": "attempts remaining",
+    "tryAgainIn": "Try again in",
+    "minutes": "minutes"
   },
   "tasks": {
     "title": "My Tasks",

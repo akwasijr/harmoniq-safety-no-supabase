@@ -314,7 +314,7 @@ function ReportIncidentPageContent() {
     };
     addIncident(incident);
     toast("Incident submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&id=${incident.id}`);
   };
 
   const getStepTitle = () => {

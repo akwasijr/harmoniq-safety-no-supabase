@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle, Plus, Home } from "lucide-react";
+import { CheckCircle, Plus, Home, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useTranslation } from "@/i18n";
@@ -13,6 +13,7 @@ function ReportSuccessPageContent() {
   const searchParams = useSearchParams();
   const { t } = useTranslation();
   const referenceNumber = searchParams.get("ref") || "INC-2024-001";
+  const incidentId = searchParams.get("id");
   const reportType = searchParams.get("type") || "incident";
 
   const typeLabels: Record<string, { title: string; description: string; action: string }> = {
@@ -65,10 +66,18 @@ function ReportSuccessPageContent() {
 
         {/* Action buttons */}
         <div className="space-y-3">
+          {incidentId && (
+            <Link href={`/${company}/app/incidents/${incidentId}`} className="block">
+              <Button className="h-12 w-full gap-2">
+                <Eye className="h-5 w-5" aria-hidden="true" />
+                {t("incidents.viewReport") || "View Report"}
+              </Button>
+            </Link>
+          )}
           <Link href={`/${company}/app/report`} className="block">
-            <Button className="h-12 w-full gap-2">
+            <Button variant={incidentId ? "outline" : "default"} className="h-12 w-full gap-2">
               <Plus className="h-5 w-5" aria-hidden="true" />
-              {labels.action}
+              {t("incidents.reportAnother") || labels.action}
             </Button>
           </Link>
           <Link href={`/${company}/app`} className="block">
