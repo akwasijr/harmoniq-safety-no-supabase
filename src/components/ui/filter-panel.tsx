@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n";
 import { DateRangeDropdown } from "@/components/ui/date-range-dropdown";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,7 @@ export function FilterPanel({
   className,
   children,
 }: FilterPanelProps) {
+  const { t } = useTranslation();
   const [showFilters, setShowFilters] = React.useState(false);
 
   const activeFiltersCount = filters.filter((f) => f.value !== "").length;
@@ -65,7 +67,7 @@ export function FilterPanel({
           onClick={() => setShowFilters(!showFilters)}
         >
           <Filter className="h-4 w-4" />
-          Filters
+          {t("common.filters")}
           {activeFiltersCount > 0 && (
             <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary-foreground text-xs font-medium text-primary">
               {activeFiltersCount}
@@ -106,11 +108,11 @@ export function FilterPanel({
               <div className="flex items-center gap-2 ml-auto">
                 {activeFiltersCount > 0 && (
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs">
-                    Clear all
+                    {t("common.clearAll")}
                   </Button>
                 )}
                 <Button size="sm" onClick={handleApply} className="h-8">
-                  Apply
+                  {t("common.apply")}
                 </Button>
               </div>
             </div>

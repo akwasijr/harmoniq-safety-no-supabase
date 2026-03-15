@@ -42,7 +42,7 @@ export default function EmployeeAssetsPage() {
   const { items: locations } = useLocationsStore();
   const { items: workOrders } = useWorkOrdersStore();
   const { items: inspectionRoutes } = useInspectionRoutesStore();
-  const { t } = useTranslation();
+  const { t, formatDate } = useTranslation();
 
   const [activeTab, setActiveTab] = React.useState<SubTab>("find");
   const [search, setSearch] = React.useState("");
@@ -401,7 +401,7 @@ export default function EmployeeAssetsPage() {
                               </span>
                               {wo.due_date && (
                                 <span className="text-xs text-muted-foreground">
-                                  Due: {new Date(wo.due_date).toLocaleDateString()}
+                                  Due: {formatDate(wo.due_date)}
                                 </span>
                               )}
                             </div>

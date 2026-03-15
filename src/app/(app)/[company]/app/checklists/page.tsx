@@ -36,7 +36,7 @@ import { useIncidentsStore } from "@/stores/incidents-store";
 import { cn } from "@/lib/utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
-import { useTranslation } from "@/i18n";
+import { useTranslation, LOCALE_DEFAULT_COUNTRY } from "@/i18n";
 
 type TabType = "checklists" | "risk-assessment" | "reports";
 type CountryCode = "US" | "NL" | "SE";
@@ -617,7 +617,7 @@ function EmployeeChecklistsPageContent() {
   
   const company = useCompanyParam();
   
-  const { t, formatDate } = useTranslation();
+  const { t, locale, formatDate } = useTranslation();
 
   const getInitialTab = (): TabType => {
     if (tabParam === "risk-assessment") return "risk-assessment";
@@ -640,7 +640,9 @@ function EmployeeChecklistsPageContent() {
     ? locations.find(l => l.id === locationParam) 
     : null;
 
-  const companyCountry: CountryCode = (currentCompany?.country as CountryCode) || "US";
+  // Derive country from user's locale first, fall back to company country, then US
+  const localeCountry = LOCALE_DEFAULT_COUNTRY[locale] as CountryCode | undefined;
+  const companyCountry: CountryCode = localeCountry || (currentCompany?.country as CountryCode) || "US";
 
   const templates = checklistTemplates;
   const activeAssets = assets.filter((a) => a.status === "active");

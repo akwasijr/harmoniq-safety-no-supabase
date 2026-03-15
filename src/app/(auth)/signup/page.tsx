@@ -5,8 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Building2, Loader } from "lucide-react";
+import { AuthTabs } from "@/components/auth/auth-tabs";
+import { useTranslation } from "@/i18n";
 
 export default function SignupPage() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [formData, setFormData] = React.useState({
@@ -116,9 +119,11 @@ export default function SignupPage() {
           <span className="text-2xl font-semibold">Harmoniq Safety</span>
         </div>
 
+        <AuthTabs />
+
         <div className="rounded-lg border bg-white p-8 shadow-sm">
-          <h1 className="text-center text-xl font-semibold mb-2">Create your account</h1>
-          <p className="text-center text-sm text-gray-600 mb-6">Sign up with your corporate account</p>
+          <h1 className="text-center text-xl font-semibold mb-2">{t("auth.createAccount")}</h1>
+          <p className="text-center text-sm text-gray-600 mb-6">{t("auth.signUpCorporate")}</p>
 
           {error && (
             <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -142,7 +147,7 @@ export default function SignupPage() {
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
               )}
-              Sign up with Google
+              {t("auth.signUpGoogle")}
             </button>
 
             <button
@@ -157,17 +162,17 @@ export default function SignupPage() {
                   <path fill="currentColor" d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"/>
                 </svg>
               )}
-              Sign up with Microsoft
+              {t("auth.signUpMicrosoft")}
             </button>
           </div>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Already have an account? <Link href="/login" className="font-semibold hover:underline">Log in</Link>
+            {t("auth.alreadyHaveAccount")} <Link href="/login" className="font-semibold hover:underline">{t("auth.logIn")}</Link>
           </p>
         </div>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          <Link href="/" className="hover:underline">← Back to home</Link>
+          <Link href="/" className="hover:underline">{t("auth.backToHome")}</Link>
         </p>
       </div>
     </div>

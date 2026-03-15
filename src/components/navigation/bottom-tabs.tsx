@@ -38,7 +38,7 @@ const tabItems: TabItem[] = [
     titleKey: "nav.tasks",
     shortTitleKey: "nav.tasksShort",
     fallback: "Tasks",
-    href: "/app/checklists",
+    href: "/app/tasks",
     icon: ClipboardCheck,
   },
   {

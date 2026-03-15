@@ -31,6 +31,8 @@ import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { commonFilterOptions } from "@/components/ui/filter-panel";
 import { useIncidentsStore } from "@/stores/incidents-store";
+import { useNotificationsStore } from "@/stores/notifications-store";
+import { notifyCriticalIncident } from "@/stores/notification-triggers";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { useUsersStore } from "@/stores/users-store";
@@ -100,6 +102,7 @@ export default function IncidentsPage() {
   const { t, formatDate } = useTranslation();
   const { toast } = useToast();
   const { items: incidents, add: addIncident } = useIncidentsStore();
+  const { add: addNotif } = useNotificationsStore();
   const { items: tickets } = useTicketsStore();
   const { items: locations } = useLocationsStore();
   const { items: users } = useUsersStore();
@@ -210,6 +213,13 @@ export default function IncidentsPage() {
       updated_at: now.toISOString(),
     };
     addIncident(incident);
+    if (incident.severity === "critical") {
+      notifyCriticalIncident(addNotif, {
+        companyId: incident.company_id,
+        incidentTitle: incident.title,
+        incidentId: incident.id,
+      });
+    }
     toast("Incident created successfully");
     setShowAddModal(false);
     setNewIncident({

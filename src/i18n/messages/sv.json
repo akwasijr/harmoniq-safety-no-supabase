@@ -1591,5 +1591,17 @@
       "status_change": "Status ändrad",
       "assign": "Tilldelad"
     }
+  },
+  "notificationTriggers": {
+    "overdueTicket": "Förfallet ärende",
+    "overdueTicketMessage": "Ärende \"{title}\" har passerat förfallodatum",
+    "overdueWorkOrder": "Förfallen arbetsorder",
+    "overdueWorkOrderMessage": "Arbetsorder \"{title}\" har passerat förfallodatum",
+    "overdueAction": "Förfallen korrigerande åtgärd",
+    "overdueActionMessage": "Åtgärd \"{title}\" har passerat förfallodatum",
+    "newAssignment": "Ny {entityType} tilldelad",
+    "newAssignmentMessage": "\"{title}\" tilldelades dig av {assignedBy}",
+    "criticalIncident": "Kritisk incident rapporterad",
+    "criticalIncidentMessage": "En kritisk incident \"{title}\" har rapporterats"
   }
 }

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n";
 
 // ---------- Error variant definitions ----------
 
@@ -32,88 +33,88 @@ export type ErrorVariant =
 
 interface ErrorVariantConfig {
   icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   iconColor: string;
   iconBgColor: string;
-  primaryAction?: string;
-  secondaryAction?: string;
+  primaryActionKey?: string;
+  secondaryActionKey?: string;
 }
 
 const ERROR_CONFIGS: Record<ErrorVariant, ErrorVariantConfig> = {
   network: {
     icon: WifiOff,
-    title: "No connection",
-    description: "Check your internet connection and try again. Your unsaved changes are safe locally.",
+    titleKey: "errors.network",
+    descriptionKey: "errors.networkDesc",
     iconColor: "text-orange-500",
     iconBgColor: "bg-orange-100 dark:bg-orange-500/10",
-    primaryAction: "Retry",
+    primaryActionKey: "errors.tryAgain",
   },
   "access-denied": {
     icon: ShieldX,
-    title: "Access denied",
-    description: "You don't have permission to view this resource. Contact your administrator if you believe this is an error.",
+    titleKey: "errors.permission",
+    descriptionKey: "errors.permissionDesc",
     iconColor: "text-destructive",
     iconBgColor: "bg-destructive/10",
-    primaryAction: "Go back",
+    primaryActionKey: "errors.goBack",
   },
   "not-found": {
     icon: FileQuestion,
-    title: "Not found",
-    description: "The page or resource you're looking for doesn't exist or may have been moved.",
+    titleKey: "errors.notFound",
+    descriptionKey: "errors.notFoundDesc",
     iconColor: "text-muted-foreground",
     iconBgColor: "bg-muted",
-    primaryAction: "Go back",
+    primaryActionKey: "errors.goBack",
   },
   "session-expired": {
     icon: Clock,
-    title: "Session expired",
-    description: "Your session has expired for security reasons. Please sign in again to continue.",
+    titleKey: "errors.sessionExpired",
+    descriptionKey: "errors.sessionExpiredDesc",
     iconColor: "text-amber-500",
     iconBgColor: "bg-amber-100 dark:bg-amber-500/10",
-    primaryAction: "Sign in",
+    primaryActionKey: "errors.signIn",
   },
   timeout: {
     icon: Clock,
-    title: "Request timed out",
-    description: "The server took too long to respond. This may be a temporary issue — please try again.",
+    titleKey: "errors.timeout",
+    descriptionKey: "errors.timeoutDesc",
     iconColor: "text-orange-500",
     iconBgColor: "bg-orange-100 dark:bg-orange-500/10",
-    primaryAction: "Retry",
+    primaryActionKey: "errors.tryAgain",
   },
   "server-error": {
     icon: ServerCrash,
-    title: "Server error",
-    description: "Something went wrong on our end. Our team has been notified. Please try again later.",
+    titleKey: "errors.server",
+    descriptionKey: "errors.serverDesc",
     iconColor: "text-destructive",
     iconBgColor: "bg-destructive/10",
-    primaryAction: "Retry",
-    secondaryAction: "Go back",
+    primaryActionKey: "errors.tryAgain",
+    secondaryActionKey: "errors.goBack",
   },
   maintenance: {
     icon: Wrench,
-    title: "Under maintenance",
-    description: "We're performing scheduled maintenance. The system will be back shortly.",
+    titleKey: "errors.maintenance",
+    descriptionKey: "errors.maintenanceDesc",
     iconColor: "text-blue-500",
     iconBgColor: "bg-blue-100 dark:bg-blue-500/10",
-    primaryAction: "Refresh",
+    primaryActionKey: "errors.refresh",
   },
   "rate-limit": {
     icon: Ban,
-    title: "Too many requests",
-    description: "You've made too many requests. Please wait a moment before trying again.",
+    titleKey: "errors.rateLimit",
+    descriptionKey: "errors.rateLimitDesc",
     iconColor: "text-amber-500",
     iconBgColor: "bg-amber-100 dark:bg-amber-500/10",
-    primaryAction: "Retry",
+    primaryActionKey: "errors.tryAgain",
   },
   generic: {
     icon: AlertTriangle,
-    title: "Something went wrong",
-    description: "An unexpected error occurred. Please try again or contact support if the problem persists.",
+    titleKey: "errors.generic",
+    descriptionKey: "errors.genericDesc",
     iconColor: "text-destructive",
     iconBgColor: "bg-destructive/10",
-    primaryAction: "Try again",
-    secondaryAction: "Go back",
+    primaryActionKey: "errors.tryAgain",
+    secondaryActionKey: "errors.goBack",
   },
 };
 
@@ -165,11 +166,12 @@ export function ErrorState({
   statusCode,
   errorDetails,
 }: ErrorStateProps) {
+  const { t } = useTranslation();
   const variant = explicitVariant ?? (statusCode ? variantFromStatus(statusCode) : "generic");
   const config = ERROR_CONFIGS[variant];
   const Icon = CustomIcon || config.icon;
-  const displayTitle = title || config.title;
-  const displayDesc = description || config.description;
+  const displayTitle = title || t(config.titleKey);
+  const displayDesc = description || t(config.descriptionKey);
 
   // For session-expired, primary action is "Sign in"
   const handlePrimary = () => {
@@ -186,7 +188,7 @@ export function ErrorState({
     onGoBack?.() ?? window.history.back();
   };
 
-  const primaryLabel = retryLabel || config.primaryAction || "Try again";
+  const primaryLabel = retryLabel || (config.primaryActionKey ? t(config.primaryActionKey) : t("errors.tryAgain"));
   const PrimaryIcon =
     variant === "session-expired" ? LogIn :
     variant === "access-denied" || variant === "not-found" ? ArrowLeft :
@@ -201,7 +203,7 @@ export function ErrorState({
         </div>
         <h3 className="mt-3 text-sm font-semibold">{displayTitle}</h3>
         <p className="mt-1 max-w-xs text-xs text-muted-foreground">{displayDesc}</p>
-        {(onRetry || config.primaryAction) && (
+        {(onRetry || config.primaryActionKey) && (
           <Button
             variant="outline"
             size="sm"
@@ -249,10 +251,10 @@ export function ErrorState({
           <PrimaryIcon className="h-4 w-4" aria-hidden="true" />
           {primaryLabel}
         </Button>
-        {config.secondaryAction && (
+        {config.secondaryActionKey && (
           <Button variant="outline" onClick={handleSecondary} className="gap-2">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            {config.secondaryAction}
+            {t(config.secondaryActionKey)}
           </Button>
         )}
       </div>

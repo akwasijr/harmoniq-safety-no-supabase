@@ -35,6 +35,7 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useToast } from "@/components/ui/toast";
 import { ROLE_PERMISSIONS, type Permission } from "@/types";
 import { useTranslation } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
 
 const tabs: Tab[] = [
   { id: "info", label: "Information", icon: Info },
@@ -54,6 +55,8 @@ export default function UserDetailPage() {
   const { t, formatDate, formatNumber } = useTranslation();
 
   const { toast } = useToast();
+  const { hasPermission: currentUserCan } = useAuth();
+  const canDeleteUser = currentUserCan("users.delete");
   const { items: users, update: updateUser, remove: removeUser } = useUsersStore();
   const { items: locations } = useLocationsStore();
   const baseUser = users.find((u) => u.id === userId);
@@ -243,6 +246,11 @@ export default function UserDetailPage() {
           ) : (
             <Button onClick={() => setIsEditing(true)} className="gap-2">
               <Edit className="h-4 w-4" /> {t("common.edit")}
+            </Button>
+          )}
+          {canDeleteUser && (
+            <Button variant="destructive" className="gap-2" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="h-4 w-4" /> {t("common.delete")}
             </Button>
           )}
         </div>
@@ -631,6 +639,7 @@ export default function UserDetailPage() {
                 </div>
                 <Button variant="outline" onClick={handleDeactivate}>{t("users.deactivate")}</Button>
               </div>
+              {canDeleteUser && (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{t("users.deleteUser")}</p>
@@ -640,6 +649,7 @@ export default function UserDetailPage() {
                   <Trash2 className="h-4 w-4" /> Delete
                 </Button>
               </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -43,6 +43,14 @@ export default function EmployeeNewsPage() {
 
   const activeContent = getActiveContent();
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full pb-16">
       {/* Header + Tabs */}

@@ -5,6 +5,11 @@ import { useParams, useRouter, notFound } from "next/navigation";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyStore } from "@/stores/company-store";
+import { useTicketsStore } from "@/stores/tickets-store";
+import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
+import { useNotificationsStore } from "@/stores/notifications-store";
+import { checkOverdueItems } from "@/stores/notification-triggers";
 import { applyPrimaryColor } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { I18nProvider } from "@/i18n";
@@ -20,6 +25,10 @@ export default function DashboardRootLayout({
   const company = params.company as string;
   const { user, currentCompany, isSuperAdmin, isEmployee, isLoading } = useAuth();
   const { items: companies, isLoading: isCompaniesLoading } = useCompanyStore();
+  const { items: tickets } = useTicketsStore();
+  const { items: workOrders } = useWorkOrdersStore();
+  const { items: correctiveActions } = useCorrectiveActionsStore();
+  const { add: addNotification } = useNotificationsStore();
 
   // Validate company slug only after companies have loaded
   const isValidCompany = React.useMemo(
@@ -49,6 +58,26 @@ export default function DashboardRootLayout({
       router.replace("/login");
     }
   }, [isLoading, user, router]);
+
+  // Check for overdue items once per hour per session
+  React.useEffect(() => {
+    if (!isLoading && user?.id && user?.company_id) {
+      const checkedKey = `harmoniq_overdue_checked_${user.id}`;
+      const lastChecked = sessionStorage.getItem(checkedKey);
+      const now = Date.now();
+      if (!lastChecked || now - parseInt(lastChecked) > 3600000) {
+        checkOverdueItems({
+          userId: user.id,
+          companyId: user.company_id,
+          tickets,
+          workOrders,
+          correctiveActions,
+          addNotification,
+        });
+        sessionStorage.setItem(checkedKey, String(now));
+      }
+    }
+  }, [user?.id, user?.company_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading || !user) {
     return (

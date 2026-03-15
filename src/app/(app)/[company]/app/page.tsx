@@ -47,6 +47,8 @@ import { useContentStore } from "@/stores/content-store";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
+import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -164,6 +166,8 @@ export default function EmployeeAppHomePage() {
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { items: incidents } = useIncidentsStore();
   const { items: tickets } = useTicketsStore();
+  const { items: workOrders } = useWorkOrdersStore();
+  const { items: correctiveActions } = useCorrectiveActionsStore();
   const { t, formatDate } = useTranslation();
 
   // Use state for time-dependent values to prevent hydration mismatch
@@ -187,6 +191,11 @@ export default function EmployeeAppHomePage() {
   // Only compute time-sensitive values after mount to prevent hydration mismatch
   const safeDays = mounted ? Math.floor((Date.now() - lastIncidentDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
   const userTickets = tickets.filter((ticket) => ticket.assigned_to === user.id);
+  const userWorkOrders = workOrders.filter((wo) => wo.assigned_to === user.id || wo.requested_by === user.id);
+  const userActions = correctiveActions.filter((ca) => ca.assigned_to === user.id);
+  const pendingTaskCount = userTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length
+    + userWorkOrders.filter((wo) => wo.status !== "completed" && wo.status !== "cancelled").length
+    + userActions.filter((ca) => ca.status !== "completed").length;
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const completedThisWeek = userTickets.filter(
     (ticket) => ticket.updated_at && new Date(ticket.updated_at) > oneWeekAgo
@@ -216,7 +225,7 @@ export default function EmployeeAppHomePage() {
   // Quick action grid items (3 per row, 6 total, consistent neutral style)
   const quickActions = [
     { href: `/${company}/app/report`, icon: AlertTriangle, label: t("app.reportIncident") },
-    { href: `/${company}/app/checklists`, icon: ClipboardCheck, label: t("app.safetyTasks") },
+    { href: `/${company}/app/tasks`, icon: ClipboardCheck, label: t("tasks.title") || "My Tasks" },
     { href: `/${company}/app/maintenance`, icon: Wrench, label: t("app.requestFix") },
     { href: `/${company}/app/assets`, icon: Search, label: t("app.browseAssets") },
     { href: `/${company}/app/scan`, icon: ScanLine, label: t("app.scanAsset") },
@@ -256,6 +265,13 @@ export default function EmployeeAppHomePage() {
               <p className="text-sm font-bold text-white mt-0.5">{safetyStreak}</p>
             </div>
           </div>
+          <Link href={`/${company}/app/tasks`} className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1 hover:bg-white/25 transition-colors">
+            <ClipboardCheck className="h-4 w-4 text-blue-300" aria-hidden="true" />
+            <div>
+              <p className="text-[11px] text-white/70 leading-none">{t("app.pending") || "Pending"}</p>
+              <p className="text-sm font-bold text-white mt-0.5">{pendingTaskCount} {t("app.tasks")}</p>
+            </div>
+          </Link>
           <div className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1">
             <CheckCircle className="h-4 w-4 text-emerald-300" aria-hidden="true" />
             <div>

@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { buildSiteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 import {
   BarChart3, Users, Building2, Globe, Shield, AlertTriangle, Package,
   CheckCircle, MapPin, Activity, Monitor, Smartphone, RefreshCw, TrendingUp,
@@ -37,6 +38,7 @@ interface AnalyticsData {
 }
 
 export default function PlatformAnalyticsPage() {
+  const { formatNumber } = useTranslation();
   const { items: companies } = useCompanyStore();
   const { items: users } = useUsersStore();
   const { items: incidents } = useIncidentsStore();
@@ -152,8 +154,8 @@ export default function PlatformAnalyticsPage() {
               <KPICard title="Total Assets" value={assets.length} icon={Package} />
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
-              <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{total.toLocaleString()}</p><p className="text-xs text-muted-foreground mt-1">Page Views</p></CardContent></Card>
-              <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{unique.toLocaleString()}</p><p className="text-xs text-muted-foreground mt-1">Unique Visitors</p></CardContent></Card>
+              <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{formatNumber(total)}</p><p className="text-xs text-muted-foreground mt-1">Page Views</p></CardContent></Card>
+              <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{formatNumber(unique)}</p><p className="text-xs text-muted-foreground mt-1">Unique Visitors</p></CardContent></Card>
               <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{topCountries.length}</p><p className="text-xs text-muted-foreground mt-1">Countries</p></CardContent></Card>
             </div>
 

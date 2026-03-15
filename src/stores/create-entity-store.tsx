@@ -1,9 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
+import { logAudit } from "@/stores/audit-helpers";
 
 type IdEntity = { id: string };
 type CompanyEntity = IdEntity & { company_id: string };
@@ -204,12 +206,33 @@ export function createEntityStore<T extends IdEntity>(
     const add = React.useCallback((item: T) => {
       setError(null);
       const previous = itemsRef.current;
-      const exists = previous.some((existing) => existing.id === item.id);
-      const next = exists ? previous.map((existing) => (existing.id === item.id ? item : existing)) : [...previous, item];
-      itemsRef.current = next;
-      // Optimistic update
-      setItems(next);
-      saveToStorage(storageKey, next);
+
+      try {
+        const exists = previous.some((existing) => existing.id === item.id);
+        const next = exists ? previous.map((existing) => (existing.id === item.id ? item : existing)) : [...previous, item];
+        itemsRef.current = next;
+        // Optimistic update
+        setItems(next);
+        saveToStorage(storageKey, next);
+
+        logAudit({
+          user_id: "system",
+          user_name: "System",
+          company_id: (item as Record<string, unknown>).company_id as string ?? "",
+          action: "create",
+          entity_type: table as "incident" | "ticket" | "work_order" | "corrective_action" | "asset" | "location" | "user" | "checklist" | "risk_assessment" | "content",
+          entity_id: item.id,
+          entity_title: (item as Record<string, unknown>).title as string ?? (item as Record<string, unknown>).name as string ?? item.id,
+          details: `Created ${table} record`,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[Harmoniq] Error in add for ${table}:`, msg);
+        itemsRef.current = previous;
+        setItems(previous);
+        toast.error("Failed to save item");
+        return;
+      }
 
       if (isSupabaseConfigured) {
         void (async () => {
@@ -217,12 +240,13 @@ export function createEntityStore<T extends IdEntity>(
           const mapped = mapToSupabase(item as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
           const { error: persistError } = await supabase.from(table).upsert(mapped);
           if (persistError) {
-            console.error(`[Harmoniq] Error adding to ${table}:`, persistError.message, persistError.details);
+            console.warn(`[Harmoniq] Error adding to ${table}:`, persistError.message, persistError.details);
             if (!isMountedRef.current) return;
             itemsRef.current = previous;
             setItems(previous);
             saveToStorage(storageKey, previous);
             setError(persistError.message);
+            toast.error("Failed to save item");
           }
         })();
       }
@@ -231,11 +255,33 @@ export function createEntityStore<T extends IdEntity>(
     const update = React.useCallback((id: string, updates: Partial<T>) => {
       setError(null);
       const previous = itemsRef.current;
-      const next = previous.map((item) => (item.id === id ? { ...item, ...updates } : item));
-      itemsRef.current = next;
-      // Optimistic update
-      setItems(next);
-      saveToStorage(storageKey, next);
+
+      try {
+        const next = previous.map((item) => (item.id === id ? { ...item, ...updates } : item));
+        itemsRef.current = next;
+        // Optimistic update
+        setItems(next);
+        saveToStorage(storageKey, next);
+
+        const existing = previous.find((item) => item.id === id);
+        logAudit({
+          user_id: "system",
+          user_name: "System",
+          company_id: (existing as Record<string, unknown> | undefined)?.company_id as string ?? "",
+          action: "update",
+          entity_type: table as "incident" | "ticket" | "work_order" | "corrective_action" | "asset" | "location" | "user" | "checklist" | "risk_assessment" | "content",
+          entity_id: id,
+          entity_title: (existing as Record<string, unknown> | undefined)?.title as string ?? (existing as Record<string, unknown> | undefined)?.name as string ?? id,
+          details: `Updated ${table} record`,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[Harmoniq] Error in update for ${table}:`, msg);
+        itemsRef.current = previous;
+        setItems(previous);
+        toast.error("Failed to update item");
+        return;
+      }
 
       if (isSupabaseConfigured) {
         void (async () => {
@@ -243,12 +289,13 @@ export function createEntityStore<T extends IdEntity>(
           const mapped = mapToSupabase(updates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
           const { error: persistError } = await supabase.from(table).update(mapped).eq("id", id);
           if (persistError) {
-            console.error(`[Harmoniq] Error updating ${table}:`, persistError.message, persistError.details);
+            console.warn(`[Harmoniq] Error updating ${table}:`, persistError.message, persistError.details);
             if (!isMountedRef.current) return;
             itemsRef.current = previous;
             setItems(previous);
             saveToStorage(storageKey, previous);
             setError(persistError.message);
+            toast.error("Failed to update item");
           }
         })();
       }
@@ -257,23 +304,46 @@ export function createEntityStore<T extends IdEntity>(
     const remove = React.useCallback((id: string) => {
       setError(null);
       const previous = itemsRef.current;
-      const next = previous.filter((item) => item.id !== id);
-      itemsRef.current = next;
-      // Optimistic update
-      setItems(next);
-      saveToStorage(storageKey, next);
+
+      try {
+        const removed = previous.find((item) => item.id === id);
+        const next = previous.filter((item) => item.id !== id);
+        itemsRef.current = next;
+        // Optimistic update
+        setItems(next);
+        saveToStorage(storageKey, next);
+
+        logAudit({
+          user_id: "system",
+          user_name: "System",
+          company_id: (removed as Record<string, unknown> | undefined)?.company_id as string ?? "",
+          action: "delete",
+          entity_type: table as "incident" | "ticket" | "work_order" | "corrective_action" | "asset" | "location" | "user" | "checklist" | "risk_assessment" | "content",
+          entity_id: id,
+          entity_title: (removed as Record<string, unknown> | undefined)?.title as string ?? (removed as Record<string, unknown> | undefined)?.name as string ?? id,
+          details: `Deleted ${table} record`,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[Harmoniq] Error in remove for ${table}:`, msg);
+        itemsRef.current = previous;
+        setItems(previous);
+        toast.error("Failed to remove item");
+        return;
+      }
 
       if (isSupabaseConfigured) {
         void (async () => {
           const supabase = createClient();
           const { error: persistError } = await supabase.from(table).delete().eq("id", id);
           if (persistError) {
-            console.error(`[Harmoniq] Error deleting from ${table}:`, persistError.message);
+            console.warn(`[Harmoniq] Error deleting from ${table}:`, persistError.message);
             if (!isMountedRef.current) return;
             itemsRef.current = previous;
             setItems(previous);
             saveToStorage(storageKey, previous);
             setError(persistError.message);
+            toast.error("Failed to remove item");
           }
         })();
       }

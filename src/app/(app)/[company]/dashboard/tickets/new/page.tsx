@@ -18,6 +18,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useTicketsStore } from "@/stores/tickets-store";
+import { useNotificationsStore } from "@/stores/notifications-store";
+import { notifyAssignment } from "@/stores/notification-triggers";
 import { useUsersStore } from "@/stores/users-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useToast } from "@/components/ui/toast";
@@ -40,6 +42,7 @@ export default function NewTicketPage() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const { add: addTicket } = useTicketsStore();
+  const { add: addNotif } = useNotificationsStore();
   const { items: users } = useUsersStore();
   const { items: incidents } = useIncidentsStore();
   const [formData, setFormData] = React.useState({
@@ -95,6 +98,16 @@ export default function NewTicketPage() {
       updated_at: now,
     };
     addTicket(ticket);
+    if (ticket.assigned_to) {
+      notifyAssignment(addNotif, {
+        userId: ticket.assigned_to,
+        companyId: ticket.company_id,
+        entityType: "ticket",
+        entityTitle: ticket.title,
+        entityId: ticket.id,
+        assignedBy: user?.full_name || "Someone",
+      });
+    }
     toast("Ticket created successfully");
     router.push(`/${company}/dashboard/tickets`);
   };

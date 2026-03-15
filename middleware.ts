@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { sanitizeRelativePath } from "@/lib/navigation";
+import type { UserRole } from "@/types";
 
 /**
  * Middleware for:
@@ -32,6 +33,10 @@ const PUBLIC_API_ROUTES = ["/api/analytics", "/api/contact", "/api/health", "/ap
 const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const SAME_SITE_FETCH_CONTEXTS = new Set(["same-origin", "same-site", "none"]);
+const PLATFORM_ROUTE_SEGMENT = "/dashboard/platform";
+const PLATFORM_ANALYTICS_SEGMENT = "/dashboard/platform/analytics";
+const PLATFORM_ADMIN_ROLES: readonly UserRole[] = ["super_admin"];
+const PLATFORM_ANALYTICS_ROLES: readonly UserRole[] = ["super_admin", "company_admin"];
 
 function detectLocale(acceptLanguage: string | null): string {
   if (!acceptLanguage) return "en";
@@ -43,9 +48,31 @@ function detectLocale(acceptLanguage: string | null): string {
   return "en";
 }
 
+function copyResponseCookies(source: NextResponse, target: NextResponse) {
+  source.cookies.getAll().forEach((cookie) => {
+    target.cookies.set(cookie);
+  });
+  return target;
+}
+
+function redirectWithSession(url: URL, source: NextResponse) {
+  return copyResponseCookies(source, NextResponse.redirect(url));
+}
+
+function getCompanySlugFromPath(pathname: string) {
+  return pathname.split("/").filter(Boolean)[0] ?? null;
+}
+
+function getAllowedPlatformRoles(pathname: string): readonly UserRole[] {
+  return pathname.includes(PLATFORM_ANALYTICS_SEGMENT)
+    ? PLATFORM_ANALYTICS_ROLES
+    : PLATFORM_ADMIN_ROLES;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isSecure = request.nextUrl.protocol === "https:";
+  const isPlatformPath = pathname.includes(PLATFORM_ROUTE_SEGMENT);
 
   // Skip static assets
   if (STATIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
@@ -76,10 +103,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // If an admin-entry cookie is present but the user is not on an admin path, clear it.
-  // This prevents the super-admin portal from appearing after using the regular login flow.
-  const isAdminPath = pathname.startsWith("/admin") || pathname.includes("/dashboard/platform");
-  if (!isAdminPath && request.cookies.get(ADMIN_ENTRY_COOKIE)) {
+  // Only clear admin-entry cookie on explicit auth page visits (login / signup).
+  // This allows super admins to switch between platform and company views without
+  // losing their admin session. The cookie still expires naturally after 60 min.
+  const isAuthResetPath = pathname === "/login" || pathname === "/signup";
+  if (isAuthResetPath && request.cookies.get(ADMIN_ENTRY_COOKIE)) {
     const response = NextResponse.next();
     response.cookies.set(ADMIN_ENTRY_COOKIE, "", {
       path: "/",
@@ -116,7 +144,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Platform admin routes require explicit admin entry flag (set by /admin login)
-  if (pathname.includes("/dashboard/platform") && !request.cookies.get(ADMIN_ENTRY_COOKIE)) {
+  if (isPlatformPath && !request.cookies.get(ADMIN_ENTRY_COOKIE)) {
     const adminUrl = new URL("/admin", request.url);
     adminUrl.searchParams.set("redirect", sanitizeRelativePath(pathname));
     return NextResponse.redirect(adminUrl);
@@ -124,7 +152,7 @@ export async function middleware(request: NextRequest) {
 
   // Protected routes: check Supabase auth
   const { updateSession } = await import("@/lib/supabase/middleware");
-  const { user, supabaseResponse } = await updateSession(request);
+  const { user, profile, supabaseResponse } = await updateSession(request);
 
   if (!user) {
     // API routes return 401 instead of redirect
@@ -133,7 +161,22 @@ export async function middleware(request: NextRequest) {
     }
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", sanitizeRelativePath(pathname));
-    return NextResponse.redirect(loginUrl);
+    return redirectWithSession(loginUrl, supabaseResponse);
+  }
+
+  if (isPlatformPath) {
+    const allowedRoles = getAllowedPlatformRoles(pathname);
+    if (!profile?.role || !allowedRoles.includes(profile.role)) {
+      const companySlug = getCompanySlugFromPath(pathname);
+      const fallbackPath =
+        profile?.role === "company_admin" && companySlug
+          ? `/${companySlug}/dashboard/platform/analytics`
+          : companySlug
+            ? `/${companySlug}/dashboard`
+            : "/login";
+      const fallbackUrl = new URL(sanitizeRelativePath(fallbackPath), request.url);
+      return redirectWithSession(fallbackUrl, supabaseResponse);
+    }
   }
 
   return supabaseResponse;

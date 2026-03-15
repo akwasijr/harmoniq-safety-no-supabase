@@ -1591,5 +1591,17 @@
       "status_change": "Status changed",
       "assign": "Assigned"
     }
+  },
+  "notificationTriggers": {
+    "overdueTicket": "Overdue ticket",
+    "overdueTicketMessage": "Ticket \"{title}\" is past due",
+    "overdueWorkOrder": "Overdue work order",
+    "overdueWorkOrderMessage": "Work order \"{title}\" is past due",
+    "overdueAction": "Overdue corrective action",
+    "overdueActionMessage": "Action \"{title}\" is past due",
+    "newAssignment": "New {entityType} assigned",
+    "newAssignmentMessage": "\"{title}\" was assigned to you by {assignedBy}",
+    "criticalIncident": "Critical incident reported",
+    "criticalIncidentMessage": "A critical incident \"{title}\" has been reported"
   }
 }

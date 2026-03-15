@@ -1,4 +1,5 @@
 import { AppDataProvider } from "@/stores/app-data-provider";
+import { I18nProvider } from "@/i18n";
 
 export default function AuthLayout({
   children,
@@ -6,8 +7,10 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppDataProvider>
-      {children}
-    </AppDataProvider>
+    <I18nProvider>
+      <AppDataProvider>
+        {children}
+      </AppDataProvider>
+    </I18nProvider>
   );
 }

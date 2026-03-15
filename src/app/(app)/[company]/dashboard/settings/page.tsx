@@ -30,14 +30,6 @@ import { useTranslation } from "@/i18n";
 
 type SettingsTabType = "general" | "branding" | "notifications" | "security" | "billing";
 
-const settingsTabs = [
-  { value: "general" as SettingsTabType, label: "General", icon: Building },
-  { value: "branding" as SettingsTabType, label: "Branding", icon: Palette },
-  { value: "notifications" as SettingsTabType, label: "Notifications", icon: Bell },
-  { value: "security" as SettingsTabType, label: "Security", icon: Shield },
-  { value: "billing" as SettingsTabType, label: "Billing", icon: CreditCard },
-];
-
 const countries = [
   { code: "US", name: "United States", regulations: "OSHA (JHA/JSA)" },
   { code: "NL", name: "Netherlands", regulations: "Arbowet (RI&E)" },
@@ -137,6 +129,14 @@ export default function SettingsPage() {
   const { update: updateCompany } = useCompanyStore();
   const { toast } = useToast();
   const { t, formatDate, formatNumber } = useTranslation();
+
+  const settingsTabs = [
+    { value: "general" as SettingsTabType, label: t("settings.tabs.general"), icon: Building },
+    { value: "branding" as SettingsTabType, label: t("settings.tabs.branding"), icon: Palette },
+    { value: "notifications" as SettingsTabType, label: t("settings.tabs.notifications"), icon: Bell },
+    { value: "security" as SettingsTabType, label: t("settings.tabs.security"), icon: Shield },
+    { value: "billing" as SettingsTabType, label: t("settings.tabs.billing"), icon: CreditCard },
+  ];
 
   // Load settings from localStorage on mount and apply branding
   React.useEffect(() => {

@@ -22,21 +22,20 @@ import { capitalize } from "@/lib/utils";
 import { getDateRangeFromValue, isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import { useTranslation } from "@/i18n";
 
-/**
- * Format a Date into a month label.
- * - If the range spans more than 12 months, include the year: "Jan '24"
- * - Otherwise just "Jan"
- */
-function formatMonthLabel(date: Date, includeYear: boolean): string {
-  const month = date.toLocaleString("default", { month: "short" });
-  if (includeYear) {
-    return `${month} '${String(date.getFullYear()).slice(2)}`;
-  }
-  return month;
-}
-
 export default function AnalyticsPage() {
   const { t, formatDate, formatNumber } = useTranslation();
+
+  const formatMonthLabel = React.useCallback(
+    (date: Date, includeYear: boolean): string => {
+      const month = formatDate(date, { month: "short" });
+      if (includeYear) {
+        return `${month} '${String(date.getFullYear()).slice(2)}`;
+      }
+      return month;
+    },
+    [formatDate]
+  );
+
   const [dateRange, setDateRange] = React.useState("last_6_months");
   
   // Filter states
@@ -131,7 +130,7 @@ export default function AnalyticsPage() {
           resolved: stats?.resolved || 0,
         };
       }),
-    [months, incidentStatsByMonth, spansMultipleYears]
+    [months, incidentStatsByMonth, spansMultipleYears, formatMonthLabel]
   );
 
   const resolutionTimeData = React.useMemo(
@@ -148,7 +147,7 @@ export default function AnalyticsPage() {
           hours: avgHours,
         };
       }),
-    [months, incidentStatsByMonth, spansMultipleYears]
+    [months, incidentStatsByMonth, spansMultipleYears, formatMonthLabel]
   );
 
   const complianceData = React.useMemo(
@@ -163,7 +162,7 @@ export default function AnalyticsPage() {
           rate,
         };
       }),
-    [months, incidentStatsByMonth, spansMultipleYears]
+    [months, incidentStatsByMonth, spansMultipleYears, formatMonthLabel]
   );
 
   const incidentsByTypeData = React.useMemo(

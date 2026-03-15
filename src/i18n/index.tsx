@@ -67,6 +67,13 @@ export const COUNTRY_DEFAULT_LOCALE: Record<string, SupportedLocale> = {
   DE: "en", // fallback
 };
 
+// Locale → primary country mapping (inverse of above, picks first match)
+export const LOCALE_DEFAULT_COUNTRY: Record<SupportedLocale, string> = {
+  en: "US",
+  nl: "NL",
+  sv: "SE",
+};
+
 // ---------- Flatten helper ----------
 
 function flattenMessages(obj: Record<string, unknown>, prefix = ""): Messages {

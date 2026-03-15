@@ -29,15 +29,6 @@ import { useIncidentsStore } from "@/stores/incidents-store";
 import { LocationType } from "@/types";
 import { useTranslation } from "@/i18n";
 
-// Location type configurations (matching dashboard)
-const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
-  site: "Campus",
-  building: "Building",
-  floor: "Floor",
-  zone: "Zone",
-  room: "Room",
-};
-
 const LOCATION_TYPE_ICONS: Record<LocationType, React.ComponentType<{ className?: string }>> = {
   site: Building2,
   building: Building,
@@ -52,9 +43,17 @@ export default function LocationLandingPage() {
   const company = routeParams.company as string;
   const locationId = routeParams.locationId as string;
 
-  const { items: locations } = useLocationsStore();
+  const { items: locations, isLoading } = useLocationsStore();
   const { items: incidents } = useIncidentsStore();
   const { t } = useTranslation();
+
+  const locationTypeLabels: Record<string, string> = {
+    site: t("locations.types.site"),
+    building: t("locations.types.building"),
+    floor: t("locations.types.floor"),
+    zone: t("locations.types.zone"),
+    room: t("locations.types.room"),
+  };
 
   const location = locations.find((l) => l.id === locationId);
 
@@ -81,7 +80,7 @@ export default function LocationLandingPage() {
     // Default contacts if none found
     if (contacts.length === 0) {
       return [
-        { id: "default_1", location_id: locationId, name: "Emergency Services", role: "Emergency", phone: "911", is_primary: true },
+        { id: "default_1", location_id: locationId, name: t("locations.emergency.services"), role: t("locations.emergency.role"), phone: "112", is_primary: true },
       ];
     }
     
@@ -187,6 +186,14 @@ export default function LocationLandingPage() {
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   if (!location) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-6">
@@ -241,7 +248,7 @@ export default function LocationLandingPage() {
                 )}
                 <div className="flex gap-2 mt-3">
                   <span className="text-xs text-muted-foreground">
-                    {LOCATION_TYPE_LABELS[location.type] || location.type}
+                    {locationTypeLabels[location.type] || location.type}
                   </span>
                 </div>
               </div>

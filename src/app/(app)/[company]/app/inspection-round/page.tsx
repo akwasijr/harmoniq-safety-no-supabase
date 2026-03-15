@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -50,11 +51,12 @@ function InspectionRoundContent() {
   const routeId = searchParams.get("route");
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { addToQueue, isOnline } = useSync();
 
-  const { items: routes } = useInspectionRoutesStore();
+  const { items: routes, isLoading: isRoutesLoading } = useInspectionRoutesStore();
   const { add: addRound } = useInspectionRoundsStore({ skipLoad: true });
-  const { items: assets } = useAssetsStore();
+  const { items: assets, isLoading: isAssetsLoading } = useAssetsStore();
 
   const route = routes.find((r) => r.id === routeId);
   const [currentIndex, setCurrentIndex] = React.useState(0);
@@ -63,15 +65,27 @@ function InspectionRoundContent() {
   const [roundStartedAt] = React.useState(new Date().toISOString());
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  if (isRoutesLoading || isAssetsLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   if (!route || route.checkpoints.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm">
           <CardContent className="pt-6 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-            <h2 className="font-semibold text-lg">Route not found</h2>
-            <p className="text-sm text-muted-foreground mt-1">This inspection route could not be loaded.</p>
-            <Button className="mt-4 w-full" onClick={() => router.back()}>Go Back</Button>
+            <h2 className="font-semibold text-lg">{t("inspectionRounds.routeNotFound")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("inspectionRounds.routeNotFoundDesc")}
+            </p>
+            <Button className="mt-4 w-full" onClick={() => router.back()}>
+              {t("common.goBack")}
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -87,6 +101,11 @@ function InspectionRoundContent() {
 
   const currentResult = results.get(checkpoint.id);
   const CheckIcon = CHECK_TYPE_ICONS[checkpoint.check_type] || Eye;
+  const resultLabels: Record<CheckpointResult, string> = {
+    pass: t("inspectionRounds.pass"),
+    fail: t("inspectionRounds.fail"),
+    needs_attention: t("inspectionRounds.needsAttention"),
+  };
 
   const setCheckpointResult = (update: Partial<InspectionCheckpointResult>) => {
     const existing = results.get(checkpoint.id);
@@ -180,7 +199,11 @@ function InspectionRoundContent() {
     // Queue for sync (especially important when offline)
     addToQueue("inspection_round", roundData as unknown as Record<string, unknown>);
 
-    toast(isOnline ? "Inspection round completed" : "Inspection saved — will sync when online");
+    toast(
+      isOnline
+        ? t("inspectionRounds.completed")
+        : t("inspectionRounds.offline.queuedForSync")
+    );
     router.push(`/${company}/app/assets`);
   };
 
@@ -207,7 +230,11 @@ function InspectionRoundContent() {
           <div className="flex-1">
             <h1 className="font-semibold text-sm">{route.name}</h1>
             <p className="text-xs text-muted-foreground">
-              Checkpoint {currentIndex + 1} of {totalCheckpoints} • {completedCount} done
+              {t("inspectionRounds.checkpointOf", {
+                current: String(currentIndex + 1),
+                total: String(totalCheckpoints),
+              })}{" "}
+              • {completedCount} {t("inspectionRounds.done")}
             </p>
           </div>
         </div>
@@ -231,7 +258,7 @@ function InspectionRoundContent() {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm">{asset?.name || "Unknown asset"}</p>
                 <p className="text-xs text-muted-foreground capitalize">
-                  {checkpoint.check_type} check
+                  {t(`inspectionRounds.checkType.${checkpoint.check_type}`)}
                   {asset?.location_id && (
                     <span className="ml-1">
                       <MapPin className="inline h-3 w-3" />
@@ -246,7 +273,7 @@ function InspectionRoundContent() {
                   currentResult.result === "fail" ? "bg-destructive/10 text-destructive" :
                   "bg-warning/10 text-warning"
                 )}>
-                  {currentResult.result.replace("_", " ")}
+                  {resultLabels[currentResult.result]}
                 </span>
               )}
             </div>
@@ -262,7 +289,7 @@ function InspectionRoundContent() {
           {(checkpoint.acceptable_min !== null || checkpoint.acceptable_max !== null) && (
             <div className="mt-2 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground">
               <Ruler className="h-3 w-3" />
-              Acceptable range:{" "}
+              {t("inspectionRounds.acceptableRange")}:{" "}
               {checkpoint.acceptable_min !== null ? checkpoint.acceptable_min : "—"}
               {" – "}
               {checkpoint.acceptable_max !== null ? checkpoint.acceptable_max : "—"}
@@ -273,7 +300,7 @@ function InspectionRoundContent() {
 
         {/* Result toggle */}
         <div className="mb-6">
-          <p className="text-sm font-medium mb-2">Result</p>
+          <p className="mb-2 text-sm font-medium">{t("inspectionRounds.result")}</p>
           <div className="grid grid-cols-3 gap-2">
             {(["pass", "fail", "needs_attention"] as CheckpointResult[]).map((r) => (
               <button
@@ -288,7 +315,7 @@ function InspectionRoundContent() {
                 {r === "pass" && <CheckCircle className="h-5 w-5" />}
                 {r === "fail" && <XCircle className="h-5 w-5" />}
                 {r === "needs_attention" && <AlertTriangle className="h-5 w-5" />}
-                <span className="capitalize text-xs">{r.replace("_", " ")}</span>
+                <span className="text-xs">{resultLabels[r]}</span>
               </button>
             ))}
           </div>
@@ -297,8 +324,8 @@ function InspectionRoundContent() {
         {/* Measurement input */}
         {(checkpoint.acceptable_min !== null || checkpoint.acceptable_max !== null) && (
           <div className="mb-6">
-            <p className="text-sm font-medium mb-2">
-              Measured value {checkpoint.unit ? `(${checkpoint.unit})` : ""}
+            <p className="mb-2 text-sm font-medium">
+              {t("inspectionRounds.measuredValue")} {checkpoint.unit ? `(${checkpoint.unit})` : ""}
             </p>
             <Input
               type="number"
@@ -316,7 +343,7 @@ function InspectionRoundContent() {
             {currentResult?.out_of_range && (
               <p className="text-xs text-destructive mt-1 flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" />
-                Value is out of acceptable range — alert will be created
+                {t("inspectionRounds.outOfRange")}
               </p>
             )}
           </div>
@@ -324,7 +351,7 @@ function InspectionRoundContent() {
 
         {/* Photo */}
         <div className="mb-6">
-          <p className="text-sm font-medium mb-2">Photo (if abnormality found)</p>
+          <p className="mb-2 text-sm font-medium">{t("inspectionRounds.photo")}</p>
           <input
             ref={fileInputRef}
             type="file"
@@ -351,16 +378,16 @@ function InspectionRoundContent() {
               onClick={() => fileInputRef.current?.click()}
             >
               <Camera className="h-4 w-4" />
-              Take Photo
+              {t("inspectionRounds.takePhoto")}
             </Button>
           )}
         </div>
 
         {/* Notes */}
         <div className="mb-6">
-          <p className="text-sm font-medium mb-2">Notes</p>
+          <p className="mb-2 text-sm font-medium">{t("inspectionRounds.notes")}</p>
           <Textarea
-            placeholder="Add any observations..."
+            placeholder={t("inspectionRounds.addNotes")}
             value={currentResult?.notes || ""}
             onChange={(e) => setCheckpointResult({ notes: e.target.value || null })}
             rows={3}
@@ -403,7 +430,7 @@ function InspectionRoundContent() {
           </Button>
           {currentIndex < totalCheckpoints - 1 ? (
             <Button onClick={handleNext} className="flex-1 h-12 gap-2">
-              Next Checkpoint
+              {t("inspectionRounds.nextCheckpoint")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
@@ -414,8 +441,10 @@ function InspectionRoundContent() {
             >
               <CheckCircle className="h-4 w-4" />
               {completedCount < totalCheckpoints
-                ? `${totalCheckpoints - completedCount} remaining`
-                : "Submit Inspection"
+                ? t("inspectionRounds.remaining", {
+                    count: String(totalCheckpoints - completedCount),
+                  })
+                : t("inspectionRounds.submitInspection")
               }
             </Button>
           )}

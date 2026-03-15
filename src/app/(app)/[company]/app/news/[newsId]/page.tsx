@@ -46,6 +46,14 @@ export default function NewsDetailPage() {
 
   const article = contentItems.find((c) => c.id === newsId);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -57,15 +65,7 @@ export default function NewsDetailPage() {
   };
 
   const handleShare = async () => {
-      if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
-
-  if (!article) return;
+    if (!article) return;
     if (navigator.share) {
       try {
         await navigator.share({

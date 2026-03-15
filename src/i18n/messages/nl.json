@@ -1591,5 +1591,17 @@
       "status_change": "Status gewijzigd",
       "assign": "Toegewezen"
     }
+  },
+  "notificationTriggers": {
+    "overdueTicket": "Achterstallig ticket",
+    "overdueTicketMessage": "Ticket \"{title}\" is verlopen",
+    "overdueWorkOrder": "Achterstallige werkorder",
+    "overdueWorkOrderMessage": "Werkorder \"{title}\" is verlopen",
+    "overdueAction": "Achterstallige corrigerende maatregel",
+    "overdueActionMessage": "Maatregel \"{title}\" is verlopen",
+    "newAssignment": "Nieuwe {entityType} toegewezen",
+    "newAssignmentMessage": "\"{title}\" is aan u toegewezen door {assignedBy}",
+    "criticalIncident": "Kritiek incident gemeld",
+    "criticalIncidentMessage": "Een kritiek incident \"{title}\" is gemeld"
   }
 }

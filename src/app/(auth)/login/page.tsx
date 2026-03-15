@@ -15,6 +15,8 @@ import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { clearClientCookie, setClientCookie } from "@/lib/client-cookies";
 import { type AppChoice, buildCompanyDestination, buildPlatformAnalyticsDestination } from "@/lib/navigation";
 import { getPlatformSlugFilterList, isPlatformSlug } from "@/lib/platform-config";
+import { AuthTabs } from "@/components/auth/auth-tabs";
+import { useTranslation } from "@/i18n";
 
 const APP_CHOICE_STORAGE_KEY = "harmoniq_app_choice";
 const APP_CHOICE_COOKIE = "harmoniq_app_choice";
@@ -23,6 +25,7 @@ const SELECTED_COMPANY_STORAGE_KEY = "harmoniq_selected_company";
 
 function LoginForm() {
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
@@ -327,11 +330,13 @@ function LoginForm() {
           <span className="text-2xl font-semibold">Harmoniq Safety</span>
         </div>
 
+        <AuthTabs />
+
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-xl">Welcome back</CardTitle>
+            <CardTitle className="text-xl">{t("auth.welcomeBack")}</CardTitle>
             <CardDescription>
-              Sign in to your account
+              {t("auth.signInToAccount")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -358,7 +363,7 @@ function LoginForm() {
                     variant={appChoice === "dashboard" ? "default" : "outline"}
                     className="w-full"
                   >
-                    Dashboard
+                    {t("auth.dashboard")}
                   </Button>
                   <Button
                     type="button"
@@ -367,7 +372,7 @@ function LoginForm() {
                     variant={appChoice === "app" ? "default" : "outline"}
                     className="w-full"
                   >
-                    Mobile App
+                    {t("auth.mobileApp")}
                   </Button>
                 </div>
               </div>
@@ -375,7 +380,7 @@ function LoginForm() {
               {/* Email field — shared between both modes */}
               <div>
                 <Label htmlFor="email" required error={Boolean(emailError)}>
-                  Email
+                  {t("auth.email")}
                 </Label>
                 <Input
                   id="email"
@@ -398,7 +403,7 @@ function LoginForm() {
                 <form onSubmit={handleEmailSignIn} className="space-y-3">
                   <div>
                     <Label htmlFor="password" required error={Boolean(passwordError)}>
-                      Password
+                      {t("auth.password")}
                     </Label>
                     <div className="relative">
                       <Input
@@ -433,7 +438,7 @@ function LoginForm() {
                       onClick={handleForgotPassword}
                       className="text-xs text-muted-foreground hover:text-foreground"
                     >
-                      Forgot password?
+                      {t("auth.forgotPassword")}
                     </button>
                   </div>
                   <Button
@@ -442,7 +447,7 @@ function LoginForm() {
                     className="w-full"
                     loading={isLoading}
                   >
-                    Sign in with password
+                    {t("auth.signIn")}
                   </Button>
                 </form>
               ) : (
@@ -454,7 +459,7 @@ function LoginForm() {
                   className="w-full"
                 >
                   {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  Send magic link
+                  {t("auth.sendMagicLink")}
                 </Button>
               )}
 
@@ -477,7 +482,7 @@ function LoginForm() {
                 className="w-full"
               >
                 <Mail className="h-4 w-4" />
-                {loginMode === "password" ? "Sign in with magic link instead" : "Sign in with password instead"}
+                {loginMode === "password" ? t("auth.magicLink") : t("auth.passwordMode")}
               </Button>
             </div>
           </CardContent>
@@ -486,7 +491,7 @@ function LoginForm() {
         {/* Back to home */}
         <p className="mt-6 text-center text-sm text-muted-foreground">
           <Link href="/" className="hover:text-foreground">
-            ← Back to home
+            {t("auth.backToHome")}
           </Link>
         </p>
       </div>
