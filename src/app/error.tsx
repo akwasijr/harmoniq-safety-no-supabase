@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { ErrorState } from "@/components/ui/error-state";
 
 export default function GlobalError({
@@ -12,6 +13,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error("Application error:", error);
+    Sentry.captureException(error);
   }, [error]);
 
   // Detect network error (guard navigator for SSR safety)

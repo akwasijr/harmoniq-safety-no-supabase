@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 function getSupabaseConnectSources() {
   const sources = ["'self'"];
@@ -18,6 +19,18 @@ function getSupabaseConnectSources() {
 }
 
 const connectSrc = getSupabaseConnectSources();
+
+// Allow Sentry ingest domain in connect-src
+const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+let sentryConnect = "";
+if (sentryDsn) {
+  try {
+    const parsed = new URL(sentryDsn);
+    sentryConnect = ` https://${parsed.host}`;
+  } catch {
+    // ignore invalid DSN
+  }
+}
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -60,7 +73,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",
               "media-src 'self' blob:",
-              `connect-src ${connectSrc}`,
+              `connect-src ${connectSrc}${sentryConnect}`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -73,4 +86,18 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Suppress Sentry CLI logs during build
+  silent: true,
+
+  // Upload source maps for readable stack traces
+  widenClientFileUpload: true,
+
+  // Configure source maps (hide from users in production)
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
+
+  // Disable telemetry
+  telemetry: false,
+});
