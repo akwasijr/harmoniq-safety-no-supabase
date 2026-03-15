@@ -25,6 +25,10 @@ import {
   X,
   Power,
   TrendingDown,
+  Shield,
+  FileCheck,
+  Download,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +82,7 @@ export default function AssetDetailPage() {
   const [activeTab, setActiveTab] = React.useState<string>("info");
   const [maintenanceSubTab, setMaintenanceSubTab] = React.useState<"schedules" | "history">("schedules");
   const [mounted, setMounted] = React.useState(false);
+  const [showAllIncidents, setShowAllIncidents] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -230,11 +235,25 @@ export default function AssetDetailPage() {
     { id: "img3", name: "Installation.jpg", uploaded: "2024-01-10" },
   ];
 
-  const certifications = [
-    { id: "c1", name: "Safety Certificate", status: "valid", expiry: "2025-06-15" },
-    { id: "c2", name: "Calibration", status: "expiring", expiry: "2024-02-28" },
-    { id: "c3", name: "ISO Compliance", status: "valid", expiry: "2025-12-31" },
-  ];
+  const certifications = React.useMemo(() => {
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const rawCerts = [
+      { id: "c1", name: "Safety Certificate", certType: "safety", certNumber: "SC-2024-0891", issuingAuthority: "OSHA", expiry: "2025-06-15" },
+      { id: "c2", name: "Calibration Certificate", certType: "quality", certNumber: "CAL-2023-1204", issuingAuthority: "ISO Calibration Lab", expiry: "2024-02-28" },
+      { id: "c3", name: "ISO 45001 Compliance", certType: "compliance", certNumber: "ISO-45001-2287", issuingAuthority: "BSI Group", expiry: "2025-12-31" },
+    ];
+    return rawCerts
+      .map((cert) => {
+        const expiryDate = new Date(cert.expiry);
+        const status: "valid" | "expiring" | "expired" = expiryDate < now ? "expired" : expiryDate <= thirtyDaysFromNow ? "expiring" : "valid";
+        return { ...cert, status };
+      })
+      .sort((a, b) => {
+        const order = { expired: 0, expiring: 1, valid: 2 };
+        return order[a.status] - order[b.status] || new Date(a.expiry).getTime() - new Date(b.expiry).getTime();
+      });
+  }, []);
 
   // Get maintenance schedules for this asset
   const [schedules, setSchedules] = React.useState<MaintenanceSchedule[]>(() => 
@@ -370,6 +389,7 @@ export default function AssetDetailPage() {
 
   const tabs: Tab[] = [
     { id: "info", label: t("assets.detailTabs.overview"), icon: Info },
+    { id: "analytics", label: t("assets.tabs.analytics") || "Analytics", icon: BarChart3 },
     { id: "timeline", label: t("assets.detailTabs.timeline"), icon: Clock },
     { id: "maintenance", label: t("assets.detailTabs.maintenance"), icon: Settings },
     { id: "readings", label: t("assets.detailTabs.readings"), icon: BarChart3 },
@@ -661,7 +681,7 @@ export default function AssetDetailPage() {
                 <p className="text-center py-4 text-muted-foreground">No incidents linked to this asset</p>
               ) : (
                 <div className="space-y-2">
-                  {assetIncidents.map((incident) => (
+                  {(showAllIncidents ? assetIncidents : assetIncidents.slice(0, 5)).map((incident) => (
                     <Link
                       key={incident.id}
                       href={`/${company}/dashboard/incidents/${incident.id}`}
@@ -694,12 +714,27 @@ export default function AssetDetailPage() {
                       </div>
                     </Link>
                   ))}
+                  {assetIncidents.length > 5 && (
+                    <Button
+                      variant="ghost"
+                      className="w-full mt-2"
+                      onClick={() => setShowAllIncidents(!showAllIncidents)}
+                    >
+                      {showAllIncidents
+                        ? (t("assets.showLess") || "Show less")
+                        : (t("assets.showAllIncidents", { count: String(assetIncidents.length) }) || `Show all ${assetIncidents.length} incidents`)}
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
+          </div>
+        )}
 
-            {/* Statistics */}
+        {/* Analytics Tab */}
+        {activeTab === "analytics" && (
+          <div className="space-y-6">
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-6">
@@ -723,6 +758,7 @@ export default function AssetDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Total Inspections</p>
                     <p className="text-3xl font-semibold">{totalInspections}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("assets.kpi.totalInspectionsDesc") || "Number of inspections performed on this asset"}</p>
                   </div>
                   <Wrench className="h-8 w-8 text-muted-foreground" />
                 </div>
@@ -734,6 +770,7 @@ export default function AssetDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Pass Rate</p>
                     <p className="text-3xl font-semibold">{totalInspections > 0 ? `${passRate}%` : "—"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("assets.kpi.passRateDesc") || "Percentage of inspections that passed all checks"}</p>
                   </div>
                   <CheckCircle className="h-8 w-8 text-muted-foreground" />
                 </div>
@@ -745,6 +782,7 @@ export default function AssetDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Total Incidents</p>
                     <p className="text-3xl font-semibold">{assetIncidents.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("assets.kpi.totalIncidentsDesc") || "Safety incidents involving this asset"}</p>
                   </div>
                   <AlertTriangle className="h-8 w-8 text-muted-foreground" />
                 </div>
@@ -756,6 +794,7 @@ export default function AssetDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Total Downtime Hours</p>
                     <p className="text-3xl font-semibold">{totalDowntimeHours.toFixed(1)}h</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("assets.kpi.downtimeHoursDesc") || "Total hours this asset was out of service"}</p>
                   </div>
                   <Power className="h-8 w-8 text-muted-foreground" />
                 </div>
@@ -767,6 +806,7 @@ export default function AssetDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Maintenance Compliance</p>
                     <p className="text-3xl font-semibold">{maintenanceCompliance}%</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("assets.kpi.maintenanceComplianceDesc") || "Percentage of on-time maintenance completions"}</p>
                   </div>
                   <Settings className="h-8 w-8 text-muted-foreground" />
                 </div>
@@ -778,6 +818,7 @@ export default function AssetDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Last Inspected</p>
                     <p className="text-3xl font-semibold">{lastInspectedDays !== null ? `${lastInspectedDays}d` : "Never"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("assets.kpi.lastInspectedDesc") || "Days since the last inspection was performed"}</p>
                   </div>
                   <Clock className="h-8 w-8 text-muted-foreground" />
                 </div>
@@ -1539,19 +1580,27 @@ export default function AssetDetailPage() {
                   <p className="text-center py-4 text-muted-foreground">{t("assets.empty.noCertifications")}</p>
                 ) : (
                 <div className="space-y-2">
-                  {certifications.map((cert) => (
+                  {certifications.map((cert) => {
+                    const CertIcon = cert.certType === "safety" ? Shield : cert.certType === "quality" ? Award : FileCheck;
+                    const statusColor = cert.status === "valid" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : cert.status === "expiring" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+                    const iconColor = cert.status === "valid" ? "text-green-600" : cert.status === "expiring" ? "text-amber-500" : "text-red-500";
+                    return (
                     <div key={cert.id} className="flex items-center justify-between rounded-lg border p-3">
                       <div className="flex items-center gap-3">
-                        <Award className="h-5 w-5 text-muted-foreground" />
+                        <CertIcon className={`h-5 w-5 ${iconColor}`} />
                         <div>
                           <p className="font-medium">{cert.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            Expires: {formatDate(cert.expiry)} • {cert.status}
+                            {cert.certNumber}{cert.issuingAuthority ? ` • ${cert.issuingAuthority}` : ""} • Expires: {formatDate(cert.expiry)}
                           </p>
                         </div>
                       </div>
+                      <Badge className={`${statusColor} border-0 text-xs`}>
+                        {t(`assets.certStatus.${cert.status}`)}
+                      </Badge>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 )}
               </CardContent>
@@ -1572,20 +1621,37 @@ export default function AssetDetailPage() {
                   <p className="text-center py-4 text-muted-foreground">{t("assets.empty.noDocuments")}</p>
                 ) : (
                 <div className="space-y-2">
-                  {storedDocuments.map((doc) => (
+                  {storedDocuments.map((doc) => {
+                    const ext = doc.name.split(".").pop()?.toLowerCase() || "";
+                    const DocIcon = ["pdf"].includes(ext) ? FileText : ["doc", "docx"].includes(ext) ? FileText : ["xls", "xlsx", "csv"].includes(ext) ? FileText : File;
+                    const iconColor = ["pdf"].includes(ext) ? "text-red-500" : ["doc", "docx"].includes(ext) ? "text-blue-500" : ["xls", "xlsx", "csv"].includes(ext) ? "text-green-500" : "text-muted-foreground";
+                    return (
                     <div key={doc.id} className="flex items-center justify-between rounded-lg border p-3">
                       <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
+                        <DocIcon className={`h-5 w-5 ${iconColor}`} />
                         <div>
                           <p className="font-medium">{doc.name}</p>
-                          <p className="text-xs text-muted-foreground">{doc.size} • {doc.uploaded}</p>
+                          <p className="text-xs text-muted-foreground">{doc.size} • {formatDate(doc.uploaded)}</p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="sm" title={t("assets.download")} onClick={() => {
+                          if (doc.dataUrl) {
+                            const link = document.createElement("a");
+                            link.href = doc.dataUrl;
+                            link.download = doc.name;
+                            link.click();
+                          }
+                        }}>
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 )}
               </CardContent>
@@ -1604,12 +1670,26 @@ export default function AssetDetailPage() {
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {storedImages.map((img) => (
-                    <div key={img.id} className="group relative aspect-square rounded-lg border bg-muted overflow-hidden cursor-pointer">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Image className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur p-2">
+                    <div
+                      key={img.id}
+                      className="group relative aspect-square rounded-lg border bg-muted overflow-hidden cursor-pointer"
+                      onClick={() => {
+                        if (img.dataUrl) window.open(img.dataUrl, "_blank");
+                      }}
+                    >
+                      {img.dataUrl ? (
+                        <img src={img.dataUrl} alt={img.name} className="absolute inset-0 h-full w-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                          <Image className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-[10px] text-muted-foreground">{t("assets.noPreview")}</span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur p-2 flex items-center justify-between">
                         <p className="text-xs font-medium truncate">{img.name}</p>
+                        {img.dataUrl && (
+                          <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                        )}
                       </div>
                     </div>
                   ))}

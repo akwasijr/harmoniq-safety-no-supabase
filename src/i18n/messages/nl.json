@@ -354,7 +354,8 @@
       "workOrders": "Werkorders",
       "parts": "Onderdelen",
       "correctiveActions": "Corrigerende maatregelen",
-      "alerts": "Waarschuwingen"
+      "alerts": "Waarschuwingen",
+      "analytics": "Analyse"
     },
     "detailTabs": {
       "overview": "Overzicht",
@@ -476,7 +477,42 @@
     "openWorkOrdersPlural": "{count} Open werkorders",
     "assignedToYou": "Aan u toegewezen",
     "assetCount": "{count} middel",
-    "assetCountPlural": "{count} middelen"
+    "assetCountPlural": "{count} middelen",
+    "avgHealthScore": "Gem. gezondheid",
+    "avgHealthScoreDesc": "Gemiddelde gezondheidsscore",
+    "certStatus": {
+      "valid": "Geldig",
+      "expiring": "Verloopt binnenkort",
+      "expired": "Verlopen"
+    },
+    "download": "Downloaden",
+    "noPreview": "Geen voorbeeld beschikbaar",
+    "wizard": {
+      "basic": "Basisinfo",
+      "technical": "Technisch",
+      "location": "Locatie",
+      "lifecycle": "Levenscyclus",
+      "compliance": "Naleving",
+      "next": "Volgende",
+      "back": "Terug",
+      "create": "Asset aanmaken",
+      "step": "Stap {current} van {total}",
+      "basicDesc": "Verplichte velden en identificatie",
+      "technicalDesc": "Fabrikant en specificaties",
+      "locationDesc": "Locatie en toewijzing",
+      "lifecycleDesc": "Aankoop- en garantiegegevens",
+      "complianceDesc": "Certificering en onderhoud"
+    },
+    "kpi": {
+      "totalInspectionsDesc": "Aantal uitgevoerde inspecties op dit asset",
+      "passRateDesc": "Percentage inspecties die alle controles hebben doorstaan",
+      "totalIncidentsDesc": "Veiligheidsincidenten met dit asset",
+      "downtimeHoursDesc": "Totale uren dat dit asset buiten dienst was",
+      "maintenanceComplianceDesc": "Percentage onderhoud op tijd voltooid",
+      "lastInspectedDesc": "Dagen sinds de laatste inspectie"
+    },
+    "showAllIncidents": "Toon alle {count} incidenten",
+    "showLess": "Toon minder"
   },
   "incidents": {
     "title": "Incidenten",
@@ -853,6 +889,15 @@
     "emergency": {
       "services": "Hulpdiensten",
       "role": "Noodgeval"
+    },
+    "wizard": {
+      "chooseType": "Kies type",
+      "details": "Details",
+      "confirm": "Bevestigen",
+      "preview": "Dit zal aanmaken",
+      "building1Floor": "1 gebouw met {count} verdieping(en)",
+      "floor1Zone": "1 verdieping met {zones} zone(s) en {rooms} kamer(s)",
+      "reviewSummary": "Bekijk wat er aangemaakt wordt"
     }
   },
   "analytics": {

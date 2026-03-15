@@ -354,7 +354,8 @@
       "workOrders": "Work Orders",
       "parts": "Parts",
       "correctiveActions": "Corrective Actions",
-      "alerts": "Alerts"
+      "alerts": "Alerts",
+      "analytics": "Analytics"
     },
     "detailTabs": {
       "overview": "Overview",
@@ -476,7 +477,42 @@
     "openWorkOrdersPlural": "{count} Open Work Orders",
     "assignedToYou": "Assigned to you",
     "assetCount": "{count} asset",
-    "assetCountPlural": "{count} assets"
+    "assetCountPlural": "{count} assets",
+    "avgHealthScore": "Avg. Health",
+    "avgHealthScoreDesc": "Average health score across assets",
+    "certStatus": {
+      "valid": "Valid",
+      "expiring": "Expiring Soon",
+      "expired": "Expired"
+    },
+    "download": "Download",
+    "noPreview": "No preview available",
+    "wizard": {
+      "basic": "Basic Info",
+      "technical": "Technical",
+      "location": "Location",
+      "lifecycle": "Lifecycle",
+      "compliance": "Compliance",
+      "next": "Next",
+      "back": "Back",
+      "create": "Create Asset",
+      "step": "Step {current} of {total}",
+      "basicDesc": "Required fields and identification",
+      "technicalDesc": "Manufacturer and specifications",
+      "locationDesc": "Location and assignment",
+      "lifecycleDesc": "Purchase and warranty details",
+      "complianceDesc": "Certification and maintenance"
+    },
+    "kpi": {
+      "totalInspectionsDesc": "Number of inspections performed on this asset",
+      "passRateDesc": "Percentage of inspections that passed all checks",
+      "totalIncidentsDesc": "Safety incidents involving this asset",
+      "downtimeHoursDesc": "Total hours this asset was out of service",
+      "maintenanceComplianceDesc": "Percentage of on-time maintenance completions",
+      "lastInspectedDesc": "Days since the last inspection was performed"
+    },
+    "showAllIncidents": "Show all {count} incidents",
+    "showLess": "Show less"
   },
   "incidents": {
     "title": "Incidents",
@@ -853,6 +889,15 @@
     "emergency": {
       "services": "Emergency Services",
       "role": "Emergency"
+    },
+    "wizard": {
+      "chooseType": "Choose Type",
+      "details": "Details",
+      "confirm": "Confirm",
+      "preview": "This will create",
+      "building1Floor": "1 building with {count} floor(s)",
+      "floor1Zone": "1 floor with {zones} zone(s) and {rooms} room(s)",
+      "reviewSummary": "Review what will be created"
     }
   },
   "analytics": {

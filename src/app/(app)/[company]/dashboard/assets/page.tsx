@@ -9,6 +9,7 @@ import {
   Package,
   AlertTriangle,
   CheckCircle,
+  Check,
   Clock,
   X,
   MapPin,
@@ -24,6 +25,8 @@ import {
   Wrench,
   ClipboardList,
   Cog,
+  Shield,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,12 +74,36 @@ export default function AssetsPage() {
     category: "machinery",
     manufacturer: "",
     model: "",
+    model_number: "",
+    specifications: "",
+    condition: "good" as string,
     location_id: "",
     purchase_date: "",
     asset_type: "static",
     department: "",
     warranty_expiry: "",
+    criticality: "medium" as string,
+    parent_asset_id: "",
+    purchase_cost: "",
+    currency: "USD",
+    expected_life_years: "",
+    installation_date: "",
+    requires_certification: false,
+    requires_calibration: false,
+    calibration_frequency_days: "",
+    maintenance_frequency_days: "",
+    safety_instructions: "",
   });
+
+  // Wizard step tracking
+  const [wizardStep, setWizardStep] = React.useState(0);
+  const wizardSteps = [
+    { id: "basic", titleKey: "assets.wizard.basic", descKey: "assets.wizard.basicDesc", icon: Package },
+    { id: "technical", titleKey: "assets.wizard.technical", descKey: "assets.wizard.technicalDesc", icon: Wrench },
+    { id: "location", titleKey: "assets.wizard.location", descKey: "assets.wizard.locationDesc", icon: MapPin },
+    { id: "lifecycle", titleKey: "assets.wizard.lifecycle", descKey: "assets.wizard.lifecycleDesc", icon: Calendar },
+    { id: "compliance", titleKey: "assets.wizard.compliance", descKey: "assets.wizard.complianceDesc", icon: Shield },
+  ] as const;
 
   const { items: assets, add: addAsset } = useAssetsStore();
   const { items: locations } = useLocationsStore();
@@ -336,6 +363,18 @@ export default function AssetsPage() {
     retired: assets.filter((a) => a.status === "retired").length,
   };
 
+  const avgHealthScore = React.useMemo(() => {
+    const activeAssets = filteredAssets.filter(a => a.status !== "retired");
+    if (activeAssets.length === 0) return 0;
+    const conditionScores: Record<string, number> = { excellent: 100, good: 80, fair: 60, poor: 40, failed: 10 };
+    return Math.round(
+      activeAssets.reduce((sum, asset) => {
+        const statusPenalty = asset.status === "active" ? 0 : asset.status === "maintenance" ? -10 : -30;
+        return sum + (conditionScores[asset.condition] || 60) + statusPenalty;
+      }, 0) / activeAssets.length
+    );
+  }, [filteredAssets]);
+
   const filters = [
     {
       id: "status",
@@ -370,7 +409,7 @@ export default function AssetsPage() {
       id: `asset_${Date.now()}`,
       company_id: company || "",
       location_id: newAsset.location_id || null,
-      parent_asset_id: null,
+      parent_asset_id: newAsset.parent_asset_id || null,
       is_system: false,
       name: newAsset.name,
       asset_tag: `AST-${Date.now().toString().slice(-6)}`,
@@ -380,34 +419,34 @@ export default function AssetsPage() {
       category: newAsset.category as Asset["category"],
       sub_category: null,
       asset_type: newAsset.asset_type as Asset["asset_type"],
-      criticality: "medium",
+      criticality: (newAsset.criticality as Asset["criticality"]) || "medium",
       department: newAsset.department || null,
       manufacturer: newAsset.manufacturer || null,
       model: newAsset.model || null,
-      model_number: null,
-      specifications: null,
+      model_number: newAsset.model_number || null,
+      specifications: newAsset.specifications || null,
       manufactured_date: null,
       purchase_date: newAsset.purchase_date || null,
-      installation_date: null,
+      installation_date: newAsset.installation_date || null,
       warranty_expiry: newAsset.warranty_expiry || null,
-      expected_life_years: null,
-      condition: "good",
+      expected_life_years: newAsset.expected_life_years ? parseInt(newAsset.expected_life_years) : null,
+      condition: (newAsset.condition as Asset["condition"]) || "good",
       condition_notes: null,
       last_condition_assessment: null,
-      purchase_cost: null,
+      purchase_cost: newAsset.purchase_cost ? parseFloat(newAsset.purchase_cost) : null,
       current_value: null,
       depreciation_rate: null,
-      currency: "USD",
-      maintenance_frequency_days: null,
+      currency: newAsset.currency || "USD",
+      maintenance_frequency_days: newAsset.maintenance_frequency_days ? parseInt(newAsset.maintenance_frequency_days) : null,
       last_maintenance_date: null,
       next_maintenance_date: null,
       maintenance_notes: null,
-      requires_certification: false,
-      requires_calibration: false,
-      calibration_frequency_days: null,
+      requires_certification: newAsset.requires_certification,
+      requires_calibration: newAsset.requires_calibration,
+      calibration_frequency_days: newAsset.calibration_frequency_days ? parseInt(newAsset.calibration_frequency_days) : null,
       last_calibration_date: null,
       next_calibration_date: null,
-      safety_instructions: null,
+      safety_instructions: newAsset.safety_instructions || null,
       status: "active",
       decommission_date: null,
       disposal_method: null,
@@ -417,17 +456,32 @@ export default function AssetsPage() {
     addAsset(asset);
     toast("Asset added successfully");
     setShowAddModal(false);
+    setWizardStep(0);
     setNewAsset({
       name: "",
       serial_number: "",
       category: "machinery",
       manufacturer: "",
       model: "",
+      model_number: "",
+      specifications: "",
+      condition: "good",
       location_id: "",
       purchase_date: "",
       asset_type: "static",
       department: "",
       warranty_expiry: "",
+      criticality: "medium",
+      parent_asset_id: "",
+      purchase_cost: "",
+      currency: "USD",
+      expected_life_years: "",
+      installation_date: "",
+      requires_certification: false,
+      requires_calibration: false,
+      calibration_frequency_days: "",
+      maintenance_frequency_days: "",
+      safety_instructions: "",
     });
     setCurrentPage(1);
   };
@@ -478,7 +532,7 @@ export default function AssetsPage() {
       {activeTab === "assets" && (
         <>
         {/* Status summary - clickable for filtering */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KPICard
             title={t("assets.statuses.active")}
             value={statusCounts.active}
@@ -499,6 +553,13 @@ export default function AssetsPage() {
             icon={AlertTriangle}
             onClick={() => { setStatusFilter(statusFilter === "retired" ? "" : "retired"); setCurrentPage(1); }}
             active={statusFilter === "retired"}
+          />
+          <KPICard
+            title={t("assets.avgHealthScore")}
+            value={`${avgHealthScore}%`}
+            description={t("assets.avgHealthScoreDesc")}
+            icon={Activity}
+            className={avgHealthScore > 80 ? "border-green-200 dark:border-green-900" : avgHealthScore >= 50 ? "border-amber-200 dark:border-amber-900" : "border-red-200 dark:border-red-900"}
           />
         </div>
 

@@ -354,7 +354,8 @@
       "workOrders": "Arbetsordrar",
       "parts": "Delar",
       "correctiveActions": "Korrigerande åtgärder",
-      "alerts": "Varningar"
+      "alerts": "Varningar",
+      "analytics": "Analys"
     },
     "detailTabs": {
       "overview": "Översikt",
@@ -476,7 +477,42 @@
     "openWorkOrdersPlural": "{count} Öppna arbetsordrar",
     "assignedToYou": "Tilldelad till dig",
     "assetCount": "{count} tillgång",
-    "assetCountPlural": "{count} tillgångar"
+    "assetCountPlural": "{count} tillgångar",
+    "avgHealthScore": "Snitt hälsa",
+    "avgHealthScoreDesc": "Genomsnittlig hälsopoäng",
+    "certStatus": {
+      "valid": "Giltig",
+      "expiring": "Löper ut snart",
+      "expired": "Utgånget"
+    },
+    "download": "Ladda ner",
+    "noPreview": "Ingen förhandsgranskning tillgänglig",
+    "wizard": {
+      "basic": "Grundinfo",
+      "technical": "Teknisk",
+      "location": "Plats",
+      "lifecycle": "Livscykel",
+      "compliance": "Efterlevnad",
+      "next": "Nästa",
+      "back": "Tillbaka",
+      "create": "Skapa tillgång",
+      "step": "Steg {current} av {total}",
+      "basicDesc": "Obligatoriska fält och identifiering",
+      "technicalDesc": "Tillverkare och specifikationer",
+      "locationDesc": "Plats och tilldelning",
+      "lifecycleDesc": "Inköps- och garantiuppgifter",
+      "complianceDesc": "Certifiering och underhåll"
+    },
+    "kpi": {
+      "totalInspectionsDesc": "Antal inspektioner utförda på denna tillgång",
+      "passRateDesc": "Andel inspektioner som klarade alla kontroller",
+      "totalIncidentsDesc": "Säkerhetsincidenter som involverar denna tillgång",
+      "downtimeHoursDesc": "Totala timmar denna tillgång var ur drift",
+      "maintenanceComplianceDesc": "Andel underhåll slutfört i tid",
+      "lastInspectedDesc": "Dagar sedan senaste inspektionen"
+    },
+    "showAllIncidents": "Visa alla {count} incidenter",
+    "showLess": "Visa färre"
   },
   "incidents": {
     "title": "Incidenter",
@@ -853,6 +889,15 @@
     "emergency": {
       "services": "Räddningstjänst",
       "role": "Nödsituation"
+    },
+    "wizard": {
+      "chooseType": "Välj typ",
+      "details": "Detaljer",
+      "confirm": "Bekräfta",
+      "preview": "Detta kommer att skapa",
+      "building1Floor": "1 byggnad med {count} våning(ar)",
+      "floor1Zone": "1 våning med {zones} zon(er) och {rooms} rum",
+      "reviewSummary": "Granska vad som kommer att skapas"
     }
   },
   "analytics": {
