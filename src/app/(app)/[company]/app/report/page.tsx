@@ -383,7 +383,7 @@ function ReportIncidentPageContent() {
                   onClick={() => { setFormData({ ...formData, type: type.value }); setStepErrors({}); }}
                   className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
                     isSelected
-                      ? "border-primary bg-primary text-white shadow-md"
+                      ? "border-primary bg-primary text-white shadow-sm"
                       : "border-border hover:border-primary/50 hover:bg-muted/50"
                   }`}
                 >
@@ -412,7 +412,7 @@ function ReportIncidentPageContent() {
                   onClick={() => { setFormData({ ...formData, severity: level.value }); setStepErrors({}); }}
                   className={`flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-all ${
                     isSelected
-                      ? "border-primary bg-primary text-white shadow-md"
+                      ? "border-primary bg-primary text-white shadow-sm"
                       : `border-border hover:border-primary/50 hover:bg-muted/50`
                   }`}
                 >

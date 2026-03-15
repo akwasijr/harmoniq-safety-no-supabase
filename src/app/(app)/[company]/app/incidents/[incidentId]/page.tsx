@@ -154,7 +154,7 @@ export default function EmployeeIncidentDetailPage() {
           </CardHeader>
           <CardContent className="pt-0">
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {incident.description || "No description provided."}
+              {incident.description || t("incidents.noDescription") || "No description provided."}
             </p>
           </CardContent>
         </Card>

@@ -282,7 +282,7 @@ function InspectionRoundContent() {
 
         {/* Checkpoint label & instructions */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-1">{checkpoint.label}</h2>
+          <h2 className="text-lg font-bold mb-1">{checkpoint.label}</h2>
           {checkpoint.instructions && (
             <p className="text-sm text-muted-foreground">{checkpoint.instructions}</p>
           )}
@@ -290,9 +290,9 @@ function InspectionRoundContent() {
             <div className="mt-2 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground">
               <Ruler className="h-3 w-3" />
               {t("inspectionRounds.acceptableRange")}:{" "}
-              {checkpoint.acceptable_min !== null ? checkpoint.acceptable_min : "—"}
+              {checkpoint.acceptable_min !== null ? checkpoint.acceptable_min : "N/A"}
               {" – "}
-              {checkpoint.acceptable_max !== null ? checkpoint.acceptable_max : "—"}
+              {checkpoint.acceptable_max !== null ? checkpoint.acceptable_max : "N/A"}
               {checkpoint.unit ? ` ${checkpoint.unit}` : ""}
             </div>
           )}

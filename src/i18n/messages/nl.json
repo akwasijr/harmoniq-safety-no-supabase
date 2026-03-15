@@ -619,7 +619,9 @@
     "locked": "Dit incidentrapport is vergrendeld en kan niet worden bewerkt",
     "lockedShort": "Vergrendeld",
     "viewReport": "Rapport bekijken",
-    "reportAnother": "Nog een melden"
+    "reportAnother": "Nog een melden",
+    "noDescription": "Geen beschrijving opgegeven.",
+    "noMatch": "Geen rapporten komen overeen met uw zoekcriteria."
   },
   "tickets": {
     "title": "Tickets",
@@ -1754,5 +1756,8 @@
     "title": "Meldingen",
     "empty_title": "Geen meldingen",
     "empty_description": "Je bent helemaal bij! Meldingen over taken, nieuws en incidenten verschijnen hier."
+  },
+  "news": {
+    "noContent": "Geen inhoud beschikbaar."
   }
 }

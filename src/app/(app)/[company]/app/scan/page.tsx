@@ -364,7 +364,7 @@ export default function ScanAssetPage() {
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
             <X className="h-8 w-8 text-destructive" />
           </div>
-          <h2 className="text-lg font-semibold mb-1">{t("scan.notFound")}</h2>
+          <h2 className="text-lg font-bold mb-1">{t("scan.notFound")}</h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-xs">
             {t("scan.notFoundDesc")}
           </p>
@@ -498,7 +498,7 @@ export default function ScanAssetPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
               <Keyboard className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="text-lg font-semibold">{t("scan.manualEntry")}</h2>
+            <h2 className="text-lg font-bold">{t("scan.manualEntry")}</h2>
             <p className="text-sm text-muted-foreground mt-1 text-center max-w-xs">
               {t("scan.manualEntryDesc")}
             </p>

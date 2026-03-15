@@ -244,7 +244,7 @@ export default function JSAFormPage() {
                 <FileCheck className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.jobDetails")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.jobDetails")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.dailyPreWork")}</p>
               </div>
             </div>
@@ -341,7 +341,7 @@ export default function JSAFormPage() {
                   <AlertTriangle className="h-5 w-5 text-warning" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">{t("riskAssessment.preWorkChecklist")}</h2>
+                  <h2 className="text-lg font-bold">{t("riskAssessment.preWorkChecklist")}</h2>
                   <p className="text-sm text-muted-foreground">
                     {t("riskAssessment.itemsChecked", { completed: String(completedCount), total: String(totalItems) })}
                   </p>
@@ -415,7 +415,7 @@ export default function JSAFormPage() {
                 <AlertTriangle className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.hazardsAndControls")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.hazardsAndControls")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.identifyHazards")}</p>
               </div>
             </div>
@@ -464,7 +464,7 @@ export default function JSAFormPage() {
                 <Card className="bg-red-50 border-red-200">
                   <CardContent className="py-4">
                     <p className="text-sm font-medium text-red-800">
-                      ⚠️ {failCount} checklist item{failCount > 1 ? "s" : ""} failed
+                      {failCount} checklist item{failCount > 1 ? "s" : ""} failed
                     </p>
                     <p className="text-xs text-red-700 mt-1">
                       Review failed items and ensure corrective actions are in place before proceeding.
@@ -484,7 +484,7 @@ export default function JSAFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSignoff")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSignoff")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.confirmAndSubmit")}</p>
               </div>
             </div>

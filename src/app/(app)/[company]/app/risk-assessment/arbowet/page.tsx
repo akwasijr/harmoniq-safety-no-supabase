@@ -266,7 +266,7 @@ export default function ArbowetFormPage() {
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.auditDetails")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.auditDetails")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.basicAuditInfo")}</p>
               </div>
             </div>
@@ -342,7 +342,7 @@ export default function ArbowetFormPage() {
                   <Scale className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">{t("riskAssessment.complianceCheck")}</h2>
+                  <h2 className="text-lg font-bold">{t("riskAssessment.complianceCheck")}</h2>
                   <p className="text-sm text-muted-foreground">
                     {t("riskAssessment.itemsAssessed", { assessed: String(assessedItems), total: String(totalItems) })}
                   </p>
@@ -490,7 +490,7 @@ export default function ArbowetFormPage() {
                 <FileCheck className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.summaryAndActions")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.summaryAndActions")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.overallAssessment")}</p>
               </div>
             </div>
@@ -519,7 +519,7 @@ export default function ArbowetFormPage() {
               <Card className="border-red-200">
                 <CardHeader className="py-3">
                   <CardTitle className="text-sm text-red-600">
-                    ⚠️ {t("riskAssessment.nonCompliantItems", { count: String(nonCompliantCount) })}
+                    {t("riskAssessment.nonCompliantItems", { count: String(nonCompliantCount) })}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -583,7 +583,7 @@ export default function ArbowetFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSubmit")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSubmit")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.confirmSubmitAudit")}</p>
               </div>
             </div>
@@ -652,7 +652,7 @@ export default function ArbowetFormPage() {
               <Card className="bg-warning/10 border-warning">
                 <CardContent className="py-4">
                   <p className="text-sm font-medium text-warning">
-                    ⚠️ {nonCompliantCount} non-compliant item{nonCompliantCount > 1 ? "s" : ""} found
+                    {nonCompliantCount} non-compliant item{nonCompliantCount > 1 ? "s" : ""} found
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     These must be addressed to achieve full Arbowet compliance. 

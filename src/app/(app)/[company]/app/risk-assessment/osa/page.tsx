@@ -297,7 +297,7 @@ export default function OSAFormPage() {
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Psykosocial riskbedömning</h2>
+                <h2 className="text-lg font-bold">Psykosocial riskbedömning</h2>
                 <p className="text-sm text-muted-foreground">Organizational and Social Work Environment</p>
               </div>
             </div>
@@ -405,7 +405,7 @@ export default function OSAFormPage() {
                 <currentOSASection.icon className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{currentOSASection.title}</h2>
+                <h2 className="text-lg font-bold">{currentOSASection.title}</h2>
                 <p className="text-sm text-muted-foreground">{currentOSASection.description}</p>
               </div>
             </div>
@@ -524,7 +524,7 @@ export default function OSAFormPage() {
                 <Brain className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Sammanfattning</h2>
+                <h2 className="text-lg font-bold">Sammanfattning</h2>
                 <p className="text-sm text-muted-foreground">Overall assessment and concerns</p>
               </div>
             </div>
@@ -625,7 +625,7 @@ export default function OSAFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSubmit")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSubmit")}</h2>
                 <p className="text-sm text-muted-foreground">Review before submitting</p>
               </div>
             </div>

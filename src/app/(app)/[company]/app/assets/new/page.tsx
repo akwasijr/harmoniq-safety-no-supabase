@@ -618,7 +618,7 @@ export default function NewAssetPage() {
                 <div className="border-t pt-4 space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("newAsset.category")}</span>
-                    <span className="font-medium capitalize">{category || "—"}</span>
+                    <span className="font-medium capitalize">{category || "N/A"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("newAsset.assetType")}</span>

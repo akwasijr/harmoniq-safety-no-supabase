@@ -283,7 +283,7 @@ export default function SAMFormPage() {
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Organisationsuppgifter</h2>
+                <h2 className="text-lg font-bold">Organisationsuppgifter</h2>
                 <p className="text-sm text-muted-foreground">Organization and workplace information</p>
               </div>
             </div>
@@ -372,7 +372,7 @@ export default function SAMFormPage() {
                   <AlertTriangle className="h-5 w-5 text-warning" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">Riskbedömning</h2>
+                  <h2 className="text-lg font-bold">Riskbedömning</h2>
                   <p className="text-sm text-muted-foreground">
                     {formData.risks.length} risker identifierade
                   </p>
@@ -559,7 +559,7 @@ export default function SAMFormPage() {
                 <Shield className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Åtgärder</h2>
+                <h2 className="text-lg font-bold">Åtgärder</h2>
                 <p className="text-sm text-muted-foreground">Action plan for identified risks</p>
               </div>
             </div>
@@ -666,7 +666,7 @@ export default function SAMFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSubmit")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSubmit")}</h2>
                 <p className="text-sm text-muted-foreground">Review before submitting</p>
               </div>
             </div>

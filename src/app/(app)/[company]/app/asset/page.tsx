@@ -107,7 +107,7 @@ function AssetQuickViewPageContent() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">{t("assets.labels.assetType")}:</span>
-                <span className="capitalize">{asset.asset_type || "—"}</span>
+                <span className="capitalize">{asset.asset_type || "N/A"}</span>
               </div>
               {location && (
                 <div className="flex items-center gap-2">

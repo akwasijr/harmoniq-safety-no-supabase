@@ -619,7 +619,9 @@
     "locked": "This incident report is locked and cannot be edited",
     "lockedShort": "Locked",
     "viewReport": "View Report",
-    "reportAnother": "Report Another"
+    "reportAnother": "Report Another",
+    "noDescription": "No description provided.",
+    "noMatch": "No reports match your search criteria."
   },
   "tickets": {
     "title": "Tickets",
@@ -1754,5 +1756,8 @@
     "title": "Notifications",
     "empty_title": "No notifications",
     "empty_description": "You're all caught up! Notifications about tasks, news, and incidents will appear here."
+  },
+  "news": {
+    "noContent": "No content available."
   }
 }

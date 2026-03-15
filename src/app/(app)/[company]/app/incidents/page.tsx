@@ -134,7 +134,7 @@ export default function EmployeeIncidentsPage() {
             <p className="text-sm text-muted-foreground mt-1">
               {myIncidents.length === 0
                 ? "You haven't submitted any incident reports yet."
-                : "No reports match your search criteria."}
+                : t("incidents.noMatch") || "No reports match your search criteria."}
             </p>
             <Link href={`/${company}/app/report`}>
               <Button variant="outline" className="mt-4 gap-2">

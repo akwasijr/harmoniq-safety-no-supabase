@@ -112,7 +112,7 @@ export default function NewsDetailPage() {
     setTimeout(() => setShowDownloadSuccess(false), 2000);
     
     // Create a simple text file as demo
-    const content = `${article.title}\n\n${article.content || "No content available."}\n\nDownloaded from Harmoniq Safety`;
+    const content = `${article.title}\n\n${article.content || t("news.noContent") || "No content available."}\n\nDownloaded from Harmoniq Safety`;
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

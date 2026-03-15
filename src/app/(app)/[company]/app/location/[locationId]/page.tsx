@@ -290,7 +290,7 @@ export default function LocationLandingPage() {
         <div className="space-y-3">
           {quickActions.map((action) => (
             <Link key={action.id} href={action.href}>
-              <Card className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50">
+              <Card className="cursor-pointer transition-all hover:border-primary/50">
                 <CardContent className="flex items-center gap-4 py-4">
                   <div className={`rounded-full ${action.bgColor} p-3`}>
                     <action.icon className={`h-6 w-6 ${action.color}`} />

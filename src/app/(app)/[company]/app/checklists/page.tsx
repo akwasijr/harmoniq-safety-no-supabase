@@ -166,7 +166,7 @@ function ChecklistsTabContent({
           Back to checklists
         </button>
         
-        <h2 className="text-lg font-semibold">Create checklist template</h2>
+        <h2 className="text-lg font-bold">Create checklist template</h2>
         
         <div className="space-y-3">
           <div>
@@ -818,7 +818,7 @@ function EmployeeChecklistsPageContent() {
                           </Badge>
                         </div>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {formatDate(new Date(incident.incident_date))} · {incident.building || (typeof incident.location === 'string' ? incident.location : null) || "—"}
+                          {formatDate(new Date(incident.incident_date))} · {incident.building || (typeof incident.location === 'string' ? incident.location : null) || "N/A"}
                         </p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />

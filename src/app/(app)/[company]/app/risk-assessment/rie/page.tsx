@@ -11,6 +11,11 @@ import {
   Building2,
   Users,
   Shield,
+  Zap,
+  Brain,
+  Bug,
+  FlaskConical,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +35,7 @@ const RISK_CATEGORIES = [
   {
     id: "physical",
     title: "Fysieke Belasting (Physical Hazards)",
-    icon: "💪",
+    icon: Zap,
     items: [
       { id: "ph_noise", label: "Lawaai (Noise)", description: ">80 dB exposure" },
       { id: "ph_vibration", label: "Trillingen (Vibration)", description: "Hand-arm or whole-body" },
@@ -43,7 +48,7 @@ const RISK_CATEGORIES = [
   {
     id: "psychosocial",
     title: "Psychosociale Arbeidsbelasting (PSA)",
-    icon: "🧠",
+    icon: Brain,
     items: [
       { id: "psa_workload", label: "Werkdruk (Workload)", description: "High demands, time pressure" },
       { id: "psa_harassment", label: "Intimidatie (Harassment)", description: "Bullying, discrimination" },
@@ -55,7 +60,7 @@ const RISK_CATEGORIES = [
   {
     id: "biological",
     title: "Biologische Agentia (Biological Agents)",
-    icon: "🦠",
+    icon: Bug,
     items: [
       { id: "bio_infection", label: "Infectierisico (Infection)", description: "Pathogens exposure" },
       { id: "bio_allergen", label: "Allergenen (Allergens)", description: "Dust, mold, animal materials" },
@@ -65,7 +70,7 @@ const RISK_CATEGORIES = [
   {
     id: "chemical",
     title: "Gevaarlijke Stoffen (Hazardous Substances)",
-    icon: "⚗️",
+    icon: FlaskConical,
     items: [
       { id: "chem_toxic", label: "Toxische stoffen (Toxic)", description: "Poisons, carcinogens" },
       { id: "chem_irritant", label: "Irriterende stoffen (Irritants)", description: "Skin, eyes, respiratory" },
@@ -76,7 +81,7 @@ const RISK_CATEGORIES = [
   {
     id: "safety",
     title: "Arbeidsveiligheid (Work Safety)",
-    icon: "🔧",
+    icon: Wrench,
     items: [
       { id: "saf_machines", label: "Machines (Machinery)", description: "Moving parts, guards" },
       { id: "saf_electrical", label: "Elektriciteit (Electrical)", description: "Shock, arc flash" },
@@ -311,7 +316,7 @@ export default function RIEFormPage() {
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Bedrijfsgegevens</h2>
+                <h2 className="text-lg font-bold">Bedrijfsgegevens</h2>
                 <p className="text-sm text-muted-foreground">Company information per Arbowet Article 5</p>
               </div>
             </div>
@@ -434,7 +439,7 @@ export default function RIEFormPage() {
                 <Users className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Werkplekinformatie</h2>
+                <h2 className="text-lg font-bold">Werkplekinformatie</h2>
                 <p className="text-sm text-muted-foreground">Describe the work environment</p>
               </div>
             </div>
@@ -492,7 +497,7 @@ export default function RIEFormPage() {
                   <AlertTriangle className="h-5 w-5 text-warning" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">Risico-inventarisatie</h2>
+                  <h2 className="text-lg font-bold">Risico-inventarisatie</h2>
                   <p className="text-sm text-muted-foreground">
                     {formData.risks.length} risico&apos;s geïdentificeerd
                   </p>
@@ -537,7 +542,7 @@ export default function RIEFormPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-xl">{category.icon}</span>
+                          <category.icon className="h-5 w-5 text-primary" />
                           <div>
                             <p className="font-medium text-sm">{category.title}</p>
                             <p className="text-xs text-muted-foreground">
@@ -699,7 +704,7 @@ export default function RIEFormPage() {
                 <Shield className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Plan van Aanpak</h2>
+                <h2 className="text-lg font-bold">Plan van Aanpak</h2>
                 <p className="text-sm text-muted-foreground">Action plan for identified risks</p>
               </div>
             </div>
@@ -808,7 +813,7 @@ export default function RIEFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSubmit")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSubmit")}</h2>
                 <p className="text-sm text-muted-foreground">Review your RI&E before submitting</p>
               </div>
             </div>
@@ -868,7 +873,7 @@ export default function RIEFormPage() {
               <Card className="bg-warning/10 border-warning">
                 <CardContent className="py-4">
                   <p className="text-sm font-medium text-warning">
-                    ⚠️ Toetsing verplicht
+                    Toetsing verplicht
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     This RI&E must be reviewed by a certified arbo-professional (preventiemedewerker) 

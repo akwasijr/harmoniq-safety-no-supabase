@@ -619,7 +619,9 @@
     "locked": "Denna incidentrapport är låst och kan inte redigeras",
     "lockedShort": "Låst",
     "viewReport": "Visa rapport",
-    "reportAnother": "Rapportera en till"
+    "reportAnother": "Rapportera en till",
+    "noDescription": "Ingen beskrivning angiven.",
+    "noMatch": "Inga rapporter matchar dina sökkriterier."
   },
   "tickets": {
     "title": "Ärenden",
@@ -1754,5 +1756,8 @@
     "title": "Aviseringar",
     "empty_title": "Inga aviseringar",
     "empty_description": "Du är helt i kapp! Aviseringar om uppgifter, nyheter och incidenter visas här."
+  },
+  "news": {
+    "noContent": "Inget innehåll tillgängligt."
   }
 }

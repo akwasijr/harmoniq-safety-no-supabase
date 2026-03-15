@@ -283,7 +283,7 @@ export default function JHAFormPage() {
                 <FileCheck className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Job Information</h2>
+                <h2 className="text-lg font-bold">Job Information</h2>
                 <p className="text-sm text-muted-foreground">Basic details about the task being analyzed</p>
               </div>
             </div>
@@ -362,7 +362,7 @@ export default function JHAFormPage() {
                   <AlertTriangle className="h-5 w-5 text-warning" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">Hazard Analysis</h2>
+                  <h2 className="text-lg font-bold">Hazard Analysis</h2>
                   <p className="text-sm text-muted-foreground">Break down the job into steps and identify hazards</p>
                 </div>
               </div>
@@ -572,7 +572,7 @@ export default function JHAFormPage() {
                 <Shield className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">PPE Requirements</h2>
+                <h2 className="text-lg font-bold">PPE Requirements</h2>
                 <p className="text-sm text-muted-foreground">Select all required personal protective equipment</p>
               </div>
             </div>
@@ -634,7 +634,7 @@ export default function JHAFormPage() {
                 <Info className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Training & Precautions</h2>
+                <h2 className="text-lg font-bold">Training & Precautions</h2>
                 <p className="text-sm text-muted-foreground">Additional requirements and special instructions</p>
               </div>
             </div>
@@ -681,7 +681,7 @@ export default function JHAFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSubmit")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSubmit")}</h2>
                 <p className="text-sm text-muted-foreground">Review your JHA before submitting</p>
               </div>
             </div>
