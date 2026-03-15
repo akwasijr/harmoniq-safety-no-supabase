@@ -1731,5 +1731,6 @@
       "members": "Leden",
       "status": "Status"
     }
-  }
+  },
+  "tasks.emptyHint": "Aan u toegewezen items verschijnen hier"
 }

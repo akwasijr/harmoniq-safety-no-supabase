@@ -175,10 +175,10 @@ function getKindIconColor(kind: UnifiedTask["kind"]) {
 // ---------------------------------------------------------------------------
 
 const TABS: { id: TabId; label: string; labelKey: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "all", label: "All", labelKey: "tasks.tabs.all", icon: ListChecks },
-  { id: "tickets", label: "Tickets", labelKey: "tasks.tabs.tickets", icon: Ticket },
-  { id: "work-orders", label: "Work Orders", labelKey: "tasks.tabs.workOrders", icon: Wrench },
-  { id: "actions", label: "Actions", labelKey: "tasks.tabs.actions", icon: ShieldAlert },
+  { id: "all", label: "All", labelKey: "tasks.all", icon: ListChecks },
+  { id: "tickets", label: "Tickets", labelKey: "tasks.tickets", icon: Ticket },
+  { id: "work-orders", label: "Work Orders", labelKey: "tasks.workOrders", icon: Wrench },
+  { id: "actions", label: "Actions", labelKey: "tasks.actions", icon: ShieldAlert },
 ];
 
 // ---------------------------------------------------------------------------
@@ -323,10 +323,10 @@ function TaskCard({
 
 function EmptyState({ kind, t }: { kind: TabId; t: (key: string, params?: Record<string, string | number>) => string }) {
   const config: Record<TabId, { icon: React.ComponentType<{ className?: string }>; messageKey: string; fallback: string }> = {
-    all: { icon: ListChecks, messageKey: "tasks.empty.all", fallback: "No tasks assigned to you" },
-    tickets: { icon: Ticket, messageKey: "tasks.empty.tickets", fallback: "No tickets assigned to you" },
-    "work-orders": { icon: Wrench, messageKey: "tasks.empty.workOrders", fallback: "No work orders assigned to you" },
-    actions: { icon: ShieldAlert, messageKey: "tasks.empty.actions", fallback: "No corrective actions assigned to you" },
+    all: { icon: ListChecks, messageKey: "tasks.empty", fallback: "No tasks assigned to you" },
+    tickets: { icon: Ticket, messageKey: "tasks.emptyTickets", fallback: "No tickets assigned to you" },
+    "work-orders": { icon: Wrench, messageKey: "tasks.emptyWorkOrders", fallback: "No work orders assigned to you" },
+    actions: { icon: ShieldAlert, messageKey: "tasks.emptyActions", fallback: "No corrective actions assigned to you" },
   };
 
   const { icon: Icon, messageKey, fallback } = config[kind];
@@ -338,7 +338,7 @@ function EmptyState({ kind, t }: { kind: TabId; t: (key: string, params?: Record
       </div>
       <p className="text-sm font-medium text-muted-foreground">{t(messageKey) || fallback}</p>
       <p className="text-xs text-muted-foreground/70 mt-1">
-        {t("tasks.empty.hint") || "Items assigned to you will appear here"}
+        {t("tasks.emptyHint") || "Items assigned to you will appear here"}
       </p>
     </div>
   );
@@ -542,7 +542,7 @@ export default function TasksPage() {
 
       {/* Tabs */}
       <div className="sticky top-14 z-20 bg-[#f0eff5] px-4 py-2">
-        <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label={t("tasks.tabs.label") || "Task categories"}>
+        <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label={t("tasks.title") || "Task categories"}>
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             const count = tabCounts[tab.id];
@@ -579,7 +579,7 @@ export default function TasksPage() {
       <div
         id={`tabpanel-${activeTab}`}
         role="tabpanel"
-        aria-label={t(`tasks.tabs.${activeTab}`) || activeTab}
+        aria-label={t(`tasks.${activeTab}`) || activeTab}
         className="flex-1 px-4 pt-3 pb-4 space-y-1.5"
       >
         {visibleTasks.length === 0 ? (

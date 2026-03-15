@@ -1731,5 +1731,6 @@
       "members": "Medlemmar",
       "status": "Status"
     }
-  }
+  },
+  "tasks.emptyHint": "Uppgifter tilldelade dig visas här"
 }

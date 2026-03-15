@@ -1731,5 +1731,6 @@
       "members": "Members",
       "status": "Status"
     }
-  }
+  },
+  "tasks.emptyHint": "Items assigned to you will appear here"
 }
