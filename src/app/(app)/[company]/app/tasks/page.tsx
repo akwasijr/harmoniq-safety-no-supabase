@@ -533,23 +533,17 @@ export default function TasksPage() {
   return (
     <div className="flex flex-col min-h-full">
       {/* Header */}
-      <header className="px-4 pt-4 pb-2">
-        <div className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5 text-primary" aria-hidden="true" />
-          <h1 className="text-lg font-semibold">{t("tasks.title") || "My Tasks"}</h1>
-          {allTasks.length > 0 && (
-            <Badge variant="secondary" className="text-[10px] h-5 min-w-5 justify-center">
-              {allTasks.length}
-            </Badge>
-          )}
-        </div>
+      <header className="bg-primary px-5 pt-5 pb-4">
+        <h1 className="text-lg font-bold text-white">{t("tasks.title") || "My Tasks"}</h1>
+        {allTasks.length > 0 && (
+          <p className="text-sm text-white/60 mt-0.5">{allTasks.length} {t("tasks.total") || "total tasks"}</p>
+        )}
       </header>
 
-      {/* Pill Tabs */}
-      <div className="sticky top-14 z-20 bg-background border-b px-4 py-2">
-        <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist" aria-label={t("tasks.tabs.label") || "Task categories"}>
+      {/* Tabs */}
+      <div className="sticky top-14 z-20 bg-[#f0eff5] px-4 py-2">
+        <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label={t("tasks.tabs.label") || "Task categories"}>
           {TABS.map((tab) => {
-            const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             const count = tabCounts[tab.id];
             return (
@@ -560,21 +554,20 @@ export default function TasksPage() {
                 aria-controls={`tabpanel-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-md transition-all whitespace-nowrap",
+                  "px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors",
                   isActive
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground",
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground border border-border/50",
                 )}
               >
-                <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span className="truncate">{t(tab.labelKey) || tab.label}</span>
+                {t(tab.labelKey) || tab.label}
                 {count > 0 && (
-                  <Badge
-                    variant={isActive ? "secondary" : "outline"}
-                    className="text-[10px] h-4 min-w-4 justify-center px-1 ml-0.5"
-                  >
+                  <span className={cn(
+                    "ml-1.5 text-xs",
+                    isActive ? "text-primary-foreground/70" : "text-muted-foreground"
+                  )}>
                     {count}
-                  </Badge>
+                  </span>
                 )}
               </button>
             );
