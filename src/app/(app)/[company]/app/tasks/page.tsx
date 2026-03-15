@@ -17,9 +17,13 @@ import {
   Clock,
   CheckCircle2,
   Package,
+  Play,
+  CheckCircle,
+  RotateCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useTranslation } from "@/i18n";
@@ -178,65 +182,142 @@ const TABS: { id: TabId; label: string; labelKey: string; icon: React.ComponentT
 ];
 
 // ---------------------------------------------------------------------------
+// Status action helpers
+// ---------------------------------------------------------------------------
+
+type StatusAction = {
+  labelKey: string;
+  fallbackLabel: string;
+  targetStatus: string;
+  icon: React.ComponentType<{ className?: string }>;
+  className: string;
+};
+
+function getStatusActions(kind: UnifiedTask["kind"], status: string): StatusAction[] {
+  if (kind === "work-order") {
+    if (status === "approved") {
+      return [{ labelKey: "tasks.startWork", fallbackLabel: "Start Work", targetStatus: "in_progress", icon: Play, className: "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900" }];
+    }
+    if (status === "in_progress") {
+      return [{ labelKey: "tasks.markComplete", fallbackLabel: "Mark Complete", targetStatus: "completed", icon: CheckCircle, className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900" }];
+    }
+  }
+  if (kind === "ticket") {
+    if (status === "new") {
+      return [{ labelKey: "tasks.start", fallbackLabel: "Start", targetStatus: "in_progress", icon: Play, className: "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900" }];
+    }
+    if (status === "in_progress") {
+      return [{ labelKey: "tasks.resolve", fallbackLabel: "Resolve", targetStatus: "resolved", icon: CheckCircle, className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900" }];
+    }
+  }
+  if (kind === "corrective-action") {
+    if (status === "open") {
+      return [{ labelKey: "tasks.start", fallbackLabel: "Start", targetStatus: "in_progress", icon: Play, className: "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900" }];
+    }
+    if (status === "in_progress") {
+      return [{ labelKey: "tasks.complete", fallbackLabel: "Complete", targetStatus: "completed", icon: CheckCircle, className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900" }];
+    }
+  }
+  return [];
+}
+
+// ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function TaskCard({ task, formatDate }: { task: UnifiedTask; formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string }) {
+function TaskCard({
+  task,
+  formatDate,
+  t,
+  onStatusUpdate,
+}: {
+  task: UnifiedTask;
+  formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  onStatusUpdate: (taskId: string, kind: UnifiedTask["kind"], targetStatus: string) => void;
+}) {
   const KindIcon = getKindIcon(task.kind);
   const kindColor = getKindIconColor(task.kind);
+  const actions = getStatusActions(task.kind, task.status);
 
   return (
-    <Link
-      href={task.href}
-      className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/40"
-    >
-      <KindIcon className={cn("h-5 w-5 shrink-0", kindColor)} aria-hidden="true" />
+    <div className="rounded-lg border transition-colors hover:bg-muted/40">
+      <Link
+        href={task.href}
+        className="flex items-center gap-3 p-3 active:bg-muted/50"
+      >
+        <KindIcon className={cn("h-5 w-5 shrink-0", kindColor)} aria-hidden="true" />
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <p className="font-medium text-sm truncate max-w-[60%]">{task.title}</p>
-          <Badge variant={task.statusVariant} className="text-[10px] h-4 shrink-0">
-            {formatStatusLabel(task.status)}
-          </Badge>
-          {task.isOverdue && (
-            <Badge variant="destructive" className="text-[10px] h-4 shrink-0">
-              Overdue
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="font-medium text-sm truncate max-w-[60%]">{task.title}</p>
+            <Badge variant={task.statusVariant} className="text-[10px] h-4 shrink-0">
+              {formatStatusLabel(task.status)}
             </Badge>
-          )}
+            {task.isOverdue && (
+              <Badge variant="destructive" className="text-[10px] h-4 shrink-0">
+                Overdue
+              </Badge>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap mt-1">
+            {task.priority && (
+              <Badge variant={task.priorityVariant} className="text-[10px] h-4 shrink-0">
+                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+              </Badge>
+            )}
+            {task.assetName && (
+              <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
+                <Package className="h-3 w-3 shrink-0" aria-hidden="true" />
+                <span className="truncate max-w-[100px]">{task.assetName}</span>
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+            {task.assignedByName && (
+              <span className="flex items-center gap-0.5 truncate">
+                <UserIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
+                {task.assignedByName}
+              </span>
+            )}
+            {task.dueDate && (
+              <span className="flex items-center gap-0.5 shrink-0">
+                <Calendar className="h-3 w-3" aria-hidden="true" />
+                {formatDate(new Date(task.dueDate), { month: "short", day: "numeric" })}
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap mt-1">
-          {task.priority && (
-            <Badge variant={task.priorityVariant} className="text-[10px] h-4 shrink-0">
-              {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-            </Badge>
-          )}
-          {task.assetName && (
-            <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
-              <Package className="h-3 w-3 shrink-0" aria-hidden="true" />
-              <span className="truncate max-w-[100px]">{task.assetName}</span>
-            </span>
-          )}
-        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+      </Link>
 
-        <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
-          {task.assignedByName && (
-            <span className="flex items-center gap-0.5 truncate">
-              <UserIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
-              {task.assignedByName}
-            </span>
-          )}
-          {task.dueDate && (
-            <span className="flex items-center gap-0.5 shrink-0">
-              <Calendar className="h-3 w-3" aria-hidden="true" />
-              {formatDate(new Date(task.dueDate), { month: "short", day: "numeric" })}
-            </span>
-          )}
+      {actions.length > 0 && (
+        <div className="flex items-center gap-2 px-3 pb-2.5 pt-0">
+          {actions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <button
+                key={action.targetStatus}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStatusUpdate(task.id, task.kind, action.targetStatus);
+                }}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
+                  action.className,
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                {t(action.labelKey) || action.fallbackLabel}
+              </button>
+            );
+          })}
         </div>
-      </div>
-
-      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-    </Link>
+      )}
+    </div>
   );
 }
 
@@ -269,14 +350,34 @@ function EmptyState({ kind, t }: { kind: TabId; t: (key: string, params?: Record
 
 export default function TasksPage() {
   const { t, formatDate } = useTranslation();
+  const { toast } = useToast();
   const company = useCompanyParam();
   const { user } = useAuth();
 
-  const { items: tickets, isLoading: ticketsLoading } = useTicketsStore();
-  const { items: workOrders, isLoading: workOrdersLoading } = useWorkOrdersStore();
-  const { items: correctiveActions, isLoading: actionsLoading } = useCorrectiveActionsStore();
+  const { items: tickets, isLoading: ticketsLoading, update: updateTicket } = useTicketsStore();
+  const { items: workOrders, isLoading: workOrdersLoading, update: updateWorkOrder } = useWorkOrdersStore();
+  const { items: correctiveActions, isLoading: actionsLoading, update: updateCorrectiveAction } = useCorrectiveActionsStore();
   const { items: users } = useUsersStore();
   const { items: assets } = useAssetsStore();
+
+  const handleStatusUpdate = React.useCallback(
+    (taskId: string, kind: UnifiedTask["kind"], targetStatus: string) => {
+      const now = new Date().toISOString();
+      if (kind === "work-order") {
+        const updates: Partial<WorkOrder> = { status: targetStatus as WorkOrderStatus, updated_at: now };
+        if (targetStatus === "completed") updates.completed_at = now;
+        updateWorkOrder(taskId, updates);
+      } else if (kind === "ticket") {
+        updateTicket(taskId, { status: targetStatus as TicketStatus, updated_at: now });
+      } else if (kind === "corrective-action") {
+        const updates: Partial<CorrectiveAction> = { status: targetStatus as CorrectiveActionStatus, updated_at: now };
+        if (targetStatus === "completed") updates.completed_at = now;
+        updateCorrectiveAction(taskId, updates);
+      }
+      toast(t("tasks.statusUpdated") || "Status updated", "success");
+    },
+    [updateTicket, updateWorkOrder, updateCorrectiveAction, toast, t],
+  );
 
   const [activeTab, setActiveTab] = React.useState<TabId>("all");
 
@@ -492,7 +593,7 @@ export default function TasksPage() {
           <EmptyState kind={activeTab} t={t} />
         ) : (
           visibleTasks.map((task) => (
-            <TaskCard key={`${task.kind}-${task.id}`} task={task} formatDate={formatDate} />
+            <TaskCard key={`${task.kind}-${task.id}`} task={task} formatDate={formatDate} t={t} onStatusUpdate={handleStatusUpdate} />
           ))
         )}
       </div>

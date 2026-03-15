@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChartCard, AreaChart, BarChart, DonutChart, COLORS } from "@/components/charts";
+import { OnboardingChecklist } from "@/components/onboarding/onboarding-checklist";
 import { useCompanyStore } from "@/stores/company-store";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
@@ -333,6 +334,9 @@ export default function DashboardPage() {
           />
         </div>
       </div>
+
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist />
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

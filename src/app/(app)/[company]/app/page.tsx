@@ -190,7 +190,11 @@ export default function EmployeeAppHomePage() {
     : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   // Only compute time-sensitive values after mount to prevent hydration mismatch
   const safeDays = mounted ? Math.floor((Date.now() - lastIncidentDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-  const userTickets = tickets.filter((ticket) => ticket.assigned_to === user.id);
+  const userTickets = tickets.filter(
+    (ticket) =>
+      ticket.assigned_to === user.id ||
+      (user.team_ids?.length && ticket.assigned_groups?.some((g) => user.team_ids!.includes(g))),
+  );
   const userWorkOrders = workOrders.filter((wo) => wo.assigned_to === user.id || wo.requested_by === user.id);
   const userActions = correctiveActions.filter((ca) => ca.assigned_to === user.id);
   const pendingTaskCount = userTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length
