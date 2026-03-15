@@ -126,9 +126,6 @@ export default function Home() {
             <a href="#stats" className="text-sm text-zinc-400 hover:text-white transition-colors">Resources</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="hidden sm:inline text-sm text-zinc-400 hover:text-white transition-colors">
-              Log in
-            </Link>
             <Link href="/signup" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
               Get Started
             </Link>
