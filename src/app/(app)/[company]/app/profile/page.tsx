@@ -382,42 +382,42 @@ export default function EmployeeProfilePage() {
       {/* Language Modal */}
       {showLanguage && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
+          className="fixed inset-0 z-[60] flex flex-col bg-background"
           role="dialog"
           aria-modal="true"
           aria-label={t("profile.language")}
           onKeyDown={(e) => { if (e.key === "Escape") setShowLanguage(false); }}
         >
-          <div className="w-full sm:max-w-md rounded-t-2xl sm:rounded-lg bg-background shadow-lg">
-            <div className="flex items-center justify-between border-b p-4">
-              <h2 className="text-lg font-semibold">Language</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowLanguage(false)} aria-label={t("common.close")}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="p-4 max-h-[60vh] overflow-y-auto">
-              {languages.map((lang) => (
-                <button
-                  key={lang.code}
-                  className={`flex w-full items-center justify-between rounded-lg p-3 text-left transition-colors ${selectedLanguage === lang.code ? "bg-primary/10" : "hover:bg-muted"}`}
-                  onClick={() => {
-                    setSelectedLanguage(lang.code);
-                    setLocale(lang.code);
-                    setShowLanguage(false);
-                    toast(t("profile.language_changed"));
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{lang.flag}</span>
-                    <div>
-                      <span className="font-medium">{lang.name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">({lang.englishName})</span>
-                    </div>
+          <div className="flex items-center justify-between border-b px-4 py-3">
+            <button onClick={() => setShowLanguage(false)} className="flex items-center gap-1 text-sm text-primary font-medium">
+              <ChevronRight className="h-4 w-4 rotate-180" />
+              {t("common.back") || "Back"}
+            </button>
+            <h2 className="text-lg font-semibold">{t("profile.language") || "Language"}</h2>
+            <div className="w-12" />
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-1">
+            {languages.map((lang) => (
+              <button
+                key={lang.code}
+                className={`flex w-full items-center justify-between rounded-lg p-4 text-left transition-colors ${selectedLanguage === lang.code ? "bg-primary/10" : "hover:bg-muted"}`}
+                onClick={() => {
+                  setSelectedLanguage(lang.code);
+                  setLocale(lang.code);
+                  setShowLanguage(false);
+                  toast(t("profile.language_changed"));
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{lang.flag}</span>
+                  <div>
+                    <span className="font-medium text-base">{lang.name}</span>
+                    <span className="text-sm text-muted-foreground ml-2">({lang.englishName})</span>
                   </div>
-                  {selectedLanguage === lang.code && <Check className="h-5 w-5 text-primary" />}
-                </button>
-              ))}
-            </div>
+                </div>
+                {selectedLanguage === lang.code && <Check className="h-5 w-5 text-primary" />}
+              </button>
+            ))}
           </div>
         </div>
       )}
