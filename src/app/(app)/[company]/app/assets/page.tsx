@@ -99,11 +99,12 @@ export default function EmployeeAssetsPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#f0eff5] px-4 pt-4 pb-2">
+      <div className="sticky top-0 z-10 bg-background border-b px-4 pt-4 pb-2">
         <h1 className="text-lg font-bold mb-3">{t("nav.assets")}</h1>
 
-        <div className="flex gap-2 overflow-x-auto" role="tablist">
+        <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist">
           {tabs.map(tab => {
+            const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
@@ -112,17 +113,16 @@ export default function EmployeeAssetsPage() {
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors",
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all whitespace-nowrap",
                   isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-muted-foreground border border-border/50"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground"
                 )}
               >
-                {tab.label}
+                <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">{tab.label}</span>
                 {tab.count ? (
-                  <span className={cn("ml-1.5 text-xs", isActive ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                    {tab.count}
-                  </span>
+                  <span className="ml-1 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">{tab.count}</span>
                 ) : null}
               </button>
             );
