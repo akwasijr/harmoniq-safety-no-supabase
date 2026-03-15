@@ -898,7 +898,10 @@
       "building1Floor": "1 gebouw met {count} verdieping(en)",
       "floor1Zone": "1 verdieping met {zones} zone(s) en {rooms} kamer(s)",
       "reviewSummary": "Bekijk wat er aangemaakt wordt"
-    }
+    },
+    "mapView": "Kaart",
+    "treeView": "Boom",
+    "noGpsData": "Geen locaties met GPS-coördinaten"
   },
   "analytics": {
     "title": "Analyse",
@@ -1718,5 +1721,12 @@
   },
   "validation": {
     "invalidEmail": "Voer een geldig e-mailadres in"
+  },
+  "gps": {
+    "useMyLocation": "Gebruik mijn locatie",
+    "latitude": "Breedtegraad",
+    "longitude": "Lengtegraad",
+    "clickToPlace": "Klik op de kaart om locatie in te stellen",
+    "clear": "Wissen"
   }
 }

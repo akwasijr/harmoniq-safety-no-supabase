@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
@@ -22,8 +23,20 @@ import {
   Users,
   Wrench,
   Shield,
+  Map,
+  TreePine,
   type LucideIcon,
 } from "lucide-react";
+
+const AssetLocationMap = dynamic(
+  () =>
+    import("@/components/shared/asset-location-map").then((m) => ({
+      default: m.AssetLocationMap,
+    })),
+  { ssr: false }
+);
+
+import { GpsPicker } from "@/components/shared/gps-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,6 +105,7 @@ function LocationsPageContent() {
   const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
   const [selectedLocationId, setSelectedLocationId] = React.useState<string | null>(selectedParam);
   const [addChildParentId, setAddChildParentId] = React.useState<string | null>(null);
+  const [viewMode, setViewMode] = React.useState<"tree" | "map">("tree");
   const { toast } = useToast();
   const { t, formatDate, formatNumber } = useTranslation();
   const { items: locations, add: addLocation, update: updateLocation, remove: removeLocation } = useLocationsStore();
@@ -109,11 +123,16 @@ function LocationsPageContent() {
     floorCount: 1,
     zoneCount: 0,
     roomCount: 0,
+    gps_lat: null as number | null,
+    gps_lng: null as number | null,
   });
+  const [locWizardStep, setLocWizardStep] = React.useState(0);
 
   const [editLocation, setEditLocation] = React.useState({
     name: "",
     address: "",
+    gps_lat: null as number | null,
+    gps_lng: null as number | null,
   });
   
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
@@ -177,8 +196,8 @@ function LocationsPageContent() {
       type: newLocation.type as "site" | "building" | "floor" | "zone" | "room",
       name: newLocation.name,
       address: newLocation.address || null,
-      gps_lat: null,
-      gps_lng: null,
+      gps_lat: newLocation.gps_lat,
+      gps_lng: newLocation.gps_lng,
       qr_code: `LOC-${newId.toUpperCase()}`,
       metadata: {},
       created_at: new Date().toISOString(),
@@ -265,6 +284,7 @@ function LocationsPageContent() {
     
     setShowAddModal(false);
     setAddChildParentId(null);
+    setLocWizardStep(0);
     setNewLocation({
       name: "",
       type: "site",
@@ -273,6 +293,8 @@ function LocationsPageContent() {
       floorCount: 1,
       zoneCount: 0,
       roomCount: 0,
+      gps_lat: null,
+      gps_lng: null,
     });
     toast("Location added successfully");
   };
@@ -351,6 +373,8 @@ function LocationsPageContent() {
       setEditLocation({
         name: selectedLocation.name,
         address: selectedLocation.address || "",
+        gps_lat: selectedLocation.gps_lat,
+        gps_lng: selectedLocation.gps_lng,
       });
       setShowEditModal(true);
     }
@@ -361,6 +385,8 @@ function LocationsPageContent() {
       updateLocation(selectedLocationId, {
         name: editLocation.name,
         address: editLocation.address || null,
+        gps_lat: editLocation.gps_lat,
+        gps_lng: editLocation.gps_lng,
       });
       toast("Location updated");
     }
@@ -401,6 +427,8 @@ function LocationsPageContent() {
           floorCount: 1,
           zoneCount: 0,
           roomCount: 0,
+          gps_lat: null,
+          gps_lng: null,
         });
         setShowAddModal(true);
       }
@@ -483,9 +511,69 @@ function LocationsPageContent() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold truncate">{t("locations.title")}</h1>
+        <div className="flex items-center gap-1 rounded-lg border bg-muted p-1">
+          <button
+            onClick={() => setViewMode("tree")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              viewMode === "tree"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <TreePine className="h-4 w-4" />
+            {t("locations.treeView")}
+          </button>
+          <button
+            onClick={() => setViewMode("map")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              viewMode === "map"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Map className="h-4 w-4" />
+            {t("locations.mapView")}
+          </button>
+        </div>
       </div>
 
+      {/* Map View */}
+      {viewMode === "map" && (() => {
+        const mapMarkers = locations
+          .filter((l) => l.gps_lat && l.gps_lng)
+          .map((l) => ({
+            id: l.id,
+            name: l.name,
+            type: "location" as const,
+            lat: l.gps_lat!,
+            lng: l.gps_lng!,
+            description: l.type,
+          }));
+
+        return (
+          <Card>
+            <CardContent className="pt-6">
+              {mapMarkers.length > 0 ? (
+                <AssetLocationMap
+                  markers={mapMarkers}
+                  height="500px"
+                  selectedMarkerId={selectedLocationId || undefined}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                  <MapPin className="h-12 w-12 mb-3 opacity-50" />
+                  <p className="text-sm">{t("locations.noGpsData")}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* Tree View - File Explorer Style */}
+      {viewMode === "tree" && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px]">
         {/* Left Sidebar - Tree */}
         <Card className="lg:col-span-1">
@@ -528,7 +616,7 @@ function LocationsPageContent() {
                     <button
                       onClick={() => { 
                         setAddChildParentId(null); 
-                        setNewLocation({ name: "", type: "site", address: "", parent_id: "", floorCount: 1, zoneCount: 0, roomCount: 0 });
+                        setNewLocation({ name: "", type: "site", address: "", parent_id: "", floorCount: 1, zoneCount: 0, roomCount: 0, gps_lat: null, gps_lng: null });
                         setShowAddModal(true); 
                       }}
                       className="flex items-center gap-2 py-1.5 px-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md w-full mt-2 border border-dashed"
@@ -813,6 +901,7 @@ function LocationsPageContent() {
             )}
           </Card>
         </div>
+      )}
 
       {/* Add Location Modal */}
       {showAddModal && (
@@ -974,6 +1063,15 @@ function LocationsPageContent() {
                   {t("locations.addressFormats")}
                 </p>
               </div>
+
+              {/* GPS Picker for site and building types */}
+              {(newLocation.type === "site" || newLocation.type === "building") && (
+                <GpsPicker
+                  lat={newLocation.gps_lat}
+                  lng={newLocation.gps_lng}
+                  onChange={(lat, lng) => setNewLocation({ ...newLocation, gps_lat: lat, gps_lng: lng })}
+                />
+              )}
             </div>
 
             <div className="flex gap-3 mt-6 pt-4 border-t">
@@ -1025,6 +1123,15 @@ function LocationsPageContent() {
                   className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
                 />
               </div>
+
+              {/* GPS Picker for site and building types */}
+              {selectedLocation && (selectedLocation.type === "site" || selectedLocation.type === "building") && (
+                <GpsPicker
+                  lat={editLocation.gps_lat}
+                  lng={editLocation.gps_lng}
+                  onChange={(lat, lng) => setEditLocation({ ...editLocation, gps_lat: lat, gps_lng: lng })}
+                />
+              )}
             </div>
 
             <div className="flex gap-3 mt-6 pt-4 border-t">

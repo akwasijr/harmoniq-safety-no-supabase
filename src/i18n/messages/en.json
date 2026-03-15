@@ -898,7 +898,10 @@
       "building1Floor": "1 building with {count} floor(s)",
       "floor1Zone": "1 floor with {zones} zone(s) and {rooms} room(s)",
       "reviewSummary": "Review what will be created"
-    }
+    },
+    "mapView": "Map",
+    "treeView": "Tree",
+    "noGpsData": "No locations with GPS coordinates"
   },
   "analytics": {
     "title": "Analytics",
@@ -1718,5 +1721,12 @@
   },
   "validation": {
     "invalidEmail": "Please enter a valid email address"
+  },
+  "gps": {
+    "useMyLocation": "Use My Location",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "clickToPlace": "Click map to set location",
+    "clear": "Clear"
   }
 }

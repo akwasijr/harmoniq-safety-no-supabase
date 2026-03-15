@@ -898,7 +898,10 @@
       "building1Floor": "1 byggnad med {count} våning(ar)",
       "floor1Zone": "1 våning med {zones} zon(er) och {rooms} rum",
       "reviewSummary": "Granska vad som kommer att skapas"
-    }
+    },
+    "mapView": "Karta",
+    "treeView": "Träd",
+    "noGpsData": "Inga platser med GPS-koordinater"
   },
   "analytics": {
     "title": "Analys",
@@ -1718,5 +1721,12 @@
   },
   "validation": {
     "invalidEmail": "Ange en giltig e-postadress"
+  },
+  "gps": {
+    "useMyLocation": "Använd min plats",
+    "latitude": "Latitud",
+    "longitude": "Longitud",
+    "clickToPlace": "Klicka på kartan för att ställa in plats",
+    "clear": "Rensa"
   }
 }
