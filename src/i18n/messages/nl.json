@@ -232,7 +232,22 @@
     "appVersion": "Harmoniq Safety v1.0.0",
     "offline": "Offline modus",
     "offlineDesc": "Sommige functies vereisen een internetverbinding",
-    "privacySecurity": "Privacy en beveiliging"
+    "privacySecurity": "Privacy en beveiliging",
+    "loading": "Profiel laden...",
+    "about": "Over",
+    "terms": "Algemene voorwaarden",
+    "privacy_policy": "Privacybeleid",
+    "appearance_description": "Licht, donker of systeem",
+    "notif_incidents": "Nieuwe incidenten",
+    "notif_incidents_desc": "Melding wanneer nieuwe incidenten worden gerapporteerd",
+    "notif_tasks": "Taakherinneringen",
+    "notif_tasks_desc": "Herinnering aan openstaande taken",
+    "notif_news": "Nieuws & aankondigingen",
+    "notif_news_desc": "Bedrijfsnieuws en updates",
+    "save_preferences": "Voorkeuren opslaan",
+    "privacy_security": "Privacy & beveiliging",
+    "change_password": "Wachtwoord wijzigen",
+    "signOut": "Uitloggen"
   },
   "dashboard": {
     "openIncidents": "Open incidenten",
@@ -523,7 +538,9 @@
       "condition": "Conditiescore",
       "downtime": "Stilstandsimpact",
       "age": "Ouderdomsfactor"
-    }
+    },
+    "work_orders_empty_title": "Alles bijgewerkt!",
+    "work_orders_empty_description": "Geen openstaande werkorders aan u toegewezen"
   },
   "incidents": {
     "title": "Incidenten",
@@ -1732,5 +1749,10 @@
       "status": "Status"
     }
   },
-  "tasks.emptyHint": "Aan u toegewezen items verschijnen hier"
+  "tasks.emptyHint": "Aan u toegewezen items verschijnen hier",
+  "notifications": {
+    "title": "Meldingen",
+    "empty_title": "Geen meldingen",
+    "empty_description": "Je bent helemaal bij! Meldingen over taken, nieuws en incidenten verschijnen hier."
+  }
 }

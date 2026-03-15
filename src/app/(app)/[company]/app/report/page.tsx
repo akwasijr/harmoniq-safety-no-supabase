@@ -335,7 +335,7 @@ function ReportIncidentPageContent() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button
             variant="ghost"

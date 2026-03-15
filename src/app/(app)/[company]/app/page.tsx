@@ -312,7 +312,7 @@ export default function EmployeeAppHomePage() {
       <QuickActionsGrid />
 
       {/* ── Content Feed ── */}
-      <div className="px-4 pt-5 pb-4 space-y-1">
+      <div className="px-4 pt-5 pb-20 space-y-1">
 
         {/* News & Updates */}
         <div className="rounded-xl bg-card border border-border/50 px-4 py-2">

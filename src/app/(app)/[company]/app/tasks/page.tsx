@@ -334,7 +334,7 @@ function EmptyState({ kind, t }: { kind: TabId; t: (key: string, params?: Record
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center" role="status">
       <div className="rounded-full bg-muted p-4 mb-3">
-        <Icon className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />
+        <Icon className="h-10 w-10 text-muted-foreground/40" aria-hidden="true" />
       </div>
       <p className="text-sm font-medium text-muted-foreground">{t(messageKey) || fallback}</p>
       <p className="text-xs text-muted-foreground/70 mt-1">
@@ -576,7 +576,7 @@ export default function TasksPage() {
         id={`tabpanel-${activeTab}`}
         role="tabpanel"
         aria-label={t(`tasks.${activeTab}`) || activeTab}
-        className="flex-1 px-4 pt-3 pb-4 space-y-1.5"
+        className="flex-1 px-4 pt-3 pb-20 space-y-1.5"
       >
         {visibleTasks.length === 0 ? (
           <EmptyState kind={activeTab} t={t} />

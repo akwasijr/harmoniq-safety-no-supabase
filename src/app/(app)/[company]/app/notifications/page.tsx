@@ -135,7 +135,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full pb-20">
       {/* Header */}
       <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
         <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ export default function NotificationsPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-lg font-bold flex-1">Notifications</h1>
+          <h1 className="text-lg font-bold flex-1">{t("notifications.title") || "Notifications"}</h1>
           {unreadCount > 0 && (
             <Badge variant="secondary" className="text-xs">
               {unreadCount} new
@@ -159,10 +159,10 @@ export default function NotificationsPage() {
       <div className="flex-1">
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-4">
-            <Bell className="h-12 w-12 text-muted-foreground/30" aria-hidden="true" />
-            <p className="text-sm font-medium text-muted-foreground mt-4">No notifications</p>
+            <Bell className="h-10 w-10 text-muted-foreground/30" aria-hidden="true" />
+            <p className="text-sm font-medium text-muted-foreground mt-4">{t("notifications.empty_title") || "No notifications"}</p>
             <p className="text-xs text-muted-foreground/70 mt-1 text-center">
-              You&apos;re all caught up! Notifications about tasks, news, and incidents will appear here.
+              {t("notifications.empty_description") || "You're all caught up! Notifications about tasks, news, and incidents will appear here."}
             </p>
           </div>
         ) : (

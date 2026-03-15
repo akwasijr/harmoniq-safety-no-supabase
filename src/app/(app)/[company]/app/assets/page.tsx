@@ -97,7 +97,7 @@ export default function EmployeeAssetsPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full pb-20">
       {/* Header */}
       <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
         <h1 className="text-lg font-bold mb-3">{t("nav.assets")}</h1>
@@ -281,8 +281,8 @@ export default function EmployeeAssetsPage() {
           {myOpenWorkOrders.length === 0 ? (
             <div className="text-center py-12">
               <CheckCircle className="h-10 w-10 mx-auto mb-3 text-success/50" />
-              <p className="text-sm font-medium text-muted-foreground">All caught up!</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">No open work orders assigned to you</p>
+              <p className="text-sm font-medium text-muted-foreground">{t("assets.work_orders_empty_title") || "All caught up!"}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">{t("assets.work_orders_empty_description") || "No open work orders assigned to you"}</p>
             </div>
           ) : (
             <>

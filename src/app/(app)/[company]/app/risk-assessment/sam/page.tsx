@@ -10,6 +10,9 @@ import {
   AlertTriangle,
   Building2,
   Shield,
+  Zap,
+  BarChart3,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +32,7 @@ const SAM_CATEGORIES = [
   {
     id: "physical",
     title: "Fysiska arbetsmiljörisker",
-    icon: "💪",
+    icon: Zap,
     items: [
       { id: "phy_noise", label: "Buller (Noise)", description: "Noise levels above 80 dB" },
       { id: "phy_vibration", label: "Vibrationer (Vibration)", description: "Hand-arm or whole-body" },
@@ -42,7 +45,7 @@ const SAM_CATEGORIES = [
   {
     id: "accident",
     title: "Olycksrisker (Accident Risks)",
-    icon: "⚠️",
+    icon: AlertTriangle,
     items: [
       { id: "acc_fall", label: "Fallrisk (Fall hazard)", description: "Heights, slippery surfaces" },
       { id: "acc_machinery", label: "Maskiner (Machinery)", description: "Moving parts, entanglement" },
@@ -55,7 +58,7 @@ const SAM_CATEGORIES = [
   {
     id: "organizational",
     title: "Organisatoriska faktorer",
-    icon: "📊",
+    icon: BarChart3,
     items: [
       { id: "org_workload", label: "Arbetsbelastning (Workload)", description: "Work demands vs resources" },
       { id: "org_workhours", label: "Arbetstider (Working hours)", description: "Shift work, overtime" },
@@ -66,7 +69,7 @@ const SAM_CATEGORIES = [
   {
     id: "social",
     title: "Sociala faktorer",
-    icon: "👥",
+    icon: Users,
     items: [
       { id: "soc_harassment", label: "Kränkande särbehandling (Harassment)", description: "Bullying, discrimination" },
       { id: "soc_violence", label: "Hot och våld (Threats/Violence)", description: "From colleagues or external" },
@@ -249,7 +252,7 @@ export default function SAMFormPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
@@ -414,7 +417,7 @@ export default function SAMFormPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-xl">{category.icon}</span>
+                          <category.icon className="h-5 w-5 text-primary" />
                           <div>
                             <p className="font-medium text-sm">{category.title}</p>
                             <p className="text-xs text-muted-foreground">

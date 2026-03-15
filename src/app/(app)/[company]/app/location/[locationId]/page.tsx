@@ -212,7 +212,7 @@ export default function LocationLandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b">
+      <header className="sticky top-14 z-50 bg-background border-b">
         <div className="flex items-center justify-between p-4">
           <Button variant="ghost" size="sm" onClick={() => router.push(`/${company}/app`)}>
             <ArrowLeft className="h-4 w-4 mr-2" />

@@ -84,11 +84,11 @@ export default function EmployeeNewsPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 pt-3 pb-4 space-y-3">
+      <div className="flex-1 px-4 pt-3 pb-20 space-y-3">
         {activeContent.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-              <FileText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+              <FileText className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
             </div>
             <h3 className="mt-4 font-semibold">{t("newsApp.noContentYet", { tab: activeTab })}</h3>
             <p className="mt-2 text-sm text-muted-foreground">

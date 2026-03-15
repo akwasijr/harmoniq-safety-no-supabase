@@ -25,7 +25,7 @@ export function EmployeeAppLayout({
   notificationCount = 0,
 }: EmployeeAppLayoutProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-[#f0eff5]">
+    <div className="flex min-h-screen flex-col bg-muted">
       {/* Header */}
       {showHeader && (
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-primary px-4">

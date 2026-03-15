@@ -232,7 +232,22 @@
     "appVersion": "Harmoniq Safety v1.0.0",
     "offline": "Offline mode",
     "offlineDesc": "Some features require an internet connection",
-    "privacySecurity": "Privacy and Security"
+    "privacySecurity": "Privacy and Security",
+    "loading": "Loading profile...",
+    "about": "About",
+    "terms": "Terms & Conditions",
+    "privacy_policy": "Privacy Policy",
+    "appearance_description": "Light, dark, or system",
+    "notif_incidents": "New Incidents",
+    "notif_incidents_desc": "Alert when new incidents are reported",
+    "notif_tasks": "Task Reminders",
+    "notif_tasks_desc": "Remind about pending tasks",
+    "notif_news": "News & Announcements",
+    "notif_news_desc": "Company news and updates",
+    "save_preferences": "Save Preferences",
+    "privacy_security": "Privacy & Security",
+    "change_password": "Change Password",
+    "signOut": "Sign Out"
   },
   "dashboard": {
     "openIncidents": "Open incidents",
@@ -523,7 +538,9 @@
       "condition": "Condition Rating",
       "downtime": "Downtime Impact",
       "age": "Asset Age Factor"
-    }
+    },
+    "work_orders_empty_title": "All caught up!",
+    "work_orders_empty_description": "No open work orders assigned to you"
   },
   "incidents": {
     "title": "Incidents",
@@ -1732,5 +1749,10 @@
       "status": "Status"
     }
   },
-  "tasks.emptyHint": "Items assigned to you will appear here"
+  "tasks.emptyHint": "Items assigned to you will appear here",
+  "notifications": {
+    "title": "Notifications",
+    "empty_title": "No notifications",
+    "empty_description": "You're all caught up! Notifications about tasks, news, and incidents will appear here."
+  }
 }

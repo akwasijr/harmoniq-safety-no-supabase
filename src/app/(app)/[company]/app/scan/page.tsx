@@ -250,7 +250,7 @@ export default function ScanAssetPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+        <header className="sticky top-14 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={handleReset}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -353,7 +353,7 @@ export default function ScanAssetPage() {
   if (scanState === "not-found") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+        <header className="sticky top-14 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={handleReset}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -391,7 +391,7 @@ export default function ScanAssetPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+      <header className="sticky top-14 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>

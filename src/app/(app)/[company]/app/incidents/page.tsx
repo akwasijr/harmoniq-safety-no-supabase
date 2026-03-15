@@ -80,7 +80,7 @@ export default function EmployeeIncidentsPage() {
   return (
     <div className="flex flex-col min-h-full bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur px-4 py-3">
+      <div className="sticky top-14 z-10 border-b bg-background/95 backdrop-blur px-4 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold">{t("app.myReports")}</h1>
           <Link href={`/${company}/app/report`}>

@@ -232,7 +232,22 @@
     "appVersion": "Harmoniq Safety v1.0.0",
     "offline": "Offlineläge",
     "offlineDesc": "Vissa funktioner kräver internetanslutning",
-    "privacySecurity": "Integritet och säkerhet"
+    "privacySecurity": "Integritet och säkerhet",
+    "loading": "Laddar profil...",
+    "about": "Om",
+    "terms": "Villkor",
+    "privacy_policy": "Integritetspolicy",
+    "appearance_description": "Ljust, mörkt eller system",
+    "notif_incidents": "Nya incidenter",
+    "notif_incidents_desc": "Avisering när nya incidenter rapporteras",
+    "notif_tasks": "Uppgiftspåminnelser",
+    "notif_tasks_desc": "Påminnelse om väntande uppgifter",
+    "notif_news": "Nyheter & meddelanden",
+    "notif_news_desc": "Företagsnyheter och uppdateringar",
+    "save_preferences": "Spara inställningar",
+    "privacy_security": "Integritet & säkerhet",
+    "change_password": "Ändra lösenord",
+    "signOut": "Logga ut"
   },
   "dashboard": {
     "openIncidents": "Öppna incidenter",
@@ -523,7 +538,9 @@
       "condition": "Tillståndsbetyg",
       "downtime": "Driftstoppseffekt",
       "age": "Åldersfaktor"
-    }
+    },
+    "work_orders_empty_title": "Allt klart!",
+    "work_orders_empty_description": "Inga öppna arbetsordrar tilldelade till dig"
   },
   "incidents": {
     "title": "Incidenter",
@@ -1732,5 +1749,10 @@
       "status": "Status"
     }
   },
-  "tasks.emptyHint": "Uppgifter tilldelade dig visas här"
+  "tasks.emptyHint": "Uppgifter tilldelade dig visas här",
+  "notifications": {
+    "title": "Aviseringar",
+    "empty_title": "Inga aviseringar",
+    "empty_description": "Du är helt i kapp! Aviseringar om uppgifter, nyheter och incidenter visas här."
+  }
 }

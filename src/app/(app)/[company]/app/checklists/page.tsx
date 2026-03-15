@@ -748,7 +748,7 @@ function EmployeeChecklistsPageContent() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 pt-3 pb-4 space-y-1">
+      <div className="flex-1 px-4 pt-3 pb-20 space-y-1">
 
         {/* CHECKLISTS TAB */}
         {activeTab === "checklists" && (

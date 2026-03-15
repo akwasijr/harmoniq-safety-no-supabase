@@ -99,7 +99,7 @@ export default function EmployeeProfilePage() {
   if (!authUser) {
     return (
       <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        Loading profile...
+        {t("profile.loading") || "Loading profile..."}
       </div>
     );
   }
@@ -132,7 +132,7 @@ export default function EmployeeProfilePage() {
   const languages = SUPPORTED_LOCALES;
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full pb-20">
       {/* Hidden file input for photo upload */}
       <input
         ref={photoInputRef}
@@ -249,8 +249,8 @@ export default function EmployeeProfilePage() {
           <div className="flex items-center gap-3 px-4 py-3.5">
             <Moon className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Appearance</p>
-              <p className="text-xs text-muted-foreground">Light, dark, or system</p>
+              <p className="text-sm font-medium">{t("profile.appearance") || "Appearance"}</p>
+              <p className="text-xs text-muted-foreground">{t("profile.appearance_description") || "Light, dark, or system"}</p>
             </div>
             <ThemeToggle />
           </div>
@@ -275,8 +275,8 @@ export default function EmployeeProfilePage() {
           >
             <Shield className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">{t("profile.security")}</p>
-              <p className="text-xs text-muted-foreground">Password and account</p>
+              <p className="text-sm font-medium">{t("profile.security") || "Privacy & Security"}</p>
+              <p className="text-xs text-muted-foreground">{t("profile.securityDesc") || "Password and account"}</p>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
           </button>
@@ -286,18 +286,18 @@ export default function EmployeeProfilePage() {
       {/* About section */}
       <div className="px-4 mt-5">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
-          About
+          {t("profile.about") || "About"}
         </h3>
         <div className="rounded-xl bg-card overflow-hidden ">
           <div className="flex items-center gap-3 px-4 py-3.5">
             <FileText className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
-            <p className="text-sm flex-1">Terms & Conditions</p>
+            <p className="text-sm flex-1">{t("profile.terms") || "Terms & Conditions"}</p>
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
           </div>
           <div className="border-t border-border/50 mx-4" />
           <div className="flex items-center gap-3 px-4 py-3.5">
             <Shield className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
-            <p className="text-sm flex-1">Privacy Policy</p>
+            <p className="text-sm flex-1">{t("profile.privacy_policy") || "Privacy Policy"}</p>
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
           </div>
         </div>
@@ -322,20 +322,21 @@ export default function EmployeeProfilePage() {
       {/* Notifications Modal */}
       {showNotifications && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
+          className="fixed inset-0 z-[60] flex flex-col bg-background"
           role="dialog"
           aria-modal="true"
           aria-label={t("common.notifications")}
           onKeyDown={(e) => { if (e.key === "Escape") setShowNotifications(false); }}
         >
-          <div className="w-full sm:max-w-md rounded-t-2xl sm:rounded-lg bg-background shadow-lg">
-            <div className="flex items-center justify-between border-b p-4">
-              <h2 className="text-lg font-semibold">{t("profile.notifications")}</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowNotifications(false)} aria-label={t("common.close")}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="space-y-4 p-4 max-h-[60vh] overflow-y-auto">
+          <div className="flex items-center justify-between border-b px-4 py-3">
+            <button onClick={() => setShowNotifications(false)} className="flex items-center gap-1 text-sm text-primary font-medium">
+              <ChevronRight className="h-4 w-4 rotate-180" />
+              {t("common.back") || "Back"}
+            </button>
+            <h2 className="text-lg font-bold">{t("profile.notifications")}</h2>
+            <div className="w-12" />
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{t("profile.pushNotifications")}</p>
@@ -352,29 +353,28 @@ export default function EmployeeProfilePage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">New Incidents</p>
-                  <p className="text-sm text-muted-foreground">Alert when new incidents are reported</p>
+                  <p className="font-medium">{t("profile.notif_incidents") || "New Incidents"}</p>
+                  <p className="text-sm text-muted-foreground">{t("profile.notif_incidents_desc") || "Alert when new incidents are reported"}</p>
                 </div>
                 <Switch checked={notifPrefs.incidents} onCheckedChange={(v) => handleNotifPrefChange("incidents", v)} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Task Reminders</p>
-                  <p className="text-sm text-muted-foreground">Remind about pending tasks</p>
+                  <p className="font-medium">{t("profile.notif_tasks") || "Task Reminders"}</p>
+                  <p className="text-sm text-muted-foreground">{t("profile.notif_tasks_desc") || "Remind about pending tasks"}</p>
                 </div>
                 <Switch checked={notifPrefs.tasks} onCheckedChange={(v) => handleNotifPrefChange("tasks", v)} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">News & Announcements</p>
-                  <p className="text-sm text-muted-foreground">Company news and updates</p>
+                  <p className="font-medium">{t("profile.notif_news") || "News & Announcements"}</p>
+                  <p className="text-sm text-muted-foreground">{t("profile.notif_news_desc") || "Company news and updates"}</p>
                 </div>
                 <Switch checked={notifPrefs.news} onCheckedChange={(v) => handleNotifPrefChange("news", v)} />
               </div>
-            </div>
-            <div className="border-t p-4">
-              <Button className="w-full" onClick={() => { setShowNotifications(false); toast("Notification preferences saved"); }}>Save Preferences</Button>
-            </div>
+          </div>
+          <div className="border-t p-4">
+            <Button className="w-full" onClick={() => { setShowNotifications(false); toast(t("profile.notificationsSaved") || "Notification preferences saved"); }}>{t("profile.save_preferences") || "Save Preferences"}</Button>
           </div>
         </div>
       )}
@@ -393,7 +393,7 @@ export default function EmployeeProfilePage() {
               <ChevronRight className="h-4 w-4 rotate-180" />
               {t("common.back") || "Back"}
             </button>
-            <h2 className="text-lg font-semibold">{t("profile.language") || "Language"}</h2>
+            <h2 className="text-lg font-bold">{t("profile.language") || "Language"}</h2>
             <div className="w-12" />
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-1">
@@ -425,23 +425,24 @@ export default function EmployeeProfilePage() {
       {/* Security Modal */}
       {showSecurity && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
+          className="fixed inset-0 z-[60] flex flex-col bg-background"
           role="dialog"
           aria-modal="true"
           aria-label={t("profile.privacySecurity")}
           onKeyDown={(e) => { if (e.key === "Escape") setShowSecurity(false); }}
         >
-          <div className="w-full sm:max-w-md rounded-t-2xl sm:rounded-lg bg-background shadow-lg">
-            <div className="flex items-center justify-between border-b p-4">
-              <h2 className="text-lg font-semibold">Privacy & Security</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowSecurity(false)} aria-label={t("common.close")}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="space-y-4 p-4 max-h-[60vh] overflow-y-auto">
+          <div className="flex items-center justify-between border-b px-4 py-3">
+            <button onClick={() => setShowSecurity(false)} className="flex items-center gap-1 text-sm text-primary font-medium">
+              <ChevronRight className="h-4 w-4 rotate-180" />
+              {t("common.back") || "Back"}
+            </button>
+            <h2 className="text-lg font-bold">{t("profile.privacy_security") || "Privacy & Security"}</h2>
+            <div className="w-12" />
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Password change (coming soon) */}
               <div>
-                <p className="font-medium mb-2">Change Password</p>
+                <p className="font-medium mb-2">{t("profile.change_password") || "Change Password"}</p>
                 <div className="rounded-lg border border-dashed border-muted-foreground/25 bg-muted/50 px-4 py-6 text-center">
                   <p className="text-sm text-muted-foreground">{t("common.comingSoon")}</p>
                 </div>
@@ -449,22 +450,18 @@ export default function EmployeeProfilePage() {
               <hr />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Two-Factor Authentication</p>
-                  <p className="text-sm text-muted-foreground">Add extra security to your account</p>
+                  <p className="font-medium">{t("profile.twoFactor") || "Two-Factor Authentication"}</p>
+                  <p className="text-sm text-muted-foreground">{t("profile.twoFactorDesc") || "Add extra security to your account"}</p>
                 </div>
                 <Badge variant="outline" className="text-xs text-muted-foreground">{t("common.comingSoon")}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Active Sessions</p>
-                  <p className="text-sm text-muted-foreground">Manage logged-in devices</p>
+                  <p className="font-medium">{t("profile.activeSessions") || "Active Sessions"}</p>
+                  <p className="text-sm text-muted-foreground">{t("profile.activeSessionsDesc") || "Manage logged-in devices"}</p>
                 </div>
                 <Badge variant="outline" className="text-xs text-muted-foreground">{t("common.comingSoon")}</Badge>
               </div>
-            </div>
-            <div className="border-t p-4">
-              <Button className="w-full" onClick={() => setShowSecurity(false)}>Close</Button>
-            </div>
           </div>
         </div>
       )}

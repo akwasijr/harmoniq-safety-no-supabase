@@ -232,7 +232,7 @@ export default function NewAssetPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background border-b">
+      <header className="sticky top-14 z-10 bg-background border-b">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />

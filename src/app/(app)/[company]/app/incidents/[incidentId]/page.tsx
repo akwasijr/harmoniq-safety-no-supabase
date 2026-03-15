@@ -93,7 +93,7 @@ export default function EmployeeIncidentDetailPage() {
   return (
     <div className="flex flex-col min-h-full bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/95 backdrop-blur px-4 py-3">
+      <div className="sticky top-14 z-10 flex items-center gap-3 border-b bg-background/95 backdrop-blur px-4 py-3">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
