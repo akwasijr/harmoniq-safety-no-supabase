@@ -227,19 +227,19 @@ export default function EmployeeAppHomePage() {
   // Determine if we have enough data for the full feed view
   const hasData = pendingChecklists.length > 0 || recentNews.length > 0;
 
-  // Quick action grid items (2 per row, 6 total, Heathrow-style colored icon blocks)
+  // Quick action grid items (2 per row, 6 total, unified primary color icons)
   const quickActions = [
-    { href: `/${company}/app/report`, labelKey: "app.reportIncident", label: "Report Incident", icon: AlertTriangle, bgColor: "bg-red-100 dark:bg-red-950", iconColor: "text-red-600" },
-    { href: `/${company}/app/tasks`, labelKey: "app.myTasks", label: "My Tasks", icon: ClipboardCheck, bgColor: "bg-blue-100 dark:bg-blue-950", iconColor: "text-blue-600" },
-    { href: `/${company}/app/assets`, labelKey: "app.browseAssets", label: "Browse Assets", icon: Search, bgColor: "bg-emerald-100 dark:bg-emerald-950", iconColor: "text-emerald-600" },
-    { href: `/${company}/app/report`, labelKey: "app.requestFix", label: "Request Fix", icon: Wrench, bgColor: "bg-amber-100 dark:bg-amber-950", iconColor: "text-amber-600" },
-    { href: `/${company}/app/assets`, labelKey: "app.scanAsset", label: "Scan Asset", icon: ScanLine, bgColor: "bg-violet-100 dark:bg-violet-950", iconColor: "text-violet-600" },
-    { href: `/${company}/app/report`, labelKey: "app.riskAssessment", label: "Risk Check", icon: ShieldCheck, bgColor: "bg-cyan-100 dark:bg-cyan-950", iconColor: "text-cyan-600" },
+    { href: `/${company}/app/report`, labelKey: "app.reportIncident", label: "Report Incident", icon: AlertTriangle },
+    { href: `/${company}/app/tasks`, labelKey: "app.myTasks", label: "My Tasks", icon: ClipboardCheck },
+    { href: `/${company}/app/assets`, labelKey: "app.browseAssets", label: "Browse Assets", icon: Search },
+    { href: `/${company}/app/report`, labelKey: "app.requestFix", label: "Request Fix", icon: Wrench },
+    { href: `/${company}/app/assets`, labelKey: "app.scanAsset", label: "Scan Asset", icon: ScanLine },
+    { href: `/${company}/app/report`, labelKey: "app.riskAssessment", label: "Risk Check", icon: ShieldCheck },
   ];
 
   // ── Shared hero section ──
   const HeroSection = () => (
-    <div className="bg-gradient-to-br from-[#2D1B69] to-[#1a1145] px-5 pt-6 pb-8">
+    <div className="bg-primary px-5 pt-6 pb-8">
       <p className="text-white/60 text-sm">{greeting}</p>
       <h1 className="text-2xl font-bold text-white mt-1">
         {user?.first_name || t("app.welcome")}
@@ -267,12 +267,12 @@ export default function EmployeeAppHomePage() {
   // ── Tip of the Day card ──
   const TipCard = () => (
     <div className="mx-4 -mt-4 relative z-10">
-      <div className="rounded-xl bg-card shadow-sm border border-border/50 px-4 py-3 flex items-start gap-3">
-        <div className="h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-950 flex items-center justify-center shrink-0 mt-0.5">
-          <Lightbulb className="h-4 w-4 text-amber-600" />
+      <div className="rounded-xl bg-card border border-border/50 px-4 py-3 flex items-start gap-3">
+        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+          <Lightbulb className="h-4 w-4 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold text-amber-600 tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
+          <p className="text-[10px] font-bold text-primary tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{todayTip.tip}</p>
         </div>
       </div>
@@ -288,9 +288,9 @@ export default function EmployeeAppHomePage() {
       <div className="grid grid-cols-2 gap-3">
         {quickActions.map((action) => (
           <Link key={action.href + action.labelKey} href={action.href}
-            className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm border border-border/50 active:scale-[0.98] transition-transform">
-            <div className={`h-12 w-12 rounded-xl ${action.bgColor} flex items-center justify-center shrink-0`}>
-              <action.icon className={`h-6 w-6 ${action.iconColor}`} />
+            className="flex items-center gap-3 rounded-xl bg-card p-4 border border-border/50 active:scale-[0.98] transition-transform">
+            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <action.icon className="h-6 w-6 text-primary" />
             </div>
             <span className="text-sm font-medium">{t(action.labelKey) || action.label}</span>
           </Link>
@@ -315,7 +315,7 @@ export default function EmployeeAppHomePage() {
       <div className="px-4 pt-5 pb-4 space-y-1">
 
         {/* News & Updates */}
-        <div className="rounded-xl bg-card shadow-sm border border-border/50 px-4 py-2">
+        <div className="rounded-xl bg-card border border-border/50 px-4 py-2">
         <Section
           title={t("app.newsAndUpdates")}
           icon={Newspaper}

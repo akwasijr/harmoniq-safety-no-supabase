@@ -13,21 +13,21 @@
   --popover: 0 0% 100%;
   --popover-foreground: 240 10% 3.9%;
 
-  /* Primary - #024E6E - dark teal for main actions */
-  --primary: 197 96% 22%;
+  /* Primary - #2D1B69 - deep purple for main actions */
+  --primary: 260 59% 26%;
   --primary-foreground: 0 0% 98%;
 
-  /* Secondary - #029EDB - bright blue for accents */
-  --secondary: 199 98% 43%;
+  /* Secondary - lighter purple for accents */
+  --secondary: 260 50% 45%;
   --secondary-foreground: 0 0% 98%;
 
   /* Muted - for disabled states and placeholders */
   --muted: 240 4.8% 95.9%;
   --muted-foreground: 240 3.8% 46.1%;
 
-  /* Accent - matches secondary for consistency */
-  --accent: 199 98% 93%;
-  --accent-foreground: 197 96% 22%;
+  /* Accent - light purple tint */
+  --accent: 260 50% 93%;
+  --accent-foreground: 260 59% 26%;
 
   /* Semantic colors */
   --destructive: 0 84.2% 60.2%;
@@ -36,13 +36,13 @@
   --success-foreground: 0 0% 98%;
   --warning: 38 92% 50%;
   --warning-foreground: 0 0% 98%;
-  --info: 199 98% 43%;
+  --info: 260 50% 45%;
   --info-foreground: 0 0% 98%;
 
   /* Borders - subtle, not accent colored */
   --border: 240 5.9% 90%;
   --input: 240 5.9% 90%;
-  --ring: 197 96% 22%;
+  --ring: 260 59% 26%;
 
   /* Radius tokens */
   --radius: 0.5rem;
@@ -54,14 +54,14 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
   /* Sidebar - dashboard specific */
-  --sidebar-background: 197 96% 12%;
+  --sidebar-background: 260 59% 16%;
   --sidebar-foreground: 0 0% 98%;
-  --sidebar-primary: 199 98% 43%;
+  --sidebar-primary: 260 50% 55%;
   --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 197 96% 18%;
+  --sidebar-accent: 260 50% 22%;
   --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-border: 197 96% 25%;
-  --sidebar-ring: 199 98% 43%;
+  --sidebar-border: 260 40% 30%;
+  --sidebar-ring: 260 50% 55%;
 
   /* Chart colors */
   --chart-1: 12 76% 61%;
@@ -93,18 +93,18 @@
   --popover: 240 10% 3.9%;
   --popover-foreground: 0 0% 98%;
 
-  /* Primary - lighter version of #024E6E for dark mode */
-  --primary: 199 98% 50%;
-  --primary-foreground: 197 96% 10%;
+  /* Primary - lighter purple for dark mode */
+  --primary: 260 60% 55%;
+  --primary-foreground: 260 59% 10%;
 
-  /* Secondary - #029EDB stays similar */
-  --secondary: 197 96% 22%;
+  /* Secondary */
+  --secondary: 260 40% 22%;
   --secondary-foreground: 0 0% 98%;
 
   --muted: 240 3.7% 15.9%;
   --muted-foreground: 240 5% 64.9%;
 
-  --accent: 197 96% 18%;
+  --accent: 260 40% 18%;
   --accent-foreground: 0 0% 98%;
 
   --destructive: 0 62.8% 50.6%;
@@ -113,16 +113,16 @@
   --success-foreground: 0 0% 98%;
   --warning: 38 92% 50%;
   --warning-foreground: 0 0% 3.9%;
-  --info: 199 98% 55%;
+  --info: 260 60% 55%;
   --info-foreground: 0 0% 3.9%;
 
   --border: 240 3.7% 20%;
   --input: 240 3.7% 20%;
-  --ring: 199 98% 50%;
+  --ring: 260 60% 55%;
 
   --sidebar-background: 240 5.9% 10%;
   --sidebar-foreground: 240 4.8% 95.9%;
-  --sidebar-primary: 0 0% 98%;
+  --sidebar-primary: 260 60% 65%;
   --sidebar-primary-foreground: 240 5.9% 10%;
   --sidebar-accent: 240 3.7% 15.9%;
   --sidebar-accent-foreground: 240 4.8% 95.9%;

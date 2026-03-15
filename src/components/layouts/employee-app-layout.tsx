@@ -28,7 +28,7 @@ export function EmployeeAppLayout({
     <div className="flex min-h-screen flex-col bg-[#f0eff5]">
       {/* Header */}
       {showHeader && (
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-[#2D1B69] px-4">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-primary px-4">
           <Link href={`/${company}/app`} className="flex items-center gap-2">
             {companyLogo ? (
               <img

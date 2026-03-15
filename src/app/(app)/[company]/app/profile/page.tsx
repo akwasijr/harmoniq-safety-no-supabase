@@ -143,7 +143,7 @@ export default function EmployeeProfilePage() {
       />
 
       {/* Profile header - deep purple continuation */}
-      <div className="bg-[#2D1B69] px-5 pt-4 pb-8 text-center">
+      <div className="bg-primary px-5 pt-4 pb-8 text-center">
         <div className="relative inline-block">
           {currentUser.avatar_url ? (
             <img
@@ -159,10 +159,10 @@ export default function EmployeeProfilePage() {
           )}
           <button
             onClick={() => photoInputRef.current?.click()}
-            className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm hover:bg-gray-100 transition-colors"
+            className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-white  hover:bg-gray-100 transition-colors"
             aria-label={t("common.changeProfilePhoto")}
           >
-            <Camera className="h-3.5 w-3.5 text-[#2D1B69]" />
+            <Camera className="h-3.5 w-3.5 text-primary" />
           </button>
         </div>
         <h1 className="mt-3 text-lg font-bold text-white">
@@ -176,9 +176,9 @@ export default function EmployeeProfilePage() {
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
           {t("profile.contactInfo") || "Contact Info"}
         </h3>
-        <div className="rounded-xl bg-card overflow-hidden shadow-sm">
+        <div className="rounded-xl bg-card overflow-hidden ">
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <Mail className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <Mail className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground">Email</p>
               <p className="text-sm font-medium truncate">{user.email}</p>
@@ -186,7 +186,7 @@ export default function EmployeeProfilePage() {
           </div>
           <div className="border-t border-border/50 mx-4" />
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <Phone className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <Phone className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground">Phone</p>
               <p className="text-sm font-medium">{user.phone}</p>
@@ -194,7 +194,7 @@ export default function EmployeeProfilePage() {
           </div>
           <div className="border-t border-border/50 mx-4" />
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <MapPin className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <MapPin className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground">Location</p>
               <p className="text-sm font-medium">{user.location}</p>
@@ -204,7 +204,7 @@ export default function EmployeeProfilePage() {
             <>
               <div className="border-t border-border/50 mx-4" />
               <div className="flex items-center gap-3 px-4 py-3.5">
-                <Briefcase className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+                <Briefcase className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">Department</p>
                   <p className="text-sm font-medium">{user.department}</p>
@@ -216,7 +216,7 @@ export default function EmployeeProfilePage() {
             <>
               <div className="border-t border-border/50 mx-4" />
               <div className="flex items-center gap-3 px-4 py-3.5">
-                <Users className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+                <Users className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">Teams</p>
                   <p className="text-sm font-medium">{user.teams.join(", ")}</p>
@@ -232,12 +232,12 @@ export default function EmployeeProfilePage() {
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
           {t("profile.settings") || "Settings"}
         </h3>
-        <div className="rounded-xl bg-card overflow-hidden shadow-sm">
+        <div className="rounded-xl bg-card overflow-hidden ">
           <button
             className="flex items-center gap-3 px-4 py-3.5 w-full text-left transition-colors hover:bg-muted/50"
             onClick={() => setShowNotifications(true)}
           >
-            <Bell className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <Bell className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">{t("profile.notifications")}</p>
               <p className="text-xs text-muted-foreground">{t("profile.notificationsDesc")}</p>
@@ -247,7 +247,7 @@ export default function EmployeeProfilePage() {
 
           <div className="border-t border-border/50 mx-4" />
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <Moon className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <Moon className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">Appearance</p>
               <p className="text-xs text-muted-foreground">Light, dark, or system</p>
@@ -260,7 +260,7 @@ export default function EmployeeProfilePage() {
             className="flex items-center gap-3 px-4 py-3.5 w-full text-left transition-colors hover:bg-muted/50"
             onClick={() => setShowLanguage(true)}
           >
-            <Globe className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <Globe className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">{t("profile.language")}</p>
               <p className="text-xs text-muted-foreground">{localeConfig.flag} {localeConfig.name}</p>
@@ -273,7 +273,7 @@ export default function EmployeeProfilePage() {
             className="flex items-center gap-3 px-4 py-3.5 w-full text-left transition-colors hover:bg-muted/50"
             onClick={() => setShowSecurity(true)}
           >
-            <Shield className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <Shield className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">{t("profile.security")}</p>
               <p className="text-xs text-muted-foreground">Password and account</p>
@@ -288,15 +288,15 @@ export default function EmployeeProfilePage() {
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
           About
         </h3>
-        <div className="rounded-xl bg-card overflow-hidden shadow-sm">
+        <div className="rounded-xl bg-card overflow-hidden ">
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <FileText className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <FileText className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <p className="text-sm flex-1">Terms & Conditions</p>
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
           </div>
           <div className="border-t border-border/50 mx-4" />
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <Shield className="h-5 w-5 text-[#2D1B69] shrink-0" aria-hidden="true" />
+            <Shield className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <p className="text-sm flex-1">Privacy Policy</p>
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
           </div>
@@ -307,7 +307,7 @@ export default function EmployeeProfilePage() {
       <div className="px-4 mt-5 mb-4">
         <button
           onClick={logout}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-card shadow-sm py-3.5 text-red-600 font-medium text-sm transition-colors hover:bg-red-50"
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-card  py-3.5 text-red-600 font-medium text-sm transition-colors hover:bg-red-50"
         >
           <LogOut className="h-4 w-4" aria-hidden="true" />
           {t("profile.signOut") || "Sign Out"}
