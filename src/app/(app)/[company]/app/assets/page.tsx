@@ -33,7 +33,7 @@ const STATUS_CONFIG: Record<string, { color: string; icon: React.ComponentType<{
   retired: { color: "text-destructive", icon: AlertTriangle },
 };
 
-type SubTab = "find" | "browse" | "rounds" | "work";
+type SubTab = "browse" | "rounds" | "work";
 
 export default function EmployeeAssetsPage() {
   const company = useCompanyParam();
@@ -44,7 +44,7 @@ export default function EmployeeAssetsPage() {
   const { items: inspectionRoutes } = useInspectionRoutesStore();
   const { t, formatDate } = useTranslation();
 
-  const [activeTab, setActiveTab] = React.useState<SubTab>("find");
+  const [activeTab, setActiveTab] = React.useState<SubTab>("browse");
   const [search, setSearch] = React.useState("");
   const [browseSearch, setBrowseSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
@@ -91,7 +91,6 @@ export default function EmployeeAssetsPage() {
   const activeRoutes = inspectionRoutes.filter(r => r.status === "active");
 
   const tabs = [
-    { id: "find" as SubTab, label: t("common.search"), icon: Search },
     { id: "browse" as SubTab, label: t("assets.tabs.assets"), icon: List },
     { id: "rounds" as SubTab, label: t("inspectionRounds.title"), icon: ClipboardCheck, count: activeRoutes.length },
     { id: "work" as SubTab, label: t("workOrders.title"), icon: Wrench, count: myOpenWorkOrders.length },
@@ -100,13 +99,11 @@ export default function EmployeeAssetsPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background border-b px-4 pt-4 pb-2">
+      <div className="sticky top-0 z-10 bg-[#f0eff5] px-4 pt-4 pb-2">
         <h1 className="text-lg font-bold mb-3">{t("nav.assets")}</h1>
 
-        {/* Sub-tabs, pill style matching Safety Tasks */}
-        <div className="flex gap-1 bg-muted rounded-lg p-1" role="tablist">
+        <div className="flex gap-2 overflow-x-auto" role="tablist">
           {tabs.map(tab => {
-            const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
@@ -115,114 +112,23 @@ export default function EmployeeAssetsPage() {
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all",
+                  "px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors",
                   isActive
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground border border-border/50"
                 )}
               >
-                <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span className="truncate">{tab.label}</span>
+                {tab.label}
                 {tab.count ? (
-                  <span className="ml-1 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">{tab.count}</span>
+                  <span className={cn("ml-1.5 text-xs", isActive ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                    {tab.count}
+                  </span>
                 ) : null}
               </button>
             );
           })}
         </div>
       </div>
-
-      {/* ====== FIND TAB ====== */}
-      {activeTab === "find" && (
-        <div className="px-4 pt-4 space-y-4">
-          {/* Search box with prominent icon */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder={t("assets.placeholders.searchByNameSerialTag")}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              autoFocus
-              className="w-full rounded-xl border-2 bg-muted/30 py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-            />
-          </div>
-
-          {/* Quick actions */}
-          <div className="grid grid-cols-2 gap-3">
-            <Link href={`/${company}/app/scan`}>
-              <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-                <CardContent className="p-4 flex flex-col items-center gap-2 text-center">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <QrCode className="h-5 w-5 text-primary" />
-                  </div>
-                  <span className="text-sm font-medium">{t("app.scanAsset")}</span>
-                  <span className="text-xs text-muted-foreground">Scan QR to find asset</span>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href={`/${company}/app/assets/new`}>
-              <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-                <CardContent className="p-4 flex flex-col items-center gap-2 text-center">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                    <Plus className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <span className="text-sm font-medium">{t("newAsset.registerShort")}</span>
-                  <span className="text-xs text-muted-foreground">Register new asset</span>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-
-          {/* Search results */}
-          {search.trim() && (
-            <div>
-              <p className="text-xs text-muted-foreground mb-2">
-                {searchResults.length === 0
-                  ? t("assets.noAssetsFound")
-                  : `${searchResults.length} result${searchResults.length !== 1 ? "s" : ""}`}
-              </p>
-              <div className="space-y-2">
-                {searchResults.map(asset => {
-                  const location = asset.location_id ? locations.find(l => l.id === asset.location_id) : null;
-                  return (
-                    <Link key={asset.id} href={`/${company}/app/asset?id=${asset.id}`} className="block">
-                      <Card className="hover:bg-muted/50 transition-colors">
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-                                <Package className="h-4 w-4 text-muted-foreground" />
-                              </div>
-                              <div className="min-w-0">
-                                <h3 className="font-medium text-sm truncate">{asset.name}</h3>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {asset.asset_tag || asset.serial_number}
-                                  {location ? ` · ${location.name}` : ""}
-                                </p>
-                              </div>
-                            </div>
-                            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Prompt when empty */}
-          {!search.trim() && (
-            <div className="text-center py-8">
-              <Search className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-              <p className="text-sm text-muted-foreground">Search by name, serial number, or asset tag</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Or scan a QR code to quickly find an asset</p>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ====== BROWSE TAB ====== */}
       {activeTab === "browse" && (
