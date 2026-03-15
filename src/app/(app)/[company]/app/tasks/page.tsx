@@ -542,8 +542,9 @@ export default function TasksPage() {
 
       {/* Tabs */}
       <div className="sticky top-14 z-20 bg-[#f0eff5] px-4 py-2">
-        <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label={t("tasks.title") || "Task categories"}>
+        <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist" aria-label={t("tasks.title") || "Task categories"}>
           {TABS.map((tab) => {
+            const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             const count = tabCounts[tab.id];
             return (
@@ -554,18 +555,16 @@ export default function TasksPage() {
                 aria-controls={`tabpanel-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors",
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-md transition-all whitespace-nowrap",
                   isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-muted-foreground border border-border/50",
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground",
                 )}
               >
-                {t(tab.labelKey) || tab.label}
+                <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">{t(tab.labelKey) || tab.label}</span>
                 {count > 0 && (
-                  <span className={cn(
-                    "ml-1.5 text-xs",
-                    isActive ? "text-primary-foreground/70" : "text-muted-foreground"
-                  )}>
+                  <span className="ml-0.5 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">
                     {count}
                   </span>
                 )}
