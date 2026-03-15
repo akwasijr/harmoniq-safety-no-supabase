@@ -436,7 +436,7 @@ export default function AssetsPage() {
       purchase_cost: newAsset.purchase_cost ? parseFloat(newAsset.purchase_cost) : null,
       current_value: null,
       depreciation_rate: null,
-      currency: newAsset.currency || "USD",
+      currency: (newAsset.currency as Asset["currency"]) || "USD",
       maintenance_frequency_days: newAsset.maintenance_frequency_days ? parseInt(newAsset.maintenance_frequency_days) : null,
       last_maintenance_date: null,
       next_maintenance_date: null,
@@ -911,163 +911,443 @@ export default function AssetsPage() {
         </>
       )}
 
-      {/* Add Asset Modal */}
+      {/* Add Asset Modal - Multi-step Wizard */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setShowAddModal(false)} />
-          <div className="relative z-50 w-full max-w-lg rounded-xl bg-background p-6 shadow-xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Add New Asset</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowAddModal(false)}>
+          <div className="fixed inset-0 bg-black/50" onClick={() => { setShowAddModal(false); setWizardStep(0); }} />
+          <div className="relative z-50 w-full max-w-2xl rounded-xl bg-background p-6 shadow-xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-semibold">{t("assets.buttons.newAsset")}</h2>
+              <Button variant="ghost" size="icon" onClick={() => { setShowAddModal(false); setWizardStep(0); }}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
+            <p className="text-sm text-muted-foreground mb-5">
+              {t("assets.wizard.step", { current: String(wizardStep + 1), total: String(wizardSteps.length) })} — {t(wizardSteps[wizardStep].descKey)}
+            </p>
 
-            <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+            {/* Progress indicator */}
+            <div className="flex items-center gap-2 mb-6">
+              {wizardSteps.map((step, i) => {
+                const StepIcon = step.icon;
+                return (
+                  <React.Fragment key={step.id}>
+                    <button
+                      type="button"
+                      onClick={() => { if (i < wizardStep) setWizardStep(i); }}
+                      className={cn(
+                        "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors",
+                        i < wizardStep
+                          ? "bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90"
+                          : i === wizardStep
+                          ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
+                          : "bg-muted text-muted-foreground cursor-default"
+                      )}
+                      aria-label={t(step.titleKey)}
+                      title={t(step.titleKey)}
+                    >
+                      {i < wizardStep ? <Check className="h-4 w-4" /> : <StepIcon className="h-4 w-4" />}
+                    </button>
+                    {i < wizardSteps.length - 1 && (
+                      <div className={cn("h-0.5 flex-1 rounded-full transition-colors", i < wizardStep ? "bg-primary" : "bg-muted")} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+
+            {/* Step 1: Basic Info */}
+            {wizardStep === 0 && (
+              <div className="space-y-4">
                 <div>
-              <Label htmlFor="name">{t("assets.labels.name")} *</Label>
+                  <Label htmlFor="name">{t("assets.labels.name")} *</Label>
                   <Input
                     id="name"
                     value={newAsset.name}
                     onChange={(e) => setNewAsset({ ...newAsset, name: e.target.value })}
                     placeholder={t("assets.placeholders.assetName")}
                     className="mt-1"
+                    autoFocus
                   />
                 </div>
                 <div>
-              <Label htmlFor="serial">{t("assets.labels.serialNumber")}</Label>
-                  <Input
-                    id="serial"
-                    value={newAsset.serial_number}
-                    onChange={(e) => setNewAsset({ ...newAsset, serial_number: e.target.value })}
-                    placeholder={t("assets.placeholders.serialNumber")}
-                    className="mt-1"
-                  />
+                  <Label htmlFor="category">{t("assets.labels.category")} *</Label>
+                  <select
+                    id="category"
+                    title="Select category"
+                    aria-label="Select category"
+                    value={newAsset.category}
+                    onChange={(e) => setNewAsset({ ...newAsset, category: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    {categoryOptions.map((cat) => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="category">{t("assets.labels.category")} *</Label>
-                <select
-                  id="category"
-                  title="Select category"
-                  aria-label="Select category"
-                  value={newAsset.category}
-                  onChange={(e) => setNewAsset({ ...newAsset, category: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  {categoryOptions.map((cat) => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <Label htmlFor="asset_type">{t("assets.labels.assetType")}</Label>
-                <select
-                  id="asset_type"
-                  title="Select asset type"
-                  aria-label="Select asset type"
-                  value={newAsset.asset_type}
-                  onChange={(e) => setNewAsset({ ...newAsset, asset_type: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="static">Static</option>
-                  <option value="movable">Movable</option>
-                </select>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="manufacturer">{t("assets.labels.manufacturer")}</Label>
-                  <Input
-                    id="manufacturer"
-                    value={newAsset.manufacturer}
-                    onChange={(e) => setNewAsset({ ...newAsset, manufacturer: e.target.value })}
-                    placeholder={t("assets.placeholders.manufacturer")}
-                    className="mt-1"
-                  />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="asset_type">{t("assets.labels.assetType")}</Label>
+                    <select
+                      id="asset_type"
+                      title="Select asset type"
+                      aria-label="Select asset type"
+                      value={newAsset.asset_type}
+                      onChange={(e) => setNewAsset({ ...newAsset, asset_type: e.target.value })}
+                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="static">Static</option>
+                      <option value="movable">Movable</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="serial">{t("assets.labels.serialNumber")}</Label>
+                    <Input
+                      id="serial"
+                      value={newAsset.serial_number}
+                      onChange={(e) => setNewAsset({ ...newAsset, serial_number: e.target.value })}
+                      placeholder={t("assets.placeholders.serialNumber")}
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="model">{t("assets.labels.model")}</Label>
+                  <Label htmlFor="criticality">Criticality</Label>
+                  <select
+                    id="criticality"
+                    title="Select criticality"
+                    aria-label="Select criticality"
+                    value={newAsset.criticality}
+                    onChange={(e) => setNewAsset({ ...newAsset, criticality: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Technical Details */}
+            {wizardStep === 1 && (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="manufacturer">{t("assets.labels.manufacturer")}</Label>
+                    <Input
+                      id="manufacturer"
+                      value={newAsset.manufacturer}
+                      onChange={(e) => setNewAsset({ ...newAsset, manufacturer: e.target.value })}
+                      placeholder={t("assets.placeholders.manufacturer")}
+                      className="mt-1"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="model">{t("assets.labels.model")}</Label>
+                    <Input
+                      id="model"
+                      value={newAsset.model}
+                      onChange={(e) => setNewAsset({ ...newAsset, model: e.target.value })}
+                      placeholder={t("assets.placeholders.model")}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="model_number">Model Number</Label>
                   <Input
-                    id="model"
-                    value={newAsset.model}
-                    onChange={(e) => setNewAsset({ ...newAsset, model: e.target.value })}
-                    placeholder={t("assets.placeholders.model")}
+                    id="model_number"
+                    value={newAsset.model_number}
+                    onChange={(e) => setNewAsset({ ...newAsset, model_number: e.target.value })}
+                    placeholder="e.g., MN-2024-A"
                     className="mt-1"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="specifications">Specifications</Label>
+                  <textarea
+                    id="specifications"
+                    value={newAsset.specifications}
+                    onChange={(e) => setNewAsset({ ...newAsset, specifications: e.target.value })}
+                    placeholder="Technical specifications, dimensions, capacity..."
+                    rows={3}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="condition">Condition</Label>
+                  <select
+                    id="condition"
+                    title="Select condition"
+                    aria-label="Select condition"
+                    value={newAsset.condition}
+                    onChange={(e) => setNewAsset({ ...newAsset, condition: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="new">New</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
               </div>
+            )}
 
-              <div>
-                <Label htmlFor="location">{t("assets.labels.location")}</Label>
-                <select
-                  id="location"
-                  title="Select location"
-                  aria-label="Select location"
-                  value={newAsset.location_id}
-                  onChange={(e) => setNewAsset({ ...newAsset, location_id: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            {/* Step 3: Location & Assignment */}
+            {wizardStep === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="location">{t("assets.labels.location")}</Label>
+                  <select
+                    id="location"
+                    title="Select location"
+                    aria-label="Select location"
+                    value={newAsset.location_id}
+                    onChange={(e) => setNewAsset({ ...newAsset, location_id: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">No location assigned</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>{loc.name} ({loc.type})</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Optionally assign this asset to a specific location
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="department">{t("assets.labels.department")}</Label>
+                  <Input
+                    id="department"
+                    list="asset-departments"
+                    value={newAsset.department}
+                    onChange={(e) => setNewAsset({ ...newAsset, department: e.target.value })}
+                    placeholder={t("assets.placeholders.department")}
+                    className="mt-1"
+                  />
+                  <datalist id="asset-departments">
+                    {departmentOptions.map((dept) => (
+                      <option key={dept} value={dept} />
+                    ))}
+                  </datalist>
+                </div>
+                <div>
+                  <Label htmlFor="parent_asset">Parent Asset</Label>
+                  <select
+                    id="parent_asset"
+                    title="Select parent asset"
+                    aria-label="Select parent asset"
+                    value={newAsset.parent_asset_id}
+                    onChange={(e) => setNewAsset({ ...newAsset, parent_asset_id: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">None (top-level asset)</option>
+                    {assets.filter(a => a.status !== "retired").map((a) => (
+                      <option key={a.id} value={a.id}>{a.name} ({a.asset_tag})</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Link this asset as a component of another asset
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Lifecycle & Financial */}
+            {wizardStep === 3 && (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="purchase_date">{t("assets.labels.purchaseDate")}</Label>
+                    <Input
+                      id="purchase_date"
+                      type="date"
+                      value={newAsset.purchase_date}
+                      onChange={(e) => setNewAsset({ ...newAsset, purchase_date: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="installation_date">Installation Date</Label>
+                    <Input
+                      id="installation_date"
+                      type="date"
+                      value={newAsset.installation_date}
+                      onChange={(e) => setNewAsset({ ...newAsset, installation_date: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="purchase_cost">Purchase Cost</Label>
+                    <Input
+                      id="purchase_cost"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newAsset.purchase_cost}
+                      onChange={(e) => setNewAsset({ ...newAsset, purchase_cost: e.target.value })}
+                      placeholder="0.00"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="currency">Currency</Label>
+                    <select
+                      id="currency"
+                      title="Select currency"
+                      aria-label="Select currency"
+                      value={newAsset.currency}
+                      onChange={(e) => setNewAsset({ ...newAsset, currency: e.target.value })}
+                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="SEK">SEK</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="warranty_expiry">{t("assets.labels.warrantyExpiry")}</Label>
+                    <Input
+                      id="warranty_expiry"
+                      type="date"
+                      value={newAsset.warranty_expiry}
+                      onChange={(e) => setNewAsset({ ...newAsset, warranty_expiry: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="expected_life_years">Expected Life (years)</Label>
+                    <Input
+                      id="expected_life_years"
+                      type="number"
+                      min="0"
+                      value={newAsset.expected_life_years}
+                      onChange={(e) => setNewAsset({ ...newAsset, expected_life_years: e.target.value })}
+                      placeholder="e.g., 10"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Compliance */}
+            {wizardStep === 4 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="text-sm font-medium">Requires Certification</p>
+                    <p className="text-xs text-muted-foreground">Asset needs active certification to operate</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={newAsset.requires_certification}
+                    onClick={() => setNewAsset({ ...newAsset, requires_certification: !newAsset.requires_certification })}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
+                      newAsset.requires_certification ? "bg-primary" : "bg-muted"
+                    )}
+                  >
+                    <span className={cn(
+                      "pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg transition-transform",
+                      newAsset.requires_certification ? "translate-x-5" : "translate-x-0"
+                    )} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="text-sm font-medium">Requires Calibration</p>
+                    <p className="text-xs text-muted-foreground">Asset needs periodic calibration</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={newAsset.requires_calibration}
+                    onClick={() => setNewAsset({ ...newAsset, requires_calibration: !newAsset.requires_calibration })}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
+                      newAsset.requires_calibration ? "bg-primary" : "bg-muted"
+                    )}
+                  >
+                    <span className={cn(
+                      "pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg transition-transform",
+                      newAsset.requires_calibration ? "translate-x-5" : "translate-x-0"
+                    )} />
+                  </button>
+                </div>
+                {newAsset.requires_calibration && (
+                  <div>
+                    <Label htmlFor="calibration_frequency">Calibration Frequency (days)</Label>
+                    <Input
+                      id="calibration_frequency"
+                      type="number"
+                      min="1"
+                      value={newAsset.calibration_frequency_days}
+                      onChange={(e) => setNewAsset({ ...newAsset, calibration_frequency_days: e.target.value })}
+                      placeholder="e.g., 365"
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+                <div>
+                  <Label htmlFor="maintenance_frequency">Maintenance Frequency (days)</Label>
+                  <Input
+                    id="maintenance_frequency"
+                    type="number"
+                    min="1"
+                    value={newAsset.maintenance_frequency_days}
+                    onChange={(e) => setNewAsset({ ...newAsset, maintenance_frequency_days: e.target.value })}
+                    placeholder="e.g., 90"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="safety_instructions">{t("assets.safetyInstructions")}</Label>
+                  <textarea
+                    id="safety_instructions"
+                    value={newAsset.safety_instructions}
+                    onChange={(e) => setNewAsset({ ...newAsset, safety_instructions: e.target.value })}
+                    placeholder="Required PPE, hazard warnings, operating procedures..."
+                    rows={3}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Navigation buttons */}
+            <div className="flex gap-3 mt-6 pt-4 border-t">
+              {wizardStep === 0 ? (
+                <Button variant="outline" className="flex-1" onClick={() => { setShowAddModal(false); setWizardStep(0); }}>
+                  {t("common.cancel")}
+                </Button>
+              ) : (
+                <Button variant="outline" className="flex-1" onClick={() => setWizardStep(wizardStep - 1)}>
+                  {t("assets.wizard.back")}
+                </Button>
+              )}
+              {wizardStep < wizardSteps.length - 1 ? (
+                <Button
+                  className="flex-1"
+                  onClick={() => setWizardStep(wizardStep + 1)}
+                  disabled={wizardStep === 0 && (!newAsset.name.trim() || !newAsset.category)}
                 >
-                  <option value="">No location assigned</option>
-                  {locations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>{loc.name} ({loc.type})</option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Optionally assign this asset to a specific location
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="department">{t("assets.labels.department")}</Label>
-                <Input
-                  id="department"
-                  list="asset-departments"
-                  value={newAsset.department}
-                  onChange={(e) => setNewAsset({ ...newAsset, department: e.target.value })}
-                  placeholder={t("assets.placeholders.department")}
-                  className="mt-1"
-                />
-                <datalist id="asset-departments">
-                  {departmentOptions.map((dept) => (
-                    <option key={dept} value={dept} />
-                  ))}
-                </datalist>
-              </div>
-
-              <div>
-                <Label htmlFor="purchase_date">{t("assets.labels.purchaseDate")}</Label>
-                <Input
-                  id="purchase_date"
-                  type="date"
-                  value={newAsset.purchase_date}
-                  onChange={(e) => setNewAsset({ ...newAsset, purchase_date: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="warranty_expiry">{t("assets.labels.warrantyExpiry")}</Label>
-                <Input
-                  id="warranty_expiry"
-                  type="date"
-                  value={newAsset.warranty_expiry}
-                  onChange={(e) => setNewAsset({ ...newAsset, warranty_expiry: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
-                {t("common.cancel")}
-              </Button>
-              <Button className="flex-1" onClick={handleAddAsset} disabled={!newAsset.name}>
-                {t("assets.buttons.newAsset")}
-              </Button>
+                  {t("assets.wizard.next")}
+                </Button>
+              ) : (
+                <Button className="flex-1" onClick={handleAddAsset} disabled={!newAsset.name.trim()}>
+                  {t("assets.wizard.create")}
+                </Button>
+              )}
             </div>
           </div>
         </div>

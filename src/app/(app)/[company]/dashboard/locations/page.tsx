@@ -25,6 +25,7 @@ import {
   Shield,
   Map,
   TreePine,
+  Check,
   type LucideIcon,
 } from "lucide-react";
 
@@ -430,6 +431,7 @@ function LocationsPageContent() {
           gps_lat: null,
           gps_lng: null,
         });
+        setLocWizardStep(0);
         setShowAddModal(true);
       }
     }
@@ -603,7 +605,7 @@ function LocationsPageContent() {
                       variant="outline" 
                       size="sm" 
                       className="mt-3"
-                      onClick={() => { setAddChildParentId(null); setShowAddModal(true); }}
+                      onClick={() => { setAddChildParentId(null); setLocWizardStep(0); setShowAddModal(true); }}
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       {t("locations.addFirstLocation")}
@@ -617,6 +619,7 @@ function LocationsPageContent() {
                       onClick={() => { 
                         setAddChildParentId(null); 
                         setNewLocation({ name: "", type: "site", address: "", parent_id: "", floorCount: 1, zoneCount: 0, roomCount: 0, gps_lat: null, gps_lng: null });
+                        setLocWizardStep(0);
                         setShowAddModal(true); 
                       }}
                       className="flex items-center gap-2 py-1.5 px-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md w-full mt-2 border border-dashed"
@@ -903,11 +906,30 @@ function LocationsPageContent() {
         </div>
       )}
 
-      {/* Add Location Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowAddModal(false); setAddChildParentId(null); }}>
+      {/* Add Location Modal - 3-step Wizard */}
+      {showAddModal && (() => {
+        const locWizardStepLabels = [
+          { id: "type", label: t("locations.wizard.chooseType") },
+          { id: "details", label: t("locations.wizard.details") },
+          { id: "confirm", label: t("locations.wizard.confirm") },
+        ];
+        const closeLocModal = () => { setShowAddModal(false); setAddChildParentId(null); setLocWizardStep(0); };
+
+        // Compute preview of what will be created
+        const previewItems: string[] = [];
+        previewItems.push(`1 ${LOCATION_TYPE_LABELS[newLocation.type]}: "${newLocation.name || "..."}"`);
+        if (newLocation.type === "building" && newLocation.floorCount > 0) {
+          previewItems.push(`${newLocation.floorCount} floor${newLocation.floorCount !== 1 ? "s" : ""}`);
+        }
+        if (newLocation.type === "floor") {
+          if (newLocation.zoneCount > 0) previewItems.push(`${newLocation.zoneCount} zone${newLocation.zoneCount !== 1 ? "s" : ""}`);
+          if (newLocation.roomCount > 0) previewItems.push(`${newLocation.roomCount} room${newLocation.roomCount !== 1 ? "s" : ""}`);
+        }
+
+        return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={closeLocModal}>
           <div className="relative z-50 w-full max-w-lg rounded-lg bg-background p-6 shadow-xl mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-2">
               <div>
                 <h2 className="text-xl font-semibold">
                   {addChildParentId 
@@ -921,171 +943,245 @@ function LocationsPageContent() {
                   </p>
                 )}
               </div>
-              <Button variant="ghost" size="icon" onClick={() => { setShowAddModal(false); setAddChildParentId(null); }}>
+              <Button variant="ghost" size="icon" onClick={closeLocModal}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">{t("locations.locationName")} *</Label>
-                <Input
-                  id="name"
-                  value={newLocation.name}
-                  onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
-                  placeholder={`e.g., ${LOCATION_TYPE_LABELS[newLocation.type]} A`}
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Show type selector only if adding to a specific parent (child location) */}
-              {addChildParentId ? (
-                <div>
-                  <Label>{t("locations.locationType")} *</Label>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {(LOCATION_HIERARCHY[locations.find(l => l.id === addChildParentId)?.type || ""] || []).map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setNewLocation({ ...newLocation, type: type as typeof newLocation.type })}
-                        className={cn(
-                          "rounded-lg border-2 p-3 text-left transition-all",
-                          newLocation.type === type
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
-                        )}
-                      >
-                        <p className="font-medium text-sm flex items-center gap-2">
-                          <LocationTypeIcon type={type} className="h-4 w-4" />
-                          {LOCATION_TYPE_LABELS[type]}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                // When adding at root level (Campus), just show selected type as info
-                <div>
-                  <Label>{t("locations.locationType")}</Label>
-                  <div className="mt-2 flex items-center gap-2 p-3 rounded-lg border-2 border-primary bg-primary/5">
-                    <LocationTypeIcon type="site" className="h-5 w-5" />
-                    <span className="font-medium">{LOCATION_TYPE_LABELS.site}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Show floor count only when adding a building */}
-              {newLocation.type === "building" && (
-                <div>
-                  <Label htmlFor="floorCount">{t("locations.numberOfFloors")} *</Label>
-                  <Input
-                    id="floorCount"
-                    type="number"
-                    min="1"
-                    max="200"
-                    value={newLocation.floorCount}
-                    onChange={(e) => setNewLocation({ ...newLocation, floorCount: Math.max(1, parseInt(e.target.value) || 1) })}
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {newLocation.floorCount} floor{newLocation.floorCount !== 1 ? "s" : ""} will be created automatically
-                  </p>
-                </div>
-              )}
-
-              {/* Show zone/room count when adding a floor */}
-              {newLocation.type === "floor" && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="zoneCount">{t("locations.numberOfZones")}</Label>
-                    <Input
-                      id="zoneCount"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={newLocation.zoneCount}
-                      onChange={(e) => setNewLocation({ ...newLocation, zoneCount: Math.max(0, parseInt(e.target.value) || 0) })}
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t("locations.optional")}
-                    </p>
-                  </div>
-                  <div>
-                    <Label htmlFor="roomCount">{t("locations.numberOfRooms")}</Label>
-                    <Input
-                      id="roomCount"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={newLocation.roomCount}
-                      onChange={(e) => setNewLocation({ ...newLocation, roomCount: Math.max(0, parseInt(e.target.value) || 0) })}
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t("locations.optional")}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Show parent selector only if not adding to a specific parent and not a site */}
-              {!addChildParentId && newLocation.type !== "site" && (
-                <div>
-                  <Label htmlFor="parent">{t("locations.parentLocation")}</Label>
-                  <select
-                    id="parent"
-                    title="Select parent location"
-                    aria-label="Select parent location"
-                    value={newLocation.parent_id}
-                    onChange={(e) => setNewLocation({ ...newLocation, parent_id: e.target.value })}
-                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            {/* Step indicator */}
+            <div className="flex items-center gap-2 mb-6">
+              {locWizardStepLabels.map((step, i) => (
+                <React.Fragment key={step.id}>
+                  <button
+                    type="button"
+                    onClick={() => { if (i < locWizardStep) setLocWizardStep(i); }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+                      i < locWizardStep
+                        ? "bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90"
+                        : i === locWizardStep
+                        ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
+                        : "bg-muted text-muted-foreground cursor-default"
+                    )}
                   >
-                    <option value="">{t("locations.selectParentLocation")}</option>
-                    {locations.map((loc) => (
-                      <option key={loc.id} value={loc.id}>{loc.name} ({loc.type})</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <Label htmlFor="address">{t("locations.addressOptional")}</Label>
-                <textarea
-                  id="address"
-                  value={newLocation.address}
-                  onChange={(e) => setNewLocation({ ...newLocation, address: e.target.value })}
-                  placeholder={"Street Address\nCity, State/Province ZIP/Postal Code\nCountry"}
-                  rows={3}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t("locations.addressFormats")}
-                </p>
-              </div>
-
-              {/* GPS Picker for site and building types */}
-              {(newLocation.type === "site" || newLocation.type === "building") && (
-                <GpsPicker
-                  lat={newLocation.gps_lat}
-                  lng={newLocation.gps_lng}
-                  onChange={(lat, lng) => setNewLocation({ ...newLocation, gps_lat: lat, gps_lng: lng })}
-                />
-              )}
+                    {i < locWizardStep ? <Check className="h-3 w-3" /> : <span>{i + 1}</span>}
+                    <span className="hidden sm:inline">{step.label}</span>
+                  </button>
+                  {i < locWizardStepLabels.length - 1 && (
+                    <div className={cn("h-0.5 flex-1 rounded-full", i < locWizardStep ? "bg-primary" : "bg-muted")} />
+                  )}
+                </React.Fragment>
+              ))}
             </div>
 
+            {/* Step 1: Choose Type */}
+            {locWizardStep === 0 && (
+              <div className="space-y-4">
+                {addChildParentId ? (
+                  <div>
+                    <Label>{t("locations.locationType")} *</Label>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {(LOCATION_HIERARCHY[locations.find(l => l.id === addChildParentId)?.type || ""] || []).map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setNewLocation({ ...newLocation, type: type as typeof newLocation.type })}
+                          className={cn(
+                            "rounded-lg border-2 p-3 text-left transition-all",
+                            newLocation.type === type
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50"
+                          )}
+                        >
+                          <p className="font-medium text-sm flex items-center gap-2">
+                            <LocationTypeIcon type={type} className="h-4 w-4" />
+                            {LOCATION_TYPE_LABELS[type]}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <Label>{t("locations.locationType")}</Label>
+                    <div className="mt-2 flex items-center gap-2 p-3 rounded-lg border-2 border-primary bg-primary/5">
+                      <LocationTypeIcon type="site" className="h-5 w-5" />
+                      <span className="font-medium">{LOCATION_TYPE_LABELS.site}</span>
+                    </div>
+                  </div>
+                )}
+
+                {!addChildParentId && newLocation.type !== "site" && (
+                  <div>
+                    <Label htmlFor="parent">{t("locations.parentLocation")}</Label>
+                    <select
+                      id="parent"
+                      title="Select parent location"
+                      aria-label="Select parent location"
+                      value={newLocation.parent_id}
+                      onChange={(e) => setNewLocation({ ...newLocation, parent_id: e.target.value })}
+                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">{t("locations.selectParentLocation")}</option>
+                      {locations.map((loc) => (
+                        <option key={loc.id} value={loc.id}>{loc.name} ({loc.type})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 2: Details */}
+            {locWizardStep === 1 && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="name">{t("locations.locationName")} *</Label>
+                  <Input
+                    id="name"
+                    value={newLocation.name}
+                    onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                    placeholder={`e.g., ${LOCATION_TYPE_LABELS[newLocation.type]} A`}
+                    className="mt-1"
+                    autoFocus
+                  />
+                </div>
+
+                {newLocation.type === "building" && (
+                  <div>
+                    <Label htmlFor="floorCount">{t("locations.numberOfFloors")} *</Label>
+                    <Input
+                      id="floorCount"
+                      type="number"
+                      min="1"
+                      max="200"
+                      value={newLocation.floorCount}
+                      onChange={(e) => setNewLocation({ ...newLocation, floorCount: Math.max(1, parseInt(e.target.value) || 1) })}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {newLocation.floorCount} floor{newLocation.floorCount !== 1 ? "s" : ""} will be created automatically
+                    </p>
+                  </div>
+                )}
+
+                {newLocation.type === "floor" && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="zoneCount">{t("locations.numberOfZones")}</Label>
+                      <Input
+                        id="zoneCount"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newLocation.zoneCount}
+                        onChange={(e) => setNewLocation({ ...newLocation, zoneCount: Math.max(0, parseInt(e.target.value) || 0) })}
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t("locations.optional")}
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="roomCount">{t("locations.numberOfRooms")}</Label>
+                      <Input
+                        id="roomCount"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newLocation.roomCount}
+                        onChange={(e) => setNewLocation({ ...newLocation, roomCount: Math.max(0, parseInt(e.target.value) || 0) })}
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t("locations.optional")}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="address">{t("locations.addressOptional")}</Label>
+                  <textarea
+                    id="address"
+                    value={newLocation.address}
+                    onChange={(e) => setNewLocation({ ...newLocation, address: e.target.value })}
+                    placeholder={"Street Address\nCity, State/Province ZIP/Postal Code\nCountry"}
+                    rows={3}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t("locations.addressFormats")}
+                  </p>
+                </div>
+
+                {(newLocation.type === "site" || newLocation.type === "building") && (
+                  <GpsPicker
+                    lat={newLocation.gps_lat}
+                    lng={newLocation.gps_lng}
+                    onChange={(lat, lng) => setNewLocation({ ...newLocation, gps_lat: lat, gps_lng: lng })}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Step 3: Confirm / Preview */}
+            {locWizardStep === 2 && (
+              <div className="space-y-4">
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <p className="text-sm font-medium mb-3">{t("locations.wizard.preview")}:</p>
+                  <ul className="space-y-2">
+                    {previewItems.map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-primary shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  {addChildParentId && (
+                    <p className="text-xs text-muted-foreground mt-3">
+                      Under: {locations.find(l => l.id === addChildParentId)?.name}
+                    </p>
+                  )}
+                  {newLocation.address && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Address: {newLocation.address.split("\n")[0]}...
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Navigation buttons */}
             <div className="flex gap-3 mt-6 pt-4 border-t">
-              <Button variant="outline" className="flex-1" onClick={() => { setShowAddModal(false); setAddChildParentId(null); }}>
-                {t("common.cancel")}
-              </Button>
-              <Button className="flex-1" onClick={handleAddLocation} disabled={!newLocation.name}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add {LOCATION_TYPE_LABELS[newLocation.type]}
-              </Button>
+              {locWizardStep === 0 ? (
+                <Button variant="outline" className="flex-1" onClick={closeLocModal}>
+                  {t("common.cancel")}
+                </Button>
+              ) : (
+                <Button variant="outline" className="flex-1" onClick={() => setLocWizardStep(locWizardStep - 1)}>
+                  {t("common.back")}
+                </Button>
+              )}
+              {locWizardStep < 2 ? (
+                <Button
+                  className="flex-1"
+                  onClick={() => setLocWizardStep(locWizardStep + 1)}
+                  disabled={locWizardStep === 1 && !newLocation.name.trim()}
+                >
+                  {t("common.next")}
+                </Button>
+              ) : (
+                <Button className="flex-1" onClick={handleAddLocation} disabled={!newLocation.name.trim()}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add {LOCATION_TYPE_LABELS[newLocation.type]}
+                </Button>
+              )}
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Edit Location Modal */}
       {showEditModal && selectedLocation && (
