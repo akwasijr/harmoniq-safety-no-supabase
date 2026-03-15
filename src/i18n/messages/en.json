@@ -61,7 +61,8 @@
     "riskAssessments": "Risk Assessments",
     "qrCodes": "QR Codes",
     "tickets": "Tickets",
-    "newsShort": "News"
+    "newsShort": "News",
+    "auditLog": "Audit Log"
   },
   "app": {
     "goodMorning": "Good morning",
@@ -1025,6 +1026,19 @@
       "selectAsset": "Select asset",
       "selectUser": "Select user",
       "estimatedHours": "e.g. 2.5"
+    },
+    "detail": {
+      "title": "Work Order Details",
+      "requestedBy": "Requested by",
+      "assignedTo": "Assigned to",
+      "relatedAsset": "Related asset",
+      "notes": "Notes",
+      "changeStatus": "Change status",
+      "notFound": "Work order not found",
+      "laborCost": "Labor cost",
+      "actualHours": "Actual hours",
+      "created": "Created",
+      "completedAt": "Completed"
     }
   },
   "correctiveActions": {
@@ -1054,6 +1068,19 @@
       "whatNeedsCorrected": "What needs to be corrected...",
       "selectAsset": "Select asset",
       "selectUser": "Select user"
+    },
+    "detail": {
+      "title": "Corrective Action Details",
+      "linkedIncident": "Linked incident",
+      "linkedAsset": "Linked asset",
+      "assignedTo": "Assigned to",
+      "overdue": "Overdue",
+      "notFound": "Corrective action not found",
+      "resolutionNotes": "Resolution notes",
+      "resolutionNotesPlaceholder": "Add resolution notes...",
+      "noResolutionNotes": "No resolution notes yet",
+      "created": "Created",
+      "completedAt": "Completed"
     }
   },
   "parts": {
@@ -1547,6 +1574,22 @@
     },
     "validation": {
       "nameAndCheckpointRequired": "Name and at least one checkpoint are required"
+    }
+  },
+  "auditLog": {
+    "title": "Audit Log",
+    "description": "Track all changes made across the platform for OSHA/Arbowet compliance",
+    "noEntries": "No audit entries found",
+    "filterByType": "Filter by type",
+    "filterByUser": "Filter by user",
+    "allTypes": "All types",
+    "allUsers": "All users",
+    "actions": {
+      "create": "Created",
+      "update": "Updated",
+      "delete": "Deleted",
+      "status_change": "Status changed",
+      "assign": "Assigned"
     }
   }
 }

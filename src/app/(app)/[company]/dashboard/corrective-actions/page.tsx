@@ -195,7 +195,9 @@ export default function CorrectiveActionsPage() {
                           {isOverdue && action.status !== "completed" ? "Overdue" : action.status.replace("_", " ")}
                         </Badge>
                       </div>
-                      <p className="text-sm mt-1">{action.description}</p>
+                      <Link href={`/${company}/dashboard/corrective-actions/${action.id}`} className="text-sm mt-1 hover:underline block">
+                        {action.description}
+                      </Link>
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <span>Assigned: {getUserName(action.assigned_to)}</span>
                         <span>Due: {formatDate(action.due_date)}</span>

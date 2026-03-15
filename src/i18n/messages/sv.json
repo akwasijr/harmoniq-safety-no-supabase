@@ -61,7 +61,8 @@
     "riskAssessments": "Riskbedömningar",
     "qrCodes": "QR-koder",
     "tickets": "Ärenden",
-    "newsShort": "Nyheter"
+    "newsShort": "Nyheter",
+    "auditLog": "Granskningslogg"
   },
   "app": {
     "goodMorning": "God morgon",
@@ -1025,6 +1026,19 @@
       "selectAsset": "Välj tillgång",
       "selectUser": "Välj användare",
       "estimatedHours": "t.ex. 2,5"
+    },
+    "detail": {
+      "title": "Arbetsorderdetaljer",
+      "requestedBy": "Begärd av",
+      "assignedTo": "Tilldelad till",
+      "relatedAsset": "Relaterad tillgång",
+      "notes": "Anteckningar",
+      "changeStatus": "Ändra status",
+      "notFound": "Arbetsorder hittades inte",
+      "laborCost": "Arbetskostnad",
+      "actualHours": "Faktiska timmar",
+      "created": "Skapad",
+      "completedAt": "Slutförd"
     }
   },
   "correctiveActions": {
@@ -1054,6 +1068,19 @@
       "whatNeedsCorrected": "Vad behöver korrigeras...",
       "selectAsset": "Välj tillgång",
       "selectUser": "Välj användare"
+    },
+    "detail": {
+      "title": "Korrigerande åtgärdsdetaljer",
+      "linkedIncident": "Länkad incident",
+      "linkedAsset": "Länkad tillgång",
+      "assignedTo": "Tilldelad till",
+      "overdue": "Försenad",
+      "notFound": "Korrigerande åtgärd hittades inte",
+      "resolutionNotes": "Åtgärdsanteckningar",
+      "resolutionNotesPlaceholder": "Lägg till åtgärdsanteckningar...",
+      "noResolutionNotes": "Inga åtgärdsanteckningar ännu",
+      "created": "Skapad",
+      "completedAt": "Slutförd"
     }
   },
   "parts": {
@@ -1547,6 +1574,22 @@
     },
     "validation": {
       "nameAndCheckpointRequired": "Namn och minst en kontrollpunkt krävs"
+    }
+  },
+  "auditLog": {
+    "title": "Granskningslogg",
+    "description": "Spåra alla ändringar som gjorts på plattformen för OSHA/Arbowet-efterlevnad",
+    "noEntries": "Inga granskningsposter hittades",
+    "filterByType": "Filtrera efter typ",
+    "filterByUser": "Filtrera efter användare",
+    "allTypes": "Alla typer",
+    "allUsers": "Alla användare",
+    "actions": {
+      "create": "Skapad",
+      "update": "Uppdaterad",
+      "delete": "Borttagen",
+      "status_change": "Status ändrad",
+      "assign": "Tilldelad"
     }
   }
 }

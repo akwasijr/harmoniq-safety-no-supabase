@@ -61,7 +61,8 @@
     "riskAssessments": "Risicobeoordeling",
     "qrCodes": "QR-codes",
     "tickets": "Tickets",
-    "newsShort": "Nieuws"
+    "newsShort": "Nieuws",
+    "auditLog": "Auditlogboek"
   },
   "app": {
     "goodMorning": "Goedemorgen",
@@ -1025,6 +1026,19 @@
       "selectAsset": "Selecteer asset",
       "selectUser": "Selecteer gebruiker",
       "estimatedHours": "bijv. 2,5"
+    },
+    "detail": {
+      "title": "Werkorderdetails",
+      "requestedBy": "Aangevraagd door",
+      "assignedTo": "Toegewezen aan",
+      "relatedAsset": "Gerelateerd asset",
+      "notes": "Notities",
+      "changeStatus": "Status wijzigen",
+      "notFound": "Werkorder niet gevonden",
+      "laborCost": "Arbeidskosten",
+      "actualHours": "Werkelijke uren",
+      "created": "Aangemaakt",
+      "completedAt": "Voltooid"
     }
   },
   "correctiveActions": {
@@ -1054,6 +1068,19 @@
       "whatNeedsCorrected": "Wat moet worden gecorrigeerd...",
       "selectAsset": "Selecteer asset",
       "selectUser": "Selecteer gebruiker"
+    },
+    "detail": {
+      "title": "Corrigerende actie details",
+      "linkedIncident": "Gekoppeld incident",
+      "linkedAsset": "Gekoppeld asset",
+      "assignedTo": "Toegewezen aan",
+      "overdue": "Te laat",
+      "notFound": "Corrigerende actie niet gevonden",
+      "resolutionNotes": "Oplossingsnotities",
+      "resolutionNotesPlaceholder": "Voeg oplossingsnotities toe...",
+      "noResolutionNotes": "Nog geen oplossingsnotities",
+      "created": "Aangemaakt",
+      "completedAt": "Voltooid"
     }
   },
   "parts": {
@@ -1547,6 +1574,22 @@
     },
     "validation": {
       "nameAndCheckpointRequired": "Naam en minstens één controlepunt zijn vereist"
+    }
+  },
+  "auditLog": {
+    "title": "Auditlogboek",
+    "description": "Volg alle wijzigingen op het platform voor OSHA/Arbowet-naleving",
+    "noEntries": "Geen auditlogboekgegevens gevonden",
+    "filterByType": "Filteren op type",
+    "filterByUser": "Filteren op gebruiker",
+    "allTypes": "Alle typen",
+    "allUsers": "Alle gebruikers",
+    "actions": {
+      "create": "Aangemaakt",
+      "update": "Bijgewerkt",
+      "delete": "Verwijderd",
+      "status_change": "Status gewijzigd",
+      "assign": "Toegewezen"
     }
   }
 }

@@ -212,7 +212,9 @@ export default function WorkOrdersPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-medium">{order.title}</h3>
+                      <Link href={`/${company}/dashboard/work-orders/${order.id}`} className="font-medium hover:underline text-primary">
+                        {order.title}
+                      </Link>
                       <Badge variant={order.priority === "critical" || order.priority === "high" ? "destructive" : order.priority === "medium" ? "warning" : "secondary"} className="capitalize">
                         {order.priority}
                       </Badge>
