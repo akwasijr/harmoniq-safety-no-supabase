@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Lock } from "lucide-react";
 import { useTranslation } from "@/i18n";
 
@@ -11,6 +12,11 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-[420px]">
+        <div className="mb-6 flex flex-col items-center gap-2">
+          <Image src="/favicon.svg" alt="Harmoniq Logo" width={40} height={40} className="h-10 w-10" />
+          <span className="text-lg font-semibold">Harmoniq Safety</span>
+        </div>
+
         <div className="rounded-xl border bg-background p-8 shadow-sm text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Lock className="h-6 w-6 text-primary" />
