@@ -1759,5 +1759,10 @@
   },
   "news": {
     "noContent": "Inget innehåll tillgängligt."
-  }
+  },
+  "auth.signupUnavailable": "Registrering är ännu inte tillgänglig",
+  "auth.signupUnavailableDesc": "Harmoniq Safety är för närvarande i privat åtkomst. Kontakta din företagsadministratör eller vårt team för en inbjudan.",
+  "auth.contactUs": "Kontakta oss",
+  "auth.noAccount": "Har du inget konto?",
+  "auth.chooseApp": "Välj app"
 }

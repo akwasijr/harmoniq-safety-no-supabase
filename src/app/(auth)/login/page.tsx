@@ -4,10 +4,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { Mail, Loader, Eye, EyeOff, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
@@ -15,7 +13,6 @@ import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { clearClientCookie, setClientCookie } from "@/lib/client-cookies";
 import { type AppChoice, buildCompanyDestination, buildPlatformAnalyticsDestination } from "@/lib/navigation";
 import { getPlatformSlugFilterList, isPlatformSlug } from "@/lib/platform-config";
-import { AuthTabs } from "@/components/auth/auth-tabs";
 import { useTranslation } from "@/i18n";
 import { mockLogin, IS_MOCK_MODE } from "@/hooks/use-auth";
 import { DEFAULT_COMPANY_SLUG } from "@/mocks/data";
@@ -417,197 +414,183 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center justify-center gap-3">
-          <Image
-            src="/favicon.svg"
-            alt="Harmoniq Logo"
-            width={48}
-            height={48}
-            className="h-12 w-12"
-          />
-          <span className="text-2xl font-semibold">Harmoniq Safety</span>
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
+      <div className="w-full max-w-[420px]">
+        <div className="rounded-xl border bg-background p-8 shadow-sm">
+          {/* Header */}
+          <h1 className="text-2xl font-bold tracking-tight mb-1">
+            {t("auth.welcomeBack") || "Sign in to your account"}
+          </h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            {t("auth.signInToAccount") || "Enter your credentials to continue"}
+          </p>
 
-        <AuthTabs />
-
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl">{t("auth.welcomeBack")}</CardTitle>
-            <CardDescription>
-              {t("auth.signInToAccount")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {isLockedOut && (
-                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300 flex items-center gap-2">
-                  <Lock className="h-4 w-4 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">{t("auth.accountLocked") || "Account temporarily locked"}</p>
-                    <p>{t("auth.tryAgainIn") || "Try again in"} {Math.ceil(lockoutRemaining / 60)} {t("auth.minutes") || "minutes"}</p>
-                  </div>
-                </div>
-              )}
-
-              {!isLockedOut && failedAttempts >= 3 && attemptsRemaining > 0 && (
-                <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                  {attemptsRemaining} {t("auth.attemptsRemaining") || "attempts remaining"}
-                </div>
-              )}
-
-              {error && (
-                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
-                  {success}
-                </div>
-              )}
-
+          {/* Alerts */}
+          {isLockedOut && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300 flex items-center gap-2 mb-4">
+              <Lock className="h-4 w-4 flex-shrink-0" />
               <div>
-                <Label>Choose app</Label>
+                <p className="font-medium">{t("auth.accountLocked") || "Account temporarily locked"}</p>
+                <p>{t("auth.tryAgainIn") || "Try again in"} {Math.ceil(lockoutRemaining / 60)} {t("auth.minutes") || "minutes"}</p>
+              </div>
+            </div>
+          )}
+
+          {!isLockedOut && failedAttempts >= 3 && attemptsRemaining > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300 mb-4">
+              {attemptsRemaining} {t("auth.attemptsRemaining") || "attempts remaining"}
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300 mb-4">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300 mb-4">
+              {success}
+            </div>
+          )}
+
+          {/* Email */}
+          <div className="mb-4">
+            <Label htmlFor="email" required error={Boolean(emailError)} className="text-sm font-medium mb-1.5">
+              {t("auth.email")}
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
+              placeholder="you@company.com"
+              error={Boolean(emailError)}
+              errorMessage={emailError}
+              required
+              disabled={isLoading}
+              className="h-11 rounded-lg bg-muted/40"
+            />
+          </div>
+
+          {loginMode === "password" ? (
+            <form onSubmit={handleEmailSignIn} className="space-y-4">
+              {/* Password */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label htmlFor="password" required error={Boolean(passwordError)} className="text-sm font-medium">
+                    {t("auth.password")}
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                  >
+                    {t("auth.forgotPassword")}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setPasswordError(""); }}
+                    placeholder="••••••••"
+                    required
+                    disabled={isLoading}
+                    error={Boolean(passwordError)}
+                    errorMessage={passwordError}
+                    className="h-11 rounded-lg bg-muted/40 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-4 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* App chooser */}
+              <div>
+                <Label className="text-sm font-medium mb-1.5">{t("auth.chooseApp") || "Choose app"}</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button
+                  <button
                     type="button"
                     onClick={() => setAppChoice("dashboard")}
                     disabled={isLoading}
-                    variant={appChoice === "dashboard" ? "default" : "outline"}
-                    className="w-full"
+                    className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
                   >
                     {t("auth.dashboard")}
-                  </Button>
-                  <Button
+                  </button>
+                  <button
                     type="button"
                     onClick={() => setAppChoice("app")}
                     disabled={isLoading}
-                    variant={appChoice === "app" ? "default" : "outline"}
-                    className="w-full"
+                    className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
                   >
                     {t("auth.mobileApp")}
-                  </Button>
+                  </button>
                 </div>
               </div>
 
-              {/* Email field, shared between both modes */}
-              <div>
-                <Label htmlFor="email" required error={Boolean(emailError)}>
-                  {t("auth.email")}
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setEmailError("");
-                  }}
-                  placeholder="you@company.com"
-                  error={Boolean(emailError)}
-                  errorMessage={emailError}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              {loginMode === "password" ? (
-                /* Password mode */
-                <form onSubmit={handleEmailSignIn} className="space-y-3">
-                  <div>
-                    <Label htmlFor="password" required error={Boolean(passwordError)}>
-                      {t("auth.password")}
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          setPasswordError("");
-                        }}
-                        placeholder="••••••••"
-                        required
-                        disabled={isLoading}
-                        error={Boolean(passwordError)}
-                        errorMessage={passwordError}
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-4 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        tabIndex={-1}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handleForgotPassword}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      {t("auth.forgotPassword")}
-                    </button>
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={isLoading || isLockedOut}
-                    className="w-full"
-                    loading={isLoading}
-                  >
-                    {t("auth.signIn")}
-                  </Button>
-                </form>
-              ) : (
-                /* Magic link mode */
-                <Button
-                  type="button"
-                  onClick={handleMagicLink}
-                  disabled={isLoading || !email}
-                  className="w-full"
-                >
-                  {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  {t("auth.sendMagicLink")}
-                </Button>
-              )}
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or</span>
-                </div>
-              </div>
-
-              {/* Toggle between modes */}
+              {/* Sign in button */}
               <Button
-                type="button"
-                onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
-                disabled={isLoading}
-                variant="outline"
-                className="w-full"
+                type="submit"
+                disabled={isLoading || isLockedOut}
+                className="w-full h-11 rounded-lg text-sm font-semibold"
+                loading={isLoading}
               >
-                <Mail className="h-4 w-4" />
-                {loginMode === "password" ? t("auth.magicLink") : t("auth.passwordMode")}
+                {t("auth.signIn")}
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </form>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleMagicLink}
+              disabled={isLoading || !email}
+              className="w-full h-11 rounded-lg text-sm font-semibold"
+            >
+              {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+              {t("auth.sendMagicLink")}
+            </Button>
+          )}
 
-        {/* Back to home */}
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-foreground">
+          {/* Divider */}
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">OR</span>
+            </div>
+          </div>
+
+          {/* Toggle login mode */}
+          <button
+            type="button"
+            onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+          >
+            <Mail className="h-4 w-4" />
+            {loginMode === "password" ? t("auth.magicLink") : t("auth.passwordMode")}
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-5 rounded-lg border bg-muted/30 py-3 text-center text-sm text-muted-foreground">
+          {t("auth.noAccount") || "Don't have an account?"}{" "}
+          <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+            {t("auth.createAccount") || "Create account"}
+          </Link>
+        </div>
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-foreground transition-colors">
             {t("auth.backToHome")}
           </Link>
         </p>

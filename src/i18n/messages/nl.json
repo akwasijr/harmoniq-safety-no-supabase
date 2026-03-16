@@ -1759,5 +1759,10 @@
   },
   "news": {
     "noContent": "Geen inhoud beschikbaar."
-  }
+  },
+  "auth.signupUnavailable": "Registratie is nog niet beschikbaar",
+  "auth.signupUnavailableDesc": "Harmoniq Safety is momenteel alleen beschikbaar via privé-toegang. Neem contact op met uw bedrijfsbeheerder of ons team voor een uitnodiging.",
+  "auth.contactUs": "Neem contact op",
+  "auth.noAccount": "Nog geen account?",
+  "auth.chooseApp": "Kies app"
 }
