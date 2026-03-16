@@ -124,7 +124,7 @@ function ResetPasswordContent() {
             </div>
             <CardTitle className="text-xl">Reset your password</CardTitle>
             <CardDescription>
-              Create a new password for your Harmoniq Safety account.
+              Create a new password for your Harmoniq account.
             </CardDescription>
           </CardHeader>
           <CardContent>

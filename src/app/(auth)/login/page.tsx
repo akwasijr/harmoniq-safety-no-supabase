@@ -419,7 +419,7 @@ function LoginForm() {
       <div className="w-full max-w-[420px]">
         <div className="mb-6 flex flex-col items-center gap-2">
           <Image src="/favicon.svg" alt="Harmoniq Logo" width={40} height={40} className="h-10 w-10" />
-          <span className="text-lg font-semibold">Harmoniq Safety</span>
+          <span className="text-lg font-semibold">Harmoniq</span>
         </div>
 
         <div className="rounded-xl border bg-background p-8 shadow-sm">

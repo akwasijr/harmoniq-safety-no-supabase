@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <div className="mb-8 flex items-center justify-center gap-2">
           <Shield className="h-8 w-8" aria-hidden="true" />
-          <span className="text-2xl font-semibold">Harmoniq Safety</span>
+          <span className="text-2xl font-semibold">Harmoniq</span>
         </div>
 
         <Card>

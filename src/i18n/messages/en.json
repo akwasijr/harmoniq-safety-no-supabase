@@ -1761,7 +1761,7 @@
     "noContent": "No content available."
   },
   "auth.signupUnavailable": "Sign up is not yet available",
-  "auth.signupUnavailableDesc": "Harmoniq Safety is currently in private access. To get started, please contact your company administrator or reach out to our team for an invitation.",
+  "auth.signupUnavailableDesc": "Harmoniq is currently in private access. To get started, please contact your company administrator or reach out to our team for an invitation.",
   "auth.contactUs": "Contact us",
   "auth.noAccount": "Don't have an account?",
   "auth.chooseApp": "Choose app",
