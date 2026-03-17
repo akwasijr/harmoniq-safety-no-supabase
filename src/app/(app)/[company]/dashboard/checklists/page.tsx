@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import type { ChecklistTemplate } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 type MainTabType = "checklists" | "risk-assessment" | "inspection";
 type SubTabType = "submissions" | "templates";
@@ -975,6 +976,7 @@ function ChecklistsPageContent() {
 
 export default function ChecklistsPage() {
   return (
+    <RoleGuard requiredPermission="checklists.view">
     <React.Suspense
       fallback={
         <div className="flex min-h-[400px] items-center justify-center">
@@ -984,5 +986,6 @@ export default function ChecklistsPage() {
     >
       <ChecklistsPageContent />
     </React.Suspense>
+    </RoleGuard>
   );
 }

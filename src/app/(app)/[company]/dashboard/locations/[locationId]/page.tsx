@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 export default function LocationDetailPage() {
   const router = useRouter();
@@ -18,8 +19,10 @@ export default function LocationDetailPage() {
   }, [company, locationId, router]);
 
   return (
+    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>
     <div className="flex items-center justify-center min-h-[50vh]">
       <p className="text-muted-foreground">{t("locations.redirecting")}</p>
     </div>
+    </RoleGuard>
   );
 }

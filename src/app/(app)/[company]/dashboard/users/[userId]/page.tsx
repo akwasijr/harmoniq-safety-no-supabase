@@ -38,6 +38,7 @@ import { useToast } from "@/components/ui/toast";
 import { ROLE_PERMISSIONS, type Permission } from "@/types";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/hooks/use-auth";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const tabs: Tab[] = [
   { id: "info", label: "Information", icon: Info },
@@ -230,6 +231,7 @@ export default function UserDetailPage() {
   const roleColor = user.role === "company_admin" ? "destructive" : user.role === "manager" ? "warning" : "secondary";
 
   return (
+    <RoleGuard requiredPermission="users.view">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -724,5 +726,6 @@ export default function UserDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

@@ -173,6 +173,7 @@ export default function EmployeeAppHomePage() {
 
   // Use state for time-dependent values to prevent hydration mismatch
   const [mounted, setMounted] = React.useState(false);
+  const [stableNow] = React.useState(() => Date.now());
   React.useEffect(() => {
     setMounted(true);
   }, []);
@@ -188,9 +189,9 @@ export default function EmployeeAppHomePage() {
   const userIncidents = incidents.filter((incident) => incident.reporter_id === user.id);
   const lastIncidentDate = userIncidents.length > 0
     ? new Date(Math.max(...userIncidents.map((incident) => new Date(incident.incident_date).getTime())))
-    : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    : new Date(stableNow - 30 * 24 * 60 * 60 * 1000);
   // Only compute time-sensitive values after mount to prevent hydration mismatch
-  const safeDays = mounted ? Math.floor((Date.now() - lastIncidentDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+  const safeDays = mounted ? Math.floor((stableNow - lastIncidentDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
   const userTickets = tickets.filter(
     (ticket) =>
       ticket.assigned_to === user.id ||
@@ -201,7 +202,7 @@ export default function EmployeeAppHomePage() {
   const pendingTaskCount = userTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length
     + userWorkOrders.filter((wo) => wo.status !== "completed" && wo.status !== "cancelled").length
     + userActions.filter((ca) => ca.status !== "completed").length;
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const oneWeekAgo = new Date(stableNow - 7 * 24 * 60 * 60 * 1000);
   const completedThisWeek = userTickets.filter(
     (ticket) => ticket.updated_at && new Date(ticket.updated_at) > oneWeekAgo
   ).length;
@@ -227,89 +228,74 @@ export default function EmployeeAppHomePage() {
   // Determine if we have enough data for the full feed view
   const hasData = pendingChecklists.length > 0 || recentNews.length > 0;
 
-  // Quick action grid items (2 per row, 6 total, unified primary color icons)
+  // ── Quick action grid items ──
   const quickActions = [
     { href: `/${company}/app/report`, labelKey: "app.reportIncident", label: "Report Incident", icon: AlertTriangle },
     { href: `/${company}/app/tasks`, labelKey: "app.myTasks", label: "My Tasks", icon: ClipboardCheck },
     { href: `/${company}/app/assets`, labelKey: "app.browseAssets", label: "Browse Assets", icon: Search },
     { href: `/${company}/app/report`, labelKey: "app.requestFix", label: "Request Fix", icon: Wrench },
-    { href: `/${company}/app/assets`, labelKey: "app.scanAsset", label: "Scan Asset", icon: ScanLine },
+    { href: `/${company}/app/scan`, labelKey: "app.scanAsset", label: "Scan Asset", icon: ScanLine },
     { href: `/${company}/app/report`, labelKey: "app.riskAssessment", label: "Risk Check", icon: ShieldCheck },
   ];
-
-  // ── Shared hero section ──
-  const HeroSection = () => (
-    <div className="bg-primary px-5 pt-6 pb-8">
-      <p className="text-white/60 text-sm">{greeting}</p>
-      <h1 className="text-2xl font-bold text-white mt-1">
-        {user?.first_name || t("app.welcome")}
-      </h1>
-      <p className="text-white/50 text-xs mt-1">{currentCompany?.name}</p>
-
-      {/* Stats row - white/glass cards */}
-      <div className="grid grid-cols-3 gap-3 mt-5">
-        <div className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
-          <p className="text-2xl font-bold text-white">{safeDays}</p>
-          <p className="text-[11px] text-white/60 mt-0.5">{t("app.safeDays")}</p>
-        </div>
-        <Link href={`/${company}/app/tasks`} className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
-          <p className="text-2xl font-bold text-white">{pendingTaskCount}</p>
-          <p className="text-[11px] text-white/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
-        </Link>
-        <div className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
-          <p className="text-2xl font-bold text-white">{completedThisWeek}</p>
-          <p className="text-[11px] text-white/60 mt-0.5">{t("app.completedWeek") || "This Week"}</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  // ── Tip of the Day card ──
-  const TipCard = () => (
-    <div className="mx-4 -mt-4 relative z-10">
-      <div className="rounded-xl bg-card border border-border/50 px-4 py-3 flex items-start gap-3">
-        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-          <Lightbulb className="h-4 w-4 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold text-primary tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{todayTip.tip}</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  // ── Quick Actions Grid (2 per row, 6 total, Heathrow-style colored icon blocks) ──
-  const QuickActionsGrid = () => (
-    <div className="px-4 mt-5">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold">{t("app.quickActions") || "Quick Actions"}</h2>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {quickActions.map((action) => (
-          <Link key={action.href + action.labelKey} href={action.href}
-            className="flex items-center gap-3 rounded-xl bg-card p-4 border border-border/50 active:scale-[0.98] transition-transform">
-            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <action.icon className="h-6 w-6 text-primary" />
-            </div>
-            <span className="text-sm font-medium">{t(action.labelKey) || action.label}</span>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
 
   // ── Always show full feed (no early return for empty state) ──
   return (
     <div className="flex flex-col min-h-full">
       {/* ── Hero Section ── */}
-      <HeroSection />
+      <div className="bg-primary px-5 pt-6 pb-8">
+        <p className="text-white/60 text-sm">{greeting}</p>
+        <h1 className="text-2xl font-bold text-white mt-1">
+          {user?.first_name || t("app.welcome")}
+        </h1>
+        <p className="text-white/50 text-xs mt-1">{currentCompany?.name}</p>
+
+        {/* Stats row - white/glass cards */}
+        <div className="grid grid-cols-3 gap-3 mt-5">
+          <div className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
+            <p className="text-2xl font-bold text-white">{safeDays}</p>
+            <p className="text-[11px] text-white/60 mt-0.5">{t("app.safeDays")}</p>
+          </div>
+          <Link href={`/${company}/app/tasks`} className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
+            <p className="text-2xl font-bold text-white">{pendingTaskCount}</p>
+            <p className="text-[11px] text-white/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
+          </Link>
+          <div className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
+            <p className="text-2xl font-bold text-white">{completedThisWeek}</p>
+            <p className="text-[11px] text-white/60 mt-0.5">{t("app.completedWeek") || "This Week"}</p>
+          </div>
+        </div>
+      </div>
 
       {/* ── Tip of the Day ── */}
-      <TipCard />
+      <div className="mx-4 -mt-4 relative z-10">
+        <div className="rounded-xl bg-card border border-border/50 px-4 py-3 flex items-start gap-3">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+            <Lightbulb className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-primary tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{todayTip.tip}</p>
+          </div>
+        </div>
+      </div>
 
       {/* ── Quick Actions ── */}
-      <QuickActionsGrid />
+      <div className="px-4 mt-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold">{t("app.quickActions") || "Quick Actions"}</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {quickActions.map((action) => (
+            <Link key={action.href + action.labelKey} href={action.href}
+              className="flex items-center gap-3 rounded-xl bg-card p-4 border border-border/50 active:scale-[0.98] transition-transform">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <action.icon className="h-6 w-6 text-primary" />
+              </div>
+              <span className="text-sm font-medium">{t(action.labelKey) || action.label}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {/* ── Content Feed ── */}
       <div className="px-4 pt-5 pb-20 space-y-1">

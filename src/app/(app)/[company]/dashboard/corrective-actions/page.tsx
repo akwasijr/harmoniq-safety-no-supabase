@@ -32,6 +32,7 @@ import { useToast } from "@/components/ui/toast";
 import { capitalize } from "@/lib/utils";
 import type { CorrectiveAction, WorkOrder, Severity } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 export default function CorrectiveActionsPage() {
   const { t, formatDate } = useTranslation();
@@ -53,7 +54,7 @@ export default function CorrectiveActionsPage() {
     due_date: "",
   });
 
-  const now = new Date();
+  const [stableNow] = React.useState(() => new Date());
   const filtered = actions.filter((a) => {
     if (statusFilter !== "all" && a.status !== statusFilter) return false;
     if (searchQuery) {
@@ -68,14 +69,14 @@ export default function CorrectiveActionsPage() {
   const inProgressCount = actions.filter((a) => a.status === "in_progress").length;
   const overdueCount = actions.filter((a) => {
     if (a.status === "completed") return false;
-    return new Date(a.due_date) < now;
+    return new Date(a.due_date) < stableNow;
   }).length;
   const completedCount = actions.filter((a) => a.status === "completed").length;
 
   const handleCreate = () => {
     if (!form.asset_id || !form.description.trim() || !form.due_date) return;
     const action: CorrectiveAction = {
-      id: `ca_${Date.now()}`,
+      id: `ca_${crypto.randomUUID().slice(0, 8)}`,
       company_id: user?.company_id || "",
       asset_id: form.asset_id,
       inspection_id: null,
@@ -109,7 +110,7 @@ export default function CorrectiveActionsPage() {
 
   const handleCreateWorkOrder = (action: CorrectiveAction) => {
     const wo: WorkOrder = {
-      id: `wo_${Date.now()}`,
+      id: `wo_${crypto.randomUUID().slice(0, 8)}`,
       company_id: user?.company_id || "",
       asset_id: action.asset_id,
       title: `WO for: ${action.description.slice(0, 60)}`,
@@ -144,6 +145,7 @@ export default function CorrectiveActionsPage() {
   }
 
   return (
+    <RoleGuard requiredPermission="incidents.view_all">
     <div className="space-y-6">
       <div className="flex items-center justify-end">
         <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
@@ -182,7 +184,7 @@ export default function CorrectiveActionsPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map((action) => {
-            const isOverdue = action.status !== "completed" && new Date(action.due_date) < now;
+            const isOverdue = action.status !== "completed" && new Date(action.due_date) < stableNow;
             return (
               <Card key={action.id} className={isOverdue ? "border-destructive/50" : ""}>
                 <CardContent className="pt-6">
@@ -298,5 +300,6 @@ export default function CorrectiveActionsPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

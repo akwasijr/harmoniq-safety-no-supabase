@@ -47,6 +47,7 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 import type { IncidentInvestigation, IncidentAction, IncidentComment, IncidentTimelineEvent, RCAAttachment, Priority } from "@/types";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const tabs: Tab[] = [
   { id: "details", label: "Details", icon: Info },
@@ -133,25 +134,37 @@ export default function IncidentDetailPage() {
   const actions = incident?.actions ?? [];
   const comments = incident?.comments ?? [];
 
+  // Use refs for frequently-changing derived values to stabilize callbacks
+  const incidentRef = React.useRef(incident);
+  const actionsRef = React.useRef(actions);
+  const commentsRef = React.useRef(comments);
+  React.useEffect(() => {
+    incidentRef.current = incident;
+    actionsRef.current = actions;
+    commentsRef.current = comments;
+  });
+
   // Helper to update investigation in store
-  const setInvestigation = React.useCallback((newInvestigation: IncidentInvestigation | null) => {
-    if (!incident) return;
+  const setInvestigation = (newInvestigation: IncidentInvestigation | null) => {
+    if (!incidentRef.current) return;
     updateIncident(incidentId, { investigation: newInvestigation, updated_at: new Date().toISOString() });
-  }, [incident, incidentId, updateIncident]);
+  };
 
   // Helper to update actions in store
-  const setActions = React.useCallback((newActions: IncidentAction[] | ((prev: IncidentAction[]) => IncidentAction[])) => {
-    if (!incident) return;
-    const resolvedActions = typeof newActions === 'function' ? newActions(actions) : newActions;
+  const setActions = (newActions: IncidentAction[] | ((prev: IncidentAction[]) => IncidentAction[])) => {
+    if (!incidentRef.current) return;
+    const currentActions = actionsRef.current;
+    const resolvedActions = typeof newActions === 'function' ? newActions(currentActions) : newActions;
     updateIncident(incidentId, { actions: resolvedActions, updated_at: new Date().toISOString() });
-  }, [incident, incidentId, actions, updateIncident]);
+  };
 
   // Helper to add comment to store
-  const addComment = React.useCallback((comment: IncidentComment) => {
-    if (!incident) return;
-    const newComments = [...comments, comment];
+  const addComment = (comment: IncidentComment) => {
+    if (!incidentRef.current) return;
+    const currentComments = commentsRef.current;
+    const newComments = [...currentComments, comment];
     updateIncident(incidentId, { comments: newComments, updated_at: new Date().toISOString() });
-  }, [incident, incidentId, comments, updateIncident]);
+  };
 
   const handleStartInvestigation = (investigatorId: string) => {
     const newInvestigation: IncidentInvestigation = {
@@ -228,8 +241,8 @@ export default function IncidentDetailPage() {
   const handleAddAction = () => {
     if (!newAction.title || !newAction.assignee || !newAction.dueDate) return;
     
-    const actionId = `act-${Date.now()}`;
-    const ticketId = `TKT-${Date.now()}`;
+    const actionId = `act-${crypto.randomUUID().slice(0, 8)}`;
+    const ticketId = `TKT-${crypto.randomUUID().slice(0, 8)}`;
     
     const action: IncidentAction = {
       id: actionId,
@@ -267,7 +280,7 @@ export default function IncidentDetailPage() {
     // Sync corrective actions to the corrective actions store
     if (newAction.actionType === "corrective") {
       addCorrectiveAction({
-        id: `ca-${Date.now()}`,
+        id: `ca-${crypto.randomUUID().slice(0, 8)}`,
         company_id: incident.company_id,
         description: newAction.description || newAction.title,
         severity: newAction.priority === "urgent" ? "critical" : newAction.priority === "high" ? "high" : newAction.priority === "low" ? "low" : "medium",
@@ -351,6 +364,7 @@ export default function IncidentDetailPage() {
   };
 
   return (
+    <RoleGuard requiredPermission="incidents.view_own">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -1614,5 +1628,6 @@ export default function IncidentDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

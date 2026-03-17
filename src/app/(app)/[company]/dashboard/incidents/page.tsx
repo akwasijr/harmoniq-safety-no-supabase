@@ -44,6 +44,7 @@ import { downloadCsv } from "@/lib/csv";
 import { useAuth } from "@/hooks/use-auth";
 import type { Incident } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 type SubTabType = "incidents" | "tickets";
 
@@ -297,6 +298,7 @@ export default function IncidentsPage() {
   }
 
   return (
+    <RoleGuard requiredPermission="incidents.view_own">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -843,5 +845,6 @@ export default function IncidentsPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

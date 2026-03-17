@@ -42,11 +42,12 @@ function InvitePageContent() {
   const router = useRouter();
   const token = searchParams.get("token");
 
-  const [state, setState] = useState<InviteState>({ status: "loading" });
+  const [state, setState] = useState<InviteState>(() =>
+    token ? { status: "loading" } : { status: "invalid" }
+  );
 
   useEffect(() => {
     if (!token) {
-      setState({ status: "invalid" });
       return;
     }
 

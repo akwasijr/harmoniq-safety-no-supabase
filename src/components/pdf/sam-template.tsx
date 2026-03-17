@@ -6,7 +6,7 @@ import {
   Text,
   View,
   StyleSheet,
-  Image,
+  Image as PdfImage,
 } from "@react-pdf/renderer";
 import { sharedStyles, getRiskLevel, getRiskColor } from "./shared-styles";
 
@@ -188,7 +188,7 @@ export function SAMPdfDocument({ data }: { data: SAMData }) {
           <View style={styles.headerContainer}>
             {data.companyLogo ? (
               <View style={styles.logoContainer}>
-                <Image src={data.companyLogo} style={styles.logoImage} />
+                <PdfImage src={data.companyLogo} style={styles.logoImage} />
               </View>
             ) : (
               <View style={styles.logoContainer} />

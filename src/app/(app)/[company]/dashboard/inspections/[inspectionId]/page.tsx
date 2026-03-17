@@ -34,6 +34,7 @@ import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
 import { BarChart } from "@/components/charts";
 import { useTranslation } from "@/i18n";
 import { useAssetInspectionsStore } from "@/stores/inspections-store";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 // Mock inspection template data
 const mockInspectionTemplates: Record<string, {
@@ -277,6 +278,17 @@ export default function InspectionDetailPage() {
     : mockInspectionTemplates[mockInspectionSubmission.templateId];
   const submission = !isTemplate ? mockInspectionSubmission : null;
 
+  const inspectionTrend = React.useMemo(() => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+    const total = template?.usedCount ?? 0;
+    const base = Math.floor(total / months.length);
+    const remainder = total % months.length;
+    return months.map((name, index) => ({
+      name,
+      inspections: base + (index < remainder ? 1 : 0),
+    }));
+  }, [template?.usedCount]);
+
   if (isLoading) {
     return <LoadingPage />;
   }
@@ -284,17 +296,6 @@ export default function InspectionDetailPage() {
   if (!template) {
     return <EmptyState title="Template not found" description="The requested inspection template could not be found." />;
   }
-
-  const inspectionTrend = React.useMemo(() => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-    const total = template.usedCount ?? 0;
-    const base = Math.floor(total / months.length);
-    const remainder = total % months.length;
-    return months.map((name, index) => ({
-      name,
-      inspections: base + (index < remainder ? 1 : 0),
-    }));
-  }, [template.usedCount]);
 
   // Group checkpoints by category
   const groupedCheckpoints = template.checkpoints.reduce((acc, checkpoint) => {
@@ -308,6 +309,7 @@ export default function InspectionDetailPage() {
   const failCount = submission?.results.filter(r => r.result === "fail" || r.result === "no").length || 0;
 
   return (
+    <RoleGuard requiredPermission="checklists.view">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -817,5 +819,6 @@ export default function InspectionDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

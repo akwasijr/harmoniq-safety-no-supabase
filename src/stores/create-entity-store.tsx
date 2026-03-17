@@ -322,7 +322,7 @@ export function createEntityStore<T extends IdEntity>(
     const itemsForCompany = React.useCallback(
       (companyId: string | null | undefined) => {
         // With Supabase, RLS already filters by company, but filter client-side too for safety
-        if (!companyId) return items;
+        if (!companyId) return [];
         return items.filter(
           (item) => "company_id" in item && (item as unknown as CompanyEntity).company_id === companyId
         );

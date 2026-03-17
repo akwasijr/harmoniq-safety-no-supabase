@@ -27,6 +27,7 @@ import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import QRCode from "qrcode";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 type QRCodeItem = {
   id: string;
@@ -164,6 +165,7 @@ export default function QRCodesPage() {
   }
 
   return (
+    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -417,5 +419,6 @@ export default function QRCodesPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

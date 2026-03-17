@@ -168,7 +168,7 @@ export default function SAMFormPage() {
       });
     } else {
       const newRisk: RiskItem = {
-        id: `${categoryId}_${itemId}_${Date.now()}`,
+        id: crypto.randomUUID(),
         categoryId,
         itemId,
         present: true,

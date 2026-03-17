@@ -109,6 +109,7 @@ function ReportIncidentPageContent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGettingLocation, setIsGettingLocation] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const refCounterRef = React.useRef(0);
   const { items: locations } = useLocationsStore();
   const { add: addIncident } = useIncidentsStore({ skipLoad: true });
   const { toast } = useToast();
@@ -277,7 +278,8 @@ function ReportIncidentPageContent() {
       return;
     }
     const now = new Date();
-    const refNumber = `INC-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
+    refCounterRef.current = (refCounterRef.current % 999) + 1;
+    const refNumber = `INC-${now.getFullYear()}-${String(refCounterRef.current).padStart(3, "0")}`;
     const incident: Incident = {
       id: crypto.randomUUID(),
       company_id: user.company_id || "",

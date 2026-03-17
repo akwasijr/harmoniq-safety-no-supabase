@@ -6,7 +6,7 @@ import {
   Text,
   View,
   StyleSheet,
-  Image,
+  Image as PdfImage,
 } from "@react-pdf/renderer";
 import { sharedStyles } from "./shared-styles";
 
@@ -200,7 +200,7 @@ export function OSAPdfDocument({ data }: { data: OSAData }) {
           <View style={styles.headerContainer}>
             {data.companyLogo ? (
               <View style={styles.logoContainer}>
-                <Image src={data.companyLogo} style={styles.logoImage} />
+                <PdfImage src={data.companyLogo} style={styles.logoImage} />
               </View>
             ) : (
               <View style={styles.logoContainer} />

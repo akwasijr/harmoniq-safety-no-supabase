@@ -27,6 +27,7 @@ import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/hooks/use-auth";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const tabs: Tab[] = [
   { id: "overview", label: "Overview", icon: Info },
@@ -54,6 +55,22 @@ export default function TeamDetailPage() {
   const { items: users, update: updateUser } = useUsersStore();
   const baseTeam = teams.find((t) => t.id === teamId);
 
+  // Editable team state (hooks must be above early returns)
+  const [editedTeam, setEditedTeam] = React.useState({
+    name: baseTeam?.name ?? "",
+    description: baseTeam?.description || "",
+    color: baseTeam?.color ?? "",
+  });
+
+  React.useEffect(() => {
+    if (!baseTeam) return;
+    setEditedTeam({
+      name: baseTeam.name,
+      description: baseTeam.description || "",
+      color: baseTeam.color,
+    });
+  }, [baseTeam]);
+
   if (isLoading) {
     return <LoadingPage />;
   }
@@ -62,21 +79,6 @@ export default function TeamDetailPage() {
   if (!baseTeam) {
     notFound();
   }
-  
-  // Editable team state
-  const [editedTeam, setEditedTeam] = React.useState({
-    name: baseTeam.name,
-    description: baseTeam.description || "",
-    color: baseTeam.color,
-  });
-
-  React.useEffect(() => {
-    setEditedTeam({
-      name: baseTeam.name,
-      description: baseTeam.description || "",
-      color: baseTeam.color,
-    });
-  }, [baseTeam]);
 
   const team = isEditing ? { ...baseTeam, ...editedTeam } : baseTeam;
 
@@ -159,6 +161,7 @@ export default function TeamDetailPage() {
   }
 
   return (
+    <RoleGuard requiredPermission="teams.view">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
@@ -557,5 +560,6 @@ export default function TeamDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

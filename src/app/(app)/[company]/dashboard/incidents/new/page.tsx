@@ -20,6 +20,7 @@ import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import type { Incident, IncidentType, Severity, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const INCIDENT_TYPES: { value: IncidentType; label: string }[] = [
   { value: "injury", label: "Injury" },
@@ -147,6 +148,7 @@ export default function NewIncidentPage() {
   const isValid = formData.title.trim() && formData.description.trim();
 
   return (
+    <RoleGuard requiredPermission="incidents.create">
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -476,5 +478,6 @@ export default function NewIncidentPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

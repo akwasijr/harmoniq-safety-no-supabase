@@ -18,6 +18,7 @@ import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyParam } from "@/hooks/use-company-param";
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import type { WorkOrder } from "@/types";
 
@@ -197,6 +198,7 @@ function WorkOrderCard({
 export default function MyTasksPage() {
   const company = useCompanyParam();
   const { user } = useAuth();
+  const { toast } = useToast();
   const { items: workOrders, isLoading, update } = useWorkOrdersStore();
   const { items: assets } = useAssetsStore();
 
@@ -248,9 +250,10 @@ export default function MyTasksPage() {
 
   const handleAccept = React.useCallback(
     (id: string) => {
-      update(id, { status: "in_progress" });
+      update(id, { status: "in_progress", updated_at: new Date().toISOString() });
+      toast({ title: "Task accepted", description: "Work order is now in progress" });
     },
-    [update]
+    [update, toast]
   );
 
   const handleComplete = React.useCallback(
@@ -258,9 +261,11 @@ export default function MyTasksPage() {
       update(id, {
         status: "completed",
         completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       });
+      toast({ title: "Task completed", description: "Work order has been marked as complete" });
     },
-    [update]
+    [update, toast]
   );
 
   if (!user || isLoading) {

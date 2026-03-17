@@ -31,6 +31,7 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/hooks/use-auth";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 export default function TicketDetailPage() {
   const router = useRouter();
@@ -49,15 +50,6 @@ export default function TicketDetailPage() {
   const canDeleteTicket = hasPermission("incidents.delete");
   const { items: tickets, isLoading, update: updateTicket, remove: removeTicket } = useTicketsStore();
   const ticket = tickets.find((t) => t.id === ticketId);
-
-  if (isLoading) {
-    return <LoadingPage />;
-  }
-
-  // Ticket not found. Trigger Next.js not-found boundary
-  if (!ticket) {
-    notFound();
-  }
 
   const [editedDescription, setEditedDescription] = React.useState("");
 
@@ -112,6 +104,16 @@ export default function TicketDetailPage() {
     } catch { /* storage full */ }
   }, [tasks, TASKS_KEY]);
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
+  // Ticket not found. Trigger Next.js not-found boundary
+  if (!ticket) {
+    notFound();
+  }
+
+
   // Mock documents
   const documents = [
     { id: "d1", name: "Incident Report.pdf", size: "245 KB", uploaded: "2024-01-28", by: "John Doe" },
@@ -145,18 +147,12 @@ export default function TicketDetailPage() {
     router.push(`/${company}/dashboard/tickets`);
   };
 
-  if (!ticket) {
-    if (isLoading) {
-      return <LoadingPage />;
-    }
-    notFound();
-  }
-
 
   const completedTasks = tasks.filter(t => t.completed).length;
   const taskProgress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
 
   return (
+    <RoleGuard requiredPermission="incidents.view_own">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -565,5 +561,6 @@ export default function TicketDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

@@ -10,7 +10,7 @@ import {
   Save,
   Eye,
   FileText,
-  Image,
+  Image as ImageIcon,
   Newspaper,
   FolderOpen,
   HelpCircle,
@@ -39,6 +39,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCompanyStore } from "@/stores/company-store";
 import type { Content } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const contentTypes = [
   { value: "news", label: "News Article", icon: Newspaper, description: "Company news and announcements" },
@@ -165,6 +166,7 @@ export default function NewContentPage() {
   const selectedType = contentTypes.find(t => t.value === formData.type);
 
   return (
+    <RoleGuard allowedRoles={["company_admin", "super_admin"]}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -437,7 +439,7 @@ export default function NewContentPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Image className="h-5 w-5" />
+                    <ImageIcon className="h-5 w-5" />
                     Featured Image
                   </CardTitle>
                 </CardHeader>
@@ -711,5 +713,6 @@ export default function NewContentPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

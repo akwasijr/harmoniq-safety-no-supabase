@@ -36,6 +36,7 @@ import type {
   InspectionCheckType,
   InspectionRouteStatus,
 } from "@/types";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const CHECK_TYPE_ICONS: Record<InspectionCheckType, React.ComponentType<{ className?: string }>> = {
   visual: Eye,
@@ -136,6 +137,7 @@ export default function InspectionRoutesPage() {
   }
 
   return (
+    <RoleGuard requiredPermission="checklists.view">
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">{t("inspectionRoutes.title")}</h1>
@@ -418,5 +420,6 @@ export default function InspectionRoutesPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

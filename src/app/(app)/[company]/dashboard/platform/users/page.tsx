@@ -75,7 +75,7 @@ export default function PlatformUsersPage() {
       middle_name: null,
       last_name: formData.last_name,
       full_name: `${formData.first_name} ${formData.last_name}`,
-      role: "super_admin",
+      role: "company_admin",
       user_type: "internal",
       account_type: "admin",
       gender: null,

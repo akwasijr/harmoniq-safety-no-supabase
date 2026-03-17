@@ -151,14 +151,18 @@ export default function AssetInspectionPage() {
     // Auto-generate work order for failed inspections
     if (result === "needs_attention") {
       const wo = createWorkOrderFromInspection({
-        inspection: { id: inspectionId, asset_id: asset.id, result, notes: "Auto-generated from failed inspection" },
+        inspection: { id: inspectionId, asset_id: asset.id, result, notes: combinedNotes || "Auto-generated from failed inspection" },
         asset: { id: asset.id, name: asset.name, company_id: asset.company_id },
         inspectorId: user.id,
       });
       addWorkOrder(wo);
     }
 
-    toast("Inspection submitted");
+    if (result === "needs_attention") {
+      toast("Inspection submitted — Work order created for follow-up");
+    } else {
+      toast("Inspection submitted");
+    }
     router.push(`/${company}/app/report/success?ref=${refNumber}&type=inspection`);
   };
 

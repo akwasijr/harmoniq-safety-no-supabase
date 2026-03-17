@@ -11,7 +11,7 @@ import {
   Eye,
   EyeOff,
   FileText,
-  Image,
+  Image as ImageIcon,
   BarChart3,
   Settings,
   Info,
@@ -30,11 +30,12 @@ import { useContentStore } from "@/stores/content-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const tabs: Tab[] = [
   { id: "details", label: "Details", icon: Info },
   { id: "preview", label: "Preview", icon: Eye },
-  { id: "media", label: "Media", icon: Image },
+  { id: "media", label: "Media", icon: ImageIcon },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
   { id: "settings", label: "Settings", icon: Settings, variant: "danger" },
 ];
@@ -89,6 +90,7 @@ export default function ContentDetailPage() {
   };
 
   return (
+    <RoleGuard allowedRoles={["company_admin", "super_admin"]}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -297,7 +299,7 @@ export default function ContentDetailPage() {
                 <span>{content.published_at ? formatDate(content.published_at) : t("content.statuses.draft")}</span>
               </div>
               <div className="h-48 rounded-lg bg-muted flex items-center justify-center mb-6">
-                <Image className="h-12 w-12 text-muted-foreground" />
+                <ImageIcon className="h-12 w-12 text-muted-foreground" />
               </div>
               <div className="prose prose-lg max-w-none">
                 <p>{content.content}</p>
@@ -317,7 +319,7 @@ export default function ContentDetailPage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="aspect-video rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/50 hover:bg-muted cursor-pointer transition-colors">
                 <div className="text-center">
-                  <Image className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">Featured Image</p>
                   <p className="text-xs text-muted-foreground">Click to upload</p>
                 </div>
@@ -455,5 +457,6 @@ export default function ContentDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

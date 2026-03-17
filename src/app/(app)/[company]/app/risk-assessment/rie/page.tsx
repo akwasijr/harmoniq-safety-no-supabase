@@ -199,7 +199,7 @@ export default function RIEFormPage() {
       });
     } else {
       const newRisk: RiskItem = {
-        id: `${categoryId}_${itemId}_${Date.now()}`,
+        id: crypto.randomUUID(),
         categoryId,
         itemId,
         present: true,

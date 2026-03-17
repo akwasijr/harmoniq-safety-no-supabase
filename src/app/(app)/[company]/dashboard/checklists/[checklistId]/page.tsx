@@ -36,6 +36,7 @@ import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import type { ChecklistItem } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const tabs: Tab[] = [
   { id: "details", label: "Details", icon: Info },
@@ -58,6 +59,7 @@ export default function ChecklistDetailPage() {
   const checklistId = routeParams.checklistId as string;
   const [activeTab, setActiveTab] = React.useState("details");
   const [isEditing, setIsEditing] = React.useState(false);
+  const [stableNow] = React.useState(() => Date.now());
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
@@ -175,7 +177,7 @@ export default function ChecklistDetailPage() {
   const handleDuplicateTemplate = () => {
     if (!template) return;
     const now = new Date().toISOString();
-    const duplicateId = `ct_${Date.now()}`;
+    const duplicateId = crypto.randomUUID();
     addTemplate({
       ...template,
       id: duplicateId,
@@ -473,6 +475,7 @@ export default function ChecklistDetailPage() {
   }
 
   return (
+    <RoleGuard requiredPermission="checklists.view">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -822,7 +825,7 @@ export default function ChecklistDetailPage() {
                 <p className="text-2xl font-semibold">
                   {templateSubmissions.filter((item) =>
                     new Date(item.submitted_at || item.created_at) >=
-                    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                    new Date(stableNow - 7 * 24 * 60 * 60 * 1000)
                   ).length}
                 </p>
               </CardContent>
@@ -949,5 +952,6 @@ export default function ChecklistDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

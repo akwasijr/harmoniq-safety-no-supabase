@@ -33,6 +33,7 @@ import { useCompanyParam } from "@/hooks/use-company-param";
 import { useTranslation } from "@/i18n";
 import { capitalize } from "@/lib/utils";
 import type { CorrectiveAction } from "@/types";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const STATUS_FLOW: Record<string, string[]> = {
   open: ["in_progress"],
@@ -56,7 +57,7 @@ export default function CorrectiveActionDetailPage() {
   const { items: users } = useUsersStore();
   const { items: incidents } = useIncidentsStore();
 
-  const canEdit = hasPermission("incidents.edit_all");
+  const canEdit = hasPermission("incidents.investigate");
 
   const action = actions.find((a) => a.id === actionId);
 
@@ -164,6 +165,7 @@ export default function CorrectiveActionDetailPage() {
       : "secondary";
 
   return (
+    <RoleGuard requiredPermission="incidents.view_all">
     <div className="space-y-6" ref={highlight ? highlightRef : undefined}>
       {/* Header */}
       <div className="flex items-start gap-4">
@@ -380,5 +382,6 @@ export default function CorrectiveActionDetailPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

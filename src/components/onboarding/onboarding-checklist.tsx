@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle, Circle, ChevronRight, X } from "lucide-react";
 import { useTranslation } from "@/i18n";
@@ -28,14 +28,14 @@ export function OnboardingChecklist() {
   const { items: assets } = useAssetsStore();
   const { items: templates } = useChecklistTemplatesStore();
 
-  const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    const key = `harmoniq_onboarding_dismissed_${user?.company_id}`;
-    if (typeof window !== "undefined" && localStorage.getItem(key)) {
-      setDismissed(true);
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window !== "undefined" && user?.company_id) {
+      const key = `harmoniq_onboarding_dismissed_${user.company_id}`;
+      return !!localStorage.getItem(key);
     }
-  }, [user?.company_id]);
+    return false;
+  });
+  const [expanded, setExpanded] = useState(false);
 
   if (!hasPermission("settings.edit") || dismissed) return null;
 
@@ -92,8 +92,6 @@ export function OnboardingChecklist() {
     localStorage.setItem(key, "true");
     setDismissed(true);
   };
-
-  const [expanded, setExpanded] = useState(false);
 
   const progress = Math.round((completedCount / steps.length) * 100);
 

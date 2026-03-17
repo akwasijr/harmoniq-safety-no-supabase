@@ -33,6 +33,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import type { Ticket as TicketType } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -155,6 +156,7 @@ export default function TicketsPage() {
   }
 
   return (
+    <RoleGuard requiredPermission="incidents.view_own">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -408,5 +410,6 @@ export default function TicketsPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

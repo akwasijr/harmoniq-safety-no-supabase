@@ -239,6 +239,7 @@ function TaskCard({
   const KindIcon = getKindIcon(task.kind);
   const kindColor = getKindIconColor(task.kind);
   const actions = getStatusActions(task.kind, task.status);
+  const iconClassName = cn("h-5 w-5 shrink-0", kindColor);
 
   return (
     <div className="rounded-lg border transition-colors hover:bg-muted/40">
@@ -246,7 +247,13 @@ function TaskCard({
         href={task.href}
         className="flex items-center gap-3 p-3 active:bg-muted/50"
       >
-        <KindIcon className={cn("h-5 w-5 shrink-0", kindColor)} aria-hidden="true" />
+        {task.kind === "ticket" ? (
+          <Ticket className={iconClassName} aria-hidden="true" />
+        ) : task.kind === "work-order" ? (
+          <Wrench className={iconClassName} aria-hidden="true" />
+        ) : (
+          <ShieldAlert className={iconClassName} aria-hidden="true" />
+        )}
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">

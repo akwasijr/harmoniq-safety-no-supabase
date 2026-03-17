@@ -779,9 +779,9 @@ export default function Home() {
               </p>
               <div className="flex gap-4 mt-6">
                 {["X", "in", "f"].map(social => (
-                  <a key={social} href="#" className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800/50 text-xs text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors">
+                  <button key={social} type="button" className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800/50 text-xs text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors">
                     {social}
-                  </a>
+                  </button>
                 ))}
               </div>
             </div>
@@ -789,7 +789,7 @@ export default function Home() {
               <h4 className="font-semibold text-white text-sm mb-4">Product</h4>
               <ul className="space-y-3">
                 {["Features", "Integrations", "Mobile App", "Changelog"].map(item => (
-                  <li key={item}><a href="#" className="text-sm text-zinc-500 hover:text-white transition-colors">{item}</a></li>
+                  <li key={item}><button type="button" className="text-sm text-zinc-500 hover:text-white transition-colors">{item}</button></li>
                 ))}
               </ul>
             </div>
@@ -797,26 +797,26 @@ export default function Home() {
               <h4 className="font-semibold text-white text-sm mb-4">Company</h4>
               <ul className="space-y-3">
                 {["About", "Blog", "Careers", "Contact"].map(item => (
-                  <li key={item}><a href="#" className="text-sm text-zinc-500 hover:text-white transition-colors">{item}</a></li>
+                  <li key={item}><button type="button" className="text-sm text-zinc-500 hover:text-white transition-colors">{item}</button></li>
                 ))}
               </ul>
             </div>
             <div>
               <h4 className="font-semibold text-white text-sm mb-4">Legal</h4>
               <ul className="space-y-3">
-                <li><a href="/privacy" className="text-sm text-zinc-500 hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="/terms" className="text-sm text-zinc-500 hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="/cookies" className="text-sm text-zinc-500 hover:text-white transition-colors">Cookie Policy</a></li>
-                <li><a href="/gdpr" className="text-sm text-zinc-500 hover:text-white transition-colors">GDPR</a></li>
+                <li><Link href="/privacy" className="text-sm text-zinc-500 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-sm text-zinc-500 hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/cookies" className="text-sm text-zinc-500 hover:text-white transition-colors">Cookie Policy</Link></li>
+                <li><Link href="/gdpr" className="text-sm text-zinc-500 hover:text-white transition-colors">GDPR</Link></li>
               </ul>
             </div>
           </div>
           <div className="mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-zinc-600">© {new Date().getFullYear()} Harmoniq. All rights reserved.</p>
             <div className="flex gap-6">
-              <a href="/privacy" className="text-sm text-zinc-600 hover:text-white transition-colors">Privacy</a>
-              <a href="/terms" className="text-sm text-zinc-600 hover:text-white transition-colors">Terms</a>
-              <a href="/cookies" className="text-sm text-zinc-600 hover:text-white transition-colors">Cookies</a>
+              <Link href="/privacy" className="text-sm text-zinc-600 hover:text-white transition-colors">Privacy</Link>
+              <Link href="/terms" className="text-sm text-zinc-600 hover:text-white transition-colors">Terms</Link>
+              <Link href="/cookies" className="text-sm text-zinc-600 hover:text-white transition-colors">Cookies</Link>
             </div>
           </div>
         </div>

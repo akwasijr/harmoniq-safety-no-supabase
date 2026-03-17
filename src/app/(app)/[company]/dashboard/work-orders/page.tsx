@@ -34,6 +34,7 @@ import { capitalize } from "@/lib/utils";
 import { getOverdueMaintenanceWorkOrders } from "@/lib/work-order-generator";
 import type { WorkOrder, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const STATUS_FLOW: Record<string, string[]> = {
   requested: ["approved", "cancelled"],
@@ -194,6 +195,7 @@ export default function WorkOrdersPage() {
   }
 
   return (
+    <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6">
       <div className="flex items-center justify-end">
         <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
@@ -404,5 +406,6 @@ export default function WorkOrdersPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

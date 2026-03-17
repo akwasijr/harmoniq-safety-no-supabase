@@ -49,6 +49,7 @@ export default function NotificationsPage() {
   const { items: tickets } = useTicketsStore();
   const { items: dbNotifications, update: updateNotification, isLoading } = useNotificationsStore();
   const { t, formatDate } = useTranslation();
+  const [fallbackTimestamp] = React.useState(() => Date.now());
 
   const notifications = React.useMemo<NotificationItem[]>(() => {
     if (!user) return [];
@@ -96,7 +97,7 @@ export default function NotificationsPage() {
           type: "task",
           title: template.name,
           description: `${template.items?.length || 0} items to complete`,
-          timestamp: new Date(template.created_at || Date.now()),
+          timestamp: new Date(template.created_at || fallbackTimestamp),
           read: false,
           href: `/${company}/app/checklists/${template.id}`,
           icon: ClipboardCheck,
@@ -115,7 +116,7 @@ export default function NotificationsPage() {
           type: "ticket",
           title: ticket.title || "Work order",
           description: `Priority: ${ticket.priority || "normal"}`,
-          timestamp: new Date(ticket.created_at || Date.now()),
+          timestamp: new Date(ticket.created_at || fallbackTimestamp),
           read: false,
           href: `/${company}/app/maintenance`,
           icon: Wrench,
@@ -126,7 +127,7 @@ export default function NotificationsPage() {
     // Sort by newest first
     items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     return items;
-  }, [user, dbNotifications, contentItems, checklistTemplates, checklistSubmissions, incidents, tickets, company]);
+  }, [user, dbNotifications, contentItems, checklistTemplates, checklistSubmissions, incidents, tickets, company, fallbackTimestamp]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

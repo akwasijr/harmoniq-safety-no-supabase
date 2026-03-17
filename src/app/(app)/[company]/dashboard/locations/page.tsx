@@ -53,6 +53,7 @@ import { useCompanyStore } from "@/stores/company-store";
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 // Location type hierarchy
 const LOCATION_HIERARCHY: Record<string, string[]> = {
@@ -1287,6 +1288,7 @@ function LocationsPageContent() {
 
 export default function LocationsPage() {
   return (
+    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>
     <React.Suspense
       fallback={
         <div className="flex min-h-[400px] items-center justify-center">
@@ -1296,5 +1298,6 @@ export default function LocationsPage() {
     >
       <LocationsPageContent />
     </React.Suspense>
+    </RoleGuard>
   );
 }

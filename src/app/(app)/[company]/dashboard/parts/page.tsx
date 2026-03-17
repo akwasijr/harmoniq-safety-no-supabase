@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import type { Part } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 export default function PartsPage() {
   const { t, formatNumber } = useTranslation();
@@ -75,6 +76,7 @@ export default function PartsPage() {
   }
 
   return (
+    <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6">
       <div className="flex items-center justify-end">
         <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
@@ -187,5 +189,6 @@ export default function PartsPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

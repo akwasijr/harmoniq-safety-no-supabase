@@ -49,6 +49,7 @@ import CorrectiveActionsContent from "@/app/(app)/[company]/dashboard/corrective
 import WorkOrdersContent from "@/app/(app)/[company]/dashboard/work-orders/page";
 import PartsContent from "@/app/(app)/[company]/dashboard/parts/page";
 import type { Asset, Alert } from "@/types";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -63,6 +64,7 @@ export default function AssetsPage() {
   const [expandedSystems, setExpandedSystems] = React.useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = React.useState<"assets" | "alerts" | "corrective-actions" | "work-orders" | "parts">("assets");
   const [alertSeverityFilter, setAlertSeverityFilter] = React.useState<string>("");
+  const [stableNow] = React.useState(() => Date.now());
 
   // Filters
   const [statusFilter, setStatusFilter] = React.useState("");
@@ -190,7 +192,7 @@ export default function AssetsPage() {
   
   // Compute alerts from asset data
   const computedAlerts = React.useMemo(() => {
-    const now = new Date();
+    const now = new Date(stableNow);
     const alerts: Alert[] = [];
     const DAY = 24 * 60 * 60 * 1000;
 
@@ -255,7 +257,7 @@ export default function AssetsPage() {
       }
     }
     return alerts;
-  }, [assets]);
+  }, [assets, stableNow, formatDate]);
 
   // Alerts - active (not dismissed/resolved)
   const activeAlerts = computedAlerts.filter(a => !a.is_dismissed && !a.is_resolved);
@@ -264,8 +266,8 @@ export default function AssetsPage() {
   const infoAlerts = activeAlerts.filter(a => a.severity === "info");
   
   // Upcoming alerts (due within next 30 days)
-  const today = new Date();
-  const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const today = new Date(stableNow);
+  const thirtyDaysFromNow = new Date(stableNow + 30 * 24 * 60 * 60 * 1000);
   const upcomingAlerts = activeAlerts.filter(a => {
     const dueDate = new Date(a.due_date);
     return dueDate >= today && dueDate <= thirtyDaysFromNow;
@@ -307,7 +309,7 @@ export default function AssetsPage() {
   ];
 
   // Filter assets
-  const filteredAssets = assets.filter((asset) => {
+  const filteredAssets = React.useMemo(() => assets.filter((asset) => {
     const matchesSearch = searchQuery === "" || 
       asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (asset.serial_number?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
@@ -317,7 +319,7 @@ export default function AssetsPage() {
     const matchesLocation = locationFilter === "" || asset.location_id === locationFilter;
     const matchesDate = asset.purchase_date ? isWithinDateRange(asset.purchase_date, dateRange as DateRangeValue) : true;
     return matchesSearch && matchesStatus && matchesCategory && matchesLocation && matchesDate;
-  });
+  }), [assets, searchQuery, statusFilter, categoryFilter, locationFilter, dateRange]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAssets.length / ITEMS_PER_PAGE);
@@ -444,6 +446,7 @@ export default function AssetsPage() {
   }
 
   return (
+    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1254,5 +1257,6 @@ export default function AssetsPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

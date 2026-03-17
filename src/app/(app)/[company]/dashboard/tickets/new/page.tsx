@@ -26,6 +26,7 @@ import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import type { Ticket } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const priorities = [
   { value: "low", label: "Low", color: "bg-green-100 text-green-800" },
@@ -113,6 +114,7 @@ export default function NewTicketPage() {
   };
 
   return (
+    <RoleGuard requiredPermission="incidents.create">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -296,5 +298,6 @@ export default function NewTicketPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

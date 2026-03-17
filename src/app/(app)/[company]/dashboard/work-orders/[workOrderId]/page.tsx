@@ -40,6 +40,7 @@ import { useNotificationsStore } from "@/stores/notifications-store";
 import { useTranslation } from "@/i18n";
 import { capitalize } from "@/lib/utils";
 import type { WorkOrder } from "@/types";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const STATUS_FLOW: Record<string, string[]> = {
   requested: ["approved", "cancelled"],
@@ -222,6 +223,7 @@ export default function WorkOrderDetailPage() {
   const totalCost = (order.parts_cost || 0) + (order.labor_cost || 0);
 
   return (
+    <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6" ref={highlight ? highlightRef : undefined}>
       {/* Header */}
       <div className="flex items-start gap-4">
@@ -524,5 +526,6 @@ export default function WorkOrderDetailPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

@@ -27,6 +27,7 @@ import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import type { Company, Country, Language } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 type SettingsTabType = "general" | "branding" | "notifications" | "security" | "billing";
 
@@ -108,6 +109,28 @@ const buildSettingsFromCompany = (company: Company | null | undefined): Settings
 
 const getSettingsKey = (companyId?: string) =>
   companyId ? `harmoniq_settings_${companyId}` : "harmoniq_settings";
+
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked ? "true" : "false"}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        checked ? "bg-primary" : "bg-muted"
+      )}
+    >
+      <span
+        className={cn(
+          "pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform",
+          checked ? "translate-x-5" : "translate-x-0"
+        )}
+      />
+    </button>
+  );
+}
 
 export default function SettingsPage() {
   const company = useCompanyParam();
@@ -216,28 +239,8 @@ export default function SettingsPage() {
     }
   };
 
-  // Toggle switch component
-  const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
-    <button
-      role="switch"
-      aria-checked={checked ? "true" : "false"}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        checked ? "bg-primary" : "bg-muted"
-      )}
-    >
-      <span
-        className={cn(
-          "pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform",
-          checked ? "translate-x-5" : "translate-x-0"
-        )}
-      />
-    </button>
-  );
-
   return (
+    <RoleGuard requiredPermission="settings.view">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -833,5 +836,6 @@ export default function SettingsPage() {
         )}
       </div>
     </div>
+    </RoleGuard>
   );
 }

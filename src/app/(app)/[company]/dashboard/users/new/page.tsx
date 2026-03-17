@@ -18,6 +18,7 @@ import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import type { CompanyRole, UserType, AccountType, Gender, Language, User } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const ROLES: { value: CompanyRole; label: string }[] = [
   { value: "company_admin", label: "Company Admin" },
@@ -127,6 +128,7 @@ export default function NewUserPage() {
   const isValid = formData.email.trim() && formData.first_name.trim() && formData.last_name.trim();
 
   return (
+    <RoleGuard requiredPermission="users.create">
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -358,5 +360,6 @@ export default function NewUserPage() {
         </Button>
       </div>
     </div>
+    </RoleGuard>
   );
 }

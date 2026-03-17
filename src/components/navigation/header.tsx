@@ -100,6 +100,7 @@ export function Header({
     // Dynamic segment patterns, check from most specific to least
     const dynamicPatterns: [RegExp, string][] = [
       [/^dashboard\/users\/teams\/[^/]+$/, "Team Details"],
+      [/^dashboard\/work-orders\/[^/]+$/, "Work Order Details"],
       [/^dashboard\/incidents\/[^/]+$/, "Incident Details"],
       [/^dashboard\/checklists\/[^/]+$/, "Checklist Details"],
       [/^dashboard\/users\/[^/]+$/, "User Details"],

@@ -29,6 +29,7 @@ import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useToast } from "@/components/ui/toast";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 // Dynamic import for PDF export (client-side only)
 const PdfExportButton = dynamic(
@@ -838,6 +839,7 @@ export default function RiskAssessmentDetailPage() {
   }
 
   return (
+    <RoleGuard requiredPermission="checklists.view">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -1184,5 +1186,6 @@ export default function RiskAssessmentDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

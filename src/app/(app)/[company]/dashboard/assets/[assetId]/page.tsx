@@ -16,7 +16,7 @@ import {
   Edit,
   Clock,
   Info,
-  Image,
+  Image as ImageIcon,
   File,
   Award,
   BarChart3,
@@ -54,6 +54,7 @@ import { capitalize } from "@/lib/utils";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import Link from "next/link";
 import type { MaintenanceSchedule, AssetCategory, AssetStatus, MeterUnit } from "@/types";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const ASSET_CATEGORIES: AssetCategory[] = [
   "machinery",
@@ -470,6 +471,7 @@ export default function AssetDetailPage() {
 
 
   return (
+    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -1221,7 +1223,7 @@ export default function AssetDetailPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Mark "{schedules.find(s => s.id === showCompleteModal)?.name}" as complete?
+                  Mark &quot;{schedules.find(s => s.id === showCompleteModal)?.name}&quot; as complete?
                 </p>
                 <div>
                   <Label>Notes (optional)</Label>
@@ -1667,7 +1669,7 @@ export default function AssetDetailPage() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" className="gap-2" onClick={() => imageInputRef.current?.click()}>
-                  <Image className="h-4 w-4" />
+                  <ImageIcon className="h-4 w-4" />
                   {t("assets.buttons.uploadImage")}
                 </Button>
                 <Button className="gap-2" onClick={() => fileInputRef.current?.click()}>
@@ -1786,7 +1788,7 @@ export default function AssetDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Image className="h-4 w-4" />
+                  <ImageIcon className="h-4 w-4" />
                   {t("assets.sections.images")}
                 </CardTitle>
               </CardHeader>
@@ -1804,7 +1806,7 @@ export default function AssetDetailPage() {
                         <img src={img.dataUrl} alt={img.name} className="absolute inset-0 h-full w-full object-cover" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                          <Image className="h-8 w-8 text-muted-foreground" />
+                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
                           <span className="text-[10px] text-muted-foreground">{t("assets.noPreview")}</span>
                         </div>
                       )}
@@ -1914,5 +1916,6 @@ export default function AssetDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

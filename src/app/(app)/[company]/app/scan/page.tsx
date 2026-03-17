@@ -54,10 +54,6 @@ export default function ScanAssetPage() {
     ? locations.find((l) => l.id === foundAsset.location_id)
     : null;
 
-  if (isLoading) {
-    return <LoadingPage message="Loading assets..." />;
-  }
-
   // Look up asset by tag, QR code, serial number, or ID
   const lookupAsset = React.useCallback(
     (query: string): string | null => {
@@ -200,6 +196,10 @@ export default function ScanAssetPage() {
       console.warn("Failed to toggle torch:", err);
     });
   }, [isTorchOn]);
+
+  if (isLoading) {
+    return <LoadingPage message="Loading assets..." />;
+  }
 
   const handleManualSearch = () => {
     const assetId = lookupAsset(manualInput);
