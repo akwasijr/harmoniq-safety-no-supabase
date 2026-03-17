@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingPage } from "@/components/ui/loading";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -137,6 +139,10 @@ export default function CorrectiveActionsPage() {
     return u ? `${u.first_name} ${u.last_name}` : "Unknown";
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-end">
@@ -168,13 +174,11 @@ export default function CorrectiveActionsPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            <Wrench className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No corrective actions found</p>
-            <p className="text-sm">Create one to track fixes for failed inspections</p>
-          </CardContent>
-        </Card>
+        <NoDataEmptyState
+          entityName="corrective actions"
+          onAdd={() => setShowCreate(true)}
+          addLabel={t("correctiveActions.newAction")}
+        />
       ) : (
         <div className="space-y-3">
           {filtered.map((action) => {

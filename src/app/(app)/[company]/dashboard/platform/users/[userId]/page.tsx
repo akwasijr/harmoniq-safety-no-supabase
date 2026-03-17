@@ -3,6 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ArrowLeft,
   Globe,
@@ -55,31 +57,23 @@ export default function PlatformUserDetailPage() {
   }, [user?.id]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!user || !editedUser) {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      );
-    }
     return (
       <RoleGuard requireSuperAdmin>
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">Platform user not found</p>
-          <Link href={`/${company}/dashboard/platform/users`}>
-            <Button variant="link" className="mt-2">
-              {t("common.back")} to platform users
-            </Button>
-          </Link>
-        </div>
+        <EmptyState
+          title="Platform user not found"
+          description="The requested platform user could not be found."
+          action={
+            <Link href={`/${company}/dashboard/platform/users`}>
+              <Button variant="link" className="mt-2">
+                {t("common.back")} to platform users
+              </Button>
+            </Link>
+          }
+        />
       </RoleGuard>
     );
   }

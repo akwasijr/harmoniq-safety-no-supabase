@@ -31,6 +31,7 @@ import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { commonFilterOptions } from "@/components/ui/filter-panel";
 import { useIncidentsStore } from "@/stores/incidents-store";
+import { LoadingPage } from "@/components/ui/loading";
 import { useNotificationsStore } from "@/stores/notifications-store";
 import { notifyCriticalIncident } from "@/stores/notification-triggers";
 import { useLocationsStore } from "@/stores/locations-store";
@@ -101,7 +102,7 @@ export default function IncidentsPage() {
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
   const { toast } = useToast();
-  const { items: incidents, add: addIncident } = useIncidentsStore();
+  const { items: incidents, isLoading, add: addIncident } = useIncidentsStore();
   const { add: addNotif } = useNotificationsStore();
   const { items: tickets } = useTicketsStore();
   const { items: locations } = useLocationsStore();
@@ -290,6 +291,10 @@ export default function IncidentsPage() {
     setCurrentPage(1);
     setSearchQuery("");
   }, [activeSubTab]);
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <div className="space-y-6">

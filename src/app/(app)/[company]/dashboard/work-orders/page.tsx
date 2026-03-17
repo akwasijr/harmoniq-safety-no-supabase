@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingPage } from "@/components/ui/loading";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -166,6 +168,10 @@ export default function WorkOrdersPage() {
     cancelled: "secondary",
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-end">
@@ -197,13 +203,11 @@ export default function WorkOrdersPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No work orders found</p>
-            <p className="text-sm">Create one to track maintenance and repair work</p>
-          </CardContent>
-        </Card>
+        <NoDataEmptyState
+          entityName="work orders"
+          onAdd={() => setShowCreate(true)}
+          addLabel={t("workOrders.newWorkOrder")}
+        />
       ) : (
         <div className="space-y-3">
           {filtered.map((order) => (

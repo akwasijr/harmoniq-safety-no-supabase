@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useParams, notFound } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
 import {
   ArrowLeft,
   Save,
@@ -54,11 +55,7 @@ export default function TeamDetailPage() {
   const baseTeam = teams.find((t) => t.id === teamId);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   // Team not found. Trigger Next.js not-found boundary

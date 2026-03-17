@@ -16,6 +16,7 @@ import { FilterPanel, commonFilterOptions } from "@/components/ui/filter-panel";
 import { ChartCard, AreaChart, DonutChart, LineChart, COLORS } from "@/components/charts";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useIncidentsStore } from "@/stores/incidents-store";
+import { LoadingPage } from "@/components/ui/loading";
 import { useLocationsStore } from "@/stores/locations-store";
 import { downloadCsv } from "@/lib/csv";
 import { capitalize } from "@/lib/utils";
@@ -43,7 +44,7 @@ export default function AnalyticsPage() {
   const [typeFilter, setTypeFilter] = React.useState("");
   const [severityFilter, setSeverityFilter] = React.useState("");
 
-  const { items: incidents } = useIncidentsStore();
+  const { items: incidents, isLoading } = useIncidentsStore();
   const { items: locations } = useLocationsStore();
 
   const filteredIncidents = React.useMemo(
@@ -223,6 +224,10 @@ export default function AnalyticsPage() {
       onChange: setSeverityFilter,
     },
   ];
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard allowedRoles={["super_admin", "company_admin", "manager"]}>

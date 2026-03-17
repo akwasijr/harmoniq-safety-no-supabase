@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ArrowLeft,
   Save,
@@ -461,17 +463,9 @@ export default function AssetDetailPage() {
 
   if (!asset) {
     if (isAssetsLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      );
+      return <LoadingPage />;
     }
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Asset not found</p>
-      </div>
-    );
+    return <EmptyState title="Asset not found" description="The requested asset could not be found." />;
   }
 
 

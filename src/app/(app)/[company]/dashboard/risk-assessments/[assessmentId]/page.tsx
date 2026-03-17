@@ -3,6 +3,8 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ArrowLeft,
   ShieldAlert,
@@ -824,27 +826,15 @@ export default function RiskAssessmentDetailPage() {
     : [];
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!template) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Template not found</p>
-      </div>
-    );
+    return <EmptyState title="Template not found" description="The requested risk assessment template could not be found." />;
   }
 
   if (!isTemplate && !submission) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Submission not found</p>
-      </div>
-    );
+    return <EmptyState title="Submission not found" description="The requested risk assessment submission could not be found." />;
   }
 
   return (

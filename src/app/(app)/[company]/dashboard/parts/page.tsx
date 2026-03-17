@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingPage } from "@/components/ui/loading";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +70,10 @@ export default function PartsPage() {
     setForm({ name: "", part_number: "", unit_cost: "", quantity_in_stock: "", minimum_stock: "", supplier: "" });
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-end">
@@ -89,13 +95,11 @@ export default function PartsPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No parts in inventory</p>
-            <p className="text-sm">Add parts to track usage and costs across work orders</p>
-          </CardContent>
-        </Card>
+        <NoDataEmptyState
+          entityName="parts"
+          onAdd={() => setShowCreate(true)}
+          addLabel={t("parts.addPart")}
+        />
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((part) => {

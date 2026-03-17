@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
+import { LoadingPage } from "@/components/ui/loading";
 import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
 import { useAssetInspectionsStore } from "@/stores/inspections-store";
 import { useAssetsStore } from "@/stores/assets-store";
@@ -124,7 +125,7 @@ function ChecklistsPageContent() {
     }
   }, [searchParams]);
 
-  const { items: checklistTemplatesStore } = useChecklistTemplatesStore();
+  const { items: checklistTemplatesStore, isLoading } = useChecklistTemplatesStore();
   const { items: checklistSubmissionsStore } = useChecklistSubmissionsStore();
   const { items: riskEvaluations } = useRiskEvaluationsStore();
   const { items: inspections } = useAssetInspectionsStore();
@@ -462,6 +463,10 @@ function ChecklistsPageContent() {
       router.push(`/${company}/dashboard/checklists/new?type=inspection`);
     }
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <div className="space-y-6">

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useParams, notFound } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
 import {
   ArrowLeft,
   Save,
@@ -50,11 +51,7 @@ export default function TicketDetailPage() {
   const ticket = tickets.find((t) => t.id === ticketId);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   // Ticket not found. Trigger Next.js not-found boundary
@@ -150,17 +147,9 @@ export default function TicketDetailPage() {
 
   if (!ticket) {
     if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      );
+      return <LoadingPage />;
     }
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Ticket not found</p>
-      </div>
-    );
+    notFound();
   }
 
 

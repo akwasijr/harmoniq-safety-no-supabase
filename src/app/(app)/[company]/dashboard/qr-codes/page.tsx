@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingPage } from "@/components/ui/loading";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KPICard } from "@/components/ui/kpi-card";
@@ -157,6 +159,10 @@ export default function QRCodesPage() {
       .catch(() => toast("Unable to copy link"));
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -201,11 +207,13 @@ export default function QRCodesPage() {
       {/* QR Codes Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredCodes.length === 0 ? (
-          <Card className="md:col-span-2 lg:col-span-3">
-            <CardContent className="py-10 text-center text-muted-foreground">
-              No QR codes match your search.
-            </CardContent>
-          </Card>
+          <div className="md:col-span-2 lg:col-span-3">
+            <NoDataEmptyState
+              entityName="QR codes"
+              onAdd={() => setShowCreateModal(true)}
+              addLabel={t("qrCodes.generateNew")}
+            />
+          </div>
         ) : (
           filteredCodes.map((qr) => (
             <Card key={qr.id}>

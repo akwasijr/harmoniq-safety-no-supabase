@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ArrowLeft,
   Wrench,
@@ -276,19 +278,11 @@ export default function InspectionDetailPage() {
   const submission = !isTemplate ? mockInspectionSubmission : null;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!template) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Template not found</p>
-      </div>
-    );
+    return <EmptyState title="Template not found" description="The requested inspection template could not be found." />;
   }
 
   const inspectionTrend = React.useMemo(() => {

@@ -25,6 +25,7 @@ import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { commonFilterOptions } from "@/components/ui/filter-panel";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useUsersStore } from "@/stores/users-store";
+import { LoadingPage } from "@/components/ui/loading";
 import { useTeamsStore } from "@/stores/teams-store";
 import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
@@ -77,7 +78,7 @@ export default function UsersPage() {
   const { toast } = useToast();
   const { items: companies } = useCompanyStore();
   const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || "";
-  const { items: users, add: addUser } = useUsersStore();
+  const { items: users, isLoading, add: addUser } = useUsersStore();
   const { items: teams, add: addTeam } = useTeamsStore();
 
   const fetchInvitations = React.useCallback(async () => {
@@ -299,6 +300,10 @@ export default function UsersPage() {
     if (!teamIds || teamIds.length === 0) return [];
     return teamIds.map(id => teams.find(t => t.id === id)?.name).filter(Boolean);
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard anyPermission={["users.view", "users.create", "users.edit"]}>

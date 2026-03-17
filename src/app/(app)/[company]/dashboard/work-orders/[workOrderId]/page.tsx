@@ -3,6 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ArrowLeft,
   Edit,
@@ -134,11 +136,7 @@ export default function WorkOrderDetailPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!order) {
@@ -148,10 +146,11 @@ export default function WorkOrderDetailPage() {
           <ArrowLeft className="h-4 w-4" />
           {t("common.back")}
         </Button>
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <ClipboardList className="h-12 w-12 text-muted-foreground/50 mb-3" />
-          <p className="text-muted-foreground">{t("workOrders.detail.notFound")}</p>
-        </div>
+        <EmptyState
+          icon={ClipboardList}
+          title={t("workOrders.detail.notFound")}
+          description="The requested work order could not be found."
+        />
       </div>
     );
   }

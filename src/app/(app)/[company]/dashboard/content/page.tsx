@@ -20,6 +20,7 @@ import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { commonFilterOptions } from "@/components/ui/filter-panel";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useContentStore } from "@/stores/content-store";
+import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import { useTranslation } from "@/i18n";
@@ -47,7 +48,7 @@ export default function ContentPage() {
   // Filters
   const [statusFilter, setStatusFilter] = React.useState("");
 
-  const { items: content } = useContentStore();
+  const { items: content, isLoading } = useContentStore();
 
   // Get current tab's content type
   const currentTabConfig = contentTabs.find(t => t.value === activeTab);
@@ -93,6 +94,10 @@ export default function ContentPage() {
     const Icon = currentTabConfig?.icon || FileText;
     return <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />;
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard allowedRoles={["super_admin", "company_admin", "manager"]}>

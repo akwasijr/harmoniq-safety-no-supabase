@@ -37,6 +37,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingPage } from "@/components/ui/loading";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
@@ -206,21 +207,10 @@ export default function IncidentDetailPage() {
   const totalActions = actions.length;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!incident) {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      );
-    }
     return (
       <EmptyState
         icon={AlertCircle}

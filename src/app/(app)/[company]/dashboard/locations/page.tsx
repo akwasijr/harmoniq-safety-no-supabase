@@ -44,6 +44,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocationsStore } from "@/stores/locations-store";
+import { LoadingPage } from "@/components/ui/loading";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useAssetsStore } from "@/stores/assets-store";
@@ -109,7 +110,7 @@ function LocationsPageContent() {
   const [viewMode, setViewMode] = React.useState<"tree" | "map">("tree");
   const { toast } = useToast();
   const { t, formatDate, formatNumber } = useTranslation();
-  const { items: locations, add: addLocation, update: updateLocation, remove: removeLocation } = useLocationsStore();
+  const { items: locations, isLoading, add: addLocation, update: updateLocation, remove: removeLocation } = useLocationsStore();
   const { items: incidents } = useIncidentsStore();
   const { items: users } = useUsersStore();
   const { items: assets } = useAssetsStore();
@@ -455,6 +456,10 @@ function LocationsPageContent() {
     const isExpanded = expandedItems.has(location.id);
     const isSelected = selectedLocationId === location.id;
     const canAddChildren = (LOCATION_HIERARCHY[location.type] || []).length > 0;
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
     return (
       <div key={location.id}>

@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ArrowLeft,
   Save,
@@ -219,16 +221,12 @@ export default function ChecklistDetailPage() {
   // If it's a submission, render submission view
   if (isSubmission) {
     if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      );
+      return <LoadingPage />;
     }
     if (!submission) {
       return (
         <div className="flex items-center justify-center h-64 flex-col gap-4">
-          <p className="text-muted-foreground">Submission not found: {checklistId}</p>
+          <EmptyState title="Submission not found" description={`Submission ${checklistId} could not be found.`} />
           <Button variant="outline" onClick={() => router.push(`/${company}/dashboard/checklists`)}>
             {t("common.back")}
           </Button>
@@ -460,17 +458,13 @@ export default function ChecklistDetailPage() {
 
   // Template view (existing code)
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!template) {
     return (
       <div className="flex items-center justify-center h-64 flex-col gap-4">
-        <p className="text-muted-foreground">Template not found: {checklistId}</p>
+        <EmptyState title="Template not found" description={`Template ${checklistId} could not be found.`} />
         <Button variant="outline" onClick={() => router.push(`/${company}/dashboard/checklists`)}>
           {t("common.back")}
         </Button>

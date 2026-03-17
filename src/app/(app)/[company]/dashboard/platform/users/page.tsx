@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
 import { useUsersStore } from "@/stores/users-store";
+import { LoadingPage } from "@/components/ui/loading";
 import type { User } from "@/types";
 import { useTranslation } from "@/i18n";
 
@@ -27,7 +28,7 @@ export default function PlatformUsersPage() {
   const router = useRouter();
   const company = params.company as string;
 
-  const { items: allUsers, add: addUser, update: updateUser, remove: removeUser } = useUsersStore();
+  const { items: allUsers, isLoading, add: addUser, update: updateUser, remove: removeUser } = useUsersStore();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -97,6 +98,10 @@ export default function PlatformUsersPage() {
     handleCloseModal();
     toast(`Admin "${newUser.full_name}" created successfully`);
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard requireSuperAdmin>

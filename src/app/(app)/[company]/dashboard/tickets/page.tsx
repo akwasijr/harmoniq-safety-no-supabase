@@ -25,6 +25,7 @@ import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { commonFilterOptions } from "@/components/ui/filter-panel";
 import { useTicketsStore } from "@/stores/tickets-store";
+import { LoadingPage } from "@/components/ui/loading";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
@@ -57,7 +58,7 @@ export default function TicketsPage() {
     due_date: "",
   });
 
-  const { items: tickets, add: addTicket } = useTicketsStore();
+  const { items: tickets, isLoading, add: addTicket } = useTicketsStore();
   const { items: incidents } = useIncidentsStore();
   const { items: users } = useUsersStore();
   const { toast } = useToast();
@@ -148,6 +149,10 @@ export default function TicketsPage() {
       due_date: "",
     });
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <div className="space-y-6">

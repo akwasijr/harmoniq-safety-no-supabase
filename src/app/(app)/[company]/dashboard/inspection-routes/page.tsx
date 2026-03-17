@@ -14,6 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KPICard } from "@/components/ui/kpi-card";
+import { LoadingPage } from "@/components/ui/loading";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
 import {
   Plus,
   X,
@@ -48,7 +50,7 @@ const CHECK_TYPE_KEYS: InspectionCheckType[] = ["visual", "auditory", "measureme
 export default function InspectionRoutesPage() {
   const { t } = useTranslation();
   const company = useCompanyParam();
-  const { items: routes, add: addRoute, update: updateRoute, remove: removeRoute } = useInspectionRoutesStore();
+  const { items: routes, isLoading, add: addRoute, update: updateRoute, remove: removeRoute } = useInspectionRoutesStore();
   const { items: assets } = useAssetsStore();
   const { items: rounds } = useInspectionRoundsStore();
   const { toast } = useToast();
@@ -129,6 +131,10 @@ export default function InspectionRoutesPage() {
     toast(next === "active" ? t("inspectionRoutes.toast.routeActivated") : t("inspectionRoutes.toast.routeDeactivated"));
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -149,13 +155,11 @@ export default function InspectionRoutesPage() {
       {/* Routes list */}
       <div className="space-y-3">
         {routes.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <ClipboardCheck className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-              <p className="font-medium text-muted-foreground">{t("inspectionRoutes.empty.title")}</p>
-              <p className="text-sm text-muted-foreground mt-1">{t("inspectionRoutes.empty.description")}</p>
-            </CardContent>
-          </Card>
+          <NoDataEmptyState
+            entityName="inspection routes"
+            onAdd={() => setShowCreateModal(true)}
+            addLabel={t("inspectionRoutes.createRoute")}
+          />
         ) : (
           routes.map((route) => {
             const isExpanded = expandedRouteId === route.id;

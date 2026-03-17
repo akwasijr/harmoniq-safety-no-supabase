@@ -37,6 +37,7 @@ import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { commonFilterOptions } from "@/components/ui/filter-panel";
 import { useAssetsStore } from "@/stores/assets-store";
+import { LoadingPage } from "@/components/ui/loading";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
@@ -105,7 +106,7 @@ export default function AssetsPage() {
     { id: "compliance", titleKey: "assets.wizard.compliance", descKey: "assets.wizard.complianceDesc", icon: Shield },
   ] as const;
 
-  const { items: assets, add: addAsset } = useAssetsStore();
+  const { items: assets, isLoading, add: addAsset } = useAssetsStore();
   const { items: locations } = useLocationsStore();
   const { items: users } = useUsersStore();
   const { toast } = useToast();
@@ -485,6 +486,10 @@ export default function AssetsPage() {
     });
     setCurrentPage(1);
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <div className="space-y-6">

@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
 import { useCompanyStore } from "@/stores/company-store";
+import { LoadingPage } from "@/components/ui/loading";
 import { useUsersStore } from "@/stores/users-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { cn } from "@/lib/utils";
@@ -48,7 +49,7 @@ export default function PlatformCompaniesPage() {
   
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const { items: companies, add: addCompany } = useCompanyStore();
+  const { items: companies, isLoading, add: addCompany } = useCompanyStore();
   const { items: users, add: addUser } = useUsersStore();
   const { items: incidents } = useIncidentsStore();
   const { toast } = useToast();
@@ -92,6 +93,10 @@ export default function PlatformCompaniesPage() {
     );
     return { userCount: companyUsers.length, incidentCount: openIncidents.length };
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard requireSuperAdmin>

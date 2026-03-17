@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ArrowLeft,
   Save,
@@ -57,7 +59,7 @@ export default function UserDetailPage() {
   const { toast } = useToast();
   const { hasPermission: currentUserCan } = useAuth();
   const canDeleteUser = currentUserCan("users.delete");
-  const { items: users, update: updateUser, remove: removeUser } = useUsersStore();
+  const { items: users, isLoading, update: updateUser, remove: removeUser } = useUsersStore();
   const { items: locations } = useLocationsStore();
   const baseUser = users.find((u) => u.id === userId);
   
@@ -97,12 +99,12 @@ export default function UserDetailPage() {
     });
   }, [baseUser]);
   
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   if (!baseUser) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">{t("users.userNotFound")}</p>
-      </div>
-    );
+    return <EmptyState title={t("users.userNotFound")} description="The requested user could not be found." />;
   }
 
   // Use edited values when editing, otherwise use base user
