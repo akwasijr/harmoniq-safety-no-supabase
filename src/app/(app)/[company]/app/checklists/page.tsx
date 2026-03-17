@@ -15,7 +15,6 @@ import {
   MapPin,
   X,
   Play,
-  Plus,
   ListChecks,
   History,
   BookTemplate,
@@ -23,9 +22,6 @@ import {
   Camera,
   MessageSquare,
   Percent,
-  ArrowLeft,
-  Save,
-  Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
@@ -124,8 +120,6 @@ function ChecklistsTabContent({
   formatDate: (date: Date, opts?: any) => string;
 }) {
   const [subTab, setSubTab] = React.useState<ChecklistSubTab>("my");
-  const [showCreateTemplate, setShowCreateTemplate] = React.useState(false);
-  const [newTemplate, setNewTemplate] = React.useState({ name: "", description: "", items: [{ question: "", type: "pass_fail" as const }] });
 
   const completedSubmissions = userSubmissions.filter(s => s.status === "submitted");
   const draftSubmissions = userSubmissions.filter(s => s.status === "draft");
@@ -155,128 +149,6 @@ function ChecklistsTabContent({
     if (applicable === 0) return 100;
     return Math.round((passed / applicable) * 100);
   };
-
-  if (showCreateTemplate) {
-    return (
-      <div className="space-y-4">
-        <button
-          onClick={() => setShowCreateTemplate(false)}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to checklists
-        </button>
-        
-        <h2 className="text-lg font-bold">Create checklist template</h2>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Template name</label>
-            <input
-              type="text"
-              value={newTemplate.name}
-              onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g. Daily Safety Walk"
-              className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Description (optional)</label>
-            <input
-              type="text"
-              value={newTemplate.description}
-              onChange={(e) => setNewTemplate(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Brief description of this checklist"
-              className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-medium text-muted-foreground">Checklist items</label>
-              <span className="text-[10px] text-muted-foreground">{newTemplate.items.length} items</span>
-            </div>
-            <div className="space-y-2">
-              {newTemplate.items.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground w-5 shrink-0">{idx + 1}.</span>
-                  <input
-                    type="text"
-                    value={item.question}
-                    onChange={(e) => {
-                      const updated = [...newTemplate.items];
-                      updated[idx] = { ...updated[idx], question: e.target.value };
-                      setNewTemplate(prev => ({ ...prev, items: updated }));
-                    }}
-                    placeholder="Check item description..."
-                    className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                  <select
-                    value={item.type}
-                    onChange={(e) => {
-                      const updated = [...newTemplate.items];
-                      updated[idx] = { ...updated[idx], type: e.target.value as any };
-                      setNewTemplate(prev => ({ ...prev, items: updated }));
-                    }}
-                    className="rounded-lg border bg-background px-2 py-2 text-xs focus:outline-none"
-                  >
-                    <option value="pass_fail">Pass/Fail</option>
-                    <option value="yes_no_na">Yes/No/N/A</option>
-                    <option value="text">Text</option>
-                    <option value="rating">Rating</option>
-                  </select>
-                  {newTemplate.items.length > 1 && (
-                    <button
-                      onClick={() => {
-                        setNewTemplate(prev => ({
-                          ...prev,
-                          items: prev.items.filter((_, i) => i !== idx),
-                        }));
-                      }}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => setNewTemplate(prev => ({
-                ...prev,
-                items: [...prev.items, { question: "", type: "pass_fail" }],
-              }))}
-              className="mt-2 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add item
-            </button>
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <button
-              onClick={() => {
-                // In production this would save to Supabase
-                setShowCreateTemplate(false);
-                setNewTemplate({ name: "", description: "", items: [{ question: "", type: "pass_fail" }] });
-              }}
-              disabled={!newTemplate.name || newTemplate.items.every(i => !i.question)}
-              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground py-2.5 text-sm font-medium disabled:opacity-50"
-            >
-              <Save className="h-4 w-4" />
-              Save template
-            </button>
-            <button
-              onClick={() => setShowCreateTemplate(false)}
-              className="px-4 rounded-lg border text-sm text-muted-foreground hover:bg-muted"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -429,7 +301,7 @@ function ChecklistsTabContent({
             <div className="py-8 text-center">
               <ClipboardCheck className="h-10 w-10 text-muted-foreground/20 mx-auto" />
               <p className="text-sm font-medium text-muted-foreground mt-2">No checklists assigned</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Start one from a template or create your own</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Checklists will appear here when assigned by your admin</p>
             </div>
           )}
         </>
@@ -438,20 +310,8 @@ function ChecklistsTabContent({
       {/* TEMPLATES sub-tab */}
       {subTab === "templates" && (
         <>
-          {/* Action buttons */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <button
-              onClick={() => setShowCreateTemplate(true)}
-              className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Plus className="h-5 w-5 text-primary" />
-              </div>
-              <div className="text-center">
-                <p className="font-semibold text-sm text-primary">Create new</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Build your own checklist</p>
-              </div>
-            </button>
+          {/* Start checklist action */}
+          <div className="mb-3">
             <Link
               href={`/${company}/app/checklists?subTab=my`}
               className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
@@ -523,12 +383,9 @@ function ChecklistsTabContent({
             ) : (
               <div className="py-4 text-center">
                 <p className="text-xs text-muted-foreground">No personal templates yet</p>
-                <button
-                  onClick={() => setShowCreateTemplate(true)}
-                  className="mt-1 text-xs text-primary hover:underline"
-                >
-                  Create your first template
-                </button>
+                <p className="mt-1 text-[11px] text-muted-foreground/70">
+                  Templates are managed from the admin dashboard
+                </p>
               </div>
             )}
           </Section>
