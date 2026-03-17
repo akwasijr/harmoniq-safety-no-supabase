@@ -12,7 +12,7 @@ function ReportSuccessPageContent() {
   const company = useCompanyParam();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
-  const referenceNumber = searchParams.get("ref") || "INC-2024-001";
+  const referenceNumber = searchParams.get("ref") || "N/A";
   const incidentId = searchParams.get("id");
   const reportType = searchParams.get("type") || "incident";
 

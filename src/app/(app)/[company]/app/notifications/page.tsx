@@ -15,9 +15,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { useContentStore } from "@/stores/content-store";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
-import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { useNotificationsStore } from "@/stores/notifications-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
@@ -42,10 +40,8 @@ export default function NotificationsPage() {
   const company = useCompanyParam();
   const router = useRouter();
   const { user } = useAuth();
-  const { items: contentItems } = useContentStore();
   const { items: checklistTemplates } = useChecklistTemplatesStore();
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
-  const { items: incidents } = useIncidentsStore();
   const { items: tickets } = useTicketsStore();
   const { items: dbNotifications, update: updateNotification, isLoading } = useNotificationsStore();
   const { t, formatDate } = useTranslation();
@@ -64,6 +60,7 @@ export default function NotificationsPage() {
           incident: { icon: AlertTriangle, color: "text-orange-500 bg-orange-50" },
           checklist: { icon: ClipboardCheck, color: "text-primary bg-primary/10" },
           task: { icon: Wrench, color: "text-purple-500 bg-purple-50" },
+          ticket: { icon: Wrench, color: "text-purple-500 bg-purple-50" },
         };
         const { icon, color } = iconMap[n.source || "content"] || iconMap.content;
         items.push({
@@ -73,7 +70,15 @@ export default function NotificationsPage() {
           description: n.message,
           timestamp: new Date(n.created_at),
           read: n.read,
-          href: n.source_id ? `/${company}/app/${n.source === "content" ? "news" : n.source === "incident" ? "incidents" : "tasks"}` : `/${company}/app`,
+          href: n.source_id
+              ? n.source === "content"
+                ? `/${company}/app/news/${n.source_id}`
+                : n.source === "incident"
+                  ? `/${company}/app/incidents/${n.source_id}`
+                  : n.source === "ticket"
+                    ? `/${company}/app/tasks`
+                    : `/${company}/app/tasks`
+              : `/${company}/app`,
           icon,
           iconColor: color,
         });
@@ -127,7 +132,7 @@ export default function NotificationsPage() {
     // Sort by newest first
     items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     return items;
-  }, [user, dbNotifications, contentItems, checklistTemplates, checklistSubmissions, incidents, tickets, company, fallbackTimestamp]);
+  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, company, fallbackTimestamp]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

@@ -57,9 +57,6 @@ export default function EmployeeIncidentDetailPage() {
   const location = incident?.location_id ? locations.find((l) => l.id === incident.location_id) : null;
   const reporter = incident?.reporter_id ? users.find((u) => u.id === incident.reporter_id) : null;
 
-  // Ensure this is the user's own incident for read-only view
-  const isOwner = incident?.reporter_id === user?.id;
-
   if (isLoading) {
     return <LoadingPage />;
   }

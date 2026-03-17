@@ -216,21 +216,6 @@ export default function LocationLandingPage() {
     );
   }
 
-  if (!location) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-6">
-        <MapPin className="h-16 w-16 text-muted-foreground mb-4" />
-        <h1 className="text-xl font-semibold mb-2">{t("locations.locationNotFound")}</h1>
-        <p className="text-muted-foreground text-center mb-6">
-          {t("locations.locationNotFoundDesc")}
-        </p>
-        <Button onClick={() => router.push(`/${company}/app`)}>
-          {t("locations.goToHome")}
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
       {/* Header */}

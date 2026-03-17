@@ -103,7 +103,7 @@ export function BottomTabs({ company }: BottomTabsProps) {
                     isActive ? "font-semibold text-primary" : "font-normal"
                   )}
                 >
-                  {t(item.shortTitleKey)}
+                  {t(item.shortTitleKey) || item.fallback}
                 </span>
               </Link>
             </li>

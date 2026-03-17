@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   Wrench,
   Clock,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
   ListChecks,
   History,
 } from "lucide-react";
@@ -66,6 +68,10 @@ const STATUS_CONFIG: Record<
   completed: {
     label: "Completed",
     className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  },
+  cancelled: {
+    label: "Cancelled",
+    className: "bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300",
   },
 };
 
@@ -198,6 +204,7 @@ function WorkOrderCard({
 
 export default function MyTasksPage() {
   const company = useCompanyParam();
+  const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
   const { items: workOrders, isLoading, update } = useWorkOrdersStore();
@@ -234,7 +241,7 @@ export default function MyTasksPage() {
   const completedWOs = React.useMemo(
     () =>
       myWorkOrders
-        .filter((wo) => wo.status === "completed")
+        .filter((wo) => wo.status === "completed" || wo.status === "cancelled")
         .sort((a, b) =>
           new Date(b.completed_at ?? b.updated_at).getTime() -
           new Date(a.completed_at ?? a.updated_at).getTime()
@@ -297,6 +304,13 @@ export default function MyTasksPage() {
       {/* Header */}
       <div className="sticky top-14 z-10 border-b bg-background/95 backdrop-blur px-4 py-3">
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.back()}
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
           <h1 className="text-lg font-semibold">My Tasks</h1>
           <Badge variant="secondary" className="text-xs">
             {activeWOs.length}

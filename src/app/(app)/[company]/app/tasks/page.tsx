@@ -12,14 +12,10 @@ import {
   ListChecks,
   Calendar,
   User as UserIcon,
-  AlertTriangle,
-  Ban,
-  Clock,
   CheckCircle2,
   Package,
   Play,
   CheckCircle,
-  RotateCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

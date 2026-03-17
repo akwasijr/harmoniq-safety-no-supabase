@@ -289,17 +289,23 @@ export default function EmployeeProfilePage() {
           {t("profile.about") || "About"}
         </h3>
         <div className="rounded-xl bg-card overflow-hidden ">
-          <div className="flex items-center gap-3 px-4 py-3.5">
+          <button
+            onClick={() => toast(t("profile.termsComingSoon") || "Terms of Service - Coming soon")}
+            className="flex items-center gap-3 px-4 py-3.5 w-full text-left transition-colors hover:bg-muted/50"
+          >
             <FileText className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <p className="text-sm flex-1">{t("profile.terms") || "Terms & Conditions"}</p>
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-          </div>
+          </button>
           <div className="border-t border-border/50 mx-4" />
-          <div className="flex items-center gap-3 px-4 py-3.5">
+          <button
+            onClick={() => toast(t("profile.privacyComingSoon") || "Privacy Policy - Coming soon")}
+            className="flex items-center gap-3 px-4 py-3.5 w-full text-left transition-colors hover:bg-muted/50"
+          >
             <Shield className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
             <p className="text-sm flex-1">{t("profile.privacy_policy") || "Privacy Policy"}</p>
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-          </div>
+          </button>
         </div>
       </div>
 

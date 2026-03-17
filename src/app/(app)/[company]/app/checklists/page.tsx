@@ -313,9 +313,10 @@ function ChecklistsTabContent({
         <>
           {/* Start checklist action */}
           <div className="mb-3">
-            <Link
-              href={`/${company}/app/checklists?subTab=my`}
-              className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
+            <button
+              type="button"
+              onClick={() => setSubTab("my")}
+              className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <Play className="h-5 w-5 text-primary" />
@@ -324,7 +325,7 @@ function ChecklistsTabContent({
                 <p className="font-semibold text-sm text-primary">Start checklist</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">From a template below</p>
               </div>
-            </Link>
+            </button>
           </div>
 
           {/* Admin templates */}
@@ -482,7 +483,7 @@ function EmployeeChecklistsPageContent() {
     if (tabParam === "risk-assessment") return "risk-assessment";
     if (tabParam === "checklists") return "checklists";
     if (tabParam === "reports") return "reports";
-    return "reports";
+    return "checklists";
   };
   
   const [activeTab, setActiveTab] = React.useState<TabType>(getInitialTab());

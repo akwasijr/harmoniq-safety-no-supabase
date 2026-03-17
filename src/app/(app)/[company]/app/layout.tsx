@@ -27,7 +27,7 @@ export default function EmployeeAppRootLayout({
   const router = useRouter();
   const { user, currentCompany, isLoading } = useAuth();
   const { items: companies, isLoading: isCompaniesLoading } = useCompanyStore();
-  const { items: contentItems } = useContentStore();
+  useContentStore();
   const { items: checklistTemplates } = useChecklistTemplatesStore();
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { items: tickets } = useTicketsStore();
@@ -40,7 +40,7 @@ export default function EmployeeAppRootLayout({
   // Prefetch all tab routes so JS chunks are ready before user navigates
   React.useEffect(() => {
     if (!company) return;
-    const tabs = ["checklists", "assets", "news", "profile"];
+    const tabs = ["checklists", "assets", "news", "profile", "tasks", "my-tasks", "notifications"];
     tabs.forEach((tab) => router.prefetch(`/${company}/app/${tab}`));
     router.prefetch(`/${company}/app`);
   }, [company, router]);
@@ -62,12 +62,6 @@ export default function EmployeeAppRootLayout({
     const openTickets = tickets.filter((t) => t.assigned_to === user.id && t.status === "new").length;
     return unreadDb + pendingTasks + openTickets;
   }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets]);
-
-  // C5: Validate company slug against known companies
-  const isValidCompany = React.useMemo(
-    () => companies.some((c) => c.slug === company),
-    [companies, company]
-  );
 
   React.useEffect(() => {
     applyPrimaryColor(currentCompany?.primary_color);

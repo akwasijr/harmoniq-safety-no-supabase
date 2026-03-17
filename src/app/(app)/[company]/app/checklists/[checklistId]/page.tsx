@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,10 +25,20 @@ import { EmptyState } from "@/components/ui/empty-state";
 import type { ChecklistResponse } from "@/types";
 
 export default function ChecklistFormPage() {
+  return (
+    <React.Suspense fallback={<LoadingPage />}>
+      <ChecklistFormPageContent />
+    </React.Suspense>
+  );
+}
+
+function ChecklistFormPageContent() {
   const router = useRouter();
   const routeParams = useParams();
+  const searchParams = useSearchParams();
   const company = routeParams.company as string;
   const checklistId = routeParams.checklistId as string;
+  const draftId = searchParams.get("draft");
   const [currentItem, setCurrentItem] = React.useState(0);
   const [answers, setAnswers] = React.useState<Record<string, string>>({});
   const [notes, setNotes] = React.useState<Record<string, string>>({});
@@ -38,13 +48,43 @@ export default function ChecklistFormPage() {
   const [generalComments, setGeneralComments] = React.useState("");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { items: templates, isLoading: isTemplatesLoading } = useChecklistTemplatesStore();
-  const { add: addSubmission } = useChecklistSubmissionsStore();
+  const { items: submissions, add: addSubmission } = useChecklistSubmissionsStore();
   const { user } = useAuth();
   const { toast } = useToast();
 
   const { t } = useTranslation();
 
   const template = templates.find((tpl) => tpl.id === checklistId);
+
+  // Resume draft if ?draft=id is present
+  const draftInitialized = React.useRef(false);
+  React.useEffect(() => {
+    if (draftInitialized.current || !draftId) return;
+    const draft = submissions.find((s) => s.id === draftId);
+    if (draft && draft.responses) {
+      const restoredAnswers: Record<string, string> = {};
+      const restoredNotes: Record<string, string> = {};
+      const restoredPhotos: Record<string, string[]> = {};
+      for (const r of draft.responses) {
+        if (r.value === true) restoredAnswers[r.item_id] = "yes";
+        else if (r.value === false) restoredAnswers[r.item_id] = "no";
+        else if (r.value === null || r.value === "na" || r.value === "n/a") restoredAnswers[r.item_id] = "na";
+        else if (typeof r.value === "number") restoredAnswers[r.item_id] = String(r.value);
+        else if (typeof r.value === "string") restoredAnswers[r.item_id] = r.value;
+        if (r.comment) restoredNotes[r.item_id] = r.comment;
+        if (r.photo_urls && r.photo_urls.length > 0) restoredPhotos[r.item_id] = r.photo_urls;
+      }
+      setAnswers(restoredAnswers);
+      setNotes(restoredNotes);
+      setPhotos(restoredPhotos);
+      if (draft.general_comments) setGeneralComments(draft.general_comments);
+      // Jump to first unanswered item
+      const items = template?.items || [];
+      const firstUnanswered = items.findIndex((item) => !restoredAnswers[item.id]);
+      if (firstUnanswered > 0) setCurrentItem(firstUnanswered);
+    }
+    draftInitialized.current = true;
+  }, [draftId, submissions, template?.items]);
 
   if (isTemplatesLoading) {
     return <LoadingPage />;
@@ -155,7 +195,7 @@ export default function ChecklistFormPage() {
     const now = new Date();
     const refNumber = `CHK-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const submission = getSubmissionData();
-    addSubmission({
+    await addSubmission({
       id: crypto.randomUUID(),
       company_id: user.company_id || "",
       created_at: now.toISOString(),
@@ -164,14 +204,6 @@ export default function ChecklistFormPage() {
     toast("Checklist submitted");
     router.push(`/${company}/app/report/success?ref=${refNumber}&type=checklist`);
   };
-
-  if (!template || items.length === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">{t("checklists.checklistNotFound")}</p>
-      </div>
-    );
-  }
 
   // Calculate progress
   const yesCount = Object.values(answers).filter((a) => a === "yes" || a === "pass").length;

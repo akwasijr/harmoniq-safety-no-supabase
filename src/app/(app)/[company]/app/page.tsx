@@ -22,7 +22,6 @@ import {
   Search,
   ScanLine,
   Newspaper,
-  HardHat,
   Eye,
   Thermometer,
   Lock,
@@ -88,9 +87,6 @@ const SAFETY_TIPS = [
   { tip: "Review risk assessments before starting unfamiliar work.", icon: ClipboardCheck },
   { tip: "If in doubt, stop and ask your supervisor.", icon: BellRing },
 ];
-
-// Rotating tip icons to keep it visually fresh
-const TIP_ICONS = [Zap, Flame, Shield, Eye, Activity, Sparkles, Heart];
 
 function getGreetingKey(): string {
   if (typeof window === "undefined") return "app.goodMorning"; // SSR default
@@ -223,19 +219,15 @@ export default function EmployeeAppHomePage() {
   const greeting = t(getGreetingKey());
 
   // Stats from computed user data
-  const safetyStreak = safeDays;
-
-  // Determine if we have enough data for the full feed view
-  const hasData = pendingChecklists.length > 0 || recentNews.length > 0;
 
   // ── Quick action grid items ──
   const quickActions = [
     { href: `/${company}/app/report`, labelKey: "app.reportIncident", label: "Report Incident", icon: AlertTriangle },
     { href: `/${company}/app/my-tasks`, labelKey: "app.myTasks", label: "My Tasks", icon: ClipboardCheck },
     { href: `/${company}/app/assets`, labelKey: "app.browseAssets", label: "Browse Assets", icon: Search },
-    { href: `/${company}/app/report`, labelKey: "app.requestFix", label: "Request Fix", icon: Wrench },
+    { href: `/${company}/app/maintenance`, labelKey: "app.requestFix", label: "Request Fix", icon: Wrench },
     { href: `/${company}/app/scan`, labelKey: "app.scanAsset", label: "Scan Asset", icon: ScanLine },
-    { href: `/${company}/app/report`, labelKey: "app.riskAssessment", label: "Risk Check", icon: ShieldCheck },
+    { href: `/${company}/app/checklists?tab=risk-assessment`, labelKey: "app.riskAssessment", label: "Risk Check", icon: ShieldCheck },
   ];
 
   // ── Always show full feed (no early return for empty state) ──

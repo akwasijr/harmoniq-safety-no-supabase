@@ -28,7 +28,7 @@ export default function EmployeeNewsPage() {
     { id: "news" as TabType, label: t("newsApp.tabs.news"), icon: Newspaper, count: news.length },
     { id: "events" as TabType, label: t("newsApp.tabs.events"), icon: Calendar, count: events.length },
     { id: "documents" as TabType, label: t("newsApp.tabs.documents"), icon: FolderOpen, count: documents.length },
-    { id: "training" as TabType, label: "Training", icon: GraduationCap, count: training.length },
+    { id: "training" as TabType, label: t("newsApp.tabs.training") || "Training", icon: GraduationCap, count: training.length },
   ];
 
   const getActiveContent = () => {
