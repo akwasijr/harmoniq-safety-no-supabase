@@ -487,7 +487,6 @@ export interface Asset {
   name: string;
   asset_tag: string; // Unique asset tag/ID
   serial_number: string | null;
-  barcode: string | null;
   qr_code: string | null;
   
   // Classification
@@ -500,11 +499,8 @@ export interface Asset {
   // Technical Specifications
   manufacturer: string | null;
   model: string | null;
-  model_number: string | null;
-  specifications: string | null;
   
   // Lifecycle Dates
-  manufactured_date: string | null;
   purchase_date: string | null;
   installation_date: string | null;
   warranty_expiry: string | null;
@@ -512,7 +508,6 @@ export interface Asset {
   
   // Condition & Performance
   condition: AssetCondition;
-  condition_notes: string | null;
   last_condition_assessment: string | null;
   
   // Financial
@@ -525,20 +520,13 @@ export interface Asset {
   maintenance_frequency_days: number | null;
   last_maintenance_date: string | null;
   next_maintenance_date: string | null;
-  maintenance_notes: string | null;
   
   // Compliance & Safety
   requires_certification: boolean;
-  requires_calibration: boolean;
-  calibration_frequency_days: number | null;
-  last_calibration_date: string | null;
-  next_calibration_date: string | null;
   safety_instructions: string | null;
   
   // Status
   status: AssetStatus;
-  decommission_date: string | null;
-  disposal_method: string | null;
 
   created_at: string;
   updated_at: string;

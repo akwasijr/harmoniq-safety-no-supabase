@@ -58,7 +58,7 @@ export default function ScanAssetPage() {
     return <LoadingPage message="Loading assets..." />;
   }
 
-  // Look up asset by tag, QR code, serial number, barcode, or ID
+  // Look up asset by tag, QR code, serial number, or ID
   const lookupAsset = React.useCallback(
     (query: string): string | null => {
       const q = query.trim().toLowerCase();
@@ -69,8 +69,7 @@ export default function ScanAssetPage() {
           a.id.toLowerCase() === q ||
           a.asset_tag.toLowerCase() === q ||
           a.qr_code?.toLowerCase() === q ||
-          a.serial_number?.toLowerCase() === q ||
-          a.barcode?.toLowerCase() === q
+          a.serial_number?.toLowerCase() === q
       );
       return match?.id || null;
     },

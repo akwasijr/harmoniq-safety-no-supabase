@@ -1850,7 +1850,6 @@ export default function AssetDetailPage() {
                     if (!asset) return;
                     updateAsset(asset.id, {
                       status: "retired",
-                      decommission_date: new Date().toISOString(),
                       updated_at: new Date().toISOString(),
                     });
                     toast("Asset marked as retired");

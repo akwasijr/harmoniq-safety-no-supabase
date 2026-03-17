@@ -75,8 +75,6 @@ export default function AssetsPage() {
     category: "machinery",
     manufacturer: "",
     model: "",
-    model_number: "",
-    specifications: "",
     condition: "good" as string,
     location_id: "",
     purchase_date: "",
@@ -90,8 +88,6 @@ export default function AssetsPage() {
     expected_life_years: "",
     installation_date: "",
     requires_certification: false,
-    requires_calibration: false,
-    calibration_frequency_days: "",
     maintenance_frequency_days: "",
     safety_instructions: "",
   });
@@ -160,30 +156,27 @@ export default function AssetsPage() {
           name: row.name,
           asset_tag: row.asset_tag || `AST-${Date.now()}-${i}`,
           serial_number: row.serial_number || null,
-          barcode: null, qr_code: null,
+          qr_code: null,
           category: (row.category as Asset["category"]) || "other",
           sub_category: null,
           asset_type: (row.asset_type as Asset["asset_type"]) || "static",
           criticality: "medium",
           department: row.department || null,
           manufacturer: row.manufacturer || null,
-          model: row.model || null, model_number: null,
-          specifications: null, manufactured_date: null,
+          model: row.model || null,
           purchase_date: row.purchase_date || null,
           installation_date: null,
           warranty_expiry: row.warranty_expiry || null,
           expected_life_years: null,
           condition: (row.condition as Asset["condition"]) || "good",
-          condition_notes: null, last_condition_assessment: null,
+          last_condition_assessment: null,
           purchase_cost: row.purchase_cost ? parseFloat(row.purchase_cost) : null,
           current_value: null, depreciation_rate: null, currency: "USD",
           maintenance_frequency_days: null, last_maintenance_date: null,
-          next_maintenance_date: null, maintenance_notes: null,
-          requires_certification: false, requires_calibration: false,
-          calibration_frequency_days: null, last_calibration_date: null,
-          next_calibration_date: null, safety_instructions: null,
+          next_maintenance_date: null,
+          requires_certification: false,
+          safety_instructions: null,
           status: (row.status as Asset["status"]) || "active",
-          decommission_date: null, disposal_method: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
@@ -225,31 +218,6 @@ export default function AssetsPage() {
             title: `${asset.name}: Warranty ${diff < 0 ? "expired" : "expiring"}`,
             description: `Warranty ${diff < 0 ? "expired" : "expires"} on ${formatDate(due)}`,
             due_date: asset.warranty_expiry,
-            severity: s,
-            is_dismissed: false,
-            dismissed_by_user_id: null,
-            dismissed_at: null,
-            is_resolved: false,
-            resolved_at: null,
-            created_at: now.toISOString(),
-          });
-        }
-      }
-
-      if (asset.next_calibration_date && asset.requires_calibration) {
-        const due = new Date(asset.next_calibration_date);
-        const diff = due.getTime() - now.getTime();
-        if (diff <= 90 * DAY) {
-          const s = severity(due);
-          alerts.push({
-            id: `alert_calibration_${asset.id}`,
-            company_id: asset.company_id,
-            type: diff < 0 ? "calibration_overdue" : "calibration_due",
-            asset_id: asset.id,
-            schedule_id: null,
-            title: `${asset.name}: Calibration ${diff < 0 ? "overdue" : "due"}`,
-            description: `Calibration ${diff < 0 ? "was due" : "due"} on ${formatDate(due)}`,
-            due_date: asset.next_calibration_date,
             severity: s,
             is_dismissed: false,
             dismissed_by_user_id: null,
@@ -415,7 +383,6 @@ export default function AssetsPage() {
       name: newAsset.name,
       asset_tag: `AST-${Date.now().toString().slice(-6)}`,
       serial_number: newAsset.serial_number || null,
-      barcode: null,
       qr_code: null,
       category: newAsset.category as Asset["category"],
       sub_category: null,
@@ -424,15 +391,11 @@ export default function AssetsPage() {
       department: newAsset.department || null,
       manufacturer: newAsset.manufacturer || null,
       model: newAsset.model || null,
-      model_number: newAsset.model_number || null,
-      specifications: newAsset.specifications || null,
-      manufactured_date: null,
       purchase_date: newAsset.purchase_date || null,
       installation_date: newAsset.installation_date || null,
       warranty_expiry: newAsset.warranty_expiry || null,
       expected_life_years: newAsset.expected_life_years ? parseInt(newAsset.expected_life_years) : null,
       condition: (newAsset.condition as Asset["condition"]) || "good",
-      condition_notes: null,
       last_condition_assessment: null,
       purchase_cost: newAsset.purchase_cost ? parseFloat(newAsset.purchase_cost) : null,
       current_value: null,
@@ -441,16 +404,9 @@ export default function AssetsPage() {
       maintenance_frequency_days: newAsset.maintenance_frequency_days ? parseInt(newAsset.maintenance_frequency_days) : null,
       last_maintenance_date: null,
       next_maintenance_date: null,
-      maintenance_notes: null,
       requires_certification: newAsset.requires_certification,
-      requires_calibration: newAsset.requires_calibration,
-      calibration_frequency_days: newAsset.calibration_frequency_days ? parseInt(newAsset.calibration_frequency_days) : null,
-      last_calibration_date: null,
-      next_calibration_date: null,
       safety_instructions: newAsset.safety_instructions || null,
       status: "active",
-      decommission_date: null,
-      disposal_method: null,
       created_at: now,
       updated_at: now,
     };
@@ -464,8 +420,6 @@ export default function AssetsPage() {
       category: "machinery",
       manufacturer: "",
       model: "",
-      model_number: "",
-      specifications: "",
       condition: "good",
       location_id: "",
       purchase_date: "",
@@ -479,8 +433,6 @@ export default function AssetsPage() {
       expected_life_years: "",
       installation_date: "",
       requires_certification: false,
-      requires_calibration: false,
-      calibration_frequency_days: "",
       maintenance_frequency_days: "",
       safety_instructions: "",
     });
@@ -1062,27 +1014,6 @@ export default function AssetsPage() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="model_number">Model Number</Label>
-                  <Input
-                    id="model_number"
-                    value={newAsset.model_number}
-                    onChange={(e) => setNewAsset({ ...newAsset, model_number: e.target.value })}
-                    placeholder="e.g., MN-2024-A"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="specifications">Specifications</Label>
-                  <textarea
-                    id="specifications"
-                    value={newAsset.specifications}
-                    onChange={(e) => setNewAsset({ ...newAsset, specifications: e.target.value })}
-                    placeholder="Technical specifications, dimensions, capacity..."
-                    rows={3}
-                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
-                  />
-                </div>
-                <div>
                   <Label htmlFor="condition">Condition</Label>
                   <select
                     id="condition"
@@ -1268,41 +1199,6 @@ export default function AssetsPage() {
                     )} />
                   </button>
                 </div>
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <div>
-                    <p className="text-sm font-medium">Requires Calibration</p>
-                    <p className="text-xs text-muted-foreground">Asset needs periodic calibration</p>
-                  </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={newAsset.requires_calibration}
-                    onClick={() => setNewAsset({ ...newAsset, requires_calibration: !newAsset.requires_calibration })}
-                    className={cn(
-                      "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
-                      newAsset.requires_calibration ? "bg-primary" : "bg-muted"
-                    )}
-                  >
-                    <span className={cn(
-                      "pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg transition-transform",
-                      newAsset.requires_calibration ? "translate-x-5" : "translate-x-0"
-                    )} />
-                  </button>
-                </div>
-                {newAsset.requires_calibration && (
-                  <div>
-                    <Label htmlFor="calibration_frequency">Calibration Frequency (days)</Label>
-                    <Input
-                      id="calibration_frequency"
-                      type="number"
-                      min="1"
-                      value={newAsset.calibration_frequency_days}
-                      onChange={(e) => setNewAsset({ ...newAsset, calibration_frequency_days: e.target.value })}
-                      placeholder="e.g., 365"
-                      className="mt-1"
-                    />
-                  </div>
-                )}
                 <div>
                   <Label htmlFor="maintenance_frequency">Maintenance Frequency (days)</Label>
                   <Input

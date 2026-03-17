@@ -154,7 +154,6 @@ export default function DashboardPage() {
       }
     };
     checkDate(asset.warranty_expiry, "Warranty");
-    checkDate(asset.next_calibration_date, "Calibration");
     checkDate(asset.next_maintenance_date, "Maintenance");
     return alerts;
   }).sort((a, b) => a.daysLeft - b.daysLeft).slice(0, 5);
