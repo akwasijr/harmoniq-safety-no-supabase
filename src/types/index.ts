@@ -320,6 +320,16 @@ export interface RCAAttachment {
   addedAt: string;
 }
 
+export interface IncidentDocument {
+  id: string;
+  name: string;
+  type: string;
+  url: string;
+  size: number;
+  uploadedAt: string;
+  uploadedBy: string;
+}
+
 export interface IncidentWitness {
   name: string;
   statement: string;
@@ -418,6 +428,12 @@ export interface Incident {
 
   created_at: string;
   updated_at: string;
+
+  // Assignment
+  assigned_to?: string | null;
+
+  // Documents
+  documents?: IncidentDocument[];
 
   // Investigation & Workflow (persisted)
   investigation?: IncidentInvestigation | null;
@@ -553,6 +569,10 @@ export interface Asset {
   // GPS
   gps_lat?: number | null;
   gps_lng?: number | null;
+
+  // Media & Notes
+  notes?: string | null;
+  media_urls?: string[];
 
   // Status
   status: AssetStatus;

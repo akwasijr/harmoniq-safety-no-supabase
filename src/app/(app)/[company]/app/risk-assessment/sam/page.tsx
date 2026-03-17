@@ -222,6 +222,14 @@ export default function SAMFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.organizationName.trim()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
+    if (formData.risks.length === 0) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");

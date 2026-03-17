@@ -40,6 +40,7 @@ import type {
 } from "@/types";
 import { useGps } from "@/hooks/use-gps";
 import { GpsCaptureButton } from "@/components/shared/gps-capture-button";
+import { storeFile, FileValidationError } from "@/lib/file-storage";
 
 const CHECK_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   visual: Eye,
@@ -154,14 +155,26 @@ function InspectionRoundContent() {
     setCheckpointResult({ result });
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setCheckpointResult({ photo_url: reader.result as string });
-    };
-    reader.readAsDataURL(file);
+    try {
+      const stored = await storeFile(
+        file,
+        "inspection_round",
+        route.id,
+        user?.id || "unknown",
+      );
+      setCheckpointResult({ photo_url: stored.dataUrl });
+    } catch (err) {
+      if (err instanceof FileValidationError) {
+        toast(err.message);
+      } else if (err instanceof Error && err.message === "QUOTA_EXCEEDED") {
+        toast("Storage is full. Delete some files and try again.");
+      } else {
+        toast("Failed to upload photo");
+      }
+    }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -440,18 +453,20 @@ function InspectionRoundContent() {
         <div className="flex items-center justify-center gap-1.5 mb-4">
           {checkpoints.map((cp, i) => {
             const cpResult = results.get(cp.id);
+            const isIncomplete = !cpResult;
             return (
               <button
                 key={cp.id}
                 type="button"
                 onClick={() => setCurrentIndex(i)}
+                aria-label={`Checkpoint ${i + 1}${isIncomplete ? " (incomplete)" : ""}`}
                 className={cn(
                   "h-2.5 w-2.5 rounded-full transition-all",
                   i === currentIndex ? "w-6 bg-primary" :
                   cpResult?.result === "pass" ? "bg-success" :
                   cpResult?.result === "fail" ? "bg-destructive" :
                   cpResult?.result === "needs_attention" ? "bg-warning" :
-                  "bg-muted-foreground/30"
+                  "bg-muted-foreground/30 ring-1 ring-muted-foreground/20"
                 )}
               />
             );
@@ -461,34 +476,41 @@ function InspectionRoundContent() {
 
       {/* Footer navigation */}
       <div className="fixed bottom-16 left-0 right-0 border-t bg-background p-4 z-20">
-        <div className="flex gap-2 max-w-lg mx-auto">
-          <Button
-            variant="outline"
-            onClick={handlePrev}
-            disabled={currentIndex === 0}
-            className="h-12"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          {currentIndex < totalCheckpoints - 1 ? (
-            <Button onClick={handleNext} className="flex-1 h-12 gap-2">
-              {t("inspectionRounds.nextCheckpoint")}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          ) : (
+        <div className="flex flex-col gap-2 max-w-lg mx-auto">
+          <div className="flex gap-2">
             <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || completedCount < totalCheckpoints}
-              className="flex-1 h-12 gap-2"
+              variant="outline"
+              onClick={handlePrev}
+              disabled={currentIndex === 0}
+              className="h-12"
             >
-              <CheckCircle className="h-4 w-4" />
-              {completedCount < totalCheckpoints
-                ? t("inspectionRounds.remaining", {
-                    count: String(totalCheckpoints - completedCount),
-                  })
-                : t("inspectionRounds.submitInspection")
-              }
+              <ArrowLeft className="h-4 w-4" />
             </Button>
+            {currentIndex < totalCheckpoints - 1 ? (
+              <Button onClick={handleNext} className="flex-1 h-12 gap-2">
+                {t("inspectionRounds.nextCheckpoint")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting || completedCount < totalCheckpoints}
+                className="flex-1 h-12 gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                {completedCount < totalCheckpoints
+                  ? t("inspectionRounds.remaining", {
+                      count: String(totalCheckpoints - completedCount),
+                    })
+                  : t("inspectionRounds.submitInspection")
+                }
+              </Button>
+            )}
+          </div>
+          {completedCount < totalCheckpoints && currentIndex === totalCheckpoints - 1 && (
+            <p className="text-xs text-center text-muted-foreground">
+              Complete all checkpoints to submit ({totalCheckpoints - completedCount} remaining)
+            </p>
           )}
         </div>
       </div>

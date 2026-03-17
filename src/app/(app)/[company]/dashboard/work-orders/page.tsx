@@ -15,6 +15,8 @@ import {
   Package,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   UserX,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,6 +59,8 @@ export default function WorkOrdersPage() {
   const [assignmentFilter, setAssignmentFilter] = React.useState<"all" | "unassigned" | "assigned">("all");
   const [showCreate, setShowCreate] = React.useState(false);
   const [expandedParts, setExpandedParts] = React.useState<string | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   // Auto-create work orders for overdue maintenance (runs once)
   const overdueCheckRan = React.useRef(false);
@@ -93,6 +97,11 @@ export default function WorkOrdersPage() {
     }
     return true;
   });
+
+  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, assignmentFilter]);
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedOrders = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const unassignedCount = orders.filter((o) => o.assigned_to === null).length;
   const openCount = orders.filter((o) => o.status === "requested" || o.status === "approved").length;
@@ -236,7 +245,7 @@ export default function WorkOrdersPage() {
         />
       ) : (
         <div className="space-y-3">
-          {filtered.map((order) => (
+          {paginatedOrders.map((order) => (
             <Card key={order.id}>
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4">
@@ -318,6 +327,43 @@ export default function WorkOrdersPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-4 border-t mt-4">
+          <p className="text-sm text-muted-foreground">
+            Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
+          </p>
+          <div className="flex gap-1">
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {(() => {
+              const pages: (number | "...")[] = totalPages <= 7
+                ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                : (() => {
+                    const p: (number | "...")[] = [1];
+                    if (currentPage > 3) p.push("...");
+                    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) p.push(i);
+                    if (currentPage < totalPages - 2) p.push("...");
+                    p.push(totalPages);
+                    return p;
+                  })();
+              return pages.map((p, idx) =>
+                p === "..." ? (
+                  <span key={`ellipsis-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
+                ) : (
+                  <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p as number)}>
+                    {p}
+                  </Button>
+                )
+              );
+            })()}
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 

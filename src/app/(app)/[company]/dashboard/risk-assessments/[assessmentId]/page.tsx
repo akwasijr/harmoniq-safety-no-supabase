@@ -424,291 +424,6 @@ const mockRiskTemplates: Record<string, {
   },
 };
 
-// Mock submission data - keyed by submission ID with form-specific fields
-const mockSubmissions: Record<string, {
-  id: string;
-  templateId: string;
-  template: string;
-  type: string;
-  location: string;
-  department: string;
-  date: string;
-  time?: string;
-  status: string;
-  submittedBy: string;
-  reviewedBy: string;
-  riskLevel: string;
-  riskScore: number;
-  hazards: { step: string; hazard: string; severity: number; probability: number; riskScore: number; controls: string }[];
-  ppeRequired: string[];
-  comments: string;
-  // JSA specific
-  jobDescription?: string;
-  crewLeader?: string;
-  crewMembers?: string[];
-  checklistCategories?: { id: string; title: string; items: { id: string; label: string; status: "pass" | "fail" | "na" | null; notes?: string }[] }[];
-  identifiedHazards?: string;
-  controlMeasures?: string;
-  stopWorkConditions?: string;
-  // RIE specific
-  risks?: { category: string; identified: boolean; description?: string; severity: number; probability: number; exposure: string; riskScore: number; priority: "high" | "medium" | "low"; currentMeasures: string; additionalMeasures: string; responsible: string; deadline: string }[];
-  actionPlan?: { action: string; priority: "high" | "medium" | "low"; responsible: string; deadline: string; status: string }[];
-  // ARBOWET specific
-  articles?: { id: string; title: string; description: string; items: { id: string; label: string; status: "compliant" | "partial" | "non_compliant" | "na"; evidence?: string; actionNeeded?: string }[] }[];
-  complianceScore?: number;
-  overallAssessment?: string;
-  priorityActions?: string;
-  nextAuditDate?: string;
-  // SAM specific
-  organizationalFactors?: { factor: string; rating: number; notes?: string }[];
-  socialFactors?: { factor: string; value: boolean | number; notes?: string }[];
-  // OSA specific
-  sections?: { id: string; title: string; icon: string; questions: { id: string; label: string; rating: number; concern: boolean; notes?: string }[]; average: number }[];
-  overallConcerns?: string;
-  suggestions?: string;
-  concernCount?: number;
-  lowRatingCount?: number;
-}> = {
-  "ra1": {
-    id: "ra1",
-    templateId: "jha",
-    template: "Job Hazard Analysis (JHA)",
-    type: "JHA",
-    location: "Warehouse A",
-    department: "Logistics",
-    date: "2024-01-28",
-    status: "completed",
-    submittedBy: "John Doe",
-    reviewedBy: "Sarah Wilson",
-    riskLevel: "medium",
-    riskScore: 9,
-    hazards: [
-      { step: "Loading heavy materials", hazard: "Back injury from lifting", severity: 3, probability: 3, riskScore: 9, controls: "Use lifting equipment, proper technique training" },
-      { step: "Operating forklift", hazard: "Collision with pedestrians", severity: 4, probability: 2, riskScore: 8, controls: "Designated pathways, warning lights, mirrors" },
-      { step: "Stacking pallets", hazard: "Falling objects", severity: 4, probability: 2, riskScore: 8, controls: "Proper stacking technique, hard hats required" },
-    ],
-    ppeRequired: ["Hard Hat", "Safety Glasses", "Steel-toe Boots", "High-visibility Vest"],
-    comments: "All workers trained on proper lifting techniques. Forklift routes clearly marked.",
-  },
-  "ra2": {
-    id: "ra2",
-    templateId: "rie",
-    template: "RI&E Assessment",
-    type: "RIE",
-    location: "Amsterdam Office",
-    department: "Kantoor",
-    date: "2024-01-27",
-    status: "in_progress",
-    submittedBy: "Jan van Berg",
-    reviewedBy: "Pending",
-    riskLevel: "high",
-    riskScore: 16,
-    hazards: [
-      { step: "Werkplek ergonomie", hazard: "RSI door beeldschermwerk", severity: 3, probability: 4, riskScore: 12, controls: "Ergonomische werkplekken, regelmatige pauzes" },
-      { step: "Psychosociale belasting", hazard: "Werkdruk en stress", severity: 4, probability: 4, riskScore: 16, controls: "Werkdrukbeleid, gesprekken met leidinggevende" },
-      { step: "Binnenklimaat", hazard: "Slechte ventilatie", severity: 2, probability: 3, riskScore: 6, controls: "Klimaatbeheersing verbeteren" },
-    ],
-    ppeRequired: [],
-    comments: "RI&E voor kantooromgeving. Focus op ergonomie en psychosociale arbeidsbelasting.",
-    risks: [
-      { category: "Ergonomische risico's", identified: true, description: "Beeldschermwerk risico's - RSI klachten", severity: 3, probability: 3, exposure: "Dagelijks", riskScore: 18, priority: "high", currentMeasures: "Verstelbare bureaus beschikbaar", additionalMeasures: "Ergonomie training, pauze-software", responsible: "HR Manager", deadline: "2024-03-01" },
-      { category: "Psychosociale risico's", identified: true, description: "Hoge werkdruk en stress", severity: 3, probability: 3, exposure: "Dagelijks", riskScore: 18, priority: "high", currentMeasures: "Jaarlijks medewerkerstevredenheidsonderzoek", additionalMeasures: "Werkdrukbeleid opstellen, coaching", responsible: "Directeur", deadline: "2024-02-15" },
-      { category: "Fysieke risico's", identified: true, description: "Klimaat - onvoldoende ventilatie", severity: 2, probability: 2, exposure: "Dagelijks", riskScore: 8, priority: "low", currentMeasures: "Airconditioning aanwezig", additionalMeasures: "CO2-meters plaatsen, onderhoud HVAC", responsible: "Facility Manager", deadline: "2024-04-01" },
-    ],
-    actionPlan: [
-      { action: "Ergonomie training voor alle medewerkers", priority: "high", responsible: "HR Manager", deadline: "2024-03-01", status: "In behandeling" },
-      { action: "Werkdrukbeleid ontwikkelen en communiceren", priority: "high", responsible: "Directeur", deadline: "2024-02-15", status: "Niet gestart" },
-      { action: "CO2-meters installeren op alle verdiepingen", priority: "medium", responsible: "Facility Manager", deadline: "2024-04-01", status: "Niet gestart" },
-    ],
-  },
-  "ra3": {
-    id: "ra3",
-    templateId: "sam",
-    template: "SAM Assessment",
-    type: "SAM",
-    location: "Stockholm Plant",
-    department: "Produktion",
-    date: "2024-01-25",
-    status: "completed",
-    submittedBy: "Erik Lindqvist",
-    reviewedBy: "Anna Karlsson",
-    riskLevel: "low",
-    riskScore: 4,
-    hazards: [
-      { step: "Maskinarbete", hazard: "Klämrisk vid pressar", severity: 4, probability: 1, riskScore: 4, controls: "Skyddsgaller, tvåhandsmanövrering" },
-      { step: "Materialhantering", hazard: "Tunga lyft", severity: 2, probability: 2, riskScore: 4, controls: "Lyfthjälpmedel, utbildning i lyftteknik" },
-    ],
-    ppeRequired: ["Skyddsglasögon", "Skyddsskor", "Hörselskydd"],
-    comments: "Systematisk genomgång av arbetsmiljön genomförd. Alla åtgärder implementerade.",
-    organizationalFactors: [
-      { factor: "Arbetsbelastning (Workload)", rating: 4, notes: "Balanserad arbetsbelastning" },
-      { factor: "Arbetstider (Working hours)", rating: 5, notes: "Regelbundna arbetstider, ingen övertid" },
-      { factor: "Inflytande (Control)", rating: 4, notes: "God möjlighet att påverka arbetet" },
-      { factor: "Kommunikation (Communication)", rating: 4, notes: "Tydlig kommunikation från ledning" },
-    ],
-    socialFactors: [
-      { factor: "Stöd från kollegor", value: 5, notes: "Bra samarbete i teamet" },
-      { factor: "Stöd från chef", value: 4, notes: "Tillgänglig och stödjande" },
-      { factor: "Kränkande särbehandling", value: false, notes: "Inga rapporterade fall" },
-    ],
-    actionPlan: [
-      { action: "Fortsätt med regelbundna teamträffar", priority: "low", responsible: "Teamledare", deadline: "2024-06-01", status: "Pågående" },
-      { action: "Uppdatera lyftutrustning", priority: "medium", responsible: "Produktionschef", deadline: "2024-04-15", status: "Planerad" },
-    ],
-  },
-  "ra4": {
-    id: "ra4",
-    templateId: "jsa",
-    template: "Job Safety Analysis (JSA)",
-    type: "JSA",
-    location: "Production Floor",
-    department: "Manufacturing",
-    date: "2024-01-24",
-    time: "07:30",
-    status: "completed",
-    submittedBy: "Sarah Wilson",
-    reviewedBy: "Mike Thompson",
-    riskLevel: "low",
-    riskScore: 3,
-    hazards: [
-      { step: "Machine startup", hazard: "Unexpected activation", severity: 3, probability: 1, riskScore: 3, controls: "Lockout/tagout procedures" },
-      { step: "Quality inspection", hazard: "Sharp edges on parts", severity: 2, probability: 1, riskScore: 2, controls: "Cut-resistant gloves required" },
-    ],
-    ppeRequired: ["Safety Glasses", "Cut-resistant Gloves", "Steel-toe Boots"],
-    comments: "Daily pre-shift safety briefing completed. All team members signed off.",
-    jobDescription: "CNC machine operation and quality inspection of machined parts",
-    crewLeader: "Sarah Wilson",
-    crewMembers: ["John Smith", "Maria Garcia", "James Brown", "Lisa Chen"],
-    checklistCategories: [
-      { id: "environment", title: "Work Environment", items: [
-        { id: "env1", label: "Area clean and free of debris", status: "pass", notes: "" },
-        { id: "env2", label: "Adequate lighting", status: "pass", notes: "" },
-        { id: "env3", label: "Ventilation adequate", status: "pass", notes: "" },
-        { id: "env4", label: "Emergency exits clear", status: "pass", notes: "" },
-      ]},
-      { id: "equipment", title: "Equipment Safety", items: [
-        { id: "eq1", label: "Machine guards in place", status: "pass", notes: "" },
-        { id: "eq2", label: "Emergency stops functional", status: "pass", notes: "Tested all 3 e-stops" },
-        { id: "eq3", label: "Lockout/tagout available", status: "pass", notes: "" },
-        { id: "eq4", label: "Tools in good condition", status: "pass", notes: "" },
-      ]},
-      { id: "ppe", title: "Personal Protective Equipment", items: [
-        { id: "ppe1", label: "Safety glasses worn", status: "pass", notes: "" },
-        { id: "ppe2", label: "Steel-toe boots worn", status: "pass", notes: "" },
-        { id: "ppe3", label: "Gloves available", status: "pass", notes: "" },
-        { id: "ppe4", label: "Hearing protection if needed", status: "na", notes: "Noise below 85dB" },
-      ]},
-    ],
-    identifiedHazards: "Sharp edges on freshly machined parts, pinch points near machine door",
-    controlMeasures: "Cut-resistant gloves required when handling parts. Keep hands clear of closing machine door.",
-    stopWorkConditions: "Unusual machine noise, missing guards, spilled coolant, damaged electrical cords",
-  },
-  "ra5": {
-    id: "ra5",
-    templateId: "osa",
-    template: "OSA - Psykosocial Riskbedömning",
-    type: "OSA",
-    location: "Malmö Warehouse",
-    department: "Lager",
-    date: "2024-01-22",
-    status: "completed",
-    submittedBy: "Anna Svensson",
-    reviewedBy: "Lars Eriksson",
-    riskLevel: "medium",
-    riskScore: 8,
-    hazards: [
-      { step: "Arbetsbelastning", hazard: "Hög arbetsbelastning under högsäsong", severity: 3, probability: 3, riskScore: 9, controls: "Extra bemanning, tydlig prioritering" },
-      { step: "Arbetstider", hazard: "Oregelbundna skift", severity: 2, probability: 3, riskScore: 6, controls: "Schemaläggning i god tid, vila mellan skift" },
-      { step: "Socialt stöd", hazard: "Isolerat arbete", severity: 2, probability: 2, riskScore: 4, controls: "Regelbundna teamträffar, mentorskap" },
-    ],
-    ppeRequired: [],
-    comments: "Organisatorisk och social arbetsmiljöbedömning. Fokus på psykosociala faktorer.",
-    sections: [
-      { id: "workload", title: "Arbetsbelastning", icon: "📊", questions: [
-        { id: "wl1", label: "Rimlig arbetsbelastning?", rating: 3, concern: true, notes: "Hög belastning under säsong" },
-        { id: "wl2", label: "Krav och resurser i balans?", rating: 3, concern: true, notes: "" },
-        { id: "wl3", label: "Möjlighet att påverka arbetet?", rating: 4, concern: false, notes: "" },
-        { id: "wl4", label: "Tydliga arbetsuppgifter?", rating: 4, concern: false, notes: "" },
-        { id: "wl5", label: "Möjlighet till återhämtning?", rating: 3, concern: true, notes: "Korta raster" },
-      ], average: 3.4 },
-      { id: "workhours", title: "Arbetstider", icon: "⏰", questions: [
-        { id: "wh1", label: "Hälsosamma arbetstider?", rating: 3, concern: true, notes: "" },
-        { id: "wh2", label: "Schemaläggs i god tid?", rating: 4, concern: false, notes: "" },
-        { id: "wh3", label: "Möjlighet att ta raster?", rating: 3, concern: true, notes: "" },
-        { id: "wh4", label: "Tillräcklig vila mellan skift?", rating: 4, concern: false, notes: "" },
-      ], average: 3.5 },
-      { id: "support", title: "Socialt stöd", icon: "👥", questions: [
-        { id: "ss1", label: "Stöd från kollegor", rating: 4, concern: false, notes: "" },
-        { id: "ss2", label: "Stöd från chef", rating: 4, concern: false, notes: "" },
-        { id: "ss3", label: "Fungerar kommunikationen?", rating: 4, concern: false, notes: "" },
-        { id: "ss4", label: "Positivt socialt klimat?", rating: 4, concern: false, notes: "" },
-      ], average: 4.0 },
-      { id: "harassment", title: "Kränkande särbehandling", icon: "⚠️", questions: [
-        { id: "kr1", label: "Förekommer kränkningar?", rating: 5, concern: false, notes: "Nej" },
-        { id: "kr2", label: "Finns rutiner för hantering?", rating: 5, concern: false, notes: "Ja" },
-      ], average: 5.0 },
-    ],
-    overallConcerns: "Hög arbetsbelastning under högsäsong och behov av bättre pausplanering.",
-    suggestions: "1. Planera in extra bemanning under högsäsong\n2. Se över rastschema\n3. Fortsätt med regelbundna teamträffar",
-    concernCount: 5,
-    lowRatingCount: 4,
-  },
-  "ra6": {
-    id: "ra6",
-    templateId: "arbowet",
-    template: "Arbowet Compliance Audit",
-    type: "ARBOWET",
-    location: "Rotterdam Factory",
-    department: "Productie",
-    date: "2024-01-20",
-    status: "completed",
-    submittedBy: "Pieter de Jong",
-    reviewedBy: "Maria Bakker",
-    riskLevel: "high",
-    riskScore: 15,
-    hazards: [
-      { step: "Art. 5 - RI&E", hazard: "RI&E niet actueel", severity: 5, probability: 3, riskScore: 15, controls: "RI&E bijwerken binnen 3 maanden" },
-      { step: "Art. 8 - Voorlichting", hazard: "Onvoldoende veiligheidsinstructies", severity: 3, probability: 3, riskScore: 9, controls: "Trainingsschema opstellen" },
-      { step: "Art. 13 - BHV", hazard: "Te weinig BHV'ers", severity: 4, probability: 2, riskScore: 8, controls: "Extra BHV-opleidingen plannen" },
-    ],
-    ppeRequired: ["Veiligheidshelm", "Veiligheidsschoenen", "Gehoorbescherming"],
-    comments: "Arbowet compliance controle. Verbeterpunten geïdentificeerd voor artikelen 5, 8 en 13.",
-    articles: [
-      { id: "art3", title: "Artikel 3 - Arbobeleid", description: "Arbeidsomstandighedenbeleid", items: [
-        { id: "3a", label: "Arbobeleid aanwezig en gedocumenteerd", status: "compliant", evidence: "Beleidsdocument v2024" },
-        { id: "3b", label: "Beleid gecommuniceerd naar medewerkers", status: "compliant", evidence: "Intranet + posters" },
-        { id: "3c", label: "Beleid wordt regelmatig geëvalueerd", status: "partial", actionNeeded: "Jaarlijkse evaluatie plannen" },
-      ]},
-      { id: "art5", title: "Artikel 5 - RI&E", description: "Risico-inventarisatie en -evaluatie", items: [
-        { id: "5a", label: "RI&E is uitgevoerd", status: "compliant", evidence: "RI&E rapport 2023" },
-        { id: "5b", label: "RI&E is actueel (< 1 jaar)", status: "non_compliant", actionNeeded: "RI&E updaten - laatste update 18 maanden geleden" },
-        { id: "5c", label: "Plan van Aanpak opgesteld", status: "partial", actionNeeded: "PvA actualiseren" },
-        { id: "5d", label: "PvA wordt gevolgd", status: "partial", actionNeeded: "Voortgangsrapportage opzetten" },
-      ]},
-      { id: "art8", title: "Artikel 8 - Voorlichting en onderricht", description: "Voorlichting en instructie werknemers", items: [
-        { id: "8a", label: "Medewerkers geïnformeerd over risico's", status: "partial", actionNeeded: "Toolboxmeetings structureren" },
-        { id: "8b", label: "Werkinstructies beschikbaar", status: "non_compliant", actionNeeded: "Werkinstructies opstellen voor alle taken" },
-        { id: "8c", label: "Trainingen verzorgd en gedocumenteerd", status: "partial", evidence: "Enkele trainingen gegeven", actionNeeded: "Trainingsmatrix opstellen" },
-      ]},
-      { id: "art13", title: "Artikel 13 - BHV", description: "Bedrijfshulpverlening", items: [
-        { id: "13a", label: "BHV-organisatie opgezet", status: "compliant", evidence: "BHV-plan aanwezig" },
-        { id: "13b", label: "Voldoende BHV'ers aanwezig", status: "non_compliant", actionNeeded: "Minimaal 2 extra BHV'ers opleiden" },
-        { id: "13c", label: "BHV-materiaal beschikbaar en gecontroleerd", status: "compliant", evidence: "Laatste controle: 15-01-2024" },
-        { id: "13d", label: "Ontruimingsoefening gehouden", status: "partial", actionNeeded: "Oefening plannen voor Q1" },
-      ]},
-      { id: "art14", title: "Artikel 14 - Arbodienst", description: "Deskundige bijstand", items: [
-        { id: "14a", label: "Contract met arbodienst", status: "compliant", evidence: "Contract ArboNed" },
-        { id: "14b", label: "Bedrijfsarts toegankelijk", status: "compliant", evidence: "Spreekuur 2x/maand" },
-        { id: "14c", label: "Basiscontract aanwezig", status: "compliant", evidence: "Basiscontract 2024" },
-      ]},
-    ],
-    complianceScore: 62,
-    overallAssessment: "De organisatie voldoet gedeeltelijk aan de Arbowet-vereisten. Er zijn significante verbeterpunten geïdentificeerd, met name rondom de actualiteit van de RI&E en de voorlichting aan medewerkers.",
-    priorityActions: "1. RI&E actualiseren (binnen 3 maanden)\n2. Werkinstructies opstellen voor alle taken\n3. Extra BHV'ers opleiden (minimaal 2)\n4. Trainingsmatrix opstellen en implementeren",
-    nextAuditDate: "2024-07-20",
-  },
-};
-
 const submissionTabs: Tab[] = [
   { id: "hazards", label: "Hazards & Risks", icon: AlertTriangle },
   { id: "controls", label: "Controls", icon: ShieldAlert },
@@ -777,10 +492,10 @@ export default function RiskAssessmentDetailPage() {
   const templateIds = ["jha", "jsa", "rie", "arbowet", "sam", "osa"];
   const isTemplate = templateIds.includes(assessmentId);
 
-  // Try to find the submission in the store first, then fall back to mock data
+  // Try to find the submission in the store
   const storeEvaluation = riskEvaluations.find(re => re.id === assessmentId);
   
-  // Get the submission if viewing a submission
+  // Get the submission from the store (no mock fallback)
   const submission = !isTemplate ? (storeEvaluation ? {
     id: storeEvaluation.id,
     templateId: storeEvaluation.form_type.toLowerCase(),
@@ -793,14 +508,14 @@ export default function RiskAssessmentDetailPage() {
     status: storeEvaluation.status === "reviewed" ? "completed" : storeEvaluation.status === "submitted" ? "in_progress" : "draft",
     submittedBy: users.find(u => u.id === storeEvaluation.submitter_id)?.full_name || "Unknown",
     reviewedBy: storeEvaluation.reviewed_by ? users.find(u => u.id === storeEvaluation.reviewed_by)?.full_name || "Reviewer" : "Pending",
-    riskLevel: "medium" as const,
+    riskLevel: "medium" as string,
     riskScore: 0,
     hazards: [] as { step: string; hazard: string; severity: number; probability: number; riskScore: number; controls: string }[],
     ppeRequired: [] as string[],
     comments: "",
     responses: storeEvaluation.responses,
-    _storeData: storeEvaluation, // Keep reference to store data
-  } : mockSubmissions[assessmentId]) : null;
+    _storeData: storeEvaluation,
+  } : null) : null;
 
   // Compute risk score from hazards when available
   const overallRisk = submission
@@ -821,9 +536,9 @@ export default function RiskAssessmentDetailPage() {
     ? mockRiskTemplates[assessmentId] 
     : (submission ? mockRiskTemplates[submission.templateId] : null);
 
-  // Get all submissions for this template (for template view)
+  // Get all submissions for this template from the store (for template view)
   const templateSubmissions = isTemplate 
-    ? Object.values(mockSubmissions).filter(sub => sub.templateId === assessmentId)
+    ? riskEvaluations.filter(re => re.form_type.toLowerCase() === assessmentId)
     : [];
 
   if (isLoading) {
@@ -886,34 +601,12 @@ export default function RiskAssessmentDetailPage() {
                 location: submission.location,
                 department: submission.department,
                 date: submission.date,
-                time: "time" in submission ? (submission.time as string) : undefined,
+                time: submission.time || undefined,
                 submittedBy: submission.submittedBy,
                 reviewedBy: typeof submission.reviewedBy === "string" ? submission.reviewedBy : undefined,
                 hazards: submission.hazards,
                 ppeRequired: submission.ppeRequired,
                 additionalNotes: submission.comments,
-                // These optional fields only exist on mock submissions, not store data
-                jobDescription: "jobDescription" in submission ? (submission.jobDescription as string) : undefined,
-                crewLeader: "crewLeader" in submission ? (submission.crewLeader as string) : undefined,
-                crewMembers: "crewMembers" in submission ? (submission.crewMembers as string[]) : undefined,
-                checklistCategories: "checklistCategories" in submission ? submission.checklistCategories : undefined,
-                identifiedHazards: "identifiedHazards" in submission ? submission.identifiedHazards : undefined,
-                controlMeasures: "controlMeasures" in submission ? submission.controlMeasures : undefined,
-                stopWorkConditions: "stopWorkConditions" in submission ? submission.stopWorkConditions : undefined,
-                risks: "risks" in submission ? submission.risks : undefined,
-                actionPlan: "actionPlan" in submission ? submission.actionPlan : undefined,
-                articles: "articles" in submission ? submission.articles : undefined,
-                complianceScore: "complianceScore" in submission ? (submission.complianceScore as number) : undefined,
-                overallAssessment: "overallAssessment" in submission ? (submission.overallAssessment as string) : undefined,
-                priorityActions: "priorityActions" in submission ? (submission.priorityActions as string) : undefined,
-                nextAuditDate: "nextAuditDate" in submission ? (submission.nextAuditDate as string) : undefined,
-                organizationalFactors: "organizationalFactors" in submission ? submission.organizationalFactors : undefined,
-                socialFactors: "socialFactors" in submission ? submission.socialFactors : undefined,
-                sections: "sections" in submission ? submission.sections : undefined,
-                overallConcerns: "overallConcerns" in submission ? (submission.overallConcerns as string) : undefined,
-                suggestions: "suggestions" in submission ? (submission.suggestions as string) : undefined,
-                concernCount: "concernCount" in submission ? (submission.concernCount as number) : undefined,
-                lowRatingCount: "lowRatingCount" in submission ? (submission.lowRatingCount as number) : undefined,
               }}
             />
           )}

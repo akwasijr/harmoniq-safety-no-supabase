@@ -127,7 +127,7 @@ function ReportIncidentPageContent() {
         if (!formData.type) next.type = t("validation.selectOption");
         break;
       case 2:
-        if (!formData.severity) next.type = t("validation.selectOption");
+        if (!formData.severity) next.severity = t("validation.selectOption");
         break;
       case 3:
         if (!formData.title.trim()) {
@@ -261,8 +261,8 @@ function ReportIncidentPageContent() {
     switch (currentStep) {
       case 1: return !!formData.type;
       case 2: return !!formData.severity;
-      case 3: return formData.title.length >= 5;
-      case 4: return formData.description.length >= 10;
+      case 3: return formData.title.length >= 3;
+      case 4: return formData.description.length === 0 || formData.description.length >= 10;
       case 5: return true; // Location is optional
       case 6: return !!formData.date && !!formData.time;
       case 7: return true; // Photos are optional
@@ -303,7 +303,7 @@ function ReportIncidentPageContent() {
       type: formData.type as IncidentType,
       type_other: formData.type === "other" ? "Other" : null,
       severity: formData.severity as Severity,
-      priority: formData.severity as Priority,
+      priority: (formData.severity === "critical" || formData.severity === "high" ? "high" : formData.severity === "medium" ? "medium" : "low") as Priority,
       title: formData.title,
       description: formData.description,
       incident_date: formData.date,

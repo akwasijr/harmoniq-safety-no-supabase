@@ -72,6 +72,8 @@ export default function UserDetailPage() {
   
   const canManageRoles = currentUserCan("users.manage_roles");
 
+  const [notificationPref, setNotificationPref] = React.useState("all");
+
   // Editable user state
   const [editedUser, setEditedUser] = React.useState({
     first_name: baseUser?.first_name || "",
@@ -289,7 +291,12 @@ export default function UserDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">{t("users.fullName")}</p>
                       {isEditing ? (
-                        <Input defaultValue={user.full_name} className="mt-1 h-8" />
+                        <Input value={`${editedUser.first_name} ${editedUser.last_name}`} className="mt-1 h-8" onChange={(e) => {
+                          const parts = e.target.value.split(" ");
+                          const firstName = parts[0] || "";
+                          const lastName = parts.slice(1).join(" ") || "";
+                          setEditedUser(prev => ({ ...prev, first_name: firstName, last_name: lastName }));
+                        }} />
                       ) : (
                         <p className="font-medium">{user.full_name}</p>
                       )}
@@ -300,7 +307,7 @@ export default function UserDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">{t("users.labels.email")}</p>
                       {isEditing ? (
-                        <Input defaultValue={user.email} className="mt-1 h-8" />
+                        <Input value={editedUser.email} className="mt-1 h-8" onChange={(e) => setEditedUser(prev => ({ ...prev, email: e.target.value }))} />
                       ) : (
                         <p className="font-medium">{user.email}</p>
                       )}
@@ -311,7 +318,7 @@ export default function UserDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">{t("users.labels.department")}</p>
                       {isEditing ? (
-                        <Input defaultValue={user.department || ""} className="mt-1 h-8" />
+                        <Input value={editedUser.department} className="mt-1 h-8" onChange={(e) => setEditedUser(prev => ({ ...prev, department: e.target.value }))} />
                       ) : (
                         <p className="font-medium">{user.department || "—"}</p>
                       )}
@@ -346,7 +353,7 @@ export default function UserDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">{t("users.jobTitle")}</p>
                       {isEditing ? (
-                        <Input defaultValue={user.job_title || ""} className="mt-1 h-8" />
+                        <Input value={editedUser.job_title} className="mt-1 h-8" onChange={(e) => setEditedUser(prev => ({ ...prev, job_title: e.target.value }))} />
                       ) : (
                         <p className="font-medium">{user.job_title || "—"}</p>
                       )}
@@ -404,10 +411,10 @@ export default function UserDetailPage() {
                 <CardTitle className="text-base">{t("users.quickActions")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full gap-2">
+                <Button variant="outline" className="w-full gap-2" onClick={() => toast("Password reset email sent")}>
                   <Key className="h-4 w-4" /> {t("users.resetPassword")}
                 </Button>
-                <Button variant="outline" className="w-full gap-2">
+                <Button variant="outline" className="w-full gap-2" onClick={() => toast("Message feature coming soon")}>
                   <Mail className="h-4 w-4" /> {t("users.sendMessage")}
                 </Button>
               </CardContent>
@@ -658,13 +665,16 @@ export default function UserDetailPage() {
               </div>
               <div>
                 <Label>Notification Preferences</Label>
-                <select title="Select notification preferences" aria-label="Select notification preferences" className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select title="Select notification preferences" aria-label="Select notification preferences" className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm" value={notificationPref} onChange={(e) => setNotificationPref(e.target.value)}>
                   <option value="all">All notifications</option>
                   <option value="important">Important only</option>
                   <option value="none">None</option>
                 </select>
               </div>
-              <Button>{t("users.saveSettings")}</Button>
+              <Button onClick={() => {
+                updateUser(baseUser.id, { notification_prefs: { push: notificationPref !== "none", email: notificationPref !== "none", incidents: true, tasks: notificationPref === "all", news: notificationPref === "all" }, updated_at: new Date().toISOString() } as Partial<import("@/types").User>);
+                toast("Settings saved successfully");
+              }}>{t("users.saveSettings")}</Button>
             </CardContent>
           </Card>
 

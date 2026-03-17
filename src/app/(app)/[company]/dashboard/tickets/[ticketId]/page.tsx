@@ -27,11 +27,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
 import { useTicketsStore } from "@/stores/tickets-store";
+import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { storeFile, getFilesForEntity } from "@/lib/file-storage";
+import type { StoredFile } from "@/lib/file-storage";
 
 export default function TicketDetailPage() {
   const router = useRouter();
@@ -46,16 +49,26 @@ export default function TicketDetailPage() {
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const canDeleteTicket = hasPermission("incidents.delete");
   const { items: tickets, isLoading, update: updateTicket, remove: removeTicket } = useTicketsStore();
+  const { items: users } = useUsersStore();
   const ticket = tickets.find((t) => t.id === ticketId);
+  const assignee = ticket?.assigned_to ? users.find((u) => u.id === ticket.assigned_to) : undefined;
 
   const [editedDescription, setEditedDescription] = React.useState("");
+  const [documents, setDocuments] = React.useState<StoredFile[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (ticket) setEditedDescription(ticket.description);
   }, [ticket?.id]);
+
+  React.useEffect(() => {
+    if (ticketId) {
+      setDocuments(getFilesForEntity("ticket", ticketId));
+    }
+  }, [ticketId]);
 
   type TicketTask = { id: string; title: string; completed: boolean };
   const TASKS_KEY = `harmoniq_ticket_tasks_${ticketId}`;
@@ -113,12 +126,18 @@ export default function TicketDetailPage() {
     notFound();
   }
 
-
-  // Mock documents
-  const documents = [
-    { id: "d1", name: "Incident Report.pdf", size: "245 KB", uploaded: "2024-01-28", by: "John Doe" },
-    { id: "d2", name: "Photos.zip", size: "4.2 MB", uploaded: "2024-01-28", by: "Jane Smith" },
-  ];
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !ticket) return;
+    try {
+      const stored = await storeFile(file, "ticket", ticket.id, user?.id || "");
+      setDocuments((prev) => [...prev, stored]);
+      toast("File uploaded", "success");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Upload failed", "error");
+    }
+    e.target.value = "";
+  };
 
   const tabs: Tab[] = [
     { id: "info", label: "Details", icon: Info },
@@ -250,7 +269,13 @@ export default function TicketDetailPage() {
                         <p className="font-medium">Incident #{ticket.incident_ids[0]}</p>
                         <p className="text-sm text-muted-foreground">Click to view details</p>
                       </div>
-                      <Button variant="outline" size="sm">View</Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push(`/${company}/dashboard/incidents/${ticket.incident_ids[0]}`)}
+                      >
+                        View
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -266,7 +291,22 @@ export default function TicketDetailPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label className="text-muted-foreground">{t("tickets.labels.status")}</Label>
-                    <p className="font-medium capitalize">{ticket.status.replace("_", " ")}</p>
+                    <select
+                      className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium capitalize"
+                      value={ticket.status}
+                      onChange={(e) => {
+                        updateTicket(ticket.id, {
+                          status: e.target.value as typeof ticket.status,
+                          updated_at: new Date().toISOString(),
+                        });
+                        toast("Status updated");
+                      }}
+                    >
+                      <option value="new">New</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">{t("tickets.labels.priority")}</Label>
@@ -274,7 +314,7 @@ export default function TicketDetailPage() {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">{t("tickets.labels.assignee")}</Label>
-                    <p className="font-medium">{ticket.assigned_to || "Unassigned"}</p>
+                    <p className="font-medium">{assignee?.full_name || "Unassigned"}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">{t("tickets.labels.dueDate")}</Label>
@@ -438,7 +478,14 @@ export default function TicketDetailPage() {
         {activeTab === "documents" && (
           <div className="space-y-6">
             <div className="flex justify-end">
-              <Button className="gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,text/csv"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <Button className="gap-2" onClick={() => fileInputRef.current?.click()}>
                 <Upload className="h-4 w-4" />
                 Upload File
               </Button>
@@ -463,11 +510,15 @@ export default function TicketDetailPage() {
                           <div>
                             <p className="font-medium">{doc.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {doc.size} • Uploaded by {doc.by} on {doc.uploaded}
+                              {(doc.size / 1024).toFixed(0)} KB • Uploaded {formatDate(new Date(doc.uploadedAt))}
                             </p>
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(doc.dataUrl, "_blank")}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                       </div>

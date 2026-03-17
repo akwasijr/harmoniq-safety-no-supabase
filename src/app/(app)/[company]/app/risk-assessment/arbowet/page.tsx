@@ -205,6 +205,10 @@ export default function ArbowetFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.companyName.trim() || !formData.auditor.trim() || !formData.auditDate.trim()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");

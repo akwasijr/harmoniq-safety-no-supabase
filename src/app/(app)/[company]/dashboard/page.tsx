@@ -23,6 +23,7 @@ import { useCompanyStore } from "@/stores/company-store";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const PLATFORM_SLUGS =
   (process.env.NEXT_PUBLIC_PLATFORM_SLUGS || "platform,admin,superadmin")
@@ -124,9 +125,12 @@ export default function DashboardPage() {
       // Severity filter
       if (severityFilter && inc.severity !== severityFilter) return false;
       
+      // Department filter
+      if (departmentFilter && (inc as unknown as Record<string, unknown>).department !== departmentFilter) return false;
+      
       return true;
     });
-  }, [incidents, dateRangeFilter.start, dateRangeFilter.end, locationFilter, typeFilter, severityFilter]);
+  }, [incidents, dateRangeFilter.start, dateRangeFilter.end, locationFilter, typeFilter, severityFilter, departmentFilter]);
 
   // Compute chart data from filtered incidents
   const incidentTrendData = React.useMemo(() => {
@@ -322,6 +326,7 @@ export default function DashboardPage() {
   const recentFilteredIncidents = filteredIncidents.slice(0, 5);
 
   return (
+    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -463,5 +468,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

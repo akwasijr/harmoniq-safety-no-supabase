@@ -31,6 +31,8 @@ import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { storeFile, getFilesForEntity } from "@/lib/file-storage";
+import type { StoredFile } from "@/lib/file-storage";
 
 const tabs: Tab[] = [
   { id: "details", label: "Details", icon: Info },
@@ -62,6 +64,10 @@ export default function ContentDetailPage() {
     status: content?.status || "draft",
   });
 
+  const [visibility, setVisibility] = React.useState("all");
+  const [mediaFiles, setMediaFiles] = React.useState<StoredFile[]>([]);
+  const mediaInputRef = React.useRef<HTMLInputElement>(null);
+
   React.useEffect(() => {
     if (content) {
       setFormData({
@@ -72,6 +78,25 @@ export default function ContentDetailPage() {
       });
     }
   }, [content]);
+
+  React.useEffect(() => {
+    if (contentId) {
+      setMediaFiles(getFilesForEntity("content", contentId));
+    }
+  }, [contentId]);
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !content) return;
+    try {
+      const stored = await storeFile(file, "content", content.id, content.created_by || "");
+      setMediaFiles((prev) => [...prev, stored]);
+      toast("File uploaded", "success");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Upload failed", "error");
+    }
+    e.target.value = "";
+  };
 
   if (isLoading) {
     return <LoadingPage />;
@@ -313,24 +338,47 @@ export default function ContentDetailPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Media & Attachments</CardTitle>
-            <Button size="sm" variant="outline" className="gap-1"><Plus className="h-3 w-3" /> Upload</Button>
+            <div>
+              <input
+                ref={mediaInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,text/csv"
+                onChange={handleMediaUpload}
+                className="hidden"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() => mediaInputRef.current?.click()}
+              >
+                <Plus className="h-3 w-3" /> Upload
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="aspect-video rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/50 hover:bg-muted cursor-pointer transition-colors">
+              <div
+                className="aspect-video rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/50 hover:bg-muted cursor-pointer transition-colors"
+                onClick={() => mediaInputRef.current?.click()}
+              >
                 <div className="text-center">
                   <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">Featured Image</p>
                   <p className="text-xs text-muted-foreground">Click to upload</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                <FileText className="h-8 w-8 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-sm">Attachment.pdf</p>
-                  <p className="text-xs text-muted-foreground">2.3 MB • Uploaded yesterday</p>
+              {mediaFiles.map((file) => (
+                <div key={file.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50">
+                  <FileText className="h-8 w-8 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium text-sm">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(file.size / 1024).toFixed(0)} KB • Uploaded {new Date(file.uploadedAt).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -388,7 +436,20 @@ export default function ContentDetailPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label>Status</Label>
-                <select className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select
+                  className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.status}
+                  onChange={(e) => {
+                    const newStatus = e.target.value as typeof content.status;
+                    setFormData({ ...formData, status: newStatus });
+                    updateContent(content.id, {
+                      status: newStatus,
+                      published_at: newStatus === "published" ? new Date().toISOString() : content.published_at,
+                      updated_at: new Date().toISOString(),
+                    });
+                    toast("Status updated");
+                  }}
+                >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
                   <option value="archived">Archived</option>
@@ -396,7 +457,11 @@ export default function ContentDetailPage() {
               </div>
               <div>
                 <Label>Visibility</Label>
-                <select className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select
+                  className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={visibility}
+                  onChange={(e) => setVisibility(e.target.value)}
+                >
                   <option value="all">All Employees</option>
                   <option value="managers">Managers Only</option>
                   <option value="specific">Specific Departments</option>

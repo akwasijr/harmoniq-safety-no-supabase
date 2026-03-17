@@ -182,6 +182,10 @@ export default function JSAFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.date.trim() || !formData.time.trim() || !formData.jobDescription.trim() || !formData.location.trim()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");

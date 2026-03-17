@@ -29,6 +29,8 @@ import {
   ExternalLink,
   Upload,
   Lock,
+  Download,
+  ChevronDown,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +49,9 @@ import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
-import type { IncidentInvestigation, IncidentAction, IncidentComment, IncidentTimelineEvent, RCAAttachment, Priority } from "@/types";
+import { useAuth } from "@/hooks/use-auth";
+import { storeFile } from "@/lib/file-storage";
+import type { IncidentInvestigation, IncidentAction, IncidentComment, IncidentTimelineEvent, RCAAttachment, IncidentDocument, Priority } from "@/types";
 import { RoleGuard } from "@/components/auth/role-guard";
 
 const tabs: Tab[] = [
@@ -122,8 +126,9 @@ export default function IncidentDetailPage() {
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
+  const { user: authUser } = useAuth();
   const { items: incidents, isLoading, update: updateIncident, remove: removeIncident } = useIncidentsStore();
-  const { items: tickets, add: addTicket } = useTicketsStore();
+  const { items: tickets, add: addTicket, update: updateTicket } = useTicketsStore();
   const { add: addCorrectiveAction } = useCorrectiveActionsStore();
   const { items: users } = useUsersStore();
 
@@ -134,6 +139,16 @@ export default function IncidentDetailPage() {
   const investigation = incident?.investigation ?? null;
   const actions = incident?.actions ?? [];
   const comments = incident?.comments ?? [];
+  const documents = incident?.documents ?? [];
+
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+
+  // Documents state
+  const documentsInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Assignment dropdown state
+  const [showAssignDropdown, setShowAssignDropdown] = React.useState(false);
 
   // Use refs for frequently-changing derived values to stabilize callbacks
   const incidentRef = React.useRef(incident);
@@ -305,6 +320,11 @@ export default function IncidentDetailPage() {
   const handleTicketStatusChange = (actionId: string, newStatus: "open" | "in_progress" | "resolved", notes?: string) => {
     setActions((prev) => prev.map((a) => {
       if (a.id === actionId) {
+        // Also update the ticket in the tickets store
+        if (a.ticketId) {
+          const ticketStatus = newStatus === "open" ? "new" : newStatus;
+          updateTicket(a.ticketId, { status: ticketStatus as "new" | "in_progress" | "resolved", updated_at: new Date().toISOString() });
+        }
         return {
           ...a,
           ticketStatus: newStatus,
@@ -375,8 +395,60 @@ export default function IncidentDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">{t("incidents.buttons.export")}</Button>
-          <Button>{t("common.save")}</Button>
+          <Button variant="outline" onClick={() => {
+            const exportData = {
+              id: incident.id,
+              reference_number: incident.reference_number,
+              title: incident.title,
+              description: incident.description,
+              type: incident.type,
+              severity: incident.severity,
+              priority: incident.priority,
+              status: incident.status,
+              incident_date: incident.incident_date,
+              incident_time: incident.incident_time,
+              building: incident.building,
+              floor: incident.floor,
+              zone: incident.zone,
+              room: incident.room,
+              reporter: reporter?.full_name || "Unknown",
+              investigation: investigation ? {
+                status: investigation.status,
+                investigator: getAssigneeName(investigation.investigator),
+                rootCauseCategory: investigation.rootCauseCategory,
+                rootCauseDescription: investigation.rootCauseDescription,
+                contributingFactors: investigation.contributingFactors,
+                lessonsLearned: investigation.lessonsLearned,
+              } : null,
+              actions: actions.map(a => ({
+                title: a.title,
+                status: a.status,
+                priority: a.priority,
+                assignee: getAssigneeName(a.assignee),
+                dueDate: a.dueDate,
+              })),
+              comments: comments.map(c => ({
+                user: c.user,
+                text: c.text,
+                date: c.date,
+              })),
+              exported_at: new Date().toISOString(),
+            };
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${incident.reference_number || incident.id}-export.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast("Incident exported", "success");
+          }}>{t("incidents.buttons.export")}</Button>
+          <Button onClick={() => {
+            updateIncident(incidentId, { updated_at: new Date().toISOString() });
+            toast("Incident saved", "success");
+          }}>{t("common.save")}</Button>
         </div>
       </div>
 
@@ -614,15 +686,95 @@ export default function IncidentDetailPage() {
                 <CardTitle className="text-base">Assigned To</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
-                    SM
-                  </div>
-                  <div>
-                    <p className="font-medium">Safety Manager</p>
-                    <p className="text-sm text-muted-foreground">Primary investigator</p>
-                  </div>
-                </div>
+                {(() => {
+                  const assignedUser = incident.assigned_to ? users.find(u => u.id === incident.assigned_to) : null;
+                  if (assignedUser) {
+                    const initials = assignedUser.full_name
+                      .split(" ")
+                      .map(n => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2);
+                    return (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
+                            {initials}
+                          </div>
+                          <div>
+                            <p className="font-medium">{assignedUser.full_name}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{assignedUser.role.replace("_", " ")}</p>
+                          </div>
+                        </div>
+                        {!isLocked && (
+                          <div className="relative">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full gap-1"
+                              onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                            >
+                              Reassign <ChevronDown className="h-3 w-3" />
+                            </Button>
+                            {showAssignDropdown && (
+                              <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg max-h-48 overflow-y-auto">
+                                {users.map((u) => (
+                                  <button
+                                    key={u.id}
+                                    type="button"
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                    onClick={() => {
+                                      updateIncident(incidentId, { assigned_to: u.id, updated_at: new Date().toISOString() });
+                                      setShowAssignDropdown(false);
+                                      toast(`Assigned to ${u.full_name}`, "success");
+                                    }}
+                                  >
+                                    {u.full_name} <span className="text-muted-foreground capitalize">({u.role.replace("_", " ")})</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">Unassigned</p>
+                      {!isLocked && (
+                        <div className="relative">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full gap-1"
+                            onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                          >
+                            <Plus className="h-3 w-3" /> Assign
+                          </Button>
+                          {showAssignDropdown && (
+                            <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg max-h-48 overflow-y-auto">
+                              {users.map((u) => (
+                                <button
+                                  key={u.id}
+                                  type="button"
+                                  className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                  onClick={() => {
+                                    updateIncident(incidentId, { assigned_to: u.id, updated_at: new Date().toISOString() });
+                                    setShowAssignDropdown(false);
+                                    toast(`Assigned to ${u.full_name}`, "success");
+                                  }}
+                                >
+                                  {u.full_name} <span className="text-muted-foreground capitalize">({u.role.replace("_", " ")})</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </div>
@@ -811,19 +963,26 @@ export default function IncidentDetailPage() {
                               className="hidden"
                               accept="image/*,.pdf"
                               multiple
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 const files = Array.from(e.target.files || []);
-                                const newAttachments: RCAAttachment[] = files.map((f) => ({
-                                  id: crypto.randomUUID(),
-                                  name: f.name,
-                                  type: f.type,
-                                  url: URL.createObjectURL(f),
-                                  addedAt: new Date().toISOString(),
-                                }));
-                                setInvestigation({
-                                  ...investigation,
-                                  attachments: [...investigation.attachments, ...newAttachments],
-                                });
+                                for (const f of files) {
+                                  try {
+                                    const stored = await storeFile(f, "incident-investigation", incidentId, authUser?.id || "");
+                                    const newAttachment: RCAAttachment = {
+                                      id: stored.id,
+                                      name: stored.name,
+                                      type: stored.type,
+                                      url: stored.dataUrl,
+                                      addedAt: new Date().toISOString(),
+                                    };
+                                    setInvestigation({
+                                      ...(incidentRef.current?.investigation ?? investigation!),
+                                      attachments: [...(incidentRef.current?.investigation?.attachments ?? investigation!.attachments), newAttachment],
+                                    });
+                                  } catch {
+                                    toast(`Failed to upload ${f.name}`, "error");
+                                  }
+                                }
                                 e.target.value = "";
                               }}
                             />
@@ -1121,19 +1280,26 @@ export default function IncidentDetailPage() {
                         className="hidden"
                         accept="image/*,.pdf"
                         multiple
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const files = Array.from(e.target.files || []);
-                          const newAttachments: RCAAttachment[] = files.map((f) => ({
-                            id: crypto.randomUUID(),
-                            name: f.name,
-                            type: f.type,
-                            url: URL.createObjectURL(f),
-                            addedAt: new Date().toISOString(),
-                          }));
-                          setInvestigation({
-                            ...investigation,
-                            attachments: [...investigation.attachments, ...newAttachments],
-                          });
+                          for (const f of files) {
+                            try {
+                              const stored = await storeFile(f, "incident-investigation", incidentId, authUser?.id || "");
+                              const newAttachment: RCAAttachment = {
+                                id: stored.id,
+                                name: stored.name,
+                                type: stored.type,
+                                url: stored.dataUrl,
+                                addedAt: new Date().toISOString(),
+                              };
+                              setInvestigation({
+                                ...(incidentRef.current?.investigation ?? investigation!),
+                                attachments: [...(incidentRef.current?.investigation?.attachments ?? investigation!.attachments), newAttachment],
+                              });
+                            } catch {
+                              toast(`Failed to upload ${f.name}`, "error");
+                            }
+                          }
                           e.target.value = "";
                         }}
                       />
@@ -1415,7 +1581,7 @@ export default function IncidentDetailPage() {
             <div className="border-t pt-4">
               <div className="flex gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
-                  You
+                  {authUser?.full_name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "?"}
                 </div>
                 <div className="flex-1 space-y-2">
                   <Textarea placeholder={t("incidents.placeholders.addComment")} value={newComment} onChange={(e) => setNewComment(e.target.value)} rows={3} />
@@ -1426,11 +1592,11 @@ export default function IncidentDetailPage() {
                       if (!newComment.trim()) return;
                       const comment: IncidentComment = {
                         id: `comment-${Date.now()}`,
-                        user: "Current User", // Would come from auth in production
-                        userId: "current-user",
+                        user: authUser?.full_name || "Unknown User",
+                        userId: authUser?.id || "unknown",
                         text: newComment.trim(),
                         date: new Date().toISOString(),
-                        avatar: "CU",
+                        avatar: authUser?.full_name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "?",
                       };
                       addComment(comment);
                       setNewComment("");
@@ -1478,32 +1644,88 @@ export default function IncidentDetailPage() {
                 <FileText className="h-4 w-4" />
                 Documents
               </CardTitle>
-              <Button size="sm" variant="outline" className="gap-1"><Plus className="h-3 w-3" /> Upload</Button>
+              <Button size="sm" variant="outline" className="gap-1" onClick={() => documentsInputRef.current?.click()}>
+                <Plus className="h-3 w-3" /> Upload
+              </Button>
+              <input
+                ref={documentsInputRef}
+                type="file"
+                className="hidden"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                multiple
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files || []);
+                  for (const f of files) {
+                    try {
+                      const stored = await storeFile(f, "incident-document", incidentId, authUser?.id || "");
+                      const newDoc: IncidentDocument = {
+                        id: stored.id,
+                        name: stored.name,
+                        type: stored.type,
+                        url: stored.dataUrl,
+                        size: stored.size,
+                        uploadedAt: new Date().toISOString(),
+                        uploadedBy: authUser?.full_name || "Unknown",
+                      };
+                      const currentDocs = incidentRef.current?.documents ?? [];
+                      updateIncident(incidentId, {
+                        documents: [...currentDocs, newDoc],
+                        updated_at: new Date().toISOString(),
+                      });
+                      toast(`Uploaded ${stored.name}`, "success");
+                    } catch {
+                      toast(`Failed to upload ${f.name}`, "error");
+                    }
+                  }
+                  e.target.value = "";
+                }}
+              />
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">Incident Report.pdf</p>
-                    <p className="text-xs text-muted-foreground">2.3 MB • Uploaded today</p>
-                  </div>
+              {documents.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
+                  <Button size="sm" variant="outline" className="mt-3 gap-1" onClick={() => documentsInputRef.current?.click()}>
+                    <Upload className="h-3 w-3" /> Upload Document
+                  </Button>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">Witness Statement.docx</p>
-                    <p className="text-xs text-muted-foreground">145 KB • 2 days ago</p>
-                  </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 group">
+                      <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{doc.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(doc.size / 1024).toFixed(1)} KB • {doc.uploadedBy}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {doc.url && (
+                          <a href={doc.url} download={doc.name} className="inline-flex">
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <Download className="h-3 w-3" />
+                            </Button>
+                          </a>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                          onClick={() => {
+                            const updatedDocs = documents.filter(d => d.id !== doc.id);
+                            updateIncident(incidentId, { documents: updatedDocs, updated_at: new Date().toISOString() });
+                            toast("Document removed", "info");
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">Investigation Notes.pdf</p>
-                    <p className="text-xs text-muted-foreground">856 KB • 3 days ago</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -1585,8 +1807,7 @@ export default function IncidentDetailPage() {
                   onClick={() => {
                     if (!incident) return;
                     updateIncident(incident.id, {
-                      status: "resolved",
-                      resolved_at: new Date().toISOString(),
+                      status: "archived",
                       updated_at: new Date().toISOString(),
                     });
                     toast("Incident archived");
@@ -1604,12 +1825,7 @@ export default function IncidentDetailPage() {
                 <Button
                   variant="destructive"
                   className="gap-2"
-                  onClick={() => {
-                    if (!incident) return;
-                    removeIncident(incident.id);
-                    toast("Incident deleted", "info");
-                    router.push(`/${company}/dashboard/incidents`);
-                  }}
+                  onClick={() => setShowDeleteConfirm(true)}
                 >
                   <Trash2 className="h-4 w-4" /> Delete
                 </Button>
@@ -1619,6 +1835,38 @@ export default function IncidentDetailPage() {
         </div>
       )}
     </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="relative bg-background rounded-lg shadow-lg w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Delete Incident</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowDeleteConfirm(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to permanently delete this incident? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (!incident) return;
+                  removeIncident(incident.id);
+                  toast("Incident deleted", "info");
+                  router.push(`/${company}/dashboard/incidents`);
+                }}
+              >
+                Delete Permanently
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </RoleGuard>
   );
 }

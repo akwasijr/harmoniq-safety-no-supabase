@@ -270,6 +270,10 @@ export default function RiskAssessmentFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (Object.keys(answers).length === 0) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");

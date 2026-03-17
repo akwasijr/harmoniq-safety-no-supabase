@@ -18,6 +18,7 @@ import { useIncidentsStore } from "@/stores/incidents-store";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
+import { storeFile } from "@/lib/file-storage";
 import type { Incident, IncidentType, Severity, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
@@ -82,19 +83,21 @@ export default function NewIncidentPage() {
     location_description: "",
     asset_id: "",
   });
-  const [photos, setPhotos] = React.useState<string[]>([]);
+  const [photos, setPhotos] = React.useState<{ id: string; name: string; url: string }[]>([]);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     
-    Array.from(files).slice(0, 5 - photos.length).forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotos((prev) => [...prev, reader.result as string].slice(0, 5));
-      };
-      reader.readAsDataURL(file);
-    });
+    const filesToProcess = Array.from(files).slice(0, 5 - photos.length);
+    for (const file of filesToProcess) {
+      try {
+        const stored = await storeFile(file, "incident", "draft", user?.id || "unknown");
+        setPhotos((prev) => [...prev, { id: stored.id, name: stored.name, url: stored.dataUrl }].slice(0, 5));
+      } catch {
+        toast("Failed to store photo", "error");
+      }
+    }
     e.target.value = "";
   };
 
@@ -130,7 +133,7 @@ export default function NewIncidentPage() {
       gps_lng: null,
       location_description: formData.location_description || null,
       asset_id: formData.asset_id || null,
-      media_urls: photos,
+      media_urls: photos.map((p) => p.url),
       status: "new",
       flagged: false,
       resolved_at: null,
@@ -436,8 +439,8 @@ export default function NewIncidentPage() {
               {photos.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
                   {photos.map((photo, index) => (
-                    <div key={photo} className="relative aspect-square rounded-lg overflow-hidden border">
-                      <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
+                    <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden border">
+                      <img src={photo.url} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
                       <Button
                         variant="destructive"
                         size="icon"

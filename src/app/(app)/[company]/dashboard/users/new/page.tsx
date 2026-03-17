@@ -91,41 +91,48 @@ export default function NewUserPage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
-    const now = new Date().toISOString();
-    const newUser: User = {
-      id: `user_${Date.now()}`,
-      company_id: currentCompany?.id || "",
-      email: formData.email,
-      first_name: formData.first_name,
-      middle_name: formData.middle_name || null,
-      last_name: formData.last_name,
-      full_name: [formData.first_name, formData.middle_name, formData.last_name]
-        .filter(Boolean)
-        .join(" "),
-      role: formData.role,
-      user_type: formData.user_type,
-      account_type: formData.account_type,
-      gender: formData.gender || null,
-      department: formData.department || null,
-      job_title: formData.job_title || null,
-      employee_id: formData.employee_id || null,
-      status: "active",
-      location_id: formData.location_id || null,
-      language: formData.language,
-      theme: "system",
-      two_factor_enabled: false,
-      last_login_at: null,
-      created_at: now,
-      updated_at: now,
-      team_ids: formData.team_ids,
-    };
-    addUser(newUser);
-    toast("User created successfully");
+    try {
+      const now = new Date().toISOString();
+      const newUser: User = {
+        id: `user_${Date.now()}`,
+        company_id: currentCompany?.id || "",
+        email: formData.email,
+        first_name: formData.first_name,
+        middle_name: formData.middle_name || null,
+        last_name: formData.last_name,
+        full_name: [formData.first_name, formData.middle_name, formData.last_name]
+          .filter(Boolean)
+          .join(" "),
+        role: formData.role,
+        user_type: formData.user_type,
+        account_type: formData.account_type,
+        gender: formData.gender || null,
+        department: formData.department || null,
+        job_title: formData.job_title || null,
+        employee_id: formData.employee_id || null,
+        status: "active",
+        location_id: formData.location_id || null,
+        language: formData.language,
+        theme: "system",
+        two_factor_enabled: false,
+        last_login_at: null,
+        created_at: now,
+        updated_at: now,
+        team_ids: formData.team_ids,
+      };
+      addUser(newUser);
+      toast("User created successfully");
 
-    router.push(`/${company}/dashboard/users`);
+      router.push(`/${company}/dashboard/users`);
+    } catch {
+      toast("Failed to create user");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const isValid = formData.email.trim() && formData.first_name.trim() && formData.last_name.trim();
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+  const isValid = formData.email.trim() && isValidEmail && formData.first_name.trim() && formData.last_name.trim();
 
   return (
     <RoleGuard requiredPermission="users.create">
@@ -189,6 +196,9 @@ export default function NewUserPage() {
                 value={formData.email}
                 onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
               />
+              {formData.email.trim() && !isValidEmail && (
+                <p className="text-xs text-destructive">Please enter a valid email address</p>
+              )}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

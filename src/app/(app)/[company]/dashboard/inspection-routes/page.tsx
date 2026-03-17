@@ -7,6 +7,7 @@ import { useInspectionRoutesStore } from "@/stores/inspection-routes-store";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useInspectionRoundsStore } from "@/stores/inspection-rounds-store";
 import { useToast } from "@/components/ui/toast";
+import { useCompanyStore } from "@/stores/company-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,8 @@ export default function InspectionRoutesPage() {
   const { items: assets } = useAssetsStore();
   const { items: rounds } = useInspectionRoundsStore();
   const { toast } = useToast();
+  const { items: companies } = useCompanyStore();
+  const currentCompany = companies.find((c) => c.slug === company) || companies[0];
 
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [expandedRouteId, setExpandedRouteId] = React.useState<string | null>(null);
@@ -104,7 +107,7 @@ export default function InspectionRoutesPage() {
     const now = new Date().toISOString();
     const route: InspectionRoute = {
       id: `route_${Date.now()}`,
-      company_id: "",
+      company_id: currentCompany?.id || "",
       name: formName.trim(),
       description: formDescription.trim() || null,
       status: "active",
@@ -238,6 +241,7 @@ export default function InspectionRoutesPage() {
                         size="sm"
                         className="text-destructive"
                         onClick={() => {
+                          if (!window.confirm("Are you sure you want to delete this route? This action cannot be undone.")) return;
                           removeRoute(route.id);
                           toast(t("inspectionRoutes.toast.routeDeleted"));
                         }}

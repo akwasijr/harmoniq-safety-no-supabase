@@ -24,6 +24,7 @@ import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
 import { useGps } from "@/hooks/use-gps";
 import { GpsCaptureButton } from "@/components/shared/gps-capture-button";
+import { storeFile, FileValidationError } from "@/lib/file-storage";
 import { INSPECTION_TEMPLATES, type AssetCategory } from "@/types";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -52,6 +53,12 @@ export default function AssetInspectionPage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const gps = useGps();
 
+  // Auto-capture GPS on mount (field worker is at the location)
+  React.useEffect(() => {
+    gps.captureLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { items: assets , isLoading } = useAssetsStore();
   const { add: addInspection } = useAssetInspectionsStore();
   const { add: addWorkOrder } = useWorkOrdersStore();
@@ -75,7 +82,7 @@ export default function AssetInspectionPage() {
   const passCount = Object.values(answers).filter((a) => a === "pass").length;
   const failCount = Object.values(answers).filter((a) => a === "fail").length;
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || !currentQuestion) return;
     
@@ -83,16 +90,28 @@ export default function AssetInspectionPage() {
     const remainingSlots = 2 - currentPhotos.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
     
-    filesToProcess.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
+    for (const file of filesToProcess) {
+      try {
+        const stored = await storeFile(
+          file,
+          "inspection",
+          assetId,
+          user?.id || "unknown",
+        );
         setPhotos((prev) => ({
           ...prev,
-          [currentQuestion.id]: [...(prev[currentQuestion.id] || []), reader.result as string],
+          [currentQuestion.id]: [...(prev[currentQuestion.id] || []), stored.dataUrl],
         }));
-      };
-      reader.readAsDataURL(file);
-    });
+      } catch (err) {
+        if (err instanceof FileValidationError) {
+          toast(err.message);
+        } else if (err instanceof Error && err.message === "QUOTA_EXCEEDED") {
+          toast("Storage is full. Delete some files and try again.");
+        } else {
+          toast(`Failed to upload photo`);
+        }
+      }
+    }
     
     if (fileInputRef.current) fileInputRef.current.value = "";
   };

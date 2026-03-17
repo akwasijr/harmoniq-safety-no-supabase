@@ -33,6 +33,7 @@ import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
 import { LoadingPage } from "@/components/ui/loading";
 import { GpsPicker } from "@/components/shared/gps-picker";
+import { storeFile, FileValidationError } from "@/lib/file-storage";
 import type { AssetCategory, AssetCondition, AssetCriticality } from "@/types";
 
 type Step = "info" | "details" | "location" | "review";
@@ -78,7 +79,9 @@ export default function NewAssetPage() {
   const [step, setStep] = React.useState<Step>("info");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [photos, setPhotos] = React.useState<string[]>([]);
+  const [photoUrls, setPhotoUrls] = React.useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const assetDraftId = React.useRef(`draft_asset_${Date.now()}`);
 
   // Form state
   const [name, setName] = React.useState("");
@@ -96,7 +99,6 @@ export default function NewAssetPage() {
   const [gpsLng, setGpsLng] = React.useState<number | null>(null);
   const [safetyInstructions, setSafetyInstructions] = React.useState("");
   const [notes, setNotes] = React.useState("");
-  const [showLocationPicker, setShowLocationPicker] = React.useState(false);
 
   const currentStepIndex = STEPS.indexOf(step);
   const isFirstStep = currentStepIndex === 0;
@@ -131,26 +133,40 @@ export default function NewAssetPage() {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
     const remainingSlots = 3 - photos.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
-    filesToProcess.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotos((prev) => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+    for (const file of filesToProcess) {
+      try {
+        const stored = await storeFile(
+          file,
+          "asset",
+          assetDraftId.current,
+          user?.id || "unknown",
+        );
+        setPhotos((prev) => [...prev, stored.dataUrl]);
+        setPhotoUrls((prev) => [...prev, stored.dataUrl]);
+      } catch (err) {
+        if (err instanceof FileValidationError) {
+          toast(err.message, "error");
+        } else if (err instanceof Error && err.message === "QUOTA_EXCEEDED") {
+          toast("Storage is full. Delete some files and try again.", "error");
+        } else {
+          toast(`Failed to upload ${(file as File).name}`, "error");
+        }
+      }
+    }
 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const removePhoto = (index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotoUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleNext = () => {
@@ -214,6 +230,8 @@ export default function NewAssetPage() {
       next_maintenance_date: null,
       requires_certification: false,
       safety_instructions: safetyInstructions.trim() || null,
+      notes: notes.trim() || null,
+      media_urls: photoUrls,
       gps_lat: gpsLat,
       gps_lng: gpsLng,
       status: "active",
