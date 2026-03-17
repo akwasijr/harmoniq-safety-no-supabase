@@ -267,7 +267,7 @@ export async function GET(request: NextRequest) {
     const invitationsWithLinks = (invitations || []).map((invitation) => ({
       ...invitation,
       invite_url: invitation.token ? `${siteUrl}/invite?token=${invitation.token}` : null,
-      company_name: (invitation as any).companies?.name || null,
+      company_name: (invitation as unknown as { companies?: { name: string } }).companies?.name || null,
     }));
 
     return NextResponse.json({ invitations: invitationsWithLinks });

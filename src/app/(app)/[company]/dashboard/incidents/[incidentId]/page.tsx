@@ -22,7 +22,7 @@ import {
   Timer,
   Shield,
   Package,
-  Image,
+  Image as ImageIcon,
   X,
   Ticket,
   ExternalLink,
@@ -46,7 +46,7 @@ import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
-import type { IncidentInvestigation, IncidentAction, IncidentComment, IncidentTimelineEvent, RCAAttachment } from "@/types";
+import type { IncidentInvestigation, IncidentAction, IncidentComment, IncidentTimelineEvent, RCAAttachment, Priority } from "@/types";
 
 const tabs: Tab[] = [
   { id: "details", label: "Details", icon: Info },
@@ -253,7 +253,7 @@ export default function IncidentDetailPage() {
       company_id: incident.company_id,
       title: newAction.title,
       description: newAction.description || `${newAction.actionType === "corrective" ? "Corrective" : "Preventive"} action from incident`,
-      priority: newAction.priority as any,
+      priority: (newAction.priority === "urgent" ? "critical" : newAction.priority) as Priority,
       status: "new",
       due_date: newAction.dueDate || null,
       assigned_to: newAction.assignee || null,
@@ -399,13 +399,13 @@ export default function IncidentDetailPage() {
                 {incident.media_urls && incident.media_urls.length > 0 && (
                   <div className="mt-4 pt-4 border-t">
                     <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                      <Image className="h-4 w-4 text-muted-foreground" />
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
                       Photos & Media ({incident.media_urls.length})
                     </p>
                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                       {incident.media_urls.map((url, idx) => (
                         <div key={url || idx} className="aspect-square rounded-lg bg-muted border flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary cursor-pointer">
-                          <Image className="h-6 w-6 text-muted-foreground" />
+                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
                         </div>
                       ))}
                     </div>
@@ -774,7 +774,7 @@ export default function IncidentDetailPage() {
                               {investigation.attachments.map((file) => (
                                 <div key={file.id} className="flex items-center gap-2 rounded-lg border p-2">
                                   {file.type.startsWith("image/") ? (
-                                    <Image className="h-4 w-4 text-blue-500 shrink-0" />
+                                    <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" />
                                   ) : (
                                     <FileText className="h-4 w-4 text-red-500 shrink-0" />
                                   )}
@@ -1086,7 +1086,7 @@ export default function IncidentDetailPage() {
                         {investigation.attachments.map((file) => (
                           <div key={file.id} className="flex items-center gap-2 rounded border p-2 text-sm">
                             {file.type.startsWith("image/") ? (
-                              <Image className="h-4 w-4 text-blue-500 shrink-0" />
+                              <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" />
                             ) : (
                               <FileText className="h-4 w-4 text-red-500 shrink-0" />
                             )}
@@ -1447,7 +1447,7 @@ export default function IncidentDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Image className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" />
                 Photos & Media
               </CardTitle>
             </CardHeader>
@@ -1456,7 +1456,7 @@ export default function IncidentDetailPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {incident.media_urls.map((url, idx) => (
                     <div key={url || idx} className="aspect-square rounded-lg bg-muted border flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary cursor-pointer">
-                      <Image className="h-8 w-8 text-muted-foreground" />
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
                     </div>
                   ))}
                 </div>

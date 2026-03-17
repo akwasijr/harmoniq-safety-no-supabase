@@ -34,6 +34,18 @@ import { useTranslation } from "@/i18n";
 
 const ITEMS_PER_PAGE = 10;
 
+interface Invitation {
+  id: string;
+  email: string;
+  role: string;
+  expires_at: string;
+  accepted_at: string | null;
+  token: string;
+  company_id: string;
+  invite_url?: string | null;
+  company_name?: string | null;
+}
+
 // Tab type
 type TabType = "users" | "invitations" | "teams";
 
@@ -45,7 +57,7 @@ export default function UsersPage() {
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [showAddTeamModal, setShowAddTeamModal] = React.useState(false);
   const [isInviting, setIsInviting] = React.useState(false);
-  const [invitations, setInvitations] = React.useState<any[]>([]);
+  const [invitations, setInvitations] = React.useState<Invitation[]>([]);
   const [isInvitesLoading, setIsInvitesLoading] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -243,8 +255,8 @@ export default function UsersPage() {
       setShowAddModal(false);
       fetchInvitations();
       setNewUser({ first_name: "", last_name: "", email: "", role: "employee", department: "", team_ids: [] });
-    } catch (err: any) {
-      toast(err?.message || "Failed to create invitation");
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Failed to create invitation");
     } finally {
       setIsInviting(false);
     }

@@ -34,6 +34,7 @@ import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation, LOCALE_DEFAULT_COUNTRY } from "@/i18n";
 import { TasksSkeleton } from "@/components/ui/loading";
+import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User } from "@/types";
 
 type TabType = "checklists" | "risk-assessment" | "reports";
 type CountryCode = "US" | "NL" | "SE";
@@ -111,13 +112,13 @@ function ChecklistsTabContent({
   formatDate,
 }: {
   company: string;
-  templates: any[];
-  pendingTemplates: any[];
-  userSubmissions: any[];
-  completedToday: any[];
-  user: any;
+  templates: ChecklistTemplate[];
+  pendingTemplates: ChecklistTemplate[];
+  userSubmissions: ChecklistSubmission[];
+  completedToday: ChecklistSubmission[];
+  user: User | null;
   t: (key: string) => string;
-  formatDate: (date: Date, opts?: any) => string;
+  formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
 }) {
   const [subTab, setSubTab] = React.useState<ChecklistSubTab>("my");
 
@@ -136,13 +137,13 @@ function ChecklistsTabContent({
   ];
 
   // Calculate score for a submission
-  const getScore = (submission: any) => {
+  const getScore = (submission: ChecklistSubmission) => {
     if (!submission.responses || submission.responses.length === 0) return null;
     const total = submission.responses.length;
-    const passed = submission.responses.filter((r: any) => 
+    const passed = submission.responses.filter((r: ChecklistResponse) => 
       r.value === true || r.value === "pass" || r.value === "yes"
     ).length;
-    const na = submission.responses.filter((r: any) => 
+    const na = submission.responses.filter((r: ChecklistResponse) => 
       r.value === "na" || r.value === "n/a"
     ).length;
     const applicable = total - na;
@@ -402,11 +403,11 @@ function ChecklistsTabContent({
                 .map((submission) => {
                   const tpl = templates.find(t => t.id === submission.template_id);
                   const score = getScore(submission);
-                  const passCount = submission.responses?.filter((r: any) => r.value === true || r.value === "pass" || r.value === "yes").length || 0;
-                  const failCount = submission.responses?.filter((r: any) => r.value === false || r.value === "fail" || r.value === "no").length || 0;
-                  const naCount = submission.responses?.filter((r: any) => r.value === "na" || r.value === "n/a").length || 0;
-                  const hasNotes = submission.responses?.some((r: any) => r.comment);
-                  const hasPhotos = submission.responses?.some((r: any) => r.photo_urls?.length > 0);
+                  const passCount = submission.responses?.filter((r: ChecklistResponse) => r.value === true || r.value === "pass" || r.value === "yes").length || 0;
+                  const failCount = submission.responses?.filter((r: ChecklistResponse) => r.value === false || r.value === "fail" || r.value === "no").length || 0;
+                  const naCount = submission.responses?.filter((r: ChecklistResponse) => r.value === "na" || r.value === "n/a").length || 0;
+                  const hasNotes = submission.responses?.some((r: ChecklistResponse) => r.comment);
+                  const hasPhotos = submission.responses?.some((r: ChecklistResponse) => (r.photo_urls?.length ?? 0) > 0);
 
                   return (
                     <div key={submission.id} className="rounded-lg border p-3 space-y-2">
