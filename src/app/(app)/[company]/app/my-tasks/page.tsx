@@ -9,7 +9,6 @@ import {
   ChevronUp,
   ListChecks,
   History,
-  MapPin,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -302,25 +301,7 @@ export default function MyTasksPage() {
           <Badge variant="secondary" className="text-xs">
             {activeWOs.length}
           </Badge>
-          <div className="ml-auto">
-            {gps.coords ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] text-success font-mono">
-                <MapPin className="h-3 w-3" />
-                {gps.coords.lat.toFixed(4)}, {gps.coords.lng.toFixed(4)}
-              </span>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1 text-xs text-muted-foreground"
-                onClick={gps.captureLocation}
-                disabled={gps.loading}
-              >
-                <MapPin className="h-3 w-3" />
-                {gps.loading ? "..." : "GPS"}
-              </Button>
-            )}
-          </div>
+
         </div>
 
         {/* Sub-tab pills */}
