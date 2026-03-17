@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useInspectionRoutesStore } from "@/stores/inspection-routes-store";
 import { useInspectionRoundsStore } from "@/stores/inspection-rounds-store";
 import { useAssetsStore } from "@/stores/assets-store";
+import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { createWorkOrderFromInspection } from "@/lib/work-order-generator";
 import { useToast } from "@/components/ui/toast";
 import { useSync } from "@/hooks/use-sync";
 import { Button } from "@/components/ui/button";
@@ -58,6 +60,7 @@ function InspectionRoundContent() {
   const { items: routes, isLoading: isRoutesLoading } = useInspectionRoutesStore();
   const { add: addRound } = useInspectionRoundsStore({ skipLoad: true });
   const { items: assets, isLoading: isAssetsLoading } = useAssetsStore();
+  const { add: addWorkOrder } = useWorkOrdersStore();
 
   const route = routes.find((r) => r.id === routeId);
   const [currentIndex, setCurrentIndex] = React.useState(0);
@@ -192,6 +195,26 @@ function InspectionRoundContent() {
     };
 
     addRound(roundData);
+
+    // Auto-generate work orders for failed / needs_attention checkpoints
+    const failedResults = Array.from(results.values()).filter(
+      (r) => r.result === "fail" || r.result === "needs_attention",
+    );
+    for (const r of failedResults) {
+      const cpAsset = assets.find((a) => a.id === r.asset_id);
+      if (!cpAsset) continue;
+      const wo = createWorkOrderFromInspection({
+        inspection: {
+          id: roundData.id,
+          asset_id: r.asset_id,
+          result: r.result,
+          notes: "Auto-generated from inspection round",
+        },
+        asset: { id: cpAsset.id, name: cpAsset.name, company_id: cpAsset.company_id },
+        inspectorId: user?.id || "",
+      });
+      addWorkOrder(wo);
+    }
 
     // Queue for sync (especially important when offline)
     addToQueue("inspection_round", roundData as unknown as Record<string, unknown>);

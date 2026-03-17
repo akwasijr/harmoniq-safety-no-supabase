@@ -17,6 +17,8 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useAssetInspectionsStore } from "@/stores/inspections-store";
+import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { createWorkOrderFromInspection } from "@/lib/work-order-generator";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
@@ -49,6 +51,7 @@ export default function AssetInspectionPage() {
 
   const { items: assets , isLoading } = useAssetsStore();
   const { add: addInspection } = useAssetInspectionsStore();
+  const { add: addWorkOrder } = useWorkOrdersStore();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -130,18 +133,31 @@ export default function AssetInspectionPage() {
       .join("\n")
       .trim();
     const mediaUrls = Object.values(photos).flat();
+    const result = failCount > 0 ? "needs_attention" : "pass";
+    const inspectionId = crypto.randomUUID();
     addInspection({
-      id: crypto.randomUUID(),
+      id: inspectionId,
       asset_id: asset.id,
       inspector_id: user.id,
       checklist_id: null,
-      result: failCount > 0 ? "needs_attention" : "pass",
+      result,
       notes: combinedNotes || null,
       media_urls: mediaUrls,
       incident_id: null,
       inspected_at: now.toISOString(),
       created_at: now.toISOString(),
     });
+
+    // Auto-generate work order for failed inspections
+    if (result === "needs_attention") {
+      const wo = createWorkOrderFromInspection({
+        inspection: { id: inspectionId, asset_id: asset.id, result, notes: "Auto-generated from failed inspection" },
+        asset: { id: asset.id, name: asset.name, company_id: asset.company_id },
+        inspectorId: user.id,
+      });
+      addWorkOrder(wo);
+    }
+
     toast("Inspection submitted");
     router.push(`/${company}/app/report/success?ref=${refNumber}&type=inspection`);
   };
