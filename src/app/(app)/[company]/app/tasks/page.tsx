@@ -1,13 +1,13 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import {
   ClipboardList,
   Ticket,
   Wrench,
   ShieldAlert,
-  ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Loader2,
   ListChecks,
   Calendar,
@@ -61,7 +61,7 @@ type UnifiedTask = {
   updatedAt: string;
   isOverdue: boolean;
   priorityWeight: number;
-  href: string;
+  description?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -236,16 +236,18 @@ function TaskCard({
   t: (key: string, params?: Record<string, string | number>) => string;
   onStatusUpdate: (taskId: string, kind: UnifiedTask["kind"], targetStatus: string) => void;
 }) {
+  const [expanded, setExpanded] = React.useState(false);
   const KindIcon = getKindIcon(task.kind);
   const kindColor = getKindIconColor(task.kind);
   const actions = getStatusActions(task.kind, task.status);
   const iconClassName = cn("h-5 w-5 shrink-0", kindColor);
 
   return (
-    <div className="rounded-lg border transition-colors hover:bg-muted/40">
-      <Link
-        href={task.href}
-        className="flex items-center gap-3 p-3 active:bg-muted/50"
+    <div className="rounded-lg border transition-colors hover:bg-muted/40 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center gap-3 p-3 text-left active:bg-muted/50"
       >
         {task.kind === "ticket" ? (
           <Ticket className={iconClassName} aria-hidden="true" />
@@ -298,30 +300,49 @@ function TaskCard({
           </div>
         </div>
 
-        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-      </Link>
+        {expanded ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+        )}
+      </button>
 
-      {actions.length > 0 && (
-        <div className="flex items-center gap-2 px-3 pb-2.5 pt-0">
-          {actions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.targetStatus}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStatusUpdate(task.id, task.kind, action.targetStatus);
-                }}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                  action.className,
-                )}
-              >
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                {t(action.labelKey) || action.fallbackLabel}
-              </button>
-            );
-          })}
+      {expanded && (
+        <div className="border-t px-3 pb-3">
+          {task.description && (
+            <p className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
+              {task.description}
+            </p>
+          )}
+          {!task.description && (
+            <p className="text-xs text-muted-foreground/70 mt-2 italic">
+              {t("tasks.noDescription") || "No description provided"}
+            </p>
+          )}
+
+          {actions.length > 0 && (
+            <div className="flex items-center gap-2 mt-3">
+              {actions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={action.targetStatus}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusUpdate(task.id, task.kind, action.targetStatus);
+                    }}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
+                      action.className,
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t(action.labelKey) || action.fallbackLabel}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -437,7 +458,7 @@ export default function TasksPage() {
         updatedAt: tk.updated_at,
         isOverdue: isItemOverdue(tk.due_date, tk.status),
         priorityWeight: PRIORITY_WEIGHT[tk.priority] ?? 0,
-        href: `/${company}/dashboard/tickets/${tk.id}`,
+        description: tk.description || "",
       }));
 
     // Work orders assigned to me or requested by me
@@ -461,7 +482,7 @@ export default function TasksPage() {
         updatedAt: wo.updated_at,
         isOverdue: isItemOverdue(wo.due_date, wo.status),
         priorityWeight: PRIORITY_WEIGHT[wo.priority] ?? 0,
-        href: `/${company}/dashboard/work-orders?highlight=${wo.id}`,
+        description: wo.description || "",
       }));
 
     // Corrective actions assigned to me
@@ -481,7 +502,7 @@ export default function TasksPage() {
         updatedAt: ca.updated_at,
         isOverdue: isItemOverdue(ca.due_date, ca.status),
         priorityWeight: PRIORITY_WEIGHT[ca.severity] ?? 0,
-        href: `/${company}/dashboard/corrective-actions?highlight=${ca.id}`,
+        description: ca.description || "",
       }));
 
     const sortTasks = (a: UnifiedTask, b: UnifiedTask) => {

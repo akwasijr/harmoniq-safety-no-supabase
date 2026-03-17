@@ -453,14 +453,14 @@ export default function EmployeeProfilePage() {
                   <p className="font-medium">{t("profile.twoFactor") || "Two-Factor Authentication"}</p>
                   <p className="text-sm text-muted-foreground">{t("profile.twoFactorDesc") || "Add extra security to your account"}</p>
                 </div>
-                <Badge variant="outline" className="text-xs text-muted-foreground">{t("common.comingSoon")}</Badge>
+                <Badge variant="outline" className="text-xs">{t("common.comingSoon")}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{t("profile.activeSessions") || "Active Sessions"}</p>
                   <p className="text-sm text-muted-foreground">{t("profile.activeSessionsDesc") || "Manage logged-in devices"}</p>
                 </div>
-                <Badge variant="outline" className="text-xs text-muted-foreground">{t("common.comingSoon")}</Badge>
+                <Badge variant="outline" className="text-xs">{t("common.comingSoon")}</Badge>
               </div>
           </div>
         </div>

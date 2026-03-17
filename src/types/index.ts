@@ -550,6 +550,10 @@ export interface Asset {
   requires_certification: boolean;
   safety_instructions: string | null;
   
+  // GPS
+  gps_lat?: number | null;
+  gps_lng?: number | null;
+
   // Status
   status: AssetStatus;
 
@@ -573,6 +577,10 @@ export interface AssetInspection {
   media_urls: string[];
 
   incident_id: string | null;
+
+  // GPS
+  gps_lat?: number | null;
+  gps_lng?: number | null;
 
   inspected_at: string;
   created_at: string;
@@ -1157,6 +1165,11 @@ export interface WorkOrder {
   labor_cost: number | null;
   corrective_action_id: string | null;
   completed_at: string | null;
+
+  // GPS
+  location_lat?: number | null;
+  location_lng?: number | null;
+
   created_at: string;
   updated_at: string;
   
@@ -1264,6 +1277,8 @@ export interface InspectionRound {
   completed_at: string | null;
   checkpoint_results: InspectionCheckpointResult[];
   alerts_created: string[];
+  gps_lat?: number | null;
+  gps_lng?: number | null;
   created_at: string;
   updated_at: string;
 }

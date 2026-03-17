@@ -23,6 +23,15 @@ import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
+import {
+  storeFile,
+  getFilesForEntity,
+  deleteFile as deleteStoredFile,
+  downloadFile,
+  seedMockCertificationFiles,
+  FileValidationError,
+  type StoredFile,
+} from "@/lib/file-storage";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useAssetData } from "./_components/useAssetData";
 import { AssetOverview } from "./_components/AssetOverview";
@@ -62,26 +71,62 @@ export default function AssetDetailPage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const imageInputRef = React.useRef<HTMLInputElement>(null);
 
-  const [storedDocuments, setStoredDocuments] = React.useState(() =>
-    loadFromStorage<Array<{ id: string; name: string; type: string; size: string; uploaded: string; dataUrl?: string }>>(
-      `harmoniq_asset_docs_${assetId}`,
-      [
-        { id: "d1", name: "User Manual.pdf", type: "document", size: "2.4 MB", uploaded: "2024-01-15" },
-        { id: "d2", name: "Safety Certificate.pdf", type: "certificate", size: "156 KB", uploaded: "2024-01-10" },
-        { id: "d3", name: "Calibration Report.pdf", type: "document", size: "89 KB", uploaded: "2024-01-05" },
-      ]
-    )
-  );
-  const [storedImages, setStoredImages] = React.useState(() =>
-    loadFromStorage<Array<{ id: string; name: string; uploaded: string; dataUrl?: string }>>(
-      `harmoniq_asset_images_${assetId}`,
-      [
-        { id: "img1", name: "Asset Photo 1.jpg", uploaded: "2024-01-15" },
-        { id: "img2", name: "Serial Number.jpg", uploaded: "2024-01-15" },
-        { id: "img3", name: "Installation.jpg", uploaded: "2024-01-10" },
-      ]
-    )
-  );
+  // Seed mock certification PDFs on first visit (idempotent)
+  React.useEffect(() => { seedMockCertificationFiles(); }, []);
+
+  // Load persisted files from file-storage
+  const loadFiles = React.useCallback(() => {
+    const all = getFilesForEntity("asset", assetId);
+    const docs = all
+      .filter((f) => !f.type.startsWith("image/"))
+      .map((f) => {
+        const sizeKb = f.size / 1024;
+        const sizeStr = sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${Math.round(sizeKb)} KB`;
+        return { id: f.id, name: f.name, type: "document", size: sizeStr, uploaded: f.uploadedAt.split("T")[0], dataUrl: f.dataUrl };
+      });
+    const imgs = all
+      .filter((f) => f.type.startsWith("image/"))
+      .map((f) => ({ id: f.id, name: f.name, uploaded: f.uploadedAt.split("T")[0], dataUrl: f.dataUrl }));
+    return { docs, imgs };
+  }, [assetId]);
+
+  const [storedDocuments, setStoredDocuments] = React.useState(() => {
+    const legacy = loadFromStorage<Array<{ id: string; name: string; type: string; size: string; uploaded: string; dataUrl?: string }>>(
+      `harmoniq_asset_docs_${assetId}`, []
+    );
+    if (legacy.length > 0) return legacy;
+    const { docs } = loadFiles();
+    return docs.length > 0 ? docs : [
+      { id: "d1", name: "User Manual.pdf", type: "document", size: "2.4 MB", uploaded: "2024-01-15" },
+      { id: "d2", name: "Safety Certificate.pdf", type: "certificate", size: "156 KB", uploaded: "2024-01-10" },
+      { id: "d3", name: "Calibration Report.pdf", type: "document", size: "89 KB", uploaded: "2024-01-05" },
+    ];
+  });
+  const [storedImages, setStoredImages] = React.useState(() => {
+    const legacy = loadFromStorage<Array<{ id: string; name: string; uploaded: string; dataUrl?: string }>>(
+      `harmoniq_asset_images_${assetId}`, []
+    );
+    if (legacy.length > 0) return legacy;
+    const { imgs } = loadFiles();
+    return imgs.length > 0 ? imgs : [
+      { id: "img1", name: "Asset Photo 1.jpg", uploaded: "2024-01-15" },
+      { id: "img2", name: "Serial Number.jpg", uploaded: "2024-01-15" },
+      { id: "img3", name: "Installation.jpg", uploaded: "2024-01-10" },
+    ];
+  });
+
+  const refreshFileLists = React.useCallback(() => {
+    const { docs, imgs } = loadFiles();
+    // Merge: keep legacy entries (no file-storage id) + file-storage entries
+    setStoredDocuments((prev) => {
+      const legacyOnly = prev.filter((d) => !d.id.startsWith("file_") && !d.id.startsWith("mock_cert_"));
+      return [...legacyOnly, ...docs];
+    });
+    setStoredImages((prev) => {
+      const legacyOnly = prev.filter((d) => !d.id.startsWith("file_") && !d.id.startsWith("mock_cert_"));
+      return [...legacyOnly, ...imgs];
+    });
+  }, [loadFiles]);
 
   const getFileType = (name: string) => {
     const ext = name.split('.').pop()?.toLowerCase();
@@ -100,30 +145,37 @@ export default function AssetDetailPage() {
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, kind: "document" | "image") => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, kind: "document" | "image") => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      const sizeKb = file.size / 1024;
+    e.target.value = "";
+    const userId = user?.id || "unknown";
+    try {
+      const stored = await storeFile(file, "asset", assetId, userId);
+      const sizeKb = stored.size / 1024;
       const sizeStr = sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${Math.round(sizeKb)} KB`;
-      const now = new Date().toISOString().split("T")[0];
+      const now = stored.uploadedAt.split("T")[0];
       if (kind === "document") {
-        const doc = { id: `d-${Date.now()}`, name: file.name, type: "document", size: sizeStr, uploaded: now, dataUrl };
+        const doc = { id: stored.id, name: stored.name, type: "document", size: sizeStr, uploaded: now, dataUrl: stored.dataUrl };
         const next = [...storedDocuments, doc];
         setStoredDocuments(next);
         saveToStorage(`harmoniq_asset_docs_${assetId}`, next);
       } else {
-        const img = { id: `img-${Date.now()}`, name: file.name, uploaded: now, dataUrl };
+        const img = { id: stored.id, name: stored.name, uploaded: now, dataUrl: stored.dataUrl };
         const next = [...storedImages, img];
         setStoredImages(next);
         saveToStorage(`harmoniq_asset_images_${assetId}`, next);
       }
       toast(`${file.name} uploaded`);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
+    } catch (err) {
+      if (err instanceof FileValidationError) {
+        toast(err.message, "error");
+      } else if (err instanceof Error && err.message === "QUOTA_EXCEEDED") {
+        toast("Storage is full. Delete some files and try again.", "error");
+      } else {
+        toast("Upload failed. Please try again.", "error");
+      }
+    }
   };
 
   // Edited asset form state
@@ -293,6 +345,24 @@ export default function AssetDetailPage() {
             storedImages={storedImages} fileInputRef={fileInputRef}
             imageInputRef={imageInputRef} handleFileUpload={handleFileUpload}
             setPreviewDoc={setPreviewDoc} setPreviewImage={setPreviewImage}
+            onDeleteFile={(fileId) => {
+              // Remove from file-storage if it's a stored file
+              if (fileId.startsWith("file_") || fileId.startsWith("mock_cert_")) {
+                deleteStoredFile(fileId);
+              }
+              // Remove from component state
+              setStoredDocuments((prev) => {
+                const next = prev.filter((d) => d.id !== fileId);
+                saveToStorage(`harmoniq_asset_docs_${assetId}`, next);
+                return next;
+              });
+              setStoredImages((prev) => {
+                const next = prev.filter((d) => d.id !== fileId);
+                saveToStorage(`harmoniq_asset_images_${assetId}`, next);
+                return next;
+              });
+              toast("File deleted", "info");
+            }}
           />
         )}
 

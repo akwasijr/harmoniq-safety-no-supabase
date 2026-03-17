@@ -231,7 +231,7 @@ export default function EmployeeAppHomePage() {
   // ── Quick action grid items ──
   const quickActions = [
     { href: `/${company}/app/report`, labelKey: "app.reportIncident", label: "Report Incident", icon: AlertTriangle },
-    { href: `/${company}/app/tasks`, labelKey: "app.myTasks", label: "My Tasks", icon: ClipboardCheck },
+    { href: `/${company}/app/my-tasks`, labelKey: "app.myTasks", label: "My Tasks", icon: ClipboardCheck },
     { href: `/${company}/app/assets`, labelKey: "app.browseAssets", label: "Browse Assets", icon: Search },
     { href: `/${company}/app/report`, labelKey: "app.requestFix", label: "Request Fix", icon: Wrench },
     { href: `/${company}/app/scan`, labelKey: "app.scanAsset", label: "Scan Asset", icon: ScanLine },

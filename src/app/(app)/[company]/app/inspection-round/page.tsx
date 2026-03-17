@@ -38,6 +38,8 @@ import type {
   InspectionCheckpointResult,
   CheckpointResult,
 } from "@/types";
+import { useGps } from "@/hooks/use-gps";
+import { GpsCaptureButton } from "@/components/shared/gps-capture-button";
 
 const CHECK_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   visual: Eye,
@@ -68,6 +70,13 @@ function InspectionRoundContent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [roundStartedAt] = React.useState(new Date().toISOString());
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const gps = useGps();
+
+  // Auto-capture GPS on page load (field worker is at the location)
+  React.useEffect(() => {
+    gps.captureLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (isRoutesLoading || isAssetsLoading) {
     return <LoadingPage />;
@@ -190,6 +199,8 @@ function InspectionRoundContent() {
       completed_at: now,
       checkpoint_results: Array.from(results.values()),
       alerts_created: alertsCreated,
+      gps_lat: gps.coords?.lat ?? null,
+      gps_lng: gps.coords?.lng ?? null,
       created_at: now,
       updated_at: now,
     };
@@ -411,6 +422,17 @@ function InspectionRoundContent() {
             value={currentResult?.notes || ""}
             onChange={(e) => setCheckpointResult({ notes: e.target.value || null })}
             rows={3}
+          />
+        </div>
+
+        {/* GPS Capture */}
+        <div className="mb-6">
+          <p className="mb-2 text-sm font-medium">{t("common.location") || "Location"}</p>
+          <GpsCaptureButton
+            coords={gps.coords}
+            loading={gps.loading}
+            error={gps.error}
+            onCapture={gps.captureLocation}
           />
         </div>
 

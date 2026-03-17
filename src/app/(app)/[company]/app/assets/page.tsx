@@ -17,6 +17,7 @@ import {
   List,
   Wrench,
   ClipboardCheck,
+  ScanLine,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -141,16 +142,25 @@ export default function EmployeeAssetsPage() {
         <div>
           {/* Filters bar */}
           <div className="px-4 pt-3 pb-2 space-y-2">
-            {/* Search within browse */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder={t("assets.placeholders.searchByNameSerialTag")}
-                value={browseSearch}
-                onChange={e => setBrowseSearch(e.target.value)}
-                className="w-full rounded-lg border bg-muted/50 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
+            {/* Search within browse + scan button */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder={t("assets.placeholders.searchByNameSerialTag")}
+                  value={browseSearch}
+                  onChange={e => setBrowseSearch(e.target.value)}
+                  className="w-full rounded-lg border bg-muted/50 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <Link
+                href={`/${company}/app/scan`}
+                className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Scan QR code"
+              >
+                <ScanLine className="h-4.5 w-4.5" />
+              </Link>
             </div>
 
             {/* Filter chips */}
@@ -315,6 +325,15 @@ export default function EmployeeAssetsPage() {
           )}
         </div>
       )}
+
+      {/* Scan FAB — always visible above bottom tabs */}
+      <Link
+        href={`/${company}/app/scan`}
+        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
+        aria-label="Scan asset QR code"
+      >
+        <ScanLine className="h-6 w-6" />
+      </Link>
     </div>
   );
 }

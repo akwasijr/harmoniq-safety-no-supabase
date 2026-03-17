@@ -23,7 +23,13 @@ export type BadgeVariant =
   | "low"
   | "medium"
   | "high"
-  | "critical";
+  | "critical"
+  | "expired"
+  | "overdue"
+  | "inactive"
+  | "active"
+  | "completed"
+  | "cancelled";
 
 /**
  * Map a priority string to a Badge variant.
@@ -89,20 +95,28 @@ export function getStatusVariant(
 ): BadgeVariant {
   switch (status) {
     case "completed":
+      return "completed";
     case "resolved":
-      return "success";
+      return "resolved";
+    case "active":
+      return "active";
     case "in_progress":
     case "approved":
       return "warning";
     case "cancelled":
+      return "cancelled";
     case "closed":
       return "secondary";
+    case "inactive":
+      return "inactive";
+    case "expired":
+      return "expired";
     case "requested":
     case "new":
     case "open":
-      return opts?.isOverdue ? "destructive" : "secondary";
+      return opts?.isOverdue ? "overdue" : "secondary";
     default:
-      return opts?.isOverdue ? "destructive" : "secondary";
+      return opts?.isOverdue ? "overdue" : "secondary";
   }
 }
 
@@ -113,8 +127,8 @@ export const WORK_ORDER_STATUS_COLORS: Record<string, BadgeVariant> = {
   requested: "secondary",
   approved: "warning",
   in_progress: "warning",
-  completed: "success",
-  cancelled: "secondary",
+  completed: "completed",
+  cancelled: "cancelled",
 };
 
 // ---------------------------------------------------------------------------

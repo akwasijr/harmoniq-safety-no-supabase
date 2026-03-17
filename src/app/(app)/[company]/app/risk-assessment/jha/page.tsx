@@ -119,9 +119,9 @@ const initialFormData: JHAFormData = {
 
 function getRiskLevel(score: number): { level: string; color: string; bgColor: string } {
   if (score === 0) return { level: "Not assessed", color: "text-muted-foreground", bgColor: "bg-muted" };
-  if (score <= 5) return { level: "Low", color: "text-green-700", bgColor: "bg-green-100" };
-  if (score <= 11) return { level: "Medium", color: "text-yellow-700", bgColor: "bg-yellow-100" };
-  return { level: "High", color: "text-red-700", bgColor: "bg-red-100" };
+  if (score <= 5) return { level: "Low", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950" };
+  if (score <= 11) return { level: "Medium", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950" };
+  return { level: "High", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950" };
 }
 
 export default function JHAFormPage() {

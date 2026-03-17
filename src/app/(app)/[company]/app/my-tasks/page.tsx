@@ -9,6 +9,7 @@ import {
   ChevronUp,
   ListChecks,
   History,
+  MapPin,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { useAssetsStore } from "@/stores/assets-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useToast } from "@/components/ui/toast";
+import { useGps } from "@/hooks/use-gps";
 import { cn } from "@/lib/utils";
 import type { WorkOrder } from "@/types";
 
@@ -42,7 +44,7 @@ const PRIORITY_CONFIG: Record<
   },
   low: {
     label: "Low",
-    className: "bg-gray-100 text-gray-600 dark:bg-gray-800/50 dark:text-gray-400",
+    className: "bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300",
   },
 };
 
@@ -201,6 +203,7 @@ export default function MyTasksPage() {
   const { toast } = useToast();
   const { items: workOrders, isLoading, update } = useWorkOrdersStore();
   const { items: assets } = useAssetsStore();
+  const gps = useGps();
 
   const [tab, setTab] = React.useState<TabType>("active");
 
@@ -250,22 +253,33 @@ export default function MyTasksPage() {
 
   const handleAccept = React.useCallback(
     (id: string) => {
-      update(id, { status: "in_progress", updated_at: new Date().toISOString() });
+      // Capture GPS at the moment of accepting the task
+      if (!gps.coords) gps.captureLocation();
+      update(id, {
+        status: "in_progress",
+        location_lat: gps.coords?.lat ?? null,
+        location_lng: gps.coords?.lng ?? null,
+        updated_at: new Date().toISOString(),
+      });
       toast("Task accepted — work order is now in progress", "success");
     },
-    [update, toast]
+    [update, toast, gps]
   );
 
   const handleComplete = React.useCallback(
     (id: string) => {
+      // Capture GPS at the moment of completing the task
+      if (!gps.coords) gps.captureLocation();
       update(id, {
         status: "completed",
         completed_at: new Date().toISOString(),
+        location_lat: gps.coords?.lat ?? null,
+        location_lng: gps.coords?.lng ?? null,
         updated_at: new Date().toISOString(),
       });
       toast("Task completed successfully", "success");
     },
-    [update, toast]
+    [update, toast, gps]
   );
 
   if (!user || isLoading) {
@@ -288,6 +302,25 @@ export default function MyTasksPage() {
           <Badge variant="secondary" className="text-xs">
             {activeWOs.length}
           </Badge>
+          <div className="ml-auto">
+            {gps.coords ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] text-success font-mono">
+                <MapPin className="h-3 w-3" />
+                {gps.coords.lat.toFixed(4)}, {gps.coords.lng.toFixed(4)}
+              </span>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs text-muted-foreground"
+                onClick={gps.captureLocation}
+                disabled={gps.loading}
+              >
+                <MapPin className="h-3 w-3" />
+                {gps.loading ? "..." : "GPS"}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Sub-tab pills */}

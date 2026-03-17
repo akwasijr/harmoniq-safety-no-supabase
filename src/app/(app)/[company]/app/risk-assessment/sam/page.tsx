@@ -126,10 +126,10 @@ const initialFormData: SAMFormData = {
 };
 
 function getRiskLevel(score: number): { level: string; color: string; bgColor: string; priority: number } {
-  if (score <= 4) return { level: "Låg (Low)", color: "text-green-700", bgColor: "bg-green-100", priority: 3 };
-  if (score <= 8) return { level: "Medel (Medium)", color: "text-yellow-700", bgColor: "bg-yellow-100", priority: 2 };
-  if (score <= 12) return { level: "Hög (High)", color: "text-orange-700", bgColor: "bg-orange-100", priority: 1 };
-  return { level: "Mycket hög (Very High)", color: "text-red-700", bgColor: "bg-red-100", priority: 0 };
+  if (score <= 4) return { level: "Låg (Low)", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950", priority: 3 };
+  if (score <= 8) return { level: "Medel (Medium)", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950", priority: 2 };
+  if (score <= 12) return { level: "Hög (High)", color: "text-orange-700 dark:text-orange-300", bgColor: "bg-orange-100 dark:bg-orange-950", priority: 1 };
+  return { level: "Mycket hög (Very High)", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950", priority: 0 };
 }
 
 export default function SAMFormPage() {

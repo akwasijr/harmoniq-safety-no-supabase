@@ -32,6 +32,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
 import { LoadingPage } from "@/components/ui/loading";
+import { GpsPicker } from "@/components/shared/gps-picker";
 import type { AssetCategory, AssetCondition, AssetCriticality } from "@/types";
 
 type Step = "info" | "details" | "location" | "review";
@@ -91,6 +92,8 @@ export default function NewAssetPage() {
   const [condition, setCondition] = React.useState<AssetCondition>("good");
   const [criticality, setCriticality] = React.useState<AssetCriticality>("medium");
   const [locationId, setLocationId] = React.useState<string>("");
+  const [gpsLat, setGpsLat] = React.useState<number | null>(null);
+  const [gpsLng, setGpsLng] = React.useState<number | null>(null);
   const [safetyInstructions, setSafetyInstructions] = React.useState("");
   const [notes, setNotes] = React.useState("");
   const [showLocationPicker, setShowLocationPicker] = React.useState(false);
@@ -211,6 +214,8 @@ export default function NewAssetPage() {
       next_maintenance_date: null,
       requires_certification: false,
       safety_instructions: safetyInstructions.trim() || null,
+      gps_lat: gpsLat,
+      gps_lng: gpsLng,
       status: "active",
       created_at: now,
       updated_at: now,
@@ -552,6 +557,18 @@ export default function NewAssetPage() {
               </div>
             </div>
 
+            {/* GPS Coordinates */}
+            <div className="space-y-2">
+              <GpsPicker
+                lat={gpsLat}
+                lng={gpsLng}
+                onChange={(lat, lng) => {
+                  setGpsLat(lat);
+                  setGpsLng(lng);
+                }}
+              />
+            </div>
+
             {/* Safety instructions */}
             <div className="space-y-2">
               <Label htmlFor="safety">{t("newAsset.safetyInstructions")}</Label>
@@ -649,6 +666,12 @@ export default function NewAssetPage() {
                     <span className="text-muted-foreground">{t("newAsset.location")}</span>
                     <span>{selectedLocation?.name || t("newAsset.notAssigned")}</span>
                   </div>
+                  {gpsLat != null && gpsLng != null && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">GPS</span>
+                      <span className="font-mono text-xs">{gpsLat.toFixed(6)}, {gpsLng.toFixed(6)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {safetyInstructions && (

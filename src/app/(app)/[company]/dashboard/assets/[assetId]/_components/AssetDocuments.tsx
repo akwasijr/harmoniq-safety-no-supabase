@@ -11,6 +11,7 @@ import {
   FileText,
   Image as ImageIcon,
   Shield,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
@@ -54,6 +55,7 @@ interface AssetDocumentsProps {
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>, kind: "document" | "image") => void;
   setPreviewDoc: (doc: { url: string; name: string } | null) => void;
   setPreviewImage: (img: { url: string; name: string } | null) => void;
+  onDeleteFile?: (fileId: string) => void;
 }
 
 export function AssetDocuments({
@@ -65,6 +67,7 @@ export function AssetDocuments({
   handleFileUpload,
   setPreviewDoc,
   setPreviewImage,
+  onDeleteFile,
 }: AssetDocumentsProps) {
   const { t, formatDate } = useTranslation();
   const [docsSubTab, setDocsSubTab] = React.useState<"certifications" | "documents" | "images">("certifications");
@@ -191,12 +194,21 @@ export function AssetDocuments({
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
+                        {doc.dataUrl && (
+                          <Button variant="ghost" size="sm" title="Open in new tab" onClick={() => {
+                            window.open(doc.dataUrl, "_blank");
+                          }}>
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button variant="ghost" size="sm" title={t("assets.download")} onClick={() => {
                           if (doc.dataUrl) {
                             const link = document.createElement("a");
                             link.href = doc.dataUrl;
                             link.download = doc.name;
+                            document.body.appendChild(link);
                             link.click();
+                            document.body.removeChild(link);
                           }
                         }}>
                           <Download className="h-4 w-4" />
@@ -206,6 +218,11 @@ export function AssetDocuments({
                         }}>
                           <Eye className="h-4 w-4" />
                         </Button>
+                        {onDeleteFile && (
+                          <Button variant="ghost" size="sm" title="Delete" className="text-destructive hover:text-destructive" onClick={() => onDeleteFile(doc.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );
@@ -245,9 +262,21 @@ export function AssetDocuments({
                   )}
                   <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur p-2 flex items-center justify-between">
                     <p className="text-xs font-medium truncate">{img.name}</p>
-                    {img.dataUrl && (
-                      <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                    )}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {img.dataUrl && (
+                        <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
+                      {onDeleteFile && (
+                        <button
+                          type="button"
+                          title="Delete image"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80"
+                          onClick={(e) => { e.stopPropagation(); onDeleteFile(img.id); }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

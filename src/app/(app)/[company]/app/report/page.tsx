@@ -37,6 +37,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import type { Incident, IncidentType, Severity, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
+import { storeFile, getFilesForEntity, deleteFile, FileValidationError, type StoredFile } from "@/lib/file-storage";
 
 const TOTAL_STEPS = 7;
 
@@ -162,12 +163,16 @@ function ReportIncidentPageContent() {
     date: new Date().toISOString().split("T")[0],
     time: new Date().toTimeString().slice(0, 5),
     photos: [] as string[],
+    photoFileIds: [] as string[],
     lostTime: false,
     activeHazard: false,
     reporterId: user?.id || "",
     gpsLat: null as number | null,
     gpsLng: null as number | null,
   });
+
+  // Stable incident ID for associating photos before submission
+  const incidentDraftId = React.useRef(`draft_${Date.now()}`);
 
   React.useEffect(() => {
     if (!selectedLocation) return;
@@ -193,7 +198,6 @@ function ReportIncidentPageContent() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        // Store both display text and actual coordinates
         const locationText = `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
         setFormData({ 
           ...formData, 
@@ -211,34 +215,45 @@ function ReportIncidentPageContent() {
     );
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     
     const remainingSlots = 4 - formData.photos.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
     
-    filesToProcess.forEach((file) => {
-      if (file.size > 10 * 1024 * 1024) {
-        toast(`File ${file.name} is too large. Max size is 10MB.`);
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
+    for (const file of filesToProcess) {
+      try {
+        const stored = await storeFile(
+          file,
+          "incident",
+          incidentDraftId.current,
+          user?.id || "unknown",
+        );
         setFormData((prev) => ({
           ...prev,
-          photos: [...prev.photos, reader.result as string],
+          photos: [...prev.photos, stored.dataUrl],
+          photoFileIds: [...prev.photoFileIds, stored.id],
         }));
-      };
-      reader.readAsDataURL(file);
-    });
+      } catch (err) {
+        if (err instanceof FileValidationError) {
+          toast(err.message, "error");
+        } else if (err instanceof Error && err.message === "QUOTA_EXCEEDED") {
+          toast("Storage is full. Delete some files and try again.", "error");
+        } else {
+          toast(`Failed to upload ${file.name}`, "error");
+        }
+      }
+    }
   };
 
   const removePhoto = (index: number) => {
+    const fileId = formData.photoFileIds[index];
+    if (fileId) deleteFile(fileId);
     setFormData((prev) => ({
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index),
+      photoFileIds: prev.photoFileIds.filter((_, i) => i !== index),
     }));
   };
 

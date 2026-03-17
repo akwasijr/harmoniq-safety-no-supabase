@@ -22,6 +22,8 @@ import { createWorkOrderFromInspection } from "@/lib/work-order-generator";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
+import { useGps } from "@/hooks/use-gps";
+import { GpsCaptureButton } from "@/components/shared/gps-capture-button";
 import { INSPECTION_TEMPLATES, type AssetCategory } from "@/types";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -48,6 +50,7 @@ export default function AssetInspectionPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showNotes, setShowNotes] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const gps = useGps();
 
   const { items: assets , isLoading } = useAssetsStore();
   const { add: addInspection } = useAssetInspectionsStore();
@@ -144,6 +147,8 @@ export default function AssetInspectionPage() {
       notes: combinedNotes || null,
       media_urls: mediaUrls,
       incident_id: null,
+      gps_lat: gps.coords?.lat ?? null,
+      gps_lng: gps.coords?.lng ?? null,
       inspected_at: now.toISOString(),
       created_at: now.toISOString(),
     });
@@ -392,6 +397,17 @@ export default function AssetInspectionPage() {
             {photos[currentQuestion.id]?.length ? t("checklists.addAnotherPhoto") : t("checklists.addPhoto")}
           </Button>
         )}
+
+        {/* GPS Capture */}
+        <div className="mt-6">
+          <p className="mb-2 text-sm font-medium">{t("common.location") || "Location"}</p>
+          <GpsCaptureButton
+            coords={gps.coords}
+            loading={gps.loading}
+            error={gps.error}
+            onCapture={gps.captureLocation}
+          />
+        </div>
 
         {/* Summary */}
         <div className="mt-8 grid grid-cols-3 gap-4 text-center">

@@ -35,10 +35,10 @@ const STATUS_CONFIG = {
 };
 
 const SEVERITY_CONFIG = {
-  low: { label: "Low", color: "bg-green-100 text-green-800" },
-  medium: { label: "Medium", color: "bg-amber-100 text-amber-800" },
-  high: { label: "High", color: "bg-orange-100 text-orange-800" },
-  critical: { label: "Critical", color: "bg-red-100 text-red-800" },
+  low: { label: "Low", color: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200" },
+  medium: { label: "Medium", color: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200" },
+  high: { label: "High", color: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200" },
+  critical: { label: "Critical", color: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200" },
 };
 
 export default function EmployeeIncidentDetailPage() {

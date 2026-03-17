@@ -157,9 +157,9 @@ function calculateRiskScore(severity: number, probability: number, exposure: num
 }
 
 function getRiskPriority(score: number): { priority: "low" | "medium" | "high"; color: string; bgColor: string } {
-  if (score <= 3) return { priority: "low", color: "text-green-700", bgColor: "bg-green-100" };
-  if (score <= 9) return { priority: "medium", color: "text-yellow-700", bgColor: "bg-yellow-100" };
-  return { priority: "high", color: "text-red-700", bgColor: "bg-red-100" };
+  if (score <= 3) return { priority: "low", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950" };
+  if (score <= 9) return { priority: "medium", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950" };
+  return { priority: "high", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950" };
 }
 
 export default function RIEFormPage() {

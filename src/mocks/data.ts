@@ -21,6 +21,12 @@ import type {
   WorkOrder,
 } from "@/types";
 import { loadFromStorage } from "@/lib/local-storage";
+import { seedMockCertificationFiles } from "@/lib/file-storage";
+
+// Seed mock certification PDFs into file-storage (idempotent, runs once)
+if (typeof window !== "undefined") {
+  seedMockCertificationFiles();
+}
 
 // ============================================
 // MOCK DEFAULTS: Single source of truth for all fallback values.

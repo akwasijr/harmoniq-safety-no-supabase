@@ -186,10 +186,10 @@ function AssetQuickViewPageContent() {
                 <span className="text-xs">{t("assets.reportIncident")}</span>
               </Button>
             </Link>
-            <Link href={`/${company}/dashboard/assets/${asset.id}`}>
+            <Link href={`/${company}/app/assets`}>
               <Button variant="outline" className="w-full h-20 flex-col gap-1">
                 <Package className="h-6 w-6" />
-                <span className="text-xs">{t("assets.fullDetails")}</span>
+                <span className="text-xs">{t("assets.browseAssets") || "Browse Assets"}</span>
               </Button>
             </Link>
           </div>
