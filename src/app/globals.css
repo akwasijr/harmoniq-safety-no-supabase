@@ -1,6 +1,104 @@
 @import "tailwindcss";
 
 /* ============================================
+   STRIPE-STYLE CORNER GRADIENT — Auth pages
+   ============================================ */
+@keyframes auth-flow {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+@keyframes auth-morph {
+  0%   { border-radius: 40% 60% 50% 50%; transform: rotate(0deg) translate(0, 0); }
+  33%  { border-radius: 55% 45% 60% 40%; transform: rotate(5deg) translate(3%, -3%); }
+  66%  { border-radius: 45% 55% 40% 60%; transform: rotate(-4deg) translate(-2%, 3%); }
+  100% { border-radius: 40% 60% 50% 50%; transform: rotate(0deg) translate(0, 0); }
+}
+
+@layer base {
+  .auth-bg {
+    position: fixed;
+    inset: 0;
+    background: white;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .auth-bg::before {
+    content: "";
+    position: absolute;
+    top: -15%;
+    right: -5%;
+    width: 40%;
+    height: 70%;
+    background: linear-gradient(
+      160deg,
+      hsla(200, 90%, 78%, 0.35),
+      hsla(240, 75%, 68%, 0.3),
+      hsla(265, 70%, 55%, 0.35),
+      hsla(280, 65%, 48%, 0.3),
+      hsla(210, 85%, 75%, 0.3)
+    );
+    background-size: 300% 300%;
+    animation: auth-flow 8s ease-in-out infinite, auth-morph 12s ease-in-out infinite;
+    filter: blur(40px);
+    transform-origin: top right;
+  }
+
+  .auth-bg::after {
+    content: "";
+    position: absolute;
+    top: 5%;
+    right: -3%;
+    width: 28%;
+    height: 55%;
+    background: linear-gradient(
+      170deg,
+      hsla(195, 90%, 80%, 0.3),
+      hsla(230, 80%, 72%, 0.25),
+      hsla(260, 65%, 58%, 0.3),
+      hsla(195, 85%, 78%, 0.25)
+    );
+    background-size: 300% 300%;
+    animation: auth-flow 6s ease-in-out infinite reverse, auth-morph 10s ease-in-out infinite reverse;
+    filter: blur(35px);
+    transform-origin: top right;
+    animation-delay: -3s;
+  }
+
+  .auth-bg-accent {
+    position: absolute;
+    top: -8%;
+    right: 3%;
+    width: 20%;
+    height: 45%;
+    background: linear-gradient(
+      150deg,
+      hsla(210, 95%, 82%, 0.28),
+      hsla(255, 70%, 65%, 0.25),
+      hsla(275, 60%, 50%, 0.22),
+      hsla(210, 90%, 78%, 0.25)
+    );
+    background-size: 300% 300%;
+    animation: auth-flow 10s ease-in-out infinite, auth-morph 14s ease-in-out infinite;
+    filter: blur(30px);
+    transform-origin: top right;
+    animation-delay: -6s;
+  }
+}
+
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    .auth-bg::before,
+    .auth-bg::after,
+    .auth-bg-accent {
+      animation: none !important;
+    }
+  }
+}
+
+/* ============================================
    HARMONIQ SAFETY - DESIGN TOKENS
    ============================================ */
 

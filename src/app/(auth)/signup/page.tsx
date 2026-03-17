@@ -10,8 +10,36 @@ export default function SignupPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-[420px]">
+    <div className="relative flex min-h-screen items-center justify-center px-4" style={{ background: 'white' }}>
+      <div aria-hidden="true" style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute', top: '-15%', right: '-8%', width: '45%', height: '80%',
+          background: 'linear-gradient(160deg, hsla(200,90%,78%,0.5), hsla(240,75%,68%,0.45), hsla(265,70%,55%,0.5), hsla(280,65%,48%,0.45), hsla(210,85%,75%,0.4))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(40px)',
+          borderRadius: '40% 60% 50% 50%',
+          animation: 'auth-flow 8s ease-in-out infinite, auth-morph 12s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', top: '5%', right: '-2%', width: '30%', height: '60%',
+          background: 'linear-gradient(170deg, hsla(195,90%,80%,0.45), hsla(230,80%,72%,0.4), hsla(260,65%,58%,0.45), hsla(195,85%,78%,0.35))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(35px)',
+          borderRadius: '50% 40% 55% 45%',
+          animation: 'auth-flow 6s ease-in-out infinite reverse, auth-morph 10s ease-in-out infinite reverse',
+          animationDelay: '-3s',
+        }} />
+        <div style={{
+          position: 'absolute', top: '-8%', right: '3%', width: '22%', height: '50%',
+          background: 'linear-gradient(150deg, hsla(210,95%,82%,0.4), hsla(255,70%,65%,0.35), hsla(275,60%,50%,0.3), hsla(210,90%,78%,0.35))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(30px)',
+          borderRadius: '45% 55% 40% 60%',
+          animation: 'auth-flow 10s ease-in-out infinite, auth-morph 14s ease-in-out infinite',
+          animationDelay: '-6s',
+        }} />
+      </div>
+      <div className="relative z-10 w-full max-w-[420px]">
         <div className="mb-6 flex flex-col items-center gap-2">
           <Image src="/favicon.svg" alt="Harmoniq Logo" width={40} height={40} className="h-10 w-10" />
           <span className="text-lg font-semibold">Harmoniq</span>

@@ -1765,6 +1765,6 @@
   "auth.contactUs": "Contact us",
   "auth.noAccount": "Don't have an account?",
   "auth.chooseApp": "Choose app",
-  "auth.dashboard": "Harmoniq Admin",
-  "auth.mobileApp": "Harmoniq Field"
+  "auth.dashboard": "Admin Dashboard",
+  "auth.mobileApp": "Field Worker"
 }

@@ -52,7 +52,13 @@ export function validateEnv() {
   const env = getEnvStatus();
 
   if (env.missingRequired.length > 0) {
-    console.error(`[ENV] Missing required environment variables: ${env.missingRequired.join(", ")}`);
+    const isMockMode = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true";
+    if (isMockMode) {
+      console.warn("[ENV] Running in MOCK MODE — auth is bypassed. Do NOT use in production.");
+    } else {
+      console.error(`[ENV] Missing required environment variables: ${env.missingRequired.join(", ")}`);
+      console.error("[ENV] Set NEXT_PUBLIC_ENABLE_MOCK_MODE=true to run without Supabase (development only).");
+    }
   }
 
   for (const publicKey of env.exposedSensitiveKeys) {

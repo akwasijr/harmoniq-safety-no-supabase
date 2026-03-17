@@ -13,7 +13,7 @@ import { mockUsers } from "@/mocks/data";
 import type { User, Company, Permission, UserRole, CompanyRole } from "@/types";
 
 const MOCK_AUTH_KEY = "harmoniq_mock_user_email";
-const IS_MOCK_MODE = !hasSupabasePublicEnv();
+const IS_MOCK_MODE = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true" && !hasSupabasePublicEnv();
 
 const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 const LEGACY_SESSION_STORAGE_KEY = "harmoniq_auth_session";

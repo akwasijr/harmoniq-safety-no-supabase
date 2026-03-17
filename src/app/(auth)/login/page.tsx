@@ -5,7 +5,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { Mail, Loader, Eye, EyeOff, Lock } from "lucide-react";
+import { Mail, Loader, Eye, EyeOff, Lock, LayoutDashboard, HardHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,11 +63,25 @@ function LoginForm() {
   const [loginMode, setLoginMode] = React.useState<"password" | "magic">("password");
   const [lockoutRemaining, setLockoutRemaining] = React.useState(0);
   const [failedAttempts, setFailedAttempts] = React.useState(0);
-  const [appChoice, setAppChoice] = React.useState<"dashboard" | "app">(() => {
-    if (typeof window === "undefined") return "dashboard";
+  const [isMobile, setIsMobile] = React.useState(false);
+  const [hasMounted, setHasMounted] = React.useState(false);
+  const [appChoice, setAppChoice] = React.useState<"dashboard" | "app">("dashboard");
+
+  React.useEffect(() => {
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
     const stored = window.localStorage.getItem(APP_CHOICE_STORAGE_KEY);
-    return stored === "app" || stored === "dashboard" ? stored : "dashboard";
-  });
+    setAppChoice(mobile ? "app" : (stored === "app" || stored === "dashboard" ? stored : "dashboard"));
+    setHasMounted(true);
+
+    const onResize = () => {
+      const m = window.innerWidth < 768;
+      setIsMobile(m);
+      if (m) setAppChoice("app");
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   React.useEffect(() => {
     const errorParam = searchParams.get("error");
@@ -415,8 +429,37 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-[420px]">
+    <div className="relative flex min-h-screen items-center justify-center px-4" style={{ background: 'white' }}>
+      {/* Animated gradient background — top-right corner */}
+      <div aria-hidden="true" style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute', top: '-15%', right: '-8%', width: '45%', height: '80%',
+          background: 'linear-gradient(160deg, hsla(200,90%,78%,0.5), hsla(240,75%,68%,0.45), hsla(265,70%,55%,0.5), hsla(280,65%,48%,0.45), hsla(210,85%,75%,0.4))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(40px)',
+          borderRadius: '40% 60% 50% 50%',
+          animation: 'auth-flow 8s ease-in-out infinite, auth-morph 12s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', top: '5%', right: '-2%', width: '30%', height: '60%',
+          background: 'linear-gradient(170deg, hsla(195,90%,80%,0.45), hsla(230,80%,72%,0.4), hsla(260,65%,58%,0.45), hsla(195,85%,78%,0.35))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(35px)',
+          borderRadius: '50% 40% 55% 45%',
+          animation: 'auth-flow 6s ease-in-out infinite reverse, auth-morph 10s ease-in-out infinite reverse',
+          animationDelay: '-3s',
+        }} />
+        <div style={{
+          position: 'absolute', top: '-8%', right: '3%', width: '22%', height: '50%',
+          background: 'linear-gradient(150deg, hsla(210,95%,82%,0.4), hsla(255,70%,65%,0.35), hsla(275,60%,50%,0.3), hsla(210,90%,78%,0.35))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(30px)',
+          borderRadius: '45% 55% 40% 60%',
+          animation: 'auth-flow 10s ease-in-out infinite, auth-morph 14s ease-in-out infinite',
+          animationDelay: '-6s',
+        }} />
+      </div>
+      <div className="relative z-10 w-full max-w-[420px]">
         <div className="mb-6 flex flex-col items-center gap-2">
           <Image src="/favicon.svg" alt="Harmoniq Logo" width={40} height={40} className="h-10 w-10" />
           <span className="text-lg font-semibold">Harmoniq</span>
@@ -520,28 +563,38 @@ function LoginForm() {
                 </div>
               </div>
 
-              {/* App chooser */}
-              <div>
-                <Label className="text-sm font-medium mb-1.5">{t("auth.chooseApp") || "Choose app"}</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setAppChoice("dashboard")}
-                    disabled={isLoading}
-                    className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
-                  >
-                    {t("auth.dashboard")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAppChoice("app")}
-                    disabled={isLoading}
-                    className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
-                  >
-                    {t("auth.mobileApp")}
-                  </button>
+              {/* App chooser — hidden on mobile (auto-selects Field Worker) */}
+              {hasMounted && !isMobile && (
+                <div role="radiogroup" aria-label={t("auth.chooseApp") || "Choose app"}>
+                  <Label className="text-sm font-medium mb-1.5">{t("auth.chooseApp") || "Choose app"}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={appChoice === "dashboard"}
+                      onClick={() => setAppChoice("dashboard")}
+                      disabled={isLoading}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "dashboard" ? "border-primary bg-primary" : "border-muted-foreground/40"}`} />
+                      <LayoutDashboard className="h-4 w-4" />
+                      {t("auth.dashboard")}
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={appChoice === "app"}
+                      onClick={() => setAppChoice("app")}
+                      disabled={isLoading}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "app" ? "border-primary bg-primary" : "border-muted-foreground/40"}`} />
+                      <HardHat className="h-4 w-4" />
+                      {t("auth.mobileApp")}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Sign in button */}
               <Button

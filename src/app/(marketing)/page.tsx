@@ -126,7 +126,7 @@ export default function Home() {
             <a href="#stats" className="text-sm text-zinc-400 hover:text-white transition-colors">Resources</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Link href="/signup" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+            <Link href="/login" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
               Get Started
             </Link>
           </div>
@@ -152,7 +152,7 @@ export default function Home() {
               Report incidents, manage assets, run inspections, and ensure compliance, all in one powerful platform built for modern operations teams.
             </motion.p>
             <motion.div variants={fadeUp} className="mt-4 flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+              <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
                 Get Started
                 <ArrowRight className="h-4 w-4" />
               </Link>

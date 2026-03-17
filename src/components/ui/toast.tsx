@@ -42,11 +42,6 @@ const iconStyles: Record<ToastVariant, string> = {
   info: "text-blue-500",
 };
 
-const barStyles: Record<ToastVariant, string> = {
-  success: "bg-green-500",
-  error: "bg-red-500",
-  info: "bg-blue-500",
-};
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
   const Icon = icons[toast.variant];
@@ -58,15 +53,16 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
 
   return (
     <div
+      role="alert"
       className={cn(
         "pointer-events-auto flex items-center gap-3 overflow-hidden rounded-lg border shadow-xl transition-all animate-in slide-in-from-top-2 fade-in",
         styles[toast.variant]
       )}
     >
-      <Icon className={cn("h-5 w-5 shrink-0 my-3 ml-3", iconStyles[toast.variant])} />
+      <Icon className={cn("h-5 w-5 shrink-0 my-3 ml-3", iconStyles[toast.variant])} aria-hidden="true" />
       <p className="text-sm font-medium flex-1 py-3 pr-1">{toast.message}</p>
-      <button onClick={onDismiss} className="shrink-0 p-3 opacity-40 hover:opacity-100 transition-opacity">
-        <X className="h-4 w-4" />
+      <button onClick={onDismiss} aria-label="Dismiss notification" className="shrink-0 p-3 opacity-40 hover:opacity-100 transition-opacity">
+        <X className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );
@@ -87,7 +83,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none w-96 max-w-[calc(100vw-2rem)]">
+      <div role="status" aria-live="polite" className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none w-96 max-w-[calc(100vw-2rem)]">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onDismiss={() => dismiss(t.id)} />
         ))}
