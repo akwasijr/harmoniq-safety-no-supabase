@@ -6,7 +6,7 @@ import {
   Home,
   ClipboardCheck,
   Package,
-  Newspaper,
+  Wrench,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -49,11 +49,11 @@ const tabItems: TabItem[] = [
     icon: Package,
   },
   {
-    titleKey: "nav.news",
-    shortTitleKey: "nav.newsShort",
-    fallback: "News",
-    href: "/app/news",
-    icon: Newspaper,
+    titleKey: "nav.myTasks",
+    shortTitleKey: "nav.myTasksShort",
+    fallback: "My Tasks",
+    href: "/app/my-tasks",
+    icon: Wrench,
   },
   {
     titleKey: "nav.profile",

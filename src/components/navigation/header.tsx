@@ -86,6 +86,7 @@ export function Header({
       "app/report/success": "Report Submitted",
       "app/checklists": "Safety Tasks",
       "app/news": "News & Updates",
+      "app/my-tasks": "My Tasks",
       "app/profile": "Profile",
       "app/risk-assessment": "Risk Assessment",
       "app/risk-assessment/jha": "Job Hazard Analysis",
