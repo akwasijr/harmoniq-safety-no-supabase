@@ -1,32 +1,26 @@
 /**
  * Middleware unit tests
  *
- * Tests the extracted helper functions and core routing logic.
- * Since Next.js middleware uses NextRequest/NextResponse which are
- * tightly coupled to the edge runtime, we test the pure functions
- * directly and use NextRequest for integration-style tests where possible.
+ * Tests the exported helper functions and core routing logic
+ * by importing directly from middleware.ts.
  */
 import { describe, it, expect } from "vitest";
+import {
+  detectLocale,
+  getCompanySlugFromPath,
+  getAllowedPlatformRoles,
+  isStaticAsset,
+  isPublicRoute,
+  isMarketingRoute,
+  isPublicApiRoute,
+  checkCsrf,
+} from "../../middleware";
 
 // ---------------------------------------------------------------------------
-// Helper function tests (extracted logic)
+// Helper function tests (imported from middleware.ts)
 // ---------------------------------------------------------------------------
 
 describe("detectLocale", () => {
-  // Re-implement the logic here since it's not exported
-  function detectLocale(acceptLanguage: string | null): string {
-    if (!acceptLanguage) return "en";
-    const langs = acceptLanguage
-      .toLowerCase()
-      .split(",")
-      .map((l) => l.split(";")[0].trim());
-    for (const lang of langs) {
-      if (lang.startsWith("sv")) return "sv";
-      if (lang.startsWith("nl")) return "nl";
-    }
-    return "en";
-  }
-
   it("returns 'en' when no Accept-Language header", () => {
     expect(detectLocale(null)).toBe("en");
   });
@@ -66,10 +60,6 @@ describe("detectLocale", () => {
 });
 
 describe("getCompanySlugFromPath", () => {
-  function getCompanySlugFromPath(pathname: string) {
-    return pathname.split("/").filter(Boolean)[0] ?? null;
-  }
-
   it("extracts company slug from dashboard path", () => {
     expect(getCompanySlugFromPath("/acme-corp/dashboard")).toBe("acme-corp");
   });
@@ -88,18 +78,6 @@ describe("getCompanySlugFromPath", () => {
 });
 
 describe("getAllowedPlatformRoles", () => {
-  const PLATFORM_ANALYTICS_SEGMENT = "/dashboard/platform/analytics";
-
-  type UserRole = "super_admin" | "company_admin" | "field_worker" | "safety_officer";
-  const PLATFORM_ADMIN_ROLES: readonly UserRole[] = ["super_admin"];
-  const PLATFORM_ANALYTICS_ROLES: readonly UserRole[] = ["super_admin", "company_admin"];
-
-  function getAllowedPlatformRoles(pathname: string): readonly UserRole[] {
-    return pathname.includes(PLATFORM_ANALYTICS_SEGMENT)
-      ? PLATFORM_ANALYTICS_ROLES
-      : PLATFORM_ADMIN_ROLES;
-  }
-
   it("returns super_admin only for platform admin routes", () => {
     const roles = getAllowedPlatformRoles("/acme/dashboard/platform/users");
     expect(roles).toEqual(["super_admin"]);
@@ -121,44 +99,6 @@ describe("getAllowedPlatformRoles", () => {
 // ---------------------------------------------------------------------------
 
 describe("route classification", () => {
-  const PUBLIC_ROUTES = [
-    "/",
-    "/login",
-    "/admin",
-    "/signup",
-    "/forgot-password",
-    "/reset-password",
-    "/contact",
-    "/privacy",
-    "/terms",
-    "/gdpr",
-    "/cookies",
-    "/invite",
-    "/auth/callback",
-    "/robots.txt",
-    "/sitemap.xml",
-  ];
-
-  const MARKETING_ROUTES = ["/", "/contact", "/privacy", "/terms", "/gdpr", "/cookies"];
-  const STATIC_PREFIXES = ["/_next", "/favicon", "/logo", "/screen-", "/bg-", "/icons", "/manifest", "/sw"];
-  const PUBLIC_API_ROUTES = ["/api/analytics", "/api/contact", "/api/health", "/api/setup"];
-
-  function isStaticAsset(pathname: string) {
-    return STATIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-  }
-
-  function isPublicRoute(pathname: string) {
-    return PUBLIC_ROUTES.includes(pathname);
-  }
-
-  function isMarketingRoute(pathname: string) {
-    return MARKETING_ROUTES.includes(pathname);
-  }
-
-  function isPublicApiRoute(pathname: string) {
-    return PUBLIC_API_ROUTES.some((r) => pathname.startsWith(r));
-  }
-
   describe("static assets", () => {
     it("matches _next paths", () => {
       expect(isStaticAsset("/_next/static/chunks/main.js")).toBe(true);
@@ -237,43 +177,6 @@ describe("route classification", () => {
 // ---------------------------------------------------------------------------
 
 describe("CSRF protection logic", () => {
-  const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-  const SAME_SITE_FETCH_CONTEXTS = new Set(["same-origin", "same-site", "none"]);
-
-  type CsrfResult = "pass" | "block-missing-origin" | "block-origin-mismatch" | "block-invalid-origin";
-
-  function checkCsrf(
-    method: string,
-    origin: string | null,
-    referer: string | null,
-    host: string | null,
-    fetchSite: string | null
-  ): CsrfResult {
-    if (!STATE_CHANGING_METHODS.has(method)) return "pass";
-
-    const source = origin ?? referer;
-
-    if (!source) {
-      if (!fetchSite || !SAME_SITE_FETCH_CONTEXTS.has(fetchSite)) {
-        return "block-missing-origin";
-      }
-      return "pass";
-    }
-
-    if (host) {
-      try {
-        const originHost = new URL(source).host;
-        if (originHost !== host) {
-          return "block-origin-mismatch";
-        }
-      } catch {
-        return "block-invalid-origin";
-      }
-    }
-
-    return "pass";
-  }
-
   it("allows GET requests", () => {
     expect(checkCsrf("GET", null, null, null, null)).toBe("pass");
   });

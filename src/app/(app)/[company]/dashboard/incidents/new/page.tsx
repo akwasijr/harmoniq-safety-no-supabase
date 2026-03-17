@@ -176,6 +176,7 @@ export default function NewIncidentPage() {
                 placeholder={t("incidents.placeholders.briefDescription")}
                 value={formData.title}
                 onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                maxLength={200}
               />
             </div>
 
@@ -203,6 +204,7 @@ export default function NewIncidentPage() {
                     placeholder={t("incidents.placeholders.describeType")}
                     value={formData.type_other}
                     onChange={(e) => setFormData((prev) => ({ ...prev, type_other: e.target.value }))}
+                    maxLength={100}
                   />
                 </div>
               )}
@@ -267,7 +269,9 @@ export default function NewIncidentPage() {
                 rows={5}
                 value={formData.description}
                 onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                maxLength={5000}
               />
+              <p className="text-xs text-muted-foreground text-right">{formData.description.length}/5000</p>
             </div>
 
             <div className="flex items-center justify-between rounded-lg border p-3">
@@ -378,7 +382,9 @@ export default function NewIncidentPage() {
                   rows={2}
                   value={formData.location_description}
                   onChange={(e) => setFormData((prev) => ({ ...prev, location_description: e.target.value }))}
+                  maxLength={2000}
                 />
+                <p className="text-xs text-muted-foreground text-right">{formData.location_description.length}/2000</p>
               </div>
             </CardContent>
           </Card>

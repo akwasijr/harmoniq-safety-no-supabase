@@ -35,7 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { commonFilterOptions } from "@/components/ui/filter-panel";
+import { useFilterOptions } from "@/components/ui/filter-panel";
 import { useAssetsStore } from "@/stores/assets-store";
 import { LoadingPage } from "@/components/ui/loading";
 import { useLocationsStore } from "@/stores/locations-store";
@@ -109,6 +109,7 @@ export default function AssetsPage() {
   const { items: users } = useUsersStore();
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
+  const filterOptions = useFilterOptions();
 
   const departmentOptions = Array.from(
     new Set(users.map((u) => u.department).filter((d): d is string => !!d))
@@ -350,7 +351,7 @@ export default function AssetsPage() {
     {
       id: "status",
       label: t("assets.allStatuses"),
-      options: commonFilterOptions.assetStatus,
+      options: filterOptions.assetStatus,
       value: statusFilter,
       onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
     },
@@ -928,6 +929,7 @@ export default function AssetsPage() {
                     placeholder={t("assets.placeholders.assetName")}
                     className="mt-1"
                     autoFocus
+                    maxLength={200}
                   />
                 </div>
                 <div>
@@ -1003,6 +1005,7 @@ export default function AssetsPage() {
                       placeholder={t("assets.placeholders.manufacturer")}
                       className="mt-1"
                       autoFocus
+                      maxLength={100}
                     />
                   </div>
                   <div>
@@ -1013,6 +1016,7 @@ export default function AssetsPage() {
                       onChange={(e) => setNewAsset({ ...newAsset, model: e.target.value })}
                       placeholder={t("assets.placeholders.model")}
                       className="mt-1"
+                      maxLength={100}
                     />
                   </div>
                 </div>
@@ -1222,8 +1226,10 @@ export default function AssetsPage() {
                     onChange={(e) => setNewAsset({ ...newAsset, safety_instructions: e.target.value })}
                     placeholder="Required PPE, hazard warnings, operating procedures..."
                     rows={3}
+                    maxLength={2000}
                     className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
                   />
+                  <p className="text-xs text-muted-foreground text-right mt-1">{newAsset.safety_instructions.length}/2000</p>
                 </div>
               </div>
             )}

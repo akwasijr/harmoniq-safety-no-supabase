@@ -13,7 +13,7 @@ import {
   Clock,
 } from "lucide-react";
 import { KPICard } from "@/components/ui/kpi-card";
-import { FilterPanel, commonFilterOptions } from "@/components/ui/filter-panel";
+import { FilterPanel, useFilterOptions } from "@/components/ui/filter-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,7 @@ function getDateRangeFilter(dateRange: string): { start: Date; end: Date } {
 export default function DashboardPage() {
   const company = useCompanyParam();
   const { t, formatDate, formatNumber } = useTranslation();
+  const filterOptions = useFilterOptions();
   const [dateRange, setDateRange] = React.useState("last_30_days");
   
   // Filter states
@@ -291,21 +292,21 @@ export default function DashboardPage() {
     {
       id: "type",
       label: t("dashboard.allTypes"),
-      options: commonFilterOptions.incidentType,
+      options: filterOptions.incidentType,
       value: typeFilter,
       onChange: setTypeFilter,
     },
     {
       id: "severity",
       label: t("dashboard.allSeverities"),
-      options: commonFilterOptions.severity,
+      options: filterOptions.severity,
       value: severityFilter,
       onChange: setSeverityFilter,
     },
     {
       id: "department",
       label: t("dashboard.allDepartments"),
-      options: commonFilterOptions.department,
+      options: filterOptions.department,
       value: departmentFilter,
       onChange: setDepartmentFilter,
     },

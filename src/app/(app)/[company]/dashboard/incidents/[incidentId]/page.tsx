@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
+import { getUserDisplayName, getPriorityVariant } from "@/lib/status-utils";
 import {
   AlertCircle,
   ArrowLeft,
@@ -337,19 +338,9 @@ export default function IncidentDetailPage() {
     })),
   ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const getAssigneeName = (userId: string) => {
-    const user = users.find((u) => u.id === userId);
-    return user?.full_name || "Unassigned";
-  };
+  const getAssigneeName = (userId: string) => getUserDisplayName(userId, users);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "urgent": return "destructive";
-      case "high": return "high";
-      case "medium": return "medium";
-      default: return "low";
-    }
-  };
+  const getPriorityColor = getPriorityVariant;
 
   const getStatusIcon = (status: string) => {
     switch (status) {

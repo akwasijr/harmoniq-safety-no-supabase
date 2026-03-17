@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { commonFilterOptions } from "@/components/ui/filter-panel";
+import { useFilterOptions } from "@/components/ui/filter-panel";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useUsersStore } from "@/stores/users-store";
 import { LoadingPage } from "@/components/ui/loading";
@@ -88,6 +88,7 @@ export default function UsersPage() {
   });
 
   const { toast } = useToast();
+  const filterOptions = useFilterOptions();
   const { items: companies } = useCompanyStore();
   const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || "";
   const { items: users, isLoading, add: addUser } = useUsersStore();
@@ -170,14 +171,14 @@ export default function UsersPage() {
     {
       id: "role",
       label: "All roles",
-      options: commonFilterOptions.userRole,
+      options: filterOptions.userRole,
       value: roleFilter,
       onChange: (v: string) => { setRoleFilter(v); setCurrentPage(1); },
     },
     {
       id: "status",
       label: "All statuses",
-      options: commonFilterOptions.userStatus,
+      options: filterOptions.userStatus,
       value: statusFilter,
       onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
     },

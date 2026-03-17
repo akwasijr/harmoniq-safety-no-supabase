@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { WORK_ORDER_STATUS_COLORS, getAssetDisplayName, getUserFirstLastName } from "@/lib/status-utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
   Plus,
@@ -172,23 +173,10 @@ export default function WorkOrdersPage() {
     });
   };
 
-  const getAssetName = (id: string | null) => {
-    if (!id) return "No asset";
-    return assets.find((a) => a.id === id)?.name || "Unknown";
-  };
-  const getUserName = (id: string | null) => {
-    if (!id) return "Unassigned";
-    const u = users.find((usr) => usr.id === id);
-    return u ? `${u.first_name} ${u.last_name}` : "Unknown";
-  };
+  const getAssetName = (id: string | null) => getAssetDisplayName(id, assets, "No asset");
+  const getUserName = (id: string | null) => getUserFirstLastName(id, users, "Unassigned");
 
-  const statusColors: Record<string, string> = {
-    requested: "secondary",
-    approved: "warning",
-    in_progress: "warning",
-    completed: "success",
-    cancelled: "secondary",
-  };
+  const statusColors = WORK_ORDER_STATUS_COLORS;
 
   if (isLoading) {
     return <LoadingPage />;
@@ -344,11 +332,12 @@ export default function WorkOrdersPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label>{t("workOrders.labels.title")} *</Label>
-                <Input className="mt-1" placeholder={t("workOrders.placeholders.title")} value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} />
+                <Input className="mt-1" placeholder={t("workOrders.placeholders.title")} value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} maxLength={200} />
               </div>
               <div>
                 <Label>{t("workOrders.labels.description")} *</Label>
-                <Textarea className="mt-1" placeholder={t("workOrders.placeholders.description")} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
+                <Textarea className="mt-1" placeholder={t("workOrders.placeholders.description")} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} maxLength={5000} />
+                <p className="text-xs text-muted-foreground text-right mt-1">{form.description.length}/5000</p>
               </div>
               <div>
                 <Label>{t("workOrders.labels.asset")}</Label>

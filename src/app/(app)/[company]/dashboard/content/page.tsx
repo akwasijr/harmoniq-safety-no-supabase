@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { commonFilterOptions } from "@/components/ui/filter-panel";
+import { useFilterOptions } from "@/components/ui/filter-panel";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useContentStore } from "@/stores/content-store";
 import { LoadingPage } from "@/components/ui/loading";
@@ -38,6 +38,7 @@ const contentTabs = [
 
 export default function ContentPage() {
   const { t, formatDate } = useTranslation();
+  const filterOptions = useFilterOptions();
   const router = useRouter();
   const company = useCompanyParam();
   const [activeTab, setActiveTab] = React.useState<ContentTabType>("news");
@@ -76,7 +77,7 @@ export default function ContentPage() {
     {
       id: "status",
       label: "All statuses",
-      options: commonFilterOptions.contentStatus,
+      options: filterOptions.contentStatus,
       value: statusFilter,
       onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
     },

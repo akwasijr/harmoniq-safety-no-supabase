@@ -328,40 +328,6 @@
     "retrying": "Opnieuw proberen...",
     "retryIn": "Opnieuw over {seconds}s"
   },
-  "empty": {
-    "noResults": "Geen resultaten gevonden",
-    "noResultsFilterDesc": "Probeer uw zoek- of filtercriteria aan te passen om te vinden wat u zoekt.",
-    "noResultsSearchDesc": "Geen items komen overeen met uw zoekopdracht. Probeer een andere zoekterm.",
-    "clearFilters": "Filters wissen",
-    "noIncidents": "Geen incidenten",
-    "noIncidentsDesc": "Er zijn nog geen incidenten gemeld. Dat is goed nieuws voor de veiligheid!",
-    "noTasks": "Geen taken toegewezen",
-    "noTasksDesc": "U bent helemaal bij! Nieuwe veiligheidstaken verschijnen hier wanneer ze zijn toegewezen.",
-    "noUsers": "Geen gebruikers",
-    "noUsersDesc": "Er zijn nog geen gebruikers toegevoegd aan dit bedrijf.",
-    "noLocations": "Geen locaties",
-    "noLocationsDesc": "Voeg locaties toe om uw werkplekveiligheidsbeheer te organiseren.",
-    "noAssets": "Geen middelen",
-    "noAssetsDesc": "Registreer apparatuur en middelen om inspecties en onderhoud bij te houden.",
-    "noContent": "Geen inhoud",
-    "noContentDesc": "Maak veiligheidsbulletins, beleid en trainingsmateriaal voor uw team.",
-    "noNotifications": "Alles bijgewerkt!",
-    "noNotificationsDesc": "U heeft op dit moment geen nieuwe meldingen.",
-    "noChecklists": "Geen checklists",
-    "noChecklistsDesc": "Veiligheidschecklists en inspecties verschijnen hier wanneer ze zijn aangemaakt.",
-    "noRiskAssessments": "Geen risicobeoordelingen",
-    "noRiskAssessmentsDesc": "Risicobeoordelingsformulieren verschijnen hier wanneer ze beschikbaar zijn.",
-    "noTeams": "Geen teams",
-    "noTeamsDesc": "Maak teams aan om medewerkers te organiseren en veiligheidsverantwoordelijkheden toe te wijzen."
-  },
-  "time": {
-    "justNow": "Zojuist",
-    "minutesAgo": "{count} min. geleden",
-    "hoursAgo": "{count} uur geleden",
-    "daysAgo": "{count} dagen geleden",
-    "today": "Vandaag",
-    "yesterday": "Gisteren"
-  },
   "assets": {
     "tabs": {
       "assets": "Middelen",
@@ -1683,18 +1649,6 @@
       "nameAndCheckpointRequired": "Naam en minstens één controlepunt zijn vereist"
     }
   },
-  "notificationTriggers": {
-    "overdueTicket": "Achterstallig ticket",
-    "overdueTicketMessage": "Ticket \"{title}\" is verlopen",
-    "overdueWorkOrder": "Achterstallige werkorder",
-    "overdueWorkOrderMessage": "Werkorder \"{title}\" is verlopen",
-    "overdueAction": "Achterstallige corrigerende maatregel",
-    "overdueActionMessage": "Maatregel \"{title}\" is verlopen",
-    "newAssignment": "Nieuwe {entityType} toegewezen",
-    "newAssignmentMessage": "\"{title}\" is aan u toegewezen door {assignedBy}",
-    "criticalIncident": "Kritiek incident gemeld",
-    "criticalIncidentMessage": "Een kritiek incident \"{title}\" is gemeld"
-  },
   "onboarding": {
     "title": "Aan de slag",
     "description": "Voltooi deze stappen om uw werkruimte in te richten",
@@ -1766,5 +1720,86 @@
   "auth.noAccount": "Nog geen account?",
   "auth.chooseApp": "Kies app",
   "auth.dashboard": "Harmoniq Admin",
-  "auth.mobileApp": "Harmoniq Field"
+  "auth.mobileApp": "Harmoniq Field",
+  "filterOptions": {
+    "severity": {
+      "low": "Laag",
+      "medium": "Gemiddeld",
+      "high": "Hoog",
+      "critical": "Kritiek"
+    },
+    "incidentType": {
+      "injury": "Letsel",
+      "near_miss": "Bijna-ongeval",
+      "hazard": "Gevaar",
+      "equipment_failure": "Apparaatstoring",
+      "environmental": "Milieuincident",
+      "fire": "Brand",
+      "property_damage": "Materiële schade"
+    },
+    "incidentStatus": {
+      "new": "Nieuw",
+      "in_progress": "In behandeling",
+      "in_review": "In beoordeling",
+      "resolved": "Opgelost"
+    },
+    "ticketStatus": {
+      "open": "Open",
+      "in_progress": "In behandeling",
+      "resolved": "Opgelost",
+      "closed": "Gesloten"
+    },
+    "ticketPriority": {
+      "low": "Laag",
+      "medium": "Gemiddeld",
+      "high": "Hoog",
+      "urgent": "Urgent"
+    },
+    "userRole": {
+      "admin": "Beheerder",
+      "manager": "Manager",
+      "supervisor": "Leidinggevende",
+      "employee": "Medewerker"
+    },
+    "userStatus": {
+      "active": "Actief",
+      "inactive": "Inactief",
+      "pending": "In afwachting"
+    },
+    "assetStatus": {
+      "active": "Actief",
+      "maintenance": "In onderhoud",
+      "retired": "Buiten gebruik"
+    },
+    "assetCondition": {
+      "excellent": "Uitstekend",
+      "good": "Goed",
+      "fair": "Redelijk",
+      "poor": "Slecht"
+    },
+    "contentType": {
+      "news": "Nieuws",
+      "announcement": "Aankondiging",
+      "alert": "Waarschuwing",
+      "policy": "Beleid",
+      "training": "Training"
+    },
+    "contentStatus": {
+      "draft": "Concept",
+      "published": "Gepubliceerd",
+      "archived": "Gearchiveerd"
+    },
+    "checklistStatus": {
+      "active": "Actief",
+      "draft": "Concept",
+      "archived": "Gearchiveerd"
+    },
+    "department": {
+      "operations": "Operaties",
+      "warehouse": "Magazijn",
+      "production": "Productie",
+      "office": "Kantoor",
+      "maintenance": "Onderhoud"
+    }
+  }
 }

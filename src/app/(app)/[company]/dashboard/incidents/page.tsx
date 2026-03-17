@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { getUserDisplayName } from "@/lib/status-utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
   Plus,
@@ -29,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { commonFilterOptions } from "@/components/ui/filter-panel";
+import { useFilterOptions } from "@/components/ui/filter-panel";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { LoadingPage } from "@/components/ui/loading";
 import { useNotificationsStore } from "@/stores/notifications-store";
@@ -102,6 +103,7 @@ export default function IncidentsPage() {
 
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
+  const filterOptions = useFilterOptions();
   const { toast } = useToast();
   const { items: incidents, isLoading, add: addIncident } = useIncidentsStore();
   const { add: addNotif } = useNotificationsStore();
@@ -154,21 +156,21 @@ export default function IncidentsPage() {
     {
       id: "status",
       label: "All statuses",
-      options: commonFilterOptions.incidentStatus,
+      options: filterOptions.incidentStatus,
       value: statusFilter,
       onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
     },
     {
       id: "severity",
       label: "All severities",
-      options: commonFilterOptions.severity,
+      options: filterOptions.severity,
       value: severityFilter,
       onChange: (v: string) => { setSeverityFilter(v); setCurrentPage(1); },
     },
     {
       id: "type",
       label: "All types",
-      options: commonFilterOptions.incidentType,
+      options: filterOptions.incidentType,
       value: typeFilter,
       onChange: (v: string) => { setTypeFilter(v); setCurrentPage(1); },
     },
@@ -240,14 +242,14 @@ export default function IncidentsPage() {
     {
       id: "status",
       label: "All statuses",
-      options: commonFilterOptions.ticketStatus,
+      options: filterOptions.ticketStatus,
       value: ticketStatusFilter,
       onChange: (v: string) => { setTicketStatusFilter(v); setCurrentPage(1); },
     },
     {
       id: "priority",
       label: "All priorities",
-      options: commonFilterOptions.ticketPriority,
+      options: filterOptions.ticketPriority,
       value: ticketPriorityFilter,
       onChange: (v: string) => { setTicketPriorityFilter(v); setCurrentPage(1); },
     },
@@ -275,11 +277,7 @@ export default function IncidentsPage() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const getAssigneeName = (userId?: string | null) => {
-    if (!userId) return "Unassigned";
-    const user = users.find((u) => u.id === userId);
-    return user?.full_name || "Unknown";
-  };
+  const getAssigneeName = (userId?: string | null) => getUserDisplayName(userId, users);
 
   const getIncidentRef = (incidentIds?: string[]) => {
     if (!incidentIds || incidentIds.length === 0) return "—";

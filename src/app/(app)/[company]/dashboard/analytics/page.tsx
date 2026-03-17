@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { KPICard } from "@/components/ui/kpi-card";
-import { FilterPanel, commonFilterOptions } from "@/components/ui/filter-panel";
+import { FilterPanel, useFilterOptions } from "@/components/ui/filter-panel";
 import { ChartCard, AreaChart, DonutChart, LineChart, COLORS } from "@/components/charts";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useIncidentsStore } from "@/stores/incidents-store";
@@ -25,6 +25,7 @@ import { useTranslation } from "@/i18n";
 
 export default function AnalyticsPage() {
   const { t, formatDate, formatNumber } = useTranslation();
+  const filterOptions = useFilterOptions();
 
   const formatMonthLabel = React.useCallback(
     (date: Date, includeYear: boolean): string => {
@@ -212,14 +213,14 @@ export default function AnalyticsPage() {
     {
       id: "type",
       label: "All types",
-      options: commonFilterOptions.incidentType,
+      options: filterOptions.incidentType,
       value: typeFilter,
       onChange: setTypeFilter,
     },
     {
       id: "severity",
       label: "All severities",
-      options: commonFilterOptions.severity,
+      options: filterOptions.severity,
       value: severityFilter,
       onChange: setSeverityFilter,
     },

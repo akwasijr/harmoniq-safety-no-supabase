@@ -328,40 +328,6 @@
     "retrying": "Retrying...",
     "retryIn": "Retry in {seconds}s"
   },
-  "empty": {
-    "noResults": "No results found",
-    "noResultsFilterDesc": "Try adjusting your search or filter criteria to find what you're looking for.",
-    "noResultsSearchDesc": "No items match your search. Try a different search term.",
-    "clearFilters": "Clear filters",
-    "noIncidents": "No incidents",
-    "noIncidentsDesc": "No incidents have been reported yet. That's great news for safety!",
-    "noTasks": "No tasks assigned",
-    "noTasksDesc": "You're all caught up! New safety tasks will appear here when assigned.",
-    "noUsers": "No users",
-    "noUsersDesc": "No users have been added to this company yet.",
-    "noLocations": "No locations",
-    "noLocationsDesc": "Add locations to organize your workplace safety management.",
-    "noAssets": "No assets",
-    "noAssetsDesc": "Register equipment and assets to track inspections and maintenance.",
-    "noContent": "No content",
-    "noContentDesc": "Create safety bulletins, policies, and training materials for your team.",
-    "noNotifications": "All caught up!",
-    "noNotificationsDesc": "You have no new notifications at this time.",
-    "noChecklists": "No checklists",
-    "noChecklistsDesc": "Safety checklists and inspections will appear here when created.",
-    "noRiskAssessments": "No risk assessments",
-    "noRiskAssessmentsDesc": "Risk assessment forms will appear here when available.",
-    "noTeams": "No teams",
-    "noTeamsDesc": "Create teams to organize employees and assign safety responsibilities."
-  },
-  "time": {
-    "justNow": "Just now",
-    "minutesAgo": "{count}m ago",
-    "hoursAgo": "{count}h ago",
-    "daysAgo": "{count}d ago",
-    "today": "Today",
-    "yesterday": "Yesterday"
-  },
   "assets": {
     "tabs": {
       "assets": "Assets",
@@ -1683,18 +1649,6 @@
       "nameAndCheckpointRequired": "Name and at least one checkpoint are required"
     }
   },
-  "notificationTriggers": {
-    "overdueTicket": "Overdue ticket",
-    "overdueTicketMessage": "Ticket \"{title}\" is past due",
-    "overdueWorkOrder": "Overdue work order",
-    "overdueWorkOrderMessage": "Work order \"{title}\" is past due",
-    "overdueAction": "Overdue corrective action",
-    "overdueActionMessage": "Action \"{title}\" is past due",
-    "newAssignment": "New {entityType} assigned",
-    "newAssignmentMessage": "\"{title}\" was assigned to you by {assignedBy}",
-    "criticalIncident": "Critical incident reported",
-    "criticalIncidentMessage": "A critical incident \"{title}\" has been reported"
-  },
   "onboarding": {
     "title": "Getting Started",
     "description": "Complete these steps to set up your workspace",
@@ -1766,5 +1720,86 @@
   "auth.noAccount": "Don't have an account?",
   "auth.chooseApp": "Choose app",
   "auth.dashboard": "Admin Dashboard",
-  "auth.mobileApp": "Field Worker"
+  "auth.mobileApp": "Field Worker",
+  "filterOptions": {
+    "severity": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "incidentType": {
+      "injury": "Injury",
+      "near_miss": "Near Miss",
+      "hazard": "Hazard",
+      "equipment_failure": "Equipment Failure",
+      "environmental": "Environmental",
+      "fire": "Fire",
+      "property_damage": "Property Damage"
+    },
+    "incidentStatus": {
+      "new": "New",
+      "in_progress": "In Progress",
+      "in_review": "In Review",
+      "resolved": "Resolved"
+    },
+    "ticketStatus": {
+      "open": "Open",
+      "in_progress": "In Progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "ticketPriority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "userRole": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "supervisor": "Supervisor",
+      "employee": "Employee"
+    },
+    "userStatus": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending"
+    },
+    "assetStatus": {
+      "active": "Active",
+      "maintenance": "Maintenance",
+      "retired": "Retired"
+    },
+    "assetCondition": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor"
+    },
+    "contentType": {
+      "news": "News",
+      "announcement": "Announcement",
+      "alert": "Alert",
+      "policy": "Policy",
+      "training": "Training"
+    },
+    "contentStatus": {
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "checklistStatus": {
+      "active": "Active",
+      "draft": "Draft",
+      "archived": "Archived"
+    },
+    "department": {
+      "operations": "Operations",
+      "warehouse": "Warehouse",
+      "production": "Production",
+      "office": "Office",
+      "maintenance": "Maintenance"
+    }
+  }
 }

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { getAssetDisplayName, getUserFirstLastName } from "@/lib/status-utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
   Plus,
@@ -133,12 +134,8 @@ export default function CorrectiveActionsPage() {
     toast("Work order created from corrective action");
   };
 
-  const getAssetName = (id: string) => assets.find((a) => a.id === id)?.name || "Unknown";
-  const getUserName = (id: string | null) => {
-    if (!id) return "Unassigned";
-    const u = users.find((usr) => usr.id === id);
-    return u ? `${u.first_name} ${u.last_name}` : "Unknown";
-  };
+  const getAssetName = (id: string) => getAssetDisplayName(id, assets);
+  const getUserName = (id: string | null) => getUserFirstLastName(id, users, "Unassigned");
 
   if (isLoading) {
     return <LoadingPage />;

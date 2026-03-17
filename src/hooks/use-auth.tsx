@@ -367,3 +367,33 @@ export function mockLogin(email: string): User | null {
 }
 
 export { IS_MOCK_MODE };
+
+// ---------------------------------------------------------------------------
+// Standalone permission helpers (pure functions, no React context needed)
+// ---------------------------------------------------------------------------
+
+export function getEffectivePermissions(role: UserRole | null, customPermissions?: Permission[]): Permission[] {
+  if (!role) return [];
+  if (role === "super_admin") return ROLE_PERMISSIONS["super_admin"];
+
+  const rolePerms = ROLE_PERMISSIONS[role as CompanyRole] || [];
+  const customPerms = customPermissions || [];
+  return [...new Set([...rolePerms, ...customPerms])];
+}
+
+export function hasPermission(role: UserRole | null, permission: Permission, customPermissions?: Permission[]): boolean {
+  if (role === "super_admin") return true;
+  return getEffectivePermissions(role, customPermissions).includes(permission);
+}
+
+export function hasAnyPermission(role: UserRole | null, permissions: Permission[], customPermissions?: Permission[]): boolean {
+  if (role === "super_admin") return true;
+  const effectivePerms = getEffectivePermissions(role, customPermissions);
+  return permissions.some((p) => effectivePerms.includes(p));
+}
+
+export function hasAllPermissions(role: UserRole | null, permissions: Permission[], customPermissions?: Permission[]): boolean {
+  if (role === "super_admin") return true;
+  const effectivePerms = getEffectivePermissions(role, customPermissions);
+  return permissions.every((p) => effectivePerms.includes(p));
+}

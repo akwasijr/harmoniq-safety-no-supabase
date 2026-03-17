@@ -123,85 +123,52 @@ export function FilterPanel({
   );
 }
 
-// Common filter options that can be reused across pages
-export const commonFilterOptions = {
-  severity: [
-    { value: "low", label: "Low" },
-    { value: "medium", label: "Medium" },
-    { value: "high", label: "High" },
-    { value: "critical", label: "Critical" },
-  ],
-  incidentType: [
-    { value: "injury", label: "Injury" },
-    { value: "near_miss", label: "Near Miss" },
-    { value: "hazard", label: "Hazard" },
-    { value: "equipment_failure", label: "Equipment Failure" },
-    { value: "environmental", label: "Environmental" },
-    { value: "fire", label: "Fire" },
-    { value: "property_damage", label: "Property Damage" },
-  ],
-  incidentStatus: [
-    { value: "new", label: "New" },
-    { value: "in_progress", label: "In Progress" },
-    { value: "in_review", label: "In Review" },
-    { value: "resolved", label: "Resolved" },
-  ],
-  ticketStatus: [
-    { value: "open", label: "Open" },
-    { value: "in_progress", label: "In Progress" },
-    { value: "resolved", label: "Resolved" },
-    { value: "closed", label: "Closed" },
-  ],
-  ticketPriority: [
-    { value: "low", label: "Low" },
-    { value: "medium", label: "Medium" },
-    { value: "high", label: "High" },
-    { value: "urgent", label: "Urgent" },
-  ],
-  userRole: [
-    { value: "admin", label: "Admin" },
-    { value: "manager", label: "Manager" },
-    { value: "supervisor", label: "Supervisor" },
-    { value: "employee", label: "Employee" },
-  ],
-  userStatus: [
-    { value: "active", label: "Active" },
-    { value: "inactive", label: "Inactive" },
-    { value: "pending", label: "Pending" },
-  ],
-  assetStatus: [
-    { value: "active", label: "Active" },
-    { value: "maintenance", label: "Maintenance" },
-    { value: "retired", label: "Retired" },
-  ],
-  assetCondition: [
-    { value: "excellent", label: "Excellent" },
-    { value: "good", label: "Good" },
-    { value: "fair", label: "Fair" },
-    { value: "poor", label: "Poor" },
-  ],
-  contentType: [
-    { value: "news", label: "News" },
-    { value: "announcement", label: "Announcement" },
-    { value: "alert", label: "Alert" },
-    { value: "policy", label: "Policy" },
-    { value: "training", label: "Training" },
-  ],
-  contentStatus: [
-    { value: "draft", label: "Draft" },
-    { value: "published", label: "Published" },
-    { value: "archived", label: "Archived" },
-  ],
-  checklistStatus: [
-    { value: "active", label: "Active" },
-    { value: "draft", label: "Draft" },
-    { value: "archived", label: "Archived" },
-  ],
-  department: [
-    { value: "operations", label: "Operations" },
-    { value: "warehouse", label: "Warehouse" },
-    { value: "production", label: "Production" },
-    { value: "office", label: "Office" },
-    { value: "maintenance", label: "Maintenance" },
-  ],
-};
+// Keys for each filter group — values reference filterOptions.{group}.{value} in i18n
+const FILTER_OPTION_KEYS = {
+  severity: ["low", "medium", "high", "critical"],
+  incidentType: ["injury", "near_miss", "hazard", "equipment_failure", "environmental", "fire", "property_damage"],
+  incidentStatus: ["new", "in_progress", "in_review", "resolved"],
+  ticketStatus: ["open", "in_progress", "resolved", "closed"],
+  ticketPriority: ["low", "medium", "high", "urgent"],
+  userRole: ["admin", "manager", "supervisor", "employee"],
+  userStatus: ["active", "inactive", "pending"],
+  assetStatus: ["active", "maintenance", "retired"],
+  assetCondition: ["excellent", "good", "fair", "poor"],
+  contentType: ["news", "announcement", "alert", "policy", "training"],
+  contentStatus: ["draft", "published", "archived"],
+  checklistStatus: ["active", "draft", "archived"],
+  department: ["operations", "warehouse", "production", "office", "maintenance"],
+} as const;
+
+type FilterGroupKey = keyof typeof FILTER_OPTION_KEYS;
+
+function buildFilterOptions(
+  t: (key: string) => string,
+): Record<FilterGroupKey, FilterOption[]> {
+  const result = {} as Record<FilterGroupKey, FilterOption[]>;
+  for (const [group, keys] of Object.entries(FILTER_OPTION_KEYS)) {
+    result[group as FilterGroupKey] = keys.map((key) => ({
+      value: key,
+      label: t(`filterOptions.${group}.${key}`),
+    }));
+  }
+  return result;
+}
+
+/**
+ * Hook that returns translated filter options.
+ * Must be called inside a component (uses useTranslation).
+ */
+export function useFilterOptions() {
+  const { t } = useTranslation();
+  return React.useMemo(() => buildFilterOptions(t), [t]);
+}
+
+/**
+ * @deprecated Use `useFilterOptions()` hook instead for translated labels.
+ * Kept temporarily so existing non-hook call sites still compile.
+ */
+export const commonFilterOptions = FILTER_OPTION_KEYS as unknown as Record<
+  FilterGroupKey,
+  FilterOption[]
+>;

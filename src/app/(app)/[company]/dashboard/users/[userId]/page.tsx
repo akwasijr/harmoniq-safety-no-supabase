@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
+import { getRoleVariant } from "@/lib/status-utils";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -228,7 +229,7 @@ export default function UserDetailPage() {
     );
   }
 
-  const roleColor = user.role === "company_admin" ? "destructive" : user.role === "manager" ? "warning" : "secondary";
+  const roleColor = getRoleVariant(user.role);
 
   return (
     <RoleGuard requiredPermission="users.view">

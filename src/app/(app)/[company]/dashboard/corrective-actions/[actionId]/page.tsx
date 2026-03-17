@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { getUserFirstLastName, getStatusVariant, getSeverityVariant } from "@/lib/status-utils";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -89,11 +90,7 @@ export default function CorrectiveActionDetailPage() {
     return assets.find((a) => a.id === id) || null;
   };
 
-  const getUserName = (id: string | null) => {
-    if (!id) return t("common.none");
-    const u = users.find((usr) => usr.id === id);
-    return u ? `${u.first_name} ${u.last_name}` : t("common.none");
-  };
+  const getUserName = (id: string | null) => getUserFirstLastName(id, users, t("common.none"));
 
   const getIncident = (inspectionId: string | null) => {
     if (!inspectionId) return null;
@@ -150,19 +147,9 @@ export default function CorrectiveActionDetailPage() {
   const linkedIncident = getIncident(action.inspection_id);
   const nextStatuses = STATUS_FLOW[action.status] || [];
 
-  const statusVariant = action.status === "completed"
-    ? "success"
-    : action.status === "in_progress"
-      ? "warning"
-      : isOverdue
-        ? "destructive"
-        : "secondary";
+  const statusVariant = getStatusVariant(action.status, { isOverdue });
 
-  const severityVariant = action.severity === "critical" || action.severity === "high"
-    ? "destructive"
-    : action.severity === "medium"
-      ? "warning"
-      : "secondary";
+  const severityVariant = getSeverityVariant(action.severity);
 
   return (
     <RoleGuard requiredPermission="incidents.view_all">

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { ThemeProvider } from "@/components/shared/theme-provider";
+import { RouteProgress } from "@/components/shared/route-progress";
 import { validateEnv } from "@/lib/env";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
@@ -110,6 +112,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Suspense fallback={null}>
+            <RouteProgress />
+          </Suspense>
           <a href="#main-content" className="skip-link">
             Skip to main content
           </a>

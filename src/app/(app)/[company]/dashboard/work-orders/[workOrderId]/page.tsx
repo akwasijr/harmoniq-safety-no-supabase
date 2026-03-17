@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { WORK_ORDER_STATUS_COLORS, getUserFirstLastName } from "@/lib/status-utils";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -50,13 +51,7 @@ const STATUS_FLOW: Record<string, string[]> = {
   cancelled: [],
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  requested: "secondary",
-  approved: "warning",
-  in_progress: "warning",
-  completed: "success",
-  cancelled: "secondary",
-};
+const STATUS_COLORS = WORK_ORDER_STATUS_COLORS;
 
 const STATUS_ICONS: Record<string, typeof Clock> = {
   requested: ClipboardList,
@@ -117,11 +112,7 @@ export default function WorkOrderDetailPage() {
     return assets.find((a) => a.id === id);
   };
 
-  const getUserName = (id: string | null) => {
-    if (!id) return t("common.none");
-    const u = users.find((usr) => usr.id === id);
-    return u ? `${u.first_name} ${u.last_name}` : t("common.none");
-  };
+  const getUserName = (id: string | null) => getUserFirstLastName(id, users, t("common.none"));
 
   const handleStatusChange = (newStatus: string) => {
     if (!order) return;

@@ -251,7 +251,7 @@ export default function MyTasksPage() {
   const handleAccept = React.useCallback(
     (id: string) => {
       update(id, { status: "in_progress", updated_at: new Date().toISOString() });
-      toast({ title: "Task accepted", description: "Work order is now in progress" });
+      toast("Task accepted — work order is now in progress", "success");
     },
     [update, toast]
   );
@@ -263,7 +263,7 @@ export default function MyTasksPage() {
         completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
-      toast({ title: "Task completed", description: "Work order has been marked as complete" });
+      toast("Task completed successfully", "success");
     },
     [update, toast]
   );

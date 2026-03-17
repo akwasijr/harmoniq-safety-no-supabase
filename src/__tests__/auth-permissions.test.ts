@@ -2,38 +2,17 @@
  * Auth permission logic tests
  *
  * Tests the permission system (ROLE_PERMISSIONS, hasPermission, hasAnyPermission,
- * hasAllPermissions) without needing React rendering or Supabase.
+ * hasAllPermissions) by importing the real standalone functions from use-auth.tsx.
  */
 import { describe, it, expect } from "vitest";
 import { ROLE_PERMISSIONS } from "@/types";
-import type { Permission, UserRole, CompanyRole } from "@/types";
-
-// Replicate the permission-checking functions from use-auth.tsx
-function getEffectivePermissions(role: UserRole | null, customPermissions?: Permission[]): Permission[] {
-  if (!role) return [];
-  if (role === "super_admin") return ROLE_PERMISSIONS["super_admin"];
-
-  const rolePerms = ROLE_PERMISSIONS[role as CompanyRole] || [];
-  const customPerms = customPermissions || [];
-  return [...new Set([...rolePerms, ...customPerms])];
-}
-
-function hasPermission(role: UserRole | null, permission: Permission, customPermissions?: Permission[]): boolean {
-  if (role === "super_admin") return true;
-  return getEffectivePermissions(role, customPermissions).includes(permission);
-}
-
-function hasAnyPermission(role: UserRole | null, permissions: Permission[], customPermissions?: Permission[]): boolean {
-  if (role === "super_admin") return true;
-  const effectivePerms = getEffectivePermissions(role, customPermissions);
-  return permissions.some((p) => effectivePerms.includes(p));
-}
-
-function hasAllPermissions(role: UserRole | null, permissions: Permission[], customPermissions?: Permission[]): boolean {
-  if (role === "super_admin") return true;
-  const effectivePerms = getEffectivePermissions(role, customPermissions);
-  return permissions.every((p) => effectivePerms.includes(p));
-}
+import type { Permission, UserRole } from "@/types";
+import {
+  getEffectivePermissions,
+  hasPermission,
+  hasAnyPermission,
+  hasAllPermissions,
+} from "@/hooks/use-auth";
 
 // ---------------------------------------------------------------------------
 

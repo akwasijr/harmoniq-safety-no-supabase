@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { commonFilterOptions } from "@/components/ui/filter-panel";
+import { useFilterOptions } from "@/components/ui/filter-panel";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { LoadingPage } from "@/components/ui/loading";
 import { useIncidentsStore } from "@/stores/incidents-store";
@@ -65,6 +65,7 @@ export default function TicketsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
+  const filterOptions = useFilterOptions();
 
   const assigneeOptions = users.map((u) => ({ value: u.id, label: u.full_name }));
 
@@ -97,14 +98,14 @@ export default function TicketsPage() {
     {
       id: "status",
       label: "All statuses",
-      options: commonFilterOptions.ticketStatus,
+      options: filterOptions.ticketStatus,
       value: statusFilter,
       onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
     },
     {
       id: "priority",
       label: "All priorities",
-      options: commonFilterOptions.ticketPriority,
+      options: filterOptions.ticketPriority,
       value: priorityFilter,
       onChange: (v: string) => { setPriorityFilter(v); setCurrentPage(1); },
     },

@@ -328,40 +328,6 @@
     "retrying": "Försöker igen...",
     "retryIn": "Försök igen om {seconds}s"
   },
-  "empty": {
-    "noResults": "Inga resultat hittades",
-    "noResultsFilterDesc": "Försök justera dina sök- eller filterkriterier för att hitta det du letar efter.",
-    "noResultsSearchDesc": "Inga objekt matchar din sökning. Försök med en annan sökterm.",
-    "clearFilters": "Rensa filter",
-    "noIncidents": "Inga incidenter",
-    "noIncidentsDesc": "Inga incidenter har rapporterats ännu. Det är goda nyheter för säkerheten!",
-    "noTasks": "Inga uppgifter tilldelade",
-    "noTasksDesc": "Du är i kapp! Nya säkerhetsuppgifter visas här när de tilldelas.",
-    "noUsers": "Inga användare",
-    "noUsersDesc": "Inga användare har lagts till i detta företag ännu.",
-    "noLocations": "Inga platser",
-    "noLocationsDesc": "Lägg till platser för att organisera din arbetsmiljöhantering.",
-    "noAssets": "Inga tillgångar",
-    "noAssetsDesc": "Registrera utrustning och tillgångar för att spåra inspektioner och underhåll.",
-    "noContent": "Inget innehåll",
-    "noContentDesc": "Skapa säkerhetsbulletiner, policyer och utbildningsmaterial för ditt team.",
-    "noNotifications": "Allt uppdaterat!",
-    "noNotificationsDesc": "Du har inga nya aviseringar just nu.",
-    "noChecklists": "Inga checklistor",
-    "noChecklistsDesc": "Säkerhetschecklistor och inspektioner visas här när de skapas.",
-    "noRiskAssessments": "Inga riskbedömningar",
-    "noRiskAssessmentsDesc": "Riskbedömningsformulär visas här när de är tillgängliga.",
-    "noTeams": "Inga team",
-    "noTeamsDesc": "Skapa team för att organisera anställda och tilldela säkerhetsansvar."
-  },
-  "time": {
-    "justNow": "Just nu",
-    "minutesAgo": "{count} min sedan",
-    "hoursAgo": "{count}t sedan",
-    "daysAgo": "{count}d sedan",
-    "today": "Idag",
-    "yesterday": "Igår"
-  },
   "assets": {
     "tabs": {
       "assets": "Tillgångar",
@@ -1683,18 +1649,6 @@
       "nameAndCheckpointRequired": "Namn och minst en kontrollpunkt krävs"
     }
   },
-  "notificationTriggers": {
-    "overdueTicket": "Förfallet ärende",
-    "overdueTicketMessage": "Ärende \"{title}\" har passerat förfallodatum",
-    "overdueWorkOrder": "Förfallen arbetsorder",
-    "overdueWorkOrderMessage": "Arbetsorder \"{title}\" har passerat förfallodatum",
-    "overdueAction": "Förfallen korrigerande åtgärd",
-    "overdueActionMessage": "Åtgärd \"{title}\" har passerat förfallodatum",
-    "newAssignment": "Ny {entityType} tilldelad",
-    "newAssignmentMessage": "\"{title}\" tilldelades dig av {assignedBy}",
-    "criticalIncident": "Kritisk incident rapporterad",
-    "criticalIncidentMessage": "En kritisk incident \"{title}\" har rapporterats"
-  },
   "onboarding": {
     "title": "Kom igång",
     "description": "Slutför dessa steg för att konfigurera din arbetsyta",
@@ -1766,5 +1720,86 @@
   "auth.noAccount": "Har du inget konto?",
   "auth.chooseApp": "Välj app",
   "auth.dashboard": "Harmoniq Admin",
-  "auth.mobileApp": "Harmoniq Field"
+  "auth.mobileApp": "Harmoniq Field",
+  "filterOptions": {
+    "severity": {
+      "low": "Låg",
+      "medium": "Medel",
+      "high": "Hög",
+      "critical": "Kritisk"
+    },
+    "incidentType": {
+      "injury": "Skada",
+      "near_miss": "Tillbud",
+      "hazard": "Fara",
+      "equipment_failure": "Utrustningsfel",
+      "environmental": "Miljöincident",
+      "fire": "Brand",
+      "property_damage": "Egendomsskada"
+    },
+    "incidentStatus": {
+      "new": "Ny",
+      "in_progress": "Pågående",
+      "in_review": "Under granskning",
+      "resolved": "Löst"
+    },
+    "ticketStatus": {
+      "open": "Öppen",
+      "in_progress": "Pågående",
+      "resolved": "Löst",
+      "closed": "Stängd"
+    },
+    "ticketPriority": {
+      "low": "Låg",
+      "medium": "Medel",
+      "high": "Hög",
+      "urgent": "Brådskande"
+    },
+    "userRole": {
+      "admin": "Administratör",
+      "manager": "Chef",
+      "supervisor": "Arbetsledare",
+      "employee": "Anställd"
+    },
+    "userStatus": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "pending": "Väntande"
+    },
+    "assetStatus": {
+      "active": "Aktiv",
+      "maintenance": "Underhåll",
+      "retired": "Avvecklad"
+    },
+    "assetCondition": {
+      "excellent": "Utmärkt",
+      "good": "Bra",
+      "fair": "Godtagbar",
+      "poor": "Dålig"
+    },
+    "contentType": {
+      "news": "Nyheter",
+      "announcement": "Meddelande",
+      "alert": "Varning",
+      "policy": "Policy",
+      "training": "Utbildning"
+    },
+    "contentStatus": {
+      "draft": "Utkast",
+      "published": "Publicerad",
+      "archived": "Arkiverad"
+    },
+    "checklistStatus": {
+      "active": "Aktiv",
+      "draft": "Utkast",
+      "archived": "Arkiverad"
+    },
+    "department": {
+      "operations": "Drift",
+      "warehouse": "Lager",
+      "production": "Produktion",
+      "office": "Kontor",
+      "maintenance": "Underhåll"
+    }
+  }
 }
