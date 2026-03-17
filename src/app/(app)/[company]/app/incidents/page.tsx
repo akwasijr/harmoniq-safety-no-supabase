@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   AlertTriangle,
   ChevronRight,
@@ -20,6 +20,8 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { capitalize } from "@/lib/utils";
+import { LoadingPage } from "@/components/ui/loading";
+import { NoDataEmptyState, NoResultsEmptyState } from "@/components/ui/empty-state";
 
 const STATUS_CONFIG = {
   new: { label: "New", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: Clock },
@@ -31,6 +33,7 @@ const STATUS_CONFIG = {
 
 export default function EmployeeIncidentsPage() {
   const params = useParams();
+  const router = useRouter();
   const company = params.company as string;
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
@@ -69,12 +72,8 @@ export default function EmployeeIncidentsPage() {
     return result;
   }, [myIncidents, statusFilter, searchQuery]);
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+  if (!user || isLoading) {
+    return <LoadingPage />;
   }
 
   return (
@@ -128,21 +127,21 @@ export default function EmployeeIncidentsPage() {
       {/* Content */}
       <div className="flex-1 px-4 py-4">
         {filteredIncidents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <AlertTriangle className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h2 className="text-base font-medium">No Reports Found</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {myIncidents.length === 0
-                ? "You haven't submitted any incident reports yet."
-                : t("incidents.noMatch") || "No reports match your search criteria."}
-            </p>
-            <Link href={`/${company}/app/report`}>
-              <Button variant="outline" className="mt-4 gap-2">
-                <Plus className="h-4 w-4" />
-                Report an Incident
-              </Button>
-            </Link>
-          </div>
+          myIncidents.length === 0 ? (
+            <NoDataEmptyState
+              entityName="incidents"
+              onAdd={() => router.push(`/${company}/app/report`)}
+              addLabel="Report an Incident"
+            />
+          ) : (
+            <NoResultsEmptyState
+              onClearFilters={() => {
+                setSearchQuery("");
+                setStatusFilter("all");
+              }}
+              hasFilters={!!searchQuery || statusFilter !== "all"}
+            />
+          )
         ) : (
           <div className="space-y-3">
             {filteredIncidents.map((incident) => {

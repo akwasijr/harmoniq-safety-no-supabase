@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { LoadingPage } from "@/components/ui/loading";
 import {
   ArrowLeft,
   ArrowRight,
@@ -66,11 +67,7 @@ function InspectionRoundContent() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   if (isRoutesLoading || isAssetsLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!route || route.checkpoints.length === 0) {

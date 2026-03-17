@@ -25,6 +25,8 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useInspectionRoutesStore } from "@/stores/inspection-routes-store";
 import { useTranslation } from "@/i18n";
+import { LoadingPage } from "@/components/ui/loading";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ComponentType<{ className?: string }> }> = {
   active: { color: "text-success", icon: CheckCircle },
@@ -38,7 +40,7 @@ type SubTab = "browse" | "rounds" | "work";
 export default function EmployeeAssetsPage() {
   const company = useCompanyParam();
   const router = useRouter();
-  const { items: assets } = useAssetsStore();
+  const { items: assets, isLoading } = useAssetsStore();
   const { items: locations } = useLocationsStore();
   const { items: workOrders } = useWorkOrdersStore();
   const { items: inspectionRoutes } = useInspectionRoutesStore();
@@ -89,6 +91,10 @@ export default function EmployeeAssetsPage() {
   }, [assets]);
 
   const activeRoutes = inspectionRoutes.filter(r => r.status === "active");
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   const tabs = [
     { id: "browse" as SubTab, label: t("assets.tabs.assets"), icon: List },
@@ -194,13 +200,7 @@ export default function EmployeeAssetsPage() {
           {/* Asset list */}
           <div className="px-4 space-y-2">
             {browseFiltered.length === 0 ? (
-              <div className="text-center py-12">
-                <Package className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-                <p className="text-sm font-medium text-muted-foreground">{t("assets.noAssetsFound")}</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">
-                  {browseSearch ? t("assets.tryDifferentSearch") : t("assets.noAssetsAvailable")}
-                </p>
-              </div>
+              <NoDataEmptyState entityName="assets" />
             ) : (
               browseFiltered.map(asset => {
                 const location = asset.location_id ? locations.find(l => l.id === asset.location_id) : null;
@@ -242,11 +242,7 @@ export default function EmployeeAssetsPage() {
       {activeTab === "rounds" && (
         <div className="px-4 pt-4 space-y-3">
           {activeRoutes.length === 0 ? (
-            <div className="text-center py-12">
-              <ClipboardCheck className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
-              <p className="text-sm font-medium text-muted-foreground">{t("inspectionRounds.noRoutes")}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t("inspectionRounds.noRoutesDesc")}</p>
-            </div>
+            <NoDataEmptyState entityName="inspection rounds" />
           ) : (
             activeRoutes.map((route) => (
               <Link key={route.id} href={`/${company}/app/inspection-round?route=${route.id}`}>
@@ -279,11 +275,7 @@ export default function EmployeeAssetsPage() {
       {activeTab === "work" && (
         <div className="px-4 pt-4 space-y-3">
           {myOpenWorkOrders.length === 0 ? (
-            <div className="text-center py-12">
-              <CheckCircle className="h-10 w-10 mx-auto mb-3 text-success/50" />
-              <p className="text-sm font-medium text-muted-foreground">{t("assets.work_orders_empty_title") || "All caught up!"}</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">{t("assets.work_orders_empty_description") || "No open work orders assigned to you"}</p>
-            </div>
+            <NoDataEmptyState entityName="work orders" />
           ) : (
             <>
               <p className="text-xs text-muted-foreground">

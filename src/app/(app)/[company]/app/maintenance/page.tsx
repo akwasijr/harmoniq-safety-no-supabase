@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import type { WorkOrder, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
+import { LoadingPage } from "@/components/ui/loading";
 
 function RequestMaintenancePageContent() {
   const router = useRouter();
@@ -23,7 +24,7 @@ function RequestMaintenancePageContent() {
   const preselectedAssetId = searchParams.get("asset") || "";
   const { user } = useAuth();
   const { toast } = useToast();
-  const { items: assets } = useAssetsStore();
+  const { items: assets, isLoading } = useAssetsStore();
   const { add: addWorkOrder } = useWorkOrdersStore();
   const { t } = useTranslation();
   const [form, setForm] = React.useState({
@@ -34,6 +35,10 @@ function RequestMaintenancePageContent() {
   });
 
   const selectedAsset = form.asset_id ? assets.find(a => a.id === form.asset_id) : null;
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   const handleSubmit = () => {
     if (!form.title.trim() || !form.description.trim()) return;

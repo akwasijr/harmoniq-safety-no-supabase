@@ -31,6 +31,7 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
+import { LoadingPage } from "@/components/ui/loading";
 import type { AssetCategory, AssetCondition, AssetCriticality } from "@/types";
 
 type Step = "info" | "details" | "location" | "review";
@@ -68,7 +69,7 @@ export default function NewAssetPage() {
   const router = useRouter();
   const company = useCompanyParam();
   const { add: addAsset, items: existingAssets } = useAssetsStore();
-  const { items: locations } = useLocationsStore();
+  const { items: locations, isLoading: isLocationsLoading } = useLocationsStore();
   const { user } = useAuth();
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -99,6 +100,10 @@ export default function NewAssetPage() {
   const isLastStep = currentStepIndex === STEPS.length - 1;
 
   const selectedLocation = locationId ? locations.find((l) => l.id === locationId) : null;
+
+  if (isLocationsLoading) {
+    return <LoadingPage />;
+  }
 
   // Generate a unique asset tag
   const generateAssetTag = (): string => {

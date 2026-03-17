@@ -23,7 +23,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useCompanyData } from "@/hooks/use-company-data";
+import { useAssetsStore } from "@/stores/assets-store";
 import { useTranslation } from "@/i18n";
+import { LoadingPage } from "@/components/ui/loading";
 
 type ScanMode = "camera" | "manual";
 type ScanState = "scanning" | "found" | "not-found";
@@ -32,6 +34,7 @@ export default function ScanAssetPage() {
   const router = useRouter();
   const company = useCompanyParam();
   const { assets, locations } = useCompanyData();
+  const { isLoading } = useAssetsStore();
   const { t } = useTranslation();
 
   const [mode, setMode] = React.useState<ScanMode>("camera");
@@ -50,6 +53,10 @@ export default function ScanAssetPage() {
   const foundLocation = foundAsset?.location_id
     ? locations.find((l) => l.id === foundAsset.location_id)
     : null;
+
+  if (isLoading) {
+    return <LoadingPage message="Loading assets..." />;
+  }
 
   // Look up asset by tag, QR code, serial number, barcode, or ID
   const lookupAsset = React.useCallback(

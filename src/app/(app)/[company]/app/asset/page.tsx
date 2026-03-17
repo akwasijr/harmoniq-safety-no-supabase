@@ -21,6 +21,7 @@ import { useAssetsStore } from "@/stores/assets-store";
 import { useTranslation } from "@/i18n";
 import { useAssetInspectionsStore } from "@/stores/inspections-store";
 import { useLocationsStore } from "@/stores/locations-store";
+import { LoadingPage } from "@/components/ui/loading";
 
 function AssetQuickViewPageContent() {
   const router = useRouter();
@@ -38,11 +39,7 @@ function AssetQuickViewPageContent() {
   const location = asset?.location_id ? locations.find((l) => l.id === asset.location_id) : null;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!asset) {

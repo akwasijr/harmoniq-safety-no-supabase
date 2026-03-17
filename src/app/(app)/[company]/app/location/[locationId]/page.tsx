@@ -28,6 +28,8 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { LocationType } from "@/types";
 import { useTranslation } from "@/i18n";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const LOCATION_TYPE_ICONS: Record<LocationType, React.ComponentType<{ className?: string }>> = {
   site: Building2,
@@ -56,6 +58,26 @@ export default function LocationLandingPage() {
   };
 
   const location = locations.find((l) => l.id === locationId);
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
+  if (!location) {
+    return (
+      <EmptyState
+        icon={MapPin}
+        title="Location not found"
+        description="This location may have been removed or you don't have access."
+        action={
+          <Button variant="outline" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Go Back
+          </Button>
+        }
+      />
+    );
+  }
 
   // Get parent location if exists
   const parentLocation = location?.parent_id 

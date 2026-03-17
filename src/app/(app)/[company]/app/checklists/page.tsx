@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation, LOCALE_DEFAULT_COUNTRY } from "@/i18n";
+import { TasksSkeleton } from "@/components/ui/loading";
 
 type TabType = "checklists" | "risk-assessment" | "reports";
 type CountryCode = "US" | "NL" | "SE";
@@ -628,8 +629,8 @@ function EmployeeChecklistsPageContent() {
   
   const [activeTab, setActiveTab] = React.useState<TabType>(getInitialTab());
 
-  const { items: checklistTemplates } = useChecklistTemplatesStore();
-  const { items: checklistSubmissions } = useChecklistSubmissionsStore();
+  const { items: checklistTemplates, isLoading: isTemplatesLoading } = useChecklistTemplatesStore();
+  const { items: checklistSubmissions, isLoading: isSubmissionsLoading } = useChecklistSubmissionsStore();
   const { items: assets } = useAssetsStore();
   const { items: locations } = useLocationsStore();
   const { items: riskEvaluations } = useRiskEvaluationsStore();
@@ -704,6 +705,10 @@ function EmployeeChecklistsPageContent() {
         date: evaluation.submitted_at || evaluation.created_at,
       };
     });
+
+  if (isTemplatesLoading || isSubmissionsLoading) {
+    return <TasksSkeleton />;
+  }
 
   return (
     <div className="flex flex-col min-h-full">
@@ -930,7 +935,7 @@ function EmployeeChecklistsPageContent() {
 
 export default function EmployeeChecklistsPage() {
   return (
-    <React.Suspense fallback={<div className="flex min-h-[400px] items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+    <React.Suspense fallback={<TasksSkeleton />}>
       <EmployeeChecklistsPageContent />
     </React.Suspense>
   );

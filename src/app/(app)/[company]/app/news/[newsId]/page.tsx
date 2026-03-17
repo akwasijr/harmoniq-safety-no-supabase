@@ -19,6 +19,8 @@ import { useContentStore } from "@/stores/content-store";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function NewsDetailPage() {
   const router = useRouter();
@@ -47,11 +49,7 @@ export default function NewsDetailPage() {
   const article = contentItems.find((c) => c.id === newsId);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   const copyToClipboard = async () => {
@@ -161,9 +159,16 @@ export default function NewsDetailPage() {
 
   if (!article) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">{t("newsApp.articleNotFound")}</p>
-      </div>
+      <EmptyState
+        icon={FileText}
+        title="Article not found"
+        description="This article may have been removed or is no longer available."
+        action={
+          <Button variant="outline" onClick={() => router.back()}>
+            Go Back
+          </Button>
+        }
+      />
     );
   }
 

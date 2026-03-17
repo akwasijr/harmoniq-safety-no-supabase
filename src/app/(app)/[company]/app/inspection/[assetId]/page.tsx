@@ -21,6 +21,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
 import { INSPECTION_TEMPLATES, type AssetCategory } from "@/types";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // Fallback / default inspection items (used when template not available)
 const defaultInspectionItems = [
@@ -145,18 +147,21 @@ export default function AssetInspectionPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!asset) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">{t("inspection.assetNotFound")}</p>
-      </div>
+      <EmptyState
+        icon={Wrench}
+        title={t("inspection.assetNotFound")}
+        description="The asset you're trying to inspect could not be found."
+        action={
+          <Button variant="outline" onClick={() => router.back()}>
+            Go Back
+          </Button>
+        }
+      />
     );
   }
 

@@ -23,6 +23,8 @@ import { useUsersStore } from "@/stores/users-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { capitalize } from "@/lib/utils";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const STATUS_CONFIG = {
   new: { label: "New", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
@@ -59,31 +61,22 @@ export default function EmployeeIncidentDetailPage() {
   const isOwner = incident?.reporter_id === user?.id;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!incident) {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      );
-    }
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
-        <h1 className="text-lg font-semibold">Incident Not Found</h1>
-        <p className="text-sm text-muted-foreground mt-1">This incident may have been deleted or you don&apos;t have access.</p>
-        <Button variant="outline" className="mt-4" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Go Back
-        </Button>
-      </div>
+      <EmptyState
+        icon={AlertTriangle}
+        title="Incident Not Found"
+        description="This incident may have been deleted or you don't have access."
+        action={
+          <Button variant="outline" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Go Back
+          </Button>
+        }
+      />
     );
   }
 

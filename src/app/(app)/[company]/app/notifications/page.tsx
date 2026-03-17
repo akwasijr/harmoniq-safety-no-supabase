@@ -23,6 +23,8 @@ import { useNotificationsStore } from "@/stores/notifications-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { LoadingPage } from "@/components/ui/loading";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
 
 interface NotificationItem {
   id: string;
@@ -45,7 +47,7 @@ export default function NotificationsPage() {
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { items: incidents } = useIncidentsStore();
   const { items: tickets } = useTicketsStore();
-  const { items: dbNotifications, update: updateNotification } = useNotificationsStore();
+  const { items: dbNotifications, update: updateNotification, isLoading } = useNotificationsStore();
   const { t, formatDate } = useTranslation();
 
   const notifications = React.useMemo<NotificationItem[]>(() => {
@@ -134,6 +136,10 @@ export default function NotificationsPage() {
     }
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
     <div className="flex flex-col min-h-full pb-20">
       {/* Header */}
@@ -158,13 +164,7 @@ export default function NotificationsPage() {
       {/* Notification list */}
       <div className="flex-1">
         {notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-4">
-            <Bell className="h-10 w-10 text-muted-foreground/30" aria-hidden="true" />
-            <p className="text-sm font-medium text-muted-foreground mt-4">{t("notifications.empty_title") || "No notifications"}</p>
-            <p className="text-xs text-muted-foreground/70 mt-1 text-center">
-              {t("notifications.empty_description") || "You're all caught up! Notifications about tasks, news, and incidents will appear here."}
-            </p>
-          </div>
+          <NoDataEmptyState entityName="notifications" />
         ) : (
           <ul className="divide-y">
             {notifications.map((notification) => (

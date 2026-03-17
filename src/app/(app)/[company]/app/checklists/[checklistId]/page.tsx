@@ -20,6 +20,8 @@ import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stor
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { ChecklistResponse } from "@/types";
 
 export default function ChecklistFormPage() {
@@ -35,7 +37,7 @@ export default function ChecklistFormPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [generalComments, setGeneralComments] = React.useState("");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const { items: templates } = useChecklistTemplatesStore();
+  const { items: templates, isLoading: isTemplatesLoading } = useChecklistTemplatesStore();
   const { add: addSubmission } = useChecklistSubmissionsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -43,11 +45,23 @@ export default function ChecklistFormPage() {
   const { t } = useTranslation();
 
   const template = templates.find((tpl) => tpl.id === checklistId);
+
+  if (isTemplatesLoading) {
+    return <LoadingPage />;
+  }
+
   if (!template) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-sm text-muted-foreground">{t("checklists.checklistNotFound")}</div>
-      </div>
+      <EmptyState
+        icon={ClipboardCheck}
+        title="Checklist not found"
+        description="This checklist may have been removed or is no longer available."
+        action={
+          <Button variant="outline" onClick={() => router.back()}>
+            Go Back
+          </Button>
+        }
+      />
     );
   }
   const items = template.items || [];
