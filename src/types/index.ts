@@ -49,12 +49,19 @@ export type Permission =
   // Settings
   | "settings.view"
   | "settings.edit"
-  | "settings.billing";
+  | "settings.billing"
+  // Work Orders
+  | "work_orders.view"
+  | "work_orders.view_all"
+  | "work_orders.create"
+  | "work_orders.edit"
+  | "work_orders.assign"
+  | "work_orders.complete"
+  | "work_orders.delete";
 
 // Role-based default permissions
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   super_admin: [
-    // Super admin has all permissions
     "incidents.view_own", "incidents.view_team", "incidents.view_all",
     "incidents.create", "incidents.edit_own", "incidents.edit_all",
     "incidents.delete", "incidents.assign", "incidents.investigate",
@@ -63,6 +70,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "users.view", "users.create", "users.edit", "users.delete", "users.manage_roles",
     "teams.view", "teams.create", "teams.edit", "teams.delete", "teams.manage_members",
     "settings.view", "settings.edit", "settings.billing",
+    "work_orders.view", "work_orders.view_all", "work_orders.create", "work_orders.edit",
+    "work_orders.assign", "work_orders.complete", "work_orders.delete",
   ],
   employee: [
     "incidents.view_own",
@@ -71,6 +80,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "checklists.view",
     "checklists.complete",
     "reports.view_own",
+    "work_orders.view",
+    "work_orders.create",
+    "work_orders.complete",
   ],
   manager: [
     "incidents.view_own",
@@ -89,6 +101,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "users.view",
     "teams.view",
     "teams.manage_members",
+    "work_orders.view",
+    "work_orders.view_all",
+    "work_orders.create",
+    "work_orders.edit",
+    "work_orders.assign",
+    "work_orders.complete",
   ],
   company_admin: [
     "incidents.view_own",
@@ -121,6 +139,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "settings.view",
     "settings.edit",
     "settings.billing",
+    "work_orders.view",
+    "work_orders.view_all",
+    "work_orders.create",
+    "work_orders.edit",
+    "work_orders.assign",
+    "work_orders.complete",
+    "work_orders.delete",
   ],
 };
 

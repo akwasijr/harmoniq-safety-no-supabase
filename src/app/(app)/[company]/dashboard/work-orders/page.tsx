@@ -14,6 +14,7 @@ import {
   Package,
   ChevronDown,
   ChevronUp,
+  UserX,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import { capitalize } from "@/lib/utils";
+import { getOverdueMaintenanceWorkOrders } from "@/lib/work-order-generator";
 import type { WorkOrder, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
 
@@ -50,8 +52,24 @@ export default function WorkOrdersPage() {
   const { assets, users, parts } = useCompanyData();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
+  const [assignmentFilter, setAssignmentFilter] = React.useState<"all" | "unassigned" | "assigned">("all");
   const [showCreate, setShowCreate] = React.useState(false);
   const [expandedParts, setExpandedParts] = React.useState<string | null>(null);
+
+  // Auto-create work orders for overdue maintenance (runs once)
+  const overdueCheckRan = React.useRef(false);
+  React.useEffect(() => {
+    if (overdueCheckRan.current || isLoading) return;
+    overdueCheckRan.current = true;
+    const newOrders = getOverdueMaintenanceWorkOrders({
+      assets,
+      existingWorkOrders: orders,
+    });
+    if (newOrders.length > 0) {
+      newOrders.forEach((wo) => add(wo));
+      toast(`Created ${newOrders.length} work order${newOrders.length > 1 ? "s" : ""} for overdue maintenance`);
+    }
+  }, [isLoading, assets, orders, add, toast]);
   const [form, setForm] = React.useState({
     title: "",
     description: "",
@@ -64,6 +82,8 @@ export default function WorkOrdersPage() {
 
   const filtered = orders.filter((o) => {
     if (statusFilter !== "all" && o.status !== statusFilter) return false;
+    if (assignmentFilter === "unassigned" && o.assigned_to !== null) return false;
+    if (assignmentFilter === "assigned" && o.assigned_to === null) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       const asset = o.asset_id ? assets.find((a) => a.id === o.asset_id) : null;
@@ -72,6 +92,7 @@ export default function WorkOrdersPage() {
     return true;
   });
 
+  const unassignedCount = orders.filter((o) => o.assigned_to === null).length;
   const openCount = orders.filter((o) => o.status === "requested" || o.status === "approved").length;
   const inProgressCount = orders.filter((o) => o.status === "in_progress").length;
   const completedCount = orders.filter((o) => o.status === "completed").length;
@@ -197,6 +218,21 @@ export default function WorkOrdersPage() {
           {["all", "requested", "approved", "in_progress", "completed"].map((s) => (
             <Button key={s} size="sm" variant={statusFilter === s ? "default" : "outline"} onClick={() => setStatusFilter(s)}>
               {s === "all" ? "All" : capitalize(s.replace("_", " "))}
+            </Button>
+          ))}
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {(["all", "unassigned", "assigned"] as const).map((val) => (
+            <Button
+              key={val}
+              size="sm"
+              variant={assignmentFilter === val ? "default" : "outline"}
+              onClick={() => setAssignmentFilter(val)}
+              className="gap-1.5"
+            >
+              {val === "unassigned" && <UserX className="h-3.5 w-3.5" />}
+              {val === "all" ? "All assignments" : capitalize(val)}
+              {val === "unassigned" && ` (${unassignedCount})`}
             </Button>
           ))}
         </div>

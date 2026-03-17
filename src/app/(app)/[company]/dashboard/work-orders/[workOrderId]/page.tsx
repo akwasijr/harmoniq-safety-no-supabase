@@ -25,10 +25,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
+import { useNotificationsStore } from "@/stores/notifications-store";
 import { useTranslation } from "@/i18n";
 import { capitalize } from "@/lib/utils";
 import type { WorkOrder } from "@/types";
@@ -71,7 +79,11 @@ export default function WorkOrderDetailPage() {
   const { items: orders, update, isLoading } = useWorkOrdersStore();
   const { assets, users, parts } = useCompanyData();
 
-  const canEdit = hasPermission("incidents.edit_all");
+  const canEdit = hasPermission("work_orders.edit");
+  const canAssign = hasPermission("work_orders.assign");
+  const canComplete = hasPermission("work_orders.complete");
+  const { add: addNotification } = useNotificationsStore();
+  const { companyId } = useCompanyData();
 
   const order = orders.find((o) => o.id === workOrderId);
 
@@ -133,6 +145,56 @@ export default function WorkOrderDetailPage() {
     });
     setIsEditing(false);
     toast(t("common.save"));
+  };
+
+  const handleAssignedToChange = (newUserId: string) => {
+    if (!order) return;
+    const value = newUserId === "__none__" ? null : newUserId;
+    update(order.id, {
+      assigned_to: value,
+      updated_at: new Date().toISOString(),
+    } as Partial<WorkOrder>);
+
+    if (value) {
+      const assignedUser = users.find((u) => u.id === value);
+      const assigneeName = assignedUser
+        ? `${assignedUser.first_name} ${assignedUser.last_name}`
+        : "someone";
+      addNotification({
+        id: crypto.randomUUID(),
+        company_id: companyId || "",
+        user_id: value,
+        title: "Work Order Assigned",
+        message: `You have been assigned to work order "${order.title}"`,
+        type: "work_order_assignment",
+        source: "work_orders",
+        source_id: order.id,
+        read: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      toast(`Assigned to ${assigneeName}`);
+    } else {
+      toast("Assignment removed");
+    }
+  };
+
+  const handlePriorityChange = (newPriority: string) => {
+    if (!order) return;
+    update(order.id, {
+      priority: newPriority as WorkOrder["priority"],
+      updated_at: new Date().toISOString(),
+    });
+    toast(`Priority changed to ${newPriority}`);
+  };
+
+  const handleDueDateChange = (newDate: string) => {
+    if (!order) return;
+    update(order.id, {
+      due_date: newDate || null,
+      updated_at: new Date().toISOString(),
+    } as Partial<WorkOrder>);
+    toast(newDate ? `Due date set to ${formatDate(newDate)}` : "Due date removed");
   };
 
   if (isLoading) {
