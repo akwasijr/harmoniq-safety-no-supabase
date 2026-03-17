@@ -77,13 +77,12 @@ export default function WorkOrderDetailPage() {
   const { user, hasPermission } = useAuth();
   const { toast } = useToast();
   const { items: orders, update, isLoading } = useWorkOrdersStore();
-  const { assets, users, parts } = useCompanyData();
+  const { assets, users, parts, companyId } = useCompanyData();
 
   const canEdit = hasPermission("work_orders.edit");
   const canAssign = hasPermission("work_orders.assign");
   const canComplete = hasPermission("work_orders.complete");
   const { add: addNotification } = useNotificationsStore();
-  const { companyId } = useCompanyData();
 
   const order = orders.find((o) => o.id === workOrderId);
 
@@ -286,30 +285,35 @@ export default function WorkOrderDetailPage() {
       </div>
 
       {/* Status change actions */}
-      {nextStatuses.length > 0 && (
+      {nextStatuses.length > 0 && (canEdit || canComplete) && (
         <Card>
           <CardContent className="py-4">
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-sm font-medium text-muted-foreground">{t("workOrders.detail.changeStatus")}:</span>
-              {nextStatuses.map((next) => (
-                <Button
-                  key={next}
-                  size="sm"
-                  variant={next === "cancelled" ? "outline" : "default"}
-                  className="gap-1"
-                  onClick={() => handleStatusChange(next)}
-                >
-                  {next === "approved" && t("workOrders.buttons.approve")}
-                  {next === "in_progress" && t("workOrders.buttons.start")}
-                  {next === "completed" && (
-                    <>
-                      <CheckCircle className="h-4 w-4" />
-                      {t("workOrders.buttons.complete")}
-                    </>
-                  )}
-                  {next === "cancelled" && t("workOrders.buttons.cancel")}
-                </Button>
-              ))}
+              {nextStatuses.map((next) => {
+                if (next === "completed" && !canComplete) return null;
+                if (next !== "completed" && next !== "cancelled" && !canEdit) return null;
+                if (next === "cancelled" && !canEdit) return null;
+                return (
+                  <Button
+                    key={next}
+                    size="sm"
+                    variant={next === "cancelled" ? "outline" : next === "completed" ? "success" : "default"}
+                    className="gap-1"
+                    onClick={() => handleStatusChange(next)}
+                  >
+                    {next === "approved" && t("workOrders.buttons.approve")}
+                    {next === "in_progress" && t("workOrders.buttons.start")}
+                    {next === "completed" && (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        {t("workOrders.buttons.complete")}
+                      </>
+                    )}
+                    {next === "cancelled" && t("workOrders.buttons.cancel")}
+                  </Button>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -423,10 +427,29 @@ export default function WorkOrderDetailPage() {
               </div>
               <div>
                 <Label className="text-muted-foreground">{t("workOrders.detail.assignedTo")}</Label>
-                <p className="font-medium flex items-center gap-2 mt-0.5">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  {getUserName(order.assigned_to)}
-                </p>
+                {canAssign ? (
+                  <Select
+                    value={order.assigned_to || "__none__"}
+                    onValueChange={handleAssignedToChange}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder={t("common.none")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">{t("common.none")}</SelectItem>
+                      {users.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.first_name} {u.last_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="font-medium flex items-center gap-2 mt-0.5">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    {getUserName(order.assigned_to)}
+                  </p>
+                )}
               </div>
               {asset && (
                 <div>
@@ -442,11 +465,37 @@ export default function WorkOrderDetailPage() {
               )}
               <div>
                 <Label className="text-muted-foreground">{t("workOrders.labels.priority")}</Label>
-                <p className="font-medium capitalize mt-0.5">{order.priority}</p>
+                {canEdit ? (
+                  <Select
+                    value={order.priority}
+                    onValueChange={handlePriorityChange}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="font-medium capitalize mt-0.5">{order.priority}</p>
+                )}
               </div>
               <div>
                 <Label className="text-muted-foreground">{t("workOrders.labels.dueDate")}</Label>
-                <p className="font-medium mt-0.5">{order.due_date ? formatDate(order.due_date) : "—"}</p>
+                {canEdit ? (
+                  <Input
+                    type="date"
+                    className="mt-1"
+                    value={order.due_date ? order.due_date.split("T")[0] : ""}
+                    onChange={(e) => handleDueDateChange(e.target.value)}
+                  />
+                ) : (
+                  <p className="font-medium mt-0.5">{order.due_date ? formatDate(order.due_date) : "—"}</p>
+                )}
               </div>
               {order.estimated_hours != null && (
                 <div>
