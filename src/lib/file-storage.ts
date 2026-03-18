@@ -61,6 +61,33 @@ export class FileValidationError extends Error {
   }
 }
 
+// Magic bytes for image MIME type validation
+const IMAGE_MAGIC_BYTES: Record<string, number[][]> = {
+  "image/png": [[0x89, 0x50, 0x4e, 0x47]],
+  "image/jpeg": [[0xff, 0xd8, 0xff]],
+  "image/gif": [[0x47, 0x49, 0x46]],
+  "image/webp": [[0x52, 0x49, 0x46, 0x46]], // RIFF header
+};
+
+async function validateImageMagicBytes(file: File): Promise<void> {
+  const expectedPatterns = IMAGE_MAGIC_BYTES[file.type];
+  if (!expectedPatterns) return; // Not an image type — skip magic byte check
+
+  const headerSize = Math.max(...expectedPatterns.map((p) => p.length));
+  const buffer = await file.slice(0, headerSize).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+
+  const matches = expectedPatterns.some((pattern) =>
+    pattern.every((byte, i) => bytes[i] === byte),
+  );
+
+  if (!matches) {
+    throw new FileValidationError(
+      `File "${file.name}" content does not match its declared type "${file.type}". The file may be corrupted or mislabeled.`,
+    );
+  }
+}
+
 /** Store a File object. Rejects files > 5 MB or with unsupported MIME types. */
 export async function storeFile(
   file: File,
@@ -79,6 +106,9 @@ export async function storeFile(
       `File type "${file.type || "unknown"}" is not supported. Allowed: PNG, JPG, GIF, WebP, PDF, CSV.`,
     );
   }
+
+  // Validate image magic bytes before storing
+  await validateImageMagicBytes(file);
 
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();

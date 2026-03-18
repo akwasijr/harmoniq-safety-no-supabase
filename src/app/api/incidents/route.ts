@@ -4,6 +4,7 @@ import { createRateLimiter } from "@/lib/rate-limit";
 import { sanitizeText, isValidUUID } from "@/lib/validation";
 
 const incidentLimiter = createRateLimiter({ limit: 20, windowMs: 60_000, prefix: "incidents" });
+const incidentGetLimiter = createRateLimiter({ limit: 100, windowMs: 60_000, prefix: "incidents-get" });
 
 async function getAuthenticatedUser(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -20,6 +21,9 @@ async function getAuthenticatedUser(supabase: Awaited<ReturnType<typeof createCl
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = incidentGetLimiter.check(request);
+    if (!rl.allowed) return rl.response;
+
     const supabase = await createClient();
     const profile = await getAuthenticatedUser(supabase);
 
@@ -37,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("incidents")
-      .select("*")
+      .select("id, company_id, reference_number, reporter_id, type, type_other, severity, priority, title, description, incident_date, incident_time, lost_time, lost_time_amount, active_hazard, location_id, building, floor, zone, room, gps_lat, gps_lng, location_description, asset_id, media_urls, status, flagged, resolved_at, resolved_by, resolution_notes, assigned_to, created_at, updated_at")
       .order("created_at", { ascending: false })
       .limit(100);
 

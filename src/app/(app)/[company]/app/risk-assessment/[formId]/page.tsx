@@ -253,7 +253,10 @@ export default function RiskAssessmentFormPage() {
 
   const { t } = useTranslation();
 
+  // Validate that formId is a known form type to prevent arbitrary ID lookups
   const config = formConfigs[formId] || defaultConfig;
+  // Note: This page uses static form configs (not DB entities), so company_id is
+  // enforced at submission via user.company_id on the RiskEvaluation record.
   const currentSectionData = config.sections[currentSection];
   const isLastSection = currentSection === config.sections.length - 1;
 

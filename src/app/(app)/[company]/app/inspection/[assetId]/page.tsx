@@ -67,7 +67,8 @@ export default function AssetInspectionPage() {
 
   const { t } = useTranslation();
 
-  const asset = assets.find((a) => a.id === assetId);
+  const rawAsset = assets.find((a) => a.id === assetId);
+  const asset = rawAsset && user?.company_id && rawAsset.company_id !== user.company_id ? undefined : rawAsset;
   
   // Get inspection template based on asset category
   const inspectionItems = React.useMemo(() => {

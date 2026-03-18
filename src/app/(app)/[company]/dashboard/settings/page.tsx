@@ -306,6 +306,7 @@ export default function SettingsPage() {
                       id="company-name" 
                       value={settings.companyName}
                       onChange={(e) => updateSetting("companyName", e.target.value)}
+                      maxLength={200}
                     />
                   </div>
                   <div className="space-y-2">
@@ -315,6 +316,7 @@ export default function SettingsPage() {
                       value={settings.appName}
                       onChange={(e) => updateSetting("appName", e.target.value)}
                       placeholder={settings.companyName}
+                      maxLength={200}
                     />
                     <p className="text-xs text-muted-foreground">
                       {t("settings.appDisplayNameHint") || "Shown in the mobile app header. Defaults to company name."}

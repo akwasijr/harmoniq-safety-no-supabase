@@ -4,6 +4,7 @@ import { createRateLimiter } from "@/lib/rate-limit";
 import { sanitizeText, isValidUUID } from "@/lib/validation";
 
 const workOrderLimiter = createRateLimiter({ limit: 20, windowMs: 60_000, prefix: "work-orders" });
+const workOrderGetLimiter = createRateLimiter({ limit: 100, windowMs: 60_000, prefix: "work-orders-get" });
 
 async function getAuthenticatedUser(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -20,6 +21,9 @@ async function getAuthenticatedUser(supabase: Awaited<ReturnType<typeof createCl
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = workOrderGetLimiter.check(request);
+    if (!rl.allowed) return rl.response;
+
     const supabase = await createClient();
     const profile = await getAuthenticatedUser(supabase);
 
@@ -36,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("work_orders")
-      .select("*")
+      .select("id, company_id, asset_id, title, description, priority, status, requested_by, assigned_to, due_date, estimated_hours, actual_hours, parts_cost, labor_cost, corrective_action_id, completed_at, created_at, updated_at")
       .order("created_at", { ascending: false })
       .limit(100);
 

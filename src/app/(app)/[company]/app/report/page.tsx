@@ -462,6 +462,7 @@ function ReportIncidentPageContent() {
               }}
               onBlur={() => validateStep(3)}
               className={`h-14 text-lg ${stepErrors.title ? "border-red-500" : ""}`}
+              maxLength={200}
             />
             {stepErrors.title && <p className="text-sm text-red-500">{stepErrors.title}</p>}
             <p className="text-sm text-muted-foreground">
@@ -591,6 +592,7 @@ function ReportIncidentPageContent() {
                 type="date"
                 className={`mt-2 h-12 text-base ${stepErrors.date ? "border-red-500" : ""}`}
                 value={formData.date}
+                max={new Date().toISOString().split("T")[0]}
                 onChange={(e) => {
                   setFormData({ ...formData, date: e.target.value });
                   if (stepErrors.date) setStepErrors({});
@@ -620,7 +622,7 @@ function ReportIncidentPageContent() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/gif,image/webp"
               multiple
               capture="environment"
               onChange={handlePhotoUpload}

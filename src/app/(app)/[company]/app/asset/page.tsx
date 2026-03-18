@@ -21,6 +21,7 @@ import { useAssetsStore } from "@/stores/assets-store";
 import { useTranslation } from "@/i18n";
 import { useAssetInspectionsStore } from "@/stores/inspections-store";
 import { useLocationsStore } from "@/stores/locations-store";
+import { useAuth } from "@/hooks/use-auth";
 import { LoadingPage } from "@/components/ui/loading";
 
 function AssetQuickViewPageContent() {
@@ -32,8 +33,10 @@ function AssetQuickViewPageContent() {
   const { items: inspections } = useAssetInspectionsStore();
   const { items: locations } = useLocationsStore();
 
+  const { user } = useAuth();
   const { t, formatDate } = useTranslation();
-  const asset = assets.find((a) => a.id === assetId);
+  const rawAsset = assets.find((a) => a.id === assetId);
+  const asset = rawAsset && user?.company_id && rawAsset.company_id !== user.company_id ? undefined : rawAsset;
   const assetInspections = inspections.filter((i) => i.asset_id === assetId);
   const lastInspection = [...assetInspections].sort((a, b) => new Date(b.inspected_at).getTime() - new Date(a.inspected_at).getTime())[0];
   const location = asset?.location_id ? locations.find((l) => l.id === asset.location_id) : null;

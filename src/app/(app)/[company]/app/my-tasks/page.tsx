@@ -198,7 +198,7 @@ export default function MyTasksPage() {
 
   const myWorkOrders = React.useMemo(() => {
     if (!user) return [];
-    return workOrders.filter((wo) => wo.assigned_to === user.id);
+    return workOrders.filter((wo) => wo.assigned_to === user.id && wo.company_id === user.company_id);
   }, [workOrders, user]);
 
   const activeWOs = React.useMemo(

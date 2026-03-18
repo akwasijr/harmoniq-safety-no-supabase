@@ -1,6 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getEnvStatus } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const healthLimiter = createRateLimiter({ limit: 60, windowMs: 60_000, prefix: "health" });
 
 export const dynamic = "force-dynamic";
 
@@ -99,7 +102,10 @@ function withNoStoreHeaders(response: NextResponse | Response) {
   return response;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rl = healthLimiter.check(request);
+  if (!rl.allowed) return rl.response;
+
   const snapshot = await getHealthSnapshot();
 
   return withNoStoreHeaders(

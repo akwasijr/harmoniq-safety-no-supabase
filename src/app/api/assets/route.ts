@@ -4,6 +4,7 @@ import { createRateLimiter } from "@/lib/rate-limit";
 import { sanitizeText, isValidUUID } from "@/lib/validation";
 
 const assetLimiter = createRateLimiter({ limit: 20, windowMs: 60_000, prefix: "assets" });
+const assetGetLimiter = createRateLimiter({ limit: 100, windowMs: 60_000, prefix: "assets-get" });
 
 async function getAuthenticatedUser(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -20,6 +21,9 @@ async function getAuthenticatedUser(supabase: Awaited<ReturnType<typeof createCl
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = assetGetLimiter.check(request);
+    if (!rl.allowed) return rl.response;
+
     const supabase = await createClient();
     const profile = await getAuthenticatedUser(supabase);
 
@@ -36,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("assets")
-      .select("*")
+      .select("id, company_id, location_id, parent_asset_id, is_system, name, asset_tag, serial_number, qr_code, category, sub_category, asset_type, criticality, department, manufacturer, model, purchase_date, installation_date, warranty_expiry, expected_life_years, condition, last_condition_assessment, purchase_cost, current_value, depreciation_rate, currency, maintenance_frequency_days, last_maintenance_date, next_maintenance_date, requires_certification, safety_instructions, gps_lat, gps_lng, notes, media_urls, status, created_at, updated_at")
       .order("created_at", { ascending: false })
       .limit(100);
 

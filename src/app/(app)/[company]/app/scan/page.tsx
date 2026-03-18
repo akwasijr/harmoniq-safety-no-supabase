@@ -25,6 +25,7 @@ import { useCompanyParam } from "@/hooks/use-company-param";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useTranslation } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import { LoadingPage } from "@/components/ui/loading";
 
@@ -37,6 +38,7 @@ export default function ScanAssetPage() {
   const { assets, locations } = useCompanyData();
   const { isLoading } = useAssetsStore();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const [mode, setMode] = React.useState<ScanMode>("camera");
@@ -51,7 +53,8 @@ export default function ScanAssetPage() {
   const scanIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const [lastScannedCode, setLastScannedCode] = React.useState<string | null>(null);
 
-  const foundAsset = foundAssetId ? assets.find((a) => a.id === foundAssetId) : null;
+  const rawFoundAsset = foundAssetId ? assets.find((a) => a.id === foundAssetId) : null;
+  const foundAsset = rawFoundAsset && user?.company_id && rawFoundAsset.company_id !== user.company_id ? null : rawFoundAsset;
   const foundLocation = foundAsset?.location_id
     ? locations.find((l) => l.id === foundAsset.location_id)
     : null;
@@ -199,7 +202,7 @@ export default function ScanAssetPage() {
     });
   }, [isTorchOn, toast, t]);
 
-  if (isLoading) {
+  if (!user || isLoading) {
     return <LoadingPage message="Loading assets..." />;
   }
 

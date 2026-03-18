@@ -252,6 +252,8 @@ export default function NewIncidentPage() {
                   type="date"
                   value={formData.incident_date}
                   onChange={(e) => setFormData((prev) => ({ ...prev, incident_date: e.target.value }))}
+                  max={new Date().toISOString().split("T")[0]}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -347,6 +349,7 @@ export default function NewIncidentPage() {
                     placeholder={t("incidents.placeholders.building")}
                     value={formData.building}
                     onChange={(e) => setFormData((prev) => ({ ...prev, building: e.target.value }))}
+                    maxLength={100}
                   />
                 </div>
                 <div className="space-y-2">
@@ -356,6 +359,7 @@ export default function NewIncidentPage() {
                     placeholder={t("incidents.placeholders.floor")}
                     value={formData.floor}
                     onChange={(e) => setFormData((prev) => ({ ...prev, floor: e.target.value }))}
+                    maxLength={100}
                   />
                 </div>
                 <div className="space-y-2">
@@ -365,6 +369,7 @@ export default function NewIncidentPage() {
                     placeholder={t("incidents.placeholders.zone")}
                     value={formData.zone}
                     onChange={(e) => setFormData((prev) => ({ ...prev, zone: e.target.value }))}
+                    maxLength={100}
                   />
                 </div>
                 <div className="space-y-2">
@@ -374,6 +379,7 @@ export default function NewIncidentPage() {
                     placeholder={t("incidents.placeholders.room")}
                     value={formData.room}
                     onChange={(e) => setFormData((prev) => ({ ...prev, room: e.target.value }))}
+                    maxLength={100}
                   />
                 </div>
               </div>
@@ -431,7 +437,7 @@ export default function NewIncidentPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/gif,image/webp"
                 multiple
                 className="hidden"
                 onChange={handlePhotoUpload}

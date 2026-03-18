@@ -165,6 +165,8 @@ export default function NewUserPage() {
                   placeholder="Jane"
                   value={formData.first_name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, first_name: e.target.value }))}
+                  maxLength={100}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -174,6 +176,7 @@ export default function NewUserPage() {
                   placeholder="M."
                   value={formData.middle_name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, middle_name: e.target.value }))}
+                  maxLength={100}
                 />
               </div>
               <div className="space-y-2">
@@ -183,6 +186,8 @@ export default function NewUserPage() {
                   placeholder="Doe"
                   value={formData.last_name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, last_name: e.target.value }))}
+                  maxLength={100}
+                  required
                 />
               </div>
             </div>
@@ -195,6 +200,8 @@ export default function NewUserPage() {
                 placeholder="jane.doe@company.com"
                 value={formData.email}
                 onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                maxLength={255}
+                required
               />
               {formData.email.trim() && !isValidEmail && (
                 <p className="text-xs text-destructive">Please enter a valid email address</p>
@@ -295,6 +302,7 @@ export default function NewUserPage() {
                   placeholder="Operations"
                   value={formData.department}
                   onChange={(e) => setFormData((prev) => ({ ...prev, department: e.target.value }))}
+                  maxLength={100}
                 />
               </div>
               <div className="space-y-2">
@@ -304,6 +312,7 @@ export default function NewUserPage() {
                   placeholder="Safety Officer"
                   value={formData.job_title}
                   onChange={(e) => setFormData((prev) => ({ ...prev, job_title: e.target.value }))}
+                  maxLength={100}
                 />
               </div>
             </div>
@@ -315,6 +324,7 @@ export default function NewUserPage() {
                 placeholder="EMP-001"
                 value={formData.employee_id}
                 onChange={(e) => setFormData((prev) => ({ ...prev, employee_id: e.target.value }))}
+                maxLength={50}
               />
             </div>
 

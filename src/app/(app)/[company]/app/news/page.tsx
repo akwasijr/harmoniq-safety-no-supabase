@@ -5,17 +5,24 @@ import Link from "next/link";
 import { FileText, ChevronRight, Clock, Tag, Newspaper, Calendar, FolderOpen, GraduationCap } from "lucide-react";
 import { useContentStore } from "@/stores/content-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
+import { LoadingPage } from "@/components/ui/loading";
 
 type TabType = "news" | "events" | "documents" | "training";
 
 export default function EmployeeNewsPage() {
   const company = useCompanyParam();
+  const { user } = useAuth();
   const { t, formatDate } = useTranslation();
   const [activeTab, setActiveTab] = React.useState<TabType>("news");
 
   const { items: contentItems , isLoading } = useContentStore();
+
+  if (!user) {
+    return <LoadingPage />;
+  }
   const content = contentItems.filter((c) => c.status === "published");
 
   // Group by type

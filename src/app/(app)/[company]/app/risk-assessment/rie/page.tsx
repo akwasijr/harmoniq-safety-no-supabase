@@ -346,6 +346,8 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                   placeholder="Enter company name"
                   className="h-12"
+                  maxLength={200}
+                  required
                 />
               </div>
 
@@ -356,6 +358,9 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, kvkNumber: e.target.value })}
                   placeholder="e.g., 12345678"
                   className="h-12"
+                  maxLength={8}
+                  pattern="[0-9]{8}"
+                  title="KvK number must be exactly 8 digits"
                 />
               </div>
 
@@ -366,6 +371,8 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="Street, City, Postal Code"
                   className="h-12"
+                  maxLength={500}
+                  required
                 />
               </div>
 
@@ -377,6 +384,7 @@ export default function RIEFormPage() {
                     onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
                     placeholder="e.g., Manufacturing"
                     className="h-12"
+                    maxLength={200}
                   />
                 </div>
                 <div className="space-y-2">
@@ -386,6 +394,7 @@ export default function RIEFormPage() {
                     onChange={(e) => setFormData({ ...formData, employeeCount: e.target.value })}
                     placeholder="Number of employees"
                     className="h-12"
+                    maxLength={10}
                   />
                 </div>
               </div>
@@ -407,6 +416,8 @@ export default function RIEFormPage() {
                     onChange={(e) => setFormData({ ...formData, assessor: e.target.value })}
                     placeholder="Assessor name"
                     className="h-12"
+                    maxLength={200}
+                    required
                   />
                 </div>
               </div>
@@ -460,6 +471,7 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, workplaceDescription: e.target.value })}
                   placeholder="Describe the physical workplace: buildings, departments, outdoor areas..."
                   className="min-h-[100px]"
+                  maxLength={5000}
                 />
               </div>
 
@@ -470,6 +482,7 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, activities: e.target.value })}
                   placeholder="List the main work activities performed..."
                   className="min-h-[100px]"
+                  maxLength={5000}
                 />
               </div>
 
@@ -480,6 +493,7 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
                   placeholder="e.g., Day shift 07:00-15:00, Night shift 23:00-07:00"
                   className="h-12"
+                  maxLength={200}
                 />
               </div>
 
@@ -490,6 +504,7 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, specialGroups: e.target.value })}
                   placeholder="Young workers (<18), pregnant workers, temporary/flex workers, disabled workers..."
                   className="min-h-[80px]"
+                  maxLength={2000}
                 />
               </div>
             </div>
@@ -798,6 +813,7 @@ export default function RIEFormPage() {
                 onChange={(e) => setFormData({ ...formData, generalMeasures: e.target.value })}
                 placeholder="General safety measures applicable across the organization..."
                 className="min-h-[100px]"
+                maxLength={5000}
               />
             </div>
 
@@ -808,6 +824,7 @@ export default function RIEFormPage() {
                 onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
                 placeholder="Any additional notes or observations..."
                 className="min-h-[80px]"
+                maxLength={2000}
               />
             </div>
           </div>
