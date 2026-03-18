@@ -44,12 +44,12 @@ const SEVERITY_LEVELS: { value: Severity; label: string }[] = [
   { value: "critical", label: "Critical" },
 ];
 
-const PRIORITY_LEVELS: { value: Priority; label: string }[] = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "critical", label: "Critical" },
-];
+/** Derive priority from severity — matches mobile field worker logic */
+function derivePriority(severity: Severity): Priority {
+  if (severity === "critical" || severity === "high") return "high";
+  if (severity === "medium") return "medium";
+  return "low";
+}
 
 export default function NewIncidentPage() {
   const router = useRouter();
@@ -68,7 +68,6 @@ export default function NewIncidentPage() {
     type: "near_miss" as IncidentType,
     type_other: "",
     severity: "medium" as Severity,
-    priority: "medium" as Priority,
     title: "",
     description: "",
     incident_date: new Date().toISOString().split("T")[0],
@@ -117,7 +116,7 @@ export default function NewIncidentPage() {
       type: formData.type,
       type_other: formData.type === "other" ? formData.type_other || null : null,
       severity: formData.severity,
-      priority: formData.priority,
+      priority: derivePriority(formData.severity),
       title: formData.title,
       description: formData.description,
       incident_date: formData.incident_date,
@@ -229,18 +228,11 @@ export default function NewIncidentPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{t("incidents.labels.priority")} *</Label>
-                <Select 
-                  value={formData.priority} 
-                  onValueChange={(v) => setFormData((prev) => ({ ...prev, priority: v as Priority }))}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {PRIORITY_LEVELS.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>{t("incidents.labels.priority")}</Label>
+                <div className="flex h-10 items-center rounded-md border bg-muted/50 px-3 text-sm capitalize text-muted-foreground">
+                  {derivePriority(formData.severity)}
+                  <span className="ml-auto text-xs text-muted-foreground/60">Auto from severity</span>
+                </div>
               </div>
             </div>
 
