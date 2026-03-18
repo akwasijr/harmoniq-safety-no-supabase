@@ -98,7 +98,8 @@
     "browseAssets": "Assets bekijken",
     "browseAssetsDesc": "Zoek apparatuur op, scan QR-codes of controleer de status.",
     "newsDesc": "Blijf op de hoogte van bedrijfsveiligheidsnieuws en beleid.",
-    "riskAssessment": "Risicobeoordeling"
+    "riskAssessment": "Risicobeoordeling",
+    "myTasks": "Mijn Taken"
   },
   "report": {
     "title": "Incident melden",

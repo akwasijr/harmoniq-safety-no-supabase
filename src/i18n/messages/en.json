@@ -98,7 +98,8 @@
     "browseAssets": "Browse assets",
     "browseAssetsDesc": "Look up equipment, scan QR codes, or check status.",
     "newsDesc": "Stay up to date with company safety news and policies.",
-    "riskAssessment": "Risk assessment"
+    "riskAssessment": "Risk assessment",
+    "myTasks": "My Tasks"
   },
   "report": {
     "title": "Report incident",

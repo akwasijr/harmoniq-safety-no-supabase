@@ -98,7 +98,8 @@
     "browseAssets": "Bläddra tillgångar",
     "browseAssetsDesc": "Sök utrustning, skanna QR-koder eller kontrollera status.",
     "newsDesc": "Håll dig uppdaterad med företagets säkerhetsnyheter och policyer.",
-    "riskAssessment": "Riskbedömning"
+    "riskAssessment": "Riskbedömning",
+    "myTasks": "Mina Uppgifter"
   },
   "report": {
     "title": "Rapportera incident",
