@@ -940,7 +940,8 @@
       "checklists": "Checklists",
       "assessments": "Assessments",
       "inspections": "Inspections",
-      "reports": "Reports"
+      "reports": "Reports",
+      "tasks": "Tasks"
     },
     "labels": {
       "pending": "Pending",

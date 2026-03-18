@@ -940,7 +940,8 @@
       "checklists": "Checklistor",
       "assessments": "Bedömningar",
       "inspections": "Inspektioner",
-      "reports": "Rapporter"
+      "reports": "Rapporter",
+      "tasks": "Uppgifter"
     },
     "labels": {
       "pending": "Väntande",

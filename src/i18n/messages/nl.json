@@ -940,7 +940,8 @@
       "checklists": "Checklists",
       "assessments": "Beoordelingen",
       "inspections": "Inspecties",
-      "reports": "Meldingen"
+      "reports": "Meldingen",
+      "tasks": "Taken"
     },
     "labels": {
       "pending": "In afwachting",

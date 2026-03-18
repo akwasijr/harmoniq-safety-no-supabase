@@ -16,6 +16,7 @@ import {
   X,
   Play,
   ListChecks,
+  ListTodo,
   History,
   Camera,
   MessageSquare,
@@ -32,9 +33,10 @@ import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation, LOCALE_DEFAULT_COUNTRY } from "@/i18n";
 import { TasksSkeleton } from "@/components/ui/loading";
+import { TasksTabContent } from "@/components/tasks/tasks-tab-content";
 import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User } from "@/types";
 
-type TabType = "checklists" | "risk-assessment" | "reports";
+type TabType = "checklists" | "risk-assessment" | "reports" | "tasks";
 type CountryCode = "US" | "NL" | "SE";
 
 // Country-specific risk assessment forms
@@ -377,6 +379,7 @@ function EmployeeChecklistsPageContent() {
     if (tabParam === "risk-assessment") return "risk-assessment";
     if (tabParam === "checklists") return "checklists";
     if (tabParam === "reports") return "reports";
+    if (tabParam === "tasks") return "tasks";
     return "checklists";
   };
   
@@ -405,6 +408,7 @@ function EmployeeChecklistsPageContent() {
     { id: "reports" as TabType, label: t("checklists.tabs.reports"), icon: AlertTriangle },
     { id: "risk-assessment" as TabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
     { id: "checklists" as TabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
+    { id: "tasks" as TabType, label: t("checklists.tabs.tasks"), icon: ListTodo },
   ];
 
   const userSubmissions = user
@@ -679,6 +683,11 @@ function EmployeeChecklistsPageContent() {
               )}
             </Section>
           </>
+        )}
+
+        {/* TASKS TAB */}
+        {activeTab === "tasks" && (
+          <TasksTabContent />
         )}
       </div>
     </div>

@@ -6,7 +6,7 @@ import {
   Home,
   ShieldCheck,
   Package,
-  ClipboardList,
+  Newspaper,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,7 @@ const tabItems: TabItem[] = [
     fallback: "Safety",
     href: "/app/checklists",
     icon: ShieldCheck,
-    alsoMatchPrefixes: ["/app/report", "/app/incidents", "/app/risk-assessment", "/app/inspections"],
+    alsoMatchPrefixes: ["/app/report", "/app/incidents", "/app/risk-assessment", "/app/inspections", "/app/tasks"],
   },
   {
     titleKey: "nav.assets",
@@ -51,11 +51,11 @@ const tabItems: TabItem[] = [
     icon: Package,
   },
   {
-    titleKey: "nav.tasks",
-    shortTitleKey: "nav.tasksShort",
-    fallback: "Tasks",
-    href: "/app/tasks",
-    icon: ClipboardList,
+    titleKey: "nav.news",
+    shortTitleKey: "nav.newsShort",
+    fallback: "News",
+    href: "/app/news",
+    icon: Newspaper,
   },
   {
     titleKey: "nav.profile",
