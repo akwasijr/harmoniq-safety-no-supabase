@@ -124,7 +124,7 @@ function FeaturedNewsCarousel({
   const scroll = (dir: "left" | "right") => {
     const container = scrollRef.current;
     if (!container) return;
-    const cardWidth = container.offsetWidth * 0.82;
+    const cardWidth = container.offsetWidth * 0.72;
     const newIndex = dir === "left" ? Math.max(0, activeIndex - 1) : Math.min(news.length - 1, activeIndex + 1);
     container.scrollTo({ left: newIndex * cardWidth, behavior: "smooth" });
     setActiveIndex(newIndex);
@@ -135,7 +135,7 @@ function FeaturedNewsCarousel({
     const container = scrollRef.current;
     if (!container) return;
     const handleScroll = () => {
-      const cardWidth = container.offsetWidth * 0.82;
+      const cardWidth = container.offsetWidth * 0.72;
       const idx = Math.round(container.scrollLeft / cardWidth);
       setActiveIndex(idx);
     };
@@ -170,24 +170,24 @@ function FeaturedNewsCarousel({
     <div className="space-y-3">
       {/* Header with arrows */}
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-bold">{t("app.featured") || "Featured"}</h2>
+        <h2 className="text-sm font-bold">{t("app.featured") || "Featured"}</h2>
         {news.length > 1 && (
           <div className="flex items-center gap-2">
             <button
               onClick={() => scroll("left")}
               disabled={activeIndex === 0}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-border transition-colors disabled:opacity-30 hover:bg-muted"
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-border transition-colors disabled:opacity-30 hover:bg-muted"
               aria-label="Previous"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={() => scroll("right")}
               disabled={activeIndex === news.length - 1}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-border transition-colors disabled:opacity-30 hover:bg-muted"
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-border transition-colors disabled:opacity-30 hover:bg-muted"
               aria-label="Next"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
@@ -204,10 +204,10 @@ function FeaturedNewsCarousel({
             key={item.id}
             href={`/${company}/app/news/${item.id}`}
             className="flex-shrink-0 snap-center rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md active:shadow-sm"
-            style={{ width: "80%" }}
+            style={{ width: "72%" }}
           >
             {/* Image / gradient placeholder */}
-            <div className={`h-40 w-full bg-gradient-to-br ${cardColors[i % cardColors.length]} relative overflow-hidden`}>
+            <div className={`h-28 w-full bg-gradient-to-br ${cardColors[i % cardColors.length]} relative overflow-hidden`}>
               {item.featured_image ? (
                 <img
                   src={item.featured_image}
@@ -217,16 +217,16 @@ function FeaturedNewsCarousel({
                 />
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <Newspaper className="h-12 w-12 text-foreground/10" aria-hidden="true" />
+                  <Newspaper className="h-8 w-8 text-foreground/10" aria-hidden="true" />
                 </div>
               )}
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-2">
-              <h3 className="font-semibold text-sm leading-snug line-clamp-2">{item.title}</h3>
+            <div className="px-3 py-2.5 space-y-1">
+              <h3 className="font-semibold text-xs leading-snug line-clamp-2">{item.title}</h3>
               {item.content && (
-                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                <p className="text-[11px] text-muted-foreground line-clamp-1 leading-relaxed">
                   {item.content.replace(/<[^>]*>/g, "").slice(0, 120)}
                 </p>
               )}
