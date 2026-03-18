@@ -25,8 +25,8 @@ export function createWorkOrderFromInspection(params: {
     company_id: asset.company_id,
     asset_id: asset.id,
     title: `Inspection Failed — ${asset.name}`,
-    description: `Auto-generated from inspection ${inspection.id} (result: ${inspection.result}).${
-      inspection.notes ? `\n\nNotes: ${inspection.notes}` : ""
+    description: `Inspection result: ${inspection.result.replace(/_/g, " ")}.${
+      inspection.notes ? `\nNotes: ${inspection.notes}` : ""
     }`,
     priority: priorityFromCriticality(asset.criticality ?? "medium"),
     status: "requested",
@@ -64,7 +64,7 @@ export function createWorkOrderFromMaintenance(params: {
     company_id: asset.company_id,
     asset_id: asset.id,
     title: `Scheduled Maintenance — ${asset.name}`,
-    description: `Auto-generated for overdue maintenance schedule "${schedule.name}" (schedule ${schedule.id}).`,
+    description: `Overdue scheduled maintenance: "${schedule.name}".`,
     priority,
     status: "requested",
     requested_by: "system",

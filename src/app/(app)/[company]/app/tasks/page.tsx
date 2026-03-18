@@ -1,20 +1,16 @@
 "use client";
 
-import React from "react";
-import { useTranslation } from "@/i18n";
-import { TasksTabContent } from "@/components/tasks/tasks-tab-content";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useCompanyParam } from "@/hooks/use-company-param";
 
 export default function TasksPage() {
-  const { t } = useTranslation();
+  const router = useRouter();
+  const company = useCompanyParam();
 
-  return (
-    <div className="flex flex-col min-h-full pb-20">
-      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
-        <h1 className="text-lg font-bold">{t("tasks.title") || "My Tasks"}</h1>
-      </div>
-      <div className="flex-1 px-4 pt-3">
-        <TasksTabContent />
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    router.replace(`/${company}/app/checklists?tab=tasks`);
+  }, [router, company]);
+
+  return null;
 }

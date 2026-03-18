@@ -280,7 +280,7 @@ function TaskCard({
       {expanded && (
         <div className="border-t px-3 pb-3">
           {task.description && (
-            <p className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
+            <p className="text-xs text-muted-foreground mt-2 line-clamp-4">
               {task.description}
             </p>
           )}
