@@ -257,7 +257,7 @@ export default function OSAFormPage() {
     };
     addEvaluation(evaluation);
     toast("Assessment submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment&id=${evaluation.id}`);
   };
 
   // Get OSA section for assessment sections

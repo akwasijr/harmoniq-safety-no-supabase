@@ -9,6 +9,7 @@ import {
   ChevronDown,
   CheckCircle,
   ShieldAlert,
+  ShieldCheck,
   FileCheck,
   AlertTriangle,
   Clock,
@@ -21,6 +22,8 @@ import {
   Camera,
   MessageSquare,
   Percent,
+  HardHat,
+  Scale,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
@@ -378,7 +381,7 @@ function EmployeeChecklistsPageContent() {
     if (tabParam === "risk-assessment") return "risk-assessment";
     if (tabParam === "checklists") return "checklists";
     if (tabParam === "reports") return "reports";
-    return "checklists";
+    return "reports";
   };
   
   const [activeTab, setActiveTab] = React.useState<TabType>(getInitialTab());
@@ -449,16 +452,27 @@ function EmployeeChecklistsPageContent() {
     });
   const completedAssessments = myAssessments
     .filter((evaluation) => evaluation.status !== "draft")
-    .slice(0, 3)
     .map((evaluation) => {
       const location = locations.find((loc) => loc.id === evaluation.location_id);
       return {
         id: evaluation.id,
+        formType: evaluation.form_type,
         name: assessmentLabelMap[evaluation.form_type] || evaluation.form_type,
         location: location?.name || "Unassigned location",
         date: evaluation.submitted_at || evaluation.created_at,
+        status: evaluation.status,
       };
     });
+
+  const assessmentTypeConf: Record<string, { icon: typeof ShieldCheck; color: string; bg: string }> = {
+    RIE: { icon: ShieldCheck, color: "text-blue-500", bg: "bg-blue-500/10" },
+    JHA: { icon: HardHat, color: "text-orange-500", bg: "bg-orange-500/10" },
+    JSA: { icon: ClipboardCheck, color: "text-green-500", bg: "bg-green-500/10" },
+    SAM: { icon: ShieldAlert, color: "text-purple-500", bg: "bg-purple-500/10" },
+    OSA: { icon: ShieldCheck, color: "text-teal-500", bg: "bg-teal-500/10" },
+    ARBOWET: { icon: Scale, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+    AFS: { icon: ShieldCheck, color: "text-cyan-500", bg: "bg-cyan-500/10" },
+  };
 
   if (isTemplatesLoading || isSubmissionsLoading) {
     return <TasksSkeleton />;
@@ -680,16 +694,25 @@ function EmployeeChecklistsPageContent() {
               {completedAssessments.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-3">{t("checklists.noCompletedAssessments")}</p>
               ) : (
-                completedAssessments.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-muted/40">
-                    <CheckCircle className="h-4 w-4 text-success shrink-0" aria-hidden="true" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{item.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{item.location}</p>
-                    </div>
-                    <span className="text-[11px] text-muted-foreground shrink-0">{formatDate(new Date(item.date))}</span>
-                  </div>
-                ))
+                completedAssessments.map((item) => {
+                  const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
+                  const TypeIcon = conf.icon;
+                  return (
+                    <Link key={item.id} href={`/${company}/app/risk-assessment/view/${item.id}`} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30">
+                      <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
+                        <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
+                          <Badge variant="success" className="text-[10px] h-4 shrink-0">{item.status}</Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{item.location} · {formatDate(new Date(item.date))}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    </Link>
+                  );
+                })
               )}
             </Section>
           </>

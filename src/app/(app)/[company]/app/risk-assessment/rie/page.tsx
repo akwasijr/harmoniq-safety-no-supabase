@@ -287,7 +287,7 @@ export default function RIEFormPage() {
     };
     addEvaluation(evaluation);
     toast("Assessment submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment&id=${evaluation.id}`);
   };
 
   return (
