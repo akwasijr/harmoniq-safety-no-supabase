@@ -530,8 +530,8 @@ export default function TasksPage() {
 
         <div className="flex gap-1 bg-muted rounded-lg p-1" role="tablist">
           {([
-            { id: "assigned" as const, labelKey: "tasks.assigned", fallback: "Assigned", count: assignedTasks.length },
-            { id: "completed" as const, labelKey: "tasks.completed", fallback: "Completed", count: completedTasks.length },
+            { id: "assigned" as const, labelKey: "tasks.assigned", fallback: "Assigned" },
+            { id: "completed" as const, labelKey: "tasks.completed", fallback: "Completed" },
           ]).map((t_) => (
             <button
               key={t_.id}
@@ -546,11 +546,6 @@ export default function TasksPage() {
               )}
             >
               {t(t_.labelKey) || t_.fallback}
-              {t_.count > 0 && (
-                <span className="ml-1 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">
-                  {t_.count}
-                </span>
-              )}
             </button>
           ))}
         </div>
