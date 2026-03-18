@@ -1564,7 +1564,11 @@
     "statusUpdated": "Status bijgewerkt",
     "mine": "Mijn",
     "assigned": "Toegewezen",
-    "completed": "Voltooid"
+    "completed": "Voltooid",
+    "searchPlaceholder": "Taken zoeken...",
+    "allTypes": "Alle types",
+    "task": "taak",
+    "tasksPlural": "taken"
   },
   "app.pending": "Openstaand",
   "errors.network": "Netwerkfout",

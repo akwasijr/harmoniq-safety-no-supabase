@@ -15,6 +15,7 @@ import {
   Package,
   Play,
   CheckCircle,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -511,7 +512,28 @@ export default function TasksPage() {
   );
 
   const [tab, setTab] = React.useState<"assigned" | "completed">("assigned");
-  const visibleTasks = tab === "assigned" ? assignedTasks : completedTasks;
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [typeFilter, setTypeFilter] = React.useState<string>("all");
+
+  // Apply search + type filter
+  const filteredTasks = React.useMemo(() => {
+    const base = tab === "assigned" ? assignedTasks : completedTasks;
+    let result = base;
+    if (typeFilter !== "all") {
+      result = result.filter((t) => t.kind === typeFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          t.assignedByName.toLowerCase().includes(q) ||
+          (t.assetName && t.assetName.toLowerCase().includes(q)) ||
+          (t.description && t.description.toLowerCase().includes(q)),
+      );
+    }
+    return result;
+  }, [tab, assignedTasks, completedTasks, typeFilter, searchQuery]);
 
   // Loading state
   if (isLoading) {
@@ -523,7 +545,7 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full pb-20">
       {/* Header + Tabs */}
       <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
         <h1 className="text-lg font-bold mb-3">{t("tasks.title") || "My Tasks"}</h1>
@@ -551,12 +573,52 @@ export default function TasksPage() {
         </div>
       </div>
 
+      {/* Search + Filters */}
+      <div className="px-4 pt-3 pb-2 space-y-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder={t("tasks.searchPlaceholder") || "Search tasks..."}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-lg border bg-muted/50 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="all">{t("tasks.allTypes") || "All Types"}</option>
+            <option value="ticket">{t("tasks.tickets") || "Tickets"}</option>
+            <option value="work-order">{t("tasks.workOrders") || "Work Orders"}</option>
+            <option value="corrective-action">{t("tasks.actions") || "Actions"}</option>
+          </select>
+
+          {(typeFilter !== "all" || searchQuery) && (
+            <button
+              onClick={() => { setTypeFilter("all"); setSearchQuery(""); }}
+              className="text-xs text-primary font-medium whitespace-nowrap px-2"
+            >
+              {t("common.clear") || "Clear"}
+            </button>
+          )}
+        </div>
+
+        <p className="text-[11px] text-muted-foreground">
+          {filteredTasks.length} {filteredTasks.length === 1 ? (t("tasks.task") || "task") : (t("tasks.tasksPlural") || "tasks")}
+        </p>
+      </div>
+
       {/* Task list */}
-      <div className="flex-1 px-4 pt-3 pb-20 space-y-1.5">
-        {visibleTasks.length === 0 ? (
+      <div className="flex-1 px-4 pt-1 space-y-1.5">
+        {filteredTasks.length === 0 ? (
           <EmptyState t={t} />
         ) : (
-          visibleTasks.map((task) => (
+          filteredTasks.map((task) => (
             <TaskCard key={`${task.kind}-${task.id}`} task={task} formatDate={formatDate} t={t} onStatusUpdate={handleStatusUpdate} />
           ))
         )}

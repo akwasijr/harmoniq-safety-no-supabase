@@ -1564,7 +1564,11 @@
     "statusUpdated": "Status uppdaterad",
     "mine": "Mina",
     "assigned": "Tilldelade",
-    "completed": "Slutförda"
+    "completed": "Slutförda",
+    "searchPlaceholder": "Sök uppgifter...",
+    "allTypes": "Alla typer",
+    "task": "uppgift",
+    "tasksPlural": "uppgifter"
   },
   "app.pending": "Väntande",
   "errors.network": "Nätverksfel",

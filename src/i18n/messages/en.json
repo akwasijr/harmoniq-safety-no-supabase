@@ -1564,7 +1564,11 @@
     "statusUpdated": "Status updated",
     "mine": "Mine",
     "assigned": "Assigned",
-    "completed": "Completed"
+    "completed": "Completed",
+    "searchPlaceholder": "Search tasks...",
+    "allTypes": "All Types",
+    "task": "task",
+    "tasksPlural": "tasks"
   },
   "app.pending": "Pending",
   "errors.network": "Network error",
