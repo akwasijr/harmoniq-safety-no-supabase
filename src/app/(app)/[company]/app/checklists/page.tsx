@@ -163,16 +163,6 @@ function ChecklistsTabContent({
             >
               <Icon className="h-3 w-3 shrink-0" />
               <span className="truncate">{tab.label}</span>
-              {tab.id === "my" && pendingTemplates.length > 0 && (
-                <Badge variant="warning" className="text-[9px] h-4 min-w-4 justify-center ml-0.5">
-                  {pendingTemplates.length}
-                </Badge>
-              )}
-              {tab.id === "completed" && completedSubmissions.length > 0 && (
-                <Badge variant="success" className="text-[9px] h-4 min-w-4 justify-center ml-0.5">
-                  {completedSubmissions.length}
-                </Badge>
-              )}
             </button>
           );
         })}
@@ -185,19 +175,18 @@ function ChecklistsTabContent({
           {pendingTemplates.length > 0 && (
             <Section
               title="Assigned to you"
-              icon={AlertTriangle}
-              iconColor="text-warning"
+              icon={ClipboardCheck}
+              iconColor="text-primary"
               count={pendingTemplates.length}
-              countVariant="warning"
             >
               {pendingTemplates.map((template) => (
                 <Link
                   key={template.id}
                   href={`/${company}/app/checklists/${template.id}`}
-                  className="flex items-center gap-3 rounded-lg border border-warning/40 bg-warning/5 p-3 transition-colors active:bg-warning/10"
+                  className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning/10">
-                    <ClipboardCheck className="h-4 w-4 text-warning" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <ClipboardCheck className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm leading-tight">{template.name}</p>
@@ -261,7 +250,6 @@ function ChecklistsTabContent({
                 icon={CheckCircle}
                 iconColor="text-success"
                 count={completedToday.length}
-                countVariant="success"
                 defaultOpen={false}
               >
                 {completedToday.map((submission) => {
@@ -638,29 +626,28 @@ function EmployeeChecklistsPageContent() {
                 <Section 
                   title={t("checklists.labels.inProgress")} 
                   icon={Clock} 
-                  iconColor="text-warning"
-                  count={inProgressAssessments.length} 
-                  countVariant="warning"
+                  iconColor="text-blue-500"
+                  count={inProgressAssessments.length}
                 >
                   {inProgressAssessments.map((item) => (
                     <Link
                       key={item.id}
                       href={`/${company}/app/risk-assessment/${item.formId}?draft=${item.id}`}
-                      className="flex items-center gap-3 rounded-lg border border-warning/40 bg-warning/5 p-3 active:bg-warning/10"
+                      className="flex items-center gap-3 rounded-lg border bg-card p-3 active:bg-muted/50 hover:bg-muted/30"
                     >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning/10">
-                        <Play className="h-4 w-4 text-warning" aria-hidden="true" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                        <Play className="h-4 w-4 text-blue-500" aria-hidden="true" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm leading-tight">{item.name}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <div className="flex-1 h-1.5 rounded-full bg-warning/20 overflow-hidden" role="progressbar" aria-valuenow={item.progress} aria-valuemin={0} aria-valuemax={100}>
-                            <div className="h-full bg-warning rounded-full" style={{ width: `${item.progress}%` }} />
+                          <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden" role="progressbar" aria-valuenow={item.progress} aria-valuemin={0} aria-valuemax={100}>
+                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${item.progress}%` }} />
                           </div>
                           <span className="text-[10px] text-muted-foreground font-medium">{item.progress}%</span>
                         </div>
                       </div>
-                      <span className="text-[10px] text-yellow-600 dark:text-yellow-400 font-medium">{t("checklists.buttons.resume")}</span>
+                      <span className="text-[10px] text-primary font-medium">{t("checklists.buttons.resume")}</span>
                     </Link>
                   ))}
                 </Section>
