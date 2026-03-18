@@ -6,8 +6,7 @@ import {
   Ticket,
   Wrench,
   ShieldAlert,
-  ChevronDown,
-  ChevronUp,
+  ChevronRight,
   Loader2,
   Calendar,
   User as UserIcon,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
@@ -207,115 +207,87 @@ function TaskCard({
   t: (key: string, params?: Record<string, string | number>) => string;
   onStatusUpdate: (taskId: string, kind: UnifiedTask["kind"], targetStatus: string) => void;
 }) {
-  const [expanded, setExpanded] = React.useState(false);
   const kindColor = getKindIconColor(task.kind);
   const actions = getStatusActions(task.kind, task.status);
-  const iconClassName = cn("h-5 w-5 shrink-0", kindColor);
+  const KindIcon = task.kind === "ticket" ? Ticket : task.kind === "work-order" ? Wrench : ShieldAlert;
 
   return (
-    <div className="rounded-lg border transition-colors hover:bg-muted/40 overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-3 p-3 text-left active:bg-muted/50"
-      >
-        {task.kind === "ticket" ? (
-          <Ticket className={iconClassName} aria-hidden="true" />
-        ) : task.kind === "work-order" ? (
-          <Wrench className={iconClassName} aria-hidden="true" />
-        ) : (
-          <ShieldAlert className={iconClassName} aria-hidden="true" />
-        )}
+    <Card className="hover:bg-muted/50 transition-colors">
+      <CardContent className="p-3">
+        <div className="flex items-start gap-3">
+          <div className={cn("flex h-9 w-9 items-center justify-center rounded-lg shrink-0", 
+            task.kind === "ticket" ? "bg-blue-500/10" : task.kind === "work-order" ? "bg-amber-500/10" : "bg-red-500/10"
+          )}>
+            <KindIcon className={cn("h-4.5 w-4.5", kindColor)} aria-hidden="true" />
+          </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="font-medium text-sm truncate max-w-[60%]">{task.title}</p>
-            <Badge variant={task.statusVariant} className="text-[10px] h-4 shrink-0">
-              {formatStatusLabel(task.status)}
-            </Badge>
-            {task.isOverdue && (
-              <Badge variant="destructive" className="text-[10px] h-4 shrink-0">
-                Overdue
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium text-sm truncate">{task.title}</h3>
+              <Badge variant={task.statusVariant} className="text-[10px] h-4 shrink-0">
+                {formatStatusLabel(task.status)}
               </Badge>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-wrap mt-1">
-            {task.priority && (
-              <Badge variant={task.priorityVariant} className="text-[10px] h-4 shrink-0">
-                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-              </Badge>
-            )}
-            {task.assetName && (
-              <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
-                <Package className="h-3 w-3 shrink-0" aria-hidden="true" />
-                <span className="truncate max-w-[100px]">{task.assetName}</span>
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
-            {task.assignedByName && (
-              <span className="flex items-center gap-0.5 truncate">
-                <UserIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
-                {task.assignedByName}
-              </span>
-            )}
-            {task.dueDate && (
-              <span className="flex items-center gap-0.5 shrink-0">
-                <Calendar className="h-3 w-3" aria-hidden="true" />
-                {formatDate(new Date(task.dueDate), { month: "short", day: "numeric" })}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {expanded ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-        )}
-      </button>
-
-      {expanded && (
-        <div className="border-t px-3 pb-3">
-          {task.description && (
-            <p className="text-xs text-muted-foreground mt-2 line-clamp-4">
-              {task.description}
-            </p>
-          )}
-          {!task.description && (
-            <p className="text-xs text-muted-foreground/70 mt-2 italic">
-              {t("tasks.noDescription") || "No description provided"}
-            </p>
-          )}
-
-          {actions.length > 0 && (
-            <div className="flex items-center gap-2 mt-3">
-              {actions.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <button
-                    key={action.targetStatus}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStatusUpdate(task.id, task.kind, action.targetStatus);
-                    }}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                      action.className,
-                    )}
-                  >
-                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t(action.labelKey) || action.fallbackLabel}
-                  </button>
-                );
-              })}
             </div>
-          )}
+
+            <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+              {task.priority && (
+                <span className="capitalize">{task.priority}</span>
+              )}
+              {task.assetName && (
+                <span className="flex items-center gap-0.5">
+                  <Package className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  <span className="truncate max-w-[100px]">{task.assetName}</span>
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+              {task.assignedByName && (
+                <span className="flex items-center gap-0.5 truncate">
+                  <UserIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  {task.assignedByName}
+                </span>
+              )}
+              {task.dueDate && (
+                <span className="flex items-center gap-0.5 shrink-0">
+                  <Calendar className="h-3 w-3" aria-hidden="true" />
+                  {formatDate(new Date(task.dueDate), { month: "short", day: "numeric" })}
+                </span>
+              )}
+              {task.isOverdue && (
+                <Badge variant="destructive" className="text-[10px] h-4 shrink-0">Overdue</Badge>
+              )}
+            </div>
+
+            {actions.length > 0 && (
+              <div className="flex items-center gap-2 mt-2">
+                {actions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.targetStatus}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onStatusUpdate(task.id, task.kind, action.targetStatus);
+                      }}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
+                        action.className,
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t(action.labelKey) || action.fallbackLabel}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1" aria-hidden="true" />
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -580,7 +552,7 @@ export function TasksTabContent() {
       </div>
 
       {/* Task list */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {filteredTasks.length === 0 ? (
           <TasksEmptyState t={t} />
         ) : (

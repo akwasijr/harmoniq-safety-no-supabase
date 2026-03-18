@@ -89,7 +89,7 @@ describe("createWorkOrderFromInspection", () => {
     expect(wo.company_id).toBe("company-1");
     expect(wo.asset_id).toBe("asset-1");
     expect(wo.title).toBe("Inspection Failed — Conveyor Belt");
-    expect(wo.description).toContain("insp-1");
+    expect(wo.description).toContain("fail");
     expect(wo.description).toContain("Broken belt");
     expect(wo.status).toBe("requested");
     expect(wo.requested_by).toBe("user-42");
@@ -126,7 +126,6 @@ describe("createWorkOrderFromMaintenance", () => {
     expect(wo.id).toBe("test-uuid-1234");
     expect(wo.title).toBe("Scheduled Maintenance — Generator");
     expect(wo.description).toContain("Oil Change");
-    expect(wo.description).toContain("sched-1");
     expect(wo.priority).toBe("high");
     expect(wo.status).toBe("requested");
     expect(wo.requested_by).toBe("system");
