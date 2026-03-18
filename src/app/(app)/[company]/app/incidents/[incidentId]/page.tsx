@@ -13,6 +13,12 @@ import {
   CheckCircle,
   FileText,
   MessageCircle,
+  Building2,
+  Image as ImageIcon,
+  ShieldAlert,
+  Flag,
+  Hash,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +31,14 @@ import { useTranslation } from "@/i18n";
 import { capitalize } from "@/lib/utils";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getFilesForEntity, type StoredFile } from "@/lib/file-storage";
+
+const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
+  low: { label: "Low", color: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200" },
+  medium: { label: "Medium", color: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200" },
+  high: { label: "High", color: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200" },
+  critical: { label: "Critical", color: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200" },
+};
 
 const STATUS_CONFIG = {
   new: { label: "New", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
@@ -57,6 +71,14 @@ export default function EmployeeIncidentDetailPage() {
   const location = incident?.location_id ? locations.find((l) => l.id === incident.location_id) : null;
   const reporter = incident?.reporter_id ? users.find((u) => u.id === incident.reporter_id) : null;
 
+  // Load attached photos
+  const [photos, setPhotos] = React.useState<StoredFile[]>([]);
+  React.useEffect(() => {
+    if (incident) {
+      setPhotos(getFilesForEntity("incident", incident.id));
+    }
+  }, [incident]);
+
   if (isLoading) {
     return <LoadingPage />;
   }
@@ -79,6 +101,15 @@ export default function EmployeeIncidentDetailPage() {
 
   const statusConfig = STATUS_CONFIG[incident.status] || STATUS_CONFIG.new;
   const severityConfig = SEVERITY_CONFIG[incident.severity] || SEVERITY_CONFIG.low;
+  const priorityConfig = PRIORITY_CONFIG[incident.priority] || PRIORITY_CONFIG.medium;
+
+  // Build location detail string
+  const locationParts = [
+    incident.building,
+    incident.floor ? `Floor ${incident.floor}` : null,
+    incident.zone,
+    incident.room ? `Room ${incident.room}` : null,
+  ].filter(Boolean);
 
   return (
     <div className="flex flex-col min-h-full bg-background">
@@ -89,20 +120,44 @@ export default function EmployeeIncidentDetailPage() {
         </Button>
         <div className="flex-1 min-w-0">
           <h1 className="text-base font-semibold truncate">Incident Report</h1>
-          <p className="text-xs text-muted-foreground">#{incident.id.slice(0, 8)}</p>
+          <p className="text-xs text-muted-foreground">
+            {incident.reference_number || `#${incident.id.slice(0, 8)}`}
+          </p>
         </div>
-        <Badge className={statusConfig.color}>{statusConfig.label}</Badge>
+        {incident.status !== "new" && (
+          <Badge className={statusConfig.color}>{statusConfig.label}</Badge>
+        )}
       </div>
 
       {/* Content */}
       <div className="flex-1 px-4 py-5 space-y-4">
-        {/* Title & Type */}
+        {/* Title & Classification */}
         <div>
           <h2 className="text-lg font-semibold">{incident.title}</h2>
-          <div className="flex items-center gap-2 mt-2">
-            <Badge variant="outline">{capitalize(incident.type)}</Badge>
-            <Badge className={severityConfig.color}>{severityConfig.label}</Badge>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <Badge variant="outline">{capitalize(incident.type.replace(/_/g, " "))}</Badge>
+            <Badge className={severityConfig.color}>{severityConfig.label} Severity</Badge>
+            <Badge className={priorityConfig.color}>{priorityConfig.label} Priority</Badge>
           </div>
+          {/* Flags */}
+          {(incident.active_hazard || incident.lost_time) && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {incident.active_hazard && (
+                <div className="flex items-center gap-1.5 rounded-full bg-red-500/10 px-2.5 py-0.5">
+                  <Zap className="h-3 w-3 text-red-500" />
+                  <span className="text-xs font-medium text-red-600 dark:text-red-400">Active Hazard</span>
+                </div>
+              )}
+              {incident.lost_time && (
+                <div className="flex items-center gap-1.5 rounded-full bg-amber-200 px-2.5 py-0.5">
+                  <Clock className="h-3 w-3 !text-black" />
+                  <span className="text-xs font-semibold !text-black">
+                    Lost Time{incident.lost_time_amount ? ` (${incident.lost_time_amount}h)` : ""}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Key Details */}
@@ -112,7 +167,10 @@ export default function EmployeeIncidentDetailPage() {
               <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
               <div>
                 <p className="text-xs text-muted-foreground">Date & Time</p>
-                <p className="text-sm font-medium">{formatDate(incident.incident_date)}</p>
+                <p className="text-sm font-medium">
+                  {formatDate(incident.incident_date)}
+                  {incident.incident_time ? ` at ${incident.incident_time}` : ""}
+                </p>
               </div>
             </div>
             
@@ -121,8 +179,22 @@ export default function EmployeeIncidentDetailPage() {
               <div>
                 <p className="text-xs text-muted-foreground">Location</p>
                 <p className="text-sm font-medium">{location?.name || "Not specified"}</p>
+                {incident.location_description && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{incident.location_description}</p>
+                )}
               </div>
             </div>
+
+            {/* Building / Floor / Zone / Room */}
+            {locationParts.length > 0 && (
+              <div className="flex items-center gap-3">
+                <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Specific Location</p>
+                  <p className="text-sm font-medium">{locationParts.join(" · ")}</p>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-3">
               <User className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -148,6 +220,39 @@ export default function EmployeeIncidentDetailPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Photos / Attachments */}
+        {(photos.length > 0 || (incident.media_urls && incident.media_urls.length > 0)) && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                Photos & Attachments ({photos.length + (incident.media_urls?.length || 0)})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-3 gap-2">
+                {photos.map((file) => (
+                  <div key={file.id} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                    {file.type.startsWith("image/") ? (
+                      <img src={file.dataUrl} alt={file.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full flex-col items-center justify-center p-2">
+                        <FileText className="h-6 w-6 text-muted-foreground" />
+                        <p className="text-[10px] text-muted-foreground mt-1 truncate w-full text-center">{file.name}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {incident.media_urls?.map((url, idx) => (
+                  <div key={`media-${idx}`} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                    <img src={url} alt={`Attachment ${idx + 1}`} className="h-full w-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Timeline/Progress */}
         <Card>

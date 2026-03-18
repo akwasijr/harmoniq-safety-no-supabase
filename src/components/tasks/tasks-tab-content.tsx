@@ -25,6 +25,8 @@ import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useAssetsStore } from "@/stores/assets-store";
+import { useRouter } from "next/navigation";
+import { useCompanyParam } from "@/hooks/use-company-param";
 import type {
   Ticket as TicketType,
   WorkOrder,
@@ -200,18 +202,20 @@ function TaskCard({
   formatDate,
   t,
   onStatusUpdate,
+  onClick,
 }: {
   task: UnifiedTask;
   formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
   t: (key: string, params?: Record<string, string | number>) => string;
   onStatusUpdate: (taskId: string, kind: UnifiedTask["kind"], targetStatus: string) => void;
+  onClick: () => void;
 }) {
   const kindColor = getKindIconColor(task.kind);
   const actions = getStatusActions(task.kind, task.status);
   const KindIcon = task.kind === "ticket" ? Ticket : task.kind === "work-order" ? Wrench : ShieldAlert;
 
   return (
-    <Card className="hover:bg-muted/50 transition-colors">
+    <Card className="hover:bg-muted/50 transition-colors cursor-pointer active:scale-[0.98]" onClick={onClick}>
       <CardContent className="p-3">
         <div className="flex items-start gap-3">
           <div className={cn("flex h-9 w-9 items-center justify-center rounded-lg shrink-0", 
@@ -457,6 +461,9 @@ export function TasksTabContent() {
   const [tab, setTab] = React.useState<"assigned" | "completed">("assigned");
   const [typeFilter, setTypeFilter] = React.useState<string>("all");
 
+  const router = useRouter();
+  const company = useCompanyParam();
+
   const filteredTasks = React.useMemo(() => {
     const base = tab === "assigned" ? assignedTasks : completedTasks;
     if (typeFilter !== "all") {
@@ -529,9 +536,16 @@ export function TasksTabContent() {
         {filteredTasks.length === 0 ? (
           <TasksEmptyState t={t} />
         ) : (
-          filteredTasks.map((task) => (
-            <TaskCard key={`${task.kind}-${task.id}`} task={task} formatDate={formatDate} t={t} onStatusUpdate={handleStatusUpdate} />
-          ))
+          filteredTasks.map((task) => {
+            const href = task.kind === "ticket"
+              ? `/${company}/app/tasks/tickets/${task.id}`
+              : task.kind === "work-order"
+              ? `/${company}/app/tasks/work-orders/${task.id}`
+              : `/${company}/app/tasks/actions/${task.id}`;
+            return (
+              <TaskCard key={`${task.kind}-${task.id}`} task={task} formatDate={formatDate} t={t} onStatusUpdate={handleStatusUpdate} onClick={() => router.push(href)} />
+            );
+          })
         )}
       </div>
     </div>

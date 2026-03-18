@@ -13,10 +13,10 @@ import {
   AlertTriangle,
   Clock,
   MapPin,
+  Package,
   X,
   Play,
   ListChecks,
-  ListTodo,
   History,
   Camera,
   MessageSquare,
@@ -33,10 +33,9 @@ import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation, LOCALE_DEFAULT_COUNTRY } from "@/i18n";
 import { TasksSkeleton } from "@/components/ui/loading";
-import { TasksTabContent } from "@/components/tasks/tasks-tab-content";
 import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User } from "@/types";
 
-type TabType = "checklists" | "risk-assessment" | "reports" | "tasks";
+type TabType = "checklists" | "risk-assessment" | "reports";
 type CountryCode = "US" | "NL" | "SE";
 
 // Country-specific risk assessment forms
@@ -379,7 +378,6 @@ function EmployeeChecklistsPageContent() {
     if (tabParam === "risk-assessment") return "risk-assessment";
     if (tabParam === "checklists") return "checklists";
     if (tabParam === "reports") return "reports";
-    if (tabParam === "tasks") return "tasks";
     return "checklists";
   };
   
@@ -408,7 +406,6 @@ function EmployeeChecklistsPageContent() {
     { id: "reports" as TabType, label: t("checklists.tabs.reports"), icon: AlertTriangle },
     { id: "risk-assessment" as TabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
     { id: "checklists" as TabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
-    { id: "tasks" as TabType, label: t("checklists.tabs.tasks"), icon: ListTodo },
   ];
 
   const userSubmissions = user
@@ -557,35 +554,48 @@ function EmployeeChecklistsPageContent() {
                   .filter(i => i.reporter_id === user?.id)
                   .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())
                   .slice(0, 10)
-                  .map((incident) => (
-                    <Link
-                      key={incident.id}
-                      href={`/${company}/app/report?view=${incident.id}`}
-                      className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/40"
-                    >
-                      <AlertTriangle className={cn(
-                        "h-5 w-5 shrink-0",
-                        incident.severity === "critical" ? "text-destructive" :
-                        incident.severity === "high" ? "text-orange-500" :
-                        incident.severity === "medium" ? "text-warning" : "text-muted-foreground"
-                      )} aria-hidden="true" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm truncate">{incident.reference_number}</p>
-                          <Badge variant={
-                            incident.status === "resolved" ? "success" :
-                            incident.status === "in_progress" ? "warning" : "secondary"
-                          } className="text-[10px] h-4">
-                            {incident.status}
-                          </Badge>
+                  .map((incident) => {
+                    const typeConfMap: Record<string, { icon: typeof AlertTriangle; color: string; bg: string }> = {
+                      injury: { icon: AlertTriangle, color: "text-red-500", bg: "bg-red-500/10" },
+                      near_miss: { icon: ShieldAlert, color: "text-orange-500", bg: "bg-orange-500/10" },
+                      hazard: { icon: AlertTriangle, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+                      property_damage: { icon: Package, color: "text-blue-500", bg: "bg-blue-500/10" },
+                      environmental: { icon: AlertTriangle, color: "text-green-500", bg: "bg-green-500/10" },
+                      fire: { icon: AlertTriangle, color: "text-red-600", bg: "bg-red-600/10" },
+                      security: { icon: ShieldAlert, color: "text-purple-500", bg: "bg-purple-500/10" },
+                      other: { icon: AlertTriangle, color: "text-muted-foreground", bg: "bg-muted" },
+                    };
+                    const typeConf = typeConfMap[incident.type] || typeConfMap.other;
+                    const TypeIcon = typeConf.icon;
+
+                    return (
+                      <Link
+                        key={incident.id}
+                        href={`/${company}/app/incidents/${incident.id}`}
+                        className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+                      >
+                        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", typeConf.bg)}>
+                          <TypeIcon className={cn("h-4 w-4", typeConf.color)} aria-hidden="true" />
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {formatDate(new Date(incident.incident_date))} · {incident.building || (typeof incident.location === 'string' ? incident.location : null) || "N/A"}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                    </Link>
-                  ))
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm leading-tight truncate">{incident.title}</p>
+                            <Badge variant={
+                              incident.status === "resolved" ? "success" :
+                              incident.status === "in_progress" ? "warning" : "secondary"
+                            } className="text-[10px] h-4 shrink-0">
+                              {incident.status.replace(/_/g, " ")}
+                            </Badge>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {incident.type.replace(/_/g, " ")} · {formatDate(new Date(incident.incident_date), { month: "short", day: "numeric" })}
+                            {incident.building ? ` · ${incident.building}` : ""}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                      </Link>
+                    );
+                  })
               ) : (
                 <div className="py-6 text-center">
                   <AlertTriangle className="h-8 w-8 text-muted-foreground/20 mx-auto" aria-hidden="true" />
@@ -685,10 +695,6 @@ function EmployeeChecklistsPageContent() {
           </>
         )}
 
-        {/* TASKS TAB */}
-        {activeTab === "tasks" && (
-          <TasksTabContent />
-        )}
       </div>
     </div>
   );
