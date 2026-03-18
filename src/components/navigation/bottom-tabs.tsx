@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  ClipboardCheck,
+  ShieldCheck,
   Package,
-  Wrench,
+  ClipboardList,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ interface TabItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   exactMatch?: boolean;
+  alsoMatchPrefixes?: string[];
 }
 
 const tabItems: TabItem[] = [
@@ -35,11 +36,12 @@ const tabItems: TabItem[] = [
     exactMatch: true,
   },
   {
-    titleKey: "nav.tasks",
-    shortTitleKey: "nav.tasksShort",
-    fallback: "Tasks",
-    href: "/app/tasks",
-    icon: ClipboardCheck,
+    titleKey: "nav.safety",
+    shortTitleKey: "nav.safetyShort",
+    fallback: "Safety",
+    href: "/app/checklists",
+    icon: ShieldCheck,
+    alsoMatchPrefixes: ["/app/report", "/app/incidents", "/app/risk-assessment", "/app/inspections"],
   },
   {
     titleKey: "nav.assets",
@@ -49,11 +51,11 @@ const tabItems: TabItem[] = [
     icon: Package,
   },
   {
-    titleKey: "nav.myTasks",
-    shortTitleKey: "nav.myTasksShort",
-    fallback: "My Tasks",
-    href: "/app/my-tasks",
-    icon: Wrench,
+    titleKey: "nav.tasks",
+    shortTitleKey: "nav.tasksShort",
+    fallback: "Tasks",
+    href: "/app/tasks",
+    icon: ClipboardList,
   },
   {
     titleKey: "nav.profile",
@@ -77,7 +79,11 @@ export function BottomTabs({ company }: BottomTabsProps) {
           // For other items, match the path or any sub-paths
           const isActive = item.exactMatch 
             ? pathname === href
-            : pathname === href || pathname.startsWith(`${href}/`);
+            : pathname === href || pathname.startsWith(`${href}/`)
+              || (item.alsoMatchPrefixes?.some(p => {
+                const fullP = `/${company}${p}`;
+                return pathname === fullP || pathname.startsWith(`${fullP}/`);
+              }) ?? false);
 
           return (
             <li key={item.href} className="flex-1">

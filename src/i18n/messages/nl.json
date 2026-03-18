@@ -65,7 +65,9 @@
     "qrCodes": "QR-codes",
     "tickets": "Tickets",
     "newsShort": "Nieuws",
-    "myTasksShort": "Mijn Taken"
+    "myTasksShort": "Mijn Taken",
+    "safetyShort": "Veiligheid",
+    "safety": "Veiligheid"
   },
   "app": {
     "goodMorning": "Goedemorgen",
@@ -1557,7 +1559,8 @@
     "start": "Starten",
     "resolve": "Oplossen",
     "complete": "Voltooien",
-    "statusUpdated": "Status bijgewerkt"
+    "statusUpdated": "Status bijgewerkt",
+    "mine": "Mijn"
   },
   "app.pending": "Openstaand",
   "errors.network": "Netwerkfout",

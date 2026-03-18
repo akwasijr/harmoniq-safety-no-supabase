@@ -41,7 +41,7 @@ import type {
 // Types
 // ---------------------------------------------------------------------------
 
-type TabId = "all" | "tickets" | "work-orders" | "actions";
+type TabId = "mine" | "all" | "tickets" | "work-orders" | "actions";
 
 type UnifiedTask = {
   id: string;
@@ -51,6 +51,7 @@ type UnifiedTask = {
   statusVariant: "default" | "secondary" | "destructive" | "success" | "warning" | "info" | "outline";
   priority?: string;
   priorityVariant?: "default" | "secondary" | "destructive" | "success" | "warning" | "info" | "outline";
+  assignedTo: string | null;
   assignedByName: string;
   dueDate: string | null;
   assetName: string | null;
@@ -171,6 +172,7 @@ function getKindIconColor(kind: UnifiedTask["kind"]) {
 // ---------------------------------------------------------------------------
 
 const TABS: { id: TabId; label: string; labelKey: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "mine", label: "Mine", labelKey: "tasks.mine", icon: UserIcon },
   { id: "all", label: "All", labelKey: "tasks.all", icon: ListChecks },
   { id: "tickets", label: "Tickets", labelKey: "tasks.tickets", icon: Ticket },
   { id: "work-orders", label: "Work Orders", labelKey: "tasks.workOrders", icon: Wrench },
@@ -347,6 +349,7 @@ function TaskCard({
 
 function EmptyState({ kind, t }: { kind: TabId; t: (key: string, params?: Record<string, string | number>) => string }) {
   const config: Record<TabId, { icon: React.ComponentType<{ className?: string }>; messageKey: string; fallback: string }> = {
+    mine: { icon: UserIcon, messageKey: "tasks.emptyMine", fallback: "No tasks assigned to you" },
     all: { icon: ListChecks, messageKey: "tasks.empty", fallback: "No tasks assigned to you" },
     tickets: { icon: Ticket, messageKey: "tasks.emptyTickets", fallback: "No tickets assigned to you" },
     "work-orders": { icon: Wrench, messageKey: "tasks.emptyWorkOrders", fallback: "No work orders assigned to you" },
@@ -403,7 +406,7 @@ export default function TasksPage() {
     [updateTicket, updateWorkOrder, updateCorrectiveAction, toast, t],
   );
 
-  const [activeTab, setActiveTab] = React.useState<TabId>("all");
+  const [activeTab, setActiveTab] = React.useState<TabId>("mine");
 
   const isLoading = ticketsLoading || workOrdersLoading || actionsLoading;
 
@@ -448,6 +451,7 @@ export default function TasksPage() {
         statusVariant: getTicketStatusVariant(tk.status),
         priority: tk.priority,
         priorityVariant: getPriorityVariant(tk.priority),
+        assignedTo: tk.assigned_to ?? null,
         assignedByName: getUserName(tk.created_by),
         dueDate: tk.due_date,
         assetName: null,
@@ -472,6 +476,7 @@ export default function TasksPage() {
         statusVariant: getWorkOrderStatusVariant(wo.status),
         priority: wo.priority,
         priorityVariant: getPriorityVariant(wo.priority),
+        assignedTo: wo.assigned_to ?? null,
         assignedByName: getUserName(wo.requested_by),
         dueDate: wo.due_date,
         assetName: getAssetName(wo.asset_id),
@@ -492,6 +497,7 @@ export default function TasksPage() {
         statusVariant: getCorrectiveActionStatusVariant(ca.status),
         priority: ca.severity,
         priorityVariant: getPriorityVariant(ca.severity),
+        assignedTo: ca.assigned_to ?? null,
         assignedByName: "",
         dueDate: ca.due_date,
         assetName: getAssetName(ca.asset_id),
@@ -519,9 +525,17 @@ export default function TasksPage() {
     };
   }, [user, tickets, workOrders, correctiveActions, company, getUserName, getAssetName]);
 
+  // "Mine" tab — only tasks assigned to the current user
+  const mineTasks = React.useMemo(
+    () => allTasks.filter((t) => t.assignedTo === user?.id),
+    [allTasks, user],
+  );
+
   // Current visible list based on active tab
   const visibleTasks = React.useMemo(() => {
     switch (activeTab) {
+      case "mine":
+        return mineTasks;
       case "tickets":
         return myTickets;
       case "work-orders":
@@ -532,17 +546,18 @@ export default function TasksPage() {
       default:
         return allTasks;
     }
-  }, [activeTab, allTasks, myTickets, myWorkOrders, myActions]);
+  }, [activeTab, allTasks, mineTasks, myTickets, myWorkOrders, myActions]);
 
   // Tab counts
   const tabCounts: Record<TabId, number> = React.useMemo(
     () => ({
+      mine: mineTasks.length,
       all: allTasks.length,
       tickets: myTickets.length,
       "work-orders": myWorkOrders.length,
       actions: myActions.length,
     }),
-    [allTasks, myTickets, myWorkOrders, myActions],
+    [allTasks, mineTasks, myTickets, myWorkOrders, myActions],
   );
 
   // Loading state

@@ -65,7 +65,9 @@
     "qrCodes": "QR Codes",
     "tickets": "Tickets",
     "newsShort": "News",
-    "myTasksShort": "My Tasks"
+    "myTasksShort": "My Tasks",
+    "safetyShort": "Safety",
+    "safety": "Safety"
   },
   "app": {
     "goodMorning": "Good morning",
@@ -1557,7 +1559,8 @@
     "start": "Start",
     "resolve": "Resolve",
     "complete": "Complete",
-    "statusUpdated": "Status updated"
+    "statusUpdated": "Status updated",
+    "mine": "Mine"
   },
   "app.pending": "Pending",
   "errors.network": "Network error",
