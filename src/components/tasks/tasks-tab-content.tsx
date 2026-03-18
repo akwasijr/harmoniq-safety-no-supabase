@@ -522,9 +522,6 @@ export function TasksTabContent() {
           )}
         </div>
 
-        <p className="text-[11px] text-muted-foreground">
-          {filteredTasks.length} {filteredTasks.length === 1 ? (t("tasks.task") || "task") : (t("tasks.tasksPlural") || "tasks")}
-        </p>
       </div>
 
       {/* Task list */}

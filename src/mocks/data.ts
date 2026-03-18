@@ -2157,6 +2157,22 @@ export const mockTickets: Ticket[] = [
     created_at: "2024-07-19T16:00:00Z",
     updated_at: "2024-07-20T10:00:00Z",
   },
+  {
+    id: "ticket_4",
+    company_id: "comp_1",
+    title: "Inspect fire extinguisher stations on Floor 2",
+    description:
+      "Monthly fire extinguisher check required. Verify pressure gauges, seals, and mounting brackets at all Floor 2 stations.",
+    priority: "medium",
+    status: "new",
+    due_date: "2026-03-25",
+    assigned_to: "user_1",
+    assigned_groups: ["Safety"],
+    incident_ids: [],
+    created_by: "user_3",
+    created_at: "2026-03-17T10:00:00Z",
+    updated_at: "2026-03-17T10:00:00Z",
+  },
 ];
 
 // ============================================
