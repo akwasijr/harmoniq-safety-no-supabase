@@ -345,7 +345,7 @@ export default function EmployeeAppHomePage() {
       ticket.assigned_to === user.id ||
       (user.team_ids?.length && ticket.assigned_groups?.some((g) => user.team_ids!.includes(g))),
   );
-  const userWorkOrders = workOrders.filter((wo) => wo.assigned_to === user.id || wo.requested_by === user.id);
+  const userWorkOrders = workOrders.filter((wo) => wo.assigned_to === user.id);
   const userActions = correctiveActions.filter((ca) => ca.assigned_to === user.id);
   const pendingTaskCount = userTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length
     + userWorkOrders.filter((wo) => wo.status !== "completed" && wo.status !== "cancelled").length

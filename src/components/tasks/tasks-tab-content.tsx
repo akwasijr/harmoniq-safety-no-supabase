@@ -393,7 +393,7 @@ export function TasksTabContent() {
       .filter(
         (wo) =>
           wo.company_id === companyId &&
-          (wo.assigned_to === user.id || wo.requested_by === user.id),
+          wo.assigned_to === user.id,
       )
       .map((wo) => ({
         id: wo.id,
