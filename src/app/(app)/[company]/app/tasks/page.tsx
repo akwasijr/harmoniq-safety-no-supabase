@@ -559,9 +559,6 @@ export default function TasksPage() {
       {/* Header + Tabs */}
       <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
         <h1 className="text-lg font-bold mb-3">{t("tasks.title") || "My Tasks"}</h1>
-        {allTasks.length > 0 && (
-          <p className="text-xs text-muted-foreground -mt-2 mb-3">{allTasks.length} {t("tasks.total") || "total tasks"}</p>
-        )}
 
         <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist" aria-label={t("tasks.title") || "Task categories"}>
           {TABS.map((tab) => {
