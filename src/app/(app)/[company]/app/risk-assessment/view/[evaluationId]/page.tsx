@@ -9,7 +9,7 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import {
-  ArrowLeft, ShieldCheck, MapPin, Calendar, User, Clock, FileText,
+  ArrowLeft, ShieldCheck, MapPin, Calendar, User, FileText,
   HardHat, AlertTriangle, CheckCircle, XCircle, Minus, Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -800,9 +800,6 @@ export default function RiskAssessmentViewPage() {
     AFS: "AFS Risk Evaluation",
   };
 
-  const statusVariant =
-    evaluation.status === "reviewed" ? "success" : evaluation.status === "submitted" ? "warning" : "secondary";
-
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header — not sticky, app nav is already sticky */}
@@ -816,9 +813,6 @@ export default function RiskAssessmentViewPage() {
               {assessmentLabels[evaluation.form_type] || evaluation.form_type}
             </h1>
           </div>
-          <Badge variant={statusVariant} className="capitalize">
-            {evaluation.status}
-          </Badge>
         </div>
       </div>
 
@@ -858,13 +852,6 @@ export default function RiskAssessmentViewPage() {
                 <span className="font-medium">{location.name}</span>
               </div>
             )}
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Status:</span>
-              <Badge variant={statusVariant} className="capitalize">
-                {evaluation.status}
-              </Badge>
-            </div>
             {evaluation.reviewed_by && (
               <div className="flex items-center gap-2 text-sm">
                 <User className="h-4 w-4 text-muted-foreground" />

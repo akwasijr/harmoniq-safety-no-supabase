@@ -703,10 +703,7 @@ function EmployeeChecklistsPageContent() {
                         <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
-                          <Badge variant="success" className="text-[10px] h-4 shrink-0">{item.status}</Badge>
-                        </div>
+                        <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">{item.location} · {formatDate(new Date(item.date))}</p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
