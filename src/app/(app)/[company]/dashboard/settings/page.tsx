@@ -39,6 +39,7 @@ const countries = [
 
 interface SettingsState {
   companyName: string;
+  appName: string;
   selectedCountry: string;
   language: string;
   dateFormat: string;
@@ -83,6 +84,7 @@ const buildSettingsFromCompany = (company: Company | null | undefined): Settings
   const c = company ?? defaultCompany;
   return {
   companyName: c.name,
+  appName: c.app_name || c.name,
   selectedCountry: c.country,
   language: c.language,
   dateFormat: c.country === "US" ? "MM/DD/YYYY" : "DD/MM/YYYY",
@@ -203,6 +205,7 @@ export default function SettingsPage() {
       // Update the company store
       updateCompany(activeCompany.id, {
         name: settings.companyName,
+        app_name: settings.appName || settings.companyName,
         primary_color: settings.primaryColor,
         secondary_color: settings.secondaryColor,
         logo_url: settings.logoUrl,
@@ -304,6 +307,18 @@ export default function SettingsPage() {
                       value={settings.companyName}
                       onChange={(e) => updateSetting("companyName", e.target.value)}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="app-name">{t("settings.appDisplayName") || "App Display Name"}</Label>
+                    <Input 
+                      id="app-name" 
+                      value={settings.appName}
+                      onChange={(e) => updateSetting("appName", e.target.value)}
+                      placeholder={settings.companyName}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("settings.appDisplayNameHint") || "Shown in the mobile app header. Defaults to company name."}
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="company-slug">{t("settings.urlSlug")}</Label>
