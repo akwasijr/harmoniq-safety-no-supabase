@@ -90,9 +90,15 @@ export function createEntityStore<T extends IdEntity>(
   const Context = React.createContext<EntityStore<T> | undefined>(undefined);
 
   function Provider({ children }: { children: React.ReactNode }) {
-    const [items, setItems] = React.useState<T[]>(() =>
-      loadFromStorage(storageKey, isSupabaseConfigured ? [] : initialData)
-    );
+    const [items, setItems] = React.useState<T[]>(() => {
+      if (isSupabaseConfigured) return loadFromStorage(storageKey, []);
+      const cached = loadFromStorage<T[]>(storageKey, []);
+      if (cached.length === 0) return initialData;
+      // Merge any new mock items not in cache
+      const cachedIds = new Set(cached.map((item: any) => item.id));
+      const newItems = initialData.filter((item: any) => !cachedIds.has(item.id));
+      return newItems.length > 0 ? [...cached, ...newItems] : cached;
+    });
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const hasLoadedRef = React.useRef(!isSupabaseConfigured);
