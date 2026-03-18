@@ -124,7 +124,7 @@ function FeaturedNewsCarousel({
   const scroll = (dir: "left" | "right") => {
     const container = scrollRef.current;
     if (!container) return;
-    const cardWidth = container.offsetWidth * 0.72;
+    const cardWidth = container.offsetWidth * 0.68;
     const newIndex = dir === "left" ? Math.max(0, activeIndex - 1) : Math.min(news.length - 1, activeIndex + 1);
     container.scrollTo({ left: newIndex * cardWidth, behavior: "smooth" });
     setActiveIndex(newIndex);
@@ -135,7 +135,7 @@ function FeaturedNewsCarousel({
     const container = scrollRef.current;
     if (!container) return;
     const handleScroll = () => {
-      const cardWidth = container.offsetWidth * 0.72;
+      const cardWidth = container.offsetWidth * 0.68;
       const idx = Math.round(container.scrollLeft / cardWidth);
       setActiveIndex(idx);
     };
@@ -203,8 +203,8 @@ function FeaturedNewsCarousel({
           <Link
             key={item.id}
             href={`/${company}/app/news/${item.id}`}
-            className="flex-shrink-0 snap-center rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md active:shadow-sm"
-            style={{ width: "72%" }}
+            className="flex-shrink-0 snap-start rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md active:shadow-sm"
+            style={{ width: "68%" }}
           >
             {/* Image / gradient placeholder */}
             <div className={`h-28 w-full bg-gradient-to-br ${cardColors[i % cardColors.length]} relative overflow-hidden`}>
