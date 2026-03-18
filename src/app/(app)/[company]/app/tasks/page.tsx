@@ -497,6 +497,22 @@ export default function TasksPage() {
     return [...filteredTickets, ...filteredWorkOrders, ...filteredActions].sort(sortTasks);
   }, [user, tickets, workOrders, correctiveActions, company, getUserName, getAssetName]);
 
+  // Split into assigned (active) vs completed
+  const COMPLETED_STATUSES = new Set(["resolved", "closed", "completed", "cancelled"]);
+
+  const assignedTasks = React.useMemo(
+    () => allTasks.filter((t) => !COMPLETED_STATUSES.has(t.status)),
+    [allTasks],
+  );
+
+  const completedTasks = React.useMemo(
+    () => allTasks.filter((t) => COMPLETED_STATUSES.has(t.status)),
+    [allTasks],
+  );
+
+  const [tab, setTab] = React.useState<"assigned" | "completed">("assigned");
+  const visibleTasks = tab === "assigned" ? assignedTasks : completedTasks;
+
   // Loading state
   if (isLoading) {
     return (
@@ -508,17 +524,44 @@ export default function TasksPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Header */}
+      {/* Header + Tabs */}
       <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
-        <h1 className="text-lg font-bold">{t("tasks.title") || "My Tasks"}</h1>
+        <h1 className="text-lg font-bold mb-3">{t("tasks.title") || "My Tasks"}</h1>
+
+        <div className="flex gap-1 bg-muted rounded-lg p-1" role="tablist">
+          {([
+            { id: "assigned" as const, labelKey: "tasks.assigned", fallback: "Assigned", count: assignedTasks.length },
+            { id: "completed" as const, labelKey: "tasks.completed", fallback: "Completed", count: completedTasks.length },
+          ]).map((t_) => (
+            <button
+              key={t_.id}
+              role="tab"
+              aria-selected={tab === t_.id}
+              onClick={() => setTab(t_.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-sm font-medium rounded-md transition-all",
+                tab === t_.id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground",
+              )}
+            >
+              {t(t_.labelKey) || t_.fallback}
+              {t_.count > 0 && (
+                <span className="ml-1 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">
+                  {t_.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Task list */}
       <div className="flex-1 px-4 pt-3 pb-20 space-y-1.5">
-        {allTasks.length === 0 ? (
+        {visibleTasks.length === 0 ? (
           <EmptyState t={t} />
         ) : (
-          allTasks.map((task) => (
+          visibleTasks.map((task) => (
             <TaskCard key={`${task.kind}-${task.id}`} task={task} formatDate={formatDate} t={t} onStatusUpdate={handleStatusUpdate} />
           ))
         )}

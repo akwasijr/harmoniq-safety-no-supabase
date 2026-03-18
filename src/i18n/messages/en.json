@@ -1560,7 +1560,9 @@
     "resolve": "Resolve",
     "complete": "Complete",
     "statusUpdated": "Status updated",
-    "mine": "Mine"
+    "mine": "Mine",
+    "assigned": "Assigned",
+    "completed": "Completed"
   },
   "app.pending": "Pending",
   "errors.network": "Network error",

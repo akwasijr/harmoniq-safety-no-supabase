@@ -1560,7 +1560,9 @@
     "resolve": "Oplossen",
     "complete": "Voltooien",
     "statusUpdated": "Status bijgewerkt",
-    "mine": "Mijn"
+    "mine": "Mijn",
+    "assigned": "Toegewezen",
+    "completed": "Voltooid"
   },
   "app.pending": "Openstaand",
   "errors.network": "Netwerkfout",

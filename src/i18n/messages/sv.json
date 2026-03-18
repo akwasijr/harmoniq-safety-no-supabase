@@ -1560,7 +1560,9 @@
     "resolve": "Lös",
     "complete": "Slutför",
     "statusUpdated": "Status uppdaterad",
-    "mine": "Mina"
+    "mine": "Mina",
+    "assigned": "Tilldelade",
+    "completed": "Slutförda"
   },
   "app.pending": "Väntande",
   "errors.network": "Nätverksfel",
