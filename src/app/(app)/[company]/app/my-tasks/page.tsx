@@ -20,74 +20,56 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useToast } from "@/components/ui/toast";
 import { useGps } from "@/hooks/use-gps";
+import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { WorkOrder } from "@/types";
 
 type TabType = "active" | "completed";
 
-const PRIORITY_CONFIG: Record<
-  string,
-  { label: string; className: string }
-> = {
-  critical: {
-    label: "Critical",
-    className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  },
-  high: {
-    label: "High",
-    className: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  },
-  medium: {
-    label: "Medium",
-    className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  },
-  low: {
-    label: "Low",
-    className: "bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300",
-  },
+const PRIORITY_CLASSES: Record<string, string> = {
+  critical: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  high: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  medium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  low: "bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300",
 };
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; className: string }
-> = {
-  requested: {
-    label: "Requested",
-    className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  },
-  approved: {
-    label: "Approved",
-    className: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-  },
-  in_progress: {
-    label: "In Progress",
-    className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-  },
-  completed: {
-    label: "Completed",
-    className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  },
-  cancelled: {
-    label: "Cancelled",
-    className: "bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300",
-  },
+const STATUS_CLASSES: Record<string, string> = {
+  requested: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  approved: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+  in_progress: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+  completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  cancelled: "bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300",
 };
 
-function getRelativeDue(dueDate: string): { text: string; overdue: boolean } {
+const STATUS_TRANSLATION_KEYS: Record<string, string> = {
+  requested: "workOrders.statuses.requested",
+  approved: "workOrders.statuses.approved",
+  in_progress: "workOrders.statuses.inProgress",
+  completed: "workOrders.statuses.completed",
+  cancelled: "workOrders.statuses.cancelled",
+};
+
+function getRelativeDue(
+  dueDate: string,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): { text: string; overdue: boolean } {
   const now = new Date();
   const due = new Date(dueDate);
   const diffMs = due.getTime() - now.getTime();
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {
+    const absDays = Math.abs(diffDays);
     return {
-      text: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? "s" : ""}`,
+      text: absDays === 1
+        ? t("tasks.overdueByDay", { days: absDays })
+        : t("tasks.overdueByDays", { days: absDays }),
       overdue: true,
     };
   }
-  if (diffDays === 0) return { text: "Due today", overdue: false };
-  if (diffDays === 1) return { text: "Due tomorrow", overdue: false };
-  return { text: `Due in ${diffDays} days`, overdue: false };
+  if (diffDays === 0) return { text: t("tasks.dueToday"), overdue: false };
+  if (diffDays === 1) return { text: t("tasks.dueTomorrow"), overdue: false };
+  return { text: t("tasks.dueInDays", { days: diffDays }), overdue: false };
 }
 
 function WorkOrderCard({
@@ -102,10 +84,13 @@ function WorkOrderCard({
   onComplete: (id: string) => void;
 }) {
   const [expanded, setExpanded] = React.useState(false);
+  const { t } = useTranslation();
 
-  const priority = PRIORITY_CONFIG[wo.priority] ?? PRIORITY_CONFIG.medium;
-  const status = STATUS_CONFIG[wo.status] ?? STATUS_CONFIG.requested;
-  const dueInfo = wo.due_date ? getRelativeDue(wo.due_date) : null;
+  const priorityClassName = PRIORITY_CLASSES[wo.priority] ?? PRIORITY_CLASSES.medium;
+  const priorityLabel = t(`priority.${wo.priority}`);
+  const statusClassName = STATUS_CLASSES[wo.status] ?? STATUS_CLASSES.requested;
+  const statusLabel = t(STATUS_TRANSLATION_KEYS[wo.status] ?? "workOrders.statuses.requested");
+  const dueInfo = wo.due_date ? getRelativeDue(wo.due_date, t) : null;
 
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
@@ -128,11 +113,11 @@ function WorkOrderCard({
           )}
 
           <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-            <Badge className={cn("text-[10px]", priority.className)} variant="secondary">
-              {priority.label}
+            <Badge className={cn("text-[10px]", priorityClassName)} variant="secondary">
+              {priorityLabel}
             </Badge>
-            <Badge className={cn("text-[10px]", status.className)} variant="secondary">
-              {status.label}
+            <Badge className={cn("text-[10px]", statusClassName)} variant="secondary">
+              {statusLabel}
             </Badge>
           </div>
 
@@ -177,7 +162,7 @@ function WorkOrderCard({
                 }}
               >
                 <Wrench className="h-3.5 w-3.5" />
-                Accept
+                {t("tasks.accept")}
               </Button>
             )}
             {wo.status === "in_progress" && (
@@ -190,7 +175,7 @@ function WorkOrderCard({
                 }}
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                Complete
+                {t("tasks.complete")}
               </Button>
             )}
           </div>
@@ -207,6 +192,7 @@ export default function MyTasksPage() {
   const { items: workOrders, isLoading, update } = useWorkOrdersStore();
   const { items: assets } = useAssetsStore();
   const gps = useGps();
+  const { t } = useTranslation();
 
   const [tab, setTab] = React.useState<TabType>("active");
 
@@ -292,8 +278,8 @@ export default function MyTasksPage() {
   const displayedWOs = tab === "active" ? activeWOs : completedWOs;
 
   const tabs = [
-    { id: "active" as TabType, label: "Active", icon: ListChecks, count: activeWOs.length },
-    { id: "completed" as TabType, label: "Completed", icon: History, count: completedWOs.length },
+    { id: "active" as TabType, label: t("tasks.active"), icon: ListChecks, count: activeWOs.length },
+    { id: "completed" as TabType, label: t("tasks.completed"), icon: History, count: completedWOs.length },
   ];
 
   return (
@@ -310,13 +296,13 @@ export default function MyTasksPage() {
 
         {/* Sub-tab pills */}
         <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5 mt-3">
-          {tabs.map((t) => {
-            const Icon = t.icon;
-            const isActive = tab === t.id;
+          {tabs.map((tabItem) => {
+            const Icon = tabItem.icon;
+            const isActive = tab === tabItem.id;
             return (
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
+                key={tabItem.id}
+                onClick={() => setTab(tabItem.id)}
                 className={cn(
                   "flex-1 flex items-center justify-center gap-1 py-1.5 px-2 text-[11px] font-medium rounded-md transition-all",
                   isActive
@@ -325,13 +311,13 @@ export default function MyTasksPage() {
                 )}
               >
                 <Icon className="h-3 w-3 shrink-0" />
-                <span className="truncate">{t.label}</span>
-                {t.count > 0 && (
+                <span className="truncate">{tabItem.label}</span>
+                {tabItem.count > 0 && (
                   <Badge
-                    variant={t.id === "active" ? "warning" : "success"}
+                    variant={tabItem.id === "active" ? "warning" : "success"}
                     className="text-[9px] h-4 min-w-4 justify-center ml-0.5"
                   >
-                    {t.count}
+                    {tabItem.count}
                   </Badge>
                 )}
               </button>
@@ -344,7 +330,7 @@ export default function MyTasksPage() {
       <div className="flex-1 px-4 py-4">
         {displayedWOs.length === 0 ? (
           <NoDataEmptyState
-            entityName={tab === "active" ? "assigned tasks" : "completed tasks"}
+            entityName={tab === "active" ? t("tasks.assignedTasks") : t("tasks.completedTasks")}
           />
         ) : (
           <div className="space-y-3">

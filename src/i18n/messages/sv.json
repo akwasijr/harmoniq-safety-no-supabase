@@ -514,7 +514,8 @@
       "age": "Åldersfaktor"
     },
     "work_orders_empty_title": "Allt klart!",
-    "work_orders_empty_description": "Inga öppna arbetsordrar tilldelade till dig"
+    "work_orders_empty_description": "Inga öppna arbetsordrar tilldelade till dig",
+    "unknownAsset": "[SV] Unknown asset"
   },
   "incidents": {
     "title": "Incidenter",
@@ -556,7 +557,8 @@
       "new": "Ny",
       "inProgress": "Pågående",
       "inReview": "Under granskning",
-      "resolved": "Löst"
+      "resolved": "Löst",
+      "archived": "[SV] Archived"
     },
     "buttons": {
       "submitIncident": "Skicka in incident",
@@ -595,7 +597,9 @@
     "viewReport": "Visa rapport",
     "reportAnother": "Rapportera en till",
     "noDescription": "Ingen beskrivning angiven.",
-    "noMatch": "Inga rapporter matchar dina sökkriterier."
+    "noMatch": "Inga rapporter matchar dina sökkriterier.",
+    "report": "[SV] Report",
+    "reportAnIncident": "[SV] Report an Incident"
   },
   "tickets": {
     "title": "Ärenden",
@@ -1570,7 +1574,16 @@
     "searchPlaceholder": "Sök uppgifter...",
     "allTypes": "Alla typer",
     "task": "uppgift",
-    "tasksPlural": "uppgifter"
+    "tasksPlural": "uppgifter",
+    "active": "[SV] Active",
+    "accept": "[SV] Accept",
+    "overdueByDay": "[SV] Overdue by {days} day",
+    "overdueByDays": "[SV] Overdue by {days} days",
+    "dueToday": "[SV] Due today",
+    "dueTomorrow": "[SV] Due tomorrow",
+    "dueInDays": "[SV] Due in {days} days",
+    "assignedTasks": "[SV] assigned tasks",
+    "completedTasks": "[SV] completed tasks"
   },
   "app.pending": "Väntande",
   "errors.network": "Nätverksfel",
@@ -1818,5 +1831,25 @@
       "office": "Kontor",
       "maintenance": "Underhåll"
     }
+  },
+  "priority": {
+    "critical": "[SV] Critical",
+    "high": "[SV] High",
+    "medium": "[SV] Medium",
+    "low": "[SV] Low"
+  },
+  "emptyState": {
+    "noResults": "[SV] No results found",
+    "noResultsFilterDesc": "[SV] Try adjusting your search or filter criteria to find what you're looking for.",
+    "noResultsSearchDesc": "[SV] No items match your search. Try a different search term.",
+    "clearFilters": "[SV] Clear filters",
+    "noData": "[SV] No {entity} yet",
+    "noDataDesc": "[SV] {entity} will appear here once created.",
+    "addEntity": "[SV] Add {entity}",
+    "offline": "[SV] You're offline",
+    "offlineDesc": "[SV] This content isn't available offline. Connect to the internet and try again.",
+    "retry": "[SV] Retry",
+    "loadFailed": "[SV] Failed to load data",
+    "loadFailedDesc": "[SV] Something went wrong while fetching the data. Please try again."
   }
 }

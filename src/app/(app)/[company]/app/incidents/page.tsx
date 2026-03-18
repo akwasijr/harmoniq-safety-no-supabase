@@ -23,12 +23,20 @@ import { capitalize } from "@/lib/utils";
 import { LoadingPage } from "@/components/ui/loading";
 import { NoDataEmptyState, NoResultsEmptyState } from "@/components/ui/empty-state";
 
-const STATUS_CONFIG = {
-  new: { label: "New", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: Clock },
-  in_progress: { label: "In Progress", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", icon: Clock },
-  in_review: { label: "In Review", color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400", icon: Clock },
-  resolved: { label: "Resolved", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle },
-  archived: { label: "Archived", color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400", icon: CheckCircle },
+const STATUS_CLASSES = {
+  new: { color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: Clock },
+  in_progress: { color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", icon: Clock },
+  in_review: { color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400", icon: Clock },
+  resolved: { color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle },
+  archived: { color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400", icon: CheckCircle },
+};
+
+const STATUS_TRANSLATION_KEYS: Record<string, string> = {
+  new: "incidents.statuses.new",
+  in_progress: "incidents.statuses.inProgress",
+  in_review: "incidents.statuses.inReview",
+  resolved: "incidents.statuses.resolved",
+  archived: "incidents.statuses.archived",
 };
 
 export default function EmployeeIncidentsPage() {
@@ -85,7 +93,7 @@ export default function EmployeeIncidentsPage() {
           <Link href={`/${company}/app/report`}>
             <Button size="sm" className="gap-1">
               <Plus className="h-4 w-4" />
-              Report
+              {t("incidents.report")}
             </Button>
           </Link>
         </div>
@@ -104,10 +112,10 @@ export default function EmployeeIncidentsPage() {
         {/* Status Filter Pills */}
         <div className="flex gap-2 mt-3 overflow-x-auto pb-1 -mx-1 px-1">
           {[
-            { value: "all", label: "All" },
-            { value: "new", label: "New" },
-            { value: "in_progress", label: "In Progress" },
-            { value: "resolved", label: "Resolved" },
+            { value: "all", label: t("common.all") },
+            { value: "new", label: t("incidents.statuses.new") },
+            { value: "in_progress", label: t("incidents.statuses.inProgress") },
+            { value: "resolved", label: t("incidents.statuses.resolved") },
           ].map((filter) => (
             <button
               key={filter.value}
@@ -131,7 +139,7 @@ export default function EmployeeIncidentsPage() {
             <NoDataEmptyState
               entityName="incidents"
               onAdd={() => router.push(`/${company}/app/report`)}
-              addLabel="Report an Incident"
+              addLabel={t("incidents.reportAnIncident")}
             />
           ) : (
             <NoResultsEmptyState
@@ -146,8 +154,9 @@ export default function EmployeeIncidentsPage() {
           <div className="space-y-3">
             {filteredIncidents.map((incident) => {
               const location = incident.location_id ? locations.find((l) => l.id === incident.location_id) : null;
-              const statusConfig = STATUS_CONFIG[incident.status] || STATUS_CONFIG.new;
+              const statusConfig = STATUS_CLASSES[incident.status] || STATUS_CLASSES.new;
               const StatusIcon = statusConfig.icon;
+              const statusLabel = t(STATUS_TRANSLATION_KEYS[incident.status] ?? "incidents.statuses.new");
 
               return (
                 <Link
@@ -185,7 +194,7 @@ export default function EmployeeIncidentsPage() {
                   </div>
 
                   <Badge className={`text-[10px] ${statusConfig.color}`} variant="secondary">
-                    {statusConfig.label}
+                    {statusLabel}
                   </Badge>
                   
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />

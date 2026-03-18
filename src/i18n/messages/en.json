@@ -514,7 +514,8 @@
       "age": "Asset Age Factor"
     },
     "work_orders_empty_title": "All caught up!",
-    "work_orders_empty_description": "No open work orders assigned to you"
+    "work_orders_empty_description": "No open work orders assigned to you",
+    "unknownAsset": "Unknown asset"
   },
   "incidents": {
     "title": "Incidents",
@@ -556,7 +557,8 @@
       "new": "New",
       "inProgress": "In Progress",
       "inReview": "In Review",
-      "resolved": "Resolved"
+      "resolved": "Resolved",
+      "archived": "Archived"
     },
     "buttons": {
       "submitIncident": "Submit Incident",
@@ -595,7 +597,9 @@
     "viewReport": "View Report",
     "reportAnother": "Report Another",
     "noDescription": "No description provided.",
-    "noMatch": "No reports match your search criteria."
+    "noMatch": "No reports match your search criteria.",
+    "report": "Report",
+    "reportAnIncident": "Report an Incident"
   },
   "tickets": {
     "title": "Tickets",
@@ -1570,7 +1574,16 @@
     "searchPlaceholder": "Search tasks...",
     "allTypes": "All Types",
     "task": "task",
-    "tasksPlural": "tasks"
+    "tasksPlural": "tasks",
+    "active": "Active",
+    "accept": "Accept",
+    "overdueByDay": "Overdue by {days} day",
+    "overdueByDays": "Overdue by {days} days",
+    "dueToday": "Due today",
+    "dueTomorrow": "Due tomorrow",
+    "dueInDays": "Due in {days} days",
+    "assignedTasks": "assigned tasks",
+    "completedTasks": "completed tasks"
   },
   "app.pending": "Pending",
   "errors.network": "Network error",
@@ -1818,5 +1831,25 @@
       "office": "Office",
       "maintenance": "Maintenance"
     }
+  },
+  "priority": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "emptyState": {
+    "noResults": "No results found",
+    "noResultsFilterDesc": "Try adjusting your search or filter criteria to find what you're looking for.",
+    "noResultsSearchDesc": "No items match your search. Try a different search term.",
+    "clearFilters": "Clear filters",
+    "noData": "No {entity} yet",
+    "noDataDesc": "{entity} will appear here once created.",
+    "addEntity": "Add {entity}",
+    "offline": "You're offline",
+    "offlineDesc": "This content isn't available offline. Connect to the internet and try again.",
+    "retry": "Retry",
+    "loadFailed": "Failed to load data",
+    "loadFailedDesc": "Something went wrong while fetching the data. Please try again."
   }
 }

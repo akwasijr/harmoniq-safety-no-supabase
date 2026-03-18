@@ -514,7 +514,8 @@
       "age": "Ouderdomsfactor"
     },
     "work_orders_empty_title": "Alles bijgewerkt!",
-    "work_orders_empty_description": "Geen openstaande werkorders aan u toegewezen"
+    "work_orders_empty_description": "Geen openstaande werkorders aan u toegewezen",
+    "unknownAsset": "[NL] Unknown asset"
   },
   "incidents": {
     "title": "Incidenten",
@@ -556,7 +557,8 @@
       "new": "Nieuw",
       "inProgress": "In behandeling",
       "inReview": "In beoordeling",
-      "resolved": "Opgelost"
+      "resolved": "Opgelost",
+      "archived": "[NL] Archived"
     },
     "buttons": {
       "submitIncident": "Incident indienen",
@@ -595,7 +597,9 @@
     "viewReport": "Rapport bekijken",
     "reportAnother": "Nog een melden",
     "noDescription": "Geen beschrijving opgegeven.",
-    "noMatch": "Geen rapporten komen overeen met uw zoekcriteria."
+    "noMatch": "Geen rapporten komen overeen met uw zoekcriteria.",
+    "report": "[NL] Report",
+    "reportAnIncident": "[NL] Report an Incident"
   },
   "tickets": {
     "title": "Tickets",
@@ -1570,7 +1574,16 @@
     "searchPlaceholder": "Taken zoeken...",
     "allTypes": "Alle types",
     "task": "taak",
-    "tasksPlural": "taken"
+    "tasksPlural": "taken",
+    "active": "[NL] Active",
+    "accept": "[NL] Accept",
+    "overdueByDay": "[NL] Overdue by {days} day",
+    "overdueByDays": "[NL] Overdue by {days} days",
+    "dueToday": "[NL] Due today",
+    "dueTomorrow": "[NL] Due tomorrow",
+    "dueInDays": "[NL] Due in {days} days",
+    "assignedTasks": "[NL] assigned tasks",
+    "completedTasks": "[NL] completed tasks"
   },
   "app.pending": "Openstaand",
   "errors.network": "Netwerkfout",
@@ -1818,5 +1831,25 @@
       "office": "Kantoor",
       "maintenance": "Onderhoud"
     }
+  },
+  "priority": {
+    "critical": "[NL] Critical",
+    "high": "[NL] High",
+    "medium": "[NL] Medium",
+    "low": "[NL] Low"
+  },
+  "emptyState": {
+    "noResults": "[NL] No results found",
+    "noResultsFilterDesc": "[NL] Try adjusting your search or filter criteria to find what you're looking for.",
+    "noResultsSearchDesc": "[NL] No items match your search. Try a different search term.",
+    "clearFilters": "[NL] Clear filters",
+    "noData": "[NL] No {entity} yet",
+    "noDataDesc": "[NL] {entity} will appear here once created.",
+    "addEntity": "[NL] Add {entity}",
+    "offline": "[NL] You're offline",
+    "offlineDesc": "[NL] This content isn't available offline. Connect to the internet and try again.",
+    "retry": "[NL] Retry",
+    "loadFailed": "[NL] Failed to load data",
+    "loadFailedDesc": "[NL] Something went wrong while fetching the data. Please try again."
   }
 }

@@ -171,7 +171,7 @@ export default function EmployeeAssetsPage() {
                 onChange={e => setStatusFilter(e.target.value)}
                 className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="all">{t("assets.allStatuses") || "All Statuses"}</option>
+                <option value="all">{t("assets.allStatuses")}</option>
                 {["active", "maintenance", "inactive", "retired"].map(s => (
                   <option key={s} value={s}>{t(`assets.statuses.${s}`)}</option>
                 ))}
@@ -183,7 +183,7 @@ export default function EmployeeAssetsPage() {
                 onChange={e => setCategoryFilter(e.target.value)}
                 className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="all">{t("assets.allCategories") || "All Categories"}</option>
+                <option value="all">{t("assets.allCategories")}</option>
                 {categories.map(c => (
                   <option key={c} value={c}>{c.replace(/_/g, " ")}</option>
                 ))}
@@ -289,7 +289,9 @@ export default function EmployeeAssetsPage() {
           ) : (
             <>
               <p className="text-xs text-muted-foreground">
-                {myOpenWorkOrders.length} open work order{myOpenWorkOrders.length !== 1 ? "s" : ""}
+                {myOpenWorkOrders.length !== 1
+                  ? t("assets.openWorkOrdersPlural", { count: myOpenWorkOrders.length })
+                  : t("assets.openWorkOrders", { count: myOpenWorkOrders.length })}
               </p>
               {myOpenWorkOrders.map(wo => {
                 const asset = assets.find(a => a.id === wo.asset_id);
@@ -301,7 +303,7 @@ export default function EmployeeAssetsPage() {
                           <div className="flex-1 min-w-0">
                             <h3 className="font-medium text-sm truncate">{wo.title}</h3>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {asset?.name || "Unknown asset"} · {wo.priority}
+                              {asset?.name || t("assets.unknownAsset")} · {wo.priority}
                             </p>
                             <div className="flex items-center gap-3 mt-1.5">
                               <span className="text-xs capitalize">
