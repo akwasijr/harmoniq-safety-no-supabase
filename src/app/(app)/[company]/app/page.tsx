@@ -239,7 +239,6 @@ export default function EmployeeAppHomePage() {
         <h1 className="text-2xl font-bold text-white mt-1">
           {user?.first_name || t("app.welcome")}
         </h1>
-        <p className="text-white/50 text-xs mt-1">{currentCompany?.name}</p>
 
         {/* Stats row - white/glass cards */}
         <div className="grid grid-cols-3 gap-3 mt-5">
