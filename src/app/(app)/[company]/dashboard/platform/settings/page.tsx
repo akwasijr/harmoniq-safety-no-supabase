@@ -38,8 +38,8 @@ export default function PlatformSettingsPage() {
   const [settings, setSettings] = React.useState({
     // General
     platformName: "Harmoniq Safety",
-    supportEmail: "support@harmoniq.io",
-    supportUrl: "https://support.harmoniq.io",
+    supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@harmoniq.io",
+    supportUrl: process.env.NEXT_PUBLIC_SUPPORT_URL || "https://support.harmoniq.io",
 
     // Data Retention
     retentionYears: 5,

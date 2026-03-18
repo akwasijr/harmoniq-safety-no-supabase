@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { WORK_ORDER_STATUS_COLORS, getAssetDisplayName, getUserFirstLastName } from "@/lib/status-utils";
+import { PAGINATION, LIMITS } from "@/lib/constants";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
   Plus,
@@ -60,7 +61,7 @@ export default function WorkOrdersPage() {
   const [showCreate, setShowCreate] = React.useState(false);
   const [expandedParts, setExpandedParts] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
-  const ITEMS_PER_PAGE = 20;
+  const ITEMS_PER_PAGE = PAGINATION.WORK_ORDERS_PAGE_SIZE;
 
   // Auto-create work orders for overdue maintenance (runs once)
   const overdueCheckRan = React.useRef(false);
@@ -382,8 +383,8 @@ export default function WorkOrdersPage() {
               </div>
               <div>
                 <Label>{t("workOrders.labels.description")} *</Label>
-                <Textarea className="mt-1" placeholder={t("workOrders.placeholders.description")} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} maxLength={5000} />
-                <p className="text-xs text-muted-foreground text-right mt-1">{form.description.length}/5000</p>
+                <Textarea className="mt-1" placeholder={t("workOrders.placeholders.description")} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} maxLength={LIMITS.MAX_DESCRIPTION_LENGTH} />
+                <p className="text-xs text-muted-foreground text-right mt-1">{form.description.length}/{LIMITS.MAX_DESCRIPTION_LENGTH}</p>
               </div>
               <div>
                 <Label>{t("workOrders.labels.asset")}</Label>

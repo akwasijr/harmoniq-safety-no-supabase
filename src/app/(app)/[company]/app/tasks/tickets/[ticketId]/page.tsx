@@ -29,8 +29,10 @@ import type { TicketStatus } from "@/types";
 export default function TicketDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const company = params.company as string;
-  const ticketId = params.ticketId as string;
+  const rawCompany = params.company;
+  const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
+  const rawTicketId = params.ticketId;
+  const ticketId = typeof rawTicketId === "string" ? rawTicketId : Array.isArray(rawTicketId) ? rawTicketId[0] : "";
 
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
@@ -42,7 +44,8 @@ export default function TicketDetailPage() {
 
   const [activeTab, setActiveTab] = React.useState("details");
 
-  const ticket = tickets.find((t) => t.id === ticketId);
+  const matchedTicket = tickets.find((t) => t.id === ticketId);
+  const ticket = matchedTicket && user?.company_id && matchedTicket.company_id !== user.company_id ? undefined : matchedTicket;
   const assignee = ticket?.assigned_to ? users.find((u) => u.id === ticket.assigned_to) : null;
   const creator = ticket?.created_by ? users.find((u) => u.id === ticket.created_by) : null;
   const linkedIncidents = (ticket?.incident_ids || []).map((id) => incidents.find((i) => i.id === id)).filter(Boolean);

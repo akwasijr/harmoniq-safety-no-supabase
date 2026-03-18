@@ -3418,3 +3418,460 @@ export function getUserById(userId: string): User | undefined {
 export function getCompanyById(companyId: string): Company | undefined {
   return getStoredCompanies().find((c) => c.id === companyId);
 }
+
+// ── Ticket mock data ──────────────────────────────────────────────
+
+export type TicketTask = { id: string; title: string; completed: boolean };
+export type TicketComment = { id: string; author: string; text: string; date: string; avatar: string };
+
+export const defaultTasks: TicketTask[] = [
+  { id: "t1", title: "Review incident report", completed: true },
+  { id: "t2", title: "Contact witness", completed: true },
+  { id: "t3", title: "Order replacement parts", completed: false },
+  { id: "t4", title: "Schedule follow-up inspection", completed: false },
+];
+
+export const defaultComments: TicketComment[] = [
+  { id: "c1", author: "John Doe", text: "Started investigation", date: "2024-01-28 09:30", avatar: "JD" },
+  { id: "c2", author: "Jane Smith", text: "Parts ordered, ETA 3 days", date: "2024-01-28 14:15", avatar: "JS" },
+  { id: "c3", author: "Mike Johnson", text: "Confirmed with supplier - delivery on track", date: "2024-01-29 10:00", avatar: "MJ" },
+];
+
+// ── Checklist mock data ───────────────────────────────────────────
+
+export const mockRiskTemplates = [
+  // USA Templates (OSHA)
+  { id: "jha", name: "Job Hazard Analysis (JHA)", type: "JHA", sections: 5, submissions: 45, status: "active", locked: true, 
+    description: "OSHA-compliant step-by-step task analysis with hazard identification and control hierarchy" },
+  { id: "jsa", name: "Job Safety Analysis (JSA)", type: "JSA", sections: 4, submissions: 32, status: "active", locked: true,
+    description: "Daily pre-work safety checklist for crew briefings" },
+  
+  // Netherlands Templates (Arbowet)
+  { id: "rie", name: "RI&E Assessment", type: "RIE", sections: 5, submissions: 28, status: "active", locked: true,
+    description: "Risico-Inventarisatie en -Evaluatie per Arbowet Article 5" },
+  { id: "arbowet", name: "Arbowet Compliance Audit", type: "ARBOWET", sections: 4, submissions: 15, status: "active", locked: true,
+    description: "Dutch Working Conditions Act compliance check (Articles 3, 5, 8, 13, 14)" },
+  
+  // Sweden Templates (AFS)
+  { id: "sam", name: "SAM Assessment", type: "SAM", sections: 4, submissions: 22, status: "active", locked: true,
+    description: "Systematiskt Arbetsmiljöarbete per AFS 2023:1" },
+  { id: "osa", name: "OSA - Psykosocial Riskbedömning", type: "OSA", sections: 8, submissions: 18, status: "active", locked: true,
+    description: "Organisatorisk och Social Arbetsmiljö per AFS 2015:4" },
+];
+
+export const mockRiskAssessments = [
+  { id: "ra1", template: "Job Hazard Analysis (JHA)", templateId: "jha", type: "JHA", location: "Warehouse A", date: "2024-01-28", status: "completed", by: "John Doe", riskLevel: "medium", riskScore: 9 },
+  { id: "ra2", template: "RI&E Assessment", templateId: "rie", type: "RIE", location: "Amsterdam Office", date: "2024-01-27", status: "in_progress", by: "Jan van Berg", riskLevel: "high", riskScore: 16 },
+  { id: "ra3", template: "SAM Assessment", templateId: "sam", type: "SAM", location: "Stockholm Plant", date: "2024-01-25", status: "completed", by: "Erik Lindqvist", riskLevel: "low", riskScore: 4 },
+  { id: "ra4", template: "Job Safety Analysis (JSA)", templateId: "jsa", type: "JSA", location: "Production Floor", date: "2024-01-24", status: "completed", by: "Sarah Wilson", riskLevel: "low", riskScore: 3 },
+  { id: "ra5", template: "OSA - Psykosocial Riskbedömning", templateId: "osa", type: "OSA", location: "Malmö Warehouse", date: "2024-01-22", status: "completed", by: "Anna Svensson", riskLevel: "medium", riskScore: 8 },
+  { id: "ra6", template: "Arbowet Compliance Audit", templateId: "arbowet", type: "ARBOWET", location: "Rotterdam Factory", date: "2024-01-20", status: "completed", by: "Pieter de Jong", riskLevel: "high", riskScore: 15 },
+];
+
+export const mockInspections = [
+  { id: "ins1", asset: "Forklift FL-001", assetId: "asset1", template: "Heavy Machinery Inspection", date: "2024-01-28", status: "passed", by: "John Doe", issues: 0, nextDue: "2024-02-28" },
+  { id: "ins2", asset: "Crane CR-003", assetId: "asset2", template: "Heavy Machinery Inspection", date: "2024-01-27", status: "failed", by: "Jane Smith", issues: 2, nextDue: "2024-02-03" },
+  { id: "ins3", asset: "Safety Harness SH-012", assetId: "asset3", template: "PPE Equipment Check", date: "2024-01-26", status: "passed", by: "Mike Johnson", issues: 0, nextDue: "2024-04-26" },
+  { id: "ins4", asset: "Delivery Truck DT-007", assetId: "asset4", template: "Vehicle Pre-Trip Inspection", date: "2024-01-25", status: "passed", by: "Sarah Wilson", issues: 1, nextDue: "2024-01-26" },
+  { id: "ins5", asset: "Welding Machine WM-002", assetId: "asset5", template: "Electrical Equipment Check", date: "2024-01-24", status: "passed", by: "Tom Brown", issues: 0, nextDue: "2024-03-24" },
+  { id: "ins6", asset: "Fire Extinguisher FE-101", assetId: "asset6", template: "Fire Safety Equipment Check", date: "2024-01-23", status: "passed", by: "Emma Davis", issues: 0, nextDue: "2024-07-23" },
+];
+
+export const mockInspectionTemplates = [
+  { id: "it1", name: "Heavy Machinery Inspection", category: "machinery", checkpoints: 24, used: 145, status: "active", description: "Comprehensive check for forklifts, cranes, and industrial equipment" },
+  { id: "it2", name: "Vehicle Pre-Trip Inspection", category: "vehicle", checkpoints: 18, used: 256, status: "active", description: "DOT-compliant pre-trip inspection for commercial vehicles" },
+  { id: "it3", name: "Fire Safety Equipment Check", category: "fire_safety", checkpoints: 10, used: 189, status: "active", description: "Extinguishers, alarms, sprinklers, and emergency lighting" },
+  { id: "it4", name: "PPE Equipment Check", category: "ppe", checkpoints: 8, used: 98, status: "active", description: "Harnesses, helmets, gloves, and safety footwear" },
+  { id: "it5", name: "Electrical Equipment Check", category: "electrical", checkpoints: 15, used: 67, status: "active", description: "Welding machines, power tools, and electrical panels" },
+  { id: "it6", name: "Scaffolding Inspection", category: "construction", checkpoints: 20, used: 34, status: "active", description: "Scaffold structure, platforms, and fall protection" },
+];
+
+// ── Risk assessment detail mock data ──────────────────────────────
+
+export const mockRiskTemplateDetails: Record<string, {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  locked: boolean;
+  sections: { name: string; description: string; fields: { label: string; type: string; required: boolean }[] }[];
+}> = {
+  "jha": {
+    id: "jha",
+    name: "Job Hazard Analysis (JHA)",
+    type: "JHA",
+    description: "OSHA-compliant step-by-step task analysis with hazard identification and control hierarchy",
+    locked: true,
+    sections: [
+      {
+        name: "Job Information",
+        description: "Basic information about the job being analyzed",
+        fields: [
+          { label: "Job/Task Title", type: "text", required: true },
+          { label: "Department", type: "select", required: true },
+          { label: "Location", type: "location", required: true },
+          { label: "Date of Analysis", type: "date", required: true },
+          { label: "Analyst Name", type: "text", required: true },
+        ],
+      },
+      {
+        name: "Task Breakdown",
+        description: "Break down the job into individual steps",
+        fields: [
+          { label: "Step Number", type: "number", required: true },
+          { label: "Step Description", type: "textarea", required: true },
+          { label: "Potential Hazards", type: "multi-select", required: true },
+          { label: "Hazard Description", type: "textarea", required: false },
+        ],
+      },
+      {
+        name: "Risk Assessment",
+        description: "Evaluate severity and probability",
+        fields: [
+          { label: "Severity (1-5)", type: "rating", required: true },
+          { label: "Probability (1-5)", type: "rating", required: true },
+          { label: "Risk Score", type: "calculated", required: true },
+          { label: "Risk Level", type: "calculated", required: true },
+        ],
+      },
+      {
+        name: "Control Measures",
+        description: "Define controls using the hierarchy",
+        fields: [
+          { label: "Elimination Controls", type: "textarea", required: false },
+          { label: "Substitution Controls", type: "textarea", required: false },
+          { label: "Engineering Controls", type: "textarea", required: false },
+          { label: "Administrative Controls", type: "textarea", required: false },
+          { label: "PPE Required", type: "multi-select", required: true },
+        ],
+      },
+      {
+        name: "Approval",
+        description: "Supervisor review and approval",
+        fields: [
+          { label: "Reviewed By", type: "text", required: true },
+          { label: "Supervisor Signature", type: "signature", required: true },
+          { label: "Approval Date", type: "date", required: true },
+        ],
+      },
+    ],
+  },
+  "rie": {
+    id: "rie",
+    name: "RI&E Assessment",
+    type: "RIE",
+    description: "Risico-Inventarisatie en -Evaluatie (Risk Inventory & Evaluation) per Arbowet",
+    locked: true,
+    sections: [
+      {
+        name: "Bedrijfsgegevens (Company Information)",
+        description: "Basic company and assessment information",
+        fields: [
+          { label: "Bedrijfsnaam", type: "text", required: true },
+          { label: "Afdeling", type: "text", required: true },
+          { label: "Locatie", type: "location", required: true },
+          { label: "Datum beoordeling", type: "date", required: true },
+          { label: "Beoordelaar", type: "text", required: true },
+        ],
+      },
+      {
+        name: "Risico-identificatie (Risk Identification)",
+        description: "Identify workplace risks by category",
+        fields: [
+          { label: "Fysieke risico's", type: "checklist", required: true },
+          { label: "Chemische risico's", type: "checklist", required: true },
+          { label: "Biologische risico's", type: "checklist", required: true },
+          { label: "Ergonomische risico's", type: "checklist", required: true },
+          { label: "Psychosociale risico's", type: "checklist", required: true },
+        ],
+      },
+      {
+        name: "Risico-evaluatie (Risk Evaluation)",
+        description: "Evaluate each identified risk",
+        fields: [
+          { label: "Ernst (Severity 1-5)", type: "rating", required: true },
+          { label: "Waarschijnlijkheid (Probability 1-5)", type: "rating", required: true },
+          { label: "Blootstelling (Exposure)", type: "select", required: true },
+          { label: "Risicoscore", type: "calculated", required: true },
+          { label: "Prioriteit", type: "calculated", required: true },
+        ],
+      },
+      {
+        name: "Beheersmaatregelen (Control Measures)",
+        description: "Define actions to control risks",
+        fields: [
+          { label: "Huidige maatregelen", type: "textarea", required: true },
+          { label: "Aanvullende maatregelen", type: "textarea", required: true },
+          { label: "Verantwoordelijke", type: "text", required: true },
+          { label: "Deadline", type: "date", required: true },
+        ],
+      },
+      {
+        name: "Plan van Aanpak (Action Plan)",
+        description: "Document the action plan",
+        fields: [
+          { label: "Actie", type: "textarea", required: true },
+          { label: "Prioriteit", type: "select", required: true },
+          { label: "Status", type: "select", required: true },
+          { label: "Evaluatiedatum", type: "date", required: true },
+        ],
+      },
+      {
+        name: "Ondertekening (Signature)",
+        description: "Management approval",
+        fields: [
+          { label: "Goedgekeurd door", type: "text", required: true },
+          { label: "Handtekening", type: "signature", required: true },
+          { label: "Datum", type: "date", required: true },
+        ],
+      },
+    ],
+  },
+  "sam": {
+    id: "sam",
+    name: "SAM Assessment",
+    type: "SAM",
+    description: "Systematiskt Arbetsmiljöarbete (Systematic Work Environment Management)",
+    locked: true,
+    sections: [
+      {
+        name: "Grundinformation (Basic Information)",
+        description: "Company and assessment details",
+        fields: [
+          { label: "Företagsnamn", type: "text", required: true },
+          { label: "Avdelning", type: "text", required: true },
+          { label: "Plats", type: "location", required: true },
+          { label: "Datum", type: "date", required: true },
+          { label: "Ansvarig", type: "text", required: true },
+        ],
+      },
+      {
+        name: "Fysisk Arbetsmiljö (Physical Environment)",
+        description: "Physical work environment risks",
+        fields: [
+          { label: "Buller (Noise)", type: "rating", required: true },
+          { label: "Belysning (Lighting)", type: "rating", required: true },
+          { label: "Temperatur", type: "rating", required: true },
+          { label: "Ergonomi", type: "rating", required: true },
+          { label: "Maskiner och utrustning", type: "checklist", required: true },
+        ],
+      },
+      {
+        name: "Psykosocial Arbetsmiljö (Psychosocial Environment)",
+        description: "Psychosocial work environment assessment",
+        fields: [
+          { label: "Arbetsbelastning (Workload)", type: "rating", required: true },
+          { label: "Kontroll över arbetet", type: "rating", required: true },
+          { label: "Socialt stöd", type: "rating", required: true },
+          { label: "Arbetstider", type: "rating", required: true },
+          { label: "Kränkande särbehandling", type: "yes_no", required: true },
+        ],
+      },
+      {
+        name: "Riskbedömning (Risk Assessment)",
+        description: "Evaluate identified risks",
+        fields: [
+          { label: "Allvarlighetsgrad (Severity 1-5)", type: "rating", required: true },
+          { label: "Sannolikhet (Probability 1-5)", type: "rating", required: true },
+          { label: "Riskpoäng", type: "calculated", required: true },
+          { label: "Risknivå", type: "calculated", required: true },
+        ],
+      },
+      {
+        name: "Åtgärder (Actions)",
+        description: "Control measures and actions",
+        fields: [
+          { label: "Befintliga åtgärder", type: "textarea", required: true },
+          { label: "Nya åtgärder", type: "textarea", required: true },
+          { label: "Ansvarig person", type: "text", required: true },
+          { label: "Deadline", type: "date", required: true },
+        ],
+      },
+      {
+        name: "Uppföljning (Follow-up)",
+        description: "Review and follow-up plan",
+        fields: [
+          { label: "Uppföljningsdatum", type: "date", required: true },
+          { label: "Utvärdering av åtgärder", type: "textarea", required: false },
+          { label: "Nästa granskning", type: "date", required: true },
+        ],
+      },
+      {
+        name: "Godkännande (Approval)",
+        description: "Management sign-off",
+        fields: [
+          { label: "Godkänd av", type: "text", required: true },
+          { label: "Signatur", type: "signature", required: true },
+          { label: "Datum", type: "date", required: true },
+        ],
+      },
+    ],
+  },
+  "jsa": {
+    id: "jsa",
+    name: "Job Safety Analysis (JSA)",
+    type: "JSA",
+    description: "Task-based safety analysis for specific job roles and activities",
+    locked: true,
+    sections: [
+      {
+        name: "Job Information",
+        description: "Details about the job and analysis",
+        fields: [
+          { label: "Job/Task Title", type: "text", required: true },
+          { label: "Department", type: "select", required: true },
+          { label: "Location", type: "location", required: true },
+          { label: "Analysis Date", type: "date", required: true },
+          { label: "Prepared By", type: "text", required: true },
+        ],
+      },
+      {
+        name: "Sequence of Basic Job Steps",
+        description: "List each step in the sequence performed",
+        fields: [
+          { label: "Step Number", type: "number", required: true },
+          { label: "Basic Job Step", type: "textarea", required: true },
+        ],
+      },
+      {
+        name: "Potential Hazards",
+        description: "Identify hazards for each step",
+        fields: [
+          { label: "Hazard Type", type: "multi-select", required: true },
+          { label: "Hazard Description", type: "textarea", required: true },
+          { label: "Severity (1-5)", type: "rating", required: true },
+          { label: "Probability (1-5)", type: "rating", required: true },
+        ],
+      },
+      {
+        name: "Recommended Actions",
+        description: "Actions to eliminate or reduce hazards",
+        fields: [
+          { label: "Recommended Action", type: "textarea", required: true },
+          { label: "Responsible Person", type: "text", required: true },
+          { label: "Completion Date", type: "date", required: true },
+          { label: "PPE Required", type: "multi-select", required: true },
+        ],
+      },
+    ],
+  },
+  "arbowet": {
+    id: "arbowet",
+    name: "Arbowet Compliance Audit",
+    type: "ARBOWET",
+    description: "Dutch Working Conditions Act compliance check (Articles 3, 5, 8, 13, 14)",
+    locked: true,
+    sections: [
+      {
+        name: "Algemene Gegevens (General Information)",
+        description: "Company and assessment details",
+        fields: [
+          { label: "Bedrijfsnaam", type: "text", required: true },
+          { label: "Vestigingsadres", type: "text", required: true },
+          { label: "Datum controle", type: "date", required: true },
+          { label: "Controleur", type: "text", required: true },
+        ],
+      },
+      {
+        name: "Arbowet Artikelen",
+        description: "Compliance with specific Arbowet articles",
+        fields: [
+          { label: "Art. 3 - Arbobeleid", type: "checklist", required: true },
+          { label: "Art. 5 - RI&E aanwezig", type: "yes_no", required: true },
+          { label: "Art. 8 - Voorlichting gegeven", type: "yes_no", required: true },
+          { label: "Art. 13 - BHV geregeld", type: "yes_no", required: true },
+          { label: "Art. 14 - Arbodienst ingeschakeld", type: "yes_no", required: true },
+        ],
+      },
+      {
+        name: "Bevindingen (Findings)",
+        description: "Document compliance gaps",
+        fields: [
+          { label: "Geconstateerde tekortkomingen", type: "textarea", required: true },
+          { label: "Ernst van afwijking", type: "rating", required: true },
+          { label: "Vereiste actie", type: "textarea", required: true },
+          { label: "Deadline", type: "date", required: true },
+        ],
+      },
+      {
+        name: "Conclusie (Conclusion)",
+        description: "Overall compliance assessment",
+        fields: [
+          { label: "Algemene beoordeling", type: "select", required: true },
+          { label: "Opmerkingen", type: "textarea", required: false },
+          { label: "Handtekening controleur", type: "signature", required: true },
+        ],
+      },
+    ],
+  },
+  "osa": {
+    id: "osa",
+    name: "OSA - Psykosocial Riskbedömning",
+    type: "OSA",
+    description: "Organisatorisk och Social Arbetsmiljö per AFS 2015:4",
+    locked: true,
+    sections: [
+      {
+        name: "Grundinformation",
+        description: "Basic assessment information",
+        fields: [
+          { label: "Företag", type: "text", required: true },
+          { label: "Arbetsplats", type: "text", required: true },
+          { label: "Datum", type: "date", required: true },
+          { label: "Utförare", type: "text", required: true },
+        ],
+      },
+      {
+        name: "Organisatorisk Arbetsmiljö",
+        description: "Organizational work environment (AFS 2015:4)",
+        fields: [
+          { label: "Arbetsbelastning", type: "rating", required: true },
+          { label: "Arbetstid", type: "rating", required: true },
+          { label: "Krav och resurser balans", type: "rating", required: true },
+          { label: "Möjlighet till återhämtning", type: "rating", required: true },
+        ],
+      },
+      {
+        name: "Social Arbetsmiljö",
+        description: "Social work environment factors",
+        fields: [
+          { label: "Socialt stöd från kollegor", type: "rating", required: true },
+          { label: "Socialt stöd från chef", type: "rating", required: true },
+          { label: "Förekomst av kränkande särbehandling", type: "yes_no", required: true },
+          { label: "Konflikter på arbetsplatsen", type: "yes_no", required: true },
+        ],
+      },
+      {
+        name: "Riskbedömning",
+        description: "Risk evaluation",
+        fields: [
+          { label: "Identifierade risker", type: "textarea", required: true },
+          { label: "Allvarlighetsgrad (1-5)", type: "rating", required: true },
+          { label: "Sannolikhet (1-5)", type: "rating", required: true },
+          { label: "Risknivå", type: "calculated", required: true },
+        ],
+      },
+      {
+        name: "Åtgärdsplan",
+        description: "Action plan",
+        fields: [
+          { label: "Planerade åtgärder", type: "textarea", required: true },
+          { label: "Ansvarig", type: "text", required: true },
+          { label: "Deadline", type: "date", required: true },
+          { label: "Uppföljning", type: "date", required: true },
+        ],
+      },
+    ],
+  },
+};
+
+// ── Platform user activity mock data ──────────────────────────────
+
+export const mockActivity = [
+  { id: "1", action: "Logged in", timestamp: "2024-07-20T10:00:00Z", ip: "192.168.1.100" },
+  { id: "2", action: "Viewed company: Harmoniq Safety", timestamp: "2024-07-20T10:05:00Z", ip: "192.168.1.100" },
+  { id: "3", action: "Created company: New Corp", timestamp: "2024-07-19T14:30:00Z", ip: "192.168.1.100" },
+  { id: "4", action: "Updated platform settings", timestamp: "2024-07-18T09:15:00Z", ip: "192.168.1.100" },
+  { id: "5", action: "Deactivated user account", timestamp: "2024-07-17T16:45:00Z", ip: "10.0.0.5" },
+  { id: "6", action: "Logged in", timestamp: "2024-07-17T08:00:00Z", ip: "10.0.0.5" },
+];

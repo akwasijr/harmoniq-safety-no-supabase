@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
+import { useTranslation } from "@/i18n";
 
 export type TaskComment = {
   id: string;
@@ -44,11 +45,23 @@ interface TaskCommentsProps {
 export function TaskComments({ entityType, entityId, formatDate }: TaskCommentsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [comments, setComments] = React.useState<TaskComment[]>([]);
   const [newComment, setNewComment] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    setComments(loadComments(entityType, entityId));
+    try {
+      setError(null);
+      const raw = typeof window !== "undefined"
+        ? window.localStorage.getItem(getStorageKey(entityType, entityId))
+        : null;
+      setComments(raw ? JSON.parse(raw) : []);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+      setComments([]);
+    }
   }, [entityType, entityId]);
 
   const handleAdd = React.useCallback(() => {
@@ -62,25 +75,39 @@ export function TaskComments({ entityType, entityId, formatDate }: TaskCommentsP
     };
     const updated = [...comments, comment];
     setComments(updated);
-    saveComments(entityType, entityId, updated);
     setNewComment("");
-    toast("Comment added", "success");
-  }, [newComment, user, comments, entityType, entityId, toast]);
+    try {
+      saveComments(entityType, entityId, updated);
+      setError(null);
+      toast(t("tasks.comments.added"), "success");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+      toast(t("tasks.comments.saveError"), "error");
+    }
+  }, [newComment, user, comments, entityType, entityId, toast, t]);
 
   return (
     <div className="space-y-4">
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
+        </div>
+      )}
+
       {/* Comment form */}
       <Card>
         <CardContent className="p-4">
           <Textarea
-            placeholder="Add a comment..."
+            placeholder={t("tasks.comments.placeholder")}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             className="mb-3 min-h-[80px] resize-none"
           />
           <Button onClick={handleAdd} disabled={!newComment.trim()} size="sm" className="w-full">
             <Send className="h-4 w-4 mr-2" />
-            Post Comment
+            {t("tasks.comments.post")}
           </Button>
         </CardContent>
       </Card>
@@ -91,7 +118,7 @@ export function TaskComments({ entityType, entityId, formatDate }: TaskCommentsP
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <MessageCircle className="h-4 w-4" />
-              Comments ({comments.length})
+              {t("tasks.comments.title", { count: comments.length })}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0 space-y-3">
@@ -110,8 +137,8 @@ export function TaskComments({ entityType, entityId, formatDate }: TaskCommentsP
           <div className="rounded-full bg-muted p-4 mb-3">
             <MessageCircle className="h-8 w-8 text-muted-foreground/40" />
           </div>
-          <p className="text-sm text-muted-foreground">No comments yet</p>
-          <p className="text-xs text-muted-foreground/70 mt-1">Be the first to add a comment</p>
+          <p className="text-sm text-muted-foreground">{t("tasks.comments.empty")}</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">{t("tasks.comments.emptyHint")}</p>
         </div>
       )}
     </div>

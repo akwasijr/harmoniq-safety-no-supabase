@@ -26,6 +26,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { mockLocationEmergencyContacts, mockLocationSafetyNotices } from "@/mocks/data";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
+import { useAuth } from "@/hooks/use-auth";
 import { LocationType } from "@/types";
 import { useTranslation } from "@/i18n";
 import { LoadingPage } from "@/components/ui/loading";
@@ -42,9 +43,12 @@ const LOCATION_TYPE_ICONS: Record<LocationType, React.ComponentType<{ className?
 export default function LocationLandingPage() {
   const router = useRouter();
   const routeParams = useParams();
-  const company = routeParams.company as string;
-  const locationId = routeParams.locationId as string;
+  const rawCompany = routeParams.company;
+  const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
+  const rawLocationId = routeParams.locationId;
+  const locationId = typeof rawLocationId === "string" ? rawLocationId : Array.isArray(rawLocationId) ? rawLocationId[0] : "";
 
+  const { user } = useAuth();
   const { items: locations, isLoading } = useLocationsStore();
   const { items: incidents } = useIncidentsStore();
   const { t } = useTranslation();
@@ -57,7 +61,8 @@ export default function LocationLandingPage() {
     room: t("locations.types.room"),
   };
 
-  const location = locations.find((l) => l.id === locationId);
+  const matchedLocation = locations.find((l) => l.id === locationId);
+  const location = matchedLocation && user?.company_id && matchedLocation.company_id !== user.company_id ? undefined : matchedLocation;
 
   if (isLoading) {
     return <LoadingPage />;

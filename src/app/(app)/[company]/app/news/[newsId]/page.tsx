@@ -25,7 +25,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 export default function NewsDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const company = params.company as string;
   const newsId = params.newsId as string;
+  const bookmarksKey = `harmoniq_${company}_bookmarks`;
   const [isBookmarked, setIsBookmarked] = React.useState(false);
   const [showShareSuccess, setShowShareSuccess] = React.useState(false);
   const [showDownloadSuccess, setShowDownloadSuccess] = React.useState(false);
@@ -37,14 +39,14 @@ export default function NewsDetailPage() {
   React.useEffect(() => {
     if (newsId && typeof window !== "undefined") {
       try {
-        const bookmarks = JSON.parse(localStorage.getItem("harmoniq_bookmarks") || "[]");
+        const bookmarks = JSON.parse(localStorage.getItem(bookmarksKey) || "[]");
         setIsBookmarked(bookmarks.includes(newsId));
       } catch {
         // Invalid JSON, ignore
         setIsBookmarked(false);
       }
     }
-  }, [newsId]);
+  }, [newsId, bookmarksKey]);
 
   const article = contentItems.find((c) => c.id === newsId);
 
@@ -86,7 +88,7 @@ export default function NewsDetailPage() {
     
     let bookmarks: string[] = [];
     try {
-      bookmarks = JSON.parse(localStorage.getItem("harmoniq_bookmarks") || "[]");
+      bookmarks = JSON.parse(localStorage.getItem(bookmarksKey) || "[]");
     } catch {
       // Invalid JSON in localStorage, reset
       bookmarks = [];
@@ -94,11 +96,11 @@ export default function NewsDetailPage() {
     
     if (isBookmarked) {
       const newBookmarks = bookmarks.filter((id: string) => id !== newsId);
-      localStorage.setItem("harmoniq_bookmarks", JSON.stringify(newBookmarks));
+      localStorage.setItem(bookmarksKey, JSON.stringify(newBookmarks));
       setIsBookmarked(false);
     } else {
       bookmarks.push(newsId);
-      localStorage.setItem("harmoniq_bookmarks", JSON.stringify(bookmarks));
+      localStorage.setItem(bookmarksKey, JSON.stringify(bookmarks));
       setIsBookmarked(true);
     }
   };

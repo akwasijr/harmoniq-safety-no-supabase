@@ -50,8 +50,9 @@ import WorkOrdersContent from "@/app/(app)/[company]/dashboard/work-orders/page"
 import PartsContent from "@/app/(app)/[company]/dashboard/parts/page";
 import type { Asset, Alert } from "@/types";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { PAGINATION } from "@/lib/constants";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 export default function AssetsPage() {
   const router = useRouter();

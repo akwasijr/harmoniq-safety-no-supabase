@@ -24,8 +24,9 @@ import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import { useTranslation } from "@/i18n";
+import { PAGINATION } from "@/lib/constants";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 type ContentTabType = "news" | "documents" | "training" | "events";
 

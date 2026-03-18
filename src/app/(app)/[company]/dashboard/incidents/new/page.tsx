@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { AlertTriangle, Camera, X, Loader2 } from "lucide-react";
+import { LIMITS } from "@/lib/constants";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -272,9 +273,9 @@ export default function NewIncidentPage() {
                 rows={5}
                 value={formData.description}
                 onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                maxLength={5000}
+                maxLength={LIMITS.MAX_DESCRIPTION_LENGTH}
               />
-              <p className="text-xs text-muted-foreground text-right">{formData.description.length}/5000</p>
+              <p className="text-xs text-muted-foreground text-right">{formData.description.length}/{LIMITS.MAX_DESCRIPTION_LENGTH}</p>
             </div>
 
             <div className="flex items-center justify-between rounded-lg border p-3">

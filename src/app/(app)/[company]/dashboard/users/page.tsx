@@ -31,8 +31,9 @@ import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
+import { PAGINATION } from "@/lib/constants";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 interface Invitation {
   id: string;

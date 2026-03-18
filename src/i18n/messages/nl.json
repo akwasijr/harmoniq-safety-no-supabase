@@ -1341,7 +1341,8 @@
     "enterAssetCode": "Assettag, serienummer of QR-code...",
     "lookupAsset": "Asset opzoeken",
     "recentAssets": "Recente assets",
-    "loginRequired": "Log in om door te gaan"
+    "loginRequired": "Log in om door te gaan",
+    "torchFailed": "[NL] Could not toggle flashlight"
   },
   "newAsset": {
     "title": "Asset registreren",
@@ -1583,7 +1584,28 @@
     "dueTomorrow": "[NL] Due tomorrow",
     "dueInDays": "[NL] Due in {days} days",
     "assignedTasks": "[NL] assigned tasks",
-    "completedTasks": "[NL] completed tasks"
+    "completedTasks": "[NL] completed tasks",
+    "comments": {
+      "title": "[NL] Comments ({count})",
+      "placeholder": "[NL] Add a comment...",
+      "post": "[NL] Post Comment",
+      "added": "[NL] Comment added",
+      "empty": "[NL] No comments yet",
+      "emptyHint": "[NL] Be the first to add a comment",
+      "loadError": "[NL] Failed to load comments",
+      "saveError": "[NL] Failed to save comment"
+    },
+    "documents": {
+      "title": "[NL] Files ({count})",
+      "upload": "[NL] Upload File",
+      "uploadHint": "[NL] PNG, JPG, GIF, WebP, PDF, CSV — max 5 MB",
+      "uploaded": "[NL] File uploaded",
+      "removed": "[NL] File removed",
+      "empty": "[NL] No files attached",
+      "emptyHint": "[NL] Upload documents, photos, or reports",
+      "uploadFailed": "[NL] Upload failed",
+      "deleteFailed": "[NL] Failed to delete file"
+    }
   },
   "app.pending": "Openstaand",
   "errors.network": "Netwerkfout",

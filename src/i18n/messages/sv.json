@@ -1341,7 +1341,8 @@
     "enterAssetCode": "Tillgångstagg, serienummer eller QR-kod...",
     "lookupAsset": "Sök tillgång",
     "recentAssets": "Senaste tillgångar",
-    "loginRequired": "Logga in för att fortsätta"
+    "loginRequired": "Logga in för att fortsätta",
+    "torchFailed": "[SV] Could not toggle flashlight"
   },
   "newAsset": {
     "title": "Registrera tillgång",
@@ -1583,7 +1584,28 @@
     "dueTomorrow": "[SV] Due tomorrow",
     "dueInDays": "[SV] Due in {days} days",
     "assignedTasks": "[SV] assigned tasks",
-    "completedTasks": "[SV] completed tasks"
+    "completedTasks": "[SV] completed tasks",
+    "comments": {
+      "title": "[SV] Comments ({count})",
+      "placeholder": "[SV] Add a comment...",
+      "post": "[SV] Post Comment",
+      "added": "[SV] Comment added",
+      "empty": "[SV] No comments yet",
+      "emptyHint": "[SV] Be the first to add a comment",
+      "loadError": "[SV] Failed to load comments",
+      "saveError": "[SV] Failed to save comment"
+    },
+    "documents": {
+      "title": "[SV] Files ({count})",
+      "upload": "[SV] Upload File",
+      "uploadHint": "[SV] PNG, JPG, GIF, WebP, PDF, CSV — max 5 MB",
+      "uploaded": "[SV] File uploaded",
+      "removed": "[SV] File removed",
+      "empty": "[SV] No files attached",
+      "emptyHint": "[SV] Upload documents, photos, or reports",
+      "uploadFailed": "[SV] Upload failed",
+      "deleteFailed": "[SV] Failed to delete file"
+    }
   },
   "app.pending": "Väntande",
   "errors.network": "Nätverksfel",

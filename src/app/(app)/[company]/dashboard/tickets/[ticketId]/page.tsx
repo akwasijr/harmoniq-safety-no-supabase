@@ -3,6 +3,8 @@
 import * as React from "react";
 import { useRouter, useParams, notFound } from "next/navigation";
 import { LoadingPage } from "@/components/ui/loading";
+import { defaultTasks as defaultTasksData, defaultComments as defaultCommentsData } from "@/mocks/data";
+import type { TicketTask, TicketComment } from "@/mocks/data";
 import {
   ArrowLeft,
   Save,
@@ -71,13 +73,8 @@ export default function TicketDetailPage() {
   }, [ticketId]);
 
   type TicketTask = { id: string; title: string; completed: boolean };
-  const TASKS_KEY = `harmoniq_ticket_tasks_${ticketId}`;
-  const defaultTasks: TicketTask[] = [
-    { id: "t1", title: "Review incident report", completed: true },
-    { id: "t2", title: "Contact witness", completed: true },
-    { id: "t3", title: "Order replacement parts", completed: false },
-    { id: "t4", title: "Schedule follow-up inspection", completed: false },
-  ];
+  const TASKS_KEY = `harmoniq_${company}_ticket_tasks_${ticketId}`;
+  const defaultTasks = defaultTasksData;
   const [tasks, setTasks] = React.useState<TicketTask[]>(() => {
     if (typeof window === "undefined") return defaultTasks;
     try {
@@ -87,12 +84,8 @@ export default function TicketDetailPage() {
   });
 
   type TicketComment = { id: string; author: string; text: string; date: string; avatar: string };
-  const COMMENTS_KEY = `harmoniq_ticket_comments_${ticketId}`;
-  const defaultComments: TicketComment[] = [
-    { id: "c1", author: "John Doe", text: "Started investigation", date: "2024-01-28 09:30", avatar: "JD" },
-    { id: "c2", author: "Jane Smith", text: "Parts ordered, ETA 3 days", date: "2024-01-28 14:15", avatar: "JS" },
-    { id: "c3", author: "Mike Johnson", text: "Confirmed with supplier - delivery on track", date: "2024-01-29 10:00", avatar: "MJ" },
-  ];
+  const COMMENTS_KEY = `harmoniq_${company}_ticket_comments_${ticketId}`;
+  const defaultComments = defaultCommentsData;
   const [comments, setComments] = React.useState<TicketComment[]>(() => {
     if (typeof window === "undefined") return defaultComments;
     try {

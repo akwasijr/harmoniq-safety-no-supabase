@@ -29,8 +29,10 @@ import type { WorkOrderStatus } from "@/types";
 export default function WorkOrderDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const company = params.company as string;
-  const orderId = params.orderId as string;
+  const rawCompany = params.company;
+  const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
+  const rawOrderId = params.orderId;
+  const orderId = typeof rawOrderId === "string" ? rawOrderId : Array.isArray(rawOrderId) ? rawOrderId[0] : "";
 
   const { user } = useAuth();
   const { t, formatDate, formatNumber } = useTranslation();
@@ -43,7 +45,8 @@ export default function WorkOrderDetailPage() {
 
   const [activeTab, setActiveTab] = React.useState("details");
 
-  const order = orders.find((o) => o.id === orderId);
+  const matchedOrder = orders.find((o) => o.id === orderId);
+  const order = matchedOrder && user?.company_id && matchedOrder.company_id !== user.company_id ? undefined : matchedOrder;
   const assignee = order?.assigned_to ? users.find((u) => u.id === order.assigned_to) : null;
   const requester = order?.requested_by ? users.find((u) => u.id === order.requested_by) : null;
   const asset = order?.asset_id ? assets.find((a) => a.id === order.asset_id) : null;

@@ -36,8 +36,10 @@ function ChecklistFormPageContent() {
   const router = useRouter();
   const routeParams = useParams();
   const searchParams = useSearchParams();
-  const company = routeParams.company as string;
-  const checklistId = routeParams.checklistId as string;
+  const rawCompany = routeParams.company;
+  const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
+  const rawChecklistId = routeParams.checklistId;
+  const checklistId = typeof rawChecklistId === "string" ? rawChecklistId : Array.isArray(rawChecklistId) ? rawChecklistId[0] : "";
   const draftId = searchParams.get("draft");
   const [currentItem, setCurrentItem] = React.useState(0);
   const [answers, setAnswers] = React.useState<Record<string, string>>({});
@@ -54,7 +56,8 @@ function ChecklistFormPageContent() {
 
   const { t } = useTranslation();
 
-  const template = templates.find((tpl) => tpl.id === checklistId);
+  const matchedTemplate = templates.find((tpl) => tpl.id === checklistId);
+  const template = matchedTemplate && user?.company_id && matchedTemplate.company_id !== user.company_id ? undefined : matchedTemplate;
 
   // Resume draft if ?draft=id is present
   const draftInitialized = React.useRef(false);

@@ -34,8 +34,9 @@ import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import type { Ticket as TicketType } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { PAGINATION } from "@/lib/constants";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 export default function TicketsPage() {
   const router = useRouter();

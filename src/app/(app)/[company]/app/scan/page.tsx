@@ -25,6 +25,7 @@ import { useCompanyParam } from "@/hooks/use-company-param";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useTranslation } from "@/i18n";
+import { useToast } from "@/components/ui/toast";
 import { LoadingPage } from "@/components/ui/loading";
 
 type ScanMode = "camera" | "manual";
@@ -36,6 +37,7 @@ export default function ScanAssetPage() {
   const { assets, locations } = useCompanyData();
   const { isLoading } = useAssetsStore();
   const { t } = useTranslation();
+  const { toast } = useToast();
 
   const [mode, setMode] = React.useState<ScanMode>("camera");
   const [scanState, setScanState] = React.useState<ScanState>("scanning");
@@ -192,10 +194,10 @@ export default function ScanAssetPage() {
     // Apply torch constraint
     track.applyConstraints({
       advanced: [{ torch: isTorchOn } as MediaTrackConstraintSet],
-    }).catch((err) => {
-      console.warn("Failed to toggle torch:", err);
+    }).catch(() => {
+      toast(t("scan.torchFailed"), "error");
     });
-  }, [isTorchOn]);
+  }, [isTorchOn, toast, t]);
 
   if (isLoading) {
     return <LoadingPage message="Loading assets..." />;

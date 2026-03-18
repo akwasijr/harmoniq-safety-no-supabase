@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
-import { FileText, Upload, File, Download, Trash2 } from "lucide-react";
+import { FileText, Upload, File, Download, Trash2, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
+import { useTranslation } from "@/i18n";
 import {
   storeFile,
   getFilesForEntity,
@@ -23,7 +24,9 @@ interface TaskDocumentsProps {
 export function TaskDocuments({ entityType, entityId, formatDate }: TaskDocumentsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [documents, setDocuments] = React.useState<StoredFile[]>([]);
+  const [uploading, setUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -34,25 +37,32 @@ export function TaskDocuments({ entityType, entityId, formatDate }: TaskDocument
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file || !user) return;
+      setUploading(true);
       try {
         const stored = await storeFile(file, entityType, entityId, user.id);
         setDocuments((prev) => [...prev, stored]);
-        toast("File uploaded", "success");
+        toast(t("tasks.documents.uploaded"), "success");
       } catch (err) {
-        toast(err instanceof Error ? err.message : "Upload failed", "error");
+        toast(err instanceof Error ? err.message : t("tasks.documents.uploadFailed"), "error");
+      } finally {
+        setUploading(false);
       }
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
-    [entityType, entityId, user, toast],
+    [entityType, entityId, user, toast, t],
   );
 
   const handleDelete = React.useCallback(
     (fileId: string) => {
-      deleteFile(fileId);
-      setDocuments((prev) => prev.filter((f) => f.id !== fileId));
-      toast("File removed", "success");
+      try {
+        deleteFile(fileId);
+        setDocuments((prev) => prev.filter((f) => f.id !== fileId));
+        toast(t("tasks.documents.removed"), "success");
+      } catch (err) {
+        toast(err instanceof Error ? err.message : t("tasks.documents.deleteFailed"), "error");
+      }
     },
-    [toast],
+    [toast, t],
   );
 
   return (
@@ -66,13 +76,23 @@ export function TaskDocuments({ entityType, entityId, formatDate }: TaskDocument
             accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,text/csv"
             className="hidden"
             onChange={handleUpload}
+            disabled={uploading}
           />
-          <Button variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="h-4 w-4 mr-2" />
-            Upload File
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4 mr-2" />
+            )}
+            {uploading ? t("common.loading") : t("tasks.documents.upload")}
           </Button>
           <p className="text-xs text-muted-foreground text-center mt-2">
-            PNG, JPG, GIF, WebP, PDF, CSV — max 5 MB
+            {t("tasks.documents.uploadHint")}
           </p>
         </CardContent>
       </Card>
@@ -83,7 +103,7 @@ export function TaskDocuments({ entityType, entityId, formatDate }: TaskDocument
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Files ({documents.length})
+              {t("tasks.documents.title", { count: documents.length })}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0 space-y-2">
@@ -120,8 +140,8 @@ export function TaskDocuments({ entityType, entityId, formatDate }: TaskDocument
           <div className="rounded-full bg-muted p-4 mb-3">
             <FileText className="h-8 w-8 text-muted-foreground/40" />
           </div>
-          <p className="text-sm text-muted-foreground">No files attached</p>
-          <p className="text-xs text-muted-foreground/70 mt-1">Upload documents, photos, or reports</p>
+          <p className="text-sm text-muted-foreground">{t("tasks.documents.empty")}</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">{t("tasks.documents.emptyHint")}</p>
         </div>
       )}
     </div>

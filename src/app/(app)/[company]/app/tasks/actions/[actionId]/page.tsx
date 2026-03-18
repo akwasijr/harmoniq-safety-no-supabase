@@ -29,8 +29,10 @@ import type { CorrectiveActionStatus } from "@/types";
 export default function CorrectiveActionDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const company = params.company as string;
-  const actionId = params.actionId as string;
+  const rawCompany = params.company;
+  const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
+  const rawActionId = params.actionId;
+  const actionId = typeof rawActionId === "string" ? rawActionId : Array.isArray(rawActionId) ? rawActionId[0] : "";
 
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
@@ -43,7 +45,8 @@ export default function CorrectiveActionDetailPage() {
 
   const [activeTab, setActiveTab] = React.useState("details");
 
-  const action = actions.find((a) => a.id === actionId);
+  const matchedAction = actions.find((a) => a.id === actionId);
+  const action = matchedAction && user?.company_id && matchedAction.company_id !== user.company_id ? undefined : matchedAction;
   const assignee = action?.assigned_to ? users.find((u) => u.id === action.assigned_to) : null;
   const asset = action?.asset_id ? assets.find((a) => a.id === action.asset_id) : null;
   const linkedInspection = action?.inspection_id ? incidents.find((i) => i.id === action.inspection_id) : null;

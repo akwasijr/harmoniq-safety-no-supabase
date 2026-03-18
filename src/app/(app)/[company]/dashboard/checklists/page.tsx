@@ -35,63 +35,18 @@ import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import type { ChecklistTemplate } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { PAGINATION } from "@/lib/constants";
+import {
+  mockRiskTemplates,
+  mockRiskAssessments,
+  mockInspections,
+  mockInspectionTemplates,
+} from "@/mocks/data";
 
 type MainTabType = "checklists" | "risk-assessment" | "inspection";
 type SubTabType = "submissions" | "templates";
 
-const ITEMS_PER_PAGE = 10;
-
-// Risk assessment templates
-const mockRiskTemplates = [
-  // USA Templates (OSHA)
-  { id: "jha", name: "Job Hazard Analysis (JHA)", type: "JHA", sections: 5, submissions: 45, status: "active", locked: true, 
-    description: "OSHA-compliant step-by-step task analysis with hazard identification and control hierarchy" },
-  { id: "jsa", name: "Job Safety Analysis (JSA)", type: "JSA", sections: 4, submissions: 32, status: "active", locked: true,
-    description: "Daily pre-work safety checklist for crew briefings" },
-  
-  // Netherlands Templates (Arbowet)
-  { id: "rie", name: "RI&E Assessment", type: "RIE", sections: 5, submissions: 28, status: "active", locked: true,
-    description: "Risico-Inventarisatie en -Evaluatie per Arbowet Article 5" },
-  { id: "arbowet", name: "Arbowet Compliance Audit", type: "ARBOWET", sections: 4, submissions: 15, status: "active", locked: true,
-    description: "Dutch Working Conditions Act compliance check (Articles 3, 5, 8, 13, 14)" },
-  
-  // Sweden Templates (AFS)
-  { id: "sam", name: "SAM Assessment", type: "SAM", sections: 4, submissions: 22, status: "active", locked: true,
-    description: "Systematiskt Arbetsmiljöarbete per AFS 2023:1" },
-  { id: "osa", name: "OSA - Psykosocial Riskbedömning", type: "OSA", sections: 8, submissions: 18, status: "active", locked: true,
-    description: "Organisatorisk och Social Arbetsmiljö per AFS 2015:4" },
-];
-
-// Mock risk assessment submissions
-const mockRiskAssessments = [
-  { id: "ra1", template: "Job Hazard Analysis (JHA)", templateId: "jha", type: "JHA", location: "Warehouse A", date: "2024-01-28", status: "completed", by: "John Doe", riskLevel: "medium", riskScore: 9 },
-  { id: "ra2", template: "RI&E Assessment", templateId: "rie", type: "RIE", location: "Amsterdam Office", date: "2024-01-27", status: "in_progress", by: "Jan van Berg", riskLevel: "high", riskScore: 16 },
-  { id: "ra3", template: "SAM Assessment", templateId: "sam", type: "SAM", location: "Stockholm Plant", date: "2024-01-25", status: "completed", by: "Erik Lindqvist", riskLevel: "low", riskScore: 4 },
-  { id: "ra4", template: "Job Safety Analysis (JSA)", templateId: "jsa", type: "JSA", location: "Production Floor", date: "2024-01-24", status: "completed", by: "Sarah Wilson", riskLevel: "low", riskScore: 3 },
-  { id: "ra5", template: "OSA - Psykosocial Riskbedömning", templateId: "osa", type: "OSA", location: "Malmö Warehouse", date: "2024-01-22", status: "completed", by: "Anna Svensson", riskLevel: "medium", riskScore: 8 },
-  { id: "ra6", template: "Arbowet Compliance Audit", templateId: "arbowet", type: "ARBOWET", location: "Rotterdam Factory", date: "2024-01-20", status: "completed", by: "Pieter de Jong", riskLevel: "high", riskScore: 15 },
-];
-
-
-// Mock data for inspections
-const mockInspections = [
-  { id: "ins1", asset: "Forklift FL-001", assetId: "asset1", template: "Heavy Machinery Inspection", date: "2024-01-28", status: "passed", by: "John Doe", issues: 0, nextDue: "2024-02-28" },
-  { id: "ins2", asset: "Crane CR-003", assetId: "asset2", template: "Heavy Machinery Inspection", date: "2024-01-27", status: "failed", by: "Jane Smith", issues: 2, nextDue: "2024-02-03" },
-  { id: "ins3", asset: "Safety Harness SH-012", assetId: "asset3", template: "PPE Equipment Check", date: "2024-01-26", status: "passed", by: "Mike Johnson", issues: 0, nextDue: "2024-04-26" },
-  { id: "ins4", asset: "Delivery Truck DT-007", assetId: "asset4", template: "Vehicle Pre-Trip Inspection", date: "2024-01-25", status: "passed", by: "Sarah Wilson", issues: 1, nextDue: "2024-01-26" },
-  { id: "ins5", asset: "Welding Machine WM-002", assetId: "asset5", template: "Electrical Equipment Check", date: "2024-01-24", status: "passed", by: "Tom Brown", issues: 0, nextDue: "2024-03-24" },
-  { id: "ins6", asset: "Fire Extinguisher FE-101", assetId: "asset6", template: "Fire Safety Equipment Check", date: "2024-01-23", status: "passed", by: "Emma Davis", issues: 0, nextDue: "2024-07-23" },
-];
-
-// Industry-standard inspection templates by category
-const mockInspectionTemplates = [
-  { id: "it1", name: "Heavy Machinery Inspection", category: "machinery", checkpoints: 24, used: 145, status: "active", description: "Comprehensive check for forklifts, cranes, and industrial equipment" },
-  { id: "it2", name: "Vehicle Pre-Trip Inspection", category: "vehicle", checkpoints: 18, used: 256, status: "active", description: "DOT-compliant pre-trip inspection for commercial vehicles" },
-  { id: "it3", name: "Fire Safety Equipment Check", category: "fire_safety", checkpoints: 10, used: 189, status: "active", description: "Extinguishers, alarms, sprinklers, and emergency lighting" },
-  { id: "it4", name: "PPE Equipment Check", category: "ppe", checkpoints: 8, used: 98, status: "active", description: "Harnesses, helmets, gloves, and safety footwear" },
-  { id: "it5", name: "Electrical Equipment Check", category: "electrical", checkpoints: 15, used: 67, status: "active", description: "Welding machines, power tools, and electrical panels" },
-  { id: "it6", name: "Scaffolding Inspection", category: "construction", checkpoints: 20, used: 34, status: "active", description: "Scaffold structure, platforms, and fall protection" },
-];
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 // Helper to get readable form type name
 function getFormTypeName(formType: string): string {

@@ -46,10 +46,11 @@ import { useAuth } from "@/hooks/use-auth";
 import type { Incident } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { PAGINATION } from "@/lib/constants";
 
 type SubTabType = "incidents" | "tickets";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 const incidentTypes = [
   { value: "injury", label: "Injury", icon: AlertCircle },

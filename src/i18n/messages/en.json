@@ -1341,7 +1341,8 @@
     "enterAssetCode": "Asset tag, serial number, or QR code...",
     "lookupAsset": "Look Up Asset",
     "recentAssets": "Recent assets",
-    "loginRequired": "Please log in to continue"
+    "loginRequired": "Please log in to continue",
+    "torchFailed": "Could not toggle flashlight"
   },
   "newAsset": {
     "title": "Register Asset",
@@ -1583,7 +1584,28 @@
     "dueTomorrow": "Due tomorrow",
     "dueInDays": "Due in {days} days",
     "assignedTasks": "assigned tasks",
-    "completedTasks": "completed tasks"
+    "completedTasks": "completed tasks",
+    "comments": {
+      "title": "Comments ({count})",
+      "placeholder": "Add a comment...",
+      "post": "Post Comment",
+      "added": "Comment added",
+      "empty": "No comments yet",
+      "emptyHint": "Be the first to add a comment",
+      "loadError": "Failed to load comments",
+      "saveError": "Failed to save comment"
+    },
+    "documents": {
+      "title": "Files ({count})",
+      "upload": "Upload File",
+      "uploadHint": "PNG, JPG, GIF, WebP, PDF, CSV — max 5 MB",
+      "uploaded": "File uploaded",
+      "removed": "File removed",
+      "empty": "No files attached",
+      "emptyHint": "Upload documents, photos, or reports",
+      "uploadFailed": "Upload failed",
+      "deleteFailed": "Failed to delete file"
+    }
   },
   "app.pending": "Pending",
   "errors.network": "Network error",

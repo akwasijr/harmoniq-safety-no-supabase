@@ -26,16 +26,7 @@ import { useToast } from "@/components/ui/toast";
 import { useUsersStore } from "@/stores/users-store";
 import type { User } from "@/types";
 import { useTranslation } from "@/i18n";
-
-// Mock activity data for the user
-const mockActivity = [
-  { id: "1", action: "Logged in", timestamp: "2024-07-20T10:00:00Z", ip: "192.168.1.100" },
-  { id: "2", action: "Viewed company: Harmoniq Safety", timestamp: "2024-07-20T10:05:00Z", ip: "192.168.1.100" },
-  { id: "3", action: "Created company: New Corp", timestamp: "2024-07-19T14:30:00Z", ip: "192.168.1.100" },
-  { id: "4", action: "Updated platform settings", timestamp: "2024-07-18T09:15:00Z", ip: "192.168.1.100" },
-  { id: "5", action: "Deactivated user account", timestamp: "2024-07-17T16:45:00Z", ip: "10.0.0.5" },
-  { id: "6", action: "Logged in", timestamp: "2024-07-17T08:00:00Z", ip: "10.0.0.5" },
-];
+import { mockActivity } from "@/mocks/data";
 
 export default function PlatformUserDetailPage() {
   const params = useParams();

@@ -6,6 +6,7 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
+import { TIMEOUTS } from "@/lib/constants";
 import {
   ArrowLeft,
   ArrowRight,
@@ -211,7 +212,7 @@ function ReportIncidentPageContent() {
         setIsGettingLocation(false);
         toast("Unable to get your location. Please enter it manually.");
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: TIMEOUTS.GPS_LOCATION }
     );
   };
 

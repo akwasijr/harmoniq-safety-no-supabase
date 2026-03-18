@@ -58,8 +58,10 @@ const SEVERITY_CONFIG = {
 export default function EmployeeIncidentDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const incidentId = params.incidentId as string;
-  const company = params.company as string;
+  const rawIncidentId = params.incidentId;
+  const incidentId = typeof rawIncidentId === "string" ? rawIncidentId : Array.isArray(rawIncidentId) ? rawIncidentId[0] : "";
+  const rawCompany = params.company;
+  const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
 
@@ -67,7 +69,8 @@ export default function EmployeeIncidentDetailPage() {
   const { items: locations } = useLocationsStore();
   const { items: users } = useUsersStore();
 
-  const incident = incidents.find((i) => i.id === incidentId);
+  const matchedIncident = incidents.find((i) => i.id === incidentId);
+  const incident = matchedIncident && user?.company_id && matchedIncident.company_id !== user.company_id ? undefined : matchedIncident;
   const location = incident?.location_id ? locations.find((l) => l.id === incident.location_id) : null;
   const reporter = incident?.reporter_id ? users.find((u) => u.id === incident.reporter_id) : null;
 
