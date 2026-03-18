@@ -100,7 +100,9 @@
     "browseAssetsDesc": "Sök utrustning, skanna QR-koder eller kontrollera status.",
     "newsDesc": "Håll dig uppdaterad med företagets säkerhetsnyheter och policyer.",
     "riskAssessment": "Riskbedömning",
-    "myTasks": "Mina Uppgifter"
+    "myTasks": "Mina Uppgifter",
+    "welcome": "Välkommen",
+    "completedWeek": "Denna Vecka"
   },
   "report": {
     "title": "Rapportera incident",
