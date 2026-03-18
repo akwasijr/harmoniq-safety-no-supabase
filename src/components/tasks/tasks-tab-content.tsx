@@ -13,7 +13,6 @@ import {
   CheckCircle,
   Package,
   Play,
-  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -456,27 +455,15 @@ export function TasksTabContent() {
   );
 
   const [tab, setTab] = React.useState<"assigned" | "completed">("assigned");
-  const [searchQuery, setSearchQuery] = React.useState("");
   const [typeFilter, setTypeFilter] = React.useState<string>("all");
 
   const filteredTasks = React.useMemo(() => {
     const base = tab === "assigned" ? assignedTasks : completedTasks;
-    let result = base;
     if (typeFilter !== "all") {
-      result = result.filter((t) => t.kind === typeFilter);
+      return base.filter((t) => t.kind === typeFilter);
     }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (t) =>
-          t.title.toLowerCase().includes(q) ||
-          t.assignedByName.toLowerCase().includes(q) ||
-          (t.assetName && t.assetName.toLowerCase().includes(q)) ||
-          (t.description && t.description.toLowerCase().includes(q)),
-      );
-    }
-    return result;
-  }, [tab, assignedTasks, completedTasks, typeFilter, searchQuery]);
+    return base;
+  }, [tab, assignedTasks, completedTasks, typeFilter]);
 
   if (isLoading) {
     return (
@@ -511,19 +498,8 @@ export function TasksTabContent() {
         ))}
       </div>
 
-      {/* Search + Filters */}
+      {/* Filters */}
       <div className="space-y-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder={t("tasks.searchPlaceholder") || "Search tasks..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border bg-muted/50 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-
         <div className="flex gap-2 overflow-x-auto pb-1">
           <select
             value={typeFilter}
@@ -536,9 +512,9 @@ export function TasksTabContent() {
             <option value="corrective-action">{t("tasks.actions") || "Actions"}</option>
           </select>
 
-          {(typeFilter !== "all" || searchQuery) && (
+          {typeFilter !== "all" && (
             <button
-              onClick={() => { setTypeFilter("all"); setSearchQuery(""); }}
+              onClick={() => { setTypeFilter("all"); }}
               className="text-xs text-primary font-medium whitespace-nowrap px-2"
             >
               {t("common.clear") || "Clear"}
