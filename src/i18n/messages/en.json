@@ -1288,7 +1288,8 @@
     "tabs": {
       "news": "News",
       "events": "Events",
-      "documents": "Documents"
+      "documents": "Documents",
+      "training": "Training"
     },
     "empty": {
       "noContent": "No content available",

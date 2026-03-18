@@ -28,7 +28,7 @@ export default function EmployeeNewsPage() {
     { id: "news" as TabType, label: t("newsApp.tabs.news"), icon: Newspaper, count: news.length },
     { id: "events" as TabType, label: t("newsApp.tabs.events"), icon: Calendar, count: events.length },
     { id: "documents" as TabType, label: t("newsApp.tabs.documents"), icon: FolderOpen, count: documents.length },
-    { id: "training" as TabType, label: t("newsApp.tabs.training") || "Training", icon: GraduationCap, count: training.length },
+    { id: "training" as TabType, label: t("newsApp.tabs.training"), icon: GraduationCap, count: training.length },
   ];
 
   const getActiveContent = () => {
@@ -100,38 +100,49 @@ export default function EmployeeNewsPage() {
             <Link
               key={item.id}
               href={`/${company}/app/news/${item.id}`}
-              className="flex gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50 bg-card"
+              className="flex gap-3 rounded-xl border p-3 transition-colors hover:bg-muted/50 bg-card"
             >
-              <div className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-lg shrink-0",
-                activeTab === "events" ? "bg-primary/10" : "bg-muted"
-              )}>
-                {activeTab === "news" && <Newspaper className="h-6 w-6 text-muted-foreground" aria-hidden="true" />}
-                {activeTab === "events" && <Calendar className="h-6 w-6 text-primary" aria-hidden="true" />}
-                {activeTab === "documents" && <FolderOpen className="h-6 w-6 text-muted-foreground" aria-hidden="true" />}
-                {activeTab === "training" && <GraduationCap className="h-6 w-6 text-muted-foreground" aria-hidden="true" />}
-              </div>
+              {item.featured_image ? (
+                <div className="h-16 w-16 rounded-lg shrink-0 overflow-hidden bg-muted">
+                  <img
+                    src={item.featured_image}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <div className={cn(
+                  "flex h-16 w-16 items-center justify-center rounded-lg shrink-0",
+                  activeTab === "events" ? "bg-primary/10" : "bg-muted"
+                )}>
+                  {activeTab === "news" && <Newspaper className="h-6 w-6 text-muted-foreground" aria-hidden="true" />}
+                  {activeTab === "events" && <Calendar className="h-6 w-6 text-primary" aria-hidden="true" />}
+                  {activeTab === "documents" && <FolderOpen className="h-6 w-6 text-muted-foreground" aria-hidden="true" />}
+                  {activeTab === "training" && <GraduationCap className="h-6 w-6 text-muted-foreground" aria-hidden="true" />}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
-                <p className="font-medium line-clamp-2">{item.title}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <p className="font-medium text-sm line-clamp-1">{item.title}</p>
+                {item.content && (
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                    {item.content.replace(/<[^>]*>/g, "").slice(0, 120)}
+                  </p>
+                )}
+                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" aria-hidden="true" />
                     {formatDate(new Date(item.published_at || item.created_at))}
                   </span>
                   {item.category && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span className="flex items-center gap-1">
                       <Tag className="h-3 w-3" aria-hidden="true" />
                       {item.category}
                     </span>
                   )}
-                  {activeTab === "documents" && (
-                    <span className="text-xs text-muted-foreground capitalize">
-                      {item.type}
-                    </span>
-                  )}
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground self-center" aria-hidden="true" />
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground self-center" aria-hidden="true" />
             </Link>
           ))
         )}

@@ -1288,7 +1288,8 @@
     "tabs": {
       "news": "Nyheter",
       "events": "Evenemang",
-      "documents": "Dokument"
+      "documents": "Dokument",
+      "training": "Utbildning"
     },
     "empty": {
       "noContent": "Inget innehåll tillgängligt",

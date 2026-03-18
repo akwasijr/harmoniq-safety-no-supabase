@@ -1288,7 +1288,8 @@
     "tabs": {
       "news": "Nieuws",
       "events": "Evenementen",
-      "documents": "Documenten"
+      "documents": "Documenten",
+      "training": "Training"
     },
     "empty": {
       "noContent": "Geen inhoud beschikbaar",
