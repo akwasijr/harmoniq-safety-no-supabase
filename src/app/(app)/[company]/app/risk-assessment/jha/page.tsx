@@ -13,7 +13,18 @@ import {
   Trash2,
   Info,
   Shield,
+  HardHat,
+  Glasses,
+  ShieldCheck,
+  Headphones,
+  Hand,
+  Footprints,
+  Shirt,
+  Wind,
+  Cable,
+  FlaskConical,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,17 +39,17 @@ import type { RiskEvaluation } from "@/types";
 import { useTranslation } from "@/i18n";
 
 // PPE Options (OSHA standard)
-const PPE_OPTIONS = [
-  { id: "hard_hat", label: "Hard Hat", icon: "🪖" },
-  { id: "safety_glasses", label: "Safety Glasses", icon: "🥽" },
-  { id: "face_shield", label: "Face Shield", icon: "😷" },
-  { id: "hearing_protection", label: "Hearing Protection", icon: "🎧" },
-  { id: "gloves", label: "Gloves", icon: "🧤" },
-  { id: "steel_toe_boots", label: "Steel-toe Boots", icon: "👢" },
-  { id: "high_vis_vest", label: "High-vis Vest", icon: "🦺" },
-  { id: "respirator", label: "Respirator", icon: "😮‍💨" },
-  { id: "fall_protection", label: "Fall Protection", icon: "🪢" },
-  { id: "chemical_suit", label: "Chemical Suit", icon: "🧪" },
+const PPE_OPTIONS: { id: string; label: string; icon: LucideIcon }[] = [
+  { id: "hard_hat", label: "Hard Hat", icon: HardHat },
+  { id: "safety_glasses", label: "Safety Glasses", icon: Glasses },
+  { id: "face_shield", label: "Face Shield", icon: ShieldCheck },
+  { id: "hearing_protection", label: "Hearing Protection", icon: Headphones },
+  { id: "gloves", label: "Gloves", icon: Hand },
+  { id: "steel_toe_boots", label: "Steel-toe Boots", icon: Footprints },
+  { id: "high_vis_vest", label: "High-vis Vest", icon: Shirt },
+  { id: "respirator", label: "Respirator", icon: Wind },
+  { id: "fall_protection", label: "Fall Protection", icon: Cable },
+  { id: "chemical_suit", label: "Chemical Suit", icon: FlaskConical },
 ];
 
 // Hazard types (OSHA Focus Four + additional)
@@ -597,7 +608,7 @@ export default function JHAFormPage() {
                       : "border-border hover:border-primary/50"
                   )}
                 >
-                  <span className="text-2xl">{ppe.icon}</span>
+                  <ppe.icon className="h-6 w-6" aria-hidden="true" />
                   <span className="font-medium text-sm">{ppe.label}</span>
                   {formData.ppeRequired.includes(ppe.id) && (
                     <CheckCircle className="h-5 w-5 text-primary ml-auto" />
@@ -760,7 +771,7 @@ export default function JHAFormPage() {
                       const ppe = PPE_OPTIONS.find((p) => p.id === id);
                       return (
                         <span key={id} className="text-xs text-muted-foreground">
-                          {ppe?.icon} {ppe?.label}
+                          {ppe && <><ppe.icon className="h-4 w-4 inline-block mr-1" aria-hidden="true" />{ppe.label}</>}
                         </span>
                       );
                     })}

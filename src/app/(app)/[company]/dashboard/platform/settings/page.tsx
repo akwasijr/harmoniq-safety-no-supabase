@@ -12,6 +12,7 @@ import {
   Languages,
   CreditCard,
   Info,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -325,7 +326,10 @@ export default function PlatformSettingsPage() {
                   {/* Demo Banner */}
                   <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30 p-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-amber-600 dark:text-amber-400 text-sm font-medium">⚠️ Demo Mode</span>
+                      <span className="text-amber-600 dark:text-amber-400 text-sm font-medium inline-flex items-center gap-1">
+                        <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                        Demo Mode
+                      </span>
                     </div>
                     <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
                       Platform security settings are for demonstration only. In production, these would enforce actual security policies.

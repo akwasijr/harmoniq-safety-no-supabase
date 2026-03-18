@@ -301,7 +301,7 @@ export function OSAPdfDocument({ data }: { data: OSAData }) {
                   <View style={{ flex: 3, flexDirection: "row", alignItems: "center" }}>
                     <Text style={styles.questionLabel}>{question.label}</Text>
                     {question.concern && (
-                      <Text style={styles.concernFlag}>⚠ Risk</Text>
+                      <Text style={styles.concernFlag}>(!) Risk</Text>
                     )}
                   </View>
                   <RatingBar rating={question.rating} />

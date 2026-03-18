@@ -554,7 +554,10 @@ export default function IncidentDetailPage() {
                       <p className="text-sm text-muted-foreground">{t("incidents.labels.activeHazard")}</p>
                       <p className="font-medium">
                         {incident.active_hazard ? (
-                          <span className="text-destructive">⚠️ Yes - Hazard still present</span>
+                          <span className="text-destructive inline-flex items-center gap-1">
+                            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                            Yes - Hazard still present
+                          </span>
                         ) : (
                           <span className="text-success">No</span>
                         )}
