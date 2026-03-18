@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 function getSupabaseConnectSources() {
   const sources = ["'self'"];
@@ -17,7 +18,17 @@ function getSupabaseConnectSources() {
   return sources.join(" ");
 }
 
-const connectSrc = getSupabaseConnectSources();
+function getSentryConnectSource() {
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (!dsn) return "";
+  try {
+    return new URL(dsn).origin;
+  } catch {
+    return "";
+  }
+}
+
+const connectSrc = [getSupabaseConnectSources(), getSentryConnectSource()].filter(Boolean).join(" ");
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -73,4 +84,21 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Suppress source map upload warnings when SENTRY_AUTH_TOKEN is not set
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+
+  // Don't widen the scope of the build process
+  disableLogger: true,
+
+  // Upload source maps for better stack traces (requires SENTRY_AUTH_TOKEN)
+  widenClientFileUpload: true,
+
+  // Delete source maps after upload so they aren't served to users
+  sourcemaps: {
+    filesToDeleteAfterUpload: [".next/static/**/*.map"],
+  },
+
+  // Automatically instrument API routes and server components
+  autoInstrumentServerFunctions: true,
+});
