@@ -38,7 +38,8 @@
     "completionProgress": "Slutförandeförlopp",
     "dismiss": "Stäng",
     "noPermission": "Du har inte behörighet att utföra denna åtgärd",
-    "noEditPermission": "Du har inte behörighet att redigera inställningar. Kontakta din administratör för åtkomst."
+    "noEditPermission": "Du har inte behörighet att redigera inställningar. Kontakta din administratör för åtkomst.",
+    "readMore": "Läs mer"
   },
   "nav": {
     "home": "Hem",
@@ -104,7 +105,8 @@
     "riskAssessment": "Riskbedömning",
     "myTasks": "Mina Uppgifter",
     "welcome": "Välkommen",
-    "completedWeek": "Denna Vecka"
+    "completedWeek": "Denna Vecka",
+    "featured": "Utvalda"
   },
   "report": {
     "title": "Rapportera incident",

@@ -18,6 +18,7 @@ import {
   CheckCircle,
   ChevronDown,
   ArrowRight,
+  ChevronLeft,
   Wrench,
   Search,
   ScanLine,
@@ -53,6 +54,7 @@ import { useCompanyParam } from "@/hooks/use-company-param";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
+import type { Content } from "@/types";
 
 // 30 safety tips that cycle daily
 const SAFETY_TIPS = [
@@ -102,6 +104,161 @@ function getDayOfYear(): number {
   const start = new Date(now.getFullYear(), 0, 0);
   const diff = now.getTime() - start.getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+// Featured News Carousel (inspired by airport-style featured cards)
+function FeaturedNewsCarousel({
+  news,
+  company,
+  t,
+  formatDate,
+}: {
+  news: Content[];
+  company: string;
+  t: (key: string) => string;
+  formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
+}) {
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  const scroll = (dir: "left" | "right") => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const cardWidth = container.offsetWidth * 0.82;
+    const newIndex = dir === "left" ? Math.max(0, activeIndex - 1) : Math.min(news.length - 1, activeIndex + 1);
+    container.scrollTo({ left: newIndex * cardWidth, behavior: "smooth" });
+    setActiveIndex(newIndex);
+  };
+
+  // Track scroll position to update active dot
+  React.useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const cardWidth = container.offsetWidth * 0.82;
+      const idx = Math.round(container.scrollLeft / cardWidth);
+      setActiveIndex(idx);
+    };
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Placeholder colors for cards without images
+  const cardColors = [
+    "from-blue-500/20 to-blue-600/10",
+    "from-emerald-500/20 to-emerald-600/10",
+    "from-amber-500/20 to-amber-600/10",
+    "from-violet-500/20 to-violet-600/10",
+    "from-rose-500/20 to-rose-600/10",
+  ];
+
+  if (news.length === 0) {
+    return (
+      <div className="rounded-xl bg-card border border-border/50 px-4 py-6">
+        <div className="flex flex-col items-center justify-center text-center py-4">
+          <div className="rounded-full bg-muted p-3 mb-3">
+            <Newspaper className="h-6 w-6 text-muted-foreground/40" aria-hidden="true" />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground">{t("app.noNewsYet") || "No news yet"}</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noNewsDesc") || "Company news and updates will appear here"}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Header with arrows */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-bold">{t("app.featured") || "Featured"}</h2>
+        {news.length > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => scroll("left")}
+              disabled={activeIndex === 0}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-border transition-colors disabled:opacity-30 hover:bg-muted"
+              aria-label="Previous"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              disabled={activeIndex === news.length - 1}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-border transition-colors disabled:opacity-30 hover:bg-muted"
+              aria-label="Next"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Scrollable cards */}
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {news.map((item, i) => (
+          <Link
+            key={item.id}
+            href={`/${company}/app/news/${item.id}`}
+            className="flex-shrink-0 snap-center rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md active:shadow-sm"
+            style={{ width: "80%" }}
+          >
+            {/* Image / gradient placeholder */}
+            <div className={`h-40 w-full bg-gradient-to-br ${cardColors[i % cardColors.length]} relative overflow-hidden`}>
+              {item.featured_image ? (
+                <img
+                  src={item.featured_image}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <Newspaper className="h-12 w-12 text-foreground/10" aria-hidden="true" />
+                </div>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-2">
+              <h3 className="font-semibold text-sm leading-snug line-clamp-2">{item.title}</h3>
+              {item.content && (
+                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                  {item.content.replace(/<[^>]*>/g, "").slice(0, 120)}
+                </p>
+              )}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] text-muted-foreground">
+                  {formatDate(new Date(item.published_at || item.created_at))}
+                </span>
+                <span className="text-xs font-medium text-primary flex items-center gap-0.5">
+                  {t("common.readMore") || "Read more"} <ArrowRight className="h-3 w-3" />
+                </span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Dot indicators */}
+      {news.length > 1 && (
+        <div className="flex justify-center gap-1.5">
+          {news.map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "h-1.5 rounded-full transition-all",
+                i === activeIndex ? "w-4 bg-primary" : "w-1.5 bg-muted-foreground/20"
+              )}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Collapsible section (shared mobile pattern)
@@ -206,7 +363,7 @@ export default function EmployeeAppHomePage() {
   // Data feeds
   const recentNews = contentItems
     .filter((item) => item.status === "published" && item.type === "news")
-    .slice(0, 2);
+    .slice(0, 5);
   const completedTemplateIds = new Set(
     checklistSubmissions
       .filter((submission) => submission.submitter_id === user.id && submission.status === "submitted")
@@ -291,51 +448,8 @@ export default function EmployeeAppHomePage() {
       {/* ── Content Feed ── */}
       <div className="px-4 pt-5 pb-20 space-y-1">
 
-        {/* News & Updates */}
-        <div className="rounded-xl bg-card border border-border/50 px-4 py-2">
-        <Section
-          title={t("app.newsAndUpdates")}
-          icon={Newspaper}
-          iconColor="text-primary"
-          action={
-            recentNews.length > 0 ? (
-              <Link href={`/${company}/app/news`} className="text-xs text-primary font-medium flex items-center gap-0.5">
-                {t("common.viewAll")} <ArrowRight className="h-3 w-3" />
-              </Link>
-            ) : undefined
-          }
-        >
-          {recentNews.length > 0 ? (
-            recentNews.map((item) => (
-              <Link
-                key={item.id}
-                href={`/${company}/app/news/${item.id}`}
-                className="flex items-start gap-3 rounded-lg p-2.5 transition-colors active:bg-muted/60 hover:bg-muted/40"
-              >
-                <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm leading-tight line-clamp-2">{item.title}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Clock className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
-                    <span className="text-[11px] text-muted-foreground">
-                      {formatDate(new Date(item.published_at || item.created_at))}
-                    </span>
-                    {item.category && (
-                      <span className="text-[10px] text-muted-foreground">{item.category}</span>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            ))
-          ) : (
-            <div className="py-4 text-center">
-              <Newspaper className="h-6 w-6 text-muted-foreground/30 mx-auto" aria-hidden="true" />
-              <p className="text-xs font-medium text-muted-foreground mt-2">{t("app.noNewsYet")}</p>
-              <p className="text-[11px] text-muted-foreground/70 mt-0.5">{t("app.noNewsDesc")}</p>
-            </div>
-          )}
-        </Section>
-        </div>
+        {/* Featured News Carousel */}
+        <FeaturedNewsCarousel news={recentNews} company={company} t={t} formatDate={formatDate} />
 
       </div>
     </div>

@@ -38,7 +38,8 @@
     "completionProgress": "Completion progress",
     "dismiss": "Dismiss",
     "noPermission": "You don't have permission to perform this action",
-    "noEditPermission": "You don't have permission to edit settings. Contact your administrator for access."
+    "noEditPermission": "You don't have permission to edit settings. Contact your administrator for access.",
+    "readMore": "Read more"
   },
   "nav": {
     "home": "Home",
@@ -104,7 +105,8 @@
     "riskAssessment": "Risk assessment",
     "myTasks": "My Tasks",
     "welcome": "Welcome",
-    "completedWeek": "This Week"
+    "completedWeek": "This Week",
+    "featured": "Featured"
   },
   "report": {
     "title": "Report incident",

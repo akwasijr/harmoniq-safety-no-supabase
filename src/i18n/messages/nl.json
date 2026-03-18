@@ -38,7 +38,8 @@
     "completionProgress": "Voortgang voltooiing",
     "dismiss": "Sluiten",
     "noPermission": "U heeft geen toestemming om deze actie uit te voeren",
-    "noEditPermission": "U heeft geen toestemming om instellingen te bewerken. Neem contact op met uw beheerder voor toegang."
+    "noEditPermission": "U heeft geen toestemming om instellingen te bewerken. Neem contact op met uw beheerder voor toegang.",
+    "readMore": "Lees meer"
   },
   "nav": {
     "home": "Startpagina",
@@ -104,7 +105,8 @@
     "riskAssessment": "Risicobeoordeling",
     "myTasks": "Mijn Taken",
     "welcome": "Welkom",
-    "completedWeek": "Deze Week"
+    "completedWeek": "Deze Week",
+    "featured": "Uitgelicht"
   },
   "report": {
     "title": "Incident melden",
