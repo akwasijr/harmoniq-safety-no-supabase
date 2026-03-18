@@ -375,7 +375,7 @@ export default function EmployeeAppHomePage() {
   // ── Quick action grid items ──
   const quickActions = [
     { href: `/${company}/app/report`, labelKey: "app.reportIncident", label: "Report Incident", icon: AlertTriangle },
-    { href: `/${company}/app/tasks`, labelKey: "app.myTasks", label: "My Tasks", icon: ClipboardCheck },
+    { href: `/${company}/app/checklists?tab=tasks`, labelKey: "app.myTasks", label: "My Tasks", icon: ClipboardCheck },
     { href: `/${company}/app/assets`, labelKey: "app.browseAssets", label: "Browse Assets", icon: Search },
     { href: `/${company}/app/maintenance`, labelKey: "app.requestFix", label: "Request Fix", icon: Wrench },
     { href: `/${company}/app/scan`, labelKey: "app.scanAsset", label: "Scan Asset", icon: ScanLine },
@@ -398,7 +398,7 @@ export default function EmployeeAppHomePage() {
             <p className="text-2xl font-bold text-white">{safeDays}</p>
             <p className="text-[11px] text-white/60 mt-0.5">{t("app.safeDays")}</p>
           </div>
-          <Link href={`/${company}/app/tasks`} className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
+          <Link href={`/${company}/app/checklists?tab=tasks`} className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
             <p className="text-2xl font-bold text-white">{pendingTaskCount}</p>
             <p className="text-[11px] text-white/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
           </Link>

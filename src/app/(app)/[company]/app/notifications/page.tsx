@@ -76,8 +76,8 @@ export default function NotificationsPage() {
                 : n.source === "incident"
                   ? `/${company}/app/incidents/${n.source_id}`
                   : n.source === "ticket"
-                    ? `/${company}/app/tasks`
-                    : `/${company}/app/tasks`
+                    ? `/${company}/app/checklists?tab=tasks`
+                    : `/${company}/app/checklists?tab=tasks`
               : `/${company}/app`,
           icon,
           iconColor: color,
