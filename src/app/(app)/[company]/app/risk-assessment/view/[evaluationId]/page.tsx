@@ -79,8 +79,8 @@ export default function RiskAssessmentViewPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      {/* Header — not sticky, app nav is already sticky */}
+      <div className="border-b bg-background">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
             <ArrowLeft className="h-5 w-5" />
@@ -89,7 +89,6 @@ export default function RiskAssessmentViewPage() {
             <h1 className="font-semibold text-base truncate">
               {assessmentLabels[evaluation.form_type] || evaluation.form_type}
             </h1>
-            <p className="text-xs text-muted-foreground">{evaluation.form_type} Assessment</p>
           </div>
           <Badge variant={statusVariant} className="capitalize">
             {evaluation.status}
@@ -159,33 +158,44 @@ export default function RiskAssessmentViewPage() {
             <div className="space-y-3">
               {Object.entries(responses).map(([key, value]) => {
                 if (key === "id" || key === "submitter_id" || key === "company_id") return null;
+                // Skip empty/null/undefined values
+                if (value === null || value === undefined || value === "") return null;
+                if (Array.isArray(value) && value.length === 0) return null;
 
+                // Human-readable label from camelCase or snake_case keys
                 const label = key
                   .replace(/([A-Z])/g, " $1")
                   .replace(/_/g, " ")
-                  .replace(/^\w/, (c) => c.toUpperCase())
+                  .replace(/\b\w/g, (c) => c.toUpperCase())
                   .trim();
 
                 if (Array.isArray(value)) {
                   return (
-                    <div key={key} className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-                      <div className="rounded-lg bg-muted/30 p-3 space-y-2">
+                    <div key={key} className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+                      <div className="space-y-2">
                         {value.map((item, i) => (
                           <div
                             key={i}
-                            className="text-sm border-b border-muted last:border-0 pb-2 last:pb-0"
+                            className="rounded-lg border bg-muted/20 p-3"
                           >
                             {typeof item === "object" && item !== null ? (
-                              <div className="space-y-1">
-                                {Object.entries(item as Record<string, unknown>).map(([k, v]) => (
-                                  <div key={k} className="flex gap-2">
-                                    <span className="text-xs text-muted-foreground capitalize min-w-[80px]">
-                                      {k.replace(/_/g, " ")}:
-                                    </span>
-                                    <span className="text-xs">{String(v)}</span>
-                                  </div>
-                                ))}
+                              <div className="space-y-1.5">
+                                {Object.entries(item as Record<string, unknown>)
+                                  .filter(([, v]) => v !== null && v !== undefined && v !== "")
+                                  .map(([k, v]) => {
+                                    const fieldLabel = k
+                                      .replace(/([A-Z])/g, " $1")
+                                      .replace(/_/g, " ")
+                                      .replace(/\b\w/g, (c) => c.toUpperCase())
+                                      .trim();
+                                    return (
+                                      <div key={k} className="flex justify-between gap-2">
+                                        <span className="text-xs text-muted-foreground">{fieldLabel}</span>
+                                        <span className="text-xs font-medium text-right">{String(v)}</span>
+                                      </div>
+                                    );
+                                  })}
                               </div>
                             ) : (
                               <p className="text-sm">{String(item)}</p>
@@ -198,18 +208,26 @@ export default function RiskAssessmentViewPage() {
                 }
 
                 if (typeof value === "object" && value !== null) {
+                  const entries = Object.entries(value as Record<string, unknown>)
+                    .filter(([, v]) => v !== null && v !== undefined && v !== "");
+                  if (entries.length === 0) return null;
                   return (
-                    <div key={key} className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-                      <div className="rounded-lg bg-muted/30 p-3 space-y-1">
-                        {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
-                          <div key={k} className="flex gap-2 text-sm">
-                            <span className="text-xs text-muted-foreground capitalize min-w-[80px]">
-                              {k.replace(/_/g, " ")}:
-                            </span>
-                            <span className="text-xs">{String(v)}</span>
-                          </div>
-                        ))}
+                    <div key={key} className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+                      <div className="rounded-lg border bg-muted/20 p-3 space-y-1.5">
+                        {entries.map(([k, v]) => {
+                          const fieldLabel = k
+                            .replace(/([A-Z])/g, " $1")
+                            .replace(/_/g, " ")
+                            .replace(/\b\w/g, (c) => c.toUpperCase())
+                            .trim();
+                          return (
+                            <div key={k} className="flex justify-between gap-2">
+                              <span className="text-xs text-muted-foreground">{fieldLabel}</span>
+                              <span className="text-xs font-medium text-right">{String(v)}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -217,8 +235,8 @@ export default function RiskAssessmentViewPage() {
 
                 if (typeof value === "boolean") {
                   return (
-                    <div key={key} className="flex items-center justify-between">
-                      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+                    <div key={key} className="flex items-center justify-between py-1">
+                      <p className="text-sm text-muted-foreground">{label}</p>
                       <Badge variant={value ? "success" : "secondary"}>
                         {value ? "Yes" : "No"}
                       </Badge>
@@ -227,9 +245,9 @@ export default function RiskAssessmentViewPage() {
                 }
 
                 return (
-                  <div key={key} className="space-y-0.5">
-                    <p className="text-xs font-medium text-muted-foreground">{label}</p>
-                    <p className="text-sm">{String(value)}</p>
+                  <div key={key} className="flex items-center justify-between py-1">
+                    <p className="text-sm text-muted-foreground">{label}</p>
+                    <p className="text-sm font-medium text-right max-w-[60%] truncate">{String(value)}</p>
                   </div>
                 );
               })}
