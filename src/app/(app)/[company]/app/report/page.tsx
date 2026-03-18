@@ -635,7 +635,7 @@ function ReportIncidentPageContent() {
               <div className="grid grid-cols-2 gap-3">
                 {formData.photos.map((photo, index) => (
                   <div key={index} className="relative aspect-square rounded-xl overflow-hidden border">
-                    <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
+                    <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                     <button
                       type="button"
                       aria-label={`Remove photo ${index + 1}`}

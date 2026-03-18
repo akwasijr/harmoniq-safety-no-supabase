@@ -27,7 +27,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     loadFromStorage<SyncQueueItem[]>(SYNC_QUEUE_KEY, [])
   );
 
-  // Monitor online/offline status
+  // Monitor online/offline status (uses syncNowRef defined below syncNow)
+  const syncNowRef = React.useRef<() => Promise<void>>(async () => {});
+
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     setIsOnline(navigator.onLine);
@@ -35,7 +37,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     const handleOnline = () => {
       setIsOnline(true);
       // Auto-sync when coming back online
-      syncNow();
+      syncNowRef.current();
     };
     const handleOffline = () => setIsOnline(false);
 
@@ -105,6 +107,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       setIsSyncing(false);
     }
   }, [isSyncing, queue]);
+
+  // Keep syncNowRef up to date so the online listener always calls the latest version
+  React.useEffect(() => { syncNowRef.current = syncNow; }, [syncNow]);
 
   const cacheForOffline = React.useCallback((key: string, data: unknown) => {
     const cache = loadFromStorage<Record<string, unknown>>(OFFLINE_CACHE_KEY, {});

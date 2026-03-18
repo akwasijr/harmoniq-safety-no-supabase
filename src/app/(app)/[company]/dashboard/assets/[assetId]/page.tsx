@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
+  AlertTriangle,
   ArrowLeft,
   Save,
   Wrench,
@@ -219,10 +220,21 @@ export default function AssetDetailPage() {
     { id: "settings", label: t("assets.detailTabs.settings"), icon: Trash2, variant: "danger" },
   ];
 
-  if (!asset) {
-    if (isAssetsLoading) return <LoadingPage />;
-    return <EmptyState title="Asset not found" description="The requested asset could not be found." />;
+  if (!isAssetsLoading && !asset) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="Asset not found"
+        description="This asset may have been removed."
+        action={
+          <Button variant="outline" size="sm" onClick={() => router.push(`/${company}/dashboard/assets`)}>
+            Back to Assets
+          </Button>
+        }
+      />
+    );
   }
+  if (!asset) return <LoadingPage />;
 
   return (
     <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>

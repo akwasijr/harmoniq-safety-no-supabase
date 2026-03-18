@@ -386,7 +386,7 @@ export function createEntityStore<T extends IdEntity>(
       if (!options?.skipLoad) {
         ctx.ensureLoaded();
       }
-    }, [ctx, options?.skipLoad]);
+    }, [ctx.ensureLoaded, options?.skipLoad]);
     return ctx;
   }
 

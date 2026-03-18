@@ -949,7 +949,7 @@ function LocationsPageContent() {
                   </p>
                 )}
               </div>
-              <Button variant="ghost" size="icon" onClick={closeLocModal}>
+              <Button variant="ghost" size="icon" onClick={closeLocModal} aria-label="Close">
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -1198,7 +1198,7 @@ function LocationsPageContent() {
                 <h2 className="text-xl font-semibold">Edit {LOCATION_TYPE_LABELS[selectedLocation.type]}</h2>
                 <p className="text-sm text-muted-foreground mt-1">{selectedLocation.name}</p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setShowEditModal(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowEditModal(false)} aria-label="Close">
                 <X className="h-5 w-5" />
               </Button>
             </div>

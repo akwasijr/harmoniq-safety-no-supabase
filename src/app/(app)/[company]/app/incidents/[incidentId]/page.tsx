@@ -238,7 +238,7 @@ export default function EmployeeIncidentDetailPage() {
                 {photos.map((file) => (
                   <div key={file.id} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
                     {file.type.startsWith("image/") ? (
-                      <img src={file.dataUrl} alt={file.name} className="h-full w-full object-cover" />
+                      <img src={file.dataUrl} alt={file.name} className="h-full w-full object-cover" loading="lazy" />
                     ) : (
                       <div className="flex h-full w-full flex-col items-center justify-center p-2">
                         <FileText className="h-6 w-6 text-muted-foreground" />
@@ -249,7 +249,7 @@ export default function EmployeeIncidentDetailPage() {
                 ))}
                 {incident.media_urls?.map((url, idx) => (
                   <div key={`media-${idx}`} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-                    <img src={url} alt={`Attachment ${idx + 1}`} className="h-full w-full object-cover" />
+                    <img src={url} alt={`Attachment ${idx + 1}`} className="h-full w-full object-cover" loading="lazy" />
                   </div>
                 ))}
               </div>

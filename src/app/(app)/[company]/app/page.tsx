@@ -211,7 +211,7 @@ function FeaturedNewsCarousel({
               {item.featured_image ? (
                 <img
                   src={item.featured_image}
-                  alt=""
+                  alt="Featured image"
                   className="h-full w-full object-cover object-center"
                   loading="lazy"
                 />

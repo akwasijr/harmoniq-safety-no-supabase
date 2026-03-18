@@ -253,7 +253,7 @@ export function AssetDocuments({
                   }}
                 >
                   {img.dataUrl ? (
-                    <img src={img.dataUrl} alt={img.name} className="absolute inset-0 h-full w-full object-cover" />
+                    <img src={img.dataUrl} alt={img.name} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
                       <ImageIcon className="h-8 w-8 text-muted-foreground" />

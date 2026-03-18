@@ -479,7 +479,7 @@ export default function NewContentPage() {
                   />
                   {featuredImage ? (
                     <div className="relative rounded-lg overflow-hidden">
-                      <img src={featuredImage.preview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
+                      <img src={featuredImage.preview} alt="Featured image preview" className="w-full h-48 object-cover rounded-lg" loading="lazy" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                         <Button size="sm" variant="secondary" onClick={() => imageInputRef.current?.click()}>
                           Change

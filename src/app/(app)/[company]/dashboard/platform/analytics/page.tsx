@@ -117,7 +117,7 @@ export default function PlatformAnalyticsPage() {
                 </Button>
               ))}
             </div>
-            <Button variant="ghost" size="icon" onClick={fetchData} disabled={isLoading} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={fetchData} disabled={isLoading} className="h-8 w-8" aria-label="Refresh data">
               <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
           </div>

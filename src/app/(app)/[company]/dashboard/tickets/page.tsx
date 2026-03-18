@@ -330,7 +330,7 @@ export default function TicketsPage() {
                 <h2 className="text-xl font-semibold">{t("tickets.createTicket")}</h2>
                 <p className="text-sm text-muted-foreground">Fill in the ticket details</p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setShowAddModal(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowAddModal(false)} aria-label="Close">
                 <X className="h-5 w-5" />
               </Button>
             </div>

@@ -188,25 +188,21 @@ export default function WorkOrderDetailPage() {
     toast(newDate ? `Due date set to ${formatDate(newDate)}` : "Due date removed");
   };
 
-  if (isLoading) {
-    return <LoadingPage />;
-  }
-
-  if (!order) {
+  if (!isLoading && !order) {
     return (
-      <div className="space-y-6">
-        <Button variant="ghost" size="sm" className="gap-2" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-          {t("common.back")}
-        </Button>
-        <EmptyState
-          icon={ClipboardList}
-          title={t("workOrders.detail.notFound")}
-          description="The requested work order could not be found."
-        />
-      </div>
+      <EmptyState
+        icon={AlertTriangle}
+        title="Work order not found"
+        description="This work order may have been removed."
+        action={
+          <Button variant="outline" size="sm" onClick={() => router.push(`/${company}/dashboard/work-orders`)}>
+            Back to Work Orders
+          </Button>
+        }
+      />
     );
   }
+  if (!order) return <LoadingPage />;
 
   const asset = getAssetName(order.asset_id);
   const StatusIcon = STATUS_ICONS[order.status] || Clock;

@@ -374,7 +374,7 @@ export default function WorkOrdersPage() {
           <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>{t("workOrders.newWorkOrder")}</CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setShowCreate(false)}><X className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => setShowCreate(false)} aria-label="Close"><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>

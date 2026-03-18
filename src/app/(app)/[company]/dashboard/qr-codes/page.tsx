@@ -228,6 +228,7 @@ export default function QRCodesPage() {
                           src={qrDataUrls[qr.id]} 
                           alt={`QR code for ${qr.name}`} 
                           className="h-14 w-14"
+                          loading="lazy"
                         />
                       ) : (
                         <QrCode className="h-10 w-10 text-muted-foreground" />
@@ -278,7 +279,7 @@ export default function QRCodesPage() {
                     <Printer className="h-3 w-3" />
                     {t("qrCodes.buttons.print")}
                   </Button>
-                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => handleCopyLink(qr)}>
+                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => handleCopyLink(qr)} aria-label="Copy link">
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
@@ -338,7 +339,7 @@ export default function QRCodesPage() {
           <div className="w-full max-w-md rounded-lg bg-background shadow-lg">
             <div className="flex items-center justify-between border-b p-4">
               <h2 className="text-lg font-semibold">{t("qrCodes.createQrCode")}</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowCreateModal(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowCreateModal(false)} aria-label="Close">
                 <X className="h-4 w-4" />
               </Button>
             </div>

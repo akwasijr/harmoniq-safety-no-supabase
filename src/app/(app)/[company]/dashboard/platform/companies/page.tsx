@@ -200,7 +200,7 @@ export default function PlatformCompaniesPage() {
                   {formStep === "general" ? `Step 1 of 3: ${t("companies.general")}` : formStep === "localization" ? `Step 2 of 3: ${t("companies.localization")}` : `Step 3 of 3: ${t("companies.branding")}`}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => { setShowAddModal(false); setFormStep("general"); }}>
+              <Button variant="ghost" size="icon" onClick={() => { setShowAddModal(false); setFormStep("general"); }} aria-label="Close">
                 <X className="h-4 w-4" />
               </Button>
             </div>

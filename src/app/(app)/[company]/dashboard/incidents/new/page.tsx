@@ -439,7 +439,7 @@ export default function NewIncidentPage() {
                 <div className="grid grid-cols-3 gap-2">
                   {photos.map((photo, index) => (
                     <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden border">
-                      <img src={photo.url} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
+                      <img src={photo.url} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                       <Button
                         variant="destructive"
                         size="icon"

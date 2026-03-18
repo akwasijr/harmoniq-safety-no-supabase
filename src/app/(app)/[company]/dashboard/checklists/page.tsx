@@ -446,7 +446,7 @@ function ChecklistsPageContent() {
           <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
             <div className="flex items-center justify-between border-b p-4">
               <h2 className="text-lg font-semibold">Start New Risk Assessment</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowNewAssessmentModal(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowNewAssessmentModal(false)} aria-label="Close">
                 <X className="h-4 w-4" />
               </Button>
             </div>

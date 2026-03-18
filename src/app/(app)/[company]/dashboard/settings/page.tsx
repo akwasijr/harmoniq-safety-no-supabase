@@ -464,7 +464,7 @@ export default function SettingsPage() {
                   <div className="relative flex h-20 w-20 items-center justify-center rounded-lg border bg-muted overflow-hidden">
                     {settings.logoUrl ? (
                       <>
-                        <img src={settings.logoUrl} alt="Company logo" className="h-full w-full object-contain" />
+                        <img src={settings.logoUrl} alt="Company logo" className="h-full w-full object-contain" loading="lazy" />
                         <button
                           onClick={removeLogo}
                           aria-label="Remove logo"
@@ -548,7 +548,7 @@ export default function SettingsPage() {
                       style={{ backgroundColor: settings.primaryColor }}
                     >
                       {settings.logoUrl ? (
-                        <img src={settings.logoUrl} alt="" className="h-8 w-8 object-contain" />
+                        <img src={settings.logoUrl} alt="Company logo" className="h-8 w-8 object-contain" loading="lazy" />
                       ) : (
                         settings.companyName.charAt(0)
                       )}

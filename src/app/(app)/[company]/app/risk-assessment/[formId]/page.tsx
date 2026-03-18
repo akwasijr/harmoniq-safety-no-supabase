@@ -3,12 +3,14 @@
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   CheckCircle,
   FileCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -254,7 +256,22 @@ export default function RiskAssessmentFormPage() {
   const { t } = useTranslation();
 
   // Validate that formId is a known form type to prevent arbitrary ID lookups
-  const config = formConfigs[formId] || defaultConfig;
+  const knownFormIds = Object.keys(formConfigs);
+  if (!knownFormIds.includes(formId)) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="Assessment not found"
+        description="This risk assessment form does not exist."
+        action={
+          <Button variant="outline" size="sm" onClick={() => router.push(`/${company}/app/risk-assessment`)}>
+            Back to Risk Assessments
+          </Button>
+        }
+      />
+    );
+  }
+  const config = formConfigs[formId];
   // Note: This page uses static form configs (not DB entities), so company_id is
   // enforced at submission via user.company_id on the RiskEvaluation record.
   const currentSectionData = config.sections[currentSection];

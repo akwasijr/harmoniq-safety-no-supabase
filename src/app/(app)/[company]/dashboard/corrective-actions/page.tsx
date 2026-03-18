@@ -240,7 +240,7 @@ export default function CorrectiveActionsPage() {
           <Card className="w-full max-w-lg">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>{t("correctiveActions.newAction")}</CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setShowCreate(false)}><X className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => setShowCreate(false)} aria-label="Close"><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>

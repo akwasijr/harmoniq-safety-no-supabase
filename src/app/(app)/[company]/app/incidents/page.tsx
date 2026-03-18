@@ -28,7 +28,7 @@ const STATUS_CLASSES = {
   in_progress: { color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", icon: Clock },
   in_review: { color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400", icon: Clock },
   resolved: { color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle },
-  archived: { color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400", icon: CheckCircle },
+  archived: { color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200", icon: CheckCircle },
 };
 
 const STATUS_TRANSLATION_KEYS: Record<string, string> = {

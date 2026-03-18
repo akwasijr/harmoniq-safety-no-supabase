@@ -220,6 +220,7 @@ export default function NewsDetailPage() {
               src={article.featured_image} 
               alt={article.title}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           </div>
         ) : (

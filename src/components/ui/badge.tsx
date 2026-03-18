@@ -41,13 +41,13 @@ const badgeVariants = cva(
         overdue:
           "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
         inactive:
-          "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300",
+          "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200",
         active:
           "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
         completed:
           "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
         cancelled:
-          "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300",
+          "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200",
       },
     },
     defaultVariants: {

@@ -23,11 +23,11 @@ export function PreviewModal({ previewDoc, previewImage, onClose, getFileType }:
         </div>
         <div className="p-4 flex items-center justify-center">
           {previewImage ? (
-            <img src={previewImage.url} alt={previewImage.name} className="max-h-[75vh] max-w-full object-contain" />
+            <img src={previewImage.url} alt={previewImage.name} className="max-h-[75vh] max-w-full object-contain" loading="lazy" />
           ) : previewDoc && getFileType(previewDoc.name) === 'pdf' ? (
             <iframe src={previewDoc.url} className="w-full h-[75vh] border-0" />
           ) : previewDoc && getFileType(previewDoc.name) === 'image' ? (
-            <img src={previewDoc.url} alt={previewDoc.name} className="max-h-[75vh] max-w-full object-contain" />
+            <img src={previewDoc.url} alt={previewDoc.name} className="max-h-[75vh] max-w-full object-contain" loading="lazy" />
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />

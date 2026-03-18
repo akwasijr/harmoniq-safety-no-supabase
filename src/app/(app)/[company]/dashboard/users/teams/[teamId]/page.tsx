@@ -169,6 +169,7 @@ export default function TeamDetailPage() {
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Go back"
             onClick={() => router.push(`/${company}/dashboard/users`)}
           >
             <ArrowLeft className="h-5 w-5" />
@@ -492,7 +493,7 @@ export default function TeamDetailPage() {
           <div className="relative z-50 w-full max-w-lg rounded-lg bg-background p-6 shadow-xl mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{t("users.addTeamMember")}</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowAddMemberModal(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowAddMemberModal(false)} aria-label="Close">
                 <X className="h-5 w-5" />
               </Button>
             </div>

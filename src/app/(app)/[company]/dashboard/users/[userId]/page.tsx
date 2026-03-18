@@ -6,6 +6,7 @@ import { getRoleVariant } from "@/lib/status-utils";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
+  AlertTriangle,
   ArrowLeft,
   Save,
   Trash2,
@@ -103,13 +104,21 @@ export default function UserDetailPage() {
     });
   }, [baseUser]);
   
-  if (isLoading) {
-    return <LoadingPage />;
+  if (!isLoading && !baseUser) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="User not found"
+        description="This user may have been removed."
+        action={
+          <Button variant="outline" size="sm" onClick={() => router.push(`/${company}/dashboard/users`)}>
+            Back to Users
+          </Button>
+        }
+      />
+    );
   }
-
-  if (!baseUser) {
-    return <EmptyState title={t("users.userNotFound")} description="The requested user could not be found." />;
-  }
+  if (!baseUser) return <LoadingPage />;
 
   // Use edited values when editing, otherwise use base user
   const user = isEditing ? { ...baseUser, ...editedUser } : baseUser;

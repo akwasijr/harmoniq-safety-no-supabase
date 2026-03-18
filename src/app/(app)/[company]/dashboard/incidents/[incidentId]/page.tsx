@@ -158,7 +158,7 @@ export default function IncidentDetailPage() {
     incidentRef.current = incident;
     actionsRef.current = actions;
     commentsRef.current = comments;
-  });
+  }, [incident, actions, comments]);
 
   // Helper to update investigation in store
   const setInvestigation = (newInvestigation: IncidentInvestigation | null) => {

@@ -373,7 +373,8 @@ function InspectionRoundContent() {
             </p>
             <Input
               type="number"
-              placeholder="Enter value..."
+              placeholder="Enter measurement value"
+              aria-label="Measured value"
               value={currentResult?.measured_value ?? ""}
               onChange={(e) => {
                 const val = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -406,7 +407,7 @@ function InspectionRoundContent() {
           />
           {currentResult?.photo_url ? (
             <div className="relative w-full aspect-video rounded-xl overflow-hidden border">
-              <img src={currentResult.photo_url} alt="Checkpoint photo" className="h-full w-full object-cover" />
+              <img src={currentResult.photo_url} alt="Checkpoint photo" className="h-full w-full object-cover" loading="lazy" />
               <button
                 type="button"
                 onClick={() => setCheckpointResult({ photo_url: null })}

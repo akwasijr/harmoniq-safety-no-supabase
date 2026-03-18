@@ -479,7 +479,7 @@ export default function NewAssetPage() {
                   <div className="flex gap-2 mb-2">
                     {photos.map((photo, index) => (
                       <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border">
-                        <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
+                        <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                         <button
                           type="button"
                           aria-label={`Remove photo ${index + 1}`}
