@@ -26,7 +26,8 @@ type InviteState =
   | { status: "valid"; invitation: InvitationData }
   | { status: "expired" }
   | { status: "invalid" }
-  | { status: "already_accepted" };
+  | { status: "already_accepted" }
+  | { status: "error"; error: string };
 
 export default function InvitePageWrapper() {
   return (
@@ -59,14 +60,13 @@ function InvitePageContent() {
         if (res.ok && data.valid) {
           setState({ status: "valid", invitation: data.invitation });
         } else if (res.status === 404) {
-          // Could be expired, already accepted, or truly invalid
           const errorMsg = (data.error || "").toLowerCase();
           if (errorMsg.includes("expired")) {
             setState({ status: "expired" });
+          } else if (errorMsg.includes("accepted") || errorMsg.includes("used")) {
+            setState({ status: "error", error: "This invitation has already been used." });
           } else {
-            // The validate endpoint filters out accepted_at != null,
-            // so a 404 on a real token likely means expired or accepted
-            setState({ status: "expired" });
+            setState({ status: "error", error: "Invitation not found or no longer valid." });
           }
         } else {
           setState({ status: "invalid" });
@@ -179,6 +179,27 @@ function InvitePageContent() {
               <CardContent className="text-center space-y-4">
                 <p className="text-sm text-muted-foreground">
                   {t("invite.invalidDescription")}
+                </p>
+                <Link href="/login">
+                  <Button variant="outline" className="w-full">
+                    {t("forgotPassword.backToLogin")}
+                  </Button>
+                </Link>
+              </CardContent>
+            </>
+          )}
+
+          {state.status === "error" && (
+            <>
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                  <AlertCircle className="h-6 w-6 text-destructive" aria-hidden="true" />
+                </div>
+                <CardTitle className="text-xl">{t("invite.invalid")}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  {state.error}
                 </p>
                 <Link href="/login">
                   <Button variant="outline" className="w-full">

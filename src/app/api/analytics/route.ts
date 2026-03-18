@@ -6,6 +6,7 @@ import { truncate } from "@/lib/validation";
 
 // 30 analytics events per IP per minute
 const analyticsLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "analytics" });
+const analyticsGetLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "analytics-get" });
 const ANALYTICS_RETENTION_DAYS = 90;
 const PAGEVIEW_MEMORY_LIMIT = 10000;
 const ANALYTICS_PAGE_SIZE = 1000;
@@ -322,6 +323,9 @@ export async function GET(request: NextRequest) {
     // Fail-closed: if auth check fails, deny access
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rl = analyticsGetLimiter.check(request);
+  if (!rl.allowed) return rl.response;
 
   const requestedDays = Number.parseInt(request.nextUrl.searchParams.get("days") || "30", 10);
   const days = Number.isFinite(requestedDays) ? Math.min(Math.max(requestedDays, 1), ANALYTICS_RETENTION_DAYS) : 30;

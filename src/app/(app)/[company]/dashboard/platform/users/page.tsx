@@ -69,7 +69,7 @@ export default function PlatformUsersPage() {
 
     const newUser: User = {
       id: `user_sa_${Date.now()}`,
-      company_id: "",
+      company_id: company || "",
       email: formData.email,
       first_name: formData.first_name,
       middle_name: null,
@@ -93,10 +93,15 @@ export default function PlatformUsersPage() {
       location_id: null,
     };
 
-    addUser(newUser);
+    try {
+      addUser(newUser);
+      toast(`Admin "${newUser.full_name}" created successfully`);
+    } catch (err) {
+      console.warn("Failed to create user:", err);
+      toast("Failed to create user. Please try again.", "error");
+    }
     setIsSubmitting(false);
     handleCloseModal();
-    toast(`Admin "${newUser.full_name}" created successfully`);
   };
 
   if (isLoading) {
@@ -210,8 +215,8 @@ export default function PlatformUsersPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                            {user.first_name.charAt(0)}
-                            {user.last_name.charAt(0)}
+                            {(user.first_name || "").charAt(0)}
+                            {(user.last_name || "").charAt(0)}
                           </div>
                           <div>
                             <p className="font-medium">{user.full_name}</p>

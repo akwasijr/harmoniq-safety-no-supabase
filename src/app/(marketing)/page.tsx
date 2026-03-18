@@ -156,7 +156,7 @@ export default function Home() {
                 Get Started
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
+              <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
                 Contact Sales
               </Link>
             </motion.div>
@@ -761,7 +761,7 @@ export default function Home() {
               Get Started Free
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
+            <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
               Contact Sales
             </Link>
           </div>

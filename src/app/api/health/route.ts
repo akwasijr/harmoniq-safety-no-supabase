@@ -71,7 +71,8 @@ async function getHealthSnapshot(): Promise<HealthSnapshot> {
 
       if (error) {
         issues.push("database_unreachable");
-        database.error = error.message;
+        console.error("[Health API] Database check failed:", error.message);
+        database.error = "Database connection failed";
       } else {
         database.ok = true;
       }

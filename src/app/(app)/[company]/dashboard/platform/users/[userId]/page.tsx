@@ -105,8 +105,8 @@ export default function PlatformUserDetailPage() {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">
-                {user.first_name.charAt(0)}
-                {user.last_name.charAt(0)}
+                {(user.first_name || "").charAt(0)}
+                {(user.last_name || "").charAt(0)}
               </div>
               <div>
                 <h1 className="heading-2">{user.full_name}</h1>

@@ -243,7 +243,7 @@ export default function UserDetailPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">
-            {user.full_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+            {(user.full_name || "").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
           </div>
           <div>
             <div className="flex items-center gap-3">

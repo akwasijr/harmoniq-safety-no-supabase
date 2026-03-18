@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     valid: true,
     invitation: {
+      email: invitation.email,
+      role: invitation.role,
+      company_id: invitation.company_id,
       company_name: (invitation as unknown as { companies?: { name: string } }).companies?.name || "Unknown",
     },
   });

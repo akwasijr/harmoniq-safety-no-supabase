@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
             gender: null,
             department: department || null,
             job_title: null,
-            employee_id: `EMP${Date.now()}`,
+            employee_id: `EMP${Date.now().toString(36)}${Math.random().toString(36).substring(2, 6)}`,
             status: "pending_activation",
             email_verified_at: null,
             oauth_provider: "email",

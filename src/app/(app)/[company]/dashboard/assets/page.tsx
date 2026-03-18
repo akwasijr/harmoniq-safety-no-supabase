@@ -45,9 +45,7 @@ import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { DetailTabs } from "@/components/ui/detail-tabs";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
-import CorrectiveActionsContent from "@/app/(app)/[company]/dashboard/corrective-actions/page";
-import WorkOrdersContent from "@/app/(app)/[company]/dashboard/work-orders/page";
-import PartsContent from "@/app/(app)/[company]/dashboard/parts/page";
+
 import type { Asset, Alert } from "@/types";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
@@ -784,13 +782,37 @@ export default function AssetsPage() {
       )}
 
       {/* Work Orders Tab */}
-      {activeTab === "work-orders" && <WorkOrdersContent />}
+      {activeTab === "work-orders" && (
+        <div className="text-center py-12">
+          <Wrench className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground mb-4">View and manage work orders for this asset</p>
+          <Link href={`/${company}/dashboard/work-orders`}>
+            <Button>Go to Work Orders</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Parts Tab */}
-      {activeTab === "parts" && <PartsContent />}
+      {activeTab === "parts" && (
+        <div className="text-center py-12">
+          <Box className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground mb-4">View and manage parts inventory</p>
+          <Link href={`/${company}/dashboard/parts`}>
+            <Button>Go to Parts</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Corrective Actions Tab */}
-      {activeTab === "corrective-actions" && <CorrectiveActionsContent />}
+      {activeTab === "corrective-actions" && (
+        <div className="text-center py-12">
+          <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground mb-4">View and manage corrective actions</p>
+          <Link href={`/${company}/dashboard/corrective-actions`}>
+            <Button>Go to Corrective Actions</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Alerts Tab Content */}
       {activeTab === "alerts" && (

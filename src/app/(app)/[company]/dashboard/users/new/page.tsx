@@ -63,7 +63,7 @@ export default function NewUserPage() {
   const { items: locations } = useLocationsStore();
   const { items: teams } = useTeamsStore();
   const { add: addUser } = useUsersStore();
-  const { t, formatDate, formatNumber } = useTranslation();
+  const { t } = useTranslation();
 
   // Form state matching User interface
   const [formData, setFormData] = React.useState({

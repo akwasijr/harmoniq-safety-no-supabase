@@ -65,7 +65,7 @@ export default function InspectionDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push(`/${company}/dashboard/checklists?tab=inspection`)}>
+          <Button variant="ghost" size="icon" onClick={() => router.push(`/${company}/dashboard/checklists`)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>

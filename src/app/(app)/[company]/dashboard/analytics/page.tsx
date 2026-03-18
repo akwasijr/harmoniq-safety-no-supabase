@@ -24,7 +24,7 @@ import { getDateRangeFromValue, isWithinDateRange, DateRangeValue } from "@/lib/
 import { useTranslation } from "@/i18n";
 
 export default function AnalyticsPage() {
-  const { t, formatDate, formatNumber } = useTranslation();
+  const { t, formatDate } = useTranslation();
   const filterOptions = useFilterOptions();
 
   const formatMonthLabel = React.useCallback(

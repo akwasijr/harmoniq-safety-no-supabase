@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     const asset_id = body.asset_id && isValidUUID(body.asset_id) ? body.asset_id : null;
 
     const now = new Date().toISOString();
-    const referenceNumber = `INC-${Date.now().toString().slice(-6)}`;
+    const referenceNumber = `INC-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
 
     const { data: incident, error } = await supabase
       .from("incidents")
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
         incident_date,
         incident_time,
         lost_time: Boolean(body.lost_time),
-        lost_time_amount: body.lost_time ? Number(body.lost_time_amount) || null : null,
+        lost_time_amount: (() => { const n = body.lost_time ? Number(body.lost_time_amount) : null; return n !== null && !isNaN(n) && n >= 0 ? n : null; })(),
         active_hazard: Boolean(body.active_hazard),
         location_id,
         building,

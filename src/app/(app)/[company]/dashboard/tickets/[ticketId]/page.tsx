@@ -80,7 +80,10 @@ export default function TicketDetailPage() {
     try {
       const stored = window.localStorage.getItem(TASKS_KEY);
       return stored ? JSON.parse(stored) : defaultTasks;
-    } catch { return defaultTasks; }
+    } catch (err) {
+      console.warn("Failed to read ticket tasks from localStorage:", err);
+      return defaultTasks;
+    }
   });
 
   type TicketComment = { id: string; author: string; text: string; date: string; avatar: string };
@@ -91,7 +94,10 @@ export default function TicketDetailPage() {
     try {
       const stored = window.localStorage.getItem(COMMENTS_KEY);
       return stored ? JSON.parse(stored) : defaultComments;
-    } catch { return defaultComments; }
+    } catch (err) {
+      console.warn("Failed to read ticket comments from localStorage:", err);
+      return defaultComments;
+    }
   });
 
   // Persist comments to localStorage
@@ -99,7 +105,9 @@ export default function TicketDetailPage() {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
-    } catch { /* storage full */ }
+    } catch (err) {
+      console.warn("Failed to write ticket comments to localStorage:", err);
+    }
   }, [comments, COMMENTS_KEY]);
 
   // Persist tasks to localStorage
@@ -107,7 +115,9 @@ export default function TicketDetailPage() {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
-    } catch { /* storage full */ }
+    } catch (err) {
+      console.warn("Failed to write ticket tasks to localStorage:", err);
+    }
   }, [tasks, TASKS_KEY]);
 
   if (isLoading) {

@@ -1378,7 +1378,7 @@ export default function IncidentDetailPage() {
                         <div className="flex flex-wrap gap-4 text-sm">
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <User className="h-4 w-4" />
-                            {getAssigneeName(action.assignee)}
+                            {action.assignee ? getAssigneeName(action.assignee) : "Unassigned"}
                           </div>
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <Calendar className="h-4 w-4" />

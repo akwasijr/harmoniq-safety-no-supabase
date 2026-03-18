@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         asset_id,
         assigned_to,
         due_date: body.due_date ? sanitizeText(body.due_date, 10) || null : null,
-        estimated_hours: body.estimated_hours ? parseFloat(body.estimated_hours) || null : null,
+        estimated_hours: (() => { const h = parseFloat(body.estimated_hours); return !isNaN(h) && h >= 0 ? h : null; })(),
         actual_hours: null,
         parts_cost: null,
         labor_cost: null,

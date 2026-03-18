@@ -259,7 +259,7 @@ export function Header({
                   Profile
                 </Link>
                 <Link
-                  href={company ? `/${company}/dashboard/settings` : "/settings"}
+                  href={company ? `/${company}/dashboard/settings` : "/login"}
                   className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent"
                   onClick={() => setShowUserMenu(false)}
                 >

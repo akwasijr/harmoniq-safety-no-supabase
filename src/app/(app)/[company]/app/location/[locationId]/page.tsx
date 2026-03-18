@@ -209,7 +209,7 @@ export default function LocationLandingPage() {
       icon: Wrench,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
-      href: `/${company}/app/checklists?tab=inspections&location=${locationId}`,
+      href: `/${company}/app/inspection?location=${locationId}`,
     },
   ];
 

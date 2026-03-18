@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     const parent_asset_id = body.parent_asset_id && isValidUUID(body.parent_asset_id) ? body.parent_asset_id : null;
 
     const now = new Date().toISOString();
-    const assetTag = `AST-${Date.now().toString().slice(-8)}`;
+    const assetTag = `AST-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
 
     const { data: asset, error } = await supabase
       .from("assets")
