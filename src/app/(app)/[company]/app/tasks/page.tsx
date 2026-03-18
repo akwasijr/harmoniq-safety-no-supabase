@@ -9,7 +9,6 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
-  ListChecks,
   Calendar,
   User as UserIcon,
   CheckCircle2,
@@ -40,8 +39,6 @@ import type {
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-type TabId = "mine" | "all" | "tickets" | "work-orders" | "actions";
 
 type UnifiedTask = {
   id: string;
@@ -168,16 +165,8 @@ function getKindIconColor(kind: UnifiedTask["kind"]) {
 }
 
 // ---------------------------------------------------------------------------
-// Tabs config
+// Empty state
 // ---------------------------------------------------------------------------
-
-const TABS: { id: TabId; label: string; labelKey: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "mine", label: "Mine", labelKey: "tasks.mine", icon: UserIcon },
-  { id: "all", label: "All", labelKey: "tasks.all", icon: ListChecks },
-  { id: "tickets", label: "Tickets", labelKey: "tasks.tickets", icon: Ticket },
-  { id: "work-orders", label: "Work Orders", labelKey: "tasks.workOrders", icon: Wrench },
-  { id: "actions", label: "Actions", labelKey: "tasks.actions", icon: ShieldAlert },
-];
 
 // ---------------------------------------------------------------------------
 // Status action helpers
@@ -347,23 +336,13 @@ function TaskCard({
   );
 }
 
-function EmptyState({ kind, t }: { kind: TabId; t: (key: string, params?: Record<string, string | number>) => string }) {
-  const config: Record<TabId, { icon: React.ComponentType<{ className?: string }>; messageKey: string; fallback: string }> = {
-    mine: { icon: UserIcon, messageKey: "tasks.emptyMine", fallback: "No tasks assigned to you" },
-    all: { icon: ListChecks, messageKey: "tasks.empty", fallback: "No tasks assigned to you" },
-    tickets: { icon: Ticket, messageKey: "tasks.emptyTickets", fallback: "No tickets assigned to you" },
-    "work-orders": { icon: Wrench, messageKey: "tasks.emptyWorkOrders", fallback: "No work orders assigned to you" },
-    actions: { icon: ShieldAlert, messageKey: "tasks.emptyActions", fallback: "No corrective actions assigned to you" },
-  };
-
-  const { icon: Icon, messageKey, fallback } = config[kind];
-
+function EmptyState({ t }: { t: (key: string, params?: Record<string, string | number>) => string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center" role="status">
       <div className="rounded-full bg-muted p-4 mb-3">
-        <Icon className="h-10 w-10 text-muted-foreground/40" aria-hidden="true" />
+        <ClipboardList className="h-10 w-10 text-muted-foreground/40" aria-hidden="true" />
       </div>
-      <p className="text-sm font-medium text-muted-foreground">{t(messageKey) || fallback}</p>
+      <p className="text-sm font-medium text-muted-foreground">{t("tasks.empty") || "No tasks assigned to you"}</p>
       <p className="text-xs text-muted-foreground/70 mt-1">
         {t("tasks.emptyHint") || "Items assigned to you will appear here"}
       </p>
@@ -406,8 +385,6 @@ export default function TasksPage() {
     [updateTicket, updateWorkOrder, updateCorrectiveAction, toast, t],
   );
 
-  const [activeTab, setActiveTab] = React.useState<TabId>("mine");
-
   const isLoading = ticketsLoading || workOrdersLoading || actionsLoading;
 
   // Lookup helpers
@@ -430,8 +407,8 @@ export default function TasksPage() {
   );
 
   // Build unified task lists
-  const { myTickets, myWorkOrders, myActions, allTasks } = React.useMemo(() => {
-    if (!user) return { myTickets: [], myWorkOrders: [], myActions: [], allTasks: [] };
+  const allTasks = React.useMemo(() => {
+    if (!user) return [];
 
     const companyId = user.company_id;
 
@@ -517,48 +494,8 @@ export default function TasksPage() {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     };
 
-    return {
-      myTickets: [...filteredTickets].sort(sortTasks),
-      myWorkOrders: [...filteredWorkOrders].sort(sortTasks),
-      myActions: [...filteredActions].sort(sortTasks),
-      allTasks: [...filteredTickets, ...filteredWorkOrders, ...filteredActions].sort(sortTasks),
-    };
+    return [...filteredTickets, ...filteredWorkOrders, ...filteredActions].sort(sortTasks);
   }, [user, tickets, workOrders, correctiveActions, company, getUserName, getAssetName]);
-
-  // "Mine" tab — only tasks assigned to the current user
-  const mineTasks = React.useMemo(
-    () => allTasks.filter((t) => t.assignedTo === user?.id),
-    [allTasks, user],
-  );
-
-  // Current visible list based on active tab
-  const visibleTasks = React.useMemo(() => {
-    switch (activeTab) {
-      case "mine":
-        return mineTasks;
-      case "tickets":
-        return myTickets;
-      case "work-orders":
-        return myWorkOrders;
-      case "actions":
-        return myActions;
-      case "all":
-      default:
-        return allTasks;
-    }
-  }, [activeTab, allTasks, mineTasks, myTickets, myWorkOrders, myActions]);
-
-  // Tab counts
-  const tabCounts: Record<TabId, number> = React.useMemo(
-    () => ({
-      mine: mineTasks.length,
-      all: allTasks.length,
-      tickets: myTickets.length,
-      "work-orders": myWorkOrders.length,
-      actions: myActions.length,
-    }),
-    [allTasks, mineTasks, myTickets, myWorkOrders, myActions],
-  );
 
   // Loading state
   if (isLoading) {
@@ -571,53 +508,17 @@ export default function TasksPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Header + Tabs */}
+      {/* Header */}
       <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
-        <h1 className="text-lg font-bold mb-3">{t("tasks.title") || "My Tasks"}</h1>
-
-        <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist" aria-label={t("tasks.title") || "Task categories"}>
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            const count = tabCounts[tab.id];
-            return (
-              <button
-                key={tab.id}
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`tabpanel-${tab.id}`}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all whitespace-nowrap",
-                  isActive
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground",
-                )}
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span className="truncate">{t(tab.labelKey) || tab.label}</span>
-                {count > 0 && (
-                  <span className="ml-0.5 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <h1 className="text-lg font-bold">{t("tasks.title") || "My Tasks"}</h1>
       </div>
 
       {/* Task list */}
-      <div
-        id={`tabpanel-${activeTab}`}
-        role="tabpanel"
-        aria-label={t(`tasks.${activeTab}`) || activeTab}
-        className="flex-1 px-4 pt-3 pb-20 space-y-1.5"
-      >
-        {visibleTasks.length === 0 ? (
-          <EmptyState kind={activeTab} t={t} />
+      <div className="flex-1 px-4 pt-3 pb-20 space-y-1.5">
+        {allTasks.length === 0 ? (
+          <EmptyState t={t} />
         ) : (
-          visibleTasks.map((task) => (
+          allTasks.map((task) => (
             <TaskCard key={`${task.kind}-${task.id}`} task={task} formatDate={formatDate} t={t} onStatusUpdate={handleStatusUpdate} />
           ))
         )}
