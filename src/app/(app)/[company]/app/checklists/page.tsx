@@ -17,8 +17,6 @@ import {
   Play,
   ListChecks,
   History,
-  BookTemplate,
-  Star,
   Camera,
   MessageSquare,
   Percent,
@@ -99,7 +97,7 @@ function Section({
 
 // ---------- Checklist Tab with Sub-tabs ----------
 
-type ChecklistSubTab = "my" | "templates" | "completed";
+type ChecklistSubTab = "my" | "completed";
 
 function ChecklistsTabContent({
   company,
@@ -125,14 +123,8 @@ function ChecklistsTabContent({
   const completedSubmissions = userSubmissions.filter(s => s.status === "submitted");
   const draftSubmissions = userSubmissions.filter(s => s.status === "draft");
 
-  // Admin-pushed templates (have assignment field or company_id)
-  const adminTemplates = templates.filter(t => t.assignment === "all" || t.assignment === "department" || t.assignment === "role");
-  // User-created templates (no assignment or created by this user)
-  const userTemplates = templates.filter(t => !t.assignment || t.assignment === undefined);
-
   const subTabs = [
     { id: "my" as ChecklistSubTab, label: "My checklists", icon: ListChecks },
-    { id: "templates" as ChecklistSubTab, label: "Templates", icon: BookTemplate },
     { id: "completed" as ChecklistSubTab, label: "Completed", icon: History },
   ];
 
@@ -305,92 +297,6 @@ function ChecklistsTabContent({
               <p className="text-xs text-muted-foreground/70 mt-1">Checklists will appear here when assigned by your admin</p>
             </div>
           )}
-        </>
-      )}
-
-      {/* TEMPLATES sub-tab */}
-      {subTab === "templates" && (
-        <>
-          {/* Start checklist action */}
-          <div className="mb-3">
-            <button
-              type="button"
-              onClick={() => setSubTab("my")}
-              className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Play className="h-5 w-5 text-primary" />
-              </div>
-              <div className="text-center">
-                <p className="font-semibold text-sm text-primary">Start checklist</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">From a template below</p>
-              </div>
-            </button>
-          </div>
-
-          {/* Admin templates */}
-          {adminTemplates.length > 0 && (
-            <Section
-              title="Company templates"
-              icon={ShieldAlert}
-              iconColor="text-primary"
-              count={adminTemplates.length}
-            >
-              {adminTemplates.map((template) => (
-                <Link
-                  key={template.id}
-                  href={`/${company}/app/checklists/${template.id}`}
-                  className="flex items-center gap-3 rounded-lg border p-3 active:bg-muted/50 hover:bg-muted/40"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <ClipboardCheck className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">{template.name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {template.items?.length || 0} items · {template.recurrence || "once"}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                </Link>
-              ))}
-            </Section>
-          )}
-
-          {/* User / personal templates */}
-          <div className="border-t" />
-          <Section
-            title="My templates"
-            icon={Star}
-            iconColor="text-amber-500"
-            count={userTemplates.length}
-          >
-            {userTemplates.length > 0 ? (
-              userTemplates.map((template) => (
-                <Link
-                  key={template.id}
-                  href={`/${company}/app/checklists/${template.id}`}
-                  className="flex items-center gap-3 rounded-lg border p-3 active:bg-muted/50 hover:bg-muted/40"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
-                    <Star className="h-4 w-4 text-amber-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">{template.name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{template.items?.length || 0} items</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                </Link>
-              ))
-            ) : (
-              <div className="py-4 text-center">
-                <p className="text-xs text-muted-foreground">No personal templates yet</p>
-                <p className="mt-1 text-[11px] text-muted-foreground/70">
-                  Templates are managed from the admin dashboard
-                </p>
-              </div>
-            )}
-          </Section>
         </>
       )}
 

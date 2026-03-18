@@ -171,7 +171,7 @@ export default function EmployeeAssetsPage() {
                 onChange={e => setStatusFilter(e.target.value)}
                 className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="all">{t("common.all")}: {t("incidents.labels.status")}</option>
+                <option value="all">{t("common.all")}: {t("assets.status") || "Status"}</option>
                 {["active", "maintenance", "inactive", "retired"].map(s => (
                   <option key={s} value={s}>{t(`assets.statuses.${s}`)}</option>
                 ))}
@@ -183,7 +183,7 @@ export default function EmployeeAssetsPage() {
                 onChange={e => setCategoryFilter(e.target.value)}
                 className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="all">{t("common.all")}: {t("incidents.labels.type")}</option>
+                <option value="all">{t("common.all")}: {t("assets.category") || "Category"}</option>
                 {categories.map(c => (
                   <option key={c} value={c}>{c.replace(/_/g, " ")}</option>
                 ))}
