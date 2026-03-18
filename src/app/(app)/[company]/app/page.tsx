@@ -203,39 +203,34 @@ function FeaturedNewsCarousel({
           <Link
             key={item.id}
             href={`/${company}/app/news/${item.id}`}
-            className="flex-shrink-0 snap-start rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md active:shadow-sm"
+            className="flex-shrink-0 snap-start rounded-lg border bg-card overflow-hidden transition-shadow hover:shadow-md active:shadow-sm"
             style={{ width: "68%" }}
           >
             {/* Image / gradient placeholder */}
-            <div className={`h-28 w-full bg-gradient-to-br ${cardColors[i % cardColors.length]} relative overflow-hidden`}>
+            <div className={`h-20 w-full bg-gradient-to-br ${cardColors[i % cardColors.length]} relative overflow-hidden`}>
               {item.featured_image ? (
                 <img
                   src={item.featured_image}
                   alt=""
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover object-center"
                   loading="lazy"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <Newspaper className="h-8 w-8 text-foreground/10" aria-hidden="true" />
+                  <Newspaper className="h-6 w-6 text-foreground/10" aria-hidden="true" />
                 </div>
               )}
             </div>
 
             {/* Content */}
-            <div className="px-3 py-2.5 space-y-1">
-              <h3 className="font-semibold text-xs leading-snug line-clamp-2">{item.title}</h3>
-              {item.content && (
-                <p className="text-[11px] text-muted-foreground line-clamp-1 leading-relaxed">
-                  {item.content.replace(/<[^>]*>/g, "").slice(0, 120)}
-                </p>
-              )}
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] text-muted-foreground">
+            <div className="px-2.5 py-2 space-y-0.5">
+              <h3 className="font-semibold text-[11px] leading-snug line-clamp-1">{item.title}</h3>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground">
                   {formatDate(new Date(item.published_at || item.created_at))}
                 </span>
-                <span className="text-xs font-medium text-primary flex items-center gap-0.5">
-                  {t("common.readMore") || "Read more"} <ArrowRight className="h-3 w-3" />
+                <span className="text-[10px] font-medium text-primary flex items-center gap-0.5">
+                  {t("common.readMore") || "Read more"} <ArrowRight className="h-2.5 w-2.5" />
                 </span>
               </div>
             </div>
