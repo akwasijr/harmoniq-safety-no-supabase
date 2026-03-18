@@ -196,7 +196,7 @@ function FeaturedNewsCarousel({
       {/* Scrollable cards */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4"
+        className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mr-4 pr-4 pl-4"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {news.map((item, i) => (
