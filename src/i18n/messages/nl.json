@@ -64,7 +64,8 @@
     "riskAssessments": "Risicobeoordeling",
     "qrCodes": "QR-codes",
     "tickets": "Tickets",
-    "newsShort": "Nieuws"
+    "newsShort": "Nieuws",
+    "myTasksShort": "Mijn Taken"
   },
   "app": {
     "goodMorning": "Goedemorgen",

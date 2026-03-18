@@ -64,7 +64,8 @@
     "riskAssessments": "Risk Assessments",
     "qrCodes": "QR Codes",
     "tickets": "Tickets",
-    "newsShort": "News"
+    "newsShort": "News",
+    "myTasksShort": "My Tasks"
   },
   "app": {
     "goodMorning": "Good morning",

@@ -64,7 +64,8 @@
     "riskAssessments": "Riskbedömningar",
     "qrCodes": "QR-koder",
     "tickets": "Ärenden",
-    "newsShort": "Nyheter"
+    "newsShort": "Nyheter",
+    "myTasksShort": "Mina Uppgifter"
   },
   "app": {
     "goodMorning": "God morgon",
