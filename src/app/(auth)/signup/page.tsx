@@ -8,6 +8,33 @@ import { useTranslation } from "@/i18n";
 
 export default function SignupPage() {
   const { t } = useTranslation();
+  const [email, setEmail] = React.useState("");
+  const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
+
+  const handleWaitlist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      if (res.ok) {
+        if (typeof window !== "undefined") {
+          const existing = JSON.parse(localStorage.getItem("harmoniq_waitlist") || "[]");
+          existing.push({ email: email.trim(), timestamp: new Date().toISOString() });
+          localStorage.setItem("harmoniq_waitlist", JSON.stringify(existing));
+        }
+        setStatus("success");
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+  };
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4" style={{ background: 'white' }}>
@@ -64,6 +91,40 @@ export default function SignupPage() {
           >
             {t("auth.contactUs") || "Contact us"}
           </Link>
+
+          <div className="mt-6 pt-6 border-t border-border">
+            {status === "success" ? (
+              <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                You&apos;re on the list! We&apos;ll notify you when spots open.
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Or join the waitlist and we&apos;ll notify you when spots open.
+                </p>
+                <form onSubmit={handleWaitlist} className="flex gap-2">
+                  <input
+                    type="email"
+                    required
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <button
+                    type="submit"
+                    disabled={status === "loading"}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    {status === "loading" ? "..." : "Join"}
+                  </button>
+                </form>
+                {status === "error" && (
+                  <p className="mt-2 text-xs text-red-500">Something went wrong. Try again.</p>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         <div className="mt-5 rounded-lg border border-border bg-card/60 dark:bg-white/5 py-3 text-center text-sm text-muted-foreground">

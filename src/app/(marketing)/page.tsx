@@ -195,8 +195,8 @@ export default function Home() {
             <a href="#stats" className="text-sm text-zinc-400 hover:text-white transition-colors">Resources</a>
           </nav>
           <div className="flex items-center gap-3">
-            <a href="#waitlist" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
-              Join Waitlist
+            <a href="/signup" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+              Get Started
             </a>
           </div>
         </motion.div>
@@ -755,53 +755,64 @@ export default function Home() {
                   icon: HardHat,
                   name: "Construction",
                   description: "Every shift begins with a Job Hazard Analysis right on your crew's phones. Fall protection audits, scaffold inspections, toolbox talks: all tracked automatically. When your superintendent walks a new job site, the pre-task checklist is already loaded based on the scope of work. Photos of hazards get GPS-tagged and timestamped. If OSHA visits, your documentation is audit-ready before they finish parking.",
+                  features: ["Job Hazard Analysis (JHA)", "Fall protection audits", "Scaffold inspection checklists", "Toolbox talk tracking", "Photo-documented hazard reporting", "OSHA compliance reports"],
                 },
                 {
                   icon: Factory,
                   name: "Manufacturing",
                   description: "Lockout/tagout compliance becomes part of the machine changeover process, not a separate safety exercise. Ergonomic assessments for repetitive tasks, machine guarding inspections on every press and conveyor, near-miss reporting from the production floor: everything flows into one dashboard. Floor managers track completion rates in real time without leaving the line. When a line goes down for maintenance, the safety protocol follows automatically.",
+                  features: ["Lockout/tagout compliance", "Machine guarding inspections", "Ergonomic assessments", "Near-miss reporting", "Production floor dashboards", "Maintenance safety protocols"],
                 },
                 {
                   icon: Droplets,
                   name: "Oil & Gas",
                   description: "Permit-to-work management, confined space entry, H2S monitoring: digitized for remote well sites where connectivity is unreliable. Your crew completes inspections offline and everything syncs when signal returns. Hot work permits route through the approval chain on mobile. Contractor orientation checklists ensure every person on your lease is trained and documented before they touch a valve.",
+                  features: ["Permit-to-work management", "Confined space entry logs", "Offline inspection sync", "Hot work permit approvals", "Contractor orientation checklists", "H2S monitoring records"],
                 },
                 {
                   icon: Stethoscope,
                   name: "Healthcare",
                   description: "Infection control rounds, sharps disposal tracking, patient safety audits: all designed for the pace of clinical work. Nurses complete hand hygiene observations between patient rooms in seconds. OSHA bloodborne pathogen compliance is built into the daily workflow, not a quarterly scramble. Incident reports for needle sticks or patient falls trigger the right notifications to risk management immediately.",
+                  features: ["Infection control rounds", "Sharps disposal tracking", "Patient safety audits", "Hand hygiene observations", "Bloodborne pathogen compliance", "Incident auto-notifications"],
                 },
                 {
                   icon: Warehouse,
                   name: "Warehousing & Logistics",
                   description: "Forklift operators scan a QR code to start their pre-shift inspection. Dock safety checks, fire extinguisher rounds, rack integrity audits: all scheduled, all tracked, all completed on mobile. Warehouse managers see which zones have open items before the morning standup. When a rack shows damage, the escalation path from photo to work order to repair confirmation is fully digital.",
+                  features: ["QR code asset scanning", "Forklift pre-shift inspections", "Fire extinguisher rounds", "Rack integrity audits", "Zone-based compliance tracking", "Photo-to-work-order escalation"],
                 },
                 {
                   icon: Pickaxe,
                   name: "Mining",
                   description: "Ground control monitoring, ventilation system checks, blast area safety protocols: built for both underground and surface operations. Each shift starts with a strata assessment on the crew leader's device. PPE compliance is tracked per worker, per shift, per zone. When conditions change mid-shift, updated risk assessments push to every device in the section. Your safety record stays clean because the system catches gaps before regulators do.",
+                  features: ["Ground control monitoring", "Ventilation system checks", "Blast area safety protocols", "PPE compliance per worker", "Live risk assessment updates", "Shift-based strata assessments"],
                 },
                 {
                   icon: UtensilsCrossed,
                   name: "Food & Beverage",
                   description: "HACCP inspections, allergen management, cold chain monitoring with automated escalation. A missed temperature check triggers an alert to the shift supervisor within minutes, not hours. Sanitation audits follow your cleaning schedules automatically. When an allergen protocol changes, every relevant checklist updates across all your facilities. Auditors see a complete digital trail from receiving dock to shipping bay.",
+                  features: ["HACCP inspections", "Allergen management", "Cold chain temperature monitoring", "Automated sanitation schedules", "Cross-facility checklist sync", "Full audit trail export"],
                 },
                 {
                   icon: BatteryCharging,
                   name: "Utilities & Energy",
                   description: "Arc flash compliance, substation inspections, vegetation management workflows for field crews managing critical infrastructure across dispersed service territories. Line clearance audits follow your reliability standards. When a crew arrives at a transformer, the inspection form loads based on equipment class and last service date. Switching procedures and safety protocols travel with the work order, not in a binder back at the office.",
+                  features: ["Arc flash compliance", "Substation inspections", "Vegetation management workflows", "Equipment-based form loading", "Line clearance audits", "Mobile switching procedures"],
                 },
                 {
                   icon: Truck,
                   name: "Transportation",
                   description: "Pre-trip vehicle inspections that DOT auditors actually accept. Drivers complete the walk-around on their phone: tires, brakes, lights, cargo securement. Defects route to maintenance automatically. Dispatchers see fleet compliance at a glance before releasing loads. Driver safety scoring aggregates inspection data, incident history, and training records into one profile. CSA scores improve because the documentation is always current.",
+                  features: ["Pre-trip vehicle inspections", "DOT-compliant documentation", "Automatic defect routing", "Fleet compliance dashboard", "Driver safety scoring", "Cargo securement checklists"],
                 },
                 {
                   icon: GraduationCap,
                   name: "Education",
                   description: "Playground safety checks before the first bell. Chemistry lab inspections before every class period. Emergency drill tracking with timestamps and headcount verification. Visitor management logs who entered, when, and which areas they accessed. Facilities teams manage building safety, grounds maintenance, and fire code compliance from a single dashboard instead of scattered spreadsheets across departments.",
+                  features: ["Playground safety checks", "Lab safety inspections", "Emergency drill tracking", "Visitor management logs", "Fire code compliance", "Facilities maintenance dashboard"],
                 },
               ];
+              const current = industries[selectedIndustry];
               return (
                 <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-0 lg:gap-12">
                   <div className="flex flex-col">
@@ -828,11 +839,19 @@ export default function Home() {
                   </div>
                   <div className="pt-6 lg:pt-3">
                     <h3 className="text-xl font-semibold text-white mb-3">
-                      {industries[selectedIndustry].name}
+                      {current.name}
                     </h3>
-                    <p className="text-zinc-400 leading-relaxed">
-                      {industries[selectedIndustry].description}
+                    <p className="text-zinc-400 leading-relaxed mb-6">
+                      {current.description}
                     </p>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                      {current.features.map((feature) => (
+                        <div key={feature} className="flex items-center gap-2 text-sm text-zinc-300">
+                          <div className="h-1 w-1 rounded-full bg-[#8B5CF6] shrink-0" />
+                          {feature}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </motion.div>
               );
