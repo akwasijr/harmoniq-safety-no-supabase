@@ -141,6 +141,7 @@ export default function Home() {
   const faqY = useParallaxOffset(faqRef, 20);
 
   const [scrolled, setScrolled] = useState(false);
+  const [selectedIndustry, setSelectedIndustry] = useState(0);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -274,7 +275,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto text-center">
             <p className="text-3xl sm:text-4xl lg:text-5xl font-light leading-snug text-zinc-300">
               Trusted by <span className="text-white font-semibold">operations teams</span> across industries worldwide.
-              A growing community committed to <span className="text-[#8B5CF6] font-semibold">protecting their people and assets</span> while
+              A growing community committed to <span className="text-white font-bold">protecting their people and assets</span> while
               staying compliant.
             </p>
           </div>
@@ -733,91 +734,108 @@ export default function Home() {
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
             variants={stagger}
-            className="max-w-4xl mx-auto"
+            className="max-w-5xl mx-auto"
           >
             <motion.div variants={fadeUp} className="mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-                Your industry.{" "}
-                <span className="text-[#8B5CF6]">Your safety.</span>
+              <h2
+                className="text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-4"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                Your industry. Your safety.
               </h2>
               <p className="text-zinc-400 text-lg">
                 Harmoniq adapts to the regulations, hazards, and workflows that matter in your world.
               </p>
             </motion.div>
 
-            <div className="space-y-0">
-              {[
+            {(() => {
+              const industries = [
                 {
                   icon: HardHat,
                   name: "Construction",
-                  description: "Your crew starts every shift with a Job Hazard Analysis on their phone. Fall protection audits, scaffold inspections, and toolbox talks are tracked automatically — so when OSHA shows up, you're ready.",
+                  description: "Every shift begins with a Job Hazard Analysis right on your crew's phones. Fall protection audits, scaffold inspections, toolbox talks: all tracked automatically. When your superintendent walks a new job site, the pre-task checklist is already loaded based on the scope of work. Photos of hazards get GPS-tagged and timestamped. If OSHA visits, your documentation is audit-ready before they finish parking.",
                 },
                 {
                   icon: Factory,
                   name: "Manufacturing",
-                  description: "Lockout/tagout compliance, machine guarding inspections, and ergonomic assessments built into your production workflow. Floor managers see real-time completion rates without leaving the line.",
+                  description: "Lockout/tagout compliance becomes part of the machine changeover process, not a separate safety exercise. Ergonomic assessments for repetitive tasks, machine guarding inspections on every press and conveyor, near-miss reporting from the production floor: everything flows into one dashboard. Floor managers track completion rates in real time without leaving the line. When a line goes down for maintenance, the safety protocol follows automatically.",
                 },
                 {
                   icon: Droplets,
                   name: "Oil & Gas",
-                  description: "Permit-to-work, confined space entry, and H2S monitoring — digitized for remote well sites. Even when your crew is offline, inspections continue. Everything syncs when signal returns.",
+                  description: "Permit-to-work management, confined space entry, H2S monitoring: digitized for remote well sites where connectivity is unreliable. Your crew completes inspections offline and everything syncs when signal returns. Hot work permits route through the approval chain on mobile. Contractor orientation checklists ensure every person on your lease is trained and documented before they touch a valve.",
                 },
                 {
                   icon: Stethoscope,
                   name: "Healthcare",
-                  description: "Infection control rounds, sharps disposal tracking, and patient safety audits that meet OSHA bloodborne pathogen standards. Nurses complete checks in seconds between rounds.",
+                  description: "Infection control rounds, sharps disposal tracking, patient safety audits: all designed for the pace of clinical work. Nurses complete hand hygiene observations between patient rooms in seconds. OSHA bloodborne pathogen compliance is built into the daily workflow, not a quarterly scramble. Incident reports for needle sticks or patient falls trigger the right notifications to risk management immediately.",
                 },
                 {
                   icon: Warehouse,
                   name: "Warehousing & Logistics",
-                  description: "Daily forklift inspections, dock plate checks, fire extinguisher rounds, and rack integrity audits — all scheduled, all tracked. QR-scan an asset to start its inspection instantly.",
+                  description: "Forklift operators scan a QR code to start their pre-shift inspection. Dock safety checks, fire extinguisher rounds, rack integrity audits: all scheduled, all tracked, all completed on mobile. Warehouse managers see which zones have open items before the morning standup. When a rack shows damage, the escalation path from photo to work order to repair confirmation is fully digital.",
                 },
                 {
                   icon: Pickaxe,
                   name: "Mining",
-                  description: "Ground control monitoring, ventilation system checks, and blast area safety protocols designed for underground and surface operations. PPE compliance tracked per worker, per shift.",
+                  description: "Ground control monitoring, ventilation system checks, blast area safety protocols: built for both underground and surface operations. Each shift starts with a strata assessment on the crew leader's device. PPE compliance is tracked per worker, per shift, per zone. When conditions change mid-shift, updated risk assessments push to every device in the section. Your safety record stays clean because the system catches gaps before regulators do.",
                 },
                 {
                   icon: UtensilsCrossed,
                   name: "Food & Beverage",
-                  description: "HACCP inspections, allergen management, and cold chain monitoring with automated escalation. A missed temperature check triggers an alert before product is compromised.",
+                  description: "HACCP inspections, allergen management, cold chain monitoring with automated escalation. A missed temperature check triggers an alert to the shift supervisor within minutes, not hours. Sanitation audits follow your cleaning schedules automatically. When an allergen protocol changes, every relevant checklist updates across all your facilities. Auditors see a complete digital trail from receiving dock to shipping bay.",
                 },
                 {
                   icon: BatteryCharging,
                   name: "Utilities & Energy",
-                  description: "Arc flash compliance, substation inspections, and vegetation management workflows for field crews managing critical infrastructure across dispersed service territories.",
+                  description: "Arc flash compliance, substation inspections, vegetation management workflows for field crews managing critical infrastructure across dispersed service territories. Line clearance audits follow your reliability standards. When a crew arrives at a transformer, the inspection form loads based on equipment class and last service date. Switching procedures and safety protocols travel with the work order, not in a binder back at the office.",
                 },
                 {
                   icon: Truck,
                   name: "Transportation",
-                  description: "Pre-trip vehicle inspections, driver safety scoring, and cargo securement checklists that satisfy DOT requirements. Dispatchers see fleet compliance status at a glance.",
+                  description: "Pre-trip vehicle inspections that DOT auditors actually accept. Drivers complete the walk-around on their phone: tires, brakes, lights, cargo securement. Defects route to maintenance automatically. Dispatchers see fleet compliance at a glance before releasing loads. Driver safety scoring aggregates inspection data, incident history, and training records into one profile. CSA scores improve because the documentation is always current.",
                 },
                 {
                   icon: GraduationCap,
                   name: "Education",
-                  description: "Playground safety checks, chemistry lab inspections, emergency drill tracking, and visitor management. Facilities teams run a safer campus with less paperwork.",
+                  description: "Playground safety checks before the first bell. Chemistry lab inspections before every class period. Emergency drill tracking with timestamps and headcount verification. Visitor management logs who entered, when, and which areas they accessed. Facilities teams manage building safety, grounds maintenance, and fire code compliance from a single dashboard instead of scattered spreadsheets across departments.",
                 },
-              ].map((industry, i) => {
-                const Icon = industry.icon;
-                return (
-                  <motion.div
-                    key={industry.name}
-                    variants={fadeUp}
-                    className="group grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-2 lg:gap-8 py-6 border-b border-zinc-800/60 last:border-b-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon className="h-5 w-5 text-zinc-500 shrink-0" aria-hidden="true" />
-                      <h3 className="text-base font-semibold text-white">
-                        {industry.name}
-                      </h3>
-                    </div>
-                    <p className="text-sm text-zinc-400 leading-relaxed lg:pt-0.5">
-                      {industry.description}
+              ];
+              return (
+                <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-0 lg:gap-12">
+                  <div className="flex flex-col">
+                    {industries.map((industry, i) => {
+                      const Icon = industry.icon;
+                      const isActive = selectedIndustry === i;
+                      return (
+                        <button
+                          key={industry.name}
+                          onClick={() => setSelectedIndustry(i)}
+                          className={`flex items-center gap-3 py-3 px-2 text-left transition-colors duration-150 ${
+                            isActive
+                              ? "text-white"
+                              : "text-zinc-500 hover:text-zinc-300"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          <span className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}>
+                            {industry.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="pt-6 lg:pt-3">
+                    <h3 className="text-xl font-semibold text-white mb-3">
+                      {industries[selectedIndustry].name}
+                    </h3>
+                    <p className="text-zinc-400 leading-relaxed">
+                      {industries[selectedIndustry].description}
                     </p>
-                  </motion.div>
-                );
-              })}
-            </div>
+                  </div>
+                </motion.div>
+              );
+            })()}
           </motion.div>
         </motion.div>
       </section>
@@ -834,9 +852,8 @@ export default function Home() {
           >
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-6">
-                  Built for teams that take safety & asset management{" "}
-                  <span className="text-[#8B5CF6]">seriously</span>
+                <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-6 text-white">
+                  Built for teams that take safety & asset management seriously
                 </h2>
                 <p className="text-zinc-400 leading-relaxed mb-8">
                   Whether you have 10 employees or 10,000, Harmoniq scales with your organization, managing safety incidents, asset lifecycles, and compliance in one place.
