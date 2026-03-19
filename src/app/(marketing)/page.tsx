@@ -34,6 +34,7 @@ import {
   UtensilsCrossed,
   BatteryCharging,
   GraduationCap,
+  Plane,
 } from "lucide-react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 
@@ -810,6 +811,12 @@ export default function Home() {
                   name: "Education",
                   description: "Playground safety checks before the first bell. Chemistry lab inspections before every class period. Emergency drill tracking with timestamps and headcount verification. Visitor management logs who entered, when, and which areas they accessed. Facilities teams manage building safety, grounds maintenance, and fire code compliance from a single dashboard instead of scattered spreadsheets across departments.",
                   features: ["Playground safety checks", "Lab safety inspections", "Emergency drill tracking", "Visitor management logs", "Fire code compliance", "Facilities maintenance dashboard"],
+                },
+                {
+                  icon: Plane,
+                  name: "Airports & Aviation",
+                  description: "Terminal operations and airside logistics each carry their own safety demands. Passenger-facing areas need escalator inspections, wet floor tracking, AED station checks, and emergency evacuation drill documentation. Behind the scenes, baggage handling systems require conveyor safety audits, ground support equipment pre-use inspections, and ramp area FOD walks. Fueling operations follow strict fire safety protocols. With hundreds of contractors operating in shared spaces, Harmoniq tracks who completed what training, which zones are cleared, and whether every vehicle on the apron passed its daily check, all from a single dashboard that security, operations, and ground handling teams can access by role.",
+                  features: ["GSE pre-use inspections", "Ramp FOD walk checklists", "Terminal safety audits", "Baggage system conveyor checks", "Fueling fire safety protocols", "Multi-contractor compliance tracking"],
                 },
               ];
               const current = industries[selectedIndustry];
