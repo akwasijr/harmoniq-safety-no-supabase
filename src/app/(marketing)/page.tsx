@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 import {
   Shield,
   ArrowRight,
@@ -25,32 +25,46 @@ import {
   Cross,
   Fuel,
   Truck,
+  CheckCircle2,
+  Mail,
 } from "lucide-react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 
+const EASE_OUT_CUBIC: [number, number, number, number] = [0.4, 0, 0.2, 1];
+
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" as const } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const fadeIn = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.8, ease: "easeOut" as const } },
+  visible: { opacity: 1, transition: { duration: 0.8, ease: EASE_OUT_CUBIC } },
 };
 
 const slideLeft = {
   hidden: { opacity: 0, x: -60 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: "easeOut" as const } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const slideRight = {
   hidden: { opacity: 0, x: 60 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: "easeOut" as const } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
+};
+
+const slideFromLeft = {
+  hidden: { opacity: 0, x: -120 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: EASE_OUT_CUBIC } },
+};
+
+const slideFromRight = {
+  hidden: { opacity: 0, x: 120 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: EASE_OUT_CUBIC, delay: 0.1 } },
 };
 
 const scaleUp = {
   hidden: { opacity: 0, scale: 0.9 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" as const } },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: EASE_OUT_CUBIC } },
 };
 
 const stagger = {
@@ -58,10 +72,35 @@ const stagger = {
 };
 
 const staggerSlow = {
-  visible: { transition: { staggerChildren: 0.15 } },
+  visible: { transition: { staggerChildren: 0.18 } },
 };
 
+const staggerDramatic = {
+  visible: { transition: { staggerChildren: 0.14 } },
+};
+
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return reduced;
+}
+
+function useParallaxOffset(ref: React.RefObject<HTMLElement | null>, range: number = 40) {
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  return useTransform(scrollYProgress, [0, 1], [range, -range]);
+}
+
 export default function Home() {
+  const prefersReducedMotion = useReducedMotion();
   const ipadRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ipadRef,
@@ -72,6 +111,25 @@ export default function Home() {
   const ipadScale = useTransform(scrollYProgress, [0, 1], [0.95, 1]);
 
   const heroRef = useRef<HTMLDivElement>(null);
+
+  // Section refs for scroll-based parallax
+  const trustRef = useRef<HTMLElement>(null);
+  const featuresRef = useRef<HTMLElement>(null);
+  const testimonialRef = useRef<HTMLElement>(null);
+  const servicesRef = useRef<HTMLElement>(null);
+  const mobileRef = useRef<HTMLElement>(null);
+  const statsRef = useRef<HTMLElement>(null);
+  const benefitsRef = useRef<HTMLElement>(null);
+  const faqRef = useRef<HTMLElement>(null);
+
+  const trustY = useParallaxOffset(trustRef, 30);
+  const featuresY = useParallaxOffset(featuresRef, 35);
+  const testimonialY = useParallaxOffset(testimonialRef, 25);
+  const servicesY = useParallaxOffset(servicesRef, 30);
+  const mobileY = useParallaxOffset(mobileRef, 35);
+  const statsY = useParallaxOffset(statsRef, 30);
+  const benefitsY = useParallaxOffset(benefitsRef, 25);
+  const faqY = useParallaxOffset(faqRef, 20);
 
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -126,9 +184,9 @@ export default function Home() {
             <a href="#stats" className="text-sm text-zinc-400 hover:text-white transition-colors">Resources</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
-              Get Started
-            </Link>
+            <a href="#waitlist" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+              Join Waitlist
+            </a>
           </div>
         </motion.div>
       </header>
@@ -152,10 +210,10 @@ export default function Home() {
               Report incidents, manage assets, run inspections, and ensure compliance, all in one powerful platform built for modern operations teams.
             </motion.p>
             <motion.div variants={fadeUp} className="mt-4 flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
-                Get Started
+              <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+                Join the Waitlist
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </a>
               <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
                 Contact Sales
               </Link>
@@ -195,10 +253,12 @@ export default function Home() {
 
       {/* ── Trust / Community Statement ── */}
       <motion.section
+        ref={trustRef}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
         variants={fadeUp}
+        style={prefersReducedMotion ? undefined : { y: trustY }}
         className="py-24 lg:py-32 relative z-10"
       >
         <div className="container mx-auto px-4 lg:px-8">
@@ -226,8 +286,8 @@ export default function Home() {
       </motion.section>
 
       {/* ── Features: Floating Pills Layout ── */}
-      <section id="features" className="py-24 lg:py-40 relative z-10 overflow-hidden">
-        <div className="container mx-auto px-4 lg:px-8">
+      <section id="features" ref={featuresRef} className="py-24 lg:py-40 relative z-10 overflow-hidden">
+        <motion.div style={prefersReducedMotion ? undefined : { y: featuresY }} className="container mx-auto px-4 lg:px-8">
           <div className="relative max-w-6xl mx-auto min-h-[600px] lg:min-h-[700px] flex items-center justify-center">
 
             {/* Floating feature pills, parallax fly-in from off-screen */}
@@ -239,8 +299,8 @@ export default function Home() {
                   key={feature.title}
                   initial={{
                     opacity: 0,
-                    x: isLeft ? -60 : 60,
-                    y: isTop ? -20 : 20,
+                    x: isLeft ? -80 : 80,
+                    y: isTop ? -30 : 30,
                   }}
                   whileInView={{
                     opacity: 1,
@@ -248,7 +308,7 @@ export default function Home() {
                     y: 0,
                   }}
                   viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.8, delay: i * 0.07, ease: "easeOut" as const }}
+                  transition={{ duration: 0.9, delay: i * 0.12, ease: EASE_OUT_CUBIC }}
                   className={`absolute hidden lg:flex items-center gap-3 rounded-full bg-zinc-800/60 backdrop-blur-sm px-5 py-3 ${featurePositions[i]}`}
                 >
                   <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${i % 2 === 0 ? "bg-[#8B5CF6]" : "bg-[#8B5CF6]/20"}`}>
@@ -278,9 +338,9 @@ export default function Home() {
                 Our platform offers a range of tools designed to help you stay organized, manage safety & assets, and achieve your compliance goals.
               </motion.p>
               <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
-                  Get Started
-                </Link>
+                <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+                  Join the Waitlist
+                </a>
                 <a href="#services" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
                   Learn More
                 </a>
@@ -300,12 +360,11 @@ export default function Home() {
             </div>
 
           </div>
-        </div>
+        </motion.div>
       </section>
-
       {/* ── Testimonial + Screenshot Section ── */}
-      <section className="py-24 lg:py-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8">
+      <section ref={testimonialRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: testimonialY }} className="container mx-auto px-4 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -343,12 +402,10 @@ export default function Home() {
               />
             </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
-
-      {/* ── Services Card 1: Analytics ── */}
-      <section id="services" className="py-24 lg:py-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8">
+      <section id="services" ref={servicesRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: servicesY }} className="container mx-auto px-4 lg:px-8">
           <motion.h2
             initial="hidden"
             whileInView="visible"
@@ -406,10 +463,8 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
-
-      {/* ── Services Card 2: Tracking ── */}
       <section className="pb-24 lg:pb-32 relative z-10">
         <div className="container mx-auto px-4 lg:px-8">
           <motion.div
@@ -462,8 +517,8 @@ export default function Home() {
       </section>
 
       {/* ── Mobile App Showcase ── */}
-      <section className="py-24 lg:py-32 relative z-10 overflow-hidden">
-        <div className="container mx-auto px-4 lg:px-8 relative">
+      <section ref={mobileRef} className="py-24 lg:py-32 relative z-10 overflow-hidden">
+        <motion.div style={prefersReducedMotion ? undefined : { y: mobileY }} className="container mx-auto px-4 lg:px-8 relative">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -494,10 +549,19 @@ export default function Home() {
                 ))}
               </div>
             </motion.div>
-            {/* Two phone frames */}
-            <motion.div variants={slideRight} className="flex justify-center gap-4">
+            {/* Two phone frames — slide from opposite sides */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              className="flex justify-center gap-4"
+            >
               {[0, 1].map(i => (
-                <div key={i} className={`w-[180px] h-[360px] rounded-[28px] bg-zinc-900 p-2 shadow-xl ${i === 1 ? "mt-12" : ""}`}>
+                <motion.div
+                  key={i}
+                  variants={i === 0 ? slideFromLeft : slideFromRight}
+                  className={`w-[180px] h-[360px] rounded-[28px] bg-zinc-900 p-2 shadow-xl ${i === 1 ? "mt-12" : ""}`}
+                >
                   <div className="w-full h-full rounded-[22px] bg-zinc-950 overflow-hidden flex flex-col">
                     {/* Status bar */}
                     <div className="h-6 px-3 flex items-center justify-between">
@@ -576,16 +640,16 @@ export default function Home() {
                       </>)}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── Stats 3-Column ── */}
-      <section id="stats" className="py-24 lg:py-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8">
+      <section id="stats" ref={statsRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: statsY }} className="container mx-auto px-4 lg:px-8">
           <motion.h2
             initial="hidden"
             whileInView="visible"
@@ -599,7 +663,7 @@ export default function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
-            variants={staggerSlow}
+            variants={staggerDramatic}
             className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
           >
             <motion.div variants={scaleUp} className="rounded-3xl bg-zinc-900/40 p-8">
@@ -649,12 +713,12 @@ export default function Home() {
               </div>
             </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── Platform Benefits ── */}
-      <section className="py-24 lg:py-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8">
+      <section ref={benefitsRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: benefitsY }} className="container mx-auto px-4 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -709,12 +773,12 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-24 lg:py-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8 max-w-3xl">
+      <section ref={faqRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: faqY }} className="container mx-auto px-4 lg:px-8 max-w-3xl">
           <motion.h2
             initial="hidden"
             whileInView="visible"
@@ -738,35 +802,10 @@ export default function Home() {
               </motion.div>
             ))}
           </motion.div>
-        </div>
+        </motion.div>
       </section>
-
-      {/* ── Pre-footer CTA ── */}
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={fadeUp}
-        className="py-24 lg:py-32 relative z-10"
-      >
-        <div className="container mx-auto px-4 lg:px-8 relative text-center max-w-3xl">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-            Ready to streamline safety & asset management?
-          </h2>
-          <p className="mt-6 text-lg text-zinc-400 leading-relaxed">
-            Join hundreds of organizations that use Harmoniq to protect their teams, manage assets, and stay compliant.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
-              Get Started Free
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
-              Contact Sales
-            </Link>
-          </div>
-        </div>
-      </motion.section>
+      {/* ── Waitlist CTA ── */}
+      <WaitlistSection />
 
       {/* ── Footer ── */}
       <footer className="py-16 relative z-10">
@@ -852,8 +891,8 @@ const features = [
 
 const faqs = [
   {
-    q: "How quickly can we get started?",
-    a: "Most teams are up and running within minutes. Create your company, invite your team, and start reporting. No complex setup required.",
+    q: "How can I get access?",
+    a: "Harmoniq is currently in private testing with select companies. We\u2019re refining the platform with real feedback before opening up. Join our waitlist below and we\u2019ll notify you as soon as spots open.",
   },
   {
     q: "Which compliance standards do you support?",
@@ -884,6 +923,106 @@ const pillsRow2 = [
   "Work Orders",
   "Mobile App",
 ];
+
+function WaitlistSection() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // Also store locally
+        const existing = JSON.parse(localStorage.getItem("harmoniq_waitlist") || "[]");
+        existing.push({ email: email.trim(), timestamp: new Date().toISOString() });
+        localStorage.setItem("harmoniq_waitlist", JSON.stringify(existing));
+        setStatus("success");
+        setMessage(data.message);
+      } else {
+        setStatus("error");
+        setMessage(data.message || "Something went wrong.");
+      }
+    } catch {
+      setStatus("error");
+      setMessage("Network error. Please try again.");
+    }
+  }
+
+  return (
+    <motion.section
+      id="waitlist"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeUp}
+      className="py-24 lg:py-32 relative z-10"
+    >
+      <div className="container mx-auto px-4 lg:px-8 relative text-center max-w-2xl">
+        {status === "success" ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, ease: EASE_OUT_CUBIC }}
+            className="rounded-3xl bg-zinc-900/40 p-10"
+          >
+            <CheckCircle2 className="h-12 w-12 text-green-400 mx-auto mb-4" />
+            <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-3">
+              You&apos;re on the list!
+            </h2>
+            <p className="text-lg text-zinc-400 leading-relaxed">
+              {message || "We\u2019ll reach out as soon as a spot opens up."}
+            </p>
+          </motion.div>
+        ) : (
+          <div className="rounded-3xl bg-zinc-900/40 p-10">
+            <Mail className="h-10 w-10 text-[#8B5CF6] mx-auto mb-4" />
+            <h2 className="text-4xl sm:text-5xl font-bold leading-tight mb-3">
+              Join the Waitlist
+            </h2>
+            <p className="text-lg text-zinc-400 leading-relaxed mb-8">
+              Harmoniq is in private beta. Drop your email and we&apos;ll let you know when it&apos;s your turn.
+            </p>
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                className="flex-1 rounded-full bg-zinc-800/60 px-5 py-3 text-base text-white placeholder-zinc-500 border border-zinc-700/50 focus:border-[#8B5CF6] focus:outline-none transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={status === "loading"}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {status === "loading" ? "Joining\u2026" : "Join Waitlist"}
+                {status !== "loading" && <ArrowRight className="h-4 w-4" />}
+              </button>
+            </form>
+            {status === "error" && (
+              <p className="mt-3 text-sm text-red-400">{message}</p>
+            )}
+            <p className="mt-4 text-xs text-zinc-600">
+              No spam, ever. We&apos;ll only email you about access.
+            </p>
+          </div>
+        )}
+      </div>
+    </motion.section>
+  );
+}
 
 function ScrollingPills({
   items,
