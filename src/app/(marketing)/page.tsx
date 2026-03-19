@@ -190,6 +190,7 @@ export default function Home() {
           </Link>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors">Product</a>
+            <a href="#industries" className="text-sm text-zinc-400 hover:text-white transition-colors">Industries</a>
             <a href="#services" className="text-sm text-zinc-400 hover:text-white transition-colors">Solutions</a>
             <a href="#stats" className="text-sm text-zinc-400 hover:text-white transition-colors">Resources</a>
           </nav>
@@ -727,7 +728,7 @@ export default function Home() {
       </section>
 
       {/* ── Industry Showcase ── */}
-      <section ref={industryRef} className="py-24 lg:py-32 relative z-10">
+      <section id="industries" ref={industryRef} className="py-24 lg:py-32 relative z-10">
         <motion.div style={prefersReducedMotion ? undefined : { y: industryY }} className="container mx-auto px-4 lg:px-8">
           <motion.div
             initial="hidden"
