@@ -27,6 +27,13 @@ import {
   Truck,
   CheckCircle2,
   Mail,
+  HardHat,
+  Droplets,
+  Stethoscope,
+  Warehouse,
+  UtensilsCrossed,
+  BatteryCharging,
+  GraduationCap,
 } from "lucide-react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 
@@ -119,6 +126,7 @@ export default function Home() {
   const servicesRef = useRef<HTMLElement>(null);
   const mobileRef = useRef<HTMLElement>(null);
   const statsRef = useRef<HTMLElement>(null);
+  const industryRef = useRef<HTMLElement>(null);
   const benefitsRef = useRef<HTMLElement>(null);
   const faqRef = useRef<HTMLElement>(null);
 
@@ -128,6 +136,7 @@ export default function Home() {
   const servicesY = useParallaxOffset(servicesRef, 30);
   const mobileY = useParallaxOffset(mobileRef, 35);
   const statsY = useParallaxOffset(statsRef, 30);
+  const industryY = useParallaxOffset(industryRef, 28);
   const benefitsY = useParallaxOffset(benefitsRef, 25);
   const faqY = useParallaxOffset(faqRef, 20);
 
@@ -712,6 +721,103 @@ export default function Home() {
                 ))}
               </div>
             </motion.div>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* ── Industry Showcase ── */}
+      <section ref={industryRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: industryY }} className="container mx-auto px-4 lg:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={stagger}
+            className="max-w-4xl mx-auto"
+          >
+            <motion.div variants={fadeUp} className="mb-16">
+              <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+                Your industry.{" "}
+                <span className="text-[#8B5CF6]">Your safety.</span>
+              </h2>
+              <p className="text-zinc-400 text-lg">
+                Harmoniq adapts to the regulations, hazards, and workflows that matter in your world.
+              </p>
+            </motion.div>
+
+            <div className="space-y-0">
+              {[
+                {
+                  icon: HardHat,
+                  name: "Construction",
+                  description: "Your crew starts every shift with a Job Hazard Analysis on their phone. Fall protection audits, scaffold inspections, and toolbox talks are tracked automatically — so when OSHA shows up, you're ready.",
+                },
+                {
+                  icon: Factory,
+                  name: "Manufacturing",
+                  description: "Lockout/tagout compliance, machine guarding inspections, and ergonomic assessments built into your production workflow. Floor managers see real-time completion rates without leaving the line.",
+                },
+                {
+                  icon: Droplets,
+                  name: "Oil & Gas",
+                  description: "Permit-to-work, confined space entry, and H2S monitoring — digitized for remote well sites. Even when your crew is offline, inspections continue. Everything syncs when signal returns.",
+                },
+                {
+                  icon: Stethoscope,
+                  name: "Healthcare",
+                  description: "Infection control rounds, sharps disposal tracking, and patient safety audits that meet OSHA bloodborne pathogen standards. Nurses complete checks in seconds between rounds.",
+                },
+                {
+                  icon: Warehouse,
+                  name: "Warehousing & Logistics",
+                  description: "Daily forklift inspections, dock plate checks, fire extinguisher rounds, and rack integrity audits — all scheduled, all tracked. QR-scan an asset to start its inspection instantly.",
+                },
+                {
+                  icon: Pickaxe,
+                  name: "Mining",
+                  description: "Ground control monitoring, ventilation system checks, and blast area safety protocols designed for underground and surface operations. PPE compliance tracked per worker, per shift.",
+                },
+                {
+                  icon: UtensilsCrossed,
+                  name: "Food & Beverage",
+                  description: "HACCP inspections, allergen management, and cold chain monitoring with automated escalation. A missed temperature check triggers an alert before product is compromised.",
+                },
+                {
+                  icon: BatteryCharging,
+                  name: "Utilities & Energy",
+                  description: "Arc flash compliance, substation inspections, and vegetation management workflows for field crews managing critical infrastructure across dispersed service territories.",
+                },
+                {
+                  icon: Truck,
+                  name: "Transportation",
+                  description: "Pre-trip vehicle inspections, driver safety scoring, and cargo securement checklists that satisfy DOT requirements. Dispatchers see fleet compliance status at a glance.",
+                },
+                {
+                  icon: GraduationCap,
+                  name: "Education",
+                  description: "Playground safety checks, chemistry lab inspections, emergency drill tracking, and visitor management. Facilities teams run a safer campus with less paperwork.",
+                },
+              ].map((industry, i) => {
+                const Icon = industry.icon;
+                return (
+                  <motion.div
+                    key={industry.name}
+                    variants={fadeUp}
+                    className="group grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-2 lg:gap-8 py-6 border-b border-zinc-800/60 last:border-b-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="h-5 w-5 text-zinc-500 shrink-0" aria-hidden="true" />
+                      <h3 className="text-base font-semibold text-white">
+                        {industry.name}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-zinc-400 leading-relaxed lg:pt-0.5">
+                      {industry.description}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
         </motion.div>
       </section>
