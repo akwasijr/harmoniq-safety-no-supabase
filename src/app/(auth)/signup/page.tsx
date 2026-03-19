@@ -66,7 +66,7 @@ export default function SignupPage() {
           </Link>
         </div>
 
-        <div className="mt-5 rounded-lg border bg-muted/30 py-3 text-center text-sm text-muted-foreground">
+        <div className="mt-5 rounded-lg border border-border bg-card/60 dark:bg-white/5 py-3 text-center text-sm text-muted-foreground">
           {t("auth.alreadyHaveAccount") || "Already have an account?"}{" "}
           <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
             {t("auth.signIn") || "Sign in"}

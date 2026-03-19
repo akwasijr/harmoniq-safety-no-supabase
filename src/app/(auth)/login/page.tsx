@@ -641,7 +641,7 @@ function LoginForm() {
         </div>
 
         {/* Footer */}
-        <div className="mt-5 rounded-lg border bg-muted/30 py-3 text-center text-sm text-muted-foreground">
+        <div className="mt-5 rounded-lg border border-border bg-card/60 dark:bg-white/5 py-3 text-center text-sm text-muted-foreground">
           {t("auth.noAccount") || "Don't have an account?"}{" "}
           <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors">
             {t("auth.createAccount") || "Create account"}
