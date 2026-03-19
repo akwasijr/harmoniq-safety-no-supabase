@@ -142,8 +142,8 @@ export default function EmployeeProfilePage() {
         onChange={handlePhotoUpload}
       />
 
-      {/* Profile header - deep purple continuation */}
-      <div className="bg-primary px-5 pt-4 pb-8 text-center">
+      {/* Profile header - brand color continuation */}
+      <div className="bg-brand-solid px-5 pt-4 pb-8 text-center">
         <div className="relative inline-block">
           {currentUser.avatar_url ? (
             <img

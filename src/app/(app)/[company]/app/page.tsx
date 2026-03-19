@@ -386,25 +386,25 @@ export default function EmployeeAppHomePage() {
   return (
     <div className="flex flex-col min-h-full">
       {/* ── Hero Section ── */}
-      <div className="bg-primary px-5 pt-6 pb-8">
-        <p className="text-white/60 text-sm">{greeting}</p>
-        <h1 className="text-2xl font-bold text-white mt-1">
+      <div className="bg-brand-solid px-5 pt-6 pb-8">
+        <p className="text-brand-solid-foreground/60 text-sm">{greeting}</p>
+        <h1 className="text-2xl font-bold text-brand-solid-foreground mt-1">
           {user?.first_name || t("app.welcome")}
         </h1>
 
         {/* Stats row - white/glass cards */}
         <div className="grid grid-cols-3 gap-3 mt-5">
           <div className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
-            <p className="text-2xl font-bold text-white">{safeDays}</p>
-            <p className="text-[11px] text-white/60 mt-0.5">{t("app.safeDays")}</p>
+            <p className="text-2xl font-bold text-brand-solid-foreground">{safeDays}</p>
+            <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.safeDays")}</p>
           </div>
           <Link href={`/${company}/app/checklists?tab=tasks`} className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
-            <p className="text-2xl font-bold text-white">{pendingTaskCount}</p>
-            <p className="text-[11px] text-white/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
+            <p className="text-2xl font-bold text-brand-solid-foreground">{pendingTaskCount}</p>
+            <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
           </Link>
           <div className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
-            <p className="text-2xl font-bold text-white">{completedThisWeek}</p>
-            <p className="text-[11px] text-white/60 mt-0.5">{t("app.completedWeek") || "This Week"}</p>
+            <p className="text-2xl font-bold text-brand-solid-foreground">{completedThisWeek}</p>
+            <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.completedWeek") || "This Week"}</p>
           </div>
         </div>
       </div>

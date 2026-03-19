@@ -132,6 +132,10 @@ export function applyBranding(options: BrandingOptions, theme: string) {
       root.style.setProperty("--primary-foreground", fg);
       root.style.setProperty("--ring", primary);
 
+      // Brand-solid: always the original color, for app header bars etc.
+      root.style.setProperty("--brand-solid", lightVal);
+      root.style.setProperty("--brand-solid-foreground", foregroundForBg(hsl));
+
       // Sidebar
       const sb = sidebarColors(hsl, isDark);
       root.style.setProperty("--sidebar-background", sb.background);
@@ -174,6 +178,7 @@ export function resetBranding() {
   const root = document.documentElement;
   const props = [
     "--primary", "--primary-foreground", "--ring",
+    "--brand-solid", "--brand-solid-foreground",
     "--secondary", "--secondary-foreground",
     "--sidebar-background", "--sidebar-foreground", "--sidebar-primary",
     "--sidebar-primary-foreground", "--sidebar-accent",

@@ -321,6 +321,8 @@
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-brand-solid: hsl(var(--brand-solid, var(--primary)));
+  --color-brand-solid-foreground: hsl(var(--brand-solid-foreground, var(--primary-foreground)));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-muted: hsl(var(--muted));

@@ -28,7 +28,7 @@ export function EmployeeAppLayout({
     <div className="flex min-h-screen flex-col bg-muted">
       {/* Header */}
       {showHeader && (
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-primary px-4">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-brand-solid px-4">
           <Link href={`/${company}/app`} className="flex items-center gap-2">
             {companyLogo ? (
               <img
@@ -37,12 +37,12 @@ export function EmployeeAppLayout({
                 className="h-6 w-6 rounded object-contain"
               />
             ) : (
-              <Shield className="h-5 w-5 text-white/80" aria-hidden="true" />
+              <Shield className="h-5 w-5 text-brand-solid-foreground/80" aria-hidden="true" />
             )}
-            <span className="font-semibold text-sm text-white">{headerTitle || companyName}</span>
+            <span className="font-semibold text-sm text-brand-solid-foreground">{headerTitle || companyName}</span>
           </Link>
           <Link href={`/${company}/app/notifications`} className="relative p-2" aria-label={`${notificationCount} notifications`}>
-            <Bell className="h-5 w-5 text-white/80" />
+            <Bell className="h-5 w-5 text-brand-solid-foreground/80" />
             {notificationCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                 {notificationCount > 99 ? "99+" : notificationCount}
