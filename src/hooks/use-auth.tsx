@@ -6,7 +6,7 @@ import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { ROLE_PERMISSIONS } from "@/types";
 import { useCompanyStore } from "@/stores/company-store";
 import { clearAllHarmoniqStorage, loadOptionalStringFromStorage, saveToStorage } from "@/lib/local-storage";
-import { resetPrimaryColor } from "@/lib/branding";
+import { resetBranding } from "@/lib/branding";
 import { clearClientCookie } from "@/lib/client-cookies";
 import { getPlatformSlugs } from "@/lib/platform-config";
 import { mockUsers } from "@/mocks/data";
@@ -307,7 +307,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (key.startsWith("sb-")) window.localStorage.removeItem(key);
       });
     }
-    resetPrimaryColor();
+    resetBranding();
     // Force a full page reload to clear any in-memory state (React context, stores, etc.)
     window.location.replace("/login");
   }, []);

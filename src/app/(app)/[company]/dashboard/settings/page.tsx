@@ -13,6 +13,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
-import { applyPrimaryColor } from "@/lib/branding";
+import { applyBranding } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
@@ -139,6 +140,7 @@ export default function SettingsPage() {
   const { currentCompany, isLoading: isAuthLoading, hasPermission: currentUserCan } = useAuth();
   const canEditSettings = currentUserCan("settings.edit");
   const { items: companies } = useCompanyStore();
+  const { resolvedTheme } = useTheme();
   const fallbackCompany = React.useMemo(() => companies.find(c => c.slug === company) ?? null, [companies, company]);
   const activeCompany = currentCompany ?? fallbackCompany ?? defaultCompany;
   const settingsStorageKey = React.useMemo(
@@ -183,7 +185,7 @@ export default function SettingsPage() {
       }
     }
     setSettings(nextSettings);
-    applyPrimaryColor(nextSettings.primaryColor);
+    applyBranding({ primaryColor: nextSettings.primaryColor, secondaryColor: nextSettings.secondaryColor }, resolvedTheme || "light");
     applyDocumentLanguage(nextSettings.language);
   }, [activeCompany, toast]);
 
@@ -196,7 +198,7 @@ export default function SettingsPage() {
     setTimeout(() => {
       if (typeof window !== "undefined") {
         localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
-        applyPrimaryColor(settings.primaryColor);
+        applyBranding({ primaryColor: settings.primaryColor, secondaryColor: settings.secondaryColor }, resolvedTheme || "light");
         applyDocumentLanguage(settings.language);
       }
       const nextCountry =

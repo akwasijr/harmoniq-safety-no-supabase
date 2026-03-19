@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { notFound, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { EmployeeAppLayout } from "@/components/layouts/employee-app-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyParam } from "@/hooks/use-company-param";
@@ -13,7 +14,7 @@ import { useNotificationsStore } from "@/stores/notifications-store";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useLocationsStore } from "@/stores/locations-store";
-import { applyPrimaryColor } from "@/lib/branding";
+import { applyBranding, resetBranding } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { I18nProvider } from "@/i18n";
 import type { SupportedLocale } from "@/i18n";
@@ -63,9 +64,21 @@ export default function EmployeeAppRootLayout({
     return unreadDb + pendingTasks + openTickets;
   }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets]);
 
+  const { resolvedTheme } = useTheme();
+
   React.useEffect(() => {
-    applyPrimaryColor(currentCompany?.primary_color);
-  }, [currentCompany?.primary_color]);
+    if (!currentCompany) return;
+    applyBranding(
+      {
+        primaryColor: currentCompany.primary_color,
+        secondaryColor: currentCompany.secondary_color,
+        fontFamily: currentCompany.font_family,
+        uiStyle: currentCompany.ui_style,
+      },
+      resolvedTheme || "light"
+    );
+    return () => resetBranding();
+  }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany]);
 
   React.useEffect(() => {
     applyDocumentLanguage(currentCompany?.language ?? user?.language);

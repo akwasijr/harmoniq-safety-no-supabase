@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useParams, useRouter, notFound } from "next/navigation";
+import { useTheme } from "next-themes";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyStore } from "@/stores/company-store";
@@ -10,7 +11,7 @@ import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useNotificationsStore } from "@/stores/notifications-store";
 import { checkOverdueItems } from "@/stores/notification-triggers";
-import { applyPrimaryColor } from "@/lib/branding";
+import { applyBranding, resetBranding } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { I18nProvider } from "@/i18n";
 import type { SupportedLocale } from "@/i18n";
@@ -36,10 +37,22 @@ export default function DashboardRootLayout({
     [companies, company, isCompaniesLoading]
   );
 
-  // Apply saved branding color on mount. Must be before any early returns to preserve hook order
+  const { resolvedTheme } = useTheme();
+
+  // Apply saved branding on mount, and re-apply when theme/company changes
   React.useEffect(() => {
-    applyPrimaryColor(currentCompany?.primary_color);
-  }, [currentCompany?.primary_color]);
+    if (!currentCompany) return;
+    applyBranding(
+      {
+        primaryColor: currentCompany.primary_color,
+        secondaryColor: currentCompany.secondary_color,
+        fontFamily: currentCompany.font_family,
+        uiStyle: currentCompany.ui_style,
+      },
+      resolvedTheme || "light"
+    );
+    return () => resetBranding();
+  }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany]);
 
   React.useEffect(() => {
     applyDocumentLanguage(currentCompany?.language ?? user?.language);
