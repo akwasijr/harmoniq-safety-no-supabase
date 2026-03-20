@@ -81,7 +81,7 @@ export default function NewAssetPage() {
   const [photos, setPhotos] = React.useState<string[]>([]);
   const [photoUrls, setPhotoUrls] = React.useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const assetDraftId = React.useRef(`draft_asset_${Date.now()}`);
+  const [assetDraftId] = React.useState(() => `draft_asset_${Date.now()}`);
 
   // Form state
   const [name, setName] = React.useState("");
@@ -145,7 +145,7 @@ export default function NewAssetPage() {
         const stored = await storeFile(
           file,
           "asset",
-          assetDraftId.current,
+          assetDraftId,
           user?.id || "unknown",
         );
         setPhotos((prev) => [...prev, stored.dataUrl]);

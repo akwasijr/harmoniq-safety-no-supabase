@@ -30,24 +30,37 @@ interface HealthSnapshot {
 
 async function getHealthSnapshot(): Promise<HealthSnapshot> {
   const env = getEnvStatus();
+  const isMockMode = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true" && (!env.hasSupabaseUrl || !env.hasSupabasePublishableKey);
   const issues: string[] = [];
   const warnings: string[] = [];
   const database = {
-    ok: false,
+    ok: isMockMode,
     error: null as string | null,
   };
 
   if (!env.hasSupabaseUrl) {
-    issues.push("supabase_url_missing");
+    if (isMockMode) {
+      warnings.push("supabase_url_missing");
+    } else {
+      issues.push("supabase_url_missing");
+    }
   }
 
   if (!env.hasSupabasePublishableKey) {
-    issues.push("supabase_publishable_key_missing");
+    if (isMockMode) {
+      warnings.push("supabase_publishable_key_missing");
+    } else {
+      issues.push("supabase_publishable_key_missing");
+    }
   }
 
   if (!env.hasSupabaseAdminKey) {
-    issues.push("supabase_admin_key_missing");
-    database.error = "Supabase admin key missing";
+    if (isMockMode) {
+      warnings.push("supabase_admin_key_missing");
+    } else {
+      issues.push("supabase_admin_key_missing");
+      database.error = "Supabase admin key missing";
+    }
   }
 
   if (!env.hasConfiguredSiteUrl) {
@@ -80,7 +93,7 @@ async function getHealthSnapshot(): Promise<HealthSnapshot> {
   }
 
   return {
-    ok: issues.length === 0 && database.ok,
+    ok: issues.length === 0 && (database.ok || isMockMode),
     timestamp: new Date().toISOString(),
     issues,
     warnings,

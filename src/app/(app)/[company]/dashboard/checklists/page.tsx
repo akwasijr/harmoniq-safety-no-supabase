@@ -427,7 +427,7 @@ function ChecklistsPageContent() {
     } else if (activeTab === "checklists") {
       router.push(`/${company}/dashboard/checklists/new`);
     } else if (activeTab === "inspection") {
-      router.push(`/${company}/dashboard/inspections/new`);
+      router.push(`/${company}/dashboard/inspection-routes`);
     }
   };
 

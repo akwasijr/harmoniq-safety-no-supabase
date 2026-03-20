@@ -172,8 +172,7 @@ function ReportIncidentPageContent() {
     gpsLng: null as number | null,
   });
 
-  // Stable incident ID for associating photos before submission
-  const incidentDraftId = React.useRef(`draft_${Date.now()}`);
+  const [incidentDraftId] = React.useState(() => `draft_${Date.now()}`);
 
   React.useEffect(() => {
     if (!selectedLocation) return;
@@ -228,7 +227,7 @@ function ReportIncidentPageContent() {
         const stored = await storeFile(
           file,
           "incident",
-          incidentDraftId.current,
+          incidentDraftId,
           user?.id || "unknown",
         );
         setFormData((prev) => ({

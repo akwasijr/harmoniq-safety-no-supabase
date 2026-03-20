@@ -29,6 +29,7 @@ import { useUsersStore } from "@/stores/users-store";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useToast } from "@/components/ui/toast";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { useAuth } from "@/hooks/use-auth";
 
 // Dynamic import for PDF export (client-side only)
 const PdfExportButton = dynamic(
@@ -89,6 +90,7 @@ export default function RiskAssessmentDetailPage() {
   const { t, formatDate } = useTranslation();
   const [activeTab, setActiveTab] = React.useState("hazards");
   const { toast } = useToast();
+  const { user } = useAuth();
   const currentCompany = React.useMemo(() => getCurrentCompany(), []);
 
   const submissionTabs: Tab[] = [
@@ -268,13 +270,13 @@ export default function RiskAssessmentDetailPage() {
               <Button 
                 className="gap-2"
                 onClick={() => {
-                  if ("_storeData" in submission && submission._storeData) {
-                    updateRiskEvaluation(submission._storeData.id, {
-                      status: "reviewed",
-                      reviewed_by: "current-user", // In production: get from auth
-                      reviewed_at: new Date().toISOString(),
-                    });
-                    toast(t("riskAssessment.approvedSuccess"), "success");
+                    if ("_storeData" in submission && submission._storeData) {
+                      updateRiskEvaluation(submission._storeData.id, {
+                        status: "reviewed",
+                        reviewed_by: user?.id ?? submission._storeData.reviewed_by,
+                        reviewed_at: new Date().toISOString(),
+                      });
+                      toast(t("riskAssessment.approvedSuccess"), "success");
                   }
                 }}
               >
