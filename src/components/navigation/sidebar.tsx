@@ -22,6 +22,7 @@ import {
   Globe,
   Building2,
   UserCog,
+  LibraryBig,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -74,7 +75,15 @@ const navItems: NavItem[] = [
     titleKey: "nav.safetyTasks",
     href: "/dashboard/checklists",
     icon: ClipboardCheck,
+    exactMatch: true,
     additionalPaths: ["/dashboard/risk-assessments", "/dashboard/inspections"],
+  },
+  {
+    title: "Task Templates",
+    titleKey: "nav.templates",
+    href: "/dashboard/checklists/my-templates",
+    icon: LibraryBig,
+    additionalPaths: ["/dashboard/checklists/templates"],
   },
   {
     title: "Users & Teams",
@@ -281,19 +290,19 @@ export function Sidebar({
             // Check if current path matches this nav item
             let isActive = false;
             if (item.exactMatch) {
-              // For exact match items (like Dashboard), only match the exact path
+              // For exact match items, only match the exact main path
               isActive = pathname === href;
             } else {
               // Check main href
               isActive = pathname === href || pathname.startsWith(`${href}/`);
+            }
               
-              // Check additional paths (e.g., Safety Tasks should match risk-assessments, inspections)
-              if (!isActive && item.additionalPaths) {
-                isActive = item.additionalPaths.some(additionalPath => {
-                  const fullPath = `/${company}${additionalPath}`;
-                  return pathname === fullPath || pathname.startsWith(`${fullPath}/`);
-                });
-              }
+            // Check additional paths regardless of exactMatch
+            if (!isActive && item.additionalPaths) {
+              isActive = item.additionalPaths.some(additionalPath => {
+                const fullPath = `/${company}${additionalPath}`;
+                return pathname === fullPath || pathname.startsWith(`${fullPath}/`);
+              });
             }
 
             return (

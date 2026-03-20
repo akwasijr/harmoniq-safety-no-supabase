@@ -68,7 +68,8 @@
     "newsShort": "Nieuws",
     "myTasksShort": "Mijn Taken",
     "safetyShort": "Veiligheid",
-    "safety": "Veiligheid"
+    "safety": "Veiligheid",
+    "templates": "Taaksjablonen"
   },
   "app": {
     "goodMorning": "Goedemorgen",
@@ -1500,7 +1501,26 @@
     "medium": "Gemiddeld",
     "high": "Hoog",
     "critical": "Kritiek",
-    "riskMatrix": "Risicomatrix"
+    "riskMatrix": "Risicomatrix",
+    "notFound": "Sjabloon niet gevonden",
+    "notFoundDesc": "Het gevraagde risicobeoordelingssjabloon kon niet worden gevonden.",
+    "submissionNotFound": "Inzending niet gevonden",
+    "submissionNotFoundDesc": "De gevraagde risicobeoordelingsinzending kon niet worden gevonden.",
+    "tabs": {
+      "hazards": "Gevaren & Risico's",
+      "controls": "Maatregelen"
+    },
+    "startAssessment": "Beoordeling starten",
+    "approve": "Goedkeuren",
+    "approved": "Goedgekeurd",
+    "requestRevision": "Revisie aanvragen",
+    "returnedForRevision": "Beoordeling teruggestuurd voor revisie.",
+    "approvedSuccess": "Beoordeling succesvol goedgekeurd.",
+    "hazardsIdentified": "{count} gevaren geïdentificeerd",
+    "controlMeasuresSummary": "Samenvatting beheersmaatregelen",
+    "requiredPPE": "Vereiste PBM",
+    "riskLabel": "Risico",
+    "standard": "Standaard"
   },
   "auth": {
     "welcomeBack": "Welkom terug",
@@ -1873,5 +1893,45 @@
     "retry": "[NL] Retry",
     "loadFailed": "[NL] Failed to load data",
     "loadFailedDesc": "[NL] Something went wrong while fetching the data. Please try again."
+  },
+  "inspections": {
+    "title": "Inspectiedetails",
+    "notFound": "Inspectie niet gevonden",
+    "notFoundDesc": "De gevraagde inspectie kon niet worden gevonden.",
+    "tabs": {
+      "overview": "Overzicht",
+      "details": "Details"
+    },
+    "result": {
+      "pass": "Geslaagd",
+      "fail": "Afgekeurd",
+      "needs_attention": "Aandacht vereist"
+    },
+    "resultSummary": "Inspectie {result}",
+    "resultLabel": "Resultaat",
+    "labels": {
+      "asset": "Asset",
+      "inspector": "Inspecteur",
+      "inspectedAt": "Geïnspecteerd op",
+      "result": "Resultaat",
+      "checklistId": "Checklist-ID",
+      "linkedIncident": "Gekoppeld incident",
+      "notes": "Notities",
+      "assetInfo": "Assetinformatie",
+      "assetName": "Naam",
+      "assetTag": "Label",
+      "assetStatus": "Status",
+      "assetNotAvailable": "Assetinformatie niet beschikbaar",
+      "location": "Locatie",
+      "latitude": "Breedtegraad",
+      "longitude": "Lengtegraad",
+      "fullRecord": "Volledig inspectierapport",
+      "inspectionId": "Inspectie-ID",
+      "assetId": "Asset-ID",
+      "inspectorId": "Inspecteur-ID",
+      "incidentId": "Incident-ID",
+      "createdAt": "Aangemaakt op",
+      "mediaAttachments": "Bijlagen"
+    }
   }
 }

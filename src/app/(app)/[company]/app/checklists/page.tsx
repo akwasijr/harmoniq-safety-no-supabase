@@ -402,7 +402,9 @@ function EmployeeChecklistsPageContent() {
   const localeCountry = LOCALE_DEFAULT_COUNTRY[locale] as CountryCode | undefined;
   const companyCountry: CountryCode = localeCountry || (currentCompany?.country as CountryCode) || "US";
 
-  const templates = checklistTemplates;
+  const templates = checklistTemplates.filter(
+    (t) => t.publish_status === "published" || t.publish_status === undefined
+  );
   const activeAssets = assets.filter((a) => a.status === "active");
 
   const tabs = [

@@ -1,0 +1,47 @@
+{
+  "hero": {
+    "title": "Harmoniq",
+    "subtitle": "Plataforma de Seguridad Laboral y Gestión de Activos",
+    "description": "Reporta incidentes, gestiona riesgos, rastrea activos y asegura el cumplimiento — todo en una potente plataforma diseñada para equipos de seguridad modernos.",
+    "cta_start": "Comenzar",
+    "cta_demo": "Solicitar una demo"
+  },
+  "trust": {
+    "statement": "De confianza para equipos de seguridad que gestionan miles de activos e incidentes en todo el mundo"
+  },
+  "features": {
+    "heading": "Todo lo que necesitas",
+    "subheading": "para seguridad y gestión de activos"
+  },
+  "cookie": {
+    "title": "Valoramos tu privacidad",
+    "description": "Utilizamos cookies para mejorar tu experiencia de navegación, analizar el tráfico del sitio y personalizar el contenido. Puedes elegir qué cookies aceptar.",
+    "accept_all": "Aceptar todo",
+    "reject_all": "Rechazar todo",
+    "customize": "Personalizar",
+    "necessary": "Necesarias",
+    "necessary_desc": "Esenciales para el funcionamiento del sitio web",
+    "analytics": "Análisis",
+    "analytics_desc": "Nos ayudan a entender cómo los visitantes interactúan con nuestro sitio",
+    "marketing": "Marketing",
+    "marketing_desc": "Se utilizan para mostrar anuncios relevantes",
+    "save_preferences": "Guardar preferencias"
+  },
+  "contact": {
+    "heading": "Contáctanos",
+    "subheading": "¿Tienes una pregunta? Nos encantaría saber de ti.",
+    "name": "Nombre completo",
+    "email": "Correo electrónico",
+    "company": "Nombre de la empresa",
+    "message": "Tu mensaje",
+    "submit": "Enviar mensaje",
+    "success": "¡Gracias! Te responderemos pronto.",
+    "error": "Algo salió mal. Por favor, inténtalo de nuevo."
+  },
+  "footer": {
+    "privacy": "Política de privacidad",
+    "terms": "Términos de servicio",
+    "contact": "Contacto",
+    "copyright": "© {year} Harmoniq Safety. Todos los derechos reservados."
+  }
+}

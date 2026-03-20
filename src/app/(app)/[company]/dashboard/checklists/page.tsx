@@ -44,7 +44,7 @@ import {
 } from "@/mocks/data";
 
 type MainTabType = "checklists" | "risk-assessment" | "inspection";
-type SubTabType = "submissions" | "templates";
+type SubTabType = "submissions" | "active";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
@@ -95,6 +95,19 @@ function ChecklistsPageContent() {
     return riskEvaluations.map(re => {
       const submitter = users.find(u => u.id === re.submitter_id);
       const location = locations.find(l => l.id === re.location_id);
+      // Parse risk from responses
+      const responses = re.responses as Record<string, unknown>;
+      const jobSteps = responses?.job_steps as Array<{ severity?: number; probability?: number }> | undefined;
+      let riskScore = 0;
+      let riskLevel: "low" | "medium" | "high" | "critical" = "low";
+      if (jobSteps && Array.isArray(jobSteps) && jobSteps.length > 0) {
+        const scores = jobSteps.map(s => (s.severity ?? 3) * (s.probability ?? 3));
+        riskScore = Math.max(...scores);
+        if (riskScore >= 16) riskLevel = "critical";
+        else if (riskScore >= 10) riskLevel = "high";
+        else if (riskScore >= 5) riskLevel = "medium";
+        else riskLevel = "low";
+      }
       return {
         id: re.id,
         template: getFormTypeName(re.form_type),
@@ -104,8 +117,8 @@ function ChecklistsPageContent() {
         date: re.submitted_at.split("T")[0],
         status: re.status === "reviewed" ? "completed" : re.status === "submitted" ? "in_progress" : "draft",
         by: submitter?.full_name || "Unknown",
-        riskLevel: "medium" as const,
-        riskScore: 0,
+        riskLevel,
+        riskScore,
       };
     });
   }, [riskEvaluations, users, locations]);
@@ -164,7 +177,7 @@ function ChecklistsPageContent() {
 
   const subTabs = [
     { id: "submissions" as SubTabType, label: "Submissions" },
-    { id: "templates" as SubTabType, label: "Templates" },
+    { id: "active" as SubTabType, label: "Active" },
   ];
 
   const getFilters = () => {
@@ -320,9 +333,9 @@ function ChecklistsPageContent() {
 
   // Calculate totals and pagination
   const getTableLength = () => {
-    if (activeTab === "checklists") return subTab === "templates" ? checklistTemplates.length : checklistSubmissions.length;
-    if (activeTab === "risk-assessment") return subTab === "templates" ? riskTemplates.length : riskSubmissions.length;
-    if (activeTab === "inspection") return subTab === "templates" ? inspectionTemplates.length : inspectionSubmissions.length;
+    if (activeTab === "checklists") return subTab === "active" ? checklistTemplates.length : checklistSubmissions.length;
+    if (activeTab === "risk-assessment") return subTab === "active" ? riskTemplates.length : riskSubmissions.length;
+    if (activeTab === "inspection") return subTab === "active" ? inspectionTemplates.length : inspectionSubmissions.length;
     return 0;
   };
 
@@ -346,9 +359,9 @@ function ChecklistsPageContent() {
   }, [activeTab]);
 
   const getAddButtonLabel = () => {
-    if (activeTab === "checklists") return "Create Checklist";
-    if (activeTab === "risk-assessment") return subTab === "templates" ? "Templates are standard" : t("checklists.buttons.newAssessment");
-    if (activeTab === "inspection") return subTab === "templates" ? "Create Template" : "New Inspection";
+    if (activeTab === "checklists") return "New Checklist";
+    if (activeTab === "risk-assessment") return t("checklists.buttons.newAssessment");
+    if (activeTab === "inspection") return "New Inspection";
     return "Create";
   };
 
@@ -409,14 +422,12 @@ function ChecklistsPageContent() {
   };
 
   const handleAddButtonClick = () => {
-    if (activeTab === "risk-assessment" && subTab === "submissions") {
+    if (activeTab === "risk-assessment") {
       setShowNewAssessmentModal(true);
     } else if (activeTab === "checklists") {
       router.push(`/${company}/dashboard/checklists/new`);
-    } else if (activeTab === "inspection" && subTab === "submissions") {
+    } else if (activeTab === "inspection") {
       router.push(`/${company}/dashboard/inspections/new`);
-    } else if (activeTab === "inspection" && subTab === "templates") {
-      router.push(`/${company}/dashboard/checklists/new?type=inspection`);
     }
   };
 
@@ -429,15 +440,16 @@ function ChecklistsPageContent() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold truncate">{t("checklists.safetyTasks")}</h1>
-        <Button 
-          size="sm" 
-          className="gap-2"
-          onClick={handleAddButtonClick}
-          disabled={activeTab === "risk-assessment" && subTab === "templates"}
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          {getAddButtonLabel()}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            className="gap-2"
+            onClick={handleAddButtonClick}
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            {getAddButtonLabel()}
+          </Button>
+        </div>
       </div>
 
       {/* New Assessment Modal */}
@@ -547,7 +559,7 @@ function ChecklistsPageContent() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">
-              {tableLength} {subTab === "templates" ? "template" : "record"}{tableLength !== 1 ? "s" : ""}
+              {tableLength} {subTab === "active" ? "active task" : "record"}{tableLength !== 1 ? "s" : ""}
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages || 1}
@@ -557,7 +569,7 @@ function ChecklistsPageContent() {
         <CardContent>
           <div className="overflow-x-auto">
             {/* Checklists Templates Table */}
-            {activeTab === "checklists" && subTab === "templates" && (
+            {activeTab === "checklists" && subTab === "active" && (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
@@ -675,7 +687,7 @@ function ChecklistsPageContent() {
             )}
 
             {/* Risk Assessment Templates Table */}
-            {activeTab === "risk-assessment" && subTab === "templates" && (
+            {activeTab === "risk-assessment" && subTab === "active" && (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
@@ -790,7 +802,7 @@ function ChecklistsPageContent() {
             )}
 
             {/* Inspection Templates Table */}
-            {activeTab === "inspection" && subTab === "templates" && (
+            {activeTab === "inspection" && subTab === "active" && (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">

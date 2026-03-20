@@ -1,0 +1,47 @@
+{
+  "hero": {
+    "title": "Harmoniq",
+    "subtitle": "Plattform für Arbeitssicherheit & Anlagenverwaltung",
+    "description": "Melden Sie Vorfälle, verwalten Sie Risiken, verfolgen Sie Anlagen und stellen Sie Compliance sicher — alles auf einer leistungsstarken Plattform für moderne Sicherheitsteams.",
+    "cta_start": "Jetzt starten",
+    "cta_demo": "Demo buchen"
+  },
+  "trust": {
+    "statement": "Vertraut von Sicherheitsteams, die weltweit Tausende von Anlagen und Vorfällen verwalten"
+  },
+  "features": {
+    "heading": "Alles was Sie brauchen",
+    "subheading": "für Sicherheit & Anlagenverwaltung"
+  },
+  "cookie": {
+    "title": "Wir schätzen Ihre Privatsphäre",
+    "description": "Wir verwenden Cookies, um Ihr Surferlebnis zu verbessern, den Datenverkehr zu analysieren und Inhalte zu personalisieren. Sie können wählen, welche Cookies Sie akzeptieren.",
+    "accept_all": "Alle akzeptieren",
+    "reject_all": "Alle ablehnen",
+    "customize": "Anpassen",
+    "necessary": "Notwendig",
+    "necessary_desc": "Unverzichtbar für die Funktion der Website",
+    "analytics": "Analyse",
+    "analytics_desc": "Helfen uns zu verstehen, wie Besucher unsere Website nutzen",
+    "marketing": "Marketing",
+    "marketing_desc": "Werden verwendet, um relevante Werbung anzuzeigen",
+    "save_preferences": "Einstellungen speichern"
+  },
+  "contact": {
+    "heading": "Kontakt aufnehmen",
+    "subheading": "Haben Sie eine Frage? Wir freuen uns von Ihnen zu hören.",
+    "name": "Vollständiger Name",
+    "email": "E-Mail-Adresse",
+    "company": "Firmenname",
+    "message": "Ihre Nachricht",
+    "submit": "Nachricht senden",
+    "success": "Vielen Dank! Wir melden uns in Kürze bei Ihnen.",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
+  "footer": {
+    "privacy": "Datenschutzrichtlinie",
+    "terms": "Nutzungsbedingungen",
+    "contact": "Kontakt",
+    "copyright": "© {year} Harmoniq Safety. Alle Rechte vorbehalten."
+  }
+}

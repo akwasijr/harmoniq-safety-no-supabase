@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Building,
   Palette,
@@ -12,6 +13,7 @@ import {
   Check,
   Upload,
   X,
+  Factory,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
@@ -26,22 +28,27 @@ import { applyBranding } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
-import type { Company, Country, Language } from "@/types";
+import type { Company, Country, Language, IndustryCode } from "@/types";
+import { INDUSTRY_METADATA, getTemplatesByIndustry } from "@/data/industry-templates";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 
-type SettingsTabType = "general" | "branding" | "notifications" | "security" | "billing";
+type SettingsTabType = "general" | "branding" | "industry" | "notifications" | "security" | "billing";
 
 const countries = [
   { code: "US", name: "United States", regulations: "OSHA (JHA/JSA)" },
   { code: "NL", name: "Netherlands", regulations: "Arbowet (RI&E)" },
   { code: "SE", name: "Sweden", regulations: "AFS (SAM)" },
+  { code: "DE", name: "Germany", regulations: "BetrSichV (Gefährdungsbeurteilung)" },
+  { code: "FR", name: "France", regulations: "Code du travail (DUERP)" },
+  { code: "ES", name: "Spain", regulations: "Ley 31/1995 (PRL)" },
 ];
 
 interface SettingsState {
   companyName: string;
   appName: string;
   selectedCountry: string;
+  selectedIndustry: string;
   language: string;
   dateFormat: string;
   timezone: string;
@@ -87,6 +94,7 @@ const buildSettingsFromCompany = (company: Company | null | undefined): Settings
   companyName: c.name,
   appName: c.app_name || c.name,
   selectedCountry: c.country,
+  selectedIndustry: c.industry || "",
   language: c.language,
   dateFormat: c.country === "US" ? "MM/DD/YYYY" : "DD/MM/YYYY",
   timezone:
@@ -161,6 +169,7 @@ export default function SettingsPage() {
   const settingsTabs = [
     { value: "general" as SettingsTabType, label: t("settings.tabs.general"), icon: Building },
     { value: "branding" as SettingsTabType, label: t("settings.tabs.branding"), icon: Palette },
+    { value: "industry" as SettingsTabType, label: "Industry", icon: Factory },
     { value: "notifications" as SettingsTabType, label: t("settings.tabs.notifications"), icon: Bell },
     { value: "security" as SettingsTabType, label: t("settings.tabs.security"), icon: Shield },
     { value: "billing" as SettingsTabType, label: t("settings.tabs.billing"), icon: CreditCard },
@@ -213,6 +222,7 @@ export default function SettingsPage() {
         logo_url: settings.logoUrl,
         language: settings.language as Language,
         country: nextCountry as Country,
+        industry: (settings.selectedIndustry || undefined) as IndustryCode | undefined,
       });
       setSaving(false);
       setSaved(true);
@@ -573,6 +583,79 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Industry Tab */}
+        {activeTab === "industry" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Industry</CardTitle>
+              <CardDescription>
+                Select your company&apos;s industry to get recommended checklist templates and compliance guidance.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <Label>Primary Industry</Label>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {(Object.keys(INDUSTRY_METADATA) as IndustryCode[]).map((code) => {
+                    const meta = INDUSTRY_METADATA[code];
+                    const isSelected = settings.selectedIndustry === code;
+                    const templateCount = getTemplatesByIndustry(code).length;
+                    return (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => {
+                          updateSetting("selectedIndustry", code);
+                        }}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg border p-3 text-left transition-colors",
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:bg-muted/50"
+                        )}
+                      >
+                        <div
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md"
+                          style={{ backgroundColor: `${meta.color}15`, color: meta.color }}
+                        >
+                          <Factory className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">
+                            {t(`industry_templates.${code}.name`)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{templateCount} templates</p>
+                        </div>
+                        {isSelected && (
+                          <Check className="h-4 w-4 shrink-0 text-primary" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {settings.selectedIndustry && (
+                <div className="pt-4 border-t space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Recommended Templates</p>
+                      <p className="text-xs text-muted-foreground">
+                        {getTemplatesByIndustry(settings.selectedIndustry as IndustryCode).length} templates available for your industry
+                      </p>
+                    </div>
+                    <Link href={`/${company}/dashboard/checklists/templates`}>
+                      <Button variant="outline" size="sm">
+                        Browse Template Library
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

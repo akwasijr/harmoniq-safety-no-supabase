@@ -68,7 +68,8 @@
     "newsShort": "Nyheter",
     "myTasksShort": "Mina Uppgifter",
     "safetyShort": "Säkerhet",
-    "safety": "Säkerhet"
+    "safety": "Säkerhet",
+    "templates": "Uppgiftsmallar"
   },
   "app": {
     "goodMorning": "God morgon",
@@ -1500,7 +1501,26 @@
     "medium": "Medel",
     "high": "Hög",
     "critical": "Kritisk",
-    "riskMatrix": "Riskmatris"
+    "riskMatrix": "Riskmatris",
+    "notFound": "Mall hittades inte",
+    "notFoundDesc": "Den begärda riskbedömningsmallen kunde inte hittas.",
+    "submissionNotFound": "Inskickning hittades inte",
+    "submissionNotFoundDesc": "Den begärda riskbedömningsinskickningen kunde inte hittas.",
+    "tabs": {
+      "hazards": "Faror och risker",
+      "controls": "Kontrollåtgärder"
+    },
+    "startAssessment": "Starta bedömning",
+    "approve": "Godkänn",
+    "approved": "Godkänd",
+    "requestRevision": "Begär revision",
+    "returnedForRevision": "Bedömning returnerad för revision.",
+    "approvedSuccess": "Bedömning godkänd.",
+    "hazardsIdentified": "{count} faror identifierade",
+    "controlMeasuresSummary": "Sammanfattning av kontrollåtgärder",
+    "requiredPPE": "Krävd skyddsutrustning",
+    "riskLabel": "Risk",
+    "standard": "Standard"
   },
   "auth": {
     "welcomeBack": "Välkommen tillbaka",
@@ -1873,5 +1893,45 @@
     "retry": "[SV] Retry",
     "loadFailed": "[SV] Failed to load data",
     "loadFailedDesc": "[SV] Something went wrong while fetching the data. Please try again."
+  },
+  "inspections": {
+    "title": "Inspektionsdetaljer",
+    "notFound": "Inspektion hittades inte",
+    "notFoundDesc": "Den begärda inspektionen kunde inte hittas.",
+    "tabs": {
+      "overview": "Översikt",
+      "details": "Detaljer"
+    },
+    "result": {
+      "pass": "Godkänd",
+      "fail": "Underkänd",
+      "needs_attention": "Kräver uppmärksamhet"
+    },
+    "resultSummary": "Inspektion {result}",
+    "resultLabel": "Resultat",
+    "labels": {
+      "asset": "Tillgång",
+      "inspector": "Inspektör",
+      "inspectedAt": "Inspekterad",
+      "result": "Resultat",
+      "checklistId": "Checklista-ID",
+      "linkedIncident": "Kopplad incident",
+      "notes": "Anteckningar",
+      "assetInfo": "Tillgångsinformation",
+      "assetName": "Namn",
+      "assetTag": "Etikett",
+      "assetStatus": "Status",
+      "assetNotAvailable": "Tillgångsinformation ej tillgänglig",
+      "location": "Plats",
+      "latitude": "Latitud",
+      "longitude": "Longitud",
+      "fullRecord": "Fullständig inspektionsrapport",
+      "inspectionId": "Inspektions-ID",
+      "assetId": "Tillgångs-ID",
+      "inspectorId": "Inspektörs-ID",
+      "incidentId": "Incident-ID",
+      "createdAt": "Skapad",
+      "mediaAttachments": "Bifogade filer"
+    }
   }
 }

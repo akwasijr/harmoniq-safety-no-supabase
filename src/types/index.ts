@@ -3,9 +3,23 @@
 // ============================================
 
 // Country and Language Types
-export type Country = "NL" | "SE" | "US";
-export type Language = "en" | "nl" | "sv";
+export type Country = "NL" | "SE" | "US" | "DE" | "FR" | "ES";
+export type Language = "en" | "nl" | "sv" | "de" | "fr" | "es";
 export type Currency = "USD" | "EUR" | "SEK";
+
+// Industry Types
+export type IndustryCode =
+  | "construction"
+  | "manufacturing"
+  | "oil_gas"
+  | "healthcare"
+  | "warehousing"
+  | "mining"
+  | "food_beverage"
+  | "utilities"
+  | "transportation"
+  | "education"
+  | "airports";
 
 // User Roles
 export type SuperAdminRole = "super_admin";
@@ -195,6 +209,8 @@ export interface Company {
   app_name: string | null; // Custom display name employees see in the app header
   country: Country;
   language: Language;
+  industry?: IndustryCode; // Primary industry for template recommendations
+  industries?: IndustryCode[]; // Additional industries (multi-sector companies)
   status: CompanyStatus;
 
   // Branding
@@ -877,9 +893,16 @@ export interface DowntimeLog {
 export interface ChecklistItem {
   id: string;
   question: string;
-  type: "yes_no_na" | "pass_fail" | "rating" | "text";
+  type: "yes_no_na" | "pass_fail" | "rating" | "text" | "number" | "photo" | "date" | "signature" | "select";
   required: boolean;
   order: number;
+  description?: string; // Helper text shown below the question
+  response_types?: Array<"yes_no_na" | "pass_fail" | "rating" | "text" | "number" | "photo" | "date" | "signature" | "select">; // Multiple response types allowed
+  options?: string[]; // For "select" type: list of choices
+  image_url?: string; // Reference image/PDF file name (local upload)
+  min_value?: number; // For "number" or "rating" type
+  max_value?: number; // For "number" or "rating" type
+  unit?: string; // For "number" type (e.g. "°C", "psi", "mm")
 }
 
 export interface ChecklistTemplate {
@@ -893,9 +916,48 @@ export interface ChecklistTemplate {
   recurrence?: "daily" | "weekly" | "monthly" | "once";
   items: ChecklistItem[];
 
+  // Industry template tracking
+  source_template_id?: string; // Links to the industry template it was activated from
+  regulation?: string; // Regulatory reference (e.g. "OSHA 29 CFR 1926")
+  tags?: string[]; // Searchable tags (e.g. ["fall_protection", "elevated_work"])
+
+  // Publish workflow:
+  //   draft     = admin activated from library, editing in progress (dashboard only)
+  //   published = pushed to field workers, visible in mobile app
+  //   archived  = hidden from field workers, kept for records
+  publish_status?: "draft" | "published" | "archived";
+
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// Industry Template Library types (for the pre-built template catalog)
+export interface IndustryChecklistItem {
+  key: string; // Stable identifier (e.g. "task_description")
+  question_key: string; // i18n key (e.g. "industry_templates.construction.jha.items.task_description")
+  type: "yes_no_na" | "pass_fail" | "rating" | "text" | "number" | "photo";
+  required: boolean;
+  order: number;
+}
+
+export interface IndustryChecklistTemplate {
+  id: string; // Stable ID (e.g. "construction_jha")
+  industry: IndustryCode;
+  name_key: string; // i18n key for template name
+  description_key: string; // i18n key for template description
+  category: string;
+  regulation: string;
+  frequency: "daily" | "weekly" | "monthly" | "quarterly" | "per_event" | "per_shift" | "continuous";
+  items: IndustryChecklistItem[];
+  tags: string[];
+}
+
+export interface IndustryTemplatePack {
+  industry: IndustryCode;
+  name_key: string; // i18n key (e.g. "industry_templates.construction.name")
+  description_key: string;
+  templates: IndustryChecklistTemplate[];
 }
 
 export interface ChecklistResponse {

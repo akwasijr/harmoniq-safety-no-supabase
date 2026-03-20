@@ -1,0 +1,47 @@
+{
+  "hero": {
+    "title": "Harmoniq",
+    "subtitle": "Plateforme de Sécurité au Travail & Gestion des Actifs",
+    "description": "Signalez les incidents, gérez les risques, suivez les actifs et assurez la conformité — le tout sur une plateforme puissante conçue pour les équipes de sécurité modernes.",
+    "cta_start": "Commencer",
+    "cta_demo": "Réserver une démo"
+  },
+  "trust": {
+    "statement": "Approuvé par des équipes de sécurité gérant des milliers d'actifs et d'incidents dans le monde entier"
+  },
+  "features": {
+    "heading": "Tout ce dont vous avez besoin",
+    "subheading": "pour la sécurité & la gestion des actifs"
+  },
+  "cookie": {
+    "title": "Nous respectons votre vie privée",
+    "description": "Nous utilisons des cookies pour améliorer votre expérience de navigation, analyser le trafic et personnaliser le contenu. Vous pouvez choisir les cookies à accepter.",
+    "accept_all": "Tout accepter",
+    "reject_all": "Tout refuser",
+    "customize": "Personnaliser",
+    "necessary": "Nécessaires",
+    "necessary_desc": "Essentiels au bon fonctionnement du site",
+    "analytics": "Analyse",
+    "analytics_desc": "Nous aident à comprendre comment les visiteurs utilisent notre site",
+    "marketing": "Marketing",
+    "marketing_desc": "Utilisés pour afficher des publicités pertinentes",
+    "save_preferences": "Enregistrer les préférences"
+  },
+  "contact": {
+    "heading": "Contactez-nous",
+    "subheading": "Vous avez une question ? Nous serions ravis de vous entendre.",
+    "name": "Nom complet",
+    "email": "Adresse e-mail",
+    "company": "Nom de l'entreprise",
+    "message": "Votre message",
+    "submit": "Envoyer le message",
+    "success": "Merci ! Nous vous recontacterons sous peu.",
+    "error": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "footer": {
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation",
+    "contact": "Contact",
+    "copyright": "© {year} Harmoniq Safety. Tous droits réservés."
+  }
+}

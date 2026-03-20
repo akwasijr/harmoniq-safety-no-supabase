@@ -16,7 +16,6 @@ import {
   Calendar,
   Lock,
   Download,
-  Clock,
   XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,16 +36,8 @@ const PdfExportButton = dynamic(
   { ssr: false, loading: () => <Button variant="outline" disabled><Download className="h-4 w-4 mr-2" />Loading...</Button> }
 );
 
-// Get current company for PDF export
-const currentCompany = getCurrentCompany();
-
 import { mockRiskTemplateDetails } from "@/mocks/data";
 const mockRiskTemplates = mockRiskTemplateDetails;
-
-const submissionTabs: Tab[] = [
-  { id: "hazards", label: "Hazards & Risks", icon: AlertTriangle },
-  { id: "controls", label: "Controls", icon: ShieldAlert },
-];
 
 // Risk score calculation helper
 function calculateRiskScore(likelihood: number, severity: number): { score: number; level: string; color: string } {
@@ -97,8 +88,13 @@ export default function RiskAssessmentDetailPage() {
   const assessmentId = routeParams.assessmentId as string;
   const { t, formatDate } = useTranslation();
   const [activeTab, setActiveTab] = React.useState("hazards");
-  const [reviewNotes, setReviewNotes] = React.useState("");
   const { toast } = useToast();
+  const currentCompany = React.useMemo(() => getCurrentCompany(), []);
+
+  const submissionTabs: Tab[] = [
+    { id: "hazards", label: t("riskAssessment.tabs.hazards"), icon: AlertTriangle },
+    { id: "controls", label: t("riskAssessment.tabs.controls"), icon: ShieldAlert },
+  ];
 
   // Connect to stores
   const { items: riskEvaluations, isLoading, update: updateRiskEvaluation } = useRiskEvaluationsStore();
@@ -114,7 +110,30 @@ export default function RiskAssessmentDetailPage() {
   // Try to find the submission in the store
   const storeEvaluation = riskEvaluations.find(re => re.id === assessmentId);
   
-  // Get the submission from the store (no mock fallback)
+  // Helper to extract hazards from responses
+  const parseHazards = React.useMemo(() => {
+    if (!storeEvaluation?.responses) return [];
+    const responses = storeEvaluation.responses as Record<string, unknown>;
+    const jobSteps = responses.job_steps as Array<{ step: string; hazards: string[]; controls: string[]; severity?: number; probability?: number }> | undefined;
+    if (!jobSteps || !Array.isArray(jobSteps)) return [];
+    return jobSteps.map((js, idx) => ({
+      step: js.step || `Step ${idx + 1}`,
+      hazard: Array.isArray(js.hazards) ? js.hazards.join(", ") : String(js.hazards || ""),
+      severity: js.severity ?? 3,
+      probability: js.probability ?? 3,
+      riskScore: (js.severity ?? 3) * (js.probability ?? 3),
+      controls: Array.isArray(js.controls) ? js.controls.join("; ") : String(js.controls || ""),
+    }));
+  }, [storeEvaluation]);
+
+  const parsePPE = React.useMemo(() => {
+    if (!storeEvaluation?.responses) return [];
+    const responses = storeEvaluation.responses as Record<string, unknown>;
+    const ppe = responses.ppe_required as string[] | undefined;
+    return Array.isArray(ppe) ? ppe : [];
+  }, [storeEvaluation]);
+
+  // Get the submission from the store
   const submission = !isTemplate ? (storeEvaluation ? {
     id: storeEvaluation.id,
     templateId: storeEvaluation.form_type.toLowerCase(),
@@ -129,8 +148,8 @@ export default function RiskAssessmentDetailPage() {
     reviewedBy: storeEvaluation.reviewed_by ? users.find(u => u.id === storeEvaluation.reviewed_by)?.full_name || "Reviewer" : "Pending",
     riskLevel: "medium" as string,
     riskScore: 0,
-    hazards: [] as { step: string; hazard: string; severity: number; probability: number; riskScore: number; controls: string }[],
-    ppeRequired: [] as string[],
+    hazards: parseHazards,
+    ppeRequired: parsePPE,
     comments: "",
     responses: storeEvaluation.responses,
     _storeData: storeEvaluation,
@@ -165,11 +184,11 @@ export default function RiskAssessmentDetailPage() {
   }
 
   if (!template) {
-    return <EmptyState title="Template not found" description="The requested risk assessment template could not be found." />;
+    return <EmptyState title={t("riskAssessment.notFound")} description={t("riskAssessment.notFoundDesc")} />;
   }
 
   if (!isTemplate && !submission) {
-    return <EmptyState title="Submission not found" description="The requested risk assessment submission could not be found." />;
+    return <EmptyState title={t("riskAssessment.submissionNotFound")} description={t("riskAssessment.submissionNotFoundDesc")} />;
   }
 
   return (
@@ -187,7 +206,7 @@ export default function RiskAssessmentDetailPage() {
               {template.locked && (
                 <span className="text-sm text-muted-foreground inline-flex items-center gap-1">
                   <Lock className="h-3 w-3" />
-                  Standard
+                  {t("riskAssessment.standard")}
                 </span>
               )}
             </div>
@@ -240,11 +259,11 @@ export default function RiskAssessmentDetailPage() {
                     updateRiskEvaluation(submission._storeData.id, {
                       status: "draft", // Send back for revision
                     });
-                    toast("Assessment returned for revision.", "info");
+                    toast(t("riskAssessment.returnedForRevision"), "info");
                   }
                 }}
               >
-                <XCircle className="h-4 w-4" /> Request Revision
+                <XCircle className="h-4 w-4" /> {t("riskAssessment.requestRevision")}
               </Button>
               <Button 
                 className="gap-2"
@@ -255,23 +274,23 @@ export default function RiskAssessmentDetailPage() {
                       reviewed_by: "current-user", // In production: get from auth
                       reviewed_at: new Date().toISOString(),
                     });
-                    toast("Assessment approved successfully.", "success");
+                    toast(t("riskAssessment.approvedSuccess"), "success");
                   }
                 }}
               >
-                <CheckCircle className="h-4 w-4" /> Approve
+                <CheckCircle className="h-4 w-4" /> {t("riskAssessment.approve")}
               </Button>
             </>
           )}
           {/* Show reviewed badge for already reviewed assessments */}
           {submission && "_storeData" in submission && submission._storeData && submission._storeData.status === "reviewed" && (
             <Badge variant="success" className="gap-1 py-1.5 px-3">
-              <CheckCircle className="h-3 w-3" /> Approved
+              <CheckCircle className="h-3 w-3" /> {t("riskAssessment.approved")}
             </Badge>
           )}
           {isTemplate && (
             <Button className="gap-2">
-              <FileCheck className="h-4 w-4" /> Start Assessment
+              <FileCheck className="h-4 w-4" /> {t("riskAssessment.startAssessment")}
             </Button>
           )}
         </div>
@@ -288,7 +307,7 @@ export default function RiskAssessmentDetailPage() {
                 </div>
                 <div>
                   <p className="font-medium">{t("riskAssessment.riskScoreLabel")}</p>
-                  <p className="text-sm text-muted-foreground">{submission.hazards.length} hazards identified</p>
+                  <p className="text-sm text-muted-foreground">{t("riskAssessment.hazardsIdentified", { count: String(submission.hazards.length) })}</p>
                 </div>
               </div>
               <div className="flex items-center gap-6">
@@ -446,7 +465,7 @@ export default function RiskAssessmentDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Control Measures</p>
+                  <p className="text-sm text-muted-foreground">{t("riskAssessment.controlMeasures")}</p>
                   <p className="mt-1">{hazard.controls}</p>
                 </div>
               </CardContent>
@@ -461,7 +480,7 @@ export default function RiskAssessmentDetailPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Control Measures Summary</CardTitle>
+              <CardTitle className="text-base">{t("riskAssessment.controlMeasuresSummary")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -470,19 +489,22 @@ export default function RiskAssessmentDetailPage() {
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-medium">{hazard.step}</p>
                       <Badge variant={hazard.riskScore >= 12 ? "destructive" : hazard.riskScore >= 6 ? "warning" : "success"}>
-                        Risk: {hazard.riskScore}
+                        {t("riskAssessment.riskLabel")}: {hazard.riskScore}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{hazard.controls}</p>
                   </div>
                 ))}
+                {submission.hazards.length === 0 && (
+                  <p className="text-sm text-muted-foreground py-4 text-center">{t("riskAssessment.hazardsIdentified", { count: "0" })}</p>
+                )}
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Required PPE</CardTitle>
+              <CardTitle className="text-base">{t("riskAssessment.requiredPPE")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -492,6 +514,9 @@ export default function RiskAssessmentDetailPage() {
                     <span>{ppe}</span>
                   </div>
                 ))}
+                {submission.ppeRequired.length === 0 && (
+                  <p className="text-sm text-muted-foreground py-4 text-center">{t("common.none")}</p>
+                )}
               </div>
             </CardContent>
           </Card>

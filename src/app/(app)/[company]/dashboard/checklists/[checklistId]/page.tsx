@@ -10,6 +10,7 @@ import {
   Trash2,
   Plus,
   GripVertical,
+  Upload,
   CheckSquare,
   Info,
   ListChecks,
@@ -21,6 +22,20 @@ import {
   Users,
   CheckCircle,
   XCircle,
+  Send,
+  Archive,
+  RotateCcw,
+  Pencil,
+  Image,
+  X,
+  Hash,
+  Type,
+  ToggleLeft,
+  Camera,
+  Calendar,
+  PenTool,
+  List,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,9 +53,12 @@ import type { ChecklistItem } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 
-const tabs: Tab[] = [
-  { id: "details", label: "Details", icon: Info },
+const baseTabs: Tab[] = [
   { id: "items", label: "Checklist Items", icon: ListChecks },
+  { id: "details", label: "Details", icon: Info },
+];
+
+const publishedTabs: Tab[] = [
   { id: "submissions", label: "Submissions", icon: FileText },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
   { id: "settings", label: "Settings", icon: Settings, variant: "danger" },
@@ -57,7 +75,7 @@ export default function ChecklistDetailPage() {
   const routeParams = useParams();
   const company = routeParams.company as string;
   const checklistId = routeParams.checklistId as string;
-  const [activeTab, setActiveTab] = React.useState("details");
+  const [activeTab, setActiveTab] = React.useState("items");
   const [isEditing, setIsEditing] = React.useState(false);
   const [stableNow] = React.useState(() => Date.now());
 
@@ -75,6 +93,9 @@ export default function ChecklistDetailPage() {
   const template = isSubmission
     ? templates.find((item) => item.id === submission?.template_id)
     : templates.find((item) => item.id === checklistId);
+
+  const isPublished = template?.publish_status === "published" || template?.is_active;
+  const tabs = isPublished ? [...baseTabs, ...publishedTabs] : baseTabs;
 
   // Form data state - initialize after template is available
   const [formData, setFormData] = React.useState({
@@ -101,7 +122,7 @@ export default function ChecklistDetailPage() {
 
   React.useEffect(() => {
     if (!checklistId) return;
-    setActiveTab(isSubmission ? "overview" : "details");
+    setActiveTab(isSubmission ? "overview" : "items");
   }, [checklistId, isSubmission]);
 
   if (!checklistId) {
@@ -170,7 +191,29 @@ export default function ChecklistDetailPage() {
       items: orderedItems,
       updated_at: now,
     });
-    toast("Checklist template updated");
+    toast("Saved as draft");
+    setIsEditing(false);
+  };
+
+  const handleSaveAndPush = () => {
+    if (!template) return;
+    const now = new Date().toISOString();
+    const orderedItems = itemsDraft.map((item, index) => ({
+      ...item,
+      order: index + 1,
+    }));
+    updateTemplate(template.id, {
+      name: formData.name.trim() || template.name,
+      description: formData.description.trim() || undefined,
+      category: formData.category.trim() || undefined,
+      assignment,
+      recurrence,
+      items: orderedItems,
+      publish_status: "published",
+      is_active: true,
+      updated_at: now,
+    });
+    toast("Saved and pushed to field workers", "success");
     setIsEditing(false);
   };
 
@@ -196,6 +239,30 @@ export default function ChecklistDetailPage() {
     toast("Template archived");
   };
 
+  const handlePublish = () => {
+    if (!template) return;
+    updateTemplate(template.id, { publish_status: "published", updated_at: new Date().toISOString() });
+    toast(t("industry_templates._ui.publishedSuccess"));
+  };
+
+  const handleUnpublish = () => {
+    if (!template) return;
+    updateTemplate(template.id, { publish_status: "draft", updated_at: new Date().toISOString() });
+    toast(t("industry_templates._ui.unpublishedSuccess"));
+  };
+
+  const handleArchivePublish = () => {
+    if (!template) return;
+    updateTemplate(template.id, { publish_status: "archived", updated_at: new Date().toISOString() });
+    toast(t("industry_templates._ui.archivedSuccess"));
+  };
+
+  const handleRestore = () => {
+    if (!template) return;
+    updateTemplate(template.id, { publish_status: "draft", updated_at: new Date().toISOString() });
+    toast(t("industry_templates._ui.restoredSuccess"));
+  };
+
   const handleDeleteTemplate = () => {
     if (!template) return;
     removeTemplate(template.id);
@@ -203,21 +270,121 @@ export default function ChecklistDetailPage() {
     router.push(`/${company}/dashboard/checklists`);
   };
 
-  const handleAddItem = () => {
-    setItemsDraft((prev) => [
-      ...prev,
-      {
-        id: `item_${Date.now()}`,
-        question: `Checklist item ${prev.length + 1}`,
-        type: "yes_no_na",
-        required: false,
-        order: prev.length + 1,
-      },
-    ]);
+  // Item editor modal state
+  const [showItemModal, setShowItemModal] = React.useState(false);
+  const [editingItem, setEditingItem] = React.useState<ChecklistItem | null>(null);
+  const [itemForm, setItemForm] = React.useState<ChecklistItem>({
+    id: "",
+    question: "",
+    type: "yes_no_na",
+    required: true,
+    order: 0,
+    description: "",
+    response_types: [],
+    options: [],
+    image_url: "",
+    min_value: undefined,
+    max_value: undefined,
+    unit: "",
+  });
+  const [newOption, setNewOption] = React.useState("");
+  const [dragIndex, setDragIndex] = React.useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const ITEM_TYPES = [
+    { value: "yes_no_na", label: "Yes / No / N/A", icon: ToggleLeft, description: "Three-choice compliance check" },
+    { value: "pass_fail", label: "Pass / Fail", icon: CheckCircle, description: "Binary pass or fail inspection" },
+    { value: "text", label: "Text", icon: Type, description: "Open text response" },
+    { value: "number", label: "Number", icon: Hash, description: "Numeric measurement with optional unit" },
+    { value: "rating", label: "Rating", icon: Star, description: "Score on a scale (e.g. 1-5)" },
+    { value: "photo", label: "Photo", icon: Camera, description: "Require a photo to be taken" },
+    { value: "date", label: "Date", icon: Calendar, description: "Date picker" },
+    { value: "signature", label: "Signature", icon: PenTool, description: "Require a signature" },
+    { value: "select", label: "Multiple Choice", icon: List, description: "Choose from a list of options" },
+  ] as const;
+
+  const openAddItemModal = () => {
+    setEditingItem(null);
+    setItemForm({
+      id: crypto.randomUUID(),
+      question: "",
+      type: "yes_no_na",
+      required: true,
+      order: itemsDraft.length + 1,
+      description: "",
+      response_types: ["yes_no_na"],
+      options: [],
+      image_url: "",
+      min_value: undefined,
+      max_value: undefined,
+      unit: "",
+    });
+    setNewOption("");
+    setShowItemModal(true);
+  };
+
+  const openEditItemModal = (item: ChecklistItem) => {
+    setEditingItem(item);
+    setItemForm({
+      ...item,
+      description: item.description || "",
+      image_url: item.image_url || "",
+      unit: item.unit || "",
+      options: item.options || [],
+      response_types: item.response_types?.length ? item.response_types : [item.type],
+    });
+    setNewOption("");
+    setShowItemModal(true);
+  };
+
+  const handleSaveItem = () => {
+    if (!itemForm.question.trim()) return;
+    const types = itemForm.response_types?.length ? itemForm.response_types : [itemForm.type];
+    const hasType = (t: string) => types.includes(t as ChecklistItem["type"]);
+    const cleanedItem: ChecklistItem = {
+      ...itemForm,
+      type: types[0],
+      response_types: types.length > 1 ? types : undefined,
+      question: itemForm.question.trim(),
+      description: itemForm.description?.trim() || undefined,
+      image_url: itemForm.image_url?.trim() || undefined,
+      unit: itemForm.unit?.trim() || undefined,
+      options: hasType("select") && itemForm.options?.length ? itemForm.options : undefined,
+      min_value: (hasType("number") || hasType("rating")) ? itemForm.min_value : undefined,
+      max_value: (hasType("number") || hasType("rating")) ? itemForm.max_value : undefined,
+    };
+
+    if (editingItem) {
+      setItemsDraft((prev) => prev.map((i) => (i.id === editingItem.id ? cleanedItem : i)));
+    } else {
+      setItemsDraft((prev) => [...prev, cleanedItem]);
+    }
+    setShowItemModal(false);
   };
 
   const handleRemoveItem = (itemId: string) => {
-    setItemsDraft((prev) => prev.filter((item) => item.id !== itemId));
+    setItemsDraft((prev) => prev.filter((item) => item.id !== itemId).map((item, idx) => ({ ...item, order: idx + 1 })));
+  };
+
+    const handleDragReorder = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    setItemsDraft((prev) => {
+      const items = [...prev];
+      const [moved] = items.splice(fromIndex, 1);
+      items.splice(toIndex, 0, moved);
+      return items.map((item, idx) => ({ ...item, order: idx + 1 }));
+    });
+  };
+
+  const handleAddOption = () => {
+    if (!newOption.trim()) return;
+    setItemForm((prev) => ({ ...prev, options: [...(prev.options || []), newOption.trim()] }));
+    setNewOption("");
+  };
+
+  const handleRemoveOption = (index: number) => {
+    setItemForm((prev) => ({ ...prev, options: (prev.options || []).filter((_, i) => i !== index) }));
   };
 
   // If it's a submission, render submission view
@@ -480,15 +647,22 @@ export default function ChecklistDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push(`/${company}/dashboard/checklists`)}>
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-semibold">{template.name}</h1>
-                <span className="text-sm text-muted-foreground">
-                  {template.is_active ? "active" : "inactive"}
-                </span>
+                {template.publish_status === "published" ? (
+                  <Badge variant="success" className="text-xs">{t("industry_templates._ui.published")}</Badge>
+                ) : template.publish_status === "archived" ? (
+                  <Badge variant="warning" className="text-xs">{t("industry_templates._ui.archived")}</Badge>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">{t("industry_templates._ui.draft")}</Badge>
+                )}
+                {template.regulation && (
+                  <span className="text-xs text-muted-foreground">{template.regulation}</span>
+                )}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 {template.items.length} {t("checklists.labels.items")} • {templateSubmissions.length} submissions • Last updated {formatDate(new Date(template.updated_at))}
@@ -496,6 +670,25 @@ export default function ChecklistDetailPage() {
             </div>
           </div>
           <div className="flex gap-2">
+            {/* Publish workflow controls */}
+            {template.publish_status === "draft" || template.publish_status === undefined ? (
+              <Button variant="outline" className="gap-2" onClick={handlePublish}>
+                <Send className="h-4 w-4" /> {t("industry_templates._ui.publishToApp")}
+              </Button>
+            ) : template.publish_status === "published" ? (
+              <>
+                <Button variant="outline" className="gap-2" onClick={handleUnpublish}>
+                  <RotateCcw className="h-4 w-4" /> {t("industry_templates._ui.unpublish")}
+                </Button>
+                <Button variant="outline" className="gap-2" onClick={handleArchivePublish}>
+                  <Archive className="h-4 w-4" /> {t("industry_templates._ui.archive")}
+                </Button>
+              </>
+            ) : template.publish_status === "archived" ? (
+              <Button variant="outline" className="gap-2" onClick={handleRestore}>
+                <RotateCcw className="h-4 w-4" /> {t("industry_templates._ui.restore")}
+              </Button>
+            ) : null}
             <Button variant="outline" className="gap-2" onClick={handleDuplicateTemplate}>
               <Copy className="h-4 w-4" /> Duplicate
             </Button>
@@ -506,13 +699,16 @@ export default function ChecklistDetailPage() {
             >
               <Eye className="h-4 w-4" /> Preview
             </Button>
-            {isEditing ? (
+            {isEditing && (
               <>
-                <Button variant="outline" onClick={resetEdits}>{t("common.cancel")}</Button>
-                <Button className="gap-2" onClick={handleSaveTemplate}><Save className="h-4 w-4" /> {t("common.save")}</Button>
+                <Button variant="outline" className="gap-2" onClick={handleSaveTemplate}><Save className="h-4 w-4" /> Save Draft</Button>
+                {template.publish_status !== "published" && (
+                  <Button className="gap-2" onClick={handleSaveAndPush}><Send className="h-4 w-4" /> Save & Push</Button>
+                )}
+                {template.publish_status === "published" && (
+                  <Button className="gap-2" onClick={handleSaveTemplate}><Save className="h-4 w-4" /> Save Changes</Button>
+                )}
               </>
-            ) : (
-              <Button onClick={() => setIsEditing(true)}>{t("common.edit")}</Button>
             )}
         </div>
       </div>
@@ -652,52 +848,375 @@ export default function ChecklistDetailPage() {
       {activeTab === "items" && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Checklist Items</CardTitle>
-            <Button size="sm" className="gap-1" onClick={handleAddItem} disabled={!isEditing}>
-              <Plus className="h-3 w-3" /> Add Item
-            </Button>
+            <CardTitle className="text-base">Checklist Items ({itemsDraft.length})</CardTitle>
+            <div className="flex items-center gap-2">
+              {isEditing ? (
+                <Button size="sm" variant="outline" className="gap-1" onClick={resetEdits}>
+                  {t("common.cancel")}
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" className="gap-1" onClick={() => setIsEditing(true)}>
+                  <Pencil className="h-3 w-3" /> {t("common.edit")}
+                </Button>
+              )}
+              <Button size="sm" className="gap-1" onClick={openAddItemModal} disabled={!isEditing}>
+                <Plus className="h-3 w-3" /> Add Item
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {itemsDraft.map((item, idx) => (
-                <div key={item.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 group">
-                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-                  <span className="text-sm text-muted-foreground w-6">{idx + 1}.</span>
-                  <div className="flex-1">
-                    <Input
-                      value={item.question}
-                      onChange={(event) =>
-                        setItemsDraft((prev) =>
-                          prev.map((current) =>
-                            current.id === item.id ? { ...current, question: event.target.value } : current
-                          )
-                        )
-                      }
-                      disabled={!isEditing}
-                      className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0"
-                    />
+            <div className="space-y-1">
+              {itemsDraft.map((item, idx) => {
+                const allTypes = item.response_types?.length ? item.response_types : [item.type];
+                return (
+                <div
+                  key={item.id}
+                  draggable={isEditing}
+                  onDragStart={(e) => {
+                    setDragIndex(idx);
+                    e.dataTransfer.effectAllowed = "move";
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.opacity = "0.4";
+                    }
+                  }}
+                  onDragEnd={(e) => {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.opacity = "1";
+                    }
+                    if (dragIndex !== null && dragOverIndex !== null) {
+                      handleDragReorder(dragIndex, dragOverIndex);
+                    }
+                    setDragIndex(null);
+                    setDragOverIndex(null);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    setDragOverIndex(idx);
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverIndex === idx) setDragOverIndex(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                  }}
+                  className={`flex items-start gap-2 p-3 rounded-lg border group transition-colors ${
+                    dragOverIndex === idx && dragIndex !== null && dragIndex !== idx
+                      ? "border-primary bg-primary/5"
+                      : "hover:bg-muted/50"
+                  } ${isEditing ? "cursor-grab active:cursor-grabbing" : ""}`}
+                >
+                  {/* Drag handle */}
+                  <div className={`pt-0.5 shrink-0 ${isEditing ? "text-muted-foreground" : "text-muted-foreground/30"}`}>
+                    <GripVertical className="h-4 w-4" />
                   </div>
-                  <Badge variant="outline" className="text-xs capitalize">{item.type}</Badge>
-                  {item.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100"
-                    onClick={() => handleRemoveItem(item.id)}
-                    disabled={!isEditing}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <span className="text-sm text-muted-foreground w-6 pt-0.5 shrink-0">{idx + 1}.</span>
+                  {/* Item content */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium leading-snug">{item.question}</p>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                    )}
+                    {item.image_url && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Image className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Reference file: {item.image_url}</span>
+                      </div>
+                    )}
+                    {allTypes.includes("select") && item.options && item.options.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {item.options.map((opt, oi) => (
+                          <span key={oi} className="text-xs bg-muted px-1.5 py-0.5 rounded">{opt}</span>
+                        ))}
+                      </div>
+                    )}
+                    {allTypes.includes("number") && item.unit && (
+                      <span className="text-xs text-muted-foreground mt-0.5 block">Unit: {item.unit}</span>
+                    )}
+                  </div>
+                  {/* Type Badges */}
+                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                    {allTypes.map((t) => {
+                      const ti = ITEM_TYPES.find((x) => x.value === t);
+                      const TIcon = ti?.icon || ToggleLeft;
+                      return (
+                        <Badge key={t} variant="outline" className="text-xs gap-1 capitalize">
+                          <TIcon className="h-3 w-3" />
+                          {ti?.label || t}
+                        </Badge>
+                      );
+                    })}
+                    {item.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
+                  </div>
+                  {/* Edit / Delete */}
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                      onClick={() => openEditItemModal(item)}
+                      disabled={!isEditing}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                      onClick={() => handleRemoveItem(item.id)}
+                      disabled={!isEditing}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
-              ))}
+                );
+              })}
+              {itemsDraft.length === 0 && (
+                <div className="text-center py-8 text-sm text-muted-foreground">
+                  No items yet. Click &quot;Add Item&quot; to create your first checklist item.
+                </div>
+              )}
             </div>
             <div className="mt-4 pt-4 border-t">
-              <Button variant="outline" className="w-full gap-2" onClick={handleAddItem} disabled={!isEditing}>
+              <Button variant="outline" className="w-full gap-2" onClick={openAddItemModal} disabled={!isEditing}>
                 <Plus className="h-4 w-4" /> Add New Item
               </Button>
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Add/Edit Item Modal */}
+      {showItemModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowItemModal(false)}>
+          <div
+            className="bg-background rounded-xl shadow-2xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-5 border-b">
+              <h3 className="text-lg font-semibold">{editingItem ? "Edit Item" : "Add Checklist Item"}</h3>
+              <Button variant="ghost" size="icon" onClick={() => setShowItemModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-5 space-y-5">
+              {/* Question */}
+              <div className="space-y-1.5">
+                <Label htmlFor="item-question">Question / Instruction <span className="text-destructive">*</span></Label>
+                <Input
+                  id="item-question"
+                  placeholder="e.g. Are all emergency exits clear and accessible?"
+                  value={itemForm.question}
+                  onChange={(e) => setItemForm((prev) => ({ ...prev, question: e.target.value }))}
+                  autoFocus
+                />
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <Label htmlFor="item-description">Description / Helper text</Label>
+                <Textarea
+                  id="item-description"
+                  placeholder="Optional guidance for the person completing this item"
+                  value={itemForm.description || ""}
+                  onChange={(e) => setItemForm((prev) => ({ ...prev, description: e.target.value }))}
+                  rows={2}
+                />
+              </div>
+
+              {/* Response Types (multi-select) */}
+              <div className="space-y-2">
+                <Label>Response Types <span className="text-xs text-muted-foreground font-normal">(select one or more)</span></Label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {ITEM_TYPES.map((typeOpt) => {
+                    const Icon = typeOpt.icon;
+                    const selectedTypes = itemForm.response_types || [itemForm.type];
+                    const isSelected = selectedTypes.includes(typeOpt.value as ChecklistItem["type"]);
+                    return (
+                      <button
+                        key={typeOpt.value}
+                        type="button"
+                        onClick={() => {
+                          setItemForm((prev) => {
+                            const current = prev.response_types?.length ? [...prev.response_types] : [prev.type];
+                            if (isSelected) {
+                              if (current.length <= 1) return prev;
+                              const filtered = current.filter((t) => t !== typeOpt.value);
+                              return { ...prev, type: filtered[0], response_types: filtered };
+                            }
+                            const next = [...current, typeOpt.value as ChecklistItem["type"]];
+                            return { ...prev, type: current[0], response_types: next };
+                          });
+                        }}
+                        className={`flex flex-col items-center gap-1 p-2.5 rounded-lg border text-xs transition-colors ${
+                          isSelected ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-muted/50"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="font-medium leading-tight text-center">{typeOpt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {(itemForm.response_types || [itemForm.type]).map((t) => ITEM_TYPES.find((i) => i.value === t)?.label).filter(Boolean).join(", ")}
+                </p>
+              </div>
+
+              {/* Number-specific: min, max, unit */}
+              {((itemForm.response_types || [itemForm.type]).includes("number") || (itemForm.response_types || [itemForm.type]).includes("rating")) && (
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="item-min">Min Value</Label>
+                    <Input
+                      id="item-min"
+                      type="number"
+                      placeholder={itemForm.type === "rating" ? "1" : "0"}
+                      value={itemForm.min_value ?? ""}
+                      onChange={(e) => setItemForm((prev) => ({ ...prev, min_value: e.target.value ? Number(e.target.value) : undefined }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="item-max">Max Value</Label>
+                    <Input
+                      id="item-max"
+                      type="number"
+                      placeholder={itemForm.type === "rating" ? "5" : "100"}
+                      value={itemForm.max_value ?? ""}
+                      onChange={(e) => setItemForm((prev) => ({ ...prev, max_value: e.target.value ? Number(e.target.value) : undefined }))}
+                    />
+                  </div>
+                  {(itemForm.response_types || [itemForm.type]).includes("number") && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="item-unit">Unit</Label>
+                      <Input
+                        id="item-unit"
+                        placeholder="e.g. °C, psi, mm"
+                        value={itemForm.unit || ""}
+                        onChange={(e) => setItemForm((prev) => ({ ...prev, unit: e.target.value }))}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Select-specific: options */}
+              {(itemForm.response_types || [itemForm.type]).includes("select") && (
+                <div className="space-y-2">
+                  <Label>Options</Label>
+                  <div className="space-y-1.5">
+                    {(itemForm.options || []).map((opt, oi) => (
+                      <div key={oi} className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground w-5 text-right">{oi + 1}.</span>
+                        <span className="text-sm flex-1">{opt}</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveOption(oi)}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add an option"
+                      value={newOption}
+                      onChange={(e) => setNewOption(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddOption(); } }}
+                    />
+                    <Button variant="outline" size="sm" onClick={handleAddOption} disabled={!newOption.trim()}>Add</Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Reference File Upload */}
+              <div className="space-y-1.5">
+                <Label>Reference Image or PDF</Label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,.pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setItemForm((prev) => ({ ...prev, image_url: file.name }));
+                    }
+                  }}
+                />
+                {itemForm.image_url ? (
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg border bg-muted/30">
+                    <Image className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-sm truncate flex-1">{itemForm.image_url}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={() => setItemForm((prev) => ({ ...prev, image_url: "" }))}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 w-full p-3 rounded-lg border border-dashed hover:bg-muted/50 transition-colors text-sm text-muted-foreground"
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span>Upload reference image or PDF</span>
+                  </button>
+                )}
+                <p className="text-xs text-muted-foreground">Attach a reference to help inspectors understand what to check</p>
+              </div>
+
+              {/* Required toggle */}
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <p className="text-sm font-medium">Required</p>
+                  <p className="text-xs text-muted-foreground">Field workers must complete this item to submit</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setItemForm((prev) => ({ ...prev, required: !prev.required }))}
+                  className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer ${
+                    itemForm.required ? "bg-primary" : "bg-muted"
+                  }`}
+                  role="switch"
+                  aria-checked={itemForm.required}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform ${
+                      itemForm.required ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Position */}
+              <div className="space-y-1.5">
+                <Label htmlFor="item-order">Position</Label>
+                <Input
+                  id="item-order"
+                  type="number"
+                  min={1}
+                  max={itemsDraft.length + (editingItem ? 0 : 1)}
+                  value={itemForm.order}
+                  onChange={(e) => setItemForm((prev) => ({ ...prev, order: Math.max(1, parseInt(e.target.value) || 1) }))}
+                />
+                <p className="text-xs text-muted-foreground">Where this item appears in the checklist (1 = first)</p>
+              </div>
+            </div>
+
+            {/* Modal footer */}
+            <div className="flex justify-end gap-2 p-5 border-t">
+              <Button variant="outline" onClick={() => setShowItemModal(false)}>Cancel</Button>
+              <Button onClick={handleSaveItem} disabled={!itemForm.question.trim()} className="gap-2">
+                {editingItem ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                {editingItem ? "Save Changes" : "Add Item"}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {activeTab === "submissions" && (

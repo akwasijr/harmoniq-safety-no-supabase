@@ -132,6 +132,20 @@ export function applyBranding(options: BrandingOptions, theme: string) {
       root.style.setProperty("--primary-foreground", fg);
       root.style.setProperty("--ring", primary);
 
+      // Accent: derived from primary so dropdowns/selections match
+      if (isDark) {
+        root.style.setProperty("--accent", `${hsl.h} ${Math.min(hsl.s, 30)}% 18%`);
+        root.style.setProperty("--accent-foreground", "0 0% 98%");
+      } else {
+        root.style.setProperty("--accent", `${hsl.h} ${Math.min(hsl.s, 40)}% 93%`);
+        root.style.setProperty("--accent-foreground", lightVal);
+      }
+
+      // Info: match primary hue
+      const infoVal = isDark ? darkVal : lightVal;
+      root.style.setProperty("--info", infoVal);
+      root.style.setProperty("--info-foreground", fg);
+
       // Brand-solid: always the original color, for app header bars etc.
       root.style.setProperty("--brand-solid", lightVal);
       root.style.setProperty("--brand-solid-foreground", foregroundForBg(hsl));
@@ -178,6 +192,8 @@ export function resetBranding() {
   const root = document.documentElement;
   const props = [
     "--primary", "--primary-foreground", "--ring",
+    "--accent", "--accent-foreground",
+    "--info", "--info-foreground",
     "--brand-solid", "--brand-solid-foreground",
     "--secondary", "--secondary-foreground",
     "--sidebar-background", "--sidebar-foreground", "--sidebar-primary",

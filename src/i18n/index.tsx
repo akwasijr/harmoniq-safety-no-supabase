@@ -2,14 +2,17 @@
 
 import * as React from "react";
 
-// Import translation files statically (no dynamic import needed for 3 languages)
+// Import translation files statically
 import en from "./messages/en.json";
 import nl from "./messages/nl.json";
 import sv from "./messages/sv.json";
+import de from "./messages/de.json";
+import fr from "./messages/fr.json";
+import es from "./messages/es.json";
 
 // ---------- Types ----------
 
-export type SupportedLocale = "en" | "nl" | "sv";
+export type SupportedLocale = "en" | "nl" | "sv" | "de" | "fr" | "es";
 
 export interface LocaleConfig {
   code: SupportedLocale;
@@ -54,6 +57,33 @@ export const LOCALE_CONFIGS: Record<SupportedLocale, LocaleConfig> = {
     numberLocale: "sv-SE",
     direction: "ltr",
   },
+  de: {
+    code: "de",
+    name: "Deutsch",
+    englishName: "German",
+    flag: "🇩🇪",
+    dateLocale: "de-DE",
+    numberLocale: "de-DE",
+    direction: "ltr",
+  },
+  fr: {
+    code: "fr",
+    name: "Français",
+    englishName: "French",
+    flag: "🇫🇷",
+    dateLocale: "fr-FR",
+    numberLocale: "fr-FR",
+    direction: "ltr",
+  },
+  es: {
+    code: "es",
+    name: "Español",
+    englishName: "Spanish",
+    flag: "🇪🇸",
+    dateLocale: "es-ES",
+    numberLocale: "es-ES",
+    direction: "ltr",
+  },
 };
 
 export const SUPPORTED_LOCALES = Object.values(LOCALE_CONFIGS);
@@ -64,7 +94,9 @@ export const COUNTRY_DEFAULT_LOCALE: Record<string, SupportedLocale> = {
   NL: "nl",
   SE: "sv",
   GB: "en",
-  DE: "en", // fallback
+  DE: "de",
+  FR: "fr",
+  ES: "es",
 };
 
 // Locale → primary country mapping (inverse of above, picks first match)
@@ -72,6 +104,9 @@ export const LOCALE_DEFAULT_COUNTRY: Record<SupportedLocale, string> = {
   en: "US",
   nl: "NL",
   sv: "SE",
+  de: "DE",
+  fr: "FR",
+  es: "ES",
 };
 
 // ---------- Flatten helper ----------
@@ -95,6 +130,9 @@ const MESSAGE_BUNDLES: Record<SupportedLocale, Messages> = {
   en: flattenMessages(en as unknown as Record<string, unknown>),
   nl: flattenMessages(nl as unknown as Record<string, unknown>),
   sv: flattenMessages(sv as unknown as Record<string, unknown>),
+  de: flattenMessages(de as unknown as Record<string, unknown>),
+  fr: flattenMessages(fr as unknown as Record<string, unknown>),
+  es: flattenMessages(es as unknown as Record<string, unknown>),
 };
 
 // ---------- Context ----------
