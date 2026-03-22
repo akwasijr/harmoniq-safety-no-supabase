@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -9,6 +10,7 @@ import {
   Newspaper,
   User,
 } from "lucide-react";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 
@@ -69,11 +71,16 @@ const tabItems: TabItem[] = [
 export function BottomTabs({ company }: BottomTabsProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const { settings } = useFieldAppSettings();
+  const visibleTabs = React.useMemo(
+    () => tabItems.filter((item) => settings.newsEnabled || item.href !== "/app/news"),
+    [settings.newsEnabled]
+  );
 
   return (
-    <nav aria-label="App navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card safe-area-inset-bottom">
+    <nav aria-label="App navigation" className="field-app-surface fixed bottom-0 left-0 right-0 z-50 border-t bg-card safe-area-inset-bottom">
       <ul className="flex h-16 items-center justify-around">
-        {tabItems.map((item) => {
+        {visibleTabs.map((item) => {
           const href = `/${company}${item.href}`;
           // For exact match items (like Home), only match the exact path
           // For other items, match the path or any sub-paths

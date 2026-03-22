@@ -24,10 +24,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useFilterOptions } from "@/components/ui/filter-panel";
-import { useTicketsStore } from "@/stores/tickets-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { LoadingPage } from "@/components/ui/loading";
-import { useIncidentsStore } from "@/stores/incidents-store";
-import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
@@ -56,13 +54,13 @@ export default function TicketsPage() {
     description: "",
     priority: "medium",
     assigned_to: "",
+    assigned_to_team_id: "",
     incident_id: "",
     due_date: "",
   });
 
-  const { items: tickets, isLoading, add: addTicket } = useTicketsStore();
-  const { items: incidents } = useIncidentsStore();
-  const { items: users } = useUsersStore();
+  const { tickets, incidents, users, teams, stores } = useCompanyData();
+  const { isLoading, add: addTicket } = stores.tickets;
   const { toast } = useToast();
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
@@ -134,7 +132,8 @@ export default function TicketsPage() {
       status: "new",
       due_date: newTicket.due_date || null,
       assigned_to: newTicket.assigned_to || null,
-      assigned_groups: [],
+      assigned_to_team_id: newTicket.assigned_to_team_id || null,
+      assigned_groups: newTicket.assigned_to_team_id ? [newTicket.assigned_to_team_id] : [],
       incident_ids: newTicket.incident_id ? [newTicket.incident_id] : [],
       created_by: user?.id || users[0]?.id || "",
       created_at: now,
@@ -144,13 +143,14 @@ export default function TicketsPage() {
     toast("Ticket created successfully");
     setShowAddModal(false);
     setNewTicket({
-      title: "",
-      description: "",
-      priority: "medium",
-      assigned_to: "",
-      incident_id: "",
-      due_date: "",
-    });
+        title: "",
+        description: "",
+        priority: "medium",
+        assigned_to: "",
+        assigned_to_team_id: "",
+        incident_id: "",
+        due_date: "",
+      });
   };
 
   if (isLoading) {
@@ -234,6 +234,8 @@ export default function TicketsPage() {
                 ) : (
                   paginatedTickets.map((ticket) => {
                     const assignee = users.find((u) => u.id === ticket.assigned_to);
+                    const assignedTeamId = ticket.assigned_to_team_id || ticket.assigned_groups[0] || "";
+                    const assignedTeam = assignedTeamId ? teams.find((team) => team.id === assignedTeamId) : null;
                     return (
                       <tr 
                         key={ticket.id} 
@@ -259,7 +261,7 @@ export default function TicketsPage() {
                         <td className="hidden py-3 md:table-cell">
                           <div className="flex items-center gap-2">
                             <User className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs">{assignee?.full_name || "Unassigned"}</span>
+                            <span className="text-xs">{assignee?.full_name || assignedTeam?.name || "Unassigned"}</span>
                           </div>
                         </td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">
@@ -390,6 +392,22 @@ export default function TicketsPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <Label>Assign team</Label>
+                <select
+                  title="Select team"
+                  aria-label="Select team"
+                  value={newTicket.assigned_to_team_id}
+                  onChange={(e) => setNewTicket({ ...newTicket, assigned_to_team_id: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">No team</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>{team.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

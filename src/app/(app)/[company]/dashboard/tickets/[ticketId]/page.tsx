@@ -28,8 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { useTicketsStore } from "@/stores/tickets-store";
-import { useUsersStore } from "@/stores/users-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
@@ -53,8 +52,8 @@ export default function TicketDetailPage() {
   const { t, formatDate } = useTranslation();
   const { hasPermission, user } = useAuth();
   const canDeleteTicket = hasPermission("incidents.delete");
-  const { items: tickets, isLoading, update: updateTicket, remove: removeTicket } = useTicketsStore();
-  const { items: users } = useUsersStore();
+  const { tickets, users, stores } = useCompanyData();
+  const { isLoading, update: updateTicket, remove: removeTicket } = stores.tickets;
   const ticket = tickets.find((t) => t.id === ticketId);
   const assignee = ticket?.assigned_to ? users.find((u) => u.id === ticket.assigned_to) : undefined;
 

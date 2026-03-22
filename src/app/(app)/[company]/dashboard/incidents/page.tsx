@@ -31,13 +31,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useFilterOptions } from "@/components/ui/filter-panel";
-import { useIncidentsStore } from "@/stores/incidents-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { LoadingPage } from "@/components/ui/loading";
 import { useNotificationsStore } from "@/stores/notifications-store";
 import { notifyCriticalIncident } from "@/stores/notification-triggers";
-import { useLocationsStore } from "@/stores/locations-store";
-import { useTicketsStore } from "@/stores/tickets-store";
-import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
@@ -106,11 +103,9 @@ export default function IncidentsPage() {
   const { t, formatDate } = useTranslation();
   const filterOptions = useFilterOptions();
   const { toast } = useToast();
-  const { items: incidents, isLoading, add: addIncident } = useIncidentsStore();
+  const { incidents, tickets, locations, users, stores } = useCompanyData();
+  const { isLoading, add: addIncident } = stores.incidents;
   const { add: addNotif } = useNotificationsStore();
-  const { items: tickets } = useTicketsStore();
-  const { items: locations } = useLocationsStore();
-  const { items: users } = useUsersStore();
 
   // Filter incidents
   const filteredIncidents = incidents.filter((incident) => {

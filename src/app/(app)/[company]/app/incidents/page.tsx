@@ -22,6 +22,7 @@ import { useTranslation } from "@/i18n";
 import { capitalize } from "@/lib/utils";
 import { LoadingPage } from "@/components/ui/loading";
 import { NoDataEmptyState, NoResultsEmptyState } from "@/components/ui/empty-state";
+import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
 
 const STATUS_CLASSES = {
   new: { color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: Clock },
@@ -52,11 +53,11 @@ export default function EmployeeIncidentsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
-  // Filter incidents to only show user's own reports
+  // Show incidents reported by the worker or assigned to them / their team.
   const myIncidents = React.useMemo(() => {
     if (!user) return [];
     return incidents
-      .filter((i) => i.reporter_id === user.id)
+      .filter((incident) => incident.reporter_id === user.id || isAssignedToUserOrTeam(incident, user))
       .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime());
   }, [incidents, user]);
 

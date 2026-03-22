@@ -181,6 +181,28 @@ export function Sidebar({
   // Helper to resolve nav item title via i18n
   const getTitle = (item: NavItem) => item.titleKey ? t(item.titleKey) : item.title;
 
+  const isNavItemActive = (item: NavItem) => {
+    const href = `/${company}${item.href}`;
+
+    if (item.href === "/dashboard/checklists/my-templates") {
+      return pathname === href
+        || pathname === `/${company}/dashboard/checklists/templates`
+        || pathname === `/${company}/dashboard/checklists/new`
+        || /^\/[^/]+\/dashboard\/checklists\/[^/]+$/.test(pathname);
+    }
+
+    if (item.exactMatch) {
+      if (pathname === href) return true;
+    } else if (pathname === href || pathname.startsWith(`${href}/`)) {
+      return true;
+    }
+
+    return (item.additionalPaths || []).some((additionalPath) => {
+      const fullPath = `/${company}${additionalPath}`;
+      return pathname === fullPath || pathname.startsWith(`${fullPath}/`);
+    });
+  };
+
   const userInitials = userName
     .split(" ")
     .map((n) => n[0])
@@ -253,9 +275,7 @@ export function Sidebar({
             <ul className="space-y-1">
               {platformNavItems.map((item) => {
                 const href = `/${company}${item.href}`;
-                const isActive = item.exactMatch
-                  ? pathname === href
-                  : pathname === href || pathname.startsWith(`${href}/`);
+                const isActive = isNavItemActive(item);
                 return (
                   <li key={item.href}>
                     <Link
@@ -286,24 +306,7 @@ export function Sidebar({
         {(!isSuperAdmin || hasSelectedCompany) && <ul className="space-y-1">
           {navItems.map((item) => {
             const href = `/${company}${item.href}`;
-            
-            // Check if current path matches this nav item
-            let isActive = false;
-            if (item.exactMatch) {
-              // For exact match items, only match the exact main path
-              isActive = pathname === href;
-            } else {
-              // Check main href
-              isActive = pathname === href || pathname.startsWith(`${href}/`);
-            }
-              
-            // Check additional paths regardless of exactMatch
-            if (!isActive && item.additionalPaths) {
-              isActive = item.additionalPaths.some(additionalPath => {
-                const fullPath = `/${company}${additionalPath}`;
-                return pathname === fullPath || pathname.startsWith(`${fullPath}/`);
-              });
-            }
+            const isActive = isNavItemActive(item);
 
             return (
               <li key={item.href}>

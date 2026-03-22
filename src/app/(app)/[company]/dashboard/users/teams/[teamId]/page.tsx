@@ -22,12 +22,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { useTeamsStore } from "@/stores/teams-store";
-import { useUsersStore } from "@/stores/users-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { addTeamToUser, addUserToTeam, removeTeamFromUser, removeUserFromTeam } from "@/lib/assignment-utils";
 
 const tabs: Tab[] = [
   { id: "overview", label: "Overview", icon: Info },
@@ -51,8 +51,9 @@ export default function TeamDetailPage() {
   const canEditTeams = currentUserCan("teams.edit");
   const canDeleteTeams = currentUserCan("teams.delete");
   const canManageMembers = currentUserCan("teams.manage_members");
-  const { items: teams, isLoading, update: updateTeam, remove: removeTeam } = useTeamsStore();
-  const { items: users, update: updateUser } = useUsersStore();
+  const { teams, users, stores } = useCompanyData();
+  const { isLoading, update: updateTeam, remove: removeTeam } = stores.teams;
+  const { update: updateUser } = stores.users;
   const baseTeam = teams.find((t) => t.id === teamId);
 
   // Editable team state (hooks must be above early returns)
@@ -83,13 +84,13 @@ export default function TeamDetailPage() {
   const team = isEditing ? { ...baseTeam, ...editedTeam } : baseTeam;
 
   // Get team members
-  const teamMembers = users.filter(u => u.team_ids?.includes(teamId));
+  const teamMembers = users.filter((user) => user.team_ids.includes(teamId));
   
   // Get team leader
   const teamLeader = team.leader_id ? users.find(u => u.id === team.leader_id) : null;
 
   // Get users not in this team for add member modal
-  const availableUsers = users.filter(u => !u.team_ids?.includes(teamId));
+  const availableUsers = users.filter((user) => !user.team_ids.includes(teamId));
 
   const handleSave = () => {
     updateTeam(baseTeam.id, {
@@ -105,7 +106,7 @@ export default function TeamDetailPage() {
   const handleDelete = () => {
     teamMembers.forEach((member) => {
       updateUser(member.id, {
-        team_ids: member.team_ids?.filter((id) => id !== teamId),
+        team_ids: removeTeamFromUser(member, teamId),
         updated_at: new Date().toISOString(),
       });
     });
@@ -119,13 +120,12 @@ export default function TeamDetailPage() {
     const user = users.find((u) => u.id === userId);
     if (!user) return;
     updateUser(user.id, {
-      team_ids: user.team_ids?.filter((id) => id !== teamId),
+      team_ids: removeTeamFromUser(user, teamId),
       updated_at: new Date().toISOString(),
     });
-    const nextMemberIds = (team.member_ids || []).filter((id) => id !== userId);
+    const nextMemberIds = removeUserFromTeam(team, userId);
     updateTeam(baseTeam.id, {
       member_ids: nextMemberIds,
-      member_count: nextMemberIds.length,
       updated_at: new Date().toISOString(),
     });
     toast("Member removed", "info");
@@ -135,13 +135,12 @@ export default function TeamDetailPage() {
     const user = users.find((u) => u.id === userId);
     if (!user) return;
     updateUser(user.id, {
-      team_ids: Array.from(new Set([...(user.team_ids || []), teamId])),
+      team_ids: addTeamToUser(user, teamId),
       updated_at: new Date().toISOString(),
     });
-    const nextMemberIds = Array.from(new Set([...(team.member_ids || []), userId]));
+    const nextMemberIds = addUserToTeam(team, userId);
     updateTeam(baseTeam.id, {
       member_ids: nextMemberIds,
-      member_count: nextMemberIds.length,
       updated_at: new Date().toISOString(),
     });
     setShowAddMemberModal(false);

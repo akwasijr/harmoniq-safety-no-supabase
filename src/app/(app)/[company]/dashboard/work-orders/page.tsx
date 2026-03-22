@@ -30,7 +30,6 @@ import { Badge } from "@/components/ui/badge";
 import { KPICard } from "@/components/ui/kpi-card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
@@ -53,8 +52,8 @@ export default function WorkOrdersPage() {
   const company = useCompanyParam();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { items: orders, add, update , isLoading } = useWorkOrdersStore();
-  const { assets, users, parts } = useCompanyData();
+  const { workOrders: orders, teams, assets, users, parts, stores } = useCompanyData();
+  const { add, update, isLoading } = stores.workOrders;
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [assignmentFilter, setAssignmentFilter] = React.useState<"all" | "unassigned" | "assigned">("all");
@@ -83,14 +82,15 @@ export default function WorkOrdersPage() {
     asset_id: "",
     priority: "medium" as Priority,
     assigned_to: "",
+    assigned_to_team_id: "",
     due_date: "",
     estimated_hours: "",
   });
 
   const filtered = orders.filter((o) => {
     if (statusFilter !== "all" && o.status !== statusFilter) return false;
-    if (assignmentFilter === "unassigned" && o.assigned_to !== null) return false;
-    if (assignmentFilter === "assigned" && o.assigned_to === null) return false;
+    if (assignmentFilter === "unassigned" && (o.assigned_to !== null || o.assigned_to_team_id)) return false;
+    if (assignmentFilter === "assigned" && o.assigned_to === null && !o.assigned_to_team_id) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       const asset = o.asset_id ? assets.find((a) => a.id === o.asset_id) : null;
@@ -104,7 +104,7 @@ export default function WorkOrdersPage() {
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginatedOrders = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  const unassignedCount = orders.filter((o) => o.assigned_to === null).length;
+  const unassignedCount = orders.filter((o) => o.assigned_to === null && !o.assigned_to_team_id).length;
   const openCount = orders.filter((o) => o.status === "requested" || o.status === "approved").length;
   const inProgressCount = orders.filter((o) => o.status === "in_progress").length;
   const completedCount = orders.filter((o) => o.status === "completed").length;
@@ -122,6 +122,7 @@ export default function WorkOrdersPage() {
       status: "requested",
       requested_by: user?.id || "",
       assigned_to: form.assigned_to || null,
+      assigned_to_team_id: form.assigned_to_team_id || null,
       due_date: form.due_date || null,
       estimated_hours: form.estimated_hours ? parseFloat(form.estimated_hours) : null,
       actual_hours: null,
@@ -135,7 +136,7 @@ export default function WorkOrdersPage() {
     add(order);
     toast("Work order created");
     setShowCreate(false);
-    setForm({ title: "", description: "", asset_id: "", priority: "medium", assigned_to: "", due_date: "", estimated_hours: "" });
+    setForm({ title: "", description: "", asset_id: "", priority: "medium", assigned_to: "", assigned_to_team_id: "", due_date: "", estimated_hours: "" });
   };
 
   const handleStatusChange = (id: string, newStatus: string) => {
@@ -185,6 +186,7 @@ export default function WorkOrdersPage() {
 
   const getAssetName = (id: string | null) => getAssetDisplayName(id, assets, "No asset");
   const getUserName = (id: string | null) => getUserFirstLastName(id, users, "Unassigned");
+  const getTeamName = (id: string | null | undefined) => teams.find((team) => team.id === id)?.name ?? null;
 
   const statusColors = WORK_ORDER_STATUS_COLORS;
 
@@ -269,7 +271,7 @@ export default function WorkOrdersPage() {
                           {getAssetName(order.asset_id)}
                         </Link>
                       )}
-                      <span>Assigned: {getUserName(order.assigned_to)}</span>
+                      <span>Assigned: {getUserName(order.assigned_to) !== "Unassigned" ? getUserName(order.assigned_to) : getTeamName(order.assigned_to_team_id) || "Unassigned"}</span>
                       {order.due_date && <span>Due: {formatDate(order.due_date)}</span>}
                       {order.estimated_hours && <span>Est: {order.estimated_hours}h</span>}
                       <span>Created: {formatDate(order.created_at)}</span>
@@ -377,6 +379,9 @@ export default function WorkOrdersPage() {
               <Button variant="ghost" size="icon" onClick={() => setShowCreate(false)} aria-label="Close"><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+                Work orders are for repair, maintenance, and asset service execution. Use tickets for investigation follow-up and corrective actions for remediation tracking.
+              </div>
               <div>
                 <Label>{t("workOrders.labels.title")} *</Label>
                 <Input className="mt-1" placeholder={t("workOrders.placeholders.title")} value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} maxLength={200} />
@@ -426,6 +431,20 @@ export default function WorkOrdersPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label>Assign team</Label>
+                  <Select value={form.assigned_to_team_id || "__none__"} onValueChange={(v) => setForm((p) => ({ ...p, assigned_to_team_id: v === "__none__" ? "" : v }))}>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="No team" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">No team</SelectItem>
+                      {teams.map((team) => (
+                        <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label>{t("workOrders.labels.estimatedHours")}</Label>
                   <Input type="number" min="0" step="0.5" className="mt-1" placeholder={t("workOrders.placeholders.estimatedHours")} value={form.estimated_hours} onChange={(e) => setForm((p) => ({ ...p, estimated_hours: e.target.value }))} />

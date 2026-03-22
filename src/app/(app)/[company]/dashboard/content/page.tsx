@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useFilterOptions } from "@/components/ui/filter-panel";
 import { RoleGuard } from "@/components/auth/role-guard";
-import { useContentStore } from "@/stores/content-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
@@ -50,7 +50,8 @@ export default function ContentPage() {
   // Filters
   const [statusFilter, setStatusFilter] = React.useState("");
 
-  const { items: content, isLoading } = useContentStore();
+  const { content, stores } = useCompanyData();
+  const { isLoading } = stores.content;
 
   // Get current tab's content type
   const currentTabConfig = contentTabs.find(t => t.value === activeTab);

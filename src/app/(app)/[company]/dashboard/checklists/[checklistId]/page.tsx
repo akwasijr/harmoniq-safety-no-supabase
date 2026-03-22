@@ -44,14 +44,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useLocationsStore } from "@/stores/locations-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import type { ChecklistItem } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { getTemplatePublishStatus } from "@/lib/template-activation";
 
 const baseTabs: Tab[] = [
   { id: "items", label: "Checklist Items", icon: ListChecks },
@@ -81,10 +80,9 @@ export default function ChecklistDetailPage() {
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
-  const { items: templates, isLoading, add: addTemplate, update: updateTemplate, remove: removeTemplate } = useChecklistTemplatesStore();
-  const { items: submissions, update: updateSubmission } = useChecklistSubmissionsStore();
-  const { items: users } = useUsersStore();
-  const { items: locations } = useLocationsStore();
+  const { checklistTemplates: templates, checklistSubmissions: submissions, users, locations, stores } = useCompanyData();
+  const { isLoading, add: addTemplate, update: updateTemplate, remove: removeTemplate } = stores.checklistTemplates;
+  const { update: updateSubmission } = stores.checklistSubmissions;
   const { isSuperAdmin, isCompanyAdmin, isManager } = useAuth();
   const canApprove = isSuperAdmin || isCompanyAdmin || isManager;
 
@@ -94,7 +92,8 @@ export default function ChecklistDetailPage() {
     ? templates.find((item) => item.id === submission?.template_id)
     : templates.find((item) => item.id === checklistId);
 
-  const isPublished = template?.publish_status === "published" || template?.is_active;
+  const templateStatus = template ? getTemplatePublishStatus(template) : "draft";
+  const isPublished = templateStatus === "published";
   const tabs = isPublished ? [...baseTabs, ...publishedTabs] : baseTabs;
 
   // Form data state - initialize after template is available
@@ -235,31 +234,31 @@ export default function ChecklistDetailPage() {
 
   const handleArchiveTemplate = () => {
     if (!template) return;
-    updateTemplate(template.id, { is_active: false, updated_at: new Date().toISOString() });
+    updateTemplate(template.id, { publish_status: "archived", is_active: false, updated_at: new Date().toISOString() });
     toast("Template archived");
   };
 
   const handlePublish = () => {
     if (!template) return;
-    updateTemplate(template.id, { publish_status: "published", updated_at: new Date().toISOString() });
+    updateTemplate(template.id, { publish_status: "published", is_active: true, updated_at: new Date().toISOString() });
     toast(t("industry_templates._ui.publishedSuccess"));
   };
 
   const handleUnpublish = () => {
     if (!template) return;
-    updateTemplate(template.id, { publish_status: "draft", updated_at: new Date().toISOString() });
+    updateTemplate(template.id, { publish_status: "draft", is_active: false, updated_at: new Date().toISOString() });
     toast(t("industry_templates._ui.unpublishedSuccess"));
   };
 
   const handleArchivePublish = () => {
     if (!template) return;
-    updateTemplate(template.id, { publish_status: "archived", updated_at: new Date().toISOString() });
+    updateTemplate(template.id, { publish_status: "archived", is_active: false, updated_at: new Date().toISOString() });
     toast(t("industry_templates._ui.archivedSuccess"));
   };
 
   const handleRestore = () => {
     if (!template) return;
-    updateTemplate(template.id, { publish_status: "draft", updated_at: new Date().toISOString() });
+    updateTemplate(template.id, { publish_status: "draft", is_active: false, updated_at: new Date().toISOString() });
     toast(t("industry_templates._ui.restoredSuccess"));
   };
 
@@ -280,7 +279,7 @@ export default function ChecklistDetailPage() {
     required: true,
     order: 0,
     description: "",
-    response_types: [],
+    response_types: undefined,
     options: [],
     image_url: "",
     min_value: undefined,
@@ -313,7 +312,7 @@ export default function ChecklistDetailPage() {
       required: true,
       order: itemsDraft.length + 1,
       description: "",
-      response_types: ["yes_no_na"],
+      response_types: undefined,
       options: [],
       image_url: "",
       min_value: undefined,
@@ -326,13 +325,15 @@ export default function ChecklistDetailPage() {
 
   const openEditItemModal = (item: ChecklistItem) => {
     setEditingItem(item);
+    const resolvedType = item.response_types?.[0] || item.type;
     setItemForm({
       ...item,
+      type: resolvedType,
       description: item.description || "",
       image_url: item.image_url || "",
       unit: item.unit || "",
       options: item.options || [],
-      response_types: item.response_types?.length ? item.response_types : [item.type],
+      response_types: item.response_types?.length ? [item.response_types[0]] : undefined,
     });
     setNewOption("");
     setShowItemModal(true);
@@ -340,19 +341,18 @@ export default function ChecklistDetailPage() {
 
   const handleSaveItem = () => {
     if (!itemForm.question.trim()) return;
-    const types = itemForm.response_types?.length ? itemForm.response_types : [itemForm.type];
-    const hasType = (t: string) => types.includes(t as ChecklistItem["type"]);
+    const selectedType = itemForm.response_types?.[0] || itemForm.type;
     const cleanedItem: ChecklistItem = {
       ...itemForm,
-      type: types[0],
-      response_types: types.length > 1 ? types : undefined,
+      type: selectedType,
+      response_types: undefined,
       question: itemForm.question.trim(),
       description: itemForm.description?.trim() || undefined,
       image_url: itemForm.image_url?.trim() || undefined,
       unit: itemForm.unit?.trim() || undefined,
-      options: hasType("select") && itemForm.options?.length ? itemForm.options : undefined,
-      min_value: (hasType("number") || hasType("rating")) ? itemForm.min_value : undefined,
-      max_value: (hasType("number") || hasType("rating")) ? itemForm.max_value : undefined,
+      options: selectedType === "select" && itemForm.options?.length ? itemForm.options : undefined,
+      min_value: selectedType === "number" || selectedType === "rating" ? itemForm.min_value : undefined,
+      max_value: selectedType === "number" || selectedType === "rating" ? itemForm.max_value : undefined,
     };
 
     if (editingItem) {
@@ -653,9 +653,9 @@ export default function ChecklistDetailPage() {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-semibold">{template.name}</h1>
-                {template.publish_status === "published" ? (
+                {templateStatus === "published" ? (
                   <Badge variant="success" className="text-xs">{t("industry_templates._ui.published")}</Badge>
-                ) : template.publish_status === "archived" ? (
+                ) : templateStatus === "archived" ? (
                   <Badge variant="warning" className="text-xs">{t("industry_templates._ui.archived")}</Badge>
                 ) : (
                   <Badge variant="secondary" className="text-xs">{t("industry_templates._ui.draft")}</Badge>
@@ -671,11 +671,11 @@ export default function ChecklistDetailPage() {
           </div>
           <div className="flex gap-2">
             {/* Publish workflow controls */}
-            {template.publish_status === "draft" || template.publish_status === undefined ? (
+            {templateStatus === "draft" ? (
               <Button variant="outline" className="gap-2" onClick={handlePublish}>
                 <Send className="h-4 w-4" /> {t("industry_templates._ui.publishToApp")}
               </Button>
-            ) : template.publish_status === "published" ? (
+            ) : templateStatus === "published" ? (
               <>
                 <Button variant="outline" className="gap-2" onClick={handleUnpublish}>
                   <RotateCcw className="h-4 w-4" /> {t("industry_templates._ui.unpublish")}
@@ -684,7 +684,7 @@ export default function ChecklistDetailPage() {
                   <Archive className="h-4 w-4" /> {t("industry_templates._ui.archive")}
                 </Button>
               </>
-            ) : template.publish_status === "archived" ? (
+            ) : templateStatus === "archived" ? (
               <Button variant="outline" className="gap-2" onClick={handleRestore}>
                 <RotateCcw className="h-4 w-4" /> {t("industry_templates._ui.restore")}
               </Button>
@@ -702,10 +702,10 @@ export default function ChecklistDetailPage() {
             {isEditing && (
               <>
                 <Button variant="outline" className="gap-2" onClick={handleSaveTemplate}><Save className="h-4 w-4" /> Save Draft</Button>
-                {template.publish_status !== "published" && (
+                {templateStatus !== "published" && (
                   <Button className="gap-2" onClick={handleSaveAndPush}><Send className="h-4 w-4" /> Save & Push</Button>
                 )}
-                {template.publish_status === "published" && (
+                {templateStatus === "published" && (
                   <Button className="gap-2" onClick={handleSaveTemplate}><Save className="h-4 w-4" /> Save Changes</Button>
                 )}
               </>
@@ -867,7 +867,7 @@ export default function ChecklistDetailPage() {
           <CardContent>
             <div className="space-y-1">
               {itemsDraft.map((item, idx) => {
-                const allTypes = item.response_types?.length ? item.response_types : [item.type];
+                const itemType = item.response_types?.[0] || item.type;
                 return (
                 <div
                   key={item.id}
@@ -923,29 +923,29 @@ export default function ChecklistDetailPage() {
                         <span className="text-xs text-muted-foreground">Reference file: {item.image_url}</span>
                       </div>
                     )}
-                    {allTypes.includes("select") && item.options && item.options.length > 0 && (
+                    {itemType === "select" && item.options && item.options.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {item.options.map((opt, oi) => (
                           <span key={oi} className="text-xs bg-muted px-1.5 py-0.5 rounded">{opt}</span>
                         ))}
                       </div>
                     )}
-                    {allTypes.includes("number") && item.unit && (
+                    {itemType === "number" && item.unit && (
                       <span className="text-xs text-muted-foreground mt-0.5 block">Unit: {item.unit}</span>
                     )}
                   </div>
                   {/* Type Badges */}
                   <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-                    {allTypes.map((t) => {
-                      const ti = ITEM_TYPES.find((x) => x.value === t);
+                    {(() => {
+                      const ti = ITEM_TYPES.find((x) => x.value === itemType);
                       const TIcon = ti?.icon || ToggleLeft;
                       return (
-                        <Badge key={t} variant="outline" className="text-xs gap-1 capitalize">
+                        <Badge variant="outline" className="text-xs gap-1 capitalize">
                           <TIcon className="h-3 w-3" />
-                          {ti?.label || t}
+                          {ti?.label || itemType}
                         </Badge>
                       );
-                    })}
+                    })()}
                     {item.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
                   </div>
                   {/* Edit / Delete */}
@@ -1025,28 +1025,29 @@ export default function ChecklistDetailPage() {
                 />
               </div>
 
-              {/* Response Types (multi-select) */}
+              {/* Response Type */}
               <div className="space-y-2">
-                <Label>Response Types <span className="text-xs text-muted-foreground font-normal">(select one or more)</span></Label>
+                <Label>Response Type <span className="text-xs text-muted-foreground font-normal">(choose one)</span></Label>
                 <div className="grid grid-cols-3 gap-1.5">
                   {ITEM_TYPES.map((typeOpt) => {
                     const Icon = typeOpt.icon;
-                    const selectedTypes = itemForm.response_types || [itemForm.type];
-                    const isSelected = selectedTypes.includes(typeOpt.value as ChecklistItem["type"]);
+                    const isSelected = itemForm.type === typeOpt.value;
                     return (
                       <button
                         key={typeOpt.value}
                         type="button"
                         onClick={() => {
                           setItemForm((prev) => {
-                            const current = prev.response_types?.length ? [...prev.response_types] : [prev.type];
-                            if (isSelected) {
-                              if (current.length <= 1) return prev;
-                              const filtered = current.filter((t) => t !== typeOpt.value);
-                              return { ...prev, type: filtered[0], response_types: filtered };
-                            }
-                            const next = [...current, typeOpt.value as ChecklistItem["type"]];
-                            return { ...prev, type: current[0], response_types: next };
+                            const nextType = typeOpt.value as ChecklistItem["type"];
+                            return {
+                              ...prev,
+                              type: nextType,
+                              response_types: undefined,
+                              options: nextType === "select" ? (prev.options || []) : [],
+                              min_value: nextType === "number" || nextType === "rating" ? prev.min_value : undefined,
+                              max_value: nextType === "number" || nextType === "rating" ? prev.max_value : undefined,
+                              unit: nextType === "number" ? prev.unit || "" : "",
+                            };
                           });
                         }}
                         className={`flex flex-col items-center gap-1 p-2.5 rounded-lg border text-xs transition-colors ${
@@ -1060,12 +1061,12 @@ export default function ChecklistDetailPage() {
                   })}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {(itemForm.response_types || [itemForm.type]).map((t) => ITEM_TYPES.find((i) => i.value === t)?.label).filter(Boolean).join(", ")}
+                  {ITEM_TYPES.find((i) => i.value === itemForm.type)?.label || itemForm.type}
                 </p>
               </div>
 
               {/* Number-specific: min, max, unit */}
-              {((itemForm.response_types || [itemForm.type]).includes("number") || (itemForm.response_types || [itemForm.type]).includes("rating")) && (
+              {(itemForm.type === "number" || itemForm.type === "rating") && (
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="item-min">Min Value</Label>
@@ -1087,7 +1088,7 @@ export default function ChecklistDetailPage() {
                       onChange={(e) => setItemForm((prev) => ({ ...prev, max_value: e.target.value ? Number(e.target.value) : undefined }))}
                     />
                   </div>
-                  {(itemForm.response_types || [itemForm.type]).includes("number") && (
+                  {itemForm.type === "number" && (
                     <div className="space-y-1.5">
                       <Label htmlFor="item-unit">Unit</Label>
                       <Input
@@ -1102,7 +1103,7 @@ export default function ChecklistDetailPage() {
               )}
 
               {/* Select-specific: options */}
-              {(itemForm.response_types || [itemForm.type]).includes("select") && (
+              {itemForm.type === "select" && (
                 <div className="space-y-2">
                   <Label>Options</Label>
                   <div className="space-y-1.5">
@@ -1384,18 +1385,26 @@ export default function ChecklistDetailPage() {
                   <Label>Status</Label>
                   <select
                     className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={template.is_active ? "active" : "inactive"}
+                    value={templateStatus}
                     onChange={(event) => {
                       const nextValue = event.target.value;
+                      if (nextValue !== "published" && nextValue !== "draft" && nextValue !== "archived") return;
                       updateTemplate(template.id, {
-                        is_active: nextValue === "active",
+                        publish_status: nextValue,
+                        is_active: nextValue === "published",
                         updated_at: new Date().toISOString(),
                       });
-                      toast(nextValue === "active" ? "Template activated" : "Template status updated");
+                      toast(
+                        nextValue === "published"
+                          ? "Template published to field app"
+                          : nextValue === "draft"
+                            ? "Template moved to draft"
+                            : "Template archived",
+                      );
                     }}
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
                     <option value="archived">Archived</option>
                   </select>
                 </div>

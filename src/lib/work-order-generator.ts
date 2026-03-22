@@ -1,4 +1,4 @@
-import type { WorkOrder, Asset, WorkOrderPriority } from "@/types";
+import type { WorkOrder, Asset, WorkOrderPriority, CorrectiveAction, Severity } from "@/types";
 
 /**
  * Map asset criticality to work order priority.
@@ -9,6 +9,24 @@ function priorityFromCriticality(
   return criticality; // AssetCriticality values map 1:1 to WorkOrderPriority
 }
 
+function dueInDays(priority: WorkOrderPriority): number {
+  switch (priority) {
+    case "critical":
+      return 1;
+    case "high":
+      return 3;
+    case "medium":
+      return 7;
+    case "low":
+    default:
+      return 14;
+  }
+}
+
+function toDateOnly(isoDate: string): string {
+  return isoDate.split("T")[0];
+}
+
 /**
  * Generate a work order from a failed / needs-attention inspection.
  */
@@ -16,8 +34,9 @@ export function createWorkOrderFromInspection(params: {
   inspection: { id: string; asset_id: string; result: string; notes?: string };
   asset: { id: string; name: string; company_id: string; criticality?: "critical" | "high" | "medium" | "low" };
   inspectorId: string;
+  correctiveActionId?: string | null;
 }): WorkOrder {
-  const { inspection, asset, inspectorId } = params;
+  const { inspection, asset, inspectorId, correctiveActionId = null } = params;
   const now = new Date().toISOString();
 
   return {
@@ -37,7 +56,40 @@ export function createWorkOrderFromInspection(params: {
     actual_hours: null,
     parts_cost: null,
     labor_cost: null,
-    corrective_action_id: null,
+    corrective_action_id: correctiveActionId,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+/**
+ * Generate a corrective action from a failed / needs-attention inspection.
+ */
+export function createCorrectiveActionFromInspection(params: {
+  inspection: { id: string; asset_id: string; result: string; notes?: string };
+  asset: { id: string; name: string; company_id: string; criticality?: "critical" | "high" | "medium" | "low" };
+}): CorrectiveAction {
+  const { inspection, asset } = params;
+  const now = new Date().toISOString();
+  const severity: Severity = priorityFromCriticality(asset.criticality ?? "medium");
+  const dueDate = new Date(now);
+  dueDate.setDate(dueDate.getDate() + dueInDays(severity));
+
+  return {
+    id: crypto.randomUUID(),
+    company_id: asset.company_id,
+    asset_id: asset.id,
+    inspection_id: inspection.id,
+    description: `Follow-up required for ${asset.name}: inspection result ${inspection.result.replace(/_/g, " ")}.${
+      inspection.notes ? `\nNotes: ${inspection.notes}` : ""
+    }`,
+    severity,
+    assigned_to: null,
+    assigned_to_team_id: null,
+    due_date: toDateOnly(dueDate.toISOString()),
+    status: "open",
+    resolution_notes: null,
     completed_at: null,
     created_at: now,
     updated_at: now,

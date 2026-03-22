@@ -17,8 +17,9 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useAssetInspectionsStore } from "@/stores/inspections-store";
+import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
-import { createWorkOrderFromInspection } from "@/lib/work-order-generator";
+import { createCorrectiveActionFromInspection, createWorkOrderFromInspection } from "@/lib/work-order-generator";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
@@ -61,6 +62,7 @@ export default function AssetInspectionPage() {
 
   const { items: assets , isLoading } = useAssetsStore();
   const { add: addInspection } = useAssetInspectionsStore();
+  const { add: addCorrectiveAction } = useCorrectiveActionsStore();
   const { add: addWorkOrder } = useWorkOrdersStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -175,16 +177,23 @@ export default function AssetInspectionPage() {
 
     // Auto-generate work order for failed inspections
     if (result === "needs_attention") {
+      const correctiveAction = createCorrectiveActionFromInspection({
+        inspection: { id: inspectionId, asset_id: asset.id, result, notes: combinedNotes || "Auto-generated from failed inspection" },
+        asset: { id: asset.id, name: asset.name, company_id: asset.company_id, criticality: asset.criticality },
+      });
+      addCorrectiveAction(correctiveAction);
+
       const wo = createWorkOrderFromInspection({
         inspection: { id: inspectionId, asset_id: asset.id, result, notes: combinedNotes || "Auto-generated from failed inspection" },
-        asset: { id: asset.id, name: asset.name, company_id: asset.company_id },
+        asset: { id: asset.id, name: asset.name, company_id: asset.company_id, criticality: asset.criticality },
         inspectorId: user.id,
+        correctiveActionId: correctiveAction.id,
       });
       addWorkOrder(wo);
     }
 
     if (result === "needs_attention") {
-      toast("Inspection submitted — Work order created for follow-up");
+      toast("Inspection submitted — corrective action and work order created for follow-up");
     } else {
       toast("Inspection submitted");
     }

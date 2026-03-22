@@ -4,6 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { Shield, Bell } from "lucide-react";
 import { BottomTabs } from "@/components/navigation/bottom-tabs";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
+import { getFieldAppShellStyle } from "@/lib/field-app-settings";
 
 interface EmployeeAppLayoutProps {
   children: React.ReactNode;
@@ -24,11 +26,17 @@ export function EmployeeAppLayout({
   headerTitle,
   notificationCount = 0,
 }: EmployeeAppLayoutProps) {
+  const { settings } = useFieldAppSettings();
+
   return (
-    <div className="flex min-h-screen flex-col bg-muted">
+    <div
+      className="field-app-shell flex min-h-screen flex-col bg-muted"
+      data-field-shadow={settings.shadow}
+      style={getFieldAppShellStyle(settings)}
+    >
       {/* Header */}
       {showHeader && (
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-brand-solid px-4">
+        <header className="field-app-surface sticky top-0 z-30 flex h-14 items-center justify-between bg-brand-solid px-4">
           <Link href={`/${company}/app`} className="flex items-center gap-2">
             {companyLogo ? (
               <img

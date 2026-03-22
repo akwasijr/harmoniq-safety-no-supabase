@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useTranslation } from "@/i18n";
 import { useCompanyStore } from "@/stores/company-store";
@@ -20,13 +21,20 @@ import {
   getAllTemplates,
   getTemplatesByIndustry,
   INDUSTRY_METADATA,
+  resolveTemplateRegulation,
 } from "@/data/industry-templates";
 import {
   activateIndustryTemplate,
+  cloneChecklistTemplate,
   isTemplateActivated,
   getActivatedTemplate,
 } from "@/lib/template-activation";
-import type { IndustryCode, IndustryChecklistTemplate } from "@/types";
+import type {
+  ChecklistTemplate,
+  Country,
+  IndustryCode,
+  IndustryChecklistTemplate,
+} from "@/types";
 
 import {
   Search,
@@ -116,8 +124,8 @@ export default function TemplateLibraryPage() {
   const currentCompany = companies.find((c) => c.slug === company) || companies[0];
   const companyIndustry = currentCompany?.industry;
 
-  const { items: existingTemplates, add: addTemplate } =
-    useChecklistTemplatesStore();
+  const { checklistTemplates: existingTemplates } = useCompanyData();
+  const { add: addTemplate } = useChecklistTemplatesStore();
 
   // ---- State ----------------------------------------------------------------
   const [selectedIndustry, setSelectedIndustry] = React.useState<
@@ -162,13 +170,13 @@ export default function TemplateLibraryPage() {
         (tmpl) =>
           t(tmpl.name_key).toLowerCase().includes(q) ||
           t(tmpl.description_key).toLowerCase().includes(q) ||
-          tmpl.regulation.toLowerCase().includes(q) ||
+          resolveTemplateRegulation(tmpl, currentCompany?.country ?? "US").toLowerCase().includes(q) ||
           tmpl.tags.some((tag) => tag.toLowerCase().includes(q)),
       );
     }
 
     return templates;
-  }, [selectedIndustry, searchQuery, t]);
+  }, [selectedIndustry, searchQuery, t, currentCompany?.country]);
 
   const groupedTemplates = React.useMemo(() => {
     const groups: Record<string, IndustryChecklistTemplate[]> = {};
@@ -189,6 +197,7 @@ export default function TemplateLibraryPage() {
     const newTemplate = activateIndustryTemplate(
       industryTemplate,
       currentCompany.id,
+      currentCompany.country,
       t,
     );
     if (mode === "push") {
@@ -202,6 +211,13 @@ export default function TemplateLibraryPage() {
       toast("Template saved as draft", "success");
       router.push(`/${company}/dashboard/checklists/${newTemplate.id}`);
     }
+  };
+
+  const handleCloneFromActive = (template: ChecklistTemplate) => {
+    const clonedTemplate = cloneChecklistTemplate(template);
+    addTemplate(clonedTemplate);
+    toast("Active template cloned as draft", "success");
+    router.push(`/${company}/dashboard/checklists/${clonedTemplate.id}`);
   };
 
   // ---- Industry options for dropdown ----------------------------------------
@@ -223,7 +239,7 @@ export default function TemplateLibraryPage() {
       <div className="space-y-6">
         {/* Page Title */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">Task Templates</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.templates")}</h1>
         </div>
 
         {/* Top-level Tabs: My Templates / Template Library */}
@@ -234,7 +250,7 @@ export default function TemplateLibraryPage() {
               className="flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative whitespace-nowrap text-muted-foreground hover:text-foreground"
             >
               <ClipboardCheck className="h-4 w-4 shrink-0" />
-              My Templates
+              {t("industry_templates._ui.myTemplates")}
             </Link>
             <button
               className={cn(
@@ -243,7 +259,7 @@ export default function TemplateLibraryPage() {
               )}
             >
               <Library className="h-4 w-4 shrink-0" />
-              Template Library
+              {t("industry_templates._ui.templateLibrary")}
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             </button>
           </div>
@@ -263,7 +279,7 @@ export default function TemplateLibraryPage() {
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <span className="truncate">
                     {selectedIndustry === "all"
-                      ? "All industries"
+                      ? t("industry_templates._ui.allIndustries")
                       : t(INDUSTRY_METADATA[selectedIndustry].label_key)}
                   </span>
                 </span>
@@ -282,7 +298,7 @@ export default function TemplateLibraryPage() {
                       setShowIndustryDropdown(false);
                     }}
                   >
-                    All industries
+                    {t("industry_templates._ui.allIndustries")}
                   </button>
                   {industryOptions.map((code) => {
                     const Icon = INDUSTRY_ICONS[code];
@@ -305,7 +321,7 @@ export default function TemplateLibraryPage() {
                         </span>
                         {isRecommended && (
                           <Badge variant="secondary" className="text-xs">
-                            Recommended
+                            {t("industry_templates._ui.recommended")}
                           </Badge>
                         )}
                       </button>
@@ -319,7 +335,7 @@ export default function TemplateLibraryPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search templates, regulations, tags..."
+                placeholder={t("industry_templates._ui.searchTemplates")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -330,8 +346,7 @@ export default function TemplateLibraryPage() {
 
         {/* Results summary */}
         <p className="text-sm text-muted-foreground">
-          {filteredTemplates.length}{" "}
-          {filteredTemplates.length === 1 ? "template" : "templates"} found
+          {t("industry_templates._ui.templateCount", { count: filteredTemplates.length })}
         </p>
 
         {/* Template groups */}
@@ -339,7 +354,7 @@ export default function TemplateLibraryPage() {
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <FileText className="h-10 w-10 text-muted-foreground/40" />
             <p className="mt-3 text-sm text-muted-foreground">
-              No templates match your search
+              {t("industry_templates._ui.noTemplatesFound")}
             </p>
           </div>
         )}
@@ -364,14 +379,19 @@ export default function TemplateLibraryPage() {
                   </span>
                   {isRecommended && (
                     <Badge variant="secondary" className="text-xs">
-                      Recommended
+                      {t("industry_templates._ui.recommended")}
                     </Badge>
                   )}
                 </div>
 
                 {/* Template cards grid */}
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {templates.map((tmpl) => (
+                  {templates.map((tmpl) => {
+                    const activatedTemplate = getActivatedTemplate(
+                      tmpl.id,
+                      existingTemplates,
+                    );
+                    return (
                     <TemplateCard
                       key={tmpl.id}
                       template={tmpl}
@@ -381,18 +401,20 @@ export default function TemplateLibraryPage() {
                           expandedTemplate === tmpl.id ? null : tmpl.id,
                         )
                       }
-                      alreadyActivated={isTemplateActivated(
-                        tmpl.id,
-                        existingTemplates,
-                      )}
-                      activatedTemplateId={
-                        getActivatedTemplate(tmpl.id, existingTemplates)?.id
-                      }
+                      alreadyActivated={isTemplateActivated(tmpl.id, existingTemplates)}
+                      activatedTemplate={activatedTemplate}
                       companySlug={company}
+                      companyCountry={currentCompany?.country ?? "US"}
                       onActivate={(mode) => handleActivate(tmpl, mode)}
+                      onCloneFromActive={
+                        activatedTemplate
+                          ? () => handleCloneFromActive(activatedTemplate)
+                          : undefined
+                      }
                       t={t}
                     />
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             );
@@ -412,9 +434,11 @@ interface TemplateCardProps {
   expanded: boolean;
   onToggleExpand: () => void;
   alreadyActivated: boolean;
-  activatedTemplateId?: string;
+  activatedTemplate?: ChecklistTemplate;
   companySlug: string;
+  companyCountry: Country;
   onActivate: (mode: "edit" | "push") => void;
+  onCloneFromActive?: () => void;
   t: (key: string) => string;
 }
 
@@ -423,9 +447,11 @@ function TemplateCard({
   expanded,
   onToggleExpand,
   alreadyActivated,
-  activatedTemplateId,
+  activatedTemplate,
   companySlug,
+  companyCountry,
   onActivate,
+  onCloneFromActive,
   t,
 }: TemplateCardProps) {
   return (
@@ -469,15 +495,15 @@ function TemplateCard({
           {template.regulation && (
             <Badge variant="outline" className="text-xs gap-1">
               <Shield className="h-3 w-3" />
-              {template.regulation}
+              {resolveTemplateRegulation(template, companyCountry)}
             </Badge>
           )}
           <Badge variant="secondary" className="text-xs gap-1">
             <Clock className="h-3 w-3" />
-            {FREQUENCY_LABELS[template.frequency] ?? template.frequency}
+            {t(`industry_templates._frequencies.${template.frequency}`)}
           </Badge>
           <span className="text-xs text-muted-foreground">
-            {template.items.length} items
+            {template.items.length} {t("industry_templates._ui.items")}
           </span>
         </div>
 
@@ -488,7 +514,7 @@ function TemplateCard({
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
                   <Check className="h-3 w-3" />
-                  Already active
+                  {t("industry_templates._ui.alreadyActivated")}
                 </span>
               </div>
             ) : (
@@ -497,7 +523,7 @@ function TemplateCard({
                 className="text-xs text-primary hover:underline flex items-center gap-1"
               >
                 <Eye className="h-3 w-3" />
-                Preview items
+                {t("industry_templates._ui.previewItems")}
               </button>
             )}
           </div>
@@ -507,7 +533,7 @@ function TemplateCard({
         {expanded && (
           <div className="border-t pt-3 mt-1 space-y-3">
             <p className="text-xs font-medium text-muted-foreground">
-              Checklist items
+              {t("industry_templates._ui.previewItems")}
             </p>
             <ol className="space-y-1">
               {template.items.map((item, idx) => (
@@ -533,17 +559,30 @@ function TemplateCard({
               {alreadyActivated ? (
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
-                    <Check className="h-3 w-3" />
-                    Already active
-                  </span>
-                  {activatedTemplateId && (
-                    <Link href={`/${companySlug}/dashboard/checklists/${activatedTemplateId}`}>
-                      <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                        <Eye className="h-3.5 w-3.5" />
-                        View in My Templates
+                  <Check className="h-3 w-3" />
+                  Already active
+                </span>
+                  <div className="flex items-center gap-2">
+                    {onCloneFromActive && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onCloneFromActive}
+                        className="gap-1.5 text-xs"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        {t("industry_templates._ui.editRefine")}
                       </Button>
-                    </Link>
-                  )}
+                    )}
+                    {activatedTemplate && (
+                      <Link href={`/${companySlug}/dashboard/checklists/${activatedTemplate.id}`}>
+                        <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                          <Eye className="h-3.5 w-3.5" />
+                          {t("industry_templates._ui.viewMyTemplates")}
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
@@ -553,7 +592,7 @@ function TemplateCard({
                     onClick={onToggleExpand}
                     className="text-xs"
                   >
-                    Close
+                    {t("common.close")}
                   </Button>
                   <Button
                     variant="outline"
@@ -562,7 +601,7 @@ function TemplateCard({
                     className="flex-1 gap-1.5 text-xs"
                   >
                     <FileText className="h-3.5 w-3.5" />
-                    Edit & Refine
+                    {t("industry_templates._ui.editRefine")}
                   </Button>
                   <Button
                     size="sm"
@@ -570,7 +609,7 @@ function TemplateCard({
                     className="flex-1 gap-1.5 text-xs"
                   >
                     <Send className="h-3.5 w-3.5" />
-                    Push as-is
+                    {t("industry_templates._ui.pushAsIs")}
                   </Button>
                 </div>
               )}

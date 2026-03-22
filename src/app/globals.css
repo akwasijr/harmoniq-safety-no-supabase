@@ -361,6 +361,30 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.field-app-shell {
+  font-family: var(--field-app-font-family, var(--font-sans));
+}
+
+.field-app-panel {
+  border-radius: var(--radius) !important;
+}
+
+.field-app-control {
+  border-radius: var(--radius) !important;
+}
+
+.field-app-shell[data-field-shadow="none"] .field-app-surface {
+  box-shadow: none;
+}
+
+.field-app-shell[data-field-shadow="subtle"] .field-app-surface {
+  box-shadow: 0 6px 18px -12px hsl(var(--foreground) / 0.22);
+}
+
+.field-app-shell[data-field-shadow="strong"] .field-app-surface {
+  box-shadow: 0 14px 32px -18px hsl(var(--foreground) / 0.3);
+}
+
 /* ============================================
    ACCESSIBILITY
    ============================================ */

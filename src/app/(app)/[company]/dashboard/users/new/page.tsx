@@ -11,14 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLocationsStore } from "@/stores/locations-store";
-import { useTeamsStore } from "@/stores/teams-store";
 import { useUsersStore } from "@/stores/users-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import type { CompanyRole, UserType, AccountType, Gender, Language, User } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { addUserToTeam } from "@/lib/assignment-utils";
 
 const ROLES: { value: CompanyRole; label: string }[] = [
   { value: "company_admin", label: "Company Admin" },
@@ -60,8 +60,8 @@ export default function NewUserPage() {
   const { toast } = useToast();
   const { items: companies } = useCompanyStore();
   const currentCompany = companies.find((c) => c.slug === company) || companies[0];
-  const { items: locations } = useLocationsStore();
-  const { items: teams } = useTeamsStore();
+  const { locations, teams, stores } = useCompanyData();
+  const { update: updateTeam } = stores.teams;
   const { add: addUser } = useUsersStore();
   const { t } = useTranslation();
 
@@ -121,6 +121,14 @@ export default function NewUserPage() {
         team_ids: formData.team_ids,
       };
       addUser(newUser);
+      formData.team_ids.forEach((teamId) => {
+        const team = teams.find((item) => item.id === teamId);
+        if (!team) return;
+        updateTeam(team.id, {
+          member_ids: addUserToTeam(team, newUser.id),
+          updated_at: now,
+        });
+      });
       toast("User created successfully");
 
       router.push(`/${company}/dashboard/users`);

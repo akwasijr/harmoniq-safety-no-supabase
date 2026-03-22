@@ -29,6 +29,7 @@ import { useTeamsStore } from "@/stores/teams-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation, SUPPORTED_LOCALES } from "@/i18n";
+import { getUserTeamIds } from "@/lib/assignment-utils";
 
 export default function EmployeeProfilePage() {
   const [showNotifications, setShowNotifications] = React.useState(false);
@@ -112,9 +113,7 @@ export default function EmployeeProfilePage() {
     : null;
   
   // Get user's teams
-  const userTeams = currentUser.team_ids 
-    ? teams.filter(t => currentUser.team_ids?.includes(t.id))
-    : [];
+  const userTeams = teams.filter((team) => getUserTeamIds(currentUser).includes(team.id));
 
   const user = {
     firstName: currentUser.first_name || "",

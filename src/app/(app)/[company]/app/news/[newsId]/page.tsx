@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useContentStore } from "@/stores/content-store";
 import { useToast } from "@/components/ui/toast";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { useTranslation } from "@/i18n";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { LoadingPage } from "@/components/ui/loading";
@@ -27,6 +28,7 @@ export default function NewsDetailPage() {
   const params = useParams();
   const company = params.company as string;
   const newsId = params.newsId as string;
+  const { settings } = useFieldAppSettings();
   const bookmarksKey = `harmoniq_${company}_bookmarks`;
   const [isBookmarked, setIsBookmarked] = React.useState(false);
   const [showShareSuccess, setShowShareSuccess] = React.useState(false);
@@ -34,6 +36,12 @@ export default function NewsDetailPage() {
   const { t, formatDate } = useTranslation();
   const { items: contentItems , isLoading } = useContentStore();
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (!settings.newsEnabled) {
+      router.replace(`/${company}/app`);
+    }
+  }, [company, router, settings.newsEnabled]);
 
   // Load bookmark state from localStorage
   React.useEffect(() => {
@@ -51,6 +59,10 @@ export default function NewsDetailPage() {
   const article = contentItems.find((c) => c.id === newsId);
 
   if (isLoading) {
+    return <LoadingPage />;
+  }
+
+  if (!settings.newsEnabled) {
     return <LoadingPage />;
   }
 

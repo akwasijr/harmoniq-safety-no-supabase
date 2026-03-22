@@ -33,7 +33,6 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
@@ -72,8 +71,8 @@ export default function WorkOrderDetailPage() {
   const { t, formatDate, formatNumber } = useTranslation();
   const { user, hasPermission } = useAuth();
   const { toast } = useToast();
-  const { items: orders, update, isLoading } = useWorkOrdersStore();
-  const { assets, users, parts, companyId } = useCompanyData();
+  const { correctiveActions, inspections, workOrders: orders, assets, users, parts, companyId, stores } = useCompanyData();
+  const { update, isLoading } = stores.workOrders;
 
   const canEdit = hasPermission("work_orders.edit");
   const canAssign = hasPermission("work_orders.assign");
@@ -205,6 +204,12 @@ export default function WorkOrderDetailPage() {
   if (!order) return <LoadingPage />;
 
   const asset = getAssetName(order.asset_id);
+  const linkedCorrectiveAction = order.corrective_action_id
+    ? correctiveActions.find((action) => action.id === order.corrective_action_id) || null
+    : null;
+  const linkedInspection = linkedCorrectiveAction?.inspection_id
+    ? inspections.find((inspection) => inspection.id === linkedCorrectiveAction.inspection_id) || null
+    : null;
   const StatusIcon = STATUS_ICONS[order.status] || Clock;
   const nextStatuses = STATUS_FLOW[order.status] || [];
   const totalCost = (order.parts_cost || 0) + (order.labor_cost || 0);
@@ -449,6 +454,30 @@ export default function WorkOrderDetailPage() {
                   >
                     <Package className="h-4 w-4 text-muted-foreground" />
                     {asset.name}
+                  </Link>
+                </div>
+              )}
+              {linkedCorrectiveAction && (
+                <div>
+                  <Label className="text-muted-foreground">Linked corrective action</Label>
+                  <Link
+                    href={`/${company}/dashboard/corrective-actions/${linkedCorrectiveAction.id}`}
+                    className="font-medium text-primary hover:underline flex items-start gap-2 mt-0.5"
+                  >
+                    <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <span className="line-clamp-2">{linkedCorrectiveAction.description}</span>
+                  </Link>
+                </div>
+              )}
+              {linkedInspection && (
+                <div>
+                  <Label className="text-muted-foreground">Source inspection</Label>
+                  <Link
+                    href={`/${company}/dashboard/inspections/${linkedInspection.id}`}
+                    className="font-medium text-primary hover:underline flex items-center gap-2 mt-0.5"
+                  >
+                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                    Inspection {linkedInspection.id}
                   </Link>
                 </div>
               )}

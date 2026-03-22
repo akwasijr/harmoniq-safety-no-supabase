@@ -5,10 +5,8 @@ import { useParams, useRouter, notFound } from "next/navigation";
 import { useTheme } from "next-themes";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useCompanyStore } from "@/stores/company-store";
-import { useTicketsStore } from "@/stores/tickets-store";
-import { useWorkOrdersStore } from "@/stores/work-orders-store";
-import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useNotificationsStore } from "@/stores/notifications-store";
 import { checkOverdueItems } from "@/stores/notification-triggers";
 import { applyBranding, resetBranding } from "@/lib/branding";
@@ -26,9 +24,7 @@ export default function DashboardRootLayout({
   const company = params.company as string;
   const { user, currentCompany, isSuperAdmin, isEmployee, isLoading } = useAuth();
   const { items: companies, isLoading: isCompaniesLoading } = useCompanyStore();
-  const { items: tickets } = useTicketsStore();
-  const { items: workOrders } = useWorkOrdersStore();
-  const { items: correctiveActions } = useCorrectiveActionsStore();
+  const { tickets, workOrders, correctiveActions } = useCompanyData();
   const { add: addNotification } = useNotificationsStore();
 
   // Validate company slug only after companies have loaded

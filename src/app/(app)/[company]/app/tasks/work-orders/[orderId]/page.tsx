@@ -23,6 +23,7 @@ import { TaskComments, loadComments } from "@/components/tasks/task-comments";
 import { TaskDocuments } from "@/components/tasks/task-documents";
 import { WorkOrderWorkLog } from "@/components/tasks/work-order-work-log";
 import { getFilesForEntity } from "@/lib/file-storage";
+import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
 import { ArrowLeft } from "lucide-react";
 import type { WorkOrderStatus } from "@/types";
 
@@ -46,7 +47,13 @@ export default function WorkOrderDetailPage() {
   const [activeTab, setActiveTab] = React.useState("details");
 
   const matchedOrder = orders.find((o) => o.id === orderId);
-  const order = matchedOrder && user?.company_id && matchedOrder.company_id !== user.company_id ? undefined : matchedOrder;
+  const order =
+    matchedOrder &&
+    user?.company_id &&
+    matchedOrder.company_id === user.company_id &&
+    isAssignedToUserOrTeam(matchedOrder, user)
+      ? matchedOrder
+      : undefined;
   const assignee = order?.assigned_to ? users.find((u) => u.id === order.assigned_to) : null;
   const requester = order?.requested_by ? users.find((u) => u.id === order.requested_by) : null;
   const asset = order?.asset_id ? assets.find((a) => a.id === order.asset_id) : null;

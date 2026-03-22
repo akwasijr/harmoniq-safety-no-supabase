@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
 import { useLocationsStore } from "@/stores/locations-store";
+import { useUsersStore } from "@/stores/users-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import {
@@ -749,6 +750,7 @@ export default function RiskAssessmentViewPage() {
   const { formatDate } = useTranslation();
   const { items: evaluations, isLoading } = useRiskEvaluationsStore();
   const { items: locations } = useLocationsStore();
+  const { items: users } = useUsersStore();
 
   const rawId = params.evaluationId;
   const id = typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : "";
@@ -762,8 +764,8 @@ export default function RiskAssessmentViewPage() {
         title="Assessment not found"
         description="This risk assessment may have been removed."
         action={
-          <Link href={`/${company}/app/checklists?tab=risk-assessment`}>
-            <Button variant="outline">Back to Safety</Button>
+          <Link href={`/${company}/app/risk-assessment`}>
+            <Button variant="outline">Back to Assessments</Button>
           </Link>
         }
       />
@@ -779,8 +781,8 @@ export default function RiskAssessmentViewPage() {
         title="Assessment not found"
         description="This risk assessment may have been removed."
         action={
-          <Link href={`/${company}/app/checklists?tab=risk-assessment`}>
-            <Button variant="outline">Back to Safety</Button>
+          <Link href={`/${company}/app/risk-assessment`}>
+            <Button variant="outline">Back to Assessments</Button>
           </Link>
         }
       />
@@ -788,6 +790,9 @@ export default function RiskAssessmentViewPage() {
   }
 
   const location = locations.find((l) => l.id === evaluation.location_id);
+  const reviewerName = evaluation.reviewed_by
+    ? users.find((candidate) => candidate.id === evaluation.reviewed_by)?.full_name || "Reviewer"
+    : null;
   const responses = (evaluation.responses || {}) as AnyData;
 
   const assessmentLabels: Record<string, string> = {
@@ -852,11 +857,11 @@ export default function RiskAssessmentViewPage() {
                 <span className="font-medium">{location.name}</span>
               </div>
             )}
-            {evaluation.reviewed_by && (
+            {reviewerName && (
               <div className="flex items-center gap-2 text-sm">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Reviewed by:</span>
-                <span className="font-medium">{evaluation.reviewed_by}</span>
+                <span className="font-medium">{reviewerName}</span>
               </div>
             )}
           </CardContent>

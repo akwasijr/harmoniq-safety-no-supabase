@@ -22,11 +22,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { getCurrentCompany } from "@/mocks/data";
 import { useTranslation } from "@/i18n";
-import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useLocationsStore } from "@/stores/locations-store";
+import { useCompanyData } from "@/hooks/use-company-data";
+import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useAuth } from "@/hooks/use-auth";
@@ -91,7 +89,11 @@ export default function RiskAssessmentDetailPage() {
   const [activeTab, setActiveTab] = React.useState("hazards");
   const { toast } = useToast();
   const { user } = useAuth();
-  const currentCompany = React.useMemo(() => getCurrentCompany(), []);
+  const { items: companies } = useCompanyStore();
+  const currentCompany = React.useMemo(
+    () => companies.find((item) => item.slug === company) ?? companies[0] ?? null,
+    [companies, company]
+  );
 
   const submissionTabs: Tab[] = [
     { id: "hazards", label: t("riskAssessment.tabs.hazards"), icon: AlertTriangle },
@@ -99,9 +101,8 @@ export default function RiskAssessmentDetailPage() {
   ];
 
   // Connect to stores
-  const { items: riskEvaluations, isLoading, update: updateRiskEvaluation } = useRiskEvaluationsStore();
-  const { items: users } = useUsersStore();
-  const { items: locations } = useLocationsStore();
+  const { riskEvaluations, users, locations, stores } = useCompanyData();
+  const { isLoading, update: updateRiskEvaluation } = stores.riskEvaluations;
 
   // Check if this is a template or submission view
   // Template IDs are: jha, jsa, rie, arbowet, sam, osa

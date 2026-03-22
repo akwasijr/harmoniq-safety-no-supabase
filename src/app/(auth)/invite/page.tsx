@@ -17,7 +17,6 @@ import { useTranslation } from "@/i18n";
 interface InvitationData {
   email: string;
   role: string;
-  company_id: string;
   company_name: string;
 }
 

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useAssetsStore } from "@/stores/assets-store";
-import { useIncidentsStore } from "@/stores/incidents-store";
+import { useAssetInspectionsStore } from "@/stores/inspections-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
@@ -23,6 +23,7 @@ import { TaskComments, loadComments } from "@/components/tasks/task-comments";
 import { TaskDocuments } from "@/components/tasks/task-documents";
 import { ActionResolution } from "@/components/tasks/action-resolution";
 import { getFilesForEntity } from "@/lib/file-storage";
+import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
 import { ArrowLeft } from "lucide-react";
 import type { CorrectiveActionStatus } from "@/types";
 
@@ -41,15 +42,21 @@ export default function CorrectiveActionDetailPage() {
   const { items: actions, update: updateAction, isLoading } = useCorrectiveActionsStore();
   const { items: users } = useUsersStore();
   const { items: assets } = useAssetsStore();
-  const { items: incidents } = useIncidentsStore();
+  const { items: inspections } = useAssetInspectionsStore();
 
   const [activeTab, setActiveTab] = React.useState("details");
 
   const matchedAction = actions.find((a) => a.id === actionId);
-  const action = matchedAction && user?.company_id && matchedAction.company_id !== user.company_id ? undefined : matchedAction;
+  const action =
+    matchedAction &&
+    user?.company_id &&
+    matchedAction.company_id === user.company_id &&
+    isAssignedToUserOrTeam(matchedAction, user)
+      ? matchedAction
+      : undefined;
   const assignee = action?.assigned_to ? users.find((u) => u.id === action.assigned_to) : null;
   const asset = action?.asset_id ? assets.find((a) => a.id === action.asset_id) : null;
-  const linkedInspection = action?.inspection_id ? incidents.find((i) => i.id === action.inspection_id) : null;
+  const linkedInspection = action?.inspection_id ? inspections.find((inspection) => inspection.id === action.inspection_id) : null;
 
   const isOverdue = React.useMemo(() => {
     if (!action?.due_date) return false;
@@ -153,15 +160,14 @@ export default function CorrectiveActionDetailPage() {
                   <CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4" />Linked Inspection</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <button
-                    onClick={() => router.push(`/${company}/app/incidents/${linkedInspection.id}`)}
-                    className="flex items-center gap-2 w-full p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left"
-                  >
+                  <div className="flex items-center gap-2 w-full p-2 rounded-lg bg-muted/50 text-left">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{linkedInspection.title}</p>
-                      <p className="text-xs text-muted-foreground">{formatDate(linkedInspection.created_at)}</p>
+                      <p className="text-sm font-medium truncate">Inspection {linkedInspection.id}</p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {linkedInspection.result.replace(/_/g, " ")} · {formatDate(linkedInspection.inspected_at)}
+                      </p>
                     </div>
-                  </button>
+                  </div>
                 </CardContent>
               </Card>
             )}

@@ -27,6 +27,7 @@ import { useUsersStore } from "@/stores/users-store";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useRouter } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
+import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
 import type {
   Ticket as TicketType,
   WorkOrder,
@@ -43,10 +44,12 @@ import type {
 type UnifiedTask = {
   id: string;
   kind: "ticket" | "work-order" | "corrective-action";
+  kindLabel: string;
   title: string;
   status: string;
   statusVariant: "default" | "secondary" | "destructive" | "success" | "warning" | "info" | "outline";
   priority?: string;
+  urgencyLabel?: string;
   priorityVariant?: "default" | "secondary" | "destructive" | "success" | "warning" | "info" | "outline";
   assignedTo: string | null;
   assignedByName: string;
@@ -153,6 +156,17 @@ function getKindIconColor(kind: UnifiedTask["kind"]) {
   }
 }
 
+function getKindLabel(kind: UnifiedTask["kind"]): string {
+  switch (kind) {
+    case "ticket":
+      return "Incident follow-up";
+    case "work-order":
+      return "Maintenance work order";
+    case "corrective-action":
+      return "Corrective action";
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Status action helpers
 // ---------------------------------------------------------------------------
@@ -232,9 +246,13 @@ function TaskCard({
               </Badge>
             </div>
 
+            <p className="mt-0.5 text-[11px] text-muted-foreground">{task.kindLabel}</p>
+
             <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
               {task.priority && (
-                <span className="capitalize">{task.priority}</span>
+                <span>
+                  {task.urgencyLabel || "Priority"}: <span className="capitalize">{task.priority}</span>
+                </span>
               )}
               {task.assetName && (
                 <span className="flex items-center gap-0.5">
@@ -302,7 +320,7 @@ function TasksEmptyState({ t }: { t: (key: string, params?: Record<string, strin
       </div>
       <p className="text-sm font-medium text-muted-foreground">{t("tasks.empty") || "No tasks assigned to you"}</p>
       <p className="text-xs text-muted-foreground/70 mt-1">
-        {t("tasks.emptyHint") || "Items assigned to you will appear here"}
+        {t("tasks.emptyHint") || "Tickets, work orders, and corrective actions assigned to you will appear here"}
       </p>
     </div>
   );
@@ -371,16 +389,17 @@ export function TasksTabContent() {
       .filter(
         (tk) =>
           tk.company_id === companyId &&
-          (tk.assigned_to === user.id ||
-            (user.team_ids?.length && tk.assigned_groups?.some((g) => user.team_ids!.includes(g)))),
+          isAssignedToUserOrTeam(tk, user),
       )
       .map((tk) => ({
         id: tk.id,
         kind: "ticket" as const,
+        kindLabel: getKindLabel("ticket"),
         title: tk.title,
         status: tk.status,
         statusVariant: getTicketStatusVariant(tk.status),
         priority: tk.priority,
+        urgencyLabel: "Priority",
         priorityVariant: getPriorityVariant(tk.priority),
         assignedTo: tk.assigned_to ?? null,
         assignedByName: getUserName(tk.created_by),
@@ -396,15 +415,17 @@ export function TasksTabContent() {
       .filter(
         (wo) =>
           wo.company_id === companyId &&
-          wo.assigned_to === user.id,
+          isAssignedToUserOrTeam(wo, user),
       )
       .map((wo) => ({
         id: wo.id,
         kind: "work-order" as const,
+        kindLabel: getKindLabel("work-order"),
         title: wo.title,
         status: wo.status,
         statusVariant: getWorkOrderStatusVariant(wo.status),
         priority: wo.priority,
+        urgencyLabel: "Priority",
         priorityVariant: getPriorityVariant(wo.priority),
         assignedTo: wo.assigned_to ?? null,
         assignedByName: getUserName(wo.requested_by),
@@ -417,14 +438,16 @@ export function TasksTabContent() {
       }));
 
     const filteredActions: UnifiedTask[] = correctiveActions
-      .filter((ca) => ca.company_id === companyId && ca.assigned_to === user.id)
+      .filter((ca) => ca.company_id === companyId && isAssignedToUserOrTeam(ca, user))
       .map((ca) => ({
         id: ca.id,
         kind: "corrective-action" as const,
+        kindLabel: getKindLabel("corrective-action"),
         title: ca.description,
         status: ca.status,
         statusVariant: getCorrectiveActionStatusVariant(ca.status),
         priority: ca.severity,
+        urgencyLabel: "Severity",
         priorityVariant: getPriorityVariant(ca.severity),
         assignedTo: ca.assigned_to ?? null,
         assignedByName: "",
@@ -516,7 +539,7 @@ export function TasksTabContent() {
             <option value="all">{t("tasks.allTypes") || "All Types"}</option>
             <option value="ticket">{t("tasks.tickets") || "Tickets"}</option>
             <option value="work-order">{t("tasks.workOrders") || "Work Orders"}</option>
-            <option value="corrective-action">{t("tasks.actions") || "Actions"}</option>
+            <option value="corrective-action">Corrective actions</option>
           </select>
 
           {typeFilter !== "all" && (

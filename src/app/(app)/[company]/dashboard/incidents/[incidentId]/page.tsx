@@ -42,10 +42,7 @@ import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingPage } from "@/components/ui/loading";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { useIncidentsStore } from "@/stores/incidents-store";
-import { useTicketsStore } from "@/stores/tickets-store";
-import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
-import { useUsersStore } from "@/stores/users-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
@@ -127,10 +124,10 @@ export default function IncidentDetailPage() {
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
   const { user: authUser } = useAuth();
-  const { items: incidents, isLoading, update: updateIncident, remove: removeIncident } = useIncidentsStore();
-  const { items: tickets, add: addTicket, update: updateTicket } = useTicketsStore();
-  const { add: addCorrectiveAction } = useCorrectiveActionsStore();
-  const { items: users } = useUsersStore();
+  const { incidents, tickets, correctiveActions, users, teams, stores } = useCompanyData();
+  const { isLoading, update: updateIncident, remove: removeIncident } = stores.incidents;
+  const { add: addTicket, update: updateTicket } = stores.tickets;
+  const { add: addCorrectiveAction, update: updateCorrectiveAction } = stores.correctiveActions;
 
   const incident = incidents.find((i) => i.id === incidentId);
   const isLocked = incident?.status === "resolved" || incident?.status === "archived";
@@ -172,6 +169,30 @@ export default function IncidentDetailPage() {
     const currentActions = actionsRef.current;
     const resolvedActions = typeof newActions === 'function' ? newActions(currentActions) : newActions;
     updateIncident(incidentId, { actions: resolvedActions, updated_at: new Date().toISOString() });
+  };
+
+  const assignIncidentToUser = (userId: string) => {
+    const selectedUser = users.find((user) => user.id === userId);
+    if (!selectedUser) return;
+    updateIncident(incidentId, {
+      assigned_to: userId,
+      assigned_to_team_id: null,
+      updated_at: new Date().toISOString(),
+    });
+    setShowAssignDropdown(false);
+    toast(`Assigned to ${selectedUser.full_name}`, "success");
+  };
+
+  const assignIncidentToTeam = (teamId: string) => {
+    const selectedTeam = teams.find((team) => team.id === teamId);
+    if (!selectedTeam) return;
+    updateIncident(incidentId, {
+      assigned_to: null,
+      assigned_to_team_id: teamId,
+      updated_at: new Date().toISOString(),
+    });
+    setShowAssignDropdown(false);
+    toast(`Assigned to ${selectedTeam.name}`, "success");
   };
 
   // Helper to add comment to store
@@ -221,6 +242,9 @@ export default function IncidentDetailPage() {
 
   const reporter = users.find((u) => u.id === incident?.reporter_id);
   const relatedTickets = tickets.filter((t) => t.incident_ids?.includes(incidentId));
+  const correctiveIncidentActions = actions.filter((action) => action.actionType === "corrective");
+  const openCorrectiveActionCount = correctiveIncidentActions.filter((action) => action.status !== "completed").length;
+  const canResolveIncident = openCorrectiveActionCount === 0;
   const [statusValue, setStatusValue] = React.useState("new");
   const [investigatorIdValue, setInvestigatorIdValue] = React.useState("");
 
@@ -259,6 +283,9 @@ export default function IncidentDetailPage() {
     
     const actionId = `act-${crypto.randomUUID().slice(0, 8)}`;
     const ticketId = `TKT-${crypto.randomUUID().slice(0, 8)}`;
+    const correctiveActionId = newAction.actionType === "corrective"
+      ? `ca-${crypto.randomUUID().slice(0, 8)}`
+      : null;
     
     const action: IncidentAction = {
       id: actionId,
@@ -268,6 +295,7 @@ export default function IncidentDetailPage() {
       dueDate: newAction.dueDate,
       status: "pending",
       ticketId: ticketId,
+      correctiveActionId,
       ticketStatus: "open",
       assignee: newAction.assignee,
       createdAt: new Date().toISOString(),
@@ -294,9 +322,9 @@ export default function IncidentDetailPage() {
     });
 
     // Sync corrective actions to the corrective actions store
-    if (newAction.actionType === "corrective") {
+    if (newAction.actionType === "corrective" && correctiveActionId) {
       addCorrectiveAction({
-        id: `ca-${crypto.randomUUID().slice(0, 8)}`,
+        id: correctiveActionId,
         company_id: incident.company_id,
         description: newAction.description || newAction.title,
         severity: newAction.priority === "urgent" ? "critical" : newAction.priority === "high" ? "high" : newAction.priority === "low" ? "low" : "medium",
@@ -320,10 +348,18 @@ export default function IncidentDetailPage() {
   const handleTicketStatusChange = (actionId: string, newStatus: "open" | "in_progress" | "resolved", notes?: string) => {
     setActions((prev) => prev.map((a) => {
       if (a.id === actionId) {
+        const now = new Date().toISOString();
         // Also update the ticket in the tickets store
         if (a.ticketId) {
           const ticketStatus = newStatus === "open" ? "new" : newStatus;
-          updateTicket(a.ticketId, { status: ticketStatus as "new" | "in_progress" | "resolved", updated_at: new Date().toISOString() });
+          updateTicket(a.ticketId, { status: ticketStatus as "new" | "in_progress" | "resolved", updated_at: now });
+        }
+        if (a.correctiveActionId) {
+          updateCorrectiveAction(a.correctiveActionId, {
+            status: newStatus === "resolved" ? "completed" : newStatus === "in_progress" ? "in_progress" : "open",
+            completed_at: newStatus === "resolved" ? now : null,
+            updated_at: now,
+          });
         }
         return {
           ...a,
@@ -668,14 +704,18 @@ export default function IncidentDetailPage() {
                       style={{ width: totalActions > 0 ? `${(completedActions / totalActions) * 100}%` : "0%" }}
                     />
                   </div>
-                  {allActionsComplete && totalActions > 0 ? (
+                  {canResolveIncident && totalActions > 0 ? (
                     <p className="text-sm text-success flex items-center gap-1">
-                      <CheckCircle className="h-4 w-4" /> All actions completed - incident can be closed
+                      <CheckCircle className="h-4 w-4" /> Corrective follow-up is complete - incident can be closed
                     </p>
                   ) : totalActions === 0 ? (
                     <p className="text-sm text-muted-foreground">No actions created yet</p>
                   ) : (
-                    <p className="text-sm text-muted-foreground">{totalActions - completedActions} action(s) pending</p>
+                    <p className="text-sm text-muted-foreground">
+                      {openCorrectiveActionCount > 0
+                        ? `${openCorrectiveActionCount} corrective action(s) still block closure`
+                        : `${totalActions - completedActions} action(s) pending`}
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -690,7 +730,8 @@ export default function IncidentDetailPage() {
               </CardHeader>
               <CardContent>
                 {(() => {
-                  const assignedUser = incident.assigned_to ? users.find(u => u.id === incident.assigned_to) : null;
+                  const assignedUser = incident.assigned_to ? users.find((user) => user.id === incident.assigned_to) : null;
+                  const assignedTeam = incident.assigned_to_team_id ? teams.find((team) => team.id === incident.assigned_to_team_id) : null;
                   if (assignedUser) {
                     const initials = assignedUser.full_name
                       .split(" ")
@@ -727,14 +768,87 @@ export default function IncidentDetailPage() {
                                     type="button"
                                     className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
                                     onClick={() => {
-                                      updateIncident(incidentId, { assigned_to: u.id, updated_at: new Date().toISOString() });
-                                      setShowAssignDropdown(false);
-                                      toast(`Assigned to ${u.full_name}`, "success");
+                                      assignIncidentToUser(u.id);
                                     }}
                                   >
                                     {u.full_name} <span className="text-muted-foreground capitalize">({u.role.replace("_", " ")})</span>
                                   </button>
                                 ))}
+                                {teams.length > 0 && (
+                                  <>
+                                    <div className="border-t px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                      Teams
+                                    </div>
+                                    {teams.map((team) => (
+                                      <button
+                                        key={team.id}
+                                        type="button"
+                                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                        onClick={() => assignIncidentToTeam(team.id)}
+                                      >
+                                        {team.name}
+                                      </button>
+                                    ))}
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  if (assignedTeam) {
+                    return (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
+                            <User className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{assignedTeam.name}</p>
+                            <p className="text-sm text-muted-foreground">Team assignment</p>
+                          </div>
+                        </div>
+                        {!isLocked && (
+                          <div className="relative">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full gap-1"
+                              onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                            >
+                              Reassign <ChevronDown className="h-3 w-3" />
+                            </Button>
+                            {showAssignDropdown && (
+                              <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg max-h-48 overflow-y-auto">
+                                {users.map((u) => (
+                                  <button
+                                    key={u.id}
+                                    type="button"
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                    onClick={() => assignIncidentToUser(u.id)}
+                                  >
+                                    {u.full_name} <span className="text-muted-foreground capitalize">({u.role.replace("_", " ")})</span>
+                                  </button>
+                                ))}
+                                {teams.length > 0 && (
+                                  <>
+                                    <div className="border-t px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                      Teams
+                                    </div>
+                                    {teams.map((team) => (
+                                      <button
+                                        key={team.id}
+                                        type="button"
+                                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                        onClick={() => assignIncidentToTeam(team.id)}
+                                      >
+                                        {team.name}
+                                      </button>
+                                    ))}
+                                  </>
+                                )}
                               </div>
                             )}
                           </div>
@@ -763,14 +877,29 @@ export default function IncidentDetailPage() {
                                   type="button"
                                   className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
                                   onClick={() => {
-                                    updateIncident(incidentId, { assigned_to: u.id, updated_at: new Date().toISOString() });
-                                    setShowAssignDropdown(false);
-                                    toast(`Assigned to ${u.full_name}`, "success");
+                                    assignIncidentToUser(u.id);
                                   }}
                                 >
                                   {u.full_name} <span className="text-muted-foreground capitalize">({u.role.replace("_", " ")})</span>
                                 </button>
                               ))}
+                              {teams.length > 0 && (
+                                <>
+                                  <div className="border-t px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                    Teams
+                                  </div>
+                                  {teams.map((team) => (
+                                    <button
+                                      key={team.id}
+                                      type="button"
+                                      className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                      onClick={() => assignIncidentToTeam(team.id)}
+                                    >
+                                      {team.name}
+                                    </button>
+                                  ))}
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1433,6 +1562,33 @@ export default function IncidentDetailPage() {
                             </div>
                           )}
                         </div>
+                        {action.correctiveActionId && (
+                          <div className="border rounded-lg p-3 bg-destructive/5">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-4 w-4 text-destructive" />
+                                <span className="text-sm font-medium">{action.correctiveActionId}</span>
+                                <Badge variant={
+                                  (correctiveActions.find((item) => item.id === action.correctiveActionId)?.status ?? "open") === "completed"
+                                    ? "success"
+                                    : (correctiveActions.find((item) => item.id === action.correctiveActionId)?.status ?? "open") === "in_progress"
+                                      ? "warning"
+                                      : "destructive"
+                                }>
+                                  {correctiveActions.find((item) => item.id === action.correctiveActionId)?.status?.replace(/_/g, " ") || "open"}
+                                </Badge>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="gap-1"
+                                onClick={() => router.push(`/${company}/dashboard/corrective-actions/${action.correctiveActionId}`)}
+                              >
+                                <ExternalLink className="h-3 w-3" /> View Corrective Action
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -1751,11 +1907,16 @@ export default function IncidentDetailPage() {
                   value={statusValue}
                   onChange={(e) => {
                     const value = e.target.value;
-                    setStatusValue(value);
                     if (!incident) return;
+                    if (value === "resolved" && !canResolveIncident) {
+                      toast(`Cannot resolve incident while ${openCorrectiveActionCount} corrective action(s) remain open.`, "error");
+                      return;
+                    }
+                    setStatusValue(value);
                     updateIncident(incident.id, {
                       status: value as typeof incident.status,
                       resolved_at: value === "resolved" ? new Date().toISOString() : null,
+                      resolved_by: value === "resolved" ? (investigatorIdValue || incident.resolved_by || authUser?.id || null) : incident.resolved_by,
                       updated_at: new Date().toISOString(),
                     });
                     toast("Incident status updated");
@@ -1766,6 +1927,11 @@ export default function IncidentDetailPage() {
                   <option value="in_review">In Review</option>
                   <option value="resolved">Resolved</option>
                 </select>
+                {!canResolveIncident && (
+                  <p className="mt-2 text-sm text-destructive">
+                    Resolution is blocked until all corrective follow-up actions are completed.
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="assigned-investigator">Assigned Investigator</Label>

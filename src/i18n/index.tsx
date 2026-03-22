@@ -153,13 +153,15 @@ const I18nContext = React.createContext<I18nContextValue | null>(null);
 
 const STORAGE_KEY = "harmoniq_locale";
 
+function getStoredLocale(): SupportedLocale | null {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return stored && stored in MESSAGE_BUNDLES ? (stored as SupportedLocale) : null;
+}
+
 function getInitialLocale(companyLocale?: SupportedLocale): SupportedLocale {
   // Priority: localStorage user preference > company default > "en"
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && stored in MESSAGE_BUNDLES) return stored as SupportedLocale;
-  }
-  return companyLocale ?? "en";
+  return getStoredLocale() ?? companyLocale ?? "en";
 }
 
 export function I18nProvider({
@@ -181,6 +183,17 @@ export function I18nProvider({
       document.documentElement.setAttribute("data-language", newLocale);
     }
   }, []);
+
+  React.useEffect(() => {
+    const storedLocale = getStoredLocale();
+    if (storedLocale) {
+      setLocaleState((prev) => (prev === storedLocale ? prev : storedLocale));
+      return;
+    }
+
+    const nextLocale = companyLocale ?? "en";
+    setLocaleState((prev) => (prev === nextLocale ? prev : nextLocale));
+  }, [companyLocale]);
 
   // Sync HTML lang on mount
   React.useEffect(() => {

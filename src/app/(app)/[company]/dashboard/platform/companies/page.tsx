@@ -24,14 +24,20 @@ import { useIncidentsStore } from "@/stores/incidents-store";
 import { cn } from "@/lib/utils";
 import { LOCALE_CONFIGS, SUPPORTED_LOCALES } from "@/i18n";
 import type { SupportedLocale } from "@/i18n";
+import { COUNTRY_OPTIONS, getCountryConfig } from "@/lib/country-config";
+import {
+  buildRegionalDefaults,
+  CURRENCY_OPTIONS,
+  DATE_FORMAT_OPTIONS,
+  getCompanySettingsKey,
+  TIMEZONE_OPTIONS,
+  type MeasurementSystem,
+} from "@/lib/company-settings";
+import { saveToStorage } from "@/lib/local-storage";
 import type { Company, Country, Language, SubscriptionTier, Currency, UIStyle } from "@/types";
 import { useTranslation } from "@/i18n";
 
-const SUPPORTED_COUNTRIES = [
-  { code: "US", name: "United States", currency: "USD", defaultLocale: "en" as SupportedLocale },
-  { code: "NL", name: "Netherlands", currency: "EUR", defaultLocale: "nl" as SupportedLocale },
-  { code: "SE", name: "Sweden", currency: "SEK", defaultLocale: "sv" as SupportedLocale },
-];
+const SUPPORTED_COUNTRIES = COUNTRY_OPTIONS;
 
 const PRICING_TIERS = [
   { value: "trial", label: "Trial", seats: 5, description: "60-day free trial" },
@@ -56,22 +62,36 @@ export default function PlatformCompaniesPage() {
 
   // Form state for Add Company modal
   const [newCompanyName, setNewCompanyName] = React.useState("");
-  const [newCompanyCountry, setNewCompanyCountry] = React.useState(SUPPORTED_COUNTRIES[0].code);
+  const [newCompanyCountry, setNewCompanyCountry] = React.useState<Country>(
+    SUPPORTED_COUNTRIES[0].code,
+  );
   const [newCompanyTier, setNewCompanyTier] = React.useState(PRICING_TIERS[0].value);
   const [newCompanyEmail, setNewCompanyEmail] = React.useState("");
   const [newAppName, setNewAppName] = React.useState("");
   const [newLanguage, setNewLanguage] = React.useState<SupportedLocale>("en");
+  const [newCurrency, setNewCurrency] = React.useState<Currency>("USD");
+  const [newDateFormat, setNewDateFormat] = React.useState("MM/DD/YYYY");
+  const [newTimezone, setNewTimezone] = React.useState("America/New_York");
+  const [newMeasurementSystem, setNewMeasurementSystem] =
+    React.useState<MeasurementSystem>("imperial");
   const [newPrimaryColor, setNewPrimaryColor] = React.useState("#2563eb");
   const [newSecondaryColor, setNewSecondaryColor] = React.useState("#1e40af");
   const [newUiStyle, setNewUiStyle] = React.useState<UIStyle>("rounded");
   const [formStep, setFormStep] = React.useState<"general" | "localization" | "branding">("general");
 
-  // Auto-set language + currency when country changes
+  const selectedCountryConfig = React.useMemo(
+    () => getCountryConfig(newCompanyCountry),
+    [newCompanyCountry],
+  );
+
+  // Auto-set regional defaults when country changes.
   React.useEffect(() => {
-    const country = SUPPORTED_COUNTRIES.find((c) => c.code === newCompanyCountry);
-    if (country) {
-      setNewLanguage(country.defaultLocale);
-    }
+    const defaults = buildRegionalDefaults(newCompanyCountry);
+    setNewLanguage(defaults.language);
+    setNewCurrency(defaults.currency);
+    setNewDateFormat(defaults.dateFormat);
+    setNewTimezone(defaults.timezone);
+    setNewMeasurementSystem(defaults.measurementSystem);
   }, [newCompanyCountry]);
 
   const filteredCompanies = React.useMemo(() => {
@@ -144,7 +164,9 @@ export default function PlatformCompaniesPage() {
                       </div>
                       <div>
                         <CardTitle className="text-base">{comp.name}</CardTitle>
-                        <p className="text-xs text-muted-foreground">{comp.country}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {getCountryConfig(comp.country).flag} {comp.country}
+                        </p>
                       </div>
                     </div>
                     <Badge
@@ -233,9 +255,9 @@ export default function PlatformCompaniesPage() {
                   </div>
                   <div>
                     <Label>{t("companies.country")} <span className="text-destructive">*</span></Label>
-                    <select title="Country" className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm" value={newCompanyCountry} onChange={(e) => setNewCompanyCountry(e.target.value)}>
+                    <select title="Country" className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm" value={newCompanyCountry} onChange={(e) => setNewCompanyCountry(e.target.value as Country)}>
                       {SUPPORTED_COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code}>{c.name}</option>
+                        <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
                       ))}
                     </select>
                   </div>
@@ -279,10 +301,74 @@ export default function PlatformCompaniesPage() {
                   <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
                     <p className="text-xs font-medium">Auto-configured from country:</p>
                     <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                      <div>Currency: <span className="font-medium text-foreground">{SUPPORTED_COUNTRIES.find((c) => c.code === newCompanyCountry)?.currency || "USD"}</span></div>
-                      <div>Date format: <span className="font-medium text-foreground">{LOCALE_CONFIGS[newLanguage]?.dateLocale || "en-US"}</span></div>
+                      <div>Country: <span className="font-medium text-foreground">{selectedCountryConfig.flag} {selectedCountryConfig.name}</span></div>
+                      <div>Currency: <span className="font-medium text-foreground">{newCurrency}</span></div>
+                      <div>Date format: <span className="font-medium text-foreground">{newDateFormat}</span></div>
+                      <div>Timezone: <span className="font-medium text-foreground">{newTimezone}</span></div>
+                      <div>Units: <span className="font-medium text-foreground">{newMeasurementSystem === "metric" ? "Metric" : "Imperial"}</span></div>
                       <div>Number format: <span className="font-medium text-foreground">{new Intl.NumberFormat(LOCALE_CONFIGS[newLanguage]?.numberLocale || "en-US").format(1234.56)}</span></div>
                       <div>Direction: <span className="font-medium text-foreground">LTR</span></div>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label>{t("settings.currency")}</Label>
+                      <select
+                        title="Currency"
+                        className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        value={newCurrency}
+                        onChange={(e) => setNewCurrency(e.target.value as Currency)}
+                      >
+                        {CURRENCY_OPTIONS.map((currency) => (
+                          <option key={currency.value} value={currency.value}>
+                            {currency.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>{t("settings.dateFormat")}</Label>
+                      <select
+                        title="Date format"
+                        className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        value={newDateFormat}
+                        onChange={(e) => setNewDateFormat(e.target.value)}
+                      >
+                        {DATE_FORMAT_OPTIONS.map((format) => (
+                          <option key={format.value} value={format.value}>
+                            {format.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>{t("settings.timezone")}</Label>
+                      <select
+                        title="Timezone"
+                        className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        value={newTimezone}
+                        onChange={(e) => setNewTimezone(e.target.value)}
+                      >
+                        {TIMEZONE_OPTIONS.map((timezone) => (
+                          <option key={timezone.value} value={timezone.value}>
+                            {timezone.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>{t("settings.measurementSystem")}</Label>
+                      <select
+                        title="Measurement system"
+                        className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        value={newMeasurementSystem}
+                        onChange={(e) =>
+                          setNewMeasurementSystem(e.target.value as MeasurementSystem)
+                        }
+                      >
+                        <option value="metric">{t("settings.metricUnits")}</option>
+                        <option value="imperial">{t("settings.imperialUnits")}</option>
+                      </select>
                     </div>
                   </div>
                   <div>
@@ -380,7 +466,9 @@ export default function PlatformCompaniesPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-sm" style={{ color: newPrimaryColor }}>{newAppName || newCompanyName || "Company Name"}</p>
-                        <p className="text-xs text-muted-foreground">{LOCALE_CONFIGS[newLanguage]?.flag} {LOCALE_CONFIGS[newLanguage]?.name} · {SUPPORTED_COUNTRIES.find((c) => c.code === newCompanyCountry)?.currency}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedCountryConfig.flag} {LOCALE_CONFIGS[newLanguage]?.name} · {newCurrency}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -418,7 +506,7 @@ export default function PlatformCompaniesPage() {
                       app_name: newAppName.trim() || null,
                       country: selectedCountry.code as Country,
                       language: newLanguage as Language,
-                      currency: selectedCountry.currency as Currency,
+                      currency: newCurrency,
                       tier: selectedTier.value as SubscriptionTier,
                       seat_limit: selectedTier.seats,
                       status: "trial",
@@ -433,6 +521,14 @@ export default function PlatformCompaniesPage() {
                       updated_at: new Date().toISOString(),
                     };
                     addCompany(newCompany);
+                    saveToStorage(getCompanySettingsKey(newCompany.id), {
+                      selectedCountry: newCompany.country,
+                      language: newLanguage,
+                      currency: newCurrency,
+                      dateFormat: newDateFormat,
+                      timezone: newTimezone,
+                      measurementSystem: newMeasurementSystem,
+                    });
                     // Create admin user for the new company if email provided
                     if (newCompanyEmail.trim()) {
                       addUser({
@@ -470,6 +566,10 @@ export default function PlatformCompaniesPage() {
                     setNewCompanyCountry(SUPPORTED_COUNTRIES[0].code);
                     setNewCompanyTier(PRICING_TIERS[0].value);
                     setNewLanguage("en");
+                    setNewCurrency("USD");
+                    setNewDateFormat("MM/DD/YYYY");
+                    setNewTimezone("America/New_York");
+                    setNewMeasurementSystem("imperial");
                     setNewPrimaryColor("#2563eb");
                     setNewSecondaryColor("#1e40af");
                     setNewUiStyle("rounded");

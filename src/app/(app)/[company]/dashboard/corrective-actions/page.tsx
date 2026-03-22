@@ -24,10 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { KPICard } from "@/components/ui/kpi-card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
-import { useAssetsStore } from "@/stores/assets-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import { capitalize } from "@/lib/utils";
@@ -40,10 +37,9 @@ export default function CorrectiveActionsPage() {
   const company = useCompanyParam();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { items: actions, add, update , isLoading } = useCorrectiveActionsStore();
-  const { items: assets } = useAssetsStore();
-  const { items: users } = useUsersStore();
-  const { add: addWorkOrder } = useWorkOrdersStore();
+  const { correctiveActions: actions, assets, users, teams, stores } = useCompanyData();
+  const { add, update, isLoading } = stores.correctiveActions;
+  const { add: addWorkOrder } = stores.workOrders;
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [showCreate, setShowCreate] = React.useState(false);
@@ -52,6 +48,7 @@ export default function CorrectiveActionsPage() {
     description: "",
     severity: "medium" as Severity,
     assigned_to: "",
+    assigned_to_team_id: "",
     due_date: "",
   });
 
@@ -84,6 +81,7 @@ export default function CorrectiveActionsPage() {
       description: form.description.trim(),
       severity: form.severity,
       assigned_to: form.assigned_to || null,
+      assigned_to_team_id: form.assigned_to_team_id || null,
       due_date: form.due_date,
       status: "open",
       resolution_notes: null,
@@ -94,7 +92,7 @@ export default function CorrectiveActionsPage() {
     add(action);
     toast("Corrective action created");
     setShowCreate(false);
-    setForm({ asset_id: "", description: "", severity: "medium", assigned_to: "", due_date: "" });
+    setForm({ asset_id: "", description: "", severity: "medium", assigned_to: "", assigned_to_team_id: "", due_date: "" });
   };
 
   const handleStatusChange = (id: string, newStatus: string) => {
@@ -120,6 +118,7 @@ export default function CorrectiveActionsPage() {
       status: "requested",
       requested_by: user?.id || "",
       assigned_to: action.assigned_to,
+      assigned_to_team_id: action.assigned_to_team_id,
       due_date: action.due_date,
       estimated_hours: null,
       actual_hours: null,
@@ -136,6 +135,7 @@ export default function CorrectiveActionsPage() {
 
   const getAssetName = (id: string) => getAssetDisplayName(id, assets);
   const getUserName = (id: string | null) => getUserFirstLastName(id, users, "Unassigned");
+  const getTeamName = (id: string | null | undefined) => teams.find((team) => team.id === id)?.name ?? null;
 
   if (isLoading) {
     return <LoadingPage />;
@@ -202,7 +202,7 @@ export default function CorrectiveActionsPage() {
                         {action.description}
                       </Link>
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span>Assigned: {getUserName(action.assigned_to)}</span>
+                        <span>Assigned: {getUserName(action.assigned_to) !== "Unassigned" ? getUserName(action.assigned_to) : getTeamName(action.assigned_to_team_id) || "Unassigned"}</span>
                         <span>Due: {formatDate(action.due_date)}</span>
                         <span>Created: {formatDate(action.created_at)}</span>
                       </div>
@@ -243,6 +243,9 @@ export default function CorrectiveActionsPage() {
               <Button variant="ghost" size="icon" onClick={() => setShowCreate(false)} aria-label="Close"><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+                Corrective actions are for remediation that must be tracked to closure. Use work orders for maintenance execution and tickets for investigation follow-up.
+              </div>
               <div>
                 <Label>{t("correctiveActions.labels.asset")} *</Label>
                 <Select value={form.asset_id} onValueChange={(v) => setForm((p) => ({ ...p, asset_id: v }))}>
@@ -282,6 +285,18 @@ export default function CorrectiveActionsPage() {
                   <SelectContent>
                     {users.filter((u) => u.role !== "super_admin").map((u) => (
                       <SelectItem key={u.id} value={u.id}>{u.first_name} {u.last_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Assign team</Label>
+                <Select value={form.assigned_to_team_id || "__none__"} onValueChange={(v) => setForm((p) => ({ ...p, assigned_to_team_id: v === "__none__" ? "" : v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="No team" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No team</SelectItem>
+                    {teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

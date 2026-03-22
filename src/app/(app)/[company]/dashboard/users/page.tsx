@@ -24,14 +24,13 @@ import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useFilterOptions } from "@/components/ui/filter-panel";
 import { RoleGuard } from "@/components/auth/role-guard";
-import { useUsersStore } from "@/stores/users-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { LoadingPage } from "@/components/ui/loading";
-import { useTeamsStore } from "@/stores/teams-store";
-import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 import { PAGINATION } from "@/lib/constants";
+import { addUserToTeam } from "@/lib/assignment-utils";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
@@ -90,10 +89,9 @@ export default function UsersPage() {
 
   const { toast } = useToast();
   const filterOptions = useFilterOptions();
-  const { items: companies } = useCompanyStore();
-  const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || "";
-  const { items: users, isLoading, add: addUser } = useUsersStore();
-  const { items: teams, add: addTeam } = useTeamsStore();
+  const { companyId, users, teams, stores } = useCompanyData();
+  const { isLoading, add: addUser } = stores.users;
+  const { add: addTeam, update: updateTeam } = stores.teams;
 
   const fetchInvitations = React.useCallback(async () => {
     try {
@@ -101,7 +99,7 @@ export default function UsersPage() {
       const res = await fetch("/api/invitations");
       const data = await res.json();
       if (res.ok) {
-        setInvitations(data.invitations || []);
+        setInvitations((data.invitations || []).filter((invite: Invitation) => invite.company_id === companyId));
       }
     } catch {
       setInvitations([]);
@@ -130,7 +128,7 @@ export default function UsersPage() {
     const matchesRole = roleFilter === "" || user.role === roleFilter;
     const matchesStatus = statusFilter === "" || user.status === statusFilter;
     const matchesDepartment = departmentFilter === "" || user.department === departmentFilter;
-    const matchesTeam = teamFilter === "" || (user.team_ids?.includes(teamFilter) ?? false);
+    const matchesTeam = teamFilter === "" || user.team_ids.includes(teamFilter);
     return matchesSearch && matchesRole && matchesStatus && matchesDepartment && matchesTeam;
   });
 
@@ -221,7 +219,7 @@ export default function UsersPage() {
         body: JSON.stringify({
           email: newUser.email,
           role: newUser.role,
-          company_id: companyId,
+          company_id: companyId || "",
           first_name: newUser.first_name,
           last_name: newUser.last_name,
           department: newUser.department,
@@ -238,6 +236,14 @@ export default function UsersPage() {
 
       if (data.user) {
         addUser(data.user);
+        newUser.team_ids.forEach((teamId) => {
+          const team = teams.find((item) => item.id === teamId);
+          if (!team) return;
+          updateTeam(team.id, {
+            member_ids: addUserToTeam(team, data.user.id),
+            updated_at: new Date().toISOString(),
+          });
+        });
       }
 
       if (data.email_sent) {
@@ -287,7 +293,7 @@ export default function UsersPage() {
     const newId = `team_new_${Date.now()}`;
     const newTeamData = {
       id: newId,
-      company_id: companyId,
+      company_id: companyId || "",
       name: newTeam.name,
       description: newTeam.description || null,
       color: newTeam.color,

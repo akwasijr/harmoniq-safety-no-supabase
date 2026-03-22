@@ -7,8 +7,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useInspectionRoutesStore } from "@/stores/inspection-routes-store";
 import { useInspectionRoundsStore } from "@/stores/inspection-rounds-store";
 import { useAssetsStore } from "@/stores/assets-store";
+import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
-import { createWorkOrderFromInspection } from "@/lib/work-order-generator";
+import { createCorrectiveActionFromInspection, createWorkOrderFromInspection } from "@/lib/work-order-generator";
 import { useToast } from "@/components/ui/toast";
 import { useSync } from "@/hooks/use-sync";
 import { Button } from "@/components/ui/button";
@@ -63,9 +64,24 @@ function InspectionRoundContent() {
   const { items: routes, isLoading: isRoutesLoading } = useInspectionRoutesStore();
   const { add: addRound } = useInspectionRoundsStore({ skipLoad: true });
   const { items: assets, isLoading: isAssetsLoading } = useAssetsStore();
+  const { add: addCorrectiveAction } = useCorrectiveActionsStore();
   const { add: addWorkOrder } = useWorkOrdersStore();
 
   const route = routes.find((r) => r.id === routeId);
+  const visibleRoute =
+    route &&
+    user?.company_id &&
+    route.company_id === user.company_id &&
+    route.status === "active" &&
+    (
+      (!route.assigned_to_user_id && !route.assigned_to_team_id) ||
+      route.assigned_to_user_id === user.id ||
+      (route.assigned_to_team_id
+        ? user.team_ids?.includes(route.assigned_to_team_id)
+        : false)
+    )
+      ? route
+      : undefined;
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [results, setResults] = React.useState<Map<string, InspectionCheckpointResult>>(new Map());
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -83,7 +99,7 @@ function InspectionRoundContent() {
     return <LoadingPage />;
   }
 
-  if (!route || route.checkpoints.length === 0) {
+  if (!visibleRoute || visibleRoute.checkpoints.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm">
@@ -102,9 +118,11 @@ function InspectionRoundContent() {
     );
   }
 
-  const checkpoints = route.checkpoints.sort((a, b) => a.order - b.order);
+  const checkpoints = visibleRoute.checkpoints.sort((a, b) => a.order - b.order);
   const checkpoint = checkpoints[currentIndex];
-  const asset = assets.find((a) => a.id === checkpoint.asset_id);
+  const asset = assets.find(
+    (a) => a.id === checkpoint.asset_id && a.company_id === user?.company_id,
+  );
   const totalCheckpoints = checkpoints.length;
   const completedCount = results.size;
   const progress = Math.round((completedCount / totalCheckpoints) * 100);
@@ -162,7 +180,7 @@ function InspectionRoundContent() {
       const stored = await storeFile(
         file,
         "inspection_round",
-        route.id,
+        visibleRoute.id,
         user?.id || "unknown",
       );
       setCheckpointResult({ photo_url: stored.dataUrl });
@@ -204,7 +222,7 @@ function InspectionRoundContent() {
 
     const roundData = {
       id: crypto.randomUUID(),
-      route_id: route.id,
+      route_id: visibleRoute.id,
       company_id: user?.company_id || "",
       inspector_id: user?.id || "",
       status: "completed" as const,
@@ -227,6 +245,16 @@ function InspectionRoundContent() {
     for (const r of failedResults) {
       const cpAsset = assets.find((a) => a.id === r.asset_id);
       if (!cpAsset) continue;
+      const correctiveAction = createCorrectiveActionFromInspection({
+        inspection: {
+          id: roundData.id,
+          asset_id: r.asset_id,
+          result: r.result,
+          notes: "Auto-generated from inspection round",
+        },
+        asset: { id: cpAsset.id, name: cpAsset.name, company_id: cpAsset.company_id, criticality: cpAsset.criticality },
+      });
+      addCorrectiveAction(correctiveAction);
       const wo = createWorkOrderFromInspection({
         inspection: {
           id: roundData.id,
@@ -234,8 +262,9 @@ function InspectionRoundContent() {
           result: r.result,
           notes: "Auto-generated from inspection round",
         },
-        asset: { id: cpAsset.id, name: cpAsset.name, company_id: cpAsset.company_id },
+        asset: { id: cpAsset.id, name: cpAsset.name, company_id: cpAsset.company_id, criticality: cpAsset.criticality },
         inspectorId: user?.id || "",
+        correctiveActionId: correctiveAction.id,
       });
       addWorkOrder(wo);
     }
@@ -272,7 +301,7 @@ function InspectionRoundContent() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="font-semibold text-sm">{route.name}</h1>
+            <h1 className="font-semibold text-sm">{visibleRoute.name}</h1>
             <p className="text-xs text-muted-foreground">
               {t("inspectionRounds.checkpointOf", {
                 current: String(currentIndex + 1),

@@ -34,8 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { useUsersStore } from "@/stores/users-store";
-import { useLocationsStore } from "@/stores/locations-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
 import { ROLE_PERMISSIONS, type Permission } from "@/types";
 import { useTranslation } from "@/i18n";
@@ -62,8 +61,8 @@ export default function UserDetailPage() {
   const { toast } = useToast();
   const { hasPermission: currentUserCan } = useAuth();
   const canDeleteUser = currentUserCan("users.delete");
-  const { items: users, isLoading, update: updateUser, remove: removeUser } = useUsersStore();
-  const { items: locations } = useLocationsStore();
+  const { users, locations, stores } = useCompanyData();
+  const { isLoading, update: updateUser, remove: removeUser } = stores.users;
   const baseUser = users.find((u) => u.id === userId);
   
   // Get user's assigned location

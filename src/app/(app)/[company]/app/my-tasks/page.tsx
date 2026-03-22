@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import * as React from "react";
 import {
   Wrench,
@@ -9,6 +10,7 @@ import {
   ChevronUp,
   ListChecks,
   History,
+  ArrowRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +24,7 @@ import { useToast } from "@/components/ui/toast";
 import { useGps } from "@/hooks/use-gps";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
 import type { WorkOrder } from "@/types";
 
 type TabType = "active" | "completed";
@@ -198,7 +201,7 @@ export default function MyTasksPage() {
 
   const myWorkOrders = React.useMemo(() => {
     if (!user) return [];
-    return workOrders.filter((wo) => wo.assigned_to === user.id && wo.company_id === user.company_id);
+    return workOrders.filter((wo) => wo.company_id === user.company_id && isAssignedToUserOrTeam(wo, user));
   }, [workOrders, user]);
 
   const activeWOs = React.useMemo(
@@ -293,6 +296,9 @@ export default function MyTasksPage() {
           </Badge>
 
         </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          This screen is your maintenance work-order queue. Use the unified task hub for tickets and corrective actions.
+        </p>
 
         {/* Sub-tab pills */}
         <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5 mt-3">
@@ -328,9 +334,20 @@ export default function MyTasksPage() {
 
       {/* Content */}
       <div className="flex-1 px-4 py-4">
+        <Link
+          href={`/${company}/app/tasks`}
+          className="mb-4 flex items-center justify-between rounded-xl border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+        >
+          <div>
+            <p className="text-sm font-medium">Need tickets or corrective actions?</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Open the full task hub to see all assigned work types.</p>
+          </div>
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        </Link>
+
         {displayedWOs.length === 0 ? (
           <NoDataEmptyState
-            entityName={tab === "active" ? t("tasks.assignedTasks") : t("tasks.completedTasks")}
+            entityName={tab === "active" ? "assigned work orders" : "completed work orders"}
           />
         ) : (
           <div className="space-y-3">

@@ -36,10 +36,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useFilterOptions } from "@/components/ui/filter-panel";
-import { useAssetsStore } from "@/stores/assets-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { LoadingPage } from "@/components/ui/loading";
-import { useLocationsStore } from "@/stores/locations-store";
-import { useUsersStore } from "@/stores/users-store";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -103,9 +101,8 @@ export default function AssetsPage() {
     { id: "compliance", titleKey: "assets.wizard.compliance", descKey: "assets.wizard.complianceDesc", icon: Shield },
   ] as const;
 
-  const { items: assets, isLoading, add: addAsset } = useAssetsStore();
-  const { items: locations } = useLocationsStore();
-  const { items: users } = useUsersStore();
+  const { assets, locations, users, stores } = useCompanyData();
+  const { isLoading, add: addAsset } = stores.assets;
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
   const filterOptions = useFilterOptions();
@@ -143,12 +140,18 @@ export default function AssetsPage() {
       const lines = text.split("\n").filter(l => l.trim());
       if (lines.length < 2) { toast("No data rows found in CSV"); return; }
       const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim());
+      const existingAssetTags = new Set(assets.map((asset) => asset.asset_tag));
       let imported = 0;
       for (let i = 1; i < lines.length; i++) {
         const vals = lines[i].match(/(".*?"|[^,]*)/g)?.map(v => v.replace(/^"|"$/g, "").replace(/""/g, '"').trim()) || [];
         const row: Record<string, string> = {};
         headers.forEach((h, idx) => { row[h] = vals[idx] || ""; });
         if (!row.name) continue;
+        const requestedAssetTag = row.asset_tag?.trim();
+        const assetTag = requestedAssetTag && !existingAssetTags.has(requestedAssetTag)
+          ? requestedAssetTag
+          : `AST-${Date.now()}-${i}`;
+        existingAssetTags.add(assetTag);
         addAsset({
           id: `asset_import_${Date.now()}_${i}`,
           company_id: company || "",
@@ -156,7 +159,7 @@ export default function AssetsPage() {
           parent_asset_id: null,
           is_system: false,
           name: row.name,
-          asset_tag: row.asset_tag || `AST-${Date.now()}-${i}`,
+          asset_tag: assetTag,
           serial_number: row.serial_number || null,
           qr_code: null,
           category: (row.category as Asset["category"]) || "other",
@@ -1191,6 +1194,7 @@ export default function AssetsPage() {
                       <option value="USD">USD</option>
                       <option value="EUR">EUR</option>
                       <option value="SEK">SEK</option>
+                      <option value="GBP">GBP</option>
                     </select>
                   </div>
                 </div>

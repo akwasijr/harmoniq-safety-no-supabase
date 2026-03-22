@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Search,
   Package,
@@ -28,6 +29,7 @@ import { useInspectionRoutesStore } from "@/stores/inspection-routes-store";
 import { useTranslation } from "@/i18n";
 import { LoadingPage } from "@/components/ui/loading";
 import { NoDataEmptyState } from "@/components/ui/empty-state";
+import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ComponentType<{ className?: string }> }> = {
   active: { color: "text-success", icon: CheckCircle },
@@ -41,6 +43,7 @@ type SubTab = "browse" | "rounds" | "work";
 export default function EmployeeAssetsPage() {
   const company = useCompanyParam();
   const router = useRouter();
+  const { user } = useAuth();
   const { items: assets, isLoading } = useAssetsStore();
   const { items: locations } = useLocationsStore();
   const { items: workOrders } = useWorkOrdersStore();
@@ -53,22 +56,33 @@ export default function EmployeeAssetsPage() {
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
 
-  const myOpenWorkOrders = workOrders.filter(wo => wo.status === "in_progress" || wo.status === "approved");
+  const companyAssets = React.useMemo(
+    () =>
+      assets.filter((asset) => !user || asset.company_id === user.company_id),
+    [assets, user],
+  );
+
+  const myOpenWorkOrders = workOrders.filter(
+    (wo) =>
+      wo.company_id === user?.company_id &&
+      (wo.status === "in_progress" || wo.status === "approved") &&
+      isAssignedToUserOrTeam(wo, user),
+  );
 
   // Search results for the Find tab (only when user types)
   const searchResults = React.useMemo(() => {
     if (!search.trim()) return [];
     const q = search.toLowerCase();
-    return assets.filter(a =>
+    return companyAssets.filter(a =>
       a.name.toLowerCase().includes(q) ||
       a.serial_number?.toLowerCase().includes(q) ||
       a.asset_tag?.toLowerCase().includes(q)
     ).slice(0, 10);
-  }, [assets, search]);
+  }, [companyAssets, search]);
 
   // Browse filtered list
   const browseFiltered = React.useMemo(() => {
-    let result = assets;
+    let result = companyAssets;
     if (browseSearch) {
       const q = browseSearch.toLowerCase();
       result = result.filter(a =>
@@ -84,14 +98,25 @@ export default function EmployeeAssetsPage() {
       result = result.filter(a => a.category === categoryFilter);
     }
     return result;
-  }, [assets, browseSearch, statusFilter, categoryFilter]);
+  }, [companyAssets, browseSearch, statusFilter, categoryFilter]);
 
   const categories = React.useMemo(() => {
-    const cats = new Set(assets.map(a => a.category));
+    const cats = new Set(companyAssets.map(a => a.category));
     return Array.from(cats).sort();
-  }, [assets]);
+  }, [companyAssets]);
 
-  const activeRoutes = inspectionRoutes.filter(r => r.status === "active");
+  const activeRoutes = inspectionRoutes.filter(
+    (route) =>
+      route.company_id === user?.company_id &&
+      route.status === "active" &&
+      (
+        (!route.assigned_to_user_id && !route.assigned_to_team_id) ||
+        route.assigned_to_user_id === user?.id ||
+        (route.assigned_to_team_id
+          ? user?.team_ids?.includes(route.assigned_to_team_id)
+          : false)
+      ),
+  );
 
   if (isLoading) {
     return <LoadingPage />;

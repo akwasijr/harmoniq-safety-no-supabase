@@ -1,4 +1,5 @@
 import type {
+  Country,
   IndustryCode,
   IndustryTemplatePack,
   IndustryChecklistTemplate,
@@ -32,6 +33,104 @@ const item = (
   required,
   order,
 });
+
+const US_CENTRIC_REGULATION_PATTERN =
+  /\b(OSHA|MSHA|FDA|USDA|NFPA|FMCSA|FAA|TSA|CPSC|NIOSH|NERC|Joint Commission|Needlestick Safety Act|FMVSS|State oil & gas commission|State fire codes|State education codes|State AED laws|state health dept|state DOT)\b/i;
+
+const COUNTRY_INDUSTRY_REGULATION_OVERRIDES: Record<
+  Exclude<Country, "US">,
+  Record<IndustryCode, string>
+> = {
+  NL: {
+    construction: "Arbowet / RI&E",
+    manufacturing: "Arbowet / NEN 3140",
+    oil_gas: "Arbowet / BRZO",
+    healthcare: "Arbowet / Wkkgz",
+    warehousing: "Arbowet / NEN 3140",
+    mining: "Mijnbouwwet / Arbowet",
+    food_beverage: "HACCP / NVWA",
+    utilities: "Arbowet / NEN 3140",
+    transportation: "Arbowet / ILT",
+    education: "Arbowet / BHV-richtlijnen",
+    airports: "Arbowet / ILT / EASA",
+  },
+  SE: {
+    construction: "AFS / SAM",
+    manufacturing: "AFS / SAM",
+    oil_gas: "AFS / SAM",
+    healthcare: "AFS / Patientsäkerhetslagen",
+    warehousing: "AFS / SAM",
+    mining: "AFS / SAM",
+    food_beverage: "Livsmedelsverket / HACCP",
+    utilities: "AFS / ESA",
+    transportation: "AFS / Transportstyrelsen",
+    education: "AFS / Skolverket",
+    airports: "AFS / Transportstyrelsen / EASA",
+  },
+  GB: {
+    construction: "HSE CDM 2015 / RIDDOR",
+    manufacturing: "HSE PUWER / LOLER",
+    oil_gas: "HSE COMAH / DSEAR",
+    healthcare: "Health and Safety at Work Act / COSHH",
+    warehousing: "HSE PUWER / LOLER",
+    mining: "Mines Regulations 2014 / Quarries Regulations 1999",
+    food_beverage: "HACCP / Food Safety Act 1990",
+    utilities: "Electricity at Work Regulations / HSE GS38",
+    transportation: "DVSA / Road Vehicles Regulations / Working Time",
+    education: "Health and Safety at Work Act / DfE guidance",
+    airports: "CAA / EASA / HSG65",
+  },
+  DE: {
+    construction: "ArbSchG / BaustellV / BetrSichV",
+    manufacturing: "ArbSchG / BetrSichV",
+    oil_gas: "ArbSchG / BetrSichV / GefStoffV",
+    healthcare: "ArbSchG / BioStoffV",
+    warehousing: "ArbSchG / BetrSichV",
+    mining: "ArbSchG / BBergG",
+    food_beverage: "HACCP / LMHV",
+    utilities: "ArbSchG / DGUV",
+    transportation: "ArbSchG / StVO / BKrFQG",
+    education: "ArbSchG / DGUV",
+    airports: "ArbSchG / EASA / LuftSiG",
+  },
+  FR: {
+    construction: "Code du travail / PPSPS",
+    manufacturing: "Code du travail / DUERP",
+    oil_gas: "Code du travail / ICPE",
+    healthcare: "Code du travail / HAS",
+    warehousing: "Code du travail / CACES",
+    mining: "Code du travail / Code minier",
+    food_beverage: "HACCP / Paquet Hygiène",
+    utilities: "Code du travail / NF C 18-510",
+    transportation: "Code du travail / Code des transports",
+    education: "Code du travail / ERP",
+    airports: "Code du travail / EASA / DGAC",
+  },
+  ES: {
+    construction: "Ley 31/1995 / RD 1627/1997",
+    manufacturing: "Ley 31/1995 / RD 1215/1997",
+    oil_gas: "Ley 31/1995 / RD 681/2003",
+    healthcare: "Ley 31/1995 / Bioseguridad",
+    warehousing: "Ley 31/1995 / RD 1215/1997",
+    mining: "Ley 31/1995 / Normas Básicas de Seguridad Minera",
+    food_beverage: "APPCC / AESAN",
+    utilities: "Ley 31/1995 / RD 614/2001",
+    transportation: "Ley 31/1995 / LOTT",
+    education: "Ley 31/1995 / Plan de Autoprotección",
+    airports: "Ley 31/1995 / AESA / EASA",
+  },
+};
+
+export function resolveTemplateRegulation(
+  template: IndustryChecklistTemplate,
+  country: Country,
+): string {
+  if (country === "US") return template.regulation;
+  if (!US_CENTRIC_REGULATION_PATTERN.test(template.regulation)) {
+    return template.regulation;
+  }
+  return COUNTRY_INDUSTRY_REGULATION_OVERRIDES[country][template.industry];
+}
 
 // ==========================================
 // INDUSTRY METADATA (icons & brand colours)

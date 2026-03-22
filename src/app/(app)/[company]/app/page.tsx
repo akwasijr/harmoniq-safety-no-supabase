@@ -5,47 +5,20 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ClipboardCheck,
-  FileText,
   ChevronRight,
-  Clock,
-  AlertCircle,
-  Shield,
-  Flame,
-  Zap,
-  Sparkles,
-  Heart,
-  Megaphone,
-  CheckCircle,
   ChevronDown,
   ArrowRight,
   ChevronLeft,
+  Newspaper,
   Wrench,
   Search,
   ScanLine,
-  Newspaper,
-  Eye,
-  Thermometer,
-  Lock,
-  Ear,
-  Footprints,
-  Siren,
-  HandMetal,
-  BookOpen,
-  Activity,
-  Stethoscope,
-  BellRing,
-  Users,
   ShieldCheck,
-  Truck,
-  RefreshCw,
-  Timer,
-  Gauge,
-  Hammer,
   Lightbulb,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { useContentStore } from "@/stores/content-store";
-import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
@@ -55,40 +28,23 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import type { Content } from "@/types";
+import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
+import {
+  type FieldAppQuickActionId,
+  getFieldAppQuickActionDefinition,
+  getFieldAppTip,
+} from "@/lib/field-app-settings";
 
-// 30 safety tips that cycle daily
-const SAFETY_TIPS = [
-  { tip: "Always inspect your PPE before starting a shift.", icon: Shield },
-  { tip: "Report near-misses. They prevent real incidents.", icon: AlertTriangle },
-  { tip: "Know your emergency exits and assembly points.", icon: Siren },
-  { tip: "Take regular breaks to stay alert and focused.", icon: Timer },
-  { tip: "Good housekeeping prevents slips, trips & falls.", icon: Sparkles },
-  { tip: "Never bypass safety guards on equipment.", icon: Lock },
-  { tip: "Communication saves lives. Speak up about hazards.", icon: Megaphone },
-  { tip: "Wear appropriate footwear for your work environment.", icon: Footprints },
-  { tip: "Keep fire extinguishers accessible and know how to use them.", icon: Flame },
-  { tip: "Always follow lockout/tagout procedures.", icon: Lock },
-  { tip: "Lift with your legs, not your back.", icon: Activity },
-  { tip: "Store chemicals in labelled containers with SDS available.", icon: Thermometer },
-  { tip: "Keep walkways and emergency exits clear at all times.", icon: ArrowRight },
-  { tip: "Report damaged electrical cords or outlets immediately.", icon: Zap },
-  { tip: "Use hearing protection in high-noise areas.", icon: Ear },
-  { tip: "Wash your hands regularly, especially before eating.", icon: HandMetal },
-  { tip: "Know the location of first aid kits on your floor.", icon: Stethoscope },
-  { tip: "Never operate machinery you haven't been trained on.", icon: Gauge },
-  { tip: "Stay hydrated. Dehydration reduces focus and reaction time.", icon: Heart },
-  { tip: "Secure loose clothing and hair near moving equipment.", icon: ShieldCheck },
-  { tip: "Report any spills immediately and clean them up.", icon: AlertCircle },
-  { tip: "Use the buddy system for high-risk tasks.", icon: Users },
-  { tip: "Check ladders for damage before climbing.", icon: Eye },
-  { tip: "Follow speed limits when driving forklifts or vehicles on-site.", icon: Truck },
-  { tip: "Stretch before physically demanding tasks.", icon: RefreshCw },
-  { tip: "Ensure proper ventilation when working with fumes.", icon: Activity },
-  { tip: "Attend all scheduled safety training sessions.", icon: BookOpen },
-  { tip: "Use the right tool for the job. Improvising causes injuries.", icon: Hammer },
-  { tip: "Review risk assessments before starting unfamiliar work.", icon: ClipboardCheck },
-  { tip: "If in doubt, stop and ask your supervisor.", icon: BellRing },
-];
+const QUICK_ACTION_ICON_MAP: Record<FieldAppQuickActionId, React.ComponentType<{ className?: string }>> = {
+  report_incident: AlertTriangle,
+  my_tasks: ClipboardCheck,
+  browse_assets: Search,
+  request_fix: Wrench,
+  scan_asset: ScanLine,
+  risk_check: ShieldCheck,
+  checklists: ClipboardCheck,
+  news: Newspaper,
+};
 
 function getGreetingKey(): string {
   if (typeof window === "undefined") return "app.goodMorning"; // SSR default
@@ -154,7 +110,7 @@ function FeaturedNewsCarousel({
 
   if (news.length === 0) {
     return (
-      <div className="rounded-xl bg-card border border-border/50 px-4 py-6">
+      <div className="field-app-panel field-app-surface bg-card border border-border/50 px-4 py-6">
         <div className="flex flex-col items-center justify-center text-center py-4">
           <div className="rounded-full bg-muted p-3 mb-3">
             <Newspaper className="h-6 w-6 text-muted-foreground/40" aria-hidden="true" />
@@ -203,7 +159,7 @@ function FeaturedNewsCarousel({
           <Link
             key={item.id}
             href={`/${company}/app/news/${item.id}`}
-            className="flex-shrink-0 snap-start rounded-lg border bg-card overflow-hidden transition-shadow hover:shadow-md active:shadow-sm"
+            className="field-app-panel field-app-surface flex-shrink-0 snap-start border bg-card overflow-hidden transition-shadow hover:shadow-md active:shadow-sm"
             style={{ width: "52%" }}
           >
             {/* Image / gradient placeholder */}
@@ -310,9 +266,8 @@ function Section({
 export default function EmployeeAppHomePage() {
   const company = useCompanyParam();
   const { user, currentCompany } = useAuth();
+  const { settings: fieldAppSettings } = useFieldAppSettings();
   const { items: contentItems } = useContentStore();
-  const { items: checklistTemplates } = useChecklistTemplatesStore();
-  const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { items: incidents } = useIncidentsStore();
   const { items: tickets } = useTicketsStore();
   const { items: workOrders } = useWorkOrdersStore();
@@ -342,11 +297,10 @@ export default function EmployeeAppHomePage() {
   const safeDays = mounted ? Math.floor((stableNow - lastIncidentDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
   const userTickets = tickets.filter(
     (ticket) =>
-      ticket.assigned_to === user.id ||
-      (user.team_ids?.length && ticket.assigned_groups?.some((g) => user.team_ids!.includes(g))),
+      isAssignedToUserOrTeam(ticket, user),
   );
-  const userWorkOrders = workOrders.filter((wo) => wo.assigned_to === user.id);
-  const userActions = correctiveActions.filter((ca) => ca.assigned_to === user.id);
+  const userWorkOrders = workOrders.filter((wo) => isAssignedToUserOrTeam(wo, user));
+  const userActions = correctiveActions.filter((ca) => isAssignedToUserOrTeam(ca, user));
   const pendingTaskCount = userTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length
     + userWorkOrders.filter((wo) => wo.status !== "completed" && wo.status !== "cancelled").length
     + userActions.filter((ca) => ca.status !== "completed").length;
@@ -356,31 +310,24 @@ export default function EmployeeAppHomePage() {
   ).length;
   
   // Data feeds
-  const recentNews = contentItems
-    .filter((item) => item.status === "published" && item.type === "news")
-    .slice(0, 5);
-  const completedTemplateIds = new Set(
-    checklistSubmissions
-      .filter((submission) => submission.submitter_id === user.id && submission.status === "submitted")
-      .map((submission) => submission.template_id)
+  const recentNews = fieldAppSettings.newsEnabled
+    ? contentItems.filter((item) => item.status === "published" && item.type === "news").slice(0, 5)
+    : [];
+  const tipText = getFieldAppTip(
+    currentCompany?.industry,
+    (currentCompany?.language ?? user.language) || "en",
+    getDayOfYear()
   );
-  const pendingChecklists = checklistTemplates.filter((template) => !completedTemplateIds.has(template.id)).slice(0, 2);
-
-  // Safety tip of the day (rotates daily)
-  const todayTip = SAFETY_TIPS[getDayOfYear() % SAFETY_TIPS.length];
   const greeting = t(getGreetingKey());
 
-  // Stats from computed user data
-
-  // ── Quick action grid items ──
-  const quickActions = [
-    { href: `/${company}/app/report`, labelKey: "app.reportIncident", label: "Report Incident", icon: AlertTriangle },
-    { href: `/${company}/app/checklists?tab=tasks`, labelKey: "app.myTasks", label: "My Tasks", icon: ClipboardCheck },
-    { href: `/${company}/app/assets`, labelKey: "app.browseAssets", label: "Browse Assets", icon: Search },
-    { href: `/${company}/app/maintenance`, labelKey: "app.requestFix", label: "Request Fix", icon: Wrench },
-    { href: `/${company}/app/scan`, labelKey: "app.scanAsset", label: "Scan Asset", icon: ScanLine },
-    { href: `/${company}/app/checklists?tab=risk-assessment`, labelKey: "app.riskAssessment", label: "Risk Check", icon: ShieldCheck },
-  ];
+  const quickActions = fieldAppSettings.quickActions.map((actionId) => {
+    const definition = getFieldAppQuickActionDefinition(actionId);
+    return {
+      ...definition,
+      href: `/${company}${definition.href}`,
+      icon: QUICK_ACTION_ICON_MAP[actionId],
+    };
+  });
 
   // ── Always show full feed (no early return for empty state) ──
   return (
@@ -394,15 +341,15 @@ export default function EmployeeAppHomePage() {
 
         {/* Stats row - white/glass cards */}
         <div className="grid grid-cols-3 gap-3 mt-5">
-          <div className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
+          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm p-3 text-center">
             <p className="text-2xl font-bold text-brand-solid-foreground">{safeDays}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.safeDays")}</p>
           </div>
-          <Link href={`/${company}/app/checklists?tab=tasks`} className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
+          <Link href={`/${company}/app/tasks`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm p-3 text-center">
             <p className="text-2xl font-bold text-brand-solid-foreground">{pendingTaskCount}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
           </Link>
-          <div className="rounded-xl bg-white/10 backdrop-blur-sm p-3 text-center">
+          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm p-3 text-center">
             <p className="text-2xl font-bold text-brand-solid-foreground">{completedThisWeek}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.completedWeek") || "This Week"}</p>
           </div>
@@ -410,17 +357,19 @@ export default function EmployeeAppHomePage() {
       </div>
 
       {/* ── Tip of the Day ── */}
-      <div className="mx-4 -mt-4 relative z-10">
-        <div className="rounded-xl bg-card border border-border/50 px-4 py-3 flex items-start gap-3">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-            <Lightbulb className="h-4 w-4 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold text-primary tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{todayTip.tip}</p>
+      {fieldAppSettings.tipOfTheDayEnabled && (
+        <div className="mx-4 -mt-4 relative z-10">
+          <div className="field-app-panel field-app-surface bg-card border border-border/50 px-4 py-3 flex items-start gap-3">
+            <div className="field-app-control h-8 w-8 bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Lightbulb className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-primary tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{tipText}</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* ── Quick Actions ── */}
       <div className="px-4 mt-5">
@@ -430,11 +379,11 @@ export default function EmployeeAppHomePage() {
         <div className="grid grid-cols-2 gap-3">
           {quickActions.map((action) => (
             <Link key={action.href + action.labelKey} href={action.href}
-              className="flex items-center gap-3 rounded-xl bg-card p-4 border border-border/50 active:scale-[0.98] transition-transform">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              className="field-app-panel field-app-surface flex items-center gap-3 bg-card p-4 border border-border/50 active:scale-[0.98] transition-transform">
+              <div className="field-app-control h-12 w-12 bg-primary/10 flex items-center justify-center shrink-0">
                 <action.icon className="h-6 w-6 text-primary" />
               </div>
-              <span className="text-sm font-medium">{t(action.labelKey) || action.label}</span>
+              <span className="text-sm font-medium">{t(action.labelKey) || action.fallbackLabel}</span>
             </Link>
           ))}
         </div>
@@ -444,7 +393,9 @@ export default function EmployeeAppHomePage() {
       <div className="px-4 pt-5 pb-20 space-y-1">
 
         {/* Featured News Carousel */}
-        <FeaturedNewsCarousel news={recentNews} company={company} t={t} formatDate={formatDate} />
+        {fieldAppSettings.newsEnabled && (
+          <FeaturedNewsCarousel news={recentNews} company={company} t={t} formatDate={formatDate} />
+        )}
 
       </div>
     </div>

@@ -1221,12 +1221,16 @@
     "companyName": "Bedrijfsnaam",
     "urlSlug": "URL-slug",
     "countryAndRegulations": "Land en regelgeving",
-    "countryDesc": "Selecteer uw land om de juiste veiligheidsvoorschriften en risicobeoordelingsformulieren te krijgen",
+    "countryDesc": "Selecteer uw land om veiligheidsvoorschriften en aanbevolen sjablonen af te stemmen",
     "selected": "Geselecteerd",
     "basedOnSelection": "Op basis van uw selectie:",
-    "usRegulations": "Uw medewerkers zien Job Hazard Analysis (JHA)- en Job Safety Analysis (JSA)-formulieren voor OSHA-naleving.",
-    "nlRegulations": "Uw medewerkers zien RI&E (Risico-Inventarisatie en -Evaluatie)-formulieren voor Arbowet-naleving.",
-    "seRegulations": "Uw medewerkers zien SAM (Systematiskt Arbetsmiljöarbete)-formulieren voor AFS 2023:1-naleving.",
+    "usRegulations": "Uw checklistsjabloonbibliotheek gebruikt Amerikaanse verwijzingen zoals OSHA, NFPA en FDA.",
+    "gbRegulations": "Uw checklistsjabloonbibliotheek gebruikt Britse verwijzingen zoals HSE, RIDDOR, COSHH en PUWER.",
+    "nlRegulations": "Uw checklistsjabloonbibliotheek gebruikt Nederlandse verwijzingen zoals Arbowet, RI&E en NEN 3140.",
+    "seRegulations": "Uw checklistsjabloonbibliotheek gebruikt Zweedse verwijzingen zoals AFS, SAM en ESA.",
+    "deRegulations": "Uw checklistsjabloonbibliotheek gebruikt Duitse verwijzingen zoals ArbSchG, BetrSichV en DGUV.",
+    "frRegulations": "Uw checklistsjabloonbibliotheek gebruikt Franse verwijzingen zoals Code du travail, DUERP en CACES.",
+    "esRegulations": "Uw checklistsjabloonbibliotheek gebruikt Spaanse verwijzingen zoals Ley 31/1995, PRL en RD 1215/1997.",
     "localization": "Lokalisatie",
     "languageAndRegional": "Taal- en regionale voorkeuren",
     "defaultLanguage": "Standaardtaal",
@@ -1286,7 +1290,11 @@
     "demoMode": "Demomodus",
     "securityDemoMessage": "Beveiligingsinstellingen zijn alleen voor demonstratie. In productie worden deze geïntegreerd met uw identiteitsprovider.",
     "billingDemoMessage": "Factuurinformatie is alleen ter demonstratie. Er worden geen daadwerkelijke kosten in rekening gebracht.",
-    "platformSecurityDemoMessage": "Platformbeveiligingsinstellingen zijn alleen voor demonstratie. In productie worden daadwerkelijke beveiligingsbeleid afgedwongen."
+    "platformSecurityDemoMessage": "Platformbeveiligingsinstellingen zijn alleen voor demonstratie. In productie worden daadwerkelijke beveiligingsbeleid afgedwongen.",
+    "currency": "Valuta",
+    "measurementSystem": "Eenheidensysteem",
+    "metricUnits": "Metrische eenheden",
+    "imperialUnits": "Imperiale eenheden"
   },
   "newsApp": {
     "title": "Nieuws & updates",
@@ -1933,5 +1941,1025 @@
       "createdAt": "Aangemaakt op",
       "mediaAttachments": "Bijlagen"
     }
+  },
+  "industry_templates": {
+    "_ui": {
+      "templateLibrary": "Sjabloonbibliotheek",
+      "browseTemplates": "Blader door branchespecifieke checklistsjablonen",
+      "activate": "Activeren",
+      "activateTemplate": "Sjabloon activeren",
+      "alreadyActivated": "Al geactiveerd",
+      "preview": "Voorbeeld",
+      "previewItems": "Voorbeelditems",
+      "items": "items",
+      "regulation": "Regelgeving",
+      "frequency": "Frequentie",
+      "category": "Categorie",
+      "tags": "Tags",
+      "filterByIndustry": "Filter op branche",
+      "allIndustries": "Alle branches",
+      "searchTemplates": "Zoek sjablonen...",
+      "noTemplatesFound": "Geen sjablonen gevonden voor uw zoekopdracht",
+      "activateConfirm": "Dit maakt een nieuwe checklist op basis van dit sjabloon. U kunt deze bewerken voordat u deze voor uw team publiceert.",
+      "activatedSuccess": "Sjabloon geactiveerd. U kunt het nu bewerken en publiceren.",
+      "publishToApp": "Publiceren in Field App",
+      "unpublish": "Depubliceren",
+      "archive": "Archiveren",
+      "restore": "Herstellen",
+      "publishConfirm": "Deze checklist wordt zichtbaar voor buitendienstmedewerkers in de mobiele app.",
+      "unpublishConfirm": "Dit verwijdert de checklist uit de mobiele app. Bestaande inzendingen blijven bewaard.",
+      "publishedSuccess": "Checklist gepubliceerd in Field App",
+      "unpublishedSuccess": "Checklist verwijderd uit Field App",
+      "archivedSuccess": "Checklist gearchiveerd",
+      "restoredSuccess": "Checklist hersteld naar concept",
+      "draft": "Concept",
+      "published": "Gepubliceerd",
+      "archived": "Gearchiveerd",
+      "recommendedForYou": "Aanbevolen voor uw branche",
+      "otherIndustries": "Andere branches",
+      "templateCount": "{count} sjablonen beschikbaar",
+      "fromTemplate": "Van sjabloon",
+      "myTemplates": "Mijn sjablonen",
+      "createTemplate": "Sjabloon maken",
+      "recommended": "Aanbevolen",
+      "viewMyTemplates": "Bekijken in Mijn sjablonen",
+      "editRefine": "Klonen en bewerken",
+      "pushAsIs": "Ongewijzigd publiceren"
+    },
+    "_frequencies": {
+      "daily": "Dagelijks",
+      "weekly": "Wekelijks",
+      "monthly": "Maandelijks",
+      "quarterly": "Per kwartaal",
+      "per_event": "Per gebeurtenis",
+      "per_shift": "Per dienst",
+      "continuous": "Continu"
+    },
+    "construction": {
+      "name": "Bouw",
+      "description": "Veiligheidschecklists voor bouwplaatsen, met aandacht voor valbeveiliging, steigers, graafwerk en werkzaamheden met zwaar materieel",
+      "jha": {
+        "name": "Taakrisicoanalyse (TRA)",
+        "description": "Systematisch proces om vóór elke taak gevaren op de werkplek te identificeren, de ernst van risico's te beoordelen en beheersmaatregelen vast te stellen ter bescherming van medewerkers",
+        "items": {
+          "task_description": "Beschrijf de uit te voeren taak",
+          "step_sequence": "Noteer de stappen in de juiste volgorde",
+          "hazards_per_step": "Identificeer gevaren per stap",
+          "risk_severity": "Beoordeel de ernst van de geïdentificeerde risico's (1-5)",
+          "risk_probability": "Beoordeel de kans op optreden (1-5)",
+          "control_measures": "Beschrijf beheersmaatregelen voor elk gevaar",
+          "ppe_required": "Alle vereiste PBM zijn geïdentificeerd en beschikbaar",
+          "responsible_person": "Naam van de verantwoordelijke persoon voor deze taak",
+          "workers_briefed": "Alle medewerkers zijn geïnstrueerd over de gevaren en beheersmaatregelen",
+          "sign_off": "Goedkeuring door leidinggevende is voltooid"
+        }
+      },
+      "fall_protection": {
+        "name": "Audit valbeveiliging",
+        "description": "Uitgebreide inspectie van valbeveiligingssystemen, waaronder leuningen, harnassen, ankerpunten en veiligheidsnetten, om naleving van veiligheidsvoorschriften voor werken op hoogte te waarborgen",
+        "items": {
+          "guardrail_integrity": "Leuningen zijn intact en correct bevestigd",
+          "harness_webbing": "Bandmateriaal van het harnas is vrij van sneden, rafels of schade",
+          "harness_d_ring": "D-ring is niet verbogen, gebarsten of gecorrodeerd",
+          "harness_stitching": "Alle stiknaden zijn intact zonder losse draden",
+          "anchor_point_rating": "Ankerpunt is geschikt voor de vereiste belastingscapaciteit",
+          "safety_net_condition": "Veiligheidsnetten zijn correct geplaatst en in goede staat",
+          "hole_covers_secured": "Alle afdekkingen van vloer-/dakopeningen zijn bevestigd en gelabeld",
+          "ladder_tie_off": "Ladders zijn bovenaan correct vastgezet of geborgd"
+        }
+      },
+      "scaffold": {
+        "name": "Steigerinspectie",
+        "description": "Gedetailleerde inspectie van steigerconstructies op structurele integriteit, correcte montage en naleving van veiligheidsnormen vóór elk gebruik",
+        "items": {
+          "base_plate_mudsill": "Voetplaten en onderleggers zijn in goede staat",
+          "cross_bracing": "Kruisschoren zijn stevig en correct geïnstalleerd",
+          "planking_complete": "Werkvloeren zijn volledig aangebracht zonder openingen groter dan 1 inch",
+          "guardrails_height": "Leuningen zijn op 42 inch hoogte aangebracht",
+          "toe_boards": "Kantplanken zijn aanwezig aan alle open zijden",
+          "access_ladder": "Toegangsladder is correct bevestigd",
+          "load_capacity_posted": "Belastingscapaciteit is duidelijk aangegeven",
+          "weather_damage": "Geen zichtbare weersschade aan steigerelementen"
+        }
+      },
+      "toolbox_talk": {
+        "name": "Registratie toolboxmeeting",
+        "description": "Documentatie van dagelijkse veiligheidsbriefings op locatie, inclusief het behandelde onderwerp, aanwezigen en vastgestelde vervolgacties",
+        "items": {
+          "topic_covered": "Onderwerp dat tijdens de toolboxmeeting is besproken",
+          "presenter_name": "Naam van de presentator",
+          "attendee_count": "Aantal aanwezigen",
+          "attendees_signed": "Alle aanwezigen hebben de presentielijst ondertekend",
+          "questions_raised": "Vragen of zorgen die tijdens de meeting zijn geuit",
+          "follow_up_actions": "Vastgestelde en toegewezen vervolgacties"
+        }
+      },
+      "excavation": {
+        "name": "Inspectie graafwerk/sleuven",
+        "description": "Veiligheidsinspectie voor graaf- en sleufwerkzaamheden, waarbij grondclassificatie, beschermingssystemen en veilige toegang worden gecontroleerd voordat medewerkers de sleuf betreden",
+        "items": {
+          "soil_classification": "Grond is correct geclassificeerd",
+          "shoring_adequate": "Stempeling of talud is toereikend voor de diepte",
+          "spoil_pile_distance": "Grondopslag ligt minimaal 2 voet van de sleufrand",
+          "water_accumulation": "Geen gevaarlijke waterophoping in de sleuf",
+          "atmospheric_testing": "Atmosferische metingen zijn uitgevoerd waar vereist",
+          "egress_points": "Uittredepunten zijn elke 25 voet beschikbaar",
+          "utilities_marked": "Alle ondergrondse leidingen en kabels zijn gelokaliseerd en gemarkeerd"
+        }
+      },
+      "crane": {
+        "name": "Voorcontrole kraan/takel",
+        "description": "Veiligheidscontrole vóór gebruik van kranen en hijsmaterieel, waarbij de mechanische staat, kwalificaties van de operator en de gereedheid van het hijsplan worden gecontroleerd",
+        "items": {
+          "wire_rope_condition": "Staalkabel is vrij van knikken, vogelkooivorming en draadbreuken",
+          "hook_latch": "Veiligheidsklep van de haak werkt correct",
+          "outriggers_deployed": "Stempels zijn volledig uitgeschoven en staan op stevige ondergrond",
+          "load_chart_available": "Lastdiagram is beschikbaar en leesbaar in de cabine",
+          "swing_radius": "Draaibereik is afgezet en vrij van personeel",
+          "operator_certification": "Certificering van de operator is actueel en geldig",
+          "pre_lift_meeting": "Voorafgaande hijsbijeenkomst is gehouden"
+        }
+      }
+    },
+    "manufacturing": {
+      "name": "Productie",
+      "description": "Veiligheidschecklists voor productieomgevingen, met aandacht voor lockout/tagout, machineafscherming, ergonomie en veiligheid op de werkvloer",
+      "loto": {
+        "name": "Verificatie lockout/tagout",
+        "description": "Verificatiechecklist voor lockout/tagout-procedures om te bevestigen dat gevaarlijke energiebronnen correct zijn geïsoleerd vóór service- of onderhoudswerkzaamheden",
+        "items": {
+          "machine_identified": "Machine of installatie is correct geïdentificeerd",
+          "energy_sources_listed": "Alle energiebronnen zijn geïdentificeerd en vastgelegd",
+          "isolation_devices": "Isolatievoorzieningen zijn op alle energiebronnen aangebracht",
+          "stored_energy_released": "Alle opgeslagen of restenergie is vrijgegeven",
+          "verification_attempted": "Verificatie van de isolatie is uitgevoerd",
+          "authorized_employee": "Bevoegde medewerker heeft de lockout afgetekend",
+          "group_lockout": "Groepslockout-procedures zijn gevolgd (indien van toepassing)",
+          "tags_attached": "Lockout/tagout-labels zijn correct bevestigd en leesbaar"
+        }
+      },
+      "machine_guarding": {
+        "name": "Inspectie machineafscherming",
+        "description": "Inspectie van machineafschermingen om te controleren of beschermingen aanwezig zijn, interlocks functioneren en noodstops bereikbaar en getest zijn",
+        "items": {
+          "point_of_operation": "Afschermingen bij het bedieningspunt zijn aanwezig en stevig bevestigd",
+          "interlock_functioning": "Veiligheidsinterlocks functioneren correct",
+          "emergency_stop": "Noodstopknop is bereikbaar en getest",
+          "light_curtain": "Uitlijning van het lichtscherm is correct (indien van toepassing)",
+          "guard_mounting": "Bevestigingsmateriaal van afschermingen zit vast en is stevig",
+          "no_bypass": "Er zijn geen omzeilinrichtingen aanwezig op veiligheidssystemen",
+          "warning_labels": "Waarschuwingslabels zijn zichtbaar en leesbaar"
+        }
+      },
+      "ergonomic": {
+        "name": "Ergonomische beoordeling",
+        "description": "Ergonomische evaluatie van werkplekken om risico's door repetitieve bewegingen, ongunstige houdingen en krachtuitoefening vast te stellen, met aanbevelingen voor verbetering",
+        "items": {
+          "repetitive_motion": "Frequentie van repetitieve bewegingen is beoordeeld",
+          "force_requirements": "Krachtvereisten vallen binnen aanvaardbare grenzen",
+          "awkward_postures": "Ongunstige houdingen zijn geïdentificeerd en gedocumenteerd",
+          "workstation_height": "Werkhoogte is passend voor de medewerker",
+          "tool_grip": "Ontwerp van de greep beperkt belasting",
+          "rest_breaks": "Er is een passend schema voor rustpauzes",
+          "modifications": "Aanbevolen aanpassingen zijn gedocumenteerd"
+        }
+      },
+      "forklift": {
+        "name": "Dagelijkse voorcontrole heftruck",
+        "description": "Dagelijkse controle vóór gebruik van heftrucks en gemotoriseerde industriële voertuigen, waarbij mechanische systemen, veiligheidsvoorzieningen en gereedheid van de bestuurder worden gecontroleerd",
+        "items": {
+          "tires_wheels": "Banden en wielen zijn in goede staat",
+          "forks_condition": "Vorken zijn vrij van scheuren, verbuigingen of overmatige slijtage",
+          "hydraulic_lines": "Hydraulische leidingen vertonen geen lekkages of schade",
+          "mast_chains": "Mast en kettingen bewegen soepel",
+          "horn_working": "Claxon werkt",
+          "lights_working": "Alle verlichting werkt (koplampen, achterlichten, zwaailicht)",
+          "backup_alarm": "Achteruitrijalarm is hoorbaar",
+          "seatbelt": "Veiligheidsgordel is aanwezig en werkt",
+          "brakes_tested": "Remmen zijn getest en reageren goed",
+          "steering": "Besturing reageert correct",
+          "battery_fuel": "Acculading of brandstofniveau is voldoende",
+          "fire_extinguisher": "Brandblusser is gemonteerd en opgeladen"
+        }
+      },
+      "chemical_spill": {
+        "name": "Gereedheid chemische morsrespons",
+        "description": "Beoordeling van de paraatheid voor respons op chemische morsingen, waarbij de inhoud van de spillkit, noodapparatuur, beschikbaarheid van PBM en toegankelijkheid van vluchtroutes worden gecontroleerd",
+        "items": {
+          "spill_kit_location": "Locatie van de spillkit is bekend en toegankelijk",
+          "spill_kit_contents": "Inhoud van de spillkit is compleet en niet verlopen",
+          "sds_binder": "SDS-map is actueel en toegankelijk",
+          "eyewash_tested": "Oogdouche is getest (wekelijkse spoeling)",
+          "shower_tested": "Nooddouche is getest",
+          "ppe_available": "Vereiste PBM voor morsrespons zijn beschikbaar",
+          "emergency_contacts": "Noodcontactinformatie is opgehangen",
+          "evacuation_route": "Vluchtroute is vrij en gemarkeerd"
+        }
+      },
+      "safety_walk": {
+        "name": "Veiligheidsronde productievloer",
+        "description": "Algemene veiligheidsronde over de productievloer om orde en netheid, naleving van PBM, paraatheid van noodvoorzieningen en algemene veiligheidsomstandigheden te beoordelen",
+        "items": {
+          "aisles_clear": "Gangpaden en looppaden zijn vrij en onbelemmerd",
+          "ppe_compliance": "Alle medewerkers dragen de vereiste PBM",
+          "housekeeping": "Orde en netheid zijn in het hele gebied op orde",
+          "emergency_exits": "Nooduitgangen zijn vrij en gemarkeerd",
+          "fire_extinguishers": "Brandblussers zijn toegankelijk en geïnspecteerd",
+          "noise_levels": "Geluidsniveaus liggen binnen aanvaardbare grenzen",
+          "first_aid_kit": "EHBO-set is aangevuld en toegankelijk",
+          "general_observations": "Aanvullende veiligheidsobservaties of aandachtspunten"
+        }
+      }
+    },
+    "oil_gas": {
+      "name": "Olie & gas",
+      "description": "Veiligheidschecklists voor olie- en gasactiviteiten, met aandacht voor werkvergunningen, besloten ruimten, H2S-veiligheid en inspecties van boorlocaties",
+      "ptw": {
+        "name": "Werkvergunning",
+        "description": "Formeel autorisatieproces voor werkzaamheden met hoog risico, waarbij wordt geborgd dat gevaren zijn geïdentificeerd, beheersmaatregelen aanwezig zijn en alle betrokkenen de scope hebben beoordeeld",
+        "items": {
+          "work_description": "Uit te voeren werkzaamheden zijn duidelijk beschreven",
+          "hazards_identified": "Alle gevaren zijn geïdentificeerd en gedocumenteerd",
+          "gas_test_results": "Resultaten van gasmetingen liggen binnen veilige grenzen",
+          "isolation_verified": "Isolatie van energiebronnen is geverifieerd",
+          "ppe_specified": "Vereiste PBM zijn gespecificeerd en beschikbaar",
+          "emergency_procedures": "Noodprocedures zijn gecommuniceerd",
+          "time_validity": "Geldigheidsduur van de vergunning is vastgesteld en gecommuniceerd",
+          "supervisor_authorization": "Leidinggevende heeft de werkzaamheden goedgekeurd"
+        }
+      },
+      "confined_space": {
+        "name": "Betreden besloten ruimte",
+        "description": "Checklist voor toegang tot besloten ruimten, inclusief atmosferische metingen, opstelling van ventilatie, reddingsplan en eisen voor continue monitoring",
+        "items": {
+          "atmospheric_o2": "Zuurstofniveau ligt tussen 19,5% en 23,5%",
+          "atmospheric_lel": "LEL-waarde ligt onder 10% van de onderste explosiegrens",
+          "atmospheric_h2s": "H2S-niveau ligt onder de actiewaarde",
+          "atmospheric_co": "CO-niveau ligt onder de toegestane blootstellingsgrens",
+          "ventilation_setup": "Ventilatieapparatuur is opgesteld en functioneert",
+          "rescue_plan": "Reddingsplan is beoordeeld en aanwezig",
+          "attendant_assigned": "Gekwalificeerde toezichthouder is aangewezen",
+          "communication_method": "Communicatiemethode is vastgesteld en getest",
+          "entry_permit_signed": "Toegangsvergunning is ingevuld en ondertekend",
+          "continuous_monitoring": "Continue atmosferische monitoring is actief"
+        }
+      },
+      "h2s": {
+        "name": "H2S-veiligheidscontrole",
+        "description": "Veiligheidsverificatie vóór aanvang van werkzaamheden in gebieden met mogelijke blootstelling aan waterstofsulfide, met aandacht voor persoonlijke monitors, ademluchtapparatuur en buddyprocedures",
+        "items": {
+          "personal_monitor": "Persoonlijke H2S-monitor is gekalibreerd en functioneert",
+          "wind_sock": "Windzak of windrichtingsindicator is zichtbaar",
+          "muster_points": "Verzamelpunten zijn geïdentificeerd en gecommuniceerd",
+          "scba_staged": "SCBA-apparatuur staat gereed voor gebruik",
+          "buddy_system": "Buddy-systeem is bevestigd en van kracht",
+          "h2s_training": "H2S-training is actueel voor al het personeel op locatie",
+          "alarm_threshold": "Alarmdrempel is ingesteld op 10 ppm"
+        }
+      },
+      "hot_work": {
+        "name": "Heetwerkvergunning",
+        "description": "Veiligheidschecklist voor heetwerkzaamheden zoals lassen, snijden of slijpen in gebieden waar brand- of explosiegevaar kan bestaan",
+        "items": {
+          "fire_watch": "Brandwacht is aangewezen en staat op positie",
+          "radius_cleared": "Gebied binnen 35 voet is vrijgemaakt van brandbare materialen",
+          "fire_extinguisher": "Brandblusser staat gereed binnen handbereik",
+          "gas_test_lel": "Gasmeting bevestigt minder dan 10% LEL",
+          "ventilation": "Voldoende ventilatie is bevestigd",
+          "post_work_watch": "Brandwacht van 30 minuten na afloop is ingepland",
+          "hot_work_area": "Heetwerkgebied is correct afgebakend"
+        }
+      },
+      "well_site": {
+        "name": "Inspectie boorlocatie",
+        "description": "Routine-inspectie van werkzaamheden en materieel op de boorlocatie, met aandacht voor werking van blowout preventers, integriteit van flowlines, containment en noodgereedheid",
+        "items": {
+          "bop_function": "BOP is functioneel getest",
+          "flowline_integrity": "Flowlines zijn intact en vertonen geen zichtbare lekkages",
+          "tank_levels": "Tankniveaus liggen binnen de aanvaardbare bandbreedte",
+          "containment_integrity": "Secundaire containment is intact",
+          "flare_operation": "Fakkelsysteem werkt correct",
+          "road_conditions": "Toegangsweg is veilig begaanbaar",
+          "signage_visible": "Vereiste signalering is zichtbaar en leesbaar",
+          "emergency_equipment": "Noodapparatuur is toegankelijk en functioneert"
+        }
+      },
+      "contractor": {
+        "name": "Contractorintroductie",
+        "description": "Veiligheidsintroductiechecklist voor contractors die de locatie betreden, waarbij wordt gecontroleerd of de introductie is voltooid, gevaren bekend zijn, PBM aanwezig zijn en vereiste documentatie beschikbaar is",
+        "items": {
+          "safety_induction": "Contractor heeft de veiligheidsintroductie voltooid",
+          "site_hazards": "Locatiespecifieke gevaren zijn doorgenomen",
+          "emergency_procedures": "Noodprocedures zijn begrepen",
+          "ppe_verified": "PBM zijn verstrekt en gecontroleerd",
+          "work_permit": "Werkvergunning is verkregen",
+          "insurance_docs": "Verzekeringsdocumentatie is aanwezig"
+        }
+      }
+    },
+    "healthcare": {
+      "name": "Gezondheidszorg",
+      "description": "Veiligheidschecklists voor zorginstellingen, met aandacht voor infectiepreventie, afvoer van scherpe voorwerpen, patiëntveiligheid en gereedheid van noodapparatuur",
+      "infection_control": {
+        "name": "Infectiepreventieronde",
+        "description": "Routinematige ronde voor infectiepreventie om te controleren of handhygiënevoorzieningen beschikbaar zijn, PBM voldoende op voorraad zijn, isolatieprotocollen worden gevolgd en oppervlakken volgens planning worden gedesinfecteerd",
+        "items": {
+          "hand_hygiene_stations": "Handhygiënepunten zijn voorzien van zeep en desinfectiemiddel",
+          "ppe_supply": "Voorraad PBM is toereikend voor de afdeling",
+          "isolation_signage": "Isolatieaanduiding is correct en aanwezig",
+          "sharps_containers": "Naaldencontainers zijn niet overvol (onder de 3/4-lijn)",
+          "surface_disinfection": "Schema voor oppervlaktedesinfectie wordt gevolgd",
+          "patient_placement": "Plaatsing van patiënten past bij hun infectiestatus"
+        }
+      },
+      "sharps": {
+        "name": "Audit afvoer scherpe voorwerpen",
+        "description": "Audit van werkwijzen voor het afvoeren van scherpe voorwerpen en containerbeheer om veilige verwerking en naleving van regelgeving in klinische ruimten te waarborgen",
+        "items": {
+          "container_fill_level": "Vulniveau van de container ligt onder de 3/4-lijn",
+          "mounting_secure": "Container is stevig gemonteerd",
+          "no_protruding_items": "Er steken geen voorwerpen uit de container",
+          "label_visible": "Label op de container is zichtbaar en leesbaar",
+          "replacements_available": "Vervangende containers zijn in de buurt beschikbaar",
+          "disposal_log": "Afvoerlogboek is actueel",
+          "needle_free_systems": "Naaldvrije systemen worden gebruikt waar van toepassing"
+        }
+      },
+      "patient_safety": {
+        "name": "Patiëntveiligheidsronde",
+        "description": "Veiligheidsronde aan het bed om patiëntidentificatie, valrisicobeoordeling, medicatieverificatie en actualiteit van het zorgplan te controleren",
+        "items": {
+          "bed_rails": "Bedhekken zijn passend voor de behoeften van de patiënt",
+          "call_bell": "Oproepbel is binnen bereik van de patiënt",
+          "fall_risk": "Valrisico is beoordeeld en gedocumenteerd",
+          "medication_verification": "Medicatieverificatie is voltooid",
+          "id_band": "Identificatiebandje van de patiënt is aanwezig en correct",
+          "allergies_documented": "Allergieën zijn gedocumenteerd en zichtbaar",
+          "care_plan": "Zorgplan is actueel en bijgewerkt"
+        }
+      },
+      "emergency_equip": {
+        "name": "Controle noodapparatuur",
+        "description": "Inspectie van klinische noodapparatuur, waaronder crash carts, defibrillatoren, zuigapparatuur en noodmedicatie, om gereedheid te waarborgen",
+        "items": {
+          "crash_cart_sealed": "Crash cart is verzegeld en sabotage-indicator is intact",
+          "defibrillator": "Defibrillator is opgeladen en zelftest is geslaagd",
+          "suction_working": "Zuigapparatuur werkt",
+          "o2_supply": "Zuurstofvoorraad is voldoende",
+          "emergency_meds": "Noodmedicatie is niet verlopen",
+          "resuscitation_bag": "Beademingsballon en masker zijn intact"
+        }
+      },
+      "hand_hygiene": {
+        "name": "Observatie handhygiëne",
+        "description": "Directe observatieaudit van naleving van handhygiëne volgens de vijf WHO-momenten, met vastlegging van techniek en nalevingspercentages",
+        "items": {
+          "before_patient": "Handhygiëne is uitgevoerd vóór patiëntcontact",
+          "after_patient": "Handhygiëne is uitgevoerd na patiëntcontact",
+          "after_surroundings": "Handhygiëne is uitgevoerd na contact met de omgeving van de patiënt",
+          "before_clean_procedure": "Handhygiëne is uitgevoerd vóór een schone of aseptische handeling",
+          "after_body_fluid": "Handhygiëne is uitgevoerd na blootstelling aan lichaamsvloeistoffen",
+          "technique_correct": "Correcte techniek voor handhygiëne is waargenomen",
+          "compliance_notes": "Aanvullende observaties over naleving"
+        }
+      },
+      "fire_life": {
+        "name": "Brand- en levensveiligheidsronde",
+        "description": "Rondgang door de instelling om naleving van brand- en levensveiligheid te controleren, inclusief nooduitgangsborden, branddeuren, vrije gangen en werking van detectiesystemen",
+        "items": {
+          "exit_signs": "Nooduitgangsborden zijn verlicht en zichtbaar",
+          "fire_doors": "Branddeuren sluiten correct",
+          "corridors_clear": "Gangen zijn vrij van apparatuur en obstakels",
+          "extinguishers": "Brandblussers zijn geïnspecteerd en toegankelijk",
+          "smoke_detectors": "Rookmelders zijn getest en functioneren",
+          "evacuation_plan": "Evacuatieplan is opgehangen en actueel"
+        }
+      }
+    },
+    "warehousing": {
+      "name": "Logistiek",
+      "description": "Veiligheidschecklists voor magazijnactiviteiten, met aandacht voor heftruckinspecties, laadperronveiligheid, brandbeveiliging en beheer van voetgangerszones",
+      "forklift": {
+        "name": "Dagelijkse voorcontrole heftruck",
+        "description": "Dagelijkse controle vóór gebruik van magazijnheftrucks, met aandacht voor mechanische staat, veiligheidsvoorzieningen en verificatie van bestuurderscertificering",
+        "items": {
+          "tires_wheels": "Banden en wielen zijn in goede staat",
+          "forks_condition": "Vorken zijn vrij van scheuren, verbuigingen of overmatige slijtage",
+          "hydraulic_lines": "Hydraulische leidingen vertonen geen lekkages of schade",
+          "mast_chains": "Mast en kettingen bewegen soepel",
+          "horn_working": "Claxon werkt",
+          "lights_working": "Alle verlichting werkt",
+          "backup_alarm": "Achteruitrijalarm is hoorbaar",
+          "seatbelt": "Veiligheidsgordel is aanwezig en werkt",
+          "brakes_tested": "Remmen zijn getest en reageren goed",
+          "steering": "Besturing reageert correct",
+          "battery_fuel": "Acculading of brandstofniveau is voldoende",
+          "fire_extinguisher": "Brandblusser is gemonteerd en opgeladen",
+          "operator_cert": "Certificering van de bestuurder is geregistreerd en actueel"
+        }
+      },
+      "dock": {
+        "name": "Veiligheidscontrole laadperron",
+        "description": "Veiligheidscontrole vóór het laden bij laadperronactiviteiten, waarbij laadbruggen, wielkeggen, borging van trailers en lichtomstandigheden worden gecontroleerd",
+        "items": {
+          "dock_plate": "Laadbrug of laadplaat is in goede staat",
+          "wheel_chocks": "Wielkeggen zijn geplaatst en stevig bevestigd",
+          "trailer_secured": "Trailer is geborgd (ICC-balk vergrendeld)",
+          "dock_leveler": "Laadbrugheffer werkt correct",
+          "lighting": "Verlichting in het laadgebied is voldoende",
+          "gap_check": "Geen gevaarlijke opening tussen trailer en laadperron"
+        }
+      },
+      "fire_extinguisher": {
+        "name": "Maandelijkse brandblussercontrole",
+        "description": "Maandelijkse visuele inspectie van brandblussers om toegankelijkheid, laadtoestand, fysieke conditie en actualiteit van inspectielabels te controleren",
+        "items": {
+          "accessible": "Brandblusser is niet geblokkeerd en is toegankelijk",
+          "charge_gauge": "Drukmeter staat in de groene zone",
+          "pin_seal": "Borgpen en verzegeling zijn intact",
+          "no_damage": "Geen zichtbare schade aan de behuizing van de brandblusser",
+          "mounting_height": "Montagehoogte is correct",
+          "inspection_tag": "Inspectielabel is actueel en ondertekend",
+          "correct_type": "Type brandblusser is geschikt voor de gevaren in dit gebied"
+        }
+      },
+      "rack": {
+        "name": "Audit stellingintegriteit",
+        "description": "Audit van de structurele integriteit van magazijnstellingen, met controle op schade, correcte verankering, naleving van belastingscapaciteit en borging van verbindingen",
+        "items": {
+          "upright_damage": "Staanders zijn vrij van deuken, doorbuiging of verdraaiing",
+          "beam_connectors": "Vergrendelingen van liggerverbindingen zijn aanwezig",
+          "base_plate": "Verankering van voetplaten is stevig",
+          "load_capacity": "Labels met belastingscapaciteit zijn aangebracht en zichtbaar",
+          "overloading": "Geen aanwijzingen voor overbelasting boven de toegestane capaciteit",
+          "wire_decking": "Draadgaaslegborden zijn in goede staat (indien van toepassing)"
+        }
+      },
+      "pedestrian": {
+        "name": "Controle voetgangersveiligheidszone",
+        "description": "Inspectie van voetgangersveiligheidszones in het magazijn, waarbij vloermarkeringen, barrières, spiegels en scheiding tussen voet- en voertuigverkeer worden gecontroleerd",
+        "items": {
+          "floor_markings": "Vloermarkeringen zijn zichtbaar en niet versleten",
+          "barriers_intact": "Barrières zijn intact en correct geplaatst",
+          "blind_corner_mirrors": "Spiegels zijn aanwezig bij onoverzichtelijke hoeken",
+          "speed_limit_signs": "Snelheidsborden zijn geplaatst en zichtbaar",
+          "pedestrian_crossings": "Voetgangersoversteekplaatsen zijn duidelijk gemarkeerd",
+          "separate_paths": "Er zijn gescheiden routes voor voetgangers en voertuigen"
+        }
+      },
+      "receiving": {
+        "name": "Veiligheidsronde ontvangstperron",
+        "description": "Veiligheidsronde in het ontvangstgebied om opgeruimde morsingen, slipgevaar, verlichting, naleving van PBM en veilige handlingpraktijken te beoordelen",
+        "items": {
+          "spills_cleaned": "Alle morsingen zijn opgeruimd",
+          "slip_hazards": "Er zijn geen slip- of struikelgevaren vastgesteld",
+          "lighting_working": "Alle verlichting in het ontvangstgebied werkt",
+          "ppe_compliance": "Medewerkers dragen de vereiste PBM (veiligheidsschoenen, handschoenen, hesje)",
+          "box_cutter_safety": "Veiligheidsmessen worden veilig gebruikt met intrekbare messen",
+          "ergonomic_lifting": "Correcte tiltechnieken worden toegepast"
+        }
+      }
+    },
+    "mining": {
+      "name": "Mijnbouw",
+      "description": "Veiligheidschecklists voor mijnbouwactiviteiten, met aandacht voor geologische beoordeling, ventilatie, springwerk, mobiel materieel en noodontsnappingsprocedures",
+      "strata": {
+        "name": "Geologische beoordeling vóór de dienst",
+        "description": "Beoordeling vóór aanvang van de dienst van grond- en dakcondities, waaronder dakstabiliteit, integriteit van zijwanden, conditie van pilaren en toereikendheid van ondersteuning voordat ondergronds werk start",
+        "items": {
+          "roof_condition": "Dakconditie is stabiel zonder tekenen van achteruitgang",
+          "rib_stability": "Zijwanden zijn stabiel en vertonen geen afschilfering",
+          "pillar_condition": "Steunpilaren zijn intact en correct gedimensioneerd",
+          "scaling_needed": "Los gesteente is verwijderd of niet aanwezig",
+          "support_installation": "Dakondersteuning is toereikend aangebracht",
+          "geological_changes": "Geen onverwachte geologische veranderingen waargenomen",
+          "water_ingress": "Waterinstroom is beheerst of afwezig"
+        }
+      },
+      "ventilation": {
+        "name": "Controle ventilatiesysteem",
+        "description": "Verificatie van ondergrondse ventilatiesystemen, waaronder werking van ventilatoren, luchtsnelheid, gasniveaus en naleving van het ventilatieplan",
+        "items": {
+          "fan_operation": "Hoofdventilator werkt correct",
+          "air_velocity": "Luchtsnelheidsmetingen liggen binnen het vereiste bereik",
+          "methane_levels": "Methaanniveaus liggen onder 1%",
+          "co_levels": "Koolmonoxideniveaus liggen binnen veilige grenzen",
+          "dust_levels": "Stofniveaus liggen binnen toegestane blootstellingsgrenzen",
+          "ventilation_controls": "Ventilatiedeuren en -doeken zijn aangebracht",
+          "air_direction": "Luchtrichting is correct volgens het ventilatieplan"
+        }
+      },
+      "blast": {
+        "name": "Veiligheid springgebied",
+        "description": "Veiligheidschecklist vóór en na springwerk met aandacht voor vrijgave van personeel, wachtposten, waarschuwingssignalen en verificatie van herbetreding",
+        "items": {
+          "personnel_cleared": "Al het personeel is uit het springgebied verwijderd",
+          "guard_posts": "Wachtposten zijn ingericht bij alle toegangspunten",
+          "warning_signals": "Waarschuwingssignalen zijn volgens procedure gegeven",
+          "blast_pattern": "Springpatroon is geverifieerd door de schietmeester",
+          "misfire_check": "Controles op weigeringen zijn uitgevoerd",
+          "reentry_time": "Wachttijd voor herbetreding is nageleefd",
+          "post_blast_ventilation": "Ventilatie na het springen is ingesteld"
+        }
+      },
+      "ppe": {
+        "name": "Controle naleving PBM",
+        "description": "Inspectie van naleving van persoonlijke beschermingsmiddelen voor mijnbouwpersoneel, met controle op staat en correct gebruik van alle vereiste veiligheidsmiddelen",
+        "items": {
+          "hard_hat": "Veiligheidshelm wordt gedragen en is in goede staat",
+          "safety_glasses": "Veiligheidsbril wordt gedragen en is niet bekrast of beschadigd",
+          "steel_toe_boots": "Veiligheidsschoenen met stalen neus worden gedragen en zijn in goede staat",
+          "hearing_protection": "Gehoorbescherming wordt gedragen in aangewezen zones",
+          "reflective_vest": "Reflecterend hesje wordt gedragen en is zichtbaar",
+          "self_rescuer": "Zelfredder is toegankelijk en geïnspecteerd",
+          "cap_lamp": "Helmlamp werkt en is volledig opgeladen",
+          "gloves": "Geschikte handschoenen worden gedragen voor de taak"
+        }
+      },
+      "mobile_equip": {
+        "name": "Voorcontrole mobiel materieel",
+        "description": "Controle vóór gebruik van mobiel mijnbouwmaterieel, met aandacht voor remmen, besturing, verlichting, brandblussystemen en rolbeveiliging",
+        "items": {
+          "brakes": "Bedrijfsrem en parkeerrem functioneren",
+          "steering": "Besturing reageert correct",
+          "lights": "Alle verlichting werkt (koplampen, achterlichten, markeringslichten)",
+          "horn": "Claxon is hoorbaar",
+          "backup_alarm": "Achteruitrijalarm werkt",
+          "fire_suppression": "Brandblussysteem is opgeladen en gereed",
+          "seatbelt": "Veiligheidsgordel werkt",
+          "tires": "Banden zijn in aanvaardbare staat",
+          "hydraulics": "Hydraulisch systeem vertoont geen lekkages",
+          "rollover_protection": "Rolbeveiligingsconstructie is intact",
+          "operator_cert": "Certificering van de bestuurder is actueel"
+        }
+      },
+      "emergency_escape": {
+        "name": "Oefening noodontsnapping",
+        "description": "Registratie van uitgevoerde noodontsnappingsoefeningen, met documentatie van deelname, routecontroles, aantrektijden van zelfredders en totale evacuatieprestaties",
+        "items": {
+          "all_workers": "Alle medewerkers in de dienst namen deel aan de oefening",
+          "primary_exit": "Primaire vluchtroute is succesvol getest",
+          "secondary_exit": "Secundaire vluchtroute is succesvol getest",
+          "self_rescuer_donning": "Tijd voor het aantrekken van de zelfredder is geregistreerd",
+          "refuge_chamber": "Schuilkamer is gelokaliseerd en geïnspecteerd",
+          "communication_check": "Communicatiesystemen zijn getest",
+          "evacuation_time": "Totale evacuatietijd is geregistreerd"
+        }
+      }
+    },
+    "food_beverage": {
+      "name": "Voeding & dranken",
+      "description": "Veiligheids- en kwaliteitschecklists voor voedsel- en drankactiviteiten, met aandacht voor HACCP, allergeenbeheer, koudeketen, hygiëne en medewerkershygiëne",
+      "haccp": {
+        "name": "HACCP-inspectie",
+        "description": "Inspectie volgens Hazard Analysis and Critical Control Points om te controleren of kritische controlepunten worden gemonitord, temperaturen binnen de norm liggen en corrigerende maatregelen zijn gedocumenteerd",
+        "items": {
+          "ccp_monitoring": "Kritische controlepunten worden volgens planning gemonitord",
+          "temp_receiving": "Ontvangsttemperaturen liggen binnen het aanvaardbare bereik",
+          "temp_storage": "Opslagtemperaturen liggen binnen het aanvaardbare bereik",
+          "temp_cooking": "Bereidingstemperaturen voldoen aan de minimumeisen",
+          "temp_holding": "Warmhoudtemperaturen liggen binnen het veilige bereik",
+          "corrective_actions": "Corrigerende maatregelen zijn gedocumenteerd bij afwijkingen",
+          "verification": "Verificatieactiviteiten zijn volgens plan uitgevoerd",
+          "records_reviewed": "HACCP-registraties zijn beoordeeld en ondertekend"
+        }
+      },
+      "allergen": {
+        "name": "Audit allergeenbeheer",
+        "description": "Audit van werkwijzen voor allergeenbeheer, inclusief verificatie van reiniging, juistheid van etiketten, scheiding van ingrediënten en naleving van personeelstraining",
+        "items": {
+          "cleaning_verified": "Reiniging tussen productieruns met allergenen is geverifieerd",
+          "label_accuracy": "Productlabels vermelden alle allergenen correct",
+          "ingredient_segregation": "Allergene ingrediënten zijn in de opslag correct gescheiden",
+          "shared_equipment": "Protocollen voor gedeelde apparatuur worden gevolgd",
+          "staff_training": "Training van medewerkers over allergenenbewustzijn is actueel"
+        }
+      },
+      "cold_chain": {
+        "name": "Temperatuurlogboek koudeketen",
+        "description": "Logboek voor temperatuurmonitoring van de koudeketen, met registratie van temperaturen van koelkasten, vriezers, ontvangst en transport, inclusief opvolging van afwijkingen",
+        "items": {
+          "refrigerator_temps": "Koelkasttemperaturen liggen onder 40F / 4C",
+          "freezer_temps": "Vriezertemperaturen liggen op of onder 0F / -18C",
+          "receiving_temps": "Producttemperaturen bij ontvangst liggen binnen het bereik",
+          "transport_temps": "Temperaturen van transportvoertuigen zijn geverifieerd",
+          "deviation_response": "Temperatuurafwijkingen zijn gedocumenteerd en opgevolgd"
+        }
+      },
+      "sanitation": {
+        "name": "Hygiëne-audit",
+        "description": "Audit van de hygiëne in de faciliteit, met aandacht voor voedselcontactoppervlakken, vloerafvoeren, plaagdierbeheersing, handwaspunten en opslag van chemicaliën",
+        "items": {
+          "food_contact_surfaces": "Voedselcontactoppervlakken zijn gereinigd en gedesinfecteerd",
+          "floor_drains": "Vloerafvoeren zijn vrij en functioneren",
+          "pest_control": "Ongediertebestrijdingsstations zijn gecontroleerd en onderhouden",
+          "hand_wash_stations": "Handwaspunten zijn aangevuld (zeep, handdoeken, desinfectiemiddel)",
+          "chemical_storage": "Reinigingschemicaliën zijn correct opgeslagen en gelabeld"
+        }
+      },
+      "hygiene": {
+        "name": "Controle medewerkershygiëne",
+        "description": "Controle op naleving van hygiëne door medewerkers in voedselproductieruimten, met aandacht voor kleding, haarbedekking, sieradenbeleid, wondafdekking en handwassen",
+        "items": {
+          "clean_uniform": "Medewerker draagt schone werkkleding of een schoon uniform",
+          "hair_restraint": "Haarbedekking (netje, pet, baardnetje) wordt correct gedragen",
+          "no_jewelry": "Er worden geen sieraden gedragen in de productieruimte",
+          "wounds_covered": "Eventuele snijwonden of wondjes zijn correct afgedekt",
+          "illness_reporting": "Vereisten voor ziektemelding zijn gecommuniceerd",
+          "handwashing": "Correct handen wassen is waargenomen",
+          "glove_use": "Handschoenen worden correct gebruikt en tijdig vervangen"
+        }
+      },
+      "shipping": {
+        "name": "Inspectie verzending/ontvangst",
+        "description": "Inspectie van inkomende en uitgaande zendingen voor voedselveiligheid, met controle op voertuigreinheid, temperaturen, integriteit van verpakkingen en traceerbaarheid van batches",
+        "items": {
+          "vehicle_cleanliness": "Aflevervoertuig is schoon en vrij van verontreiniging",
+          "temperature_verified": "Producttemperaturen zijn bij aankomst geverifieerd",
+          "packaging_integrity": "Verpakking is intact zonder schade of manipulatie",
+          "date_codes": "Datumcodes zijn gecontroleerd en acceptabel",
+          "rejected_items": "Afgekeurde items zijn gedocumenteerd en apart gezet",
+          "lot_traceability": "Batchnummers zijn vastgelegd voor traceerbaarheid"
+        }
+      }
+    },
+    "utilities": {
+      "name": "Nutsvoorzieningen",
+      "description": "Veiligheidschecklists voor werkzaamheden in de energiesector, met aandacht voor vlamboogveiligheid, inspecties van onderstations, lijnvrijgave en schakelprocedures",
+      "arc_flash": {
+        "name": "Controle vlamboogveiligheid",
+        "description": "Controle op naleving van beheer van vlambooggevaren, waarbij incidentenergieanalyse, juiste PBM-categorie en autorisatie voor werken onder spanning worden gecontroleerd",
+        "items": {
+          "incident_energy": "Incidentenergieniveau voor het werkgebied is vastgesteld",
+          "ppe_category": "PBM-categorie komt overeen met het incidentenergieniveau",
+          "approach_boundaries": "Benaderingsgrenzen zijn gemarkeerd en gecommuniceerd",
+          "energized_permit": "Werkvergunning voor werken onder spanning is verkregen",
+          "buddy_system": "Buddy-systeem is van kracht voor werken onder spanning",
+          "de_energize_eval": "Beoordeling voor eerst spanningsloos maken is uitgevoerd"
+        }
+      },
+      "substation": {
+        "name": "Inspectie onderstation",
+        "description": "Routine-inspectie van apparatuur en infrastructuur van elektrische onderstations, met aandacht voor transformatoren, schakelaars, aardingsnetten en perimeterbeveiliging",
+        "items": {
+          "transformer_oil": "Oliepeil van transformator ligt binnen normale grenzen",
+          "breaker_operation": "Aantal schakelingen van vermogensschakelaar is geregistreerd",
+          "ground_grid": "Aansluitingen van het aardingsnet zijn intact",
+          "fence_security": "Perimeterhekwerk is veilig en zonder openingen",
+          "signage_visible": "Waarschuwings- en identificatieborden zijn zichtbaar",
+          "vegetation_clearance": "Vegetatie rond apparatuur wordt vrijgehouden",
+          "animal_guards": "Dierweringen zijn aanwezig en onbeschadigd"
+        }
+      },
+      "vegetation": {
+        "name": "Audit vegetatiebeheer",
+        "description": "Audit van vegetatiebeheer langs stroomlijncorridors, waarbij vrijhoudafstanden, snoeiplanning en naleving van milieueisen worden gecontroleerd",
+        "items": {
+          "row_clearance": "Vrijhoudafstanden in de leidingstrook voldoen aan de eisen",
+          "trimming_completed": "Gepland boomonderhoud is uitgevoerd",
+          "growth_assessment": "Beoordeling van groeisnelheid is gedocumenteerd",
+          "herbicide_records": "Registraties van herbicidentoepassing zijn actueel",
+          "endangered_species": "Controle op beschermde soorten is uitgevoerd",
+          "access_road": "Toegangsweg verkeert in aanvaardbare staat"
+        }
+      },
+      "line_clearance": {
+        "name": "Audit lijnvrijgave",
+        "description": "Veiligheidsaudit voor lijnwerk aan spanningsloze elektriciteitsleidingen, waarbij isolatie, tijdelijke aarding en minimale naderingsafstanden worden gecontroleerd",
+        "items": {
+          "line_identified": "Leiding is geïdentificeerd en bevestigd als spanningsloos",
+          "grounds_installed": "Tijdelijke aardingen zijn aangebracht",
+          "approach_distance": "Minimale naderingsafstand wordt aangehouden",
+          "rubber_goods": "Rubber beschermingsmiddelen zijn getest en binnen de certificeringsdatum",
+          "traffic_control": "Verkeersmaatregelen zijn aanwezig waar vereist"
+        }
+      },
+      "switching": {
+        "name": "Schakelprocedure",
+        "description": "Stapsgewijze checklist voor schakelprocedures in elektrische distributiesystemen, met borging van verificatie door twee personen, spanningstesten en afstemming met de meldkamer",
+        "items": {
+          "procedure_printed": "Stapsgewijze schakelprocedure is geprint en beschikbaar",
+          "two_person_rule": "Tweepersoonsregel wordt gevolgd",
+          "isolation_verified": "Isolatiepunten zijn geverifieerd",
+          "voltage_test": "Test-aard-test-spanningsverificatie is uitgevoerd",
+          "scada_notification": "SCADA-meldkamer is geïnformeerd",
+          "operating_log": "Bedrijfslogboek is bijgewerkt"
+        }
+      },
+      "pole_climbing": {
+        "name": "Klimveiligheid mast/toren",
+        "description": "Veiligheidschecklist vóór het beklimmen van masten en torens, waarbij valbeveiliging, structurele integriteit en beschikbaarheid van reddingsmiddelen worden gecontroleerd",
+        "items": {
+          "fall_protection": "Valbeveiligingsuitrusting is geïnspecteerd",
+          "climbing_equipment": "Klimuitrusting heeft de juiste classificatie",
+          "pole_tested": "Houten paal is getest (hamer-/boortest)",
+          "structure_integrity": "Structurele integriteit is geverifieerd",
+          "rescue_device": "Persoonlijk reddingsmiddel is beschikbaar",
+          "communication": "Communicatie met het grondteam is opgezet"
+        }
+      }
+    },
+    "transportation": {
+      "name": "Transport",
+      "description": "Veiligheidschecklists voor commerciële transportactiviteiten, met aandacht voor voertuiginspecties, ladingzekering, rij- en rusttijden en vervoer van gevaarlijke stoffen",
+      "pre_trip": {
+        "name": "Voertuiginspectie vóór vertrek",
+        "description": "Uitgebreide inspectie vóór vertrek van commerciële voertuigen, met controle van banden, remmen, verlichting, spiegels, koppelinrichtingen en nooduitrusting",
+        "items": {
+          "tires": "Banden hebben voldoende profiel en de juiste spanning",
+          "brakes_air": "Luchtdruk is voldoende en het remsysteem functioneert",
+          "lights_all": "Alle verlichting werkt (koplampen, achterlichten, markeringslichten, richtingaanwijzers)",
+          "mirrors": "Spiegels zijn schoon, correct afgesteld en onbeschadigd",
+          "windshield": "Voorruit is schoon en heeft geen scheuren die het zicht belemmeren",
+          "horn": "Claxon werkt",
+          "coupling_devices": "Koppelinrichtingen zijn gezekerd (vijfde wiel, trekhaak)",
+          "cargo_securement": "Middelen voor ladingzekering zijn toereikend en aanwezig",
+          "emergency_equipment": "Nooduitrusting is aanwezig (gevarendriehoek, brandblusser)"
+        }
+      },
+      "driver_scorecard": {
+        "name": "Veiligheidsscorekaart chauffeur",
+        "description": "Periodieke beoordeling van de veiligheidsprestaties van chauffeurs, met aandacht voor slagingspercentages van inspecties, incidenthistorie, naleving van rij- en rusttijden en voltooiing van trainingen",
+        "items": {
+          "inspection_pass_rate": "Beoordeel het slagingspercentage van inspecties van deze chauffeur voor deze periode",
+          "incident_history": "Documenteer eventuele incidenten in de beoordelingsperiode",
+          "hos_compliance": "Naleving van rij- en rusttijden is geverifieerd",
+          "training_completion": "Vereiste trainingsmodules zijn voltooid",
+          "moving_violations": "Documenteer eventuele verkeersovertredingen",
+          "preventable_accidents": "Documenteer eventuele vermijdbare ongevallen"
+        }
+      },
+      "cargo": {
+        "name": "Controle ladingzekering",
+        "description": "Verificatie van ladingzekering om te waarborgen dat lading binnen de gewichtslimieten blijft, correct is vastgezet, geblokkeerd en gestut vóór transport",
+        "items": {
+          "weight_limits": "Lading valt binnen de gewichtslimieten voor voertuig en route",
+          "tiedowns_rated": "Sjorbanden hebben de juiste classificatie en zijn in voldoende aantal aanwezig",
+          "header_board": "Kopschot of frontschot is in goede staat",
+          "blocking_bracing": "Blokkering en stutting zijn stevig",
+          "load_shift": "Controle op verschuiven van de lading is uitgevoerd",
+          "hazmat_placards": "Borden voor gevaarlijke stoffen zijn aangebracht (indien van toepassing)"
+        }
+      },
+      "hos": {
+        "name": "Naleving rij- en rusttijden",
+        "description": "Verificatie van naleving van rij- en rusttijden voor beroepschauffeurs, met controle van ELD-functionaliteit, beschikbare rijtijd, rustpauzes en documentatie van uitzonderingen",
+        "items": {
+          "eld_functioning": "Elektronisch registratiesysteem functioneert correct",
+          "drive_time": "Beschikbare rijtijd ligt binnen de wettelijke limieten",
+          "rest_break": "Verplichte rustpauze is genomen",
+          "sleeper_berth": "Regels voor de slaapcabine worden nageleefd (indien van toepassing)",
+          "adverse_conditions": "Uitzondering voor ongunstige rijomstandigheden is gedocumenteerd (indien gebruikt)"
+        }
+      },
+      "hazmat": {
+        "name": "Checklist transport gevaarlijke stoffen",
+        "description": "Checklist vóór transport van zendingen met gevaarlijke stoffen, met controle van vrachtpapieren, borden, integriteit van de verpakking en bevoegdheid van de chauffeur",
+        "items": {
+          "shipping_papers": "Vrachtpapieren zijn compleet en correct",
+          "placards_correct": "Voertuigborden zijn correct voor de lading",
+          "packaging_integrity": "Integriteit van de verpakking is geverifieerd",
+          "compatibility": "Compatibiliteit van de lading is geverifieerd",
+          "emergency_info": "Informatie voor noodrespons is toegankelijk",
+          "driver_endorsement": "Bevoegdheid van de chauffeur voor gevaarlijke stoffen is actueel"
+        }
+      },
+      "post_trip": {
+        "name": "Inspectierapport na rit",
+        "description": "Voertuiginspectie aan het einde van de rit waarbij defecten, remprestaties, bandconditie, vloeistoflekkages en gereedheid van de laadruimte voor de volgende lading worden gedocumenteerd",
+        "items": {
+          "defects_discovered": "Documenteer eventuele defecten die tijdens de rit zijn ontdekt",
+          "brake_performance": "Remprestaties waren tijdens de rit naar tevredenheid",
+          "tire_condition": "Conditie van de banden na de beladen rit is acceptabel",
+          "fluid_leaks": "Er zijn geen nieuwe vloeistoflekkages waargenomen",
+          "body_damage": "Er is geen nieuwe carrosserieschade waargenomen",
+          "cargo_area": "Laadruimte is gereinigd en klaar voor gebruik",
+          "report_signed": "Inspectierapport na rit is ondertekend"
+        }
+      }
+    },
+    "education": {
+      "name": "Onderwijs",
+      "description": "Veiligheidschecklists voor onderwijsinstellingen, met aandacht voor speelplaatsinspecties, laboratoriumveiligheid, noodoefeningen en veiligheidsrondes in gebouwen",
+      "playground": {
+        "name": "Inspectie speelplaatsveiligheid",
+        "description": "Routine-inspectie van speeltoestellen en ondergronden om gevaren te signaleren, leeftijdsgeschikt ontwerp te verifiëren en naleving van valzones te waarborgen",
+        "items": {
+          "equipment_integrity": "Apparatuur is vrij van scherpe randen, losse bouten en schade",
+          "fall_zone_surfacing": "Ondergrond in valzones is toereikend (diepte en dekking)",
+          "age_appropriate": "Bewegwijzering voor de juiste leeftijdsgroep is aangebracht",
+          "entrapment_hazards": "Er zijn geen beknellingsgevaren aanwezig",
+          "drain_covers": "Afvoerafdekkingen zijn stevig bevestigd en liggen gelijk",
+          "general_condition": "Algemene staat van de speelplaats is naar tevredenheid"
+        }
+      },
+      "lab": {
+        "name": "Laboratoriumveiligheidsinspectie",
+        "description": "Veiligheidsinspectie voor onderwijs-laboratoria, met controle van noodapparatuur, chemische opslag, werking van zuurkasten en beschikbaarheid van PBM",
+        "items": {
+          "eyewash_tested": "Oogdouche is getest en functioneert",
+          "shower_tested": "Nooddouche is getest en functioneert",
+          "fume_hood": "Zuurkast werkt en de luchtstroom is voldoende",
+          "chemical_storage": "Chemicaliën zijn correct opgeslagen en gelabeld",
+          "sds_accessible": "Veiligheidsinformatiebladen zijn toegankelijk",
+          "ppe_available": "PBM zijn beschikbaar (veiligheidsbrillen, handschoenen, schorten)",
+          "emergency_shutoffs": "Noodafsluiters zijn gelabeld en toegankelijk",
+          "glassware_disposal": "Containers voor gebroken glaswerk zijn beschikbaar"
+        }
+      },
+      "emergency_drill": {
+        "name": "Registratie noodoefening",
+        "description": "Documentatie van uitgevoerde noodoefeningen, inclusief type oefening, evacuatietijd, afstemming van presentielijsten en verbeterpunten",
+        "items": {
+          "drill_type": "Type uitgevoerde oefening (brand, lockdown, aardbeving, tornado)",
+          "weather_conditions": "Weersomstandigheden tijdens de oefening",
+          "evacuation_time": "Totale evacuatietijd in minuten",
+          "headcount_reconciled": "Aanwezigen zijn afgestemd met de presentielijsten",
+          "areas_of_delay": "Gebieden met vertraging of opstoppingen zijn vastgesteld",
+          "communication_effectiveness": "Communicatiesystemen werkten effectief",
+          "special_needs": "Voorzieningen voor personen met speciale behoeften zijn correct uitgevoerd"
+        }
+      },
+      "visitor": {
+        "name": "Bezoekersregistratie",
+        "description": "Logboek voor inchecken en volgen van bezoekers op onderwijsinstellingen, met documentatie van identiteitscontrole, afgifte van badges en vereiste begeleiding",
+        "items": {
+          "visitor_id_checked": "Identiteit van de bezoeker is gecontroleerd",
+          "purpose_of_visit": "Doel van het bezoek is vastgelegd",
+          "badge_issued": "Bezoekersbadge is uitgegeven",
+          "escort_assigned": "Begeleider is toegewezen (indien vereist)",
+          "sign_out_time": "Uitchecktijd is geregistreerd",
+          "restricted_areas": "Beperkte gebieden zijn gecommuniceerd"
+        }
+      },
+      "building": {
+        "name": "Veiligheidsronde gebouw",
+        "description": "Veiligheidsrondgang door onderwijsgebouwen met controle van nooduitgangsborden, brandblussers, AED-gereedheid en algemene gebouwcondities",
+        "items": {
+          "exit_signs": "Nooduitgangsborden zijn verlicht en zichtbaar",
+          "fire_extinguishers": "Brandblussers zijn geïnspecteerd en toegankelijk",
+          "aed_checked": "AED is gecontroleerd en gereed",
+          "stairwell_lighting": "Verlichting in trappenhuizen werkt",
+          "trip_hazards": "Geen struikelgevaren in gangen of looppaden",
+          "hvac_functioning": "HVAC-systeem functioneert correct",
+          "water_temperature": "Watertemperatuur is getest (anti-verbranding)"
+        }
+      },
+      "bus": {
+        "name": "Veiligheid bus/vervoer",
+        "description": "Veiligheidschecklist voor schoolbussen en voertuigen voor leerlingenvervoer, met aandacht voor voorcontroles, nooduitgangen en procedures voor het tellen van leerlingen",
+        "items": {
+          "pre_trip_inspection": "Voertuiginspectie vóór vertrek is uitgevoerd",
+          "first_aid_kit": "EHBO-set is aanwezig en aangevuld",
+          "emergency_exits": "Nooduitgangen functioneren en zijn niet geblokkeerd",
+          "communication_device": "Communicatiemiddel werkt",
+          "student_count": "Procedure voor het tellen van leerlingen is aanwezig",
+          "wheelchair_lift": "Rolstoellift is getest (indien van toepassing)"
+        }
+      }
+    },
+    "airports": {
+      "name": "Luchthavens",
+      "description": "Veiligheidschecklists voor luchthavenactiviteiten, met aandacht voor terminalveiligheid, grondmaterieel, naleving op het platform, tankactiviteiten en beheer van contractors",
+      "escalator": {
+        "name": "Veiligheid roltrap/lift",
+        "description": "Veiligheidsinspectie van roltrappen en liften in terminalgebouwen, met controle van noodstops, mechanische uitlijning en communicatiesystemen",
+        "items": {
+          "emergency_stop": "Noodstopknop functioneert",
+          "comb_plate": "Kambord is intact en correct uitgelijnd",
+          "handrail_speed": "Snelheid van de leuning loopt gelijk met de treedsnelheid",
+          "step_demarcation": "Markeringen op de treden zijn zichtbaar",
+          "lighting": "Verlichting bij de aanloop en langs de installatie is voldoende",
+          "intercom": "Intercom of noodcommunicatie werkt",
+          "maintenance_log": "Onderhoudslogboek is actueel"
+        }
+      },
+      "terminal_floor": {
+        "name": "Ronde gevaren terminalvloer",
+        "description": "Rondgang door terminalvloeren om natte vloeren, struikelgevaren, bouwafzettingen en knelpunten in passagiersstromen te signaleren",
+        "items": {
+          "wet_floor_signage": "Natte vloeren zijn gemarkeerd met correcte signalering",
+          "spill_cleanup": "Morsingen zijn direct opgeruimd",
+          "trip_hazards": "Er zijn geen struikelgevaren aanwezig (gescheurd tapijt, ongelijke tegels)",
+          "construction_barriers": "Bouwafzettingen zijn stevig en zichtbaar",
+          "lighting_functional": "Alle verlichting in het terminalgebied werkt",
+          "crowd_flow": "Passagiersstroom is voldoende en veroorzaakt geen veiligheidsrisico's"
+        }
+      },
+      "aed": {
+        "name": "Controle AED-/eerstehulppost",
+        "description": "Inspectie van automatische externe defibrillatoren en eerstehulpposten in de terminal, met controle van gereedheid, voorraadniveaus en beschikbaarheid van getrainde hulpverleners",
+        "items": {
+          "aed_powered": "AED staat aan en geeft gereedstatus aan",
+          "pads_not_expired": "AED-elektroden zijn niet verlopen",
+          "battery_charge": "Batterijlading is voldoende",
+          "first_aid_supplies": "Eerstehulpbenodigdheden zijn aangevuld",
+          "location_signage": "Locatieaanduiding van de post is zichtbaar",
+          "trained_responder": "Dichtstbijzijnde getrainde hulpverlener is vermeld en aanwezig"
+        }
+      },
+      "emergency_evac": {
+        "name": "Paraatheid noodevacuatie",
+        "description": "Beoordeling van de gereedheid voor noodevacuatie van de terminal, met controle van nooduitgangsborden, vrije vluchtroutes, werking van het omroepsysteem en bekendheid met personeelsrollen",
+        "items": {
+          "exit_signage": "Nooduitgangsborden zijn overal in de terminal verlicht",
+          "evacuation_routes": "Vluchtroutes zijn vrij van obstakels",
+          "pa_system": "Omroepsysteem is getest en functioneert",
+          "assembly_points": "Verzamelplaatsen zijn gemarkeerd en gecommuniceerd",
+          "wheelchair_chairs": "Evacuatiestoelen voor rolstoelgebruikers staan gereed bij trappenhuizen",
+          "staff_assignments": "Medewerkers kennen hun evacuatieverantwoordelijkheden"
+        }
+      },
+      "gse": {
+        "name": "Voorgebruik GSE",
+        "description": "Controle vóór gebruik van grondmaterieel, waaronder bandladers, trekkers en bagagekarren, met verificatie van mechanische staat en certificering van de operator",
+        "items": {
+          "belt_loader": "Bandlader werkt soepel en gecontroleerd",
+          "tug_brakes_lights": "Remmen en verlichting van de trekker functioneren",
+          "baggage_cart": "Koppeling van de bagagekar is stevig",
+          "fuel_level": "Brandstofniveau is voldoende voor de dienst",
+          "fire_extinguisher": "Brandblusser is gemonteerd en opgeladen",
+          "backup_alarm": "Achteruitrijalarm is hoorbaar",
+          "tire_condition": "Bandconditie is acceptabel",
+          "operator_cert": "Certificering van de operator is actueel"
+        }
+      },
+      "fod": {
+        "name": "FOD-ronde",
+        "description": "Inspectie op vreemde voorwerpen op platform- en aprongebieden, met controle van reinheid van het oppervlak, verantwoording van gereedschap en documentatie van aangetroffen materiaal",
+        "items": {
+          "ramp_clear": "Platformgebied is vrij van vreemde voorwerpen",
+          "tools_accounted": "Alle gereedschappen en apparatuur zijn geteld en verantwoord",
+          "loose_items": "Losse voorwerpen zijn vastgezet of verwijderd",
+          "fod_bins": "FOD-verzamelbakken zijn beschikbaar en niet vol",
+          "surface_condition": "Oppervlak is veilig (geen ijs of stilstaand water)",
+          "debris_documented": "Eventueel aangetroffen puin is gedocumenteerd en verwijderd"
+        }
+      },
+      "fueling": {
+        "name": "Veiligheid tankoperatie",
+        "description": "Veiligheidschecklist voor het tanken van vliegtuigen, met aandacht voor bonding/aarding, spill containment, beheersing van ontstekingsbronnen en verificatie van brandstofkwaliteit",
+        "items": {
+          "bonding_grounding": "Bonding- en aardingsverbindingen zijn aangebracht",
+          "dead_man_switch": "Dodemansschakelaar functioneert",
+          "spill_containment": "Middelen voor morsbeheersing staan gereed",
+          "fire_extinguisher": "Brandblusser is toegankelijk",
+          "no_ignition_sources": "Er zijn geen ontstekingsbronnen aanwezig in de tankzone",
+          "fuel_sample": "Brandstofmonster is helder en vrij van verontreiniging",
+          "quantity_verified": "Brandstofhoeveelheid is gecontroleerd aan de hand van de order"
+        }
+      },
+      "baggage": {
+        "name": "Audit bagageafhandelingssysteem",
+        "description": "Veiligheidsaudit van bagageafhandelingssystemen, met controle van afscherming van transportbanden, noodstops, markeringen van knelpunten en beschikbaarheid van ergonomische tilhulpen",
+        "items": {
+          "conveyor_guarding": "Afschermingen van transportbanden zijn aanwezig",
+          "emergency_stops": "Noodstopknoppen zijn bereikbaar en getest",
+          "pinch_points": "Knelpunten zijn duidelijk gemarkeerd",
+          "lighting": "Verlichting in de bagageafhandelingsruimte is voldoende",
+          "maintenance_access": "Onderhoudstoegangen zijn correct beveiligd",
+          "noise_levels": "Geluidsniveaus liggen binnen aanvaardbare grenzen",
+          "ergonomic_aids": "Ergonomische tilhulpen zijn beschikbaar"
+        }
+      },
+      "ramp": {
+        "name": "Naleving veiligheidszones platform",
+        "description": "Controle op naleving van veiligheidszones op het platform, met verificatie van vrije zones voor jet blast, positionering van apparatuur, snelheidslimieten voor voertuigen en gebruik van PBM door platformmedewerkers",
+        "items": {
+          "jet_blast_zone": "Jetblastzone is vrij van personeel en materieel",
+          "equipment_marshalling": "Positionering van materieel volgt de juiste procedures",
+          "vehicle_speed": "Snelheidslimieten voor voertuigen worden nageleefd",
+          "wing_walker": "Wing walker is aanwezig bij pushback-operaties",
+          "hearing_protection": "Gehoorbescherming wordt gedragen door alle platformmedewerkers",
+          "reflective_vests": "Reflecterende veiligheidshesjes worden gedragen",
+          "headsets_tested": "Communicatieheadsets zijn getest"
+        }
+      },
+      "contractor": {
+        "name": "Naleving meerdere contractors",
+        "description": "Nalevingscontrole van meerdere grondafhandelingscontractors, met verificatie van actuele trainingen, geldigheid van beveiligingsbadges, incidentrapportage en afronding van corrigerende maatregelen",
+        "items": {
+          "handler_training": "Veiligheidstraining van grondafhandelaar is actueel",
+          "security_badges": "Geldigheid van beveiligingsbadges is gecontroleerd",
+          "ramp_driving_auth": "Rijbevoegdheid op het platform is actueel",
+          "incident_reports": "Veiligheidsincidentrapporten per afhandelaar zijn beoordeeld",
+          "audit_scores": "Auditscores per contractor zijn gedocumenteerd",
+          "corrective_actions": "Afrondingspercentages van corrigerende maatregelen worden gevolgd"
+        }
+      }
+    }
+  },
+  "dateRange": {
+    "today": "Vandaag",
+    "yesterday": "Gisteren",
+    "last7Days": "Laatste 7 dagen",
+    "last30Days": "Laatste 30 dagen",
+    "last90Days": "Laatste 90 dagen",
+    "last6Months": "Laatste 6 maanden",
+    "allTime": "Altijd",
+    "customRange": "Aangepast bereik",
+    "selectDate": "Selecteer datum",
+    "startDate": "Startdatum",
+    "endDate": "Einddatum"
   }
 }

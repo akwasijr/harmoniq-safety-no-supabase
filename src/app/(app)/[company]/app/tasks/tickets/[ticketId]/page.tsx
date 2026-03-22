@@ -23,6 +23,7 @@ import { TaskComments, loadComments } from "@/components/tasks/task-comments";
 import { TaskDocuments } from "@/components/tasks/task-documents";
 import { TicketSubtasks } from "@/components/tasks/ticket-subtasks";
 import { getFilesForEntity } from "@/lib/file-storage";
+import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
 import { ArrowLeft } from "lucide-react";
 import type { TicketStatus } from "@/types";
 
@@ -45,7 +46,13 @@ export default function TicketDetailPage() {
   const [activeTab, setActiveTab] = React.useState("details");
 
   const matchedTicket = tickets.find((t) => t.id === ticketId);
-  const ticket = matchedTicket && user?.company_id && matchedTicket.company_id !== user.company_id ? undefined : matchedTicket;
+  const ticket =
+    matchedTicket &&
+    user?.company_id &&
+    matchedTicket.company_id === user.company_id &&
+    isAssignedToUserOrTeam(matchedTicket, user)
+      ? matchedTicket
+      : undefined;
   const assignee = ticket?.assigned_to ? users.find((u) => u.id === ticket.assigned_to) : null;
   const creator = ticket?.created_by ? users.find((u) => u.id === ticket.created_by) : null;
   const linkedIncidents = (ticket?.incident_ids || []).map((id) => incidents.find((i) => i.id === id)).filter(Boolean);

@@ -2,28 +2,16 @@
 
 import * as React from "react";
 import { mockMaintenanceSchedules, mockDowntimeLogs } from "@/mocks/data";
-import { useAssetsStore } from "@/stores/assets-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useTeamsStore } from "@/stores/teams-store";
-import { useAssetInspectionsStore } from "@/stores/inspections-store";
-import { useIncidentsStore } from "@/stores/incidents-store";
-import { useLocationsStore } from "@/stores/locations-store";
-import { useMeterReadingsStore } from "@/stores/meter-readings-store";
-import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import type { MaintenanceSchedule } from "@/types";
 
 export function useAssetData(assetId: string) {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => { setMounted(true); }, []);
 
-  const { items: assets, update: updateAsset, remove: removeAsset, isLoading: isAssetsLoading } = useAssetsStore();
-  const { items: users } = useUsersStore();
-  const { items: teams } = useTeamsStore();
-  const { items: inspections } = useAssetInspectionsStore();
-  const { items: incidents } = useIncidentsStore();
-  const { items: locations } = useLocationsStore();
-  const { items: workOrders } = useWorkOrdersStore();
-  const { items: allMeterReadings, add: addMeterReading } = useMeterReadingsStore();
+  const { assets, users, teams, inspections, incidents, locations, workOrders, meterReadings: allMeterReadings, stores } = useCompanyData();
+  const { update: updateAsset, remove: removeAsset, isLoading: isAssetsLoading } = stores.assets;
+  const { add: addMeterReading } = stores.meterReadings;
 
   const asset = assets.find((a) => a.id === assetId);
   const assetInspections = inspections.filter((i) => i.asset_id === assetId);
@@ -143,32 +131,50 @@ export function useAssetData(assetId: string) {
 
   // Certifications
   const certifications = React.useMemo(() => {
+    if (!asset?.certifications?.length) {
+      return [];
+    }
+
     const now = new Date();
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const rawCerts = [
-      { id: "c1", name: "Safety Certificate", certType: "safety", certNumber: "SC-2024-0891", issuingAuthority: "OSHA", expiry: "2025-06-15" },
-      { id: "c2", name: "Calibration Certificate", certType: "quality", certNumber: "CAL-2023-1204", issuingAuthority: "ISO Calibration Lab", expiry: "2024-02-28" },
-      { id: "c3", name: "ISO 45001 Compliance", certType: "compliance", certNumber: "ISO-45001-2287", issuingAuthority: "BSI Group", expiry: "2025-12-31" },
-    ];
-    return rawCerts
+
+    return asset.certifications
       .map((cert) => {
-        const expiryDate = new Date(cert.expiry);
-        const status: "valid" | "expiring" | "expired" = expiryDate < now ? "expired" : expiryDate <= thirtyDaysFromNow ? "expiring" : "valid";
-        return { ...cert, status };
+        const expiryDate = new Date(cert.expiry_date);
+        const status: "valid" | "expiring" | "expired" =
+          expiryDate < now ? "expired" : expiryDate <= thirtyDaysFromNow ? "expiring" : "valid";
+
+        return {
+          id: cert.id,
+          name: cert.name,
+          certType: cert.name.toLowerCase().includes("calibration")
+            ? "quality"
+            : cert.name.toLowerCase().includes("safety")
+              ? "safety"
+              : "compliance",
+          certNumber: cert.certificate_number || "—",
+          issuingAuthority: cert.issuer || "",
+          expiry: cert.expiry_date,
+          status,
+        };
       })
       .sort((a, b) => {
         const order = { expired: 0, expiring: 1, valid: 2 };
         return order[a.status] - order[b.status] || new Date(a.expiry).getTime() - new Date(b.expiry).getTime();
       });
-  }, []);
+  }, [asset?.certifications]);
 
-  // Mock inspection history
-  const inspectionHistory = [
-    { id: "i1", date: "2024-01-28", result: "pass", inspector: "John Doe", notes: "All checks passed" },
-    { id: "i2", date: "2024-01-21", result: "pass", inspector: "Jane Smith", notes: "Minor wear noted" },
-    { id: "i3", date: "2024-01-14", result: "fail", inspector: "John Doe", notes: "Safety guard damaged" },
-    { id: "i4", date: "2024-01-07", result: "pass", inspector: "Mike Johnson", notes: "Routine inspection" },
-  ];
+  const inspectionHistory = React.useMemo(() => {
+    return [...assetInspections]
+      .sort((a, b) => new Date(b.inspected_at).getTime() - new Date(a.inspected_at).getTime())
+      .map((inspection) => ({
+        id: inspection.id,
+        date: inspection.inspected_at,
+        result: inspection.result,
+        inspector: users.find((user) => user.id === inspection.inspector_id)?.full_name || "Unknown inspector",
+        notes: inspection.notes || "No notes recorded",
+      }));
+  }, [assetInspections, users]);
 
   return {
     asset,

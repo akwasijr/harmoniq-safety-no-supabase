@@ -21,8 +21,7 @@ import { NoDataEmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KPICard } from "@/components/ui/kpi-card";
-import { useLocationsStore } from "@/stores/locations-store";
-import { useAssetsStore } from "@/stores/assets-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
@@ -55,8 +54,8 @@ export default function QRCodesPage() {
   const company = useCompanyParam();
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const { items: locations } = useLocationsStore();
-  const { items: allAssets , isLoading } = useAssetsStore();
+  const { locations, assets: allAssets, stores } = useCompanyData();
+  const { isLoading } = stores.assets;
   const { toast } = useToast();
   const [qrCodes, setQrCodes] = React.useState<QRCodeItem[]>(() =>
     loadFromStorage(STORAGE_KEY, initialQRCodes)

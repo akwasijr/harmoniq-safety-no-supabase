@@ -23,15 +23,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { LoadingPage } from "@/components/ui/loading";
-import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
-import { useAssetInspectionsStore } from "@/stores/inspections-store";
-import { useAssetsStore } from "@/stores/assets-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useLocationsStore } from "@/stores/locations-store";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
+import { getTemplatePublishStatus } from "@/lib/template-activation";
 import type { ChecklistTemplate } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
@@ -45,6 +41,19 @@ import {
 
 type MainTabType = "checklists" | "risk-assessment" | "inspection";
 type SubTabType = "submissions" | "active";
+type InspectionSubmissionRow = {
+  id: string;
+  asset: string;
+  assetId: string;
+  template: string;
+  templateSource?: string;
+  date: string;
+  status: string;
+  by: string;
+  issues: number;
+  followUpCount?: number;
+  nextDue: string;
+};
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
@@ -81,13 +90,19 @@ function ChecklistsPageContent() {
     }
   }, [searchParams]);
 
-  const { items: checklistTemplatesStore, isLoading } = useChecklistTemplatesStore();
-  const { items: checklistSubmissionsStore } = useChecklistSubmissionsStore();
-  const { items: riskEvaluations } = useRiskEvaluationsStore();
-  const { items: inspections } = useAssetInspectionsStore();
-  const { items: assets } = useAssetsStore();
-  const { items: users } = useUsersStore();
-  const { items: locations } = useLocationsStore();
+  const {
+    checklistTemplates: checklistTemplatesStore,
+    checklistSubmissions: checklistSubmissionsStore,
+    riskEvaluations,
+    inspections,
+    assets,
+    correctiveActions,
+    users,
+    locations,
+    workOrders,
+    stores,
+  } = useCompanyData();
+  const { isLoading } = stores.checklistTemplates;
   const { t, formatDate, formatNumber } = useTranslation();
 
   // Map store risk evaluations to the display format
@@ -132,30 +147,59 @@ function ChecklistsPageContent() {
   }, [storeRiskAssessments]);
 
   // Map store inspections to the display format
-  const storeInspectionsList = React.useMemo(() => {
+  const storeInspectionsList = React.useMemo<InspectionSubmissionRow[]>(() => {
     return inspections.map(ins => {
       const asset = assets.find(a => a.id === ins.asset_id);
       const inspector = users.find(u => u.id === ins.inspector_id);
+      const checklistSubmission = ins.checklist_id
+        ? checklistSubmissionsStore.find((submission) => submission.id === ins.checklist_id)
+        : null;
+      const checklistTemplate = checklistSubmission
+        ? checklistTemplatesStore.find((template) => template.id === checklistSubmission.template_id)
+        : ins.checklist_id
+          ? checklistTemplatesStore.find((template) => template.id === ins.checklist_id)
+          : null;
+      const relatedActions = correctiveActions.filter((action) => action.inspection_id === ins.id);
+      const relatedWorkOrders = workOrders.filter((workOrder) =>
+        workOrder.corrective_action_id != null &&
+        relatedActions.some((action) => action.id === workOrder.corrective_action_id),
+      );
       return {
         id: ins.id,
         asset: asset?.name || "Unknown Asset",
         assetId: ins.asset_id,
-        template: "Equipment Inspection",
+        template: checklistTemplate?.name || (ins.checklist_id ? "Linked checklist" : "Direct asset inspection"),
+        templateSource: checklistSubmission
+          ? `Submission ${checklistSubmission.id}`
+          : checklistTemplate
+            ? `Template ${checklistTemplate.id}`
+            : ins.checklist_id
+              ? `Checklist ${ins.checklist_id}`
+              : "No checklist linked",
         date: ins.inspected_at.split("T")[0],
         status: ins.result === "pass" ? "passed" : ins.result === "fail" ? "failed" : "pending",
         by: inspector?.full_name || "Unknown",
-        issues: 0, // AssetInspection doesn't track individual issues
+        issues: relatedActions.length,
+        followUpCount: relatedActions.length + relatedWorkOrders.length,
         nextDue: "—", // No next inspection date in this type
       };
     });
-  }, [inspections, assets, users]);
+  }, [
+    inspections,
+    assets,
+    users,
+    checklistSubmissionsStore,
+    checklistTemplatesStore,
+    correctiveActions,
+    workOrders,
+  ]);
 
   // Combine store data with mock data
-  const combinedInspections = React.useMemo(() => {
+  const combinedInspections = React.useMemo<InspectionSubmissionRow[]>(() => {
     if (storeInspectionsList.length > 0) {
       return storeInspectionsList;
     }
-    return mockInspections;
+    return mockInspections as InspectionSubmissionRow[];
   }, [storeInspectionsList]);
 
   const deriveChecklistCategory = (template: ChecklistTemplate) => {
@@ -187,6 +231,8 @@ function ChecklistsPageContent() {
         label: "All statuses",
         options: [
           { value: "active", label: "Active" },
+          { value: "draft", label: "Draft" },
+          { value: "archived", label: "Archived" },
           { value: "completed", label: "Completed" },
           { value: "in_progress", label: "In Progress" },
           { value: "passed", label: "Passed" },
@@ -210,7 +256,12 @@ function ChecklistsPageContent() {
         description: template.description || "",
         items: template.items.length,
         used,
-        status: template.is_active ? "active" : "inactive",
+        status:
+          getTemplatePublishStatus(template) === "published"
+            ? "active"
+            : getTemplatePublishStatus(template) === "archived"
+              ? "archived"
+              : "draft",
         category: deriveChecklistCategory(template),
       };
     });
@@ -610,7 +661,7 @@ function ChecklistsPageContent() {
                         </td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{template.used} times</td>
                         <td className="py-3">
-                          <Badge variant={template.status === "active" ? "success" : "secondary"} className="text-xs capitalize">
+                          <Badge variant={template.status === "active" ? "success" : template.status === "draft" ? "warning" : "secondary"} className="text-xs capitalize">
                             {template.status}
                           </Badge>
                         </td>
@@ -841,7 +892,7 @@ function ChecklistsPageContent() {
                         <td className="hidden py-3 md:table-cell text-xs">{template.checkpoints} {t("checklists.labels.items")}</td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{template.used} times</td>
                         <td className="py-3">
-                          <Badge variant={template.status === "active" ? "success" : "secondary"} className="text-xs capitalize">{template.status}</Badge>
+                          <Badge variant={template.status === "active" ? "success" : template.status === "draft" ? "warning" : "secondary"} className="text-xs capitalize">{template.status}</Badge>
                         </td>
                         <td className="py-3">
                           <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -862,7 +913,7 @@ function ChecklistsPageContent() {
                     <th className="pb-3 font-medium">Template</th>
                     <th className="hidden pb-3 font-medium md:table-cell">By</th>
                     <th className="hidden pb-3 font-medium lg:table-cell">Next Due</th>
-                    <th className="pb-3 font-medium">Issues</th>
+                     <th className="pb-3 font-medium">Follow-up</th>
                     <th className="pb-3 font-medium">Result</th>
                     <th className="pb-3 font-medium w-10"></th>
                   </tr>
@@ -890,16 +941,23 @@ function ChecklistsPageContent() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 text-xs">{inspection.template}</td>
-                        <td className="hidden py-3 md:table-cell text-xs text-muted-foreground">{inspection.by}</td>
-                        <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{inspection.nextDue}</td>
-                        <td className="py-3 text-xs">
-                          {inspection.issues > 0 ? (
-                            <Badge variant="warning" className="text-xs">{inspection.issues} issue{inspection.issues > 1 ? "s" : ""}</Badge>
-                          ) : (
-                            <span className="text-muted-foreground">None</span>
-                          )}
-                        </td>
+                         <td className="py-3">
+                           <div>
+                             <p className="text-xs font-medium">{inspection.template}</p>
+                             <p className="text-[11px] text-muted-foreground">{inspection.templateSource}</p>
+                           </div>
+                         </td>
+                         <td className="hidden py-3 md:table-cell text-xs text-muted-foreground">{inspection.by}</td>
+                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{inspection.nextDue}</td>
+                         <td className="py-3 text-xs">
+                           {(inspection.followUpCount ?? inspection.issues) > 0 ? (
+                             <Badge variant="warning" className="text-xs">
+                               {inspection.followUpCount ?? inspection.issues} linked item{(inspection.followUpCount ?? inspection.issues) > 1 ? "s" : ""}
+                             </Badge>
+                           ) : (
+                             <span className="text-muted-foreground">None</span>
+                           )}
+                         </td>
                         <td className="py-3">
                           <Badge variant={inspection.status === "passed" ? "success" : "destructive"} className="text-xs capitalize">{inspection.status}</Badge>
                         </td>

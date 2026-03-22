@@ -26,8 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { useContentStore } from "@/stores/content-store";
-import { useUsersStore } from "@/stores/users-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
@@ -52,8 +51,8 @@ export default function ContentDetailPage() {
   const [isEditing, setIsEditing] = React.useState(false);
 
   const { toast } = useToast();
-  const { items: contentItems, isLoading, update: updateContent, remove: removeContent } = useContentStore();
-  const { items: users } = useUsersStore();
+  const { content: contentItems, users, stores } = useCompanyData();
+  const { isLoading, update: updateContent, remove: removeContent } = stores.content;
   const content = contentItems.find((c) => c.id === contentId);
   const author = content?.created_by ? users.find((u) => u.id === content.created_by) : undefined;
 

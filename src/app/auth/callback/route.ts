@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { buildCompanyDestination } from "@/lib/navigation";
+import { INVITE_TOKEN_PATTERN, isInvitableRole } from "@/lib/invitations";
 import { getPlatformSlugFilterList, getPlatformSlugs, isPlatformSlug } from "@/lib/platform-config";
 import { getSuperAdminEmails } from "@/lib/server-config";
 
@@ -121,6 +122,10 @@ async function acceptInviteIfPending(
 ): Promise<NextResponse | null> {
   const email = user.email?.toLowerCase() || "";
 
+  if (!INVITE_TOKEN_PATTERN.test(inviteToken)) {
+    return redirectToLoginError(requestUrl, "Invalid invitation. Contact your administrator for a new invite.");
+  }
+
   // Validate the invite token
   const { data: invitation } = await supabase
     .from("invitations")
@@ -132,6 +137,10 @@ async function acceptInviteIfPending(
     .maybeSingle();
 
   if (!invitation) return null; // No valid invite, fall through to normal routing
+
+  if (!isInvitableRole(invitation.role)) {
+    return redirectToLoginError(requestUrl, "Invalid invitation. Contact your administrator for a new invite.");
+  }
 
   // Check if user profile already exists
   const { data: existingProfile } = await supabase
@@ -290,10 +299,14 @@ async function routeAuthenticatedUser(
       .select("*")
       .eq("email", email)
       .is("accepted_at", null)
-      .gt("expires_at", new Date().toISOString())
-      .maybeSingle();
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
 
     if (invitation) {
+      if (!isInvitableRole(invitation.role)) {
+        return await denyAccess();
+      }
+
       // Accept invitation, create user profile
       await supabase.from("users").insert([{
         id: user.id,

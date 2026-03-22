@@ -1221,12 +1221,16 @@
     "companyName": "Company name",
     "urlSlug": "URL slug",
     "countryAndRegulations": "Country & Regulations",
-    "countryDesc": "Select your operating country to get the correct safety regulations and risk assessment forms",
+    "countryDesc": "Select your operating country to align safety regulations and recommended templates",
     "selected": "Selected",
     "basedOnSelection": "Based on your selection:",
-    "usRegulations": "Your employees will see Job Hazard Analysis (JHA) and Job Safety Analysis (JSA) forms for OSHA compliance.",
-    "nlRegulations": "Your employees will see RI&E (Risico-Inventarisatie en -Evaluatie) forms for Arbowet compliance.",
-    "seRegulations": "Your employees will see SAM (Systematiskt Arbetsmiljöarbete) forms for AFS 2023:1 compliance.",
+    "usRegulations": "Your checklist template library will use US references such as OSHA, NFPA, and FDA.",
+    "gbRegulations": "Your checklist template library will use UK references such as HSE, RIDDOR, COSHH, and PUWER.",
+    "nlRegulations": "Your checklist template library will use Dutch references such as Arbowet, RI&E, and NEN 3140.",
+    "seRegulations": "Your checklist template library will use Swedish references such as AFS, SAM, and ESA.",
+    "deRegulations": "Your checklist template library will use German references such as ArbSchG, BetrSichV, and DGUV.",
+    "frRegulations": "Your checklist template library will use French references such as Code du travail, DUERP, and CACES.",
+    "esRegulations": "Your checklist template library will use Spanish references such as Ley 31/1995, PRL, and RD 1215/1997.",
     "localization": "Localization",
     "languageAndRegional": "Language and regional preferences",
     "defaultLanguage": "Default language",
@@ -1286,7 +1290,11 @@
     "demoMode": "Demo Mode",
     "securityDemoMessage": "Security settings are for demonstration only. In production, these would integrate with your identity provider.",
     "billingDemoMessage": "Billing information shown is for demonstration purposes. No actual charges will be made.",
-    "platformSecurityDemoMessage": "Platform security settings are for demonstration only. In production, these would enforce actual security policies."
+    "platformSecurityDemoMessage": "Platform security settings are for demonstration only. In production, these would enforce actual security policies.",
+    "currency": "Currency",
+    "measurementSystem": "Measurement system",
+    "metricUnits": "Metric units",
+    "imperialUnits": "Imperial units"
   },
   "newsApp": {
     "title": "News & Updates",
@@ -1930,7 +1938,13 @@
       "recommendedForYou": "Recommended for your industry",
       "otherIndustries": "Other industries",
       "templateCount": "{count} templates available",
-      "fromTemplate": "From template"
+      "fromTemplate": "From template",
+      "myTemplates": "My Templates",
+      "createTemplate": "Create Template",
+      "recommended": "Recommended",
+      "viewMyTemplates": "View in My Templates",
+      "editRefine": "Clone & Edit",
+      "pushAsIs": "Push as-is"
     },
     "_frequencies": {
       "daily": "Daily",
@@ -2934,5 +2948,18 @@
       "createdAt": "Created At",
       "mediaAttachments": "Media Attachments"
     }
+  },
+  "dateRange": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "last90Days": "Last 90 days",
+    "last6Months": "Last 6 months",
+    "allTime": "All time",
+    "customRange": "Custom range",
+    "selectDate": "Select date",
+    "startDate": "Start date",
+    "endDate": "End date"
   }
 }

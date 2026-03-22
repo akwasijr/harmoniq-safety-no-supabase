@@ -106,6 +106,7 @@ function ReportIncidentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locationParam = searchParams.get("location");
+  const assetParam = searchParams.get("asset");
   const company = useCompanyParam();
   const [currentStep, setCurrentStep] = React.useState(1);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -319,7 +320,7 @@ function ReportIncidentPageContent() {
       gps_lat: formData.gpsLat,
       gps_lng: formData.gpsLng,
       location_description: formData.location || null,
-      asset_id: null,
+      asset_id: assetParam || null,
       media_urls: formData.photos,
       status: "new",
       flagged: false,

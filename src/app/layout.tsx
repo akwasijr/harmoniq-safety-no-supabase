@@ -1,6 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  IBM_Plex_Sans,
+  Inter,
+  Manrope,
+  Playfair_Display,
+  Plus_Jakarta_Sans,
+  Public_Sans,
+  Source_Sans_3,
+  Work_Sans,
+} from "next/font/google";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { RouteProgress } from "@/components/shared/route-progress";
 import { validateEnv } from "@/lib/env";
@@ -24,6 +35,42 @@ const playfair = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
   weight: ["400", "500"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const ibmPlexSans = IBM_Plex_Sans({
+  variable: "--font-ibm-plex-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta-sans",
+  subsets: ["latin"],
+});
+
+const publicSans = Public_Sans({
+  variable: "--font-public-sans",
+  subsets: ["latin"],
+});
+
+const sourceSans3 = Source_Sans_3({
+  variable: "--font-source-sans-3",
+  subsets: ["latin"],
+});
+
+const workSans = Work_Sans({
+  variable: "--font-work-sans",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -104,7 +151,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} font-sans antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${inter.variable} ${ibmPlexSans.variable} ${manrope.variable} ${plusJakartaSans.variable} ${publicSans.variable} ${sourceSans3.variable} ${workSans.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"

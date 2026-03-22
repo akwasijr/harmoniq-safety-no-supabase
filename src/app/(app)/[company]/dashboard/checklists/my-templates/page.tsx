@@ -26,10 +26,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import type { ChecklistTemplate } from "@/types";
+import { cloneChecklistTemplate, getTemplatePublishStatus } from "@/lib/template-activation";
 
 type StatusFilter = "all" | "draft" | "published" | "archived";
 
@@ -37,8 +38,8 @@ function MyTemplatesContent() {
   const router = useRouter();
   const company = useCompanyParam();
   const { t } = useTranslation();
-  const { items: templates, update: updateItem, remove: removeItem } = useChecklistTemplatesStore();
-  const { items: submissions } = useChecklistSubmissionsStore();
+  const { checklistTemplates: templates, checklistSubmissions: submissions, stores } = useCompanyData();
+  const { add: addItem, update: updateItem, remove: removeItem } = stores.checklistTemplates;
 
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all");
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -46,14 +47,13 @@ function MyTemplatesContent() {
   const [menuOpenId, setMenuOpenId] = React.useState<string | null>(null);
 
   // Only show company templates (not the raw industry templates)
-  const companyTemplates = templates.filter((t) => t.company_id);
+  const companyTemplates = templates;
 
   const filteredTemplates = companyTemplates.filter((t) => {
+    const status = getTemplatePublishStatus(t);
     const matchesStatus =
       statusFilter === "all" ||
-      (statusFilter === "draft" && (t.publish_status === "draft" || (!t.publish_status && !t.is_active))) ||
-      (statusFilter === "published" && (t.publish_status === "published" || (!t.publish_status && t.is_active))) ||
-      (statusFilter === "archived" && t.publish_status === "archived");
+      statusFilter === status;
 
     const matchesSearch =
       !searchQuery ||
@@ -65,16 +65,16 @@ function MyTemplatesContent() {
 
   const statusCounts = {
     all: companyTemplates.length,
-    draft: companyTemplates.filter((t) => t.publish_status === "draft" || (!t.publish_status && !t.is_active)).length,
-    published: companyTemplates.filter((t) => t.publish_status === "published" || (!t.publish_status && t.is_active)).length,
-    archived: companyTemplates.filter((t) => t.publish_status === "archived").length,
+    draft: companyTemplates.filter((t) => getTemplatePublishStatus(t) === "draft").length,
+    published: companyTemplates.filter((t) => getTemplatePublishStatus(t) === "published").length,
+    archived: companyTemplates.filter((t) => getTemplatePublishStatus(t) === "archived").length,
   };
 
   const getSubmissionCount = (templateId: string) =>
     submissions.filter((s) => s.template_id === templateId).length;
 
   const getStatusBadge = (template: ChecklistTemplate) => {
-    const status = template.publish_status || (template.is_active ? "published" : "draft");
+    const status = getTemplatePublishStatus(template);
     switch (status) {
       case "published":
         return (
@@ -96,7 +96,7 @@ function MyTemplatesContent() {
   };
 
   const handleUnpublish = (template: ChecklistTemplate) => {
-    updateItem(template.id, { publish_status: "draft", updated_at: new Date().toISOString() });
+    updateItem(template.id, { publish_status: "draft", is_active: false, updated_at: new Date().toISOString() });
   };
 
   const handleArchive = (template: ChecklistTemplate) => {
@@ -104,22 +104,13 @@ function MyTemplatesContent() {
   };
 
   const handleRestore = (template: ChecklistTemplate) => {
-    updateItem(template.id, { publish_status: "draft", updated_at: new Date().toISOString() });
+    updateItem(template.id, { publish_status: "draft", is_active: false, updated_at: new Date().toISOString() });
   };
 
   const handleDuplicate = (template: ChecklistTemplate) => {
-    const copy: ChecklistTemplate = {
-      ...template,
-      id: crypto.randomUUID(),
-      name: `${template.name} (Copy)`,
-      publish_status: "draft",
-      is_active: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    // Add via store — we need addItem but the store pattern uses items directly
-    // For now, navigate to create
-    router.push(`/${company}/dashboard/checklists/${template.id}`);
+    const copy = cloneChecklistTemplate(template);
+    addItem(copy);
+    router.push(`/${company}/dashboard/checklists/${copy.id}`);
     setMenuOpenId(null);
   };
 
@@ -133,7 +124,7 @@ function MyTemplatesContent() {
   const handleBulkPublish = () => {
     selectedIds.forEach((id) => {
       const t = templates.find((x) => x.id === id);
-      if (t && t.publish_status !== "published") {
+      if (t && getTemplatePublishStatus(t) !== "published") {
         updateItem(id, { publish_status: "published", is_active: true, updated_at: new Date().toISOString() });
       }
     });
@@ -178,21 +169,21 @@ function MyTemplatesContent() {
   };
 
   const statusTabs: { id: StatusFilter; label: string }[] = [
-    { id: "all", label: `All (${statusCounts.all})` },
-    { id: "draft", label: `Drafts (${statusCounts.draft})` },
-    { id: "published", label: `Live (${statusCounts.published})` },
-    { id: "archived", label: `Archived (${statusCounts.archived})` },
+    { id: "all", label: `${t("common.all")} (${statusCounts.all})` },
+    { id: "draft", label: `${t("industry_templates._ui.draft")} (${statusCounts.draft})` },
+    { id: "published", label: `${t("industry_templates._ui.published")} (${statusCounts.published})` },
+    { id: "archived", label: `${t("industry_templates._ui.archived")} (${statusCounts.archived})` },
   ];
 
   return (
     <div className="space-y-6">
       {/* Page Title + Actions */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Task Templates</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.templates")}</h1>
         <Link href={`/${company}/dashboard/checklists/new`}>
           <Button className="gap-2">
             <Plus className="h-4 w-4" />
-            Create Template
+            {t("industry_templates._ui.createTemplate")}
           </Button>
         </Link>
       </div>
@@ -207,7 +198,7 @@ function MyTemplatesContent() {
             )}
           >
             <ClipboardCheck className="h-4 w-4 shrink-0" />
-            My Templates
+            {t("industry_templates._ui.myTemplates")}
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
           </button>
           <Link
@@ -215,7 +206,7 @@ function MyTemplatesContent() {
             className="flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative whitespace-nowrap text-muted-foreground hover:text-foreground"
           >
             <Library className="h-4 w-4 shrink-0" />
-            Template Library
+            {t("industry_templates._ui.templateLibrary")}
           </Link>
         </div>
       </div>
@@ -242,7 +233,7 @@ function MyTemplatesContent() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search templates..."
+            placeholder={t("industry_templates._ui.searchTemplates")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -267,15 +258,13 @@ function MyTemplatesContent() {
           {filteredTemplates.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <ClipboardCheck className="h-10 w-10 text-muted-foreground/50 mb-3" />
-              <p className="text-sm font-medium">No templates found</p>
+              <p className="text-sm font-medium">{t("industry_templates._ui.noTemplatesFound")}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {statusFilter !== "all"
-                  ? `No ${statusFilter} templates. Try a different filter.`
-                  : "Browse the Template Library to get started."}
+                {t("industry_templates._ui.browseTemplates")}
               </p>
               <Link href={`/${company}/dashboard/checklists/templates`}>
                 <Button variant="outline" size="sm" className="mt-4 gap-2">
-                  <Library className="h-3.5 w-3.5" />Browse Template Library
+                  <Library className="h-3.5 w-3.5" />{t("industry_templates._ui.templateLibrary")}
                 </Button>
               </Link>
             </div>
@@ -304,7 +293,7 @@ function MyTemplatesContent() {
                 <tbody>
                   {filteredTemplates.map((template) => {
                     const subCount = getSubmissionCount(template.id);
-                    const status = template.publish_status || (template.is_active ? "published" : "draft");
+                    const status = getTemplatePublishStatus(template);
                     const category = (template as unknown as Record<string, unknown>).category as string || "general";
 
                     return (

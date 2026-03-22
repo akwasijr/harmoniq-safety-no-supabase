@@ -46,6 +46,7 @@ export default function NewChecklistPage() {
       category: "general",
       assignment: "all",
       recurrence: "daily",
+      publish_status: "draft",
       items: [
         {
           id: crypto.randomUUID(),
@@ -55,7 +56,7 @@ export default function NewChecklistPage() {
           order: 1,
         },
       ],
-      is_active: true,
+      is_active: false,
       created_at: now,
       updated_at: now,
     };

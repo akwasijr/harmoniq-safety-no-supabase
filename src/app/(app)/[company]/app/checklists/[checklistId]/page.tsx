@@ -22,6 +22,7 @@ import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
+import { isVisibleToFieldApp } from "@/lib/template-activation";
 import type { ChecklistResponse } from "@/types";
 
 export default function ChecklistFormPage() {
@@ -57,7 +58,13 @@ function ChecklistFormPageContent() {
   const { t } = useTranslation();
 
   const matchedTemplate = templates.find((tpl) => tpl.id === checklistId);
-  const template = matchedTemplate && user?.company_id && matchedTemplate.company_id !== user.company_id ? undefined : matchedTemplate;
+  const template =
+    matchedTemplate &&
+    user?.company_id &&
+    matchedTemplate.company_id === user.company_id &&
+    isVisibleToFieldApp(matchedTemplate)
+      ? matchedTemplate
+      : undefined;
 
   // Resume draft if ?draft=id is present
   const draftInitialized = React.useRef(false);

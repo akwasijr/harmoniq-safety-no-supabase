@@ -2,7 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FileText, ChevronRight, Clock, Tag, Newspaper, Calendar, FolderOpen, GraduationCap } from "lucide-react";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { useContentStore } from "@/stores/content-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
@@ -14,13 +16,25 @@ type TabType = "news" | "events" | "documents" | "training";
 
 export default function EmployeeNewsPage() {
   const company = useCompanyParam();
+  const router = useRouter();
   const { user } = useAuth();
+  const { settings } = useFieldAppSettings();
   const { t, formatDate } = useTranslation();
   const [activeTab, setActiveTab] = React.useState<TabType>("news");
 
   const { items: contentItems , isLoading } = useContentStore();
 
+  React.useEffect(() => {
+    if (!settings.newsEnabled) {
+      router.replace(`/${company}/app`);
+    }
+  }, [company, router, settings.newsEnabled]);
+
   if (!user) {
+    return <LoadingPage />;
+  }
+
+  if (!settings.newsEnabled) {
     return <LoadingPage />;
   }
   const content = contentItems.filter((c) => c.status === "published");
@@ -107,7 +121,7 @@ export default function EmployeeNewsPage() {
             <Link
               key={item.id}
               href={`/${company}/app/news/${item.id}`}
-              className="flex gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50 bg-card"
+              className="field-app-surface flex gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50 bg-card"
             >
               <div className={cn(
                 "flex h-12 w-12 items-center justify-center rounded-lg shrink-0",

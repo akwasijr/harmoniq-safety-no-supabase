@@ -24,10 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
-import { useAssetsStore } from "@/stores/assets-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useIncidentsStore } from "@/stores/incidents-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import { useCompanyParam } from "@/hooks/use-company-param";
@@ -53,10 +50,8 @@ export default function CorrectiveActionDetailPage() {
   const { t, formatDate } = useTranslation();
   const { hasPermission } = useAuth();
   const { toast } = useToast();
-  const { items: actions, update, isLoading } = useCorrectiveActionsStore();
-  const { items: assets } = useAssetsStore();
-  const { items: users } = useUsersStore();
-  const { items: incidents } = useIncidentsStore();
+  const { correctiveActions: actions, assets, inspections, users, incidents, workOrders, stores } = useCompanyData();
+  const { update, isLoading } = stores.correctiveActions;
 
   const canEdit = hasPermission("incidents.investigate");
 
@@ -92,9 +87,9 @@ export default function CorrectiveActionDetailPage() {
 
   const getUserName = (id: string | null) => getUserFirstLastName(id, users, t("common.none"));
 
-  const getIncident = (inspectionId: string | null) => {
+  const getInspection = (inspectionId: string | null) => {
     if (!inspectionId) return null;
-    return incidents.find((i) => i.id === inspectionId) || null;
+    return inspections.find((inspection) => inspection.id === inspectionId) || null;
   };
 
   const handleStatusChange = (newStatus: string) => {
@@ -144,7 +139,11 @@ export default function CorrectiveActionDetailPage() {
   const now = new Date();
   const isOverdue = action.status !== "completed" && new Date(action.due_date) < now;
   const asset = getAsset(action.asset_id);
-  const linkedIncident = getIncident(action.inspection_id);
+  const linkedInspection = getInspection(action.inspection_id);
+  const linkedIncident = linkedInspection?.incident_id
+    ? incidents.find((incident) => incident.id === linkedInspection.incident_id) || null
+    : null;
+  const linkedWorkOrders = workOrders.filter((workOrder) => workOrder.corrective_action_id === action.id);
   const nextStatuses = STATUS_FLOW[action.status] || [];
 
   const statusVariant = getStatusVariant(action.status, { isOverdue });
@@ -288,6 +287,58 @@ export default function CorrectiveActionDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {linkedInspection && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Linked inspection
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Link
+                  href={`/${company}/dashboard/inspections/${linkedInspection.id}`}
+                  className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+                >
+                  <FileText className="h-5 w-5 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">Inspection {linkedInspection.id}</p>
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {linkedInspection.result.replace(/_/g, " ")} · {formatDate(linkedInspection.inspected_at)}
+                    </p>
+                  </div>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
+          {linkedWorkOrders.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Wrench className="h-4 w-4" />
+                  Linked work orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {linkedWorkOrders.map((workOrder) => (
+                  <Link
+                    key={workOrder.id}
+                    href={`/${company}/dashboard/work-orders/${workOrder.id}`}
+                    className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+                  >
+                    <Wrench className="h-5 w-5 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{workOrder.title}</p>
+                      <p className="text-sm text-muted-foreground capitalize">{workOrder.status.replace(/_/g, " ")}</p>
+                    </div>
+                    <Badge variant="secondary" className="capitalize shrink-0">{workOrder.priority}</Badge>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Linked incident */}
           {linkedIncident && (

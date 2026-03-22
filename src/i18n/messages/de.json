@@ -1221,12 +1221,16 @@
     "companyName": "Firmenname",
     "urlSlug": "URL-Kennung",
     "countryAndRegulations": "Land & Vorschriften",
-    "countryDesc": "Select your operating country to get the correct safety regulations and risk assessment forms",
+    "countryDesc": "Wählen Sie Ihr Einsatzland, um Sicherheitsvorschriften und empfohlene Vorlagen auszurichten",
     "selected": "Selected",
     "basedOnSelection": "Based on your selection:",
-    "usRegulations": "Your employees will see Job Hazard Analysis (JHA) and Job Safety Analysis (JSA) forms for OSHA compliance.",
-    "nlRegulations": "Your employees will see RI&E (Risico-Inventarisatie en -Evaluatie) forms for Arbowet compliance.",
-    "seRegulations": "Your employees will see SAM (Systematiskt Arbetsmiljöarbete) forms for AFS 2023:1 compliance.",
+    "usRegulations": "Ihre Checklistenbibliothek verwendet US-Referenzen wie OSHA, NFPA und FDA.",
+    "gbRegulations": "Ihre Checklistenbibliothek verwendet britische Referenzen wie HSE, RIDDOR, COSHH und PUWER.",
+    "nlRegulations": "Ihre Checklistenbibliothek verwendet niederländische Referenzen wie Arbowet, RI&E und NEN 3140.",
+    "seRegulations": "Ihre Checklistenbibliothek verwendet schwedische Referenzen wie AFS, SAM und ESA.",
+    "deRegulations": "Ihre Checklistenbibliothek verwendet deutsche Referenzen wie ArbSchG, BetrSichV und DGUV.",
+    "frRegulations": "Ihre Checklistenbibliothek verwendet französische Referenzen wie Code du travail, DUERP und CACES.",
+    "esRegulations": "Ihre Checklistenbibliothek verwendet spanische Referenzen wie Ley 31/1995, PRL und RD 1215/1997.",
     "localization": "Lokalisierung",
     "languageAndRegional": "Language and regional preferences",
     "defaultLanguage": "Standardsprache",
@@ -1286,7 +1290,11 @@
     "demoMode": "Demo Mode",
     "securityDemoMessage": "Security settings are for demonstration only. In production, these would integrate with your identity provider.",
     "billingDemoMessage": "Billing information shown is for demonstration purposes. No actual charges will be made.",
-    "platformSecurityDemoMessage": "Platform security settings are for demonstration only. In production, these would enforce actual security policies."
+    "platformSecurityDemoMessage": "Platform security settings are for demonstration only. In production, these would enforce actual security policies.",
+    "currency": "Währung",
+    "measurementSystem": "Einheitensystem",
+    "metricUnits": "Metrische Einheiten",
+    "imperialUnits": "Imperiale Einheiten"
   },
   "newsApp": {
     "title": "News & Updates",
@@ -1896,1001 +1904,1007 @@
   },
   "industry_templates": {
     "_ui": {
-      "templateLibrary": "Template Library",
-      "browseTemplates": "Browse industry-specific checklist templates",
+      "templateLibrary": "Vorlagenbibliothek",
+      "browseTemplates": "Branchenspezifische Checklisten-Vorlagen durchsuchen",
       "activate": "Aktivieren",
-      "activateTemplate": "Activate Template",
-      "alreadyActivated": "Already Activated",
+      "activateTemplate": "Vorlage aktivieren",
+      "alreadyActivated": "Bereits aktiviert",
       "preview": "Vorschau",
-      "previewItems": "Preview Items",
+      "previewItems": "Einträge anzeigen",
       "items": "Elemente",
-      "regulation": "Regulation",
-      "frequency": "Frequency",
-      "category": "Category",
-      "tags": "Tags",
-      "filterByIndustry": "Filter by industry",
-      "allIndustries": "All Industries",
-      "searchTemplates": "Search templates...",
-      "noTemplatesFound": "No templates match your search",
-      "activateConfirm": "This will create a new checklist from this template. You can edit it before publishing to your team.",
-      "activatedSuccess": "Template activated. You can now edit and publish it.",
-      "publishToApp": "Publish to Field App",
-      "unpublish": "Unpublish",
-      "archive": "Archive",
-      "restore": "Restore",
-      "publishConfirm": "This checklist will become visible to field workers in the mobile app.",
-      "unpublishConfirm": "This will remove the checklist from the mobile app. Existing submissions will be kept.",
-      "publishedSuccess": "Checklist published to field app",
-      "unpublishedSuccess": "Checklist unpublished from field app",
-      "archivedSuccess": "Checklist archived",
-      "restoredSuccess": "Checklist restored to draft",
+      "regulation": "Vorschrift",
+      "frequency": "Häufigkeit",
+      "category": "Kategorie",
+      "tags": "Schlagwörter",
+      "filterByIndustry": "Nach Branche filtern",
+      "allIndustries": "Alle Branchen",
+      "searchTemplates": "Vorlagen suchen...",
+      "noTemplatesFound": "Keine Vorlagen entsprechen Ihrer Suche",
+      "activateConfirm": "Dadurch wird eine neue Checkliste aus dieser Vorlage erstellt. Sie können sie bearbeiten, bevor Sie sie in Ihrem Team veröffentlichen.",
+      "activatedSuccess": "Vorlage aktiviert. Sie können sie jetzt bearbeiten und veröffentlichen.",
+      "publishToApp": "In Field-App veröffentlichen",
+      "unpublish": "Veröffentlichung aufheben",
+      "archive": "Archivieren",
+      "restore": "Wiederherstellen",
+      "publishConfirm": "Diese Checkliste wird für Mitarbeitende im Außendienst in der mobilen App sichtbar.",
+      "unpublishConfirm": "Dadurch wird die Checkliste aus der mobilen App entfernt. Bestehende Einreichungen bleiben erhalten.",
+      "publishedSuccess": "Checkliste in der Field-App veröffentlicht",
+      "unpublishedSuccess": "Veröffentlichung der Checkliste in der Field-App aufgehoben",
+      "archivedSuccess": "Checkliste archiviert",
+      "restoredSuccess": "Checkliste als Entwurf wiederhergestellt",
       "draft": "Entwurf",
       "published": "Veröffentlicht",
       "archived": "Archiviert",
-      "recommendedForYou": "Recommended for your industry",
-      "otherIndustries": "Other industries",
-      "templateCount": "{count} templates available",
-      "fromTemplate": "From template"
+      "recommendedForYou": "Für Ihre Branche empfohlen",
+      "otherIndustries": "Andere Branchen",
+      "templateCount": "{count} Vorlagen verfügbar",
+      "fromTemplate": "Aus Vorlage",
+      "myTemplates": "Meine Vorlagen",
+      "createTemplate": "Vorlage erstellen",
+      "recommended": "Empfohlen",
+      "viewMyTemplates": "In Meine Vorlagen anzeigen",
+      "editRefine": "Klonen und bearbeiten",
+      "pushAsIs": "Unverändert veröffentlichen"
     },
     "_frequencies": {
-      "daily": "Daily",
-      "weekly": "Weekly",
-      "monthly": "Monthly",
-      "quarterly": "Quarterly",
-      "per_event": "Per event",
-      "per_shift": "Per shift",
-      "continuous": "Continuous"
+      "daily": "Täglich",
+      "weekly": "Wöchentlich",
+      "monthly": "Monatlich",
+      "quarterly": "Vierteljährlich",
+      "per_event": "Pro Ereignis",
+      "per_shift": "Pro Schicht",
+      "continuous": "Kontinuierlich"
     },
     "construction": {
-      "name": "Construction",
-      "description": "Safety checklists for construction sites, covering fall protection, scaffolding, excavation, and heavy equipment operations",
+      "name": "Bauwesen",
+      "description": "Sicherheitschecklisten für Baustellen, die Absturzsicherung, Gerüste, Aushubarbeiten und den Betrieb schwerer Geräte abdecken",
       "jha": {
-        "name": "Job Hazard Analysis (JHA)",
-        "description": "Systematic process to identify workplace hazards before each task, assess risk severity, and establish control measures for worker protection",
+        "name": "Gefährdungsanalyse der Tätigkeit (JHA)",
+        "description": "Systematischer Prozess zur Identifizierung von Gefährdungen am Arbeitsplatz vor jeder Aufgabe, zur Bewertung der Risikoschwere und zur Festlegung von Schutzmaßnahmen für Mitarbeitende",
         "items": {
-          "task_description": "Describe the task to be performed",
-          "step_sequence": "List the steps in the correct sequence",
-          "hazards_per_step": "Identify hazards for each step",
-          "risk_severity": "Rate the severity of identified risks (1-5)",
-          "risk_probability": "Rate the probability of occurrence (1-5)",
-          "control_measures": "Describe control measures for each hazard",
-          "ppe_required": "All required PPE has been identified and is available",
-          "responsible_person": "Name of the responsible person for this task",
-          "workers_briefed": "All workers have been briefed on the hazards and controls",
-          "sign_off": "Supervisor sign-off completed"
+          "task_description": "Auszuführende Aufgabe beschreiben",
+          "step_sequence": "Schritte in der richtigen Reihenfolge auflisten",
+          "hazards_per_step": "Gefährdungen für jeden Schritt identifizieren",
+          "risk_severity": "Schwere der identifizierten Risiken bewerten (1-5)",
+          "risk_probability": "Eintrittswahrscheinlichkeit bewerten (1-5)",
+          "control_measures": "Schutzmaßnahmen für jede Gefährdung beschreiben",
+          "ppe_required": "Alle erforderliche PSA wurde identifiziert und ist verfügbar",
+          "responsible_person": "Name der für diese Aufgabe verantwortlichen Person",
+          "workers_briefed": "Alle Mitarbeitenden wurden über Gefährdungen und Schutzmaßnahmen unterwiesen",
+          "sign_off": "Freigabe durch die Aufsicht abgeschlossen"
         }
       },
       "fall_protection": {
-        "name": "Fall Protection Audit",
-        "description": "Comprehensive inspection of fall protection systems including guardrails, harnesses, anchor points, and safety nets to ensure compliance with height safety regulations",
+        "name": "Prüfung der Absturzsicherung",
+        "description": "Umfassende Inspektion von Absturzsicherungssystemen einschließlich Geländern, Auffanggurten, Anschlagpunkten und Sicherheitsnetzen zur Sicherstellung der Einhaltung der Höhenarbeitsschutzvorschriften",
         "items": {
-          "guardrail_integrity": "Guardrails are intact and properly secured",
-          "harness_webbing": "Harness webbing is free of cuts, fraying, or damage",
-          "harness_d_ring": "D-ring is not bent, cracked, or corroded",
-          "harness_stitching": "All stitching is intact with no pulled threads",
-          "anchor_point_rating": "Anchor point is rated for the required load capacity",
-          "safety_net_condition": "Safety nets are properly positioned and in good condition",
-          "hole_covers_secured": "All floor/roof hole covers are secured and labeled",
-          "ladder_tie_off": "Ladders are properly tied off or secured at the top"
+          "guardrail_integrity": "Geländer sind intakt und ordnungsgemäß gesichert",
+          "harness_webbing": "Gurtband des Auffanggurts ist frei von Schnitten, Ausfransungen oder Beschädigungen",
+          "harness_d_ring": "D-Ring ist nicht verbogen, gerissen oder korrodiert",
+          "harness_stitching": "Alle Nähte sind intakt und weisen keine gezogenen Fäden auf",
+          "anchor_point_rating": "Anschlagpunkt ist für die erforderliche Traglast ausgelegt",
+          "safety_net_condition": "Sicherheitsnetze sind korrekt positioniert und in gutem Zustand",
+          "hole_covers_secured": "Alle Boden-/Dachöffnungsabdeckungen sind gesichert und gekennzeichnet",
+          "ladder_tie_off": "Leitern sind oben ordnungsgemäß angebunden oder gesichert"
         }
       },
       "scaffold": {
-        "name": "Scaffold Inspection",
-        "description": "Detailed inspection of scaffold structures for structural integrity, proper assembly, and compliance with safety standards before each use",
+        "name": "Gerüstinspektion",
+        "description": "Detaillierte Inspektion von Gerüstkonstruktionen auf strukturelle Integrität, ordnungsgemäßen Aufbau und Einhaltung der Sicherheitsstandards vor jeder Nutzung",
         "items": {
-          "base_plate_mudsill": "Base plates and mudsills are in good condition",
-          "cross_bracing": "Cross-bracing is secure and properly installed",
-          "planking_complete": "Planking is complete with no gaps greater than 1 inch",
-          "guardrails_height": "Guardrails are installed at 42 inches",
-          "toe_boards": "Toe boards are in place on all open sides",
-          "access_ladder": "Access ladder is properly secured",
-          "load_capacity_posted": "Load capacity is clearly posted",
-          "weather_damage": "No visible weather damage to scaffold components"
+          "base_plate_mudsill": "Fußplatten und Unterleger sind in gutem Zustand",
+          "cross_bracing": "Kreuzverstrebungen sind sicher und ordnungsgemäß montiert",
+          "planking_complete": "Belag ist vollständig, ohne Lücken größer als 1 Zoll",
+          "guardrails_height": "Geländer sind in 42 Zoll Höhe installiert",
+          "toe_boards": "Fußleisten sind an allen offenen Seiten vorhanden",
+          "access_ladder": "Zugangsleiter ist ordnungsgemäß gesichert",
+          "load_capacity_posted": "Tragfähigkeit ist deutlich angegeben",
+          "weather_damage": "Keine sichtbaren Witterungsschäden an Gerüstbauteilen"
         }
       },
       "toolbox_talk": {
-        "name": "Toolbox Talk Record",
-        "description": "Documentation of daily safety briefings conducted on-site, including the topic covered, attendees, and any follow-up actions identified",
+        "name": "Protokoll der Sicherheitsunterweisung",
+        "description": "Dokumentation der täglich vor Ort durchgeführten Sicherheitskurzbesprechungen einschließlich Thema, Teilnehmenden und identifizierter Folgemaßnahmen",
         "items": {
-          "topic_covered": "Topic discussed during the toolbox talk",
-          "presenter_name": "Name of the presenter",
-          "attendee_count": "Number of attendees present",
-          "attendees_signed": "All attendees have signed the attendance sheet",
-          "questions_raised": "Questions or concerns raised during the talk",
-          "follow_up_actions": "Follow-up actions identified and assigned"
+          "topic_covered": "In der Sicherheitsunterweisung behandeltes Thema",
+          "presenter_name": "Name der präsentierenden Person",
+          "attendee_count": "Anzahl der anwesenden Teilnehmenden",
+          "attendees_signed": "Alle Teilnehmenden haben die Anwesenheitsliste unterschrieben",
+          "questions_raised": "Während der Besprechung angesprochene Fragen oder Bedenken",
+          "follow_up_actions": "Identifizierte und zugewiesene Folgemaßnahmen"
         }
       },
       "excavation": {
-        "name": "Excavation/Trenching Inspection",
-        "description": "Safety inspection for excavation and trenching work, verifying soil classification, protective systems, and safe access before workers enter the trench",
+        "name": "Inspektion von Aushub-/Grabenarbeiten",
+        "description": "Sicherheitsinspektion für Aushub- und Grabenarbeiten mit Überprüfung der Bodenklassifizierung, Schutzsysteme und sicheren Zugänge, bevor Beschäftigte den Graben betreten",
         "items": {
-          "soil_classification": "Soil has been properly classified",
-          "shoring_adequate": "Shoring or sloping is adequate for the depth",
-          "spoil_pile_distance": "Spoil pile is at least 2 feet from the trench edge",
-          "water_accumulation": "No hazardous water accumulation in the trench",
-          "atmospheric_testing": "Atmospheric testing completed where required",
-          "egress_points": "Egress points are available every 25 feet",
-          "utilities_marked": "All underground utilities have been located and marked"
+          "soil_classification": "Boden wurde ordnungsgemäß klassifiziert",
+          "shoring_adequate": "Verbau oder Böschung ist für die Tiefe ausreichend",
+          "spoil_pile_distance": "Aushubmaterial liegt mindestens 2 Fuß vom Grabenrand entfernt",
+          "water_accumulation": "Keine gefährliche Wasseransammlung im Graben",
+          "atmospheric_testing": "Atmosphärische Prüfung wurde bei Bedarf durchgeführt",
+          "egress_points": "Ausstiegspunkte sind alle 25 Fuß verfügbar",
+          "utilities_marked": "Alle unterirdischen Versorgungsleitungen wurden lokalisiert und markiert"
         }
       },
       "crane": {
-        "name": "Crane/Hoist Pre-Operation",
-        "description": "Pre-operation safety check for cranes and hoisting equipment, verifying mechanical condition, operator qualifications, and lift plan readiness",
+        "name": "Vorbetriebliche Prüfung von Kran/Hebezeug",
+        "description": "Sicherheitsprüfung vor dem Betrieb von Kränen und Hebezeugen mit Überprüfung des mechanischen Zustands, der Qualifikation der Bedienperson und der Einsatzbereitschaft des Hebeplans",
         "items": {
-          "wire_rope_condition": "Wire rope is free of kinks, bird-caging, and broken strands",
-          "hook_latch": "Hook safety latch is functional",
-          "outriggers_deployed": "Outriggers are fully extended and on solid ground",
-          "load_chart_available": "Load chart is available and legible in the cab",
-          "swing_radius": "Swing radius is barricaded and clear of personnel",
-          "operator_certification": "Operator certification is current and valid",
-          "pre_lift_meeting": "Pre-lift meeting has been conducted"
+          "wire_rope_condition": "Drahtseil ist frei von Knicken, Aufdrehungen und gebrochenen Litzen",
+          "hook_latch": "Sicherheitsverriegelung am Haken funktioniert",
+          "outriggers_deployed": "Abstützungen sind vollständig ausgefahren und stehen auf festem Untergrund",
+          "load_chart_available": "Lastdiagramm ist in der Kabine vorhanden und lesbar",
+          "swing_radius": "Schwenkbereich ist abgesperrt und frei von Personen",
+          "operator_certification": "Bedienerqualifikation ist aktuell und gültig",
+          "pre_lift_meeting": "Besprechung vor dem Hebevorgang wurde durchgeführt"
         }
       }
     },
     "manufacturing": {
-      "name": "Manufacturing",
-      "description": "Safety checklists for manufacturing facilities, covering lockout/tagout, machine guarding, ergonomics, and production floor safety",
+      "name": "Fertigung",
+      "description": "Sicherheitschecklisten für Fertigungsbetriebe mit den Schwerpunkten Lockout/Tagout, Maschinenschutz, Ergonomie und Sicherheit in der Produktion",
       "loto": {
-        "name": "Lockout/Tagout Verification",
-        "description": "Verification checklist for lockout/tagout procedures to confirm hazardous energy sources are properly isolated before servicing or maintenance work",
+        "name": "Lockout/Tagout-Verifizierung",
+        "description": "Verifizierungsliste für Lockout/Tagout-Verfahren zur Bestätigung, dass gefährliche Energiequellen vor Service- oder Wartungsarbeiten ordnungsgemäß isoliert wurden",
         "items": {
-          "machine_identified": "Machine or equipment has been properly identified",
-          "energy_sources_listed": "All energy sources have been identified and listed",
-          "isolation_devices": "Isolation devices have been applied to all energy sources",
-          "stored_energy_released": "All stored or residual energy has been released",
-          "verification_attempted": "Verification of isolation has been attempted",
-          "authorized_employee": "Authorized employee has signed off on the lockout",
-          "group_lockout": "Group lockout procedures followed (if applicable)",
-          "tags_attached": "Lockout/tagout tags are properly attached and legible"
+          "machine_identified": "Maschine oder Anlage wurde ordnungsgemäß identifiziert",
+          "energy_sources_listed": "Alle Energiequellen wurden identifiziert und aufgelistet",
+          "isolation_devices": "Isolierungseinrichtungen wurden an allen Energiequellen angebracht",
+          "stored_energy_released": "Gespeicherte oder Restenergie wurde vollständig abgebaut",
+          "verification_attempted": "Überprüfung der Isolierung wurde durchgeführt",
+          "authorized_employee": "Autorisierte Person hat die Sperrung freigegeben",
+          "group_lockout": "Gruppen-Lockout-Verfahren wurden eingehalten (falls zutreffend)",
+          "tags_attached": "Lockout/Tagout-Kennzeichnungen sind ordnungsgemäß angebracht und lesbar"
         }
       },
       "machine_guarding": {
-        "name": "Machine Guarding Inspection",
-        "description": "Inspection of machine guarding systems to verify guards are in place, interlocks are functioning, and emergency stops are accessible and tested",
+        "name": "Inspektion des Maschinenschutzes",
+        "description": "Inspektion von Maschinenschutzsystemen zur Überprüfung, dass Schutzvorrichtungen vorhanden sind, Verriegelungen funktionieren und Not-Aus-Einrichtungen zugänglich und geprüft sind",
         "items": {
-          "point_of_operation": "Point-of-operation guards are in place and secure",
-          "interlock_functioning": "Safety interlocks are functioning correctly",
-          "emergency_stop": "Emergency stop button is accessible and tested",
-          "light_curtain": "Light curtain alignment is correct (if applicable)",
-          "guard_mounting": "Guard mounting hardware is tight and secure",
-          "no_bypass": "No bypass devices are present on safety systems",
-          "warning_labels": "Warning labels are visible and legible"
+          "point_of_operation": "Schutzvorrichtungen am Arbeitsbereich sind vorhanden und sicher befestigt",
+          "interlock_functioning": "Sicherheitsverriegelungen funktionieren korrekt",
+          "emergency_stop": "Not-Aus-Taste ist zugänglich und geprüft",
+          "light_curtain": "Lichtschranke ist korrekt ausgerichtet (falls zutreffend)",
+          "guard_mounting": "Befestigungsteile der Schutzvorrichtung sind fest und sicher",
+          "no_bypass": "Keine Umgehungseinrichtungen an Sicherheitssystemen vorhanden",
+          "warning_labels": "Warnhinweise sind sichtbar und lesbar"
         }
       },
       "ergonomic": {
-        "name": "Ergonomic Assessment",
-        "description": "Workstation ergonomic evaluation to identify repetitive motion risks, awkward postures, and force requirements, with recommendations for improvement",
+        "name": "Ergonomische Beurteilung",
+        "description": "Ergonomische Bewertung des Arbeitsplatzes zur Identifizierung von Risiken durch repetitive Bewegungen, ungünstige Körperhaltungen und Kraftaufwand sowie mit Empfehlungen zur Verbesserung",
         "items": {
-          "repetitive_motion": "Repetitive motion frequency has been assessed",
-          "force_requirements": "Force requirements are within acceptable limits",
-          "awkward_postures": "Awkward postures have been identified and documented",
-          "workstation_height": "Workstation height is appropriate for the worker",
-          "tool_grip": "Tool grip design minimizes strain",
-          "rest_breaks": "Adequate rest break schedule is in place",
-          "modifications": "Recommended modifications have been documented"
+          "repetitive_motion": "Häufigkeit repetitiver Bewegungen wurde bewertet",
+          "force_requirements": "Kraftanforderungen liegen innerhalb akzeptabler Grenzen",
+          "awkward_postures": "Ungünstige Körperhaltungen wurden identifiziert und dokumentiert",
+          "workstation_height": "Arbeitshöhe ist für die arbeitende Person geeignet",
+          "tool_grip": "Werkzeuggriff minimiert Belastungen",
+          "rest_breaks": "Ausreichender Pausenplan ist vorhanden",
+          "modifications": "Empfohlene Anpassungen wurden dokumentiert"
         }
       },
       "forklift": {
-        "name": "Forklift Daily Pre-Use",
-        "description": "Daily pre-use inspection for forklifts and powered industrial trucks, verifying mechanical systems, safety devices, and operator readiness",
+        "name": "Tägliche Vorbenutzungsprüfung des Gabelstaplers",
+        "description": "Tägliche Vorbenutzungsprüfung für Gabelstapler und Flurförderzeuge mit Überprüfung mechanischer Systeme, Sicherheitseinrichtungen und Einsatzbereitschaft der Bedienperson",
         "items": {
-          "tires_wheels": "Tires and wheels are in good condition",
-          "forks_condition": "Forks are free of cracks, bends, or excessive wear",
-          "hydraulic_lines": "Hydraulic lines show no leaks or damage",
-          "mast_chains": "Mast and chains operate smoothly",
-          "horn_working": "Horn is functioning",
-          "lights_working": "All lights are functioning (headlights, tail, strobe)",
-          "backup_alarm": "Backup alarm is audible",
-          "seatbelt": "Seatbelt is present and functional",
-          "brakes_tested": "Brakes have been tested and are responsive",
-          "steering": "Steering responds correctly",
-          "battery_fuel": "Battery charge or fuel level is adequate",
-          "fire_extinguisher": "Fire extinguisher is mounted and charged"
+          "tires_wheels": "Reifen und Räder sind in gutem Zustand",
+          "forks_condition": "Gabelzinken sind frei von Rissen, Verbiegungen oder übermäßigem Verschleiß",
+          "hydraulic_lines": "Hydraulikleitungen weisen keine Lecks oder Schäden auf",
+          "mast_chains": "Hubmast und Ketten laufen ruhig",
+          "horn_working": "Hupe funktioniert",
+          "lights_working": "Alle Leuchten funktionieren (Front-, Heck-, Rundumleuchte)",
+          "backup_alarm": "Rückfahrwarner ist hörbar",
+          "seatbelt": "Sicherheitsgurt ist vorhanden und funktionsfähig",
+          "brakes_tested": "Bremsen wurden geprüft und reagieren ordnungsgemäß",
+          "steering": "Lenkung reagiert korrekt",
+          "battery_fuel": "Batterieladung bzw. Kraftstoffstand ist ausreichend",
+          "fire_extinguisher": "Feuerlöscher ist montiert und einsatzbereit"
         }
       },
       "chemical_spill": {
-        "name": "Chemical Spill Response Readiness",
-        "description": "Readiness assessment for chemical spill response, verifying spill kit contents, emergency equipment, PPE availability, and evacuation route accessibility",
+        "name": "Bereitschaft für chemische Verschüttungsreaktion",
+        "description": "Bereitschaftsbewertung für die Reaktion auf Chemikalienverschüttungen mit Überprüfung des Inhalts von Spill-Kits, Notfalleinrichtungen, verfügbarer PSA und zugänglicher Evakuierungswege",
         "items": {
-          "spill_kit_location": "Spill kit location is known and accessible",
-          "spill_kit_contents": "Spill kit contents are complete and not expired",
-          "sds_binder": "SDS binder is current and accessible",
-          "eyewash_tested": "Eyewash station has been tested (weekly flush)",
-          "shower_tested": "Emergency shower has been tested",
-          "ppe_available": "Required PPE for spill response is available",
-          "emergency_contacts": "Emergency contact information is posted",
-          "evacuation_route": "Evacuation route is clear and marked"
+          "spill_kit_location": "Standort des Spill-Kits ist bekannt und zugänglich",
+          "spill_kit_contents": "Inhalt des Spill-Kits ist vollständig und nicht abgelaufen",
+          "sds_binder": "Sicherheitsdatenblatt-Ordner ist aktuell und zugänglich",
+          "eyewash_tested": "Augendusche wurde geprüft (wöchentliche Spülung)",
+          "shower_tested": "Notdusche wurde geprüft",
+          "ppe_available": "Erforderliche PSA für die Reaktion auf Verschüttungen ist verfügbar",
+          "emergency_contacts": "Notfallkontaktinformationen sind ausgehängt",
+          "evacuation_route": "Evakuierungsweg ist frei und gekennzeichnet"
         }
       },
       "safety_walk": {
-        "name": "Production Floor Safety Walk",
-        "description": "General safety walkthrough of the production floor to assess housekeeping, PPE compliance, emergency equipment readiness, and overall safety conditions",
+        "name": "Sicherheitsrundgang in der Produktion",
+        "description": "Allgemeiner Sicherheitsrundgang in der Produktion zur Bewertung von Ordnung und Sauberkeit, Einhaltung der PSA, Bereitschaft der Notfalleinrichtungen und der allgemeinen Sicherheitsbedingungen",
         "items": {
-          "aisles_clear": "Aisles and walkways are clear and unobstructed",
-          "ppe_compliance": "All workers are wearing required PPE",
-          "housekeeping": "Housekeeping is acceptable throughout the area",
-          "emergency_exits": "Emergency exits are unobstructed and marked",
-          "fire_extinguishers": "Fire extinguishers are accessible and inspected",
-          "noise_levels": "Noise levels are within acceptable limits",
-          "first_aid_kit": "First aid kit is stocked and accessible",
-          "general_observations": "Additional safety observations or concerns"
+          "aisles_clear": "Gänge und Verkehrswege sind frei und nicht blockiert",
+          "ppe_compliance": "Alle Mitarbeitenden tragen die erforderliche PSA",
+          "housekeeping": "Ordnung und Sauberkeit im gesamten Bereich sind akzeptabel",
+          "emergency_exits": "Notausgänge sind frei und gekennzeichnet",
+          "fire_extinguishers": "Feuerlöscher sind zugänglich und geprüft",
+          "noise_levels": "Lärmpegel liegen innerhalb akzeptabler Grenzen",
+          "first_aid_kit": "Erste-Hilfe-Kasten ist bestückt und zugänglich",
+          "general_observations": "Zusätzliche Sicherheitsbeobachtungen oder Bedenken"
         }
       }
     },
     "oil_gas": {
-      "name": "Oil & Gas",
-      "description": "Safety checklists for oil and gas operations, covering permit-to-work, confined space entry, H2S safety, and well site inspections",
+      "name": "Öl & Gas",
+      "description": "Sicherheitschecklisten für Öl- und Gasbetriebe mit den Schwerpunkten Arbeitserlaubnisse, enge Räume, H2S-Sicherheit und Inspektionen von Bohrstandorten",
       "ptw": {
-        "name": "Permit-to-Work",
-        "description": "Formal authorization process for high-risk work activities, ensuring hazards are identified, controls are in place, and all parties have reviewed the work scope",
+        "name": "Arbeitserlaubnis",
+        "description": "Formaler Freigabeprozess für Hochrisikoarbeiten, der sicherstellt, dass Gefährdungen identifiziert wurden, Schutzmaßnahmen vorhanden sind und alle Beteiligten den Arbeitsumfang geprüft haben",
         "items": {
-          "work_description": "Work to be performed has been clearly described",
-          "hazards_identified": "All hazards have been identified and documented",
-          "gas_test_results": "Gas test results are within safe limits",
-          "isolation_verified": "Isolation of energy sources has been verified",
-          "ppe_specified": "Required PPE has been specified and is available",
-          "emergency_procedures": "Emergency procedures have been communicated",
-          "time_validity": "Permit validity period has been set and communicated",
-          "supervisor_authorization": "Supervisor has authorized the work"
+          "work_description": "Auszuführende Arbeiten wurden klar beschrieben",
+          "hazards_identified": "Alle Gefährdungen wurden identifiziert und dokumentiert",
+          "gas_test_results": "Gasmessergebnisse liegen innerhalb sicherer Grenzwerte",
+          "isolation_verified": "Isolation der Energiequellen wurde verifiziert",
+          "ppe_specified": "Erforderliche PSA wurde festgelegt und ist verfügbar",
+          "emergency_procedures": "Notfallverfahren wurden kommuniziert",
+          "time_validity": "Gültigkeitsdauer der Erlaubnis wurde festgelegt und kommuniziert",
+          "supervisor_authorization": "Aufsicht hat die Arbeiten freigegeben"
         }
       },
       "confined_space": {
-        "name": "Confined Space Entry",
-        "description": "Entry permit checklist for confined space work, including atmospheric monitoring, ventilation setup, rescue planning, and continuous monitoring requirements",
+        "name": "Arbeiten in engen Räumen",
+        "description": "Checkliste für die Einfahrerlaubnis bei Arbeiten in engen Räumen, einschließlich Atmosphärenüberwachung, Lüftung, Rettungsplanung und Anforderungen an die kontinuierliche Überwachung",
         "items": {
-          "atmospheric_o2": "Oxygen level is between 19.5% and 23.5%",
-          "atmospheric_lel": "LEL reading is below 10% of the lower explosive limit",
-          "atmospheric_h2s": "H2S level is below the action level",
-          "atmospheric_co": "CO level is below the permissible exposure limit",
-          "ventilation_setup": "Ventilation equipment is set up and functioning",
-          "rescue_plan": "Rescue plan has been reviewed and is in place",
-          "attendant_assigned": "Qualified attendant has been assigned",
-          "communication_method": "Communication method has been established and tested",
-          "entry_permit_signed": "Entry permit has been completed and signed",
-          "continuous_monitoring": "Continuous atmospheric monitoring is active"
+          "atmospheric_o2": "Sauerstoffgehalt liegt zwischen 19,5 % und 23,5 %",
+          "atmospheric_lel": "LEL-Wert liegt unter 10 % der unteren Explosionsgrenze",
+          "atmospheric_h2s": "H2S-Wert liegt unter dem Auslösewert",
+          "atmospheric_co": "CO-Wert liegt unter dem zulässigen Expositionsgrenzwert",
+          "ventilation_setup": "Lüftungseinrichtung ist aufgebaut und funktionsfähig",
+          "rescue_plan": "Rettungsplan wurde geprüft und ist vorhanden",
+          "attendant_assigned": "Qualifizierte Aufsichtsperson wurde zugewiesen",
+          "communication_method": "Kommunikationsmethode wurde festgelegt und getestet",
+          "entry_permit_signed": "Einfahrerlaubnis wurde vollständig ausgefüllt und unterzeichnet",
+          "continuous_monitoring": "Kontinuierliche Atmosphärenüberwachung ist aktiv"
         }
       },
       "h2s": {
-        "name": "H2S Safety Check",
-        "description": "Pre-work safety verification for areas with potential hydrogen sulfide exposure, covering personal monitors, breathing apparatus, and buddy system protocols",
+        "name": "H2S-Sicherheitsprüfung",
+        "description": "Sicherheitsprüfung vor Arbeitsbeginn in Bereichen mit möglicher Schwefelwasserstoffexposition, einschließlich persönlicher Monitore, Atemschutzgeräte und Buddy-System-Protokolle",
         "items": {
-          "personal_monitor": "Personal H2S monitor is calibrated and functioning",
-          "wind_sock": "Wind sock or direction indicator is visible",
-          "muster_points": "Muster points have been identified and communicated",
-          "scba_staged": "SCBA equipment is staged and ready for use",
-          "buddy_system": "Buddy system is confirmed and in effect",
-          "h2s_training": "H2S training is current for all personnel on site",
-          "alarm_threshold": "Alarm threshold is set at 10 ppm"
+          "personal_monitor": "Persönlicher H2S-Monitor ist kalibriert und funktionsfähig",
+          "wind_sock": "Windsack oder Richtungsanzeiger ist sichtbar",
+          "muster_points": "Sammelpunkte wurden festgelegt und kommuniziert",
+          "scba_staged": "Umluftunabhängiges Atemschutzgerät ist bereitgestellt und einsatzbereit",
+          "buddy_system": "Buddy-System ist bestätigt und aktiv",
+          "h2s_training": "H2S-Schulung ist für alle Personen vor Ort aktuell",
+          "alarm_threshold": "Alarmschwelle ist auf 10 ppm eingestellt"
         }
       },
       "hot_work": {
-        "name": "Hot Work Permit",
-        "description": "Safety checklist for hot work activities such as welding, cutting, or grinding in areas where fire or explosion hazards may exist",
+        "name": "Heißarbeitserlaubnis",
+        "description": "Sicherheitscheckliste für Heißarbeiten wie Schweißen, Schneiden oder Schleifen in Bereichen mit möglicher Brand- oder Explosionsgefahr",
         "items": {
-          "fire_watch": "Fire watch has been assigned and is in position",
-          "radius_cleared": "Area within 35 feet has been cleared of combustibles",
-          "fire_extinguisher": "Fire extinguisher is staged within reach",
-          "gas_test_lel": "Gas test confirms below 10% LEL",
-          "ventilation": "Adequate ventilation has been confirmed",
-          "post_work_watch": "Post-work 30-minute fire watch has been scheduled",
-          "hot_work_area": "Hot work area has been properly designated"
+          "fire_watch": "Brandwache wurde zugewiesen und ist vor Ort",
+          "radius_cleared": "Bereich im Umkreis von 35 Fuß wurde von brennbaren Materialien geräumt",
+          "fire_extinguisher": "Feuerlöscher ist in Reichweite bereitgestellt",
+          "gas_test_lel": "Gasprüfung bestätigt weniger als 10 % LEL",
+          "ventilation": "Ausreichende Lüftung wurde bestätigt",
+          "post_work_watch": "30-minütige Brandwache nach Arbeitsende wurde eingeplant",
+          "hot_work_area": "Bereich für Heißarbeiten wurde ordnungsgemäß ausgewiesen"
         }
       },
       "well_site": {
-        "name": "Well Site Inspection",
-        "description": "Routine inspection of well site operations and equipment, covering blowout preventer function, flowline integrity, containment, and emergency readiness",
+        "name": "Inspektion des Bohrstandorts",
+        "description": "Routineinspektion von Arbeiten und Geräten am Bohrstandort mit Überprüfung der Funktion des Blowout-Preventers, der Integrität von Leitungen, der Rückhaltung und der Notfallbereitschaft",
         "items": {
-          "bop_function": "BOP has been function tested",
-          "flowline_integrity": "Flowlines are intact with no visible leaks",
-          "tank_levels": "Tank levels are within acceptable range",
-          "containment_integrity": "Secondary containment is intact",
-          "flare_operation": "Flare system is operating correctly",
-          "road_conditions": "Access road conditions are safe",
-          "signage_visible": "Required signage is visible and legible",
-          "emergency_equipment": "Emergency equipment is accessible and functional"
+          "bop_function": "BOP wurde funktionsgeprüft",
+          "flowline_integrity": "Förderleitungen sind intakt und weisen keine sichtbaren Lecks auf",
+          "tank_levels": "Tankfüllstände liegen im zulässigen Bereich",
+          "containment_integrity": "Sekundäre Rückhaltung ist intakt",
+          "flare_operation": "Fackelsystem funktioniert ordnungsgemäß",
+          "road_conditions": "Zufahrtsstraßenbedingungen sind sicher",
+          "signage_visible": "Erforderliche Beschilderung ist sichtbar und lesbar",
+          "emergency_equipment": "Notfallausrüstung ist zugänglich und funktionsfähig"
         }
       },
       "contractor": {
-        "name": "Contractor Orientation",
-        "description": "Safety orientation checklist for contractors entering the site, verifying induction completion, hazard awareness, PPE, and required documentation",
+        "name": "Unternehmerunterweisung",
+        "description": "Sicherheitsunterweisung für Auftragnehmende beim Betreten des Standorts mit Überprüfung des Abschlusses der Einführung, des Gefährdungsbewusstseins, der PSA und der erforderlichen Unterlagen",
         "items": {
-          "safety_induction": "Contractor has completed safety induction",
-          "site_hazards": "Site-specific hazards have been reviewed",
-          "emergency_procedures": "Emergency procedures have been understood",
-          "ppe_verified": "PPE has been provided and verified",
-          "work_permit": "Work permit has been obtained",
-          "insurance_docs": "Insurance documentation is on file"
+          "safety_induction": "Auftragnehmende haben die Sicherheitseinweisung abgeschlossen",
+          "site_hazards": "Standortspezifische Gefährdungen wurden besprochen",
+          "emergency_procedures": "Notfallverfahren wurden verstanden",
+          "ppe_verified": "PSA wurde bereitgestellt und überprüft",
+          "work_permit": "Arbeitserlaubnis wurde eingeholt",
+          "insurance_docs": "Versicherungsunterlagen liegen vor"
         }
       }
     },
     "healthcare": {
-      "name": "Healthcare",
-      "description": "Safety checklists for healthcare facilities, covering infection control, sharps disposal, patient safety, and emergency equipment readiness",
+      "name": "Gesundheitswesen",
+      "description": "Sicherheitschecklisten für Gesundheitseinrichtungen mit den Schwerpunkten Infektionsschutz, Entsorgung spitzer Gegenstände, Patientensicherheit und Einsatzbereitschaft von Notfallequipment",
       "infection_control": {
-        "name": "Infection Control Round",
-        "description": "Routine infection prevention round to verify hand hygiene availability, PPE supply, isolation protocols, and surface disinfection compliance",
+        "name": "Infektionsschutz-Rundgang",
+        "description": "Regelmäßiger Rundgang zur Infektionsprävention zur Überprüfung der Verfügbarkeit von Handhygiene, PSA-Beständen, Isolationsprotokollen und Einhaltung der Flächendesinfektion",
         "items": {
-          "hand_hygiene_stations": "Hand hygiene stations are stocked with soap and sanitizer",
-          "ppe_supply": "PPE supply is adequate for the unit",
-          "isolation_signage": "Isolation signage is correct and in place",
-          "sharps_containers": "Sharps containers are not overfull (below 3/4 line)",
-          "surface_disinfection": "Surface disinfection schedule is being followed",
-          "patient_placement": "Patient placement is appropriate for infection status"
+          "hand_hygiene_stations": "Handhygienestationen sind mit Seife und Desinfektionsmittel bestückt",
+          "ppe_supply": "PSA-Bestand ist für die Station ausreichend",
+          "isolation_signage": "Isolationsbeschilderung ist korrekt und vorhanden",
+          "sharps_containers": "Behälter für spitze Gegenstände sind nicht überfüllt (unter der 3/4-Markierung)",
+          "surface_disinfection": "Zeitplan für Flächendesinfektion wird eingehalten",
+          "patient_placement": "Unterbringung der Patientinnen und Patienten ist dem Infektionsstatus angemessen"
         }
       },
       "sharps": {
-        "name": "Sharps Disposal Audit",
-        "description": "Audit of sharps disposal practices and container management to ensure safe handling and regulatory compliance across clinical areas",
+        "name": "Audit zur Entsorgung spitzer Gegenstände",
+        "description": "Audit der Entsorgungspraktiken für spitze Gegenstände und des Behältermanagements zur Sicherstellung einer sicheren Handhabung und der Einhaltung gesetzlicher Vorgaben in klinischen Bereichen",
         "items": {
-          "container_fill_level": "Container fill level is below the 3/4 line",
-          "mounting_secure": "Container is securely mounted",
-          "no_protruding_items": "No items are protruding from the container",
-          "label_visible": "Container label is visible and legible",
-          "replacements_available": "Replacement containers are available nearby",
-          "disposal_log": "Disposal log is current",
-          "needle_free_systems": "Needle-free systems are in use where applicable"
+          "container_fill_level": "Füllstand des Behälters liegt unter der 3/4-Markierung",
+          "mounting_secure": "Behälter ist sicher befestigt",
+          "no_protruding_items": "Es ragen keine Gegenstände aus dem Behälter heraus",
+          "label_visible": "Behälterkennzeichnung ist sichtbar und lesbar",
+          "replacements_available": "Ersatzbehälter sind in der Nähe verfügbar",
+          "disposal_log": "Entsorgungsprotokoll ist aktuell",
+          "needle_free_systems": "Nadelfreie Systeme werden verwendet, wo anwendbar"
         }
       },
       "patient_safety": {
-        "name": "Patient Safety Round",
-        "description": "Bedside safety round to verify patient identification, fall risk assessment, medication verification, and care plan currency",
+        "name": "Rundgang Patientensicherheit",
+        "description": "Sicherheitsrundgang am Bett zur Überprüfung der Patientenidentifikation, Sturzrisikobewertung, Medikamentenverifikation und Aktualität des Pflegeplans",
         "items": {
-          "bed_rails": "Bed rails are appropriate for patient needs",
-          "call_bell": "Call bell is within patient reach",
-          "fall_risk": "Fall risk has been assessed and documented",
-          "medication_verification": "Medication verification has been completed",
-          "id_band": "Patient identification band is present and correct",
-          "allergies_documented": "Allergies are documented and visible",
-          "care_plan": "Care plan is current and updated"
+          "bed_rails": "Seitengitter sind den Bedürfnissen der Patientinnen und Patienten angemessen",
+          "call_bell": "Rufanlage ist für die Patientinnen und Patienten erreichbar",
+          "fall_risk": "Sturzrisiko wurde bewertet und dokumentiert",
+          "medication_verification": "Medikamentenverifikation wurde abgeschlossen",
+          "id_band": "Patientenidentifikationsband ist vorhanden und korrekt",
+          "allergies_documented": "Allergien sind dokumentiert und sichtbar",
+          "care_plan": "Pflegeplan ist aktuell und aktualisiert"
         }
       },
       "emergency_equip": {
-        "name": "Emergency Equipment Check",
-        "description": "Inspection of clinical emergency equipment including crash carts, defibrillators, suction devices, and emergency medications for readiness",
+        "name": "Prüfung der Notfallausrüstung",
+        "description": "Inspektion klinischer Notfallausrüstung einschließlich Notfallwagen, Defibrillatoren, Absauggeräten und Notfallmedikamenten hinsichtlich Einsatzbereitschaft",
         "items": {
-          "crash_cart_sealed": "Crash cart is sealed with tamper indicator intact",
-          "defibrillator": "Defibrillator is charged and self-test passed",
-          "suction_working": "Suction equipment is working",
-          "o2_supply": "Oxygen supply is adequate",
-          "emergency_meds": "Emergency medications are not expired",
-          "resuscitation_bag": "Resuscitation bag and mask are intact"
+          "crash_cart_sealed": "Notfallwagen ist versiegelt, Manipulationsanzeige intakt",
+          "defibrillator": "Defibrillator ist geladen und Selbsttest bestanden",
+          "suction_working": "Absauggerät funktioniert",
+          "o2_supply": "Sauerstoffversorgung ist ausreichend",
+          "emergency_meds": "Notfallmedikamente sind nicht abgelaufen",
+          "resuscitation_bag": "Beatmungsbeutel und Maske sind intakt"
         }
       },
       "hand_hygiene": {
-        "name": "Hand Hygiene Observation",
-        "description": "Direct observation audit of hand hygiene compliance based on the WHO five moments, documenting technique and compliance rates",
+        "name": "Beobachtung der Handhygiene",
+        "description": "Direkte Beobachtung der Einhaltung der Handhygiene anhand der fünf WHO-Momente mit Dokumentation der Technik und der Compliance-Rate",
         "items": {
-          "before_patient": "Hand hygiene performed before patient contact",
-          "after_patient": "Hand hygiene performed after patient contact",
-          "after_surroundings": "Hand hygiene performed after touching patient surroundings",
-          "before_clean_procedure": "Hand hygiene performed before clean or aseptic procedure",
-          "after_body_fluid": "Hand hygiene performed after body fluid exposure",
-          "technique_correct": "Proper hand hygiene technique observed",
-          "compliance_notes": "Additional compliance observations"
+          "before_patient": "Handhygiene vor Patientenkontakt durchgeführt",
+          "after_patient": "Handhygiene nach Patientenkontakt durchgeführt",
+          "after_surroundings": "Handhygiene nach Berührung der Patientenumgebung durchgeführt",
+          "before_clean_procedure": "Handhygiene vor sauberer oder aseptischer Tätigkeit durchgeführt",
+          "after_body_fluid": "Handhygiene nach Kontakt mit Körperflüssigkeiten durchgeführt",
+          "technique_correct": "Korrekte Handhygienetechnik wurde beobachtet",
+          "compliance_notes": "Zusätzliche Beobachtungen zur Einhaltung"
         }
       },
       "fire_life": {
-        "name": "Fire/Life Safety Walk",
-        "description": "Facility walkthrough to verify fire and life safety compliance, including exit signage, fire doors, corridor clearance, and detector functionality",
+        "name": "Rundgang Brandschutz/Lebensschutz",
+        "description": "Gebäuderundgang zur Überprüfung der Einhaltung von Brandschutz- und Lebensschutzanforderungen einschließlich Ausgangsbeschilderung, Feuerschutztüren, freier Flure und Funktion der Detektoren",
         "items": {
-          "exit_signs": "Exit signs are illuminated and visible",
-          "fire_doors": "Fire doors are closing properly",
-          "corridors_clear": "Corridors are clear of equipment and obstructions",
-          "extinguishers": "Fire extinguishers are inspected and accessible",
-          "smoke_detectors": "Smoke detectors are tested and functional",
-          "evacuation_plan": "Evacuation plan is posted and current"
+          "exit_signs": "Ausgangsschilder sind beleuchtet und sichtbar",
+          "fire_doors": "Feuerschutztüren schließen ordnungsgemäß",
+          "corridors_clear": "Flure sind frei von Geräten und Hindernissen",
+          "extinguishers": "Feuerlöscher sind geprüft und zugänglich",
+          "smoke_detectors": "Rauchmelder sind getestet und funktionsfähig",
+          "evacuation_plan": "Evakuierungsplan ist ausgehängt und aktuell"
         }
       }
     },
     "warehousing": {
-      "name": "Warehousing",
-      "description": "Safety checklists for warehouse operations, covering forklift inspections, dock safety, fire protection, and pedestrian zone management",
+      "name": "Lagerlogistik",
+      "description": "Sicherheitschecklisten für Lagerbetriebe mit den Schwerpunkten Gabelstaplerinspektionen, Sicherheit an Verladerampen, Brandschutz und Management von Fußgängerzonen",
       "forklift": {
-        "name": "Forklift Daily Pre-Use",
-        "description": "Daily pre-use inspection for warehouse forklifts, covering mechanical condition, safety features, and operator certification verification",
+        "name": "Tägliche Vorbenutzungsprüfung des Gabelstaplers",
+        "description": "Tägliche Vorbenutzungsprüfung für Lagergabelstapler mit Überprüfung des mechanischen Zustands, der Sicherheitsmerkmale und der Bedienerqualifikation",
         "items": {
-          "tires_wheels": "Tires and wheels are in good condition",
-          "forks_condition": "Forks are free of cracks, bends, or excessive wear",
-          "hydraulic_lines": "Hydraulic lines show no leaks or damage",
-          "mast_chains": "Mast and chains operate smoothly",
-          "horn_working": "Horn is functioning",
-          "lights_working": "All lights are functioning",
-          "backup_alarm": "Backup alarm is audible",
-          "seatbelt": "Seatbelt is present and functional",
-          "brakes_tested": "Brakes have been tested and are responsive",
-          "steering": "Steering responds correctly",
-          "battery_fuel": "Battery charge or fuel level is adequate",
-          "fire_extinguisher": "Fire extinguisher is mounted and charged",
-          "operator_cert": "Operator certification is on file and current"
+          "tires_wheels": "Reifen und Räder sind in gutem Zustand",
+          "forks_condition": "Gabelzinken sind frei von Rissen, Verbiegungen oder übermäßigem Verschleiß",
+          "hydraulic_lines": "Hydraulikleitungen weisen keine Lecks oder Schäden auf",
+          "mast_chains": "Hubmast und Ketten laufen ruhig",
+          "horn_working": "Hupe funktioniert",
+          "lights_working": "Alle Leuchten funktionieren",
+          "backup_alarm": "Rückfahrwarner ist hörbar",
+          "seatbelt": "Sicherheitsgurt ist vorhanden und funktionsfähig",
+          "brakes_tested": "Bremsen wurden geprüft und reagieren ordnungsgemäß",
+          "steering": "Lenkung reagiert korrekt",
+          "battery_fuel": "Batterieladung bzw. Kraftstoffstand ist ausreichend",
+          "fire_extinguisher": "Feuerlöscher ist montiert und einsatzbereit",
+          "operator_cert": "Bedienerqualifikation ist dokumentiert und aktuell"
         }
       },
       "dock": {
-        "name": "Dock Safety Check",
-        "description": "Pre-loading safety check for dock operations, verifying dock plates, wheel chocks, trailer securement, and lighting conditions",
+        "name": "Prüfung der Sicherheit an der Verladerampe",
+        "description": "Sicherheitsprüfung vor dem Beladen mit Überprüfung von Überladeblechen, Radkeilen, Sicherung des Aufliegers und Beleuchtungsverhältnissen",
         "items": {
-          "dock_plate": "Dock plate or board is in good condition",
-          "wheel_chocks": "Wheel chocks are in place and secure",
-          "trailer_secured": "Trailer is secured (ICC bar engaged)",
-          "dock_leveler": "Dock leveler is functioning properly",
-          "lighting": "Loading area lighting is adequate",
-          "gap_check": "No hazardous gap between trailer and dock"
+          "dock_plate": "Überladeblech oder -brücke ist in gutem Zustand",
+          "wheel_chocks": "Radkeile sind vorhanden und sicher angebracht",
+          "trailer_secured": "Auflieger ist gesichert (ICC-Bügel eingerastet)",
+          "dock_leveler": "Überladebrücke funktioniert ordnungsgemäß",
+          "lighting": "Beleuchtung im Ladebereich ist ausreichend",
+          "gap_check": "Kein gefährlicher Spalt zwischen Auflieger und Rampe"
         }
       },
       "fire_extinguisher": {
-        "name": "Fire Extinguisher Monthly",
-        "description": "Monthly visual inspection of fire extinguishers to verify accessibility, charge status, physical condition, and inspection tag currency",
+        "name": "Monatliche Feuerlöscherprüfung",
+        "description": "Monatliche Sichtprüfung von Feuerlöschern zur Überprüfung von Zugänglichkeit, Ladezustand, äußerem Zustand und Aktualität des Prüfschilds",
         "items": {
-          "accessible": "Fire extinguisher is not blocked and is accessible",
-          "charge_gauge": "Charge gauge is in the green zone",
-          "pin_seal": "Pin and seal are intact",
-          "no_damage": "No visible damage to the extinguisher body",
-          "mounting_height": "Mounting height is correct",
-          "inspection_tag": "Inspection tag is current and signed",
-          "correct_type": "Extinguisher type is correct for the area hazards"
+          "accessible": "Feuerlöscher ist nicht blockiert und zugänglich",
+          "charge_gauge": "Druckanzeige ist im grünen Bereich",
+          "pin_seal": "Splint und Plombe sind intakt",
+          "no_damage": "Keine sichtbaren Schäden am Feuerlöschergehäuse",
+          "mounting_height": "Montagehöhe ist korrekt",
+          "inspection_tag": "Prüfplakette ist aktuell und unterschrieben",
+          "correct_type": "Feuerlöschertyp ist für die Gefährdungen im Bereich geeignet"
         }
       },
       "rack": {
-        "name": "Rack Integrity Audit",
-        "description": "Structural integrity audit of warehouse racking systems, checking for damage, proper anchoring, load capacity compliance, and connector security",
+        "name": "Audit der Regal-Integrität",
+        "description": "Audit der strukturellen Integrität von Lagerregalsystemen mit Prüfung auf Schäden, ordnungsgemäße Verankerung, Einhaltung der Traglast und sichere Verbinder",
         "items": {
-          "upright_damage": "Uprights are free of dents, bowing, or twisting",
-          "beam_connectors": "Beam connector locks are in place",
-          "base_plate": "Base plate anchoring is secure",
-          "load_capacity": "Load capacity labels are posted and visible",
-          "overloading": "No evidence of overloading beyond rated capacity",
-          "wire_decking": "Wire decking is in good condition (if applicable)"
+          "upright_damage": "Ständer sind frei von Dellen, Verformungen oder Verdrehungen",
+          "beam_connectors": "Sicherungen der Trägerverbinder sind eingesetzt",
+          "base_plate": "Verankerung der Fußplatte ist sicher",
+          "load_capacity": "Traglastschilder sind angebracht und sichtbar",
+          "overloading": "Keine Hinweise auf Überlastung über die zulässige Tragfähigkeit hinaus",
+          "wire_decking": "Drahtgitterauflagen sind in gutem Zustand (falls zutreffend)"
         }
       },
       "pedestrian": {
-        "name": "Pedestrian Safety Zone Check",
-        "description": "Inspection of pedestrian safety zones within the warehouse, verifying floor markings, barriers, mirrors, and separation between foot and vehicle traffic",
+        "name": "Prüfung der Fußgängersicherheitszone",
+        "description": "Inspektion der Fußgängersicherheitszonen im Lager mit Überprüfung von Bodenmarkierungen, Barrieren, Spiegeln und der Trennung von Fuß- und Fahrzeugverkehr",
         "items": {
-          "floor_markings": "Floor markings are visible and not worn",
-          "barriers_intact": "Barriers are intact and properly positioned",
-          "blind_corner_mirrors": "Mirrors are in place at blind corners",
-          "speed_limit_signs": "Speed limit signs are posted and visible",
-          "pedestrian_crossings": "Pedestrian crossings are clearly marked",
-          "separate_paths": "Separate travel paths exist for pedestrians and vehicles"
+          "floor_markings": "Bodenmarkierungen sind sichtbar und nicht abgenutzt",
+          "barriers_intact": "Barrieren sind intakt und ordnungsgemäß positioniert",
+          "blind_corner_mirrors": "Spiegel sind an unübersichtlichen Ecken angebracht",
+          "speed_limit_signs": "Geschwindigkeitsbegrenzungen sind angebracht und sichtbar",
+          "pedestrian_crossings": "Fußgängerüberwege sind deutlich markiert",
+          "separate_paths": "Getrennte Verkehrswege für Fußgänger und Fahrzeuge sind vorhanden"
         }
       },
       "receiving": {
-        "name": "Receiving Dock Safety Walk",
-        "description": "Safety walk of the receiving dock area to assess spill cleanup, slip hazards, lighting, PPE compliance, and safe handling practices",
+        "name": "Sicherheitsrundgang Wareneingang",
+        "description": "Sicherheitsrundgang im Wareneingangsbereich zur Bewertung von Verschüttungsbeseitigung, Rutschgefahren, Beleuchtung, PSA-Einhaltung und sicheren Handhabungspraktiken",
         "items": {
-          "spills_cleaned": "All spills have been cleaned up",
-          "slip_hazards": "No slip or trip hazards identified",
-          "lighting_working": "All lighting in the receiving area is working",
-          "ppe_compliance": "Workers are wearing required PPE (steel toes, gloves, vest)",
-          "box_cutter_safety": "Box cutters are being used safely with retractable blades",
-          "ergonomic_lifting": "Proper lifting techniques are being observed"
+          "spills_cleaned": "Alle Verschüttungen wurden beseitigt",
+          "slip_hazards": "Keine Rutsch- oder Stolpergefahren festgestellt",
+          "lighting_working": "Die gesamte Beleuchtung im Wareneingang funktioniert",
+          "ppe_compliance": "Mitarbeitende tragen die erforderliche PSA (Sicherheitsschuhe, Handschuhe, Weste)",
+          "box_cutter_safety": "Kartonschneider werden mit einziehbaren Klingen sicher verwendet",
+          "ergonomic_lifting": "Korrekte Hebetechniken werden eingehalten"
         }
       }
     },
     "mining": {
-      "name": "Mining",
-      "description": "Safety checklists for mining operations, covering strata assessment, ventilation, blasting, mobile equipment, and emergency escape procedures",
+      "name": "Bergbau",
+      "description": "Sicherheitschecklisten für den Bergbau mit den Schwerpunkten Gebirgskontrolle, Bewetterung, Sprengarbeiten, mobile Ausrüstung und Notausstiegsverfahren",
       "strata": {
-        "name": "Pre-Shift Strata Assessment",
-        "description": "Pre-shift assessment of ground conditions including roof stability, rib integrity, pillar condition, and support adequacy before commencing underground work",
+        "name": "Gebirgskontrolle vor Schichtbeginn",
+        "description": "Kontrolle der Gebirgsverhältnisse vor Schichtbeginn einschließlich Dachstabilität, Stabilität der Stöße, Zustand der Pfeiler und Angemessenheit der Stützung vor Beginn der Untertagearbeit",
         "items": {
-          "roof_condition": "Roof condition is stable with no signs of deterioration",
-          "rib_stability": "Rib walls are stable and not spalling",
-          "pillar_condition": "Support pillars are intact and properly sized",
-          "scaling_needed": "Loose rock has been scaled or is not present",
-          "support_installation": "Roof support installation is adequate",
-          "geological_changes": "No unexpected geological changes observed",
-          "water_ingress": "Water ingress is controlled or absent"
+          "roof_condition": "Dachzustand ist stabil und zeigt keine Anzeichen von Verschlechterung",
+          "rib_stability": "Stöße sind stabil und zeigen kein Abplatzen",
+          "pillar_condition": "Stützpfeiler sind intakt und ausreichend dimensioniert",
+          "scaling_needed": "Lose Gesteinsstücke wurden entfernt oder sind nicht vorhanden",
+          "support_installation": "Dachunterstützung ist ausreichend installiert",
+          "geological_changes": "Keine unerwarteten geologischen Veränderungen beobachtet",
+          "water_ingress": "Wassereintritt ist kontrolliert oder nicht vorhanden"
         }
       },
       "ventilation": {
-        "name": "Ventilation System Check",
-        "description": "Verification of underground ventilation systems including fan operation, air velocity, gas levels, and compliance with the ventilation plan",
+        "name": "Prüfung des Bewetterungssystems",
+        "description": "Überprüfung der untertägigen Bewetterungssysteme einschließlich Lüfterbetrieb, Luftgeschwindigkeit, Gaswerten und Einhaltung des Bewetterungsplans",
         "items": {
-          "fan_operation": "Main ventilation fan is operating correctly",
-          "air_velocity": "Air velocity readings are within required range",
-          "methane_levels": "Methane levels are below 1%",
-          "co_levels": "Carbon monoxide levels are within safe limits",
-          "dust_levels": "Dust levels are within permissible exposure limits",
-          "ventilation_controls": "Ventilation doors and curtains are in place",
-          "air_direction": "Air direction is correct per the ventilation plan"
+          "fan_operation": "Hauptlüfter arbeitet ordnungsgemäß",
+          "air_velocity": "Messwerte der Luftgeschwindigkeit liegen im erforderlichen Bereich",
+          "methane_levels": "Methanwerte liegen unter 1 %",
+          "co_levels": "Kohlenmonoxidwerte liegen innerhalb sicherer Grenzwerte",
+          "dust_levels": "Staubwerte liegen innerhalb der zulässigen Expositionsgrenzwerte",
+          "ventilation_controls": "Bewetterungstüren und -vorhänge sind vorhanden",
+          "air_direction": "Luftströmungsrichtung entspricht dem Bewetterungsplan"
         }
       },
       "blast": {
-        "name": "Blast Area Safety",
-        "description": "Pre-blast and post-blast safety checklist covering personnel clearance, guard posts, warning signals, and re-entry verification",
+        "name": "Sicherheit im Sprengbereich",
+        "description": "Sicherheitscheckliste vor und nach Sprengungen mit Überprüfung der Räumung des Bereichs, Sicherungsposten, Warnsignale und Wiederbetretensfreigabe",
         "items": {
-          "personnel_cleared": "All personnel have been cleared from the blast area",
-          "guard_posts": "Guard posts have been established at all access points",
-          "warning_signals": "Warning signals have been given per procedure",
-          "blast_pattern": "Blast pattern has been verified by the shot firer",
-          "misfire_check": "Misfire checks have been completed",
-          "reentry_time": "Re-entry waiting time has been observed",
-          "post_blast_ventilation": "Post-blast ventilation has been established"
+          "personnel_cleared": "Alle Personen wurden aus dem Sprengbereich entfernt",
+          "guard_posts": "Sicherungsposten wurden an allen Zugangspunkten eingerichtet",
+          "warning_signals": "Warnsignale wurden gemäß Verfahren gegeben",
+          "blast_pattern": "Sprengschema wurde von der Sprengaufsicht verifiziert",
+          "misfire_check": "Kontrollen auf Versager wurden abgeschlossen",
+          "reentry_time": "Wartezeit vor dem Wiederbetreten wurde eingehalten",
+          "post_blast_ventilation": "Bewetterung nach der Sprengung wurde hergestellt"
         }
       },
       "ppe": {
-        "name": "PPE Compliance Check",
-        "description": "Personal protective equipment compliance inspection for mining personnel, verifying condition and proper use of all required safety gear",
+        "name": "Prüfung der PSA-Einhaltung",
+        "description": "Inspektion der Einhaltung persönlicher Schutzausrüstung für Bergbaupersonal mit Überprüfung von Zustand und korrekter Verwendung aller erforderlichen Schutzausrüstungen",
         "items": {
-          "hard_hat": "Hard hat is worn and in good condition",
-          "safety_glasses": "Safety glasses are worn and not scratched or damaged",
-          "steel_toe_boots": "Steel-toe boots are worn and in good condition",
-          "hearing_protection": "Hearing protection is worn in designated areas",
-          "reflective_vest": "Reflective vest is worn and visible",
-          "self_rescuer": "Self-rescuer is accessible and inspected",
-          "cap_lamp": "Cap lamp is functioning and fully charged",
-          "gloves": "Appropriate gloves are worn for the task"
+          "hard_hat": "Schutzhelm wird getragen und ist in gutem Zustand",
+          "safety_glasses": "Schutzbrille wird getragen und ist nicht zerkratzt oder beschädigt",
+          "steel_toe_boots": "Sicherheitsschuhe mit Stahlkappe werden getragen und sind in gutem Zustand",
+          "hearing_protection": "Gehörschutz wird in ausgewiesenen Bereichen getragen",
+          "reflective_vest": "Warnweste wird getragen und ist sichtbar",
+          "self_rescuer": "Selbstretter ist zugänglich und geprüft",
+          "cap_lamp": "Grubenlampe funktioniert und ist vollständig geladen",
+          "gloves": "Geeignete Handschuhe werden für die Aufgabe getragen"
         }
       },
       "mobile_equip": {
-        "name": "Mobile Equipment Pre-Op",
-        "description": "Pre-operation inspection of mobile mining equipment covering brakes, steering, lights, fire suppression, and roll-over protection systems",
+        "name": "Vorbetriebliche Prüfung mobiler Geräte",
+        "description": "Prüfung mobiler Bergbauausrüstung vor dem Betrieb mit Kontrolle von Bremsen, Lenkung, Beleuchtung, Feuerlöschsystem und Überrollschutz",
         "items": {
-          "brakes": "Service and parking brakes are functioning",
-          "steering": "Steering is responsive and correct",
-          "lights": "All lights are functioning (headlights, tail, clearance)",
-          "horn": "Horn is audible",
-          "backup_alarm": "Backup alarm is functioning",
-          "fire_suppression": "Fire suppression system is charged and ready",
-          "seatbelt": "Seatbelt is functional",
-          "tires": "Tires are in acceptable condition",
-          "hydraulics": "Hydraulic system shows no leaks",
-          "rollover_protection": "Roll-over protection structure is intact",
-          "operator_cert": "Operator certification is current"
+          "brakes": "Betriebs- und Feststellbremsen funktionieren",
+          "steering": "Lenkung reagiert ordnungsgemäß",
+          "lights": "Alle Leuchten funktionieren (Front-, Heck-, Begrenzungsleuchten)",
+          "horn": "Hupe ist hörbar",
+          "backup_alarm": "Rückfahrwarner funktioniert",
+          "fire_suppression": "Feuerlöschsystem ist geladen und einsatzbereit",
+          "seatbelt": "Sicherheitsgurt ist funktionsfähig",
+          "tires": "Reifen sind in akzeptablem Zustand",
+          "hydraulics": "Hydrauliksystem weist keine Lecks auf",
+          "rollover_protection": "Überrollschutzstruktur ist intakt",
+          "operator_cert": "Bedienerqualifikation ist aktuell"
         }
       },
       "emergency_escape": {
-        "name": "Emergency Escape Drill",
-        "description": "Record of emergency escape drill execution, documenting participation, route testing, self-rescuer donning times, and total evacuation performance",
+        "name": "Notausstiegsübung",
+        "description": "Aufzeichnung der Durchführung einer Notausstiegsübung mit Dokumentation der Teilnahme, Prüfung der Fluchtwege, Anlegezeiten des Selbstretters und der gesamten Evakuierungsleistung",
         "items": {
-          "all_workers": "All workers on shift participated in the drill",
-          "primary_exit": "Primary escape route was tested successfully",
-          "secondary_exit": "Secondary escape route was tested successfully",
-          "self_rescuer_donning": "Self-rescuer donning time was recorded",
-          "refuge_chamber": "Refuge chamber was located and inspected",
-          "communication_check": "Communication systems were tested",
-          "evacuation_time": "Total evacuation time was recorded"
+          "all_workers": "Alle Mitarbeitenden der Schicht haben an der Übung teilgenommen",
+          "primary_exit": "Primärer Fluchtweg wurde erfolgreich getestet",
+          "secondary_exit": "Sekundärer Fluchtweg wurde erfolgreich getestet",
+          "self_rescuer_donning": "Anlegezeit des Selbstretters wurde aufgezeichnet",
+          "refuge_chamber": "Rettungskammer wurde lokalisiert und geprüft",
+          "communication_check": "Kommunikationssysteme wurden getestet",
+          "evacuation_time": "Gesamte Evakuierungszeit wurde aufgezeichnet"
         }
       }
     },
     "food_beverage": {
-      "name": "Food & Beverage",
-      "description": "Safety and quality checklists for food and beverage operations, covering HACCP, allergen management, cold chain, sanitation, and employee hygiene",
+      "name": "Lebensmittel & Getränke",
+      "description": "Sicherheits- und Qualitätschecklisten für Lebensmittel- und Getränkebetriebe, die HACCP, Allergenmanagement, Kühlkette, Hygiene und Mitarbeitendenhygiene abdecken",
       "haccp": {
-        "name": "HACCP Inspection",
-        "description": "Hazard Analysis and Critical Control Point inspection to verify monitoring of critical control points, temperature compliance, and corrective action documentation",
+        "name": "HACCP-Inspektion",
+        "description": "Inspektion gemäß Gefahrenanalyse und kritischen Kontrollpunkten zur Überprüfung der Überwachung kritischer Kontrollpunkte, der Temperaturkonformität und der Dokumentation von Korrekturmaßnahmen",
         "items": {
-          "ccp_monitoring": "Critical control points are being monitored per schedule",
-          "temp_receiving": "Receiving temperatures are within acceptable range",
-          "temp_storage": "Storage temperatures are within acceptable range",
-          "temp_cooking": "Cooking temperatures meet minimum requirements",
-          "temp_holding": "Holding temperatures are within safe range",
-          "corrective_actions": "Corrective actions are documented when deviations occur",
-          "verification": "Verification activities are completed per plan",
-          "records_reviewed": "HACCP records have been reviewed and signed"
+          "ccp_monitoring": "Kritische Kontrollpunkte werden gemäß Zeitplan überwacht",
+          "temp_receiving": "Wareneingangstemperaturen liegen im akzeptablen Bereich",
+          "temp_storage": "Lagertemperaturen liegen im akzeptablen Bereich",
+          "temp_cooking": "Gartemperaturen erfüllen die Mindestanforderungen",
+          "temp_holding": "Warmhalte- oder Haltetemperaturen liegen im sicheren Bereich",
+          "corrective_actions": "Korrekturmaßnahmen werden dokumentiert, wenn Abweichungen auftreten",
+          "verification": "Verifizierungstätigkeiten werden gemäß Plan durchgeführt",
+          "records_reviewed": "HACCP-Aufzeichnungen wurden geprüft und unterzeichnet"
         }
       },
       "allergen": {
-        "name": "Allergen Management Audit",
-        "description": "Audit of allergen management practices including cleaning verification, label accuracy, ingredient segregation, and staff training compliance",
+        "name": "Audit zum Allergenmanagement",
+        "description": "Audit der Allergenmanagementpraktiken einschließlich Verifizierung der Reinigung, Etikettengenauigkeit, Trennung von Zutaten und Einhaltung der Schulungsanforderungen",
         "items": {
-          "cleaning_verified": "Cleaning between allergen production runs is verified",
-          "label_accuracy": "Product labels accurately list all allergens",
-          "ingredient_segregation": "Allergenic ingredients are properly segregated in storage",
-          "shared_equipment": "Shared equipment protocols are being followed",
-          "staff_training": "Staff allergen awareness training is current"
+          "cleaning_verified": "Reinigung zwischen allergenhaltigen Produktionsläufen wurde verifiziert",
+          "label_accuracy": "Produktetiketten führen alle Allergene korrekt auf",
+          "ingredient_segregation": "Allergenhaltige Zutaten sind im Lager ordnungsgemäß getrennt",
+          "shared_equipment": "Verfahren für gemeinsam genutzte Geräte werden eingehalten",
+          "staff_training": "Schulung des Personals zum Allergenbewusstsein ist aktuell"
         }
       },
       "cold_chain": {
-        "name": "Cold Chain Temperature Log",
-        "description": "Temperature monitoring log for cold chain integrity, tracking refrigerator, freezer, receiving, and transport temperatures with deviation response",
+        "name": "Temperaturprotokoll der Kühlkette",
+        "description": "Temperaturüberwachungsprotokoll für die Integrität der Kühlkette mit Erfassung von Kühl-, Gefrier-, Wareneingangs- und Transporttemperaturen einschließlich Reaktion auf Abweichungen",
         "items": {
-          "refrigerator_temps": "Refrigerator temperatures are below 40F / 4C",
-          "freezer_temps": "Freezer temperatures are at or below 0F / -18C",
-          "receiving_temps": "Receiving dock product temperatures are within range",
-          "transport_temps": "Transport vehicle temperatures are verified",
-          "deviation_response": "Temperature deviations have been documented and responded to"
+          "refrigerator_temps": "Kühlschranktemperaturen liegen unter 40F / 4C",
+          "freezer_temps": "Gefrierschranktemperaturen liegen bei oder unter 0F / -18C",
+          "receiving_temps": "Produkttemperaturen an der Wareneingangsrampe liegen im Bereich",
+          "transport_temps": "Temperaturen der Transportfahrzeuge wurden verifiziert",
+          "deviation_response": "Temperaturabweichungen wurden dokumentiert und bearbeitet"
         }
       },
       "sanitation": {
-        "name": "Sanitation Audit",
-        "description": "Facility sanitation audit covering food contact surfaces, floor drains, pest control, hand wash stations, and chemical storage practices",
+        "name": "Hygieneaudit",
+        "description": "Audit der Betriebshygiene mit Fokus auf lebensmittelberührende Oberflächen, Bodenabläufe, Schädlingsbekämpfung, Handwaschstationen und Lagerung von Chemikalien",
         "items": {
-          "food_contact_surfaces": "Food contact surfaces are cleaned and sanitized",
-          "floor_drains": "Floor drains are clear and functioning",
-          "pest_control": "Pest control stations are checked and maintained",
-          "hand_wash_stations": "Hand wash stations are stocked (soap, towels, sanitizer)",
-          "chemical_storage": "Cleaning chemicals are properly stored and labeled"
+          "food_contact_surfaces": "Lebensmittelberührende Oberflächen sind gereinigt und desinfiziert",
+          "floor_drains": "Bodenabläufe sind frei und funktionsfähig",
+          "pest_control": "Stationen zur Schädlingsbekämpfung werden kontrolliert und instand gehalten",
+          "hand_wash_stations": "Handwaschstationen sind bestückt (Seife, Handtücher, Desinfektionsmittel)",
+          "chemical_storage": "Reinigungschemikalien sind ordnungsgemäß gelagert und gekennzeichnet"
         }
       },
       "hygiene": {
-        "name": "Employee Hygiene Check",
-        "description": "Employee hygiene compliance check for food production areas, verifying uniforms, hair restraints, jewelry policy, wound coverage, and handwashing",
+        "name": "Prüfung der Mitarbeitendenhygiene",
+        "description": "Prüfung der Hygienevorgaben für Mitarbeitende in der Lebensmittelproduktion mit Überprüfung von Arbeitskleidung, Haarabdeckungen, Schmuckverbot, Wundabdeckung und Händewaschen",
         "items": {
-          "clean_uniform": "Employee is wearing a clean uniform or work clothes",
-          "hair_restraint": "Hair restraint (net, cap, beard cover) is properly worn",
-          "no_jewelry": "No jewelry is worn in the production area",
-          "wounds_covered": "Any cuts or wounds are properly covered",
-          "illness_reporting": "Illness reporting requirements have been communicated",
-          "handwashing": "Proper handwashing has been observed",
-          "glove_use": "Gloves are being used and changed appropriately"
+          "clean_uniform": "Mitarbeitende tragen saubere Uniform oder Arbeitskleidung",
+          "hair_restraint": "Haarabdeckung (Netz, Kappe, Bartschutz) wird ordnungsgemäß getragen",
+          "no_jewelry": "Im Produktionsbereich wird kein Schmuck getragen",
+          "wounds_covered": "Schnitte oder Wunden sind ordnungsgemäß abgedeckt",
+          "illness_reporting": "Vorgaben zur Meldung von Erkrankungen wurden kommuniziert",
+          "handwashing": "Ordnungsgemäßes Händewaschen wurde beobachtet",
+          "glove_use": "Handschuhe werden angemessen verwendet und gewechselt"
         }
       },
       "shipping": {
-        "name": "Shipping/Receiving Inspection",
-        "description": "Inspection of incoming and outgoing shipments for food safety, verifying vehicle cleanliness, temperatures, packaging integrity, and lot traceability",
+        "name": "Versand-/Wareneingangsinspektion",
+        "description": "Inspektion ein- und ausgehender Sendungen hinsichtlich Lebensmittelsicherheit mit Überprüfung von Sauberkeit des Fahrzeugs, Temperaturen, Unversehrtheit der Verpackung und Chargenrückverfolgbarkeit",
         "items": {
-          "vehicle_cleanliness": "Delivery vehicle is clean and free of contamination",
-          "temperature_verified": "Product temperatures have been verified on arrival",
-          "packaging_integrity": "Packaging is intact with no damage or tampering",
-          "date_codes": "Date codes have been checked and are acceptable",
-          "rejected_items": "Rejected items have been documented and separated",
-          "lot_traceability": "Lot numbers have been recorded for traceability"
+          "vehicle_cleanliness": "Lieferfahrzeug ist sauber und frei von Kontaminationen",
+          "temperature_verified": "Produkttemperaturen wurden bei Anlieferung überprüft",
+          "packaging_integrity": "Verpackung ist intakt und weist keine Beschädigungen oder Manipulationen auf",
+          "date_codes": "Datumskennzeichnungen wurden geprüft und sind akzeptabel",
+          "rejected_items": "Abgelehnte Artikel wurden dokumentiert und getrennt",
+          "lot_traceability": "Chargennummern wurden zur Rückverfolgbarkeit erfasst"
         }
       }
     },
     "utilities": {
-      "name": "Utilities",
-      "description": "Safety checklists for electrical utility operations, covering arc flash compliance, substation inspections, line clearance, and switching procedures",
+      "name": "Versorgungsbetriebe",
+      "description": "Sicherheitschecklisten für elektrische Versorgungsbetriebe mit den Schwerpunkten Lichtbogenschutz, Umspannwerksinspektionen, Leitungsfreigabe und Schaltverfahren",
       "arc_flash": {
-        "name": "Arc Flash Compliance Check",
-        "description": "Compliance verification for arc flash hazard management, ensuring incident energy analysis, PPE category matching, and energized work authorization",
+        "name": "Prüfung zur Lichtbogenkonformität",
+        "description": "Konformitätsprüfung zum Management von Lichtbogengefahren, die sicherstellt, dass Störlichtbogenenergie analysiert wurde, die PSA-Kategorie passt und Arbeiten unter Spannung freigegeben sind",
         "items": {
-          "incident_energy": "Incident energy level has been determined for the work area",
-          "ppe_category": "PPE category matches the incident energy level",
-          "approach_boundaries": "Approach boundaries are marked and communicated",
-          "energized_permit": "Energized work permit has been obtained",
-          "buddy_system": "Buddy system is in effect for energized work",
-          "de_energize_eval": "De-energize first evaluation has been completed"
+          "incident_energy": "Störlichtbogenenergie für den Arbeitsbereich wurde bestimmt",
+          "ppe_category": "PSA-Kategorie entspricht dem Störlichtbogenenergieniveau",
+          "approach_boundaries": "Annäherungsgrenzen sind markiert und kommuniziert",
+          "energized_permit": "Freigabe für Arbeiten unter Spannung wurde eingeholt",
+          "buddy_system": "Buddy-System gilt für Arbeiten unter Spannung",
+          "de_energize_eval": "Bewertung einer Freischaltung vor Arbeitsbeginn wurde abgeschlossen"
         }
       },
       "substation": {
-        "name": "Substation Inspection",
-        "description": "Routine inspection of electrical substation equipment and infrastructure, covering transformers, breakers, ground grids, and perimeter security",
+        "name": "Umspannwerksinspektion",
+        "description": "Routineinspektion von Ausrüstung und Infrastruktur im Umspannwerk mit Überprüfung von Transformatoren, Leistungsschaltern, Erdungsnetzen und Perimetersicherung",
         "items": {
-          "transformer_oil": "Transformer oil levels are within normal range",
-          "breaker_operation": "Breaker operation count is recorded",
-          "ground_grid": "Ground grid connections are intact",
-          "fence_security": "Perimeter fence is secure with no breaches",
-          "signage_visible": "Warning and identification signage is visible",
-          "vegetation_clearance": "Vegetation clearance is maintained around equipment",
-          "animal_guards": "Animal guards are in place and undamaged"
+          "transformer_oil": "Transformatorölstände liegen im Normalbereich",
+          "breaker_operation": "Schaltspielzahl des Leistungsschalters wurde erfasst",
+          "ground_grid": "Verbindungen des Erdungsnetzes sind intakt",
+          "fence_security": "Perimeterzaun ist sicher und weist keine Beschädigungen auf",
+          "signage_visible": "Warn- und Kennzeichnungsschilder sind sichtbar",
+          "vegetation_clearance": "Vegetationsfreihaltung rund um die Ausrüstung wird eingehalten",
+          "animal_guards": "Tierschutzvorrichtungen sind vorhanden und unbeschädigt"
         }
       },
       "vegetation": {
-        "name": "Vegetation Management Audit",
-        "description": "Audit of vegetation management practices along power line corridors, verifying clearance distances, trimming schedules, and environmental compliance",
+        "name": "Audit zum Vegetationsmanagement",
+        "description": "Audit der Vegetationsmanagementpraktiken entlang von Stromtrassen mit Überprüfung von Freihalteabständen, Schnittplänen und Umweltkonformität",
         "items": {
-          "row_clearance": "Right-of-way clearance distances meet requirements",
-          "trimming_completed": "Scheduled tree trimming has been completed",
-          "growth_assessment": "Growth rate assessment is documented",
-          "herbicide_records": "Herbicide application records are current",
-          "endangered_species": "Endangered species check has been completed",
-          "access_road": "Access road condition is acceptable"
+          "row_clearance": "Freihalteabstände im Trassenbereich erfüllen die Anforderungen",
+          "trimming_completed": "Geplanter Baumschnitt wurde abgeschlossen",
+          "growth_assessment": "Bewertung der Wachstumsrate ist dokumentiert",
+          "herbicide_records": "Aufzeichnungen über Herbizidanwendungen sind aktuell",
+          "endangered_species": "Prüfung auf gefährdete Arten wurde abgeschlossen",
+          "access_road": "Zustand der Zufahrtsstraße ist akzeptabel"
         }
       },
       "line_clearance": {
-        "name": "Line Clearance Audit",
-        "description": "Safety audit for line clearance work on de-energized power lines, verifying isolation, protective grounding, and minimum approach distances",
+        "name": "Audit der Leitungsfreigabe",
+        "description": "Sicherheitsaudit für Arbeiten an freigeschalteten Stromleitungen mit Überprüfung von Isolation, Schutzerdung und Mindestannäherungsabständen",
         "items": {
-          "line_identified": "Line has been identified and confirmed isolated",
-          "grounds_installed": "Protective grounds have been installed",
-          "approach_distance": "Minimum approach distance is being observed",
-          "rubber_goods": "Rubber goods are tested and within certification date",
-          "traffic_control": "Traffic control is in place where required"
+          "line_identified": "Leitung wurde identifiziert und ihre Freischaltung bestätigt",
+          "grounds_installed": "Schutzerdungen wurden angebracht",
+          "approach_distance": "Mindestannäherungsabstand wird eingehalten",
+          "rubber_goods": "Gummischutzausrüstung ist geprüft und innerhalb des Zertifizierungszeitraums",
+          "traffic_control": "Verkehrssicherung ist bei Bedarf vorhanden"
         }
       },
       "switching": {
-        "name": "Switching Procedure",
-        "description": "Step-by-step switching procedure checklist for electrical distribution systems, ensuring two-person verification, voltage testing, and control center coordination",
+        "name": "Schaltverfahren",
+        "description": "Schritt-für-Schritt-Checkliste für Schaltverfahren in elektrischen Verteilungssystemen, die Zwei-Personen-Prüfung, Spannungsprüfung und Abstimmung mit der Leitstelle sicherstellt",
         "items": {
-          "procedure_printed": "Step-by-step switching procedure is printed and available",
-          "two_person_rule": "Two-person rule is being followed",
-          "isolation_verified": "Isolation points have been verified",
-          "voltage_test": "Test-ground-test voltage verification completed",
-          "scada_notification": "SCADA control center has been notified",
-          "operating_log": "Operating log has been updated"
+          "procedure_printed": "Schritt-für-Schritt-Schaltverfahren ist ausgedruckt und verfügbar",
+          "two_person_rule": "Zwei-Personen-Regel wird eingehalten",
+          "isolation_verified": "Trennstellen wurden verifiziert",
+          "voltage_test": "Spannungsprüfung-Erdung-Spannungsprüfung wurde abgeschlossen",
+          "scada_notification": "SCADA-Leitstelle wurde informiert",
+          "operating_log": "Betriebsprotokoll wurde aktualisiert"
         }
       },
       "pole_climbing": {
-        "name": "Pole/Tower Climbing Safety",
-        "description": "Pre-climb safety checklist for pole and tower work, verifying fall protection equipment, structure integrity, and rescue device availability",
+        "name": "Sicherheit beim Mast-/Turmsteigen",
+        "description": "Sicherheitscheckliste vor dem Besteigen von Masten und Türmen mit Überprüfung von Absturzsicherung, struktureller Integrität und Verfügbarkeit persönlicher Rettungsgeräte",
         "items": {
-          "fall_protection": "Fall protection equipment has been inspected",
-          "climbing_equipment": "Climbing equipment is properly rated",
-          "pole_tested": "Wood pole has been tested (hammer/bore test)",
-          "structure_integrity": "Structure integrity has been verified",
-          "rescue_device": "Personal rescue device is available",
-          "communication": "Communication with ground crew has been established"
+          "fall_protection": "Ausrüstung zur Absturzsicherung wurde geprüft",
+          "climbing_equipment": "Steigausrüstung ist ordnungsgemäß zertifiziert",
+          "pole_tested": "Holzmast wurde geprüft (Hammer-/Bohrprobe)",
+          "structure_integrity": "Strukturelle Integrität wurde verifiziert",
+          "rescue_device": "Persönliches Rettungsgerät ist verfügbar",
+          "communication": "Kommunikation mit dem Bodenpersonal wurde hergestellt"
         }
       }
     },
     "transportation": {
-      "name": "Transportation",
-      "description": "Safety checklists for commercial transportation operations, covering vehicle inspections, cargo securement, hours of service, and hazmat transport",
+      "name": "Transport",
+      "description": "Sicherheitschecklisten für gewerbliche Transportbetriebe mit den Schwerpunkten Fahrzeuginspektionen, Ladungssicherung, Lenk- und Ruhezeiten sowie Gefahrguttransport",
       "pre_trip": {
-        "name": "Pre-Trip Vehicle Inspection",
-        "description": "Comprehensive pre-trip inspection of commercial vehicles covering tires, brakes, lights, mirrors, coupling devices, and emergency equipment",
+        "name": "Fahrzeuginspektion vor Fahrtantritt",
+        "description": "Umfassende Inspektion von Nutzfahrzeugen vor Fahrtantritt mit Überprüfung von Reifen, Bremsen, Beleuchtung, Spiegeln, Kupplungseinrichtungen und Notfallausrüstung",
         "items": {
-          "tires": "Tires have adequate tread depth and proper inflation",
-          "brakes_air": "Air pressure is adequate and brake system is functional",
-          "lights_all": "All lights are functioning (headlights, tail, markers, turn signals)",
-          "mirrors": "Mirrors are clean, properly adjusted, and undamaged",
-          "windshield": "Windshield is clean with no cracks impairing vision",
-          "horn": "Horn is functioning",
-          "coupling_devices": "Coupling devices are secure (fifth wheel, pintle hook)",
-          "cargo_securement": "Cargo securement devices are adequate and in place",
-          "emergency_equipment": "Emergency equipment is present (triangles, fire extinguisher)"
+          "tires": "Reifen haben ausreichende Profiltiefe und korrekten Luftdruck",
+          "brakes_air": "Luftdruck ist ausreichend und das Bremssystem funktioniert",
+          "lights_all": "Alle Leuchten funktionieren (Scheinwerfer, Rückleuchten, Markierungsleuchten, Blinker)",
+          "mirrors": "Spiegel sind sauber, korrekt eingestellt und unbeschädigt",
+          "windshield": "Windschutzscheibe ist sauber und hat keine die Sicht beeinträchtigenden Risse",
+          "horn": "Hupe funktioniert",
+          "coupling_devices": "Kupplungseinrichtungen sind sicher (Sattelkupplung, Zugöse)",
+          "cargo_securement": "Ladungssicherungseinrichtungen sind ausreichend und angebracht",
+          "emergency_equipment": "Notfallausrüstung ist vorhanden (Warndreiecke, Feuerlöscher)"
         }
       },
       "driver_scorecard": {
-        "name": "Driver Safety Scorecard",
-        "description": "Periodic driver safety performance review covering inspection pass rates, incident history, hours of service compliance, and training completion",
+        "name": "Fahrersicherheits-Scorecard",
+        "description": "Regelmäßige Bewertung der Fahrsicherheitsleistung mit Inspektions-Erfolgsquoten, Vorfallhistorie, Einhaltung der Lenk- und Ruhezeiten und Abschluss von Schulungen",
         "items": {
-          "inspection_pass_rate": "Rate the driver's inspection pass rate for this period",
-          "incident_history": "Document any incidents during the review period",
-          "hos_compliance": "Hours of service compliance has been verified",
-          "training_completion": "Required training modules have been completed",
-          "moving_violations": "Document any moving violations",
-          "preventable_accidents": "Document any preventable accidents"
+          "inspection_pass_rate": "Bewerten Sie die Erfolgsquote der Fahrzeugprüfungen der Fahrerin bzw. des Fahrers für diesen Zeitraum",
+          "incident_history": "Dokumentieren Sie alle Vorfälle im Bewertungszeitraum",
+          "hos_compliance": "Einhaltung der Lenk- und Ruhezeiten wurde verifiziert",
+          "training_completion": "Erforderliche Schulungsmodule wurden abgeschlossen",
+          "moving_violations": "Dokumentieren Sie alle Verkehrsverstöße",
+          "preventable_accidents": "Dokumentieren Sie alle vermeidbaren Unfälle"
         }
       },
       "cargo": {
-        "name": "Cargo Securement Check",
-        "description": "Cargo securement verification to ensure loads are within weight limits, properly tied down, blocked, and braced before transport",
+        "name": "Prüfung der Ladungssicherung",
+        "description": "Überprüfung der Ladungssicherung, um sicherzustellen, dass Lasten innerhalb der Gewichtsgrenzen liegen und vor dem Transport ordnungsgemäß gesichert, blockiert und abgestützt sind",
         "items": {
-          "weight_limits": "Load is within weight limits for the vehicle and route",
-          "tiedowns_rated": "Tie-downs are rated and in adequate quantity",
-          "header_board": "Header board or bulkhead is in good condition",
-          "blocking_bracing": "Blocking and bracing is secure",
-          "load_shift": "Load shift check has been performed",
-          "hazmat_placards": "Hazmat placards are displayed (if applicable)"
+          "weight_limits": "Ladung liegt innerhalb der Gewichtsgrenzen für Fahrzeug und Route",
+          "tiedowns_rated": "Zurrmittel sind ausreichend ausgelegt und in genügender Anzahl vorhanden",
+          "header_board": "Stirnwand oder Ladungsanschlag ist in gutem Zustand",
+          "blocking_bracing": "Blockierung und Abstützung sind sicher",
+          "load_shift": "Kontrolle auf Ladungsverschiebung wurde durchgeführt",
+          "hazmat_placards": "Gefahrgutkennzeichen sind angebracht (falls zutreffend)"
         }
       },
       "hos": {
-        "name": "Hours of Service Compliance",
-        "description": "Hours of service compliance verification for commercial drivers, checking ELD functionality, available drive time, rest breaks, and exception documentation",
+        "name": "Einhaltung der Lenk- und Ruhezeiten",
+        "description": "Überprüfung der Einhaltung der Lenk- und Ruhezeiten für Berufskraftfahrende mit Kontrolle der ELD-Funktion, verfügbarer Lenkzeit, Pausen und Dokumentation von Ausnahmen",
         "items": {
-          "eld_functioning": "Electronic logging device is functioning correctly",
-          "drive_time": "Available drive time is within regulatory limits",
-          "rest_break": "Required rest break has been taken",
-          "sleeper_berth": "Sleeper berth provisions are being followed (if applicable)",
-          "adverse_conditions": "Adverse driving conditions exception documented (if used)"
+          "eld_functioning": "Elektronisches Fahrtenbuch funktioniert korrekt",
+          "drive_time": "Verfügbare Lenkzeit liegt innerhalb der gesetzlichen Grenzwerte",
+          "rest_break": "Erforderliche Ruhepause wurde eingelegt",
+          "sleeper_berth": "Vorgaben zur Schlafkabine werden eingehalten (falls zutreffend)",
+          "adverse_conditions": "Ausnahme wegen widriger Fahrbedingungen wurde dokumentiert (falls genutzt)"
         }
       },
       "hazmat": {
-        "name": "Hazmat Transport Checklist",
-        "description": "Pre-transport checklist for hazardous materials shipments, verifying shipping papers, placards, packaging integrity, and driver endorsement",
+        "name": "Checkliste Gefahrguttransport",
+        "description": "Checkliste vor dem Transport von Gefahrgutsendungen mit Überprüfung von Beförderungspapieren, Kennzeichen, Verpackungsintegrität und Fahrerberechtigung",
         "items": {
-          "shipping_papers": "Shipping papers are complete and accurate",
-          "placards_correct": "Vehicle placards are correct for the cargo",
-          "packaging_integrity": "Packaging integrity has been verified",
-          "compatibility": "Cargo compatibility has been verified",
-          "emergency_info": "Emergency response information is accessible",
-          "driver_endorsement": "Driver hazmat endorsement is current"
+          "shipping_papers": "Beförderungspapiere sind vollständig und korrekt",
+          "placards_correct": "Fahrzeugkennzeichen sind für die Ladung korrekt",
+          "packaging_integrity": "Unversehrtheit der Verpackung wurde überprüft",
+          "compatibility": "Kompatibilität der Ladung wurde verifiziert",
+          "emergency_info": "Informationen für Notfallmaßnahmen sind zugänglich",
+          "driver_endorsement": "Gefahrgutberechtigung der Fahrerin bzw. des Fahrers ist aktuell"
         }
       },
       "post_trip": {
-        "name": "Post-Trip Inspection Report",
-        "description": "End-of-trip vehicle inspection documenting defects, brake performance, tire condition, fluid leaks, and cargo area readiness for the next load",
+        "name": "Bericht zur Nachfahrtinspektion",
+        "description": "Fahrzeuginspektion am Ende der Fahrt mit Dokumentation von Mängeln, Bremsleistung, Reifenzustand, Flüssigkeitslecks und Einsatzbereitschaft des Laderaums für die nächste Ladung",
         "items": {
-          "defects_discovered": "Document any defects discovered during the trip",
-          "brake_performance": "Brake performance was satisfactory during the trip",
-          "tire_condition": "Tire condition after the loaded trip is acceptable",
-          "fluid_leaks": "No new fluid leaks observed",
-          "body_damage": "No new body damage observed",
-          "cargo_area": "Cargo area has been cleaned and is ready",
-          "report_signed": "Post-trip inspection report has been signed"
+          "defects_discovered": "Dokumentieren Sie alle während der Fahrt festgestellten Mängel",
+          "brake_performance": "Bremsleistung war während der Fahrt zufriedenstellend",
+          "tire_condition": "Reifenzustand nach der Fahrt mit Ladung ist akzeptabel",
+          "fluid_leaks": "Keine neuen Flüssigkeitslecks festgestellt",
+          "body_damage": "Keine neuen Karosserieschäden festgestellt",
+          "cargo_area": "Laderaum wurde gereinigt und ist bereit",
+          "report_signed": "Bericht zur Nachfahrtinspektion wurde unterzeichnet"
         }
       }
     },
     "education": {
-      "name": "Education",
-      "description": "Safety checklists for educational facilities, covering playground inspections, laboratory safety, emergency drills, and building safety walks",
+      "name": "Bildung",
+      "description": "Sicherheitschecklisten für Bildungseinrichtungen mit den Schwerpunkten Spielplatzinspektionen, Laborsicherheit, Notfallübungen und Gebäuderundgängen",
       "playground": {
-        "name": "Playground Safety Inspection",
-        "description": "Routine inspection of playground equipment and surfaces to identify hazards, verify age-appropriate design, and ensure fall zone compliance",
+        "name": "Spielplatz-Sicherheitsinspektion",
+        "description": "Regelmäßige Inspektion von Spielgeräten und Oberflächen zur Identifizierung von Gefährdungen, Überprüfung altersgerechter Gestaltung und Einhaltung von Fallschutzzonen",
         "items": {
-          "equipment_integrity": "Equipment is free of sharp edges, loose bolts, and damage",
-          "fall_zone_surfacing": "Fall zone surfacing is adequate (depth and coverage)",
-          "age_appropriate": "Age-appropriate signage is posted",
-          "entrapment_hazards": "No entrapment hazards are present",
-          "drain_covers": "Drain covers are secure and flush",
-          "general_condition": "Overall playground condition is satisfactory"
+          "equipment_integrity": "Geräte sind frei von scharfen Kanten, losen Schrauben und Beschädigungen",
+          "fall_zone_surfacing": "Belag in Fallschutzzonen ist ausreichend (Tiefe und Abdeckung)",
+          "age_appropriate": "Beschilderung zur Altersangemessenheit ist angebracht",
+          "entrapment_hazards": "Keine Einklemmgefahren vorhanden",
+          "drain_covers": "Ablaufabdeckungen sind sicher befestigt und bündig",
+          "general_condition": "Allgemeiner Zustand des Spielplatzes ist zufriedenstellend"
         }
       },
       "lab": {
-        "name": "Laboratory Safety Inspection",
-        "description": "Safety inspection for educational laboratory spaces, verifying emergency equipment, chemical storage, fume hood operation, and PPE availability",
+        "name": "Laborsicherheitsinspektion",
+        "description": "Sicherheitsinspektion für schulische Laborbereiche mit Überprüfung von Notfalleinrichtungen, Chemikalienlagerung, Funktion des Abzugs und Verfügbarkeit von PSA",
         "items": {
-          "eyewash_tested": "Eyewash station has been tested and is functional",
-          "shower_tested": "Emergency shower has been tested and is functional",
-          "fume_hood": "Fume hood is functioning and airflow is adequate",
-          "chemical_storage": "Chemicals are properly stored and labeled",
-          "sds_accessible": "Safety Data Sheets are accessible",
-          "ppe_available": "PPE is available (goggles, gloves, aprons)",
-          "emergency_shutoffs": "Emergency shutoffs are labeled and accessible",
-          "glassware_disposal": "Broken glassware disposal containers are available"
+          "eyewash_tested": "Augendusche wurde geprüft und ist funktionsfähig",
+          "shower_tested": "Notdusche wurde geprüft und ist funktionsfähig",
+          "fume_hood": "Abzug funktioniert und Luftstrom ist ausreichend",
+          "chemical_storage": "Chemikalien sind ordnungsgemäß gelagert und gekennzeichnet",
+          "sds_accessible": "Sicherheitsdatenblätter sind zugänglich",
+          "ppe_available": "PSA ist verfügbar (Schutzbrillen, Handschuhe, Schürzen)",
+          "emergency_shutoffs": "Notabschaltungen sind gekennzeichnet und zugänglich",
+          "glassware_disposal": "Behälter für die Entsorgung zerbrochener Glaswaren sind verfügbar"
         }
       },
       "emergency_drill": {
-        "name": "Emergency Drill Record",
-        "description": "Documentation of emergency drill execution including drill type, evacuation time, headcount reconciliation, and areas for improvement",
+        "name": "Protokoll der Notfallübung",
+        "description": "Dokumentation der Durchführung einer Notfallübung einschließlich Übungsart, Evakuierungszeit, Abgleich der Anwesenheitszahlen und Verbesserungsbereichen",
         "items": {
-          "drill_type": "Type of drill conducted (fire, lockdown, earthquake, tornado)",
-          "weather_conditions": "Weather conditions during the drill",
-          "evacuation_time": "Total evacuation time in minutes",
-          "headcount_reconciled": "Headcount was reconciled with attendance records",
-          "areas_of_delay": "Areas of delay or congestion identified",
-          "communication_effectiveness": "Communication systems worked effectively",
-          "special_needs": "Special needs accommodations were properly executed"
+          "drill_type": "Art der durchgeführten Übung (Brand, Lockdown, Erdbeben, Tornado)",
+          "weather_conditions": "Wetterbedingungen während der Übung",
+          "evacuation_time": "Gesamte Evakuierungszeit in Minuten",
+          "headcount_reconciled": "Anwesendenzahl wurde mit den Anwesenheitslisten abgeglichen",
+          "areas_of_delay": "Bereiche mit Verzögerungen oder Stauungen",
+          "communication_effectiveness": "Kommunikationssysteme haben wirksam funktioniert",
+          "special_needs": "Vorkehrungen für besondere Bedürfnisse wurden ordnungsgemäß umgesetzt"
         }
       },
       "visitor": {
-        "name": "Visitor Management Log",
-        "description": "Visitor check-in and tracking log for educational campuses, documenting identification verification, badge issuance, and escort requirements",
+        "name": "Besuchermanagement-Protokoll",
+        "description": "Protokoll zur Anmeldung und Nachverfolgung von Besucherinnen und Besuchern auf Bildungscampussen mit Dokumentation der Ausweisprüfung, Ausgabe von Besucherausweisen und Begleitpflichten",
         "items": {
-          "visitor_id_checked": "Visitor identification has been checked",
-          "purpose_of_visit": "Purpose of visit has been documented",
-          "badge_issued": "Visitor badge has been issued",
-          "escort_assigned": "Escort has been assigned (if required)",
-          "sign_out_time": "Sign-out time has been recorded",
-          "restricted_areas": "Restricted areas have been communicated"
+          "visitor_id_checked": "Identität der besuchenden Person wurde geprüft",
+          "purpose_of_visit": "Zweck des Besuchs wurde dokumentiert",
+          "badge_issued": "Besucherausweis wurde ausgegeben",
+          "escort_assigned": "Begleitperson wurde zugewiesen (falls erforderlich)",
+          "sign_out_time": "Abmeldezeit wurde erfasst",
+          "restricted_areas": "Eingeschränkte Bereiche wurden kommuniziert"
         }
       },
       "building": {
-        "name": "Building Safety Walk",
-        "description": "Facility safety walkthrough for educational buildings, checking exit signs, fire extinguishers, AED readiness, and general building conditions",
+        "name": "Gebäudesicherheitsrundgang",
+        "description": "Sicherheitsrundgang durch Bildungsgebäude mit Kontrolle von Ausgangsschildern, Feuerlöschern, AED-Einsatzbereitschaft und allgemeinen Gebäudezuständen",
         "items": {
-          "exit_signs": "Exit signs are illuminated and visible",
-          "fire_extinguishers": "Fire extinguishers are inspected and accessible",
-          "aed_checked": "AED has been checked and is ready",
-          "stairwell_lighting": "Stairwell lighting is functioning",
-          "trip_hazards": "No trip hazards in corridors or walkways",
-          "hvac_functioning": "HVAC system is functioning properly",
-          "water_temperature": "Water temperature has been tested (anti-scald)"
+          "exit_signs": "Ausgangsschilder sind beleuchtet und sichtbar",
+          "fire_extinguishers": "Feuerlöscher sind geprüft und zugänglich",
+          "aed_checked": "AED wurde geprüft und ist einsatzbereit",
+          "stairwell_lighting": "Treppenhausbeleuchtung funktioniert",
+          "trip_hazards": "Keine Stolpergefahren in Fluren oder Gehwegen",
+          "hvac_functioning": "HLK-System funktioniert ordnungsgemäß",
+          "water_temperature": "Wassertemperatur wurde geprüft (Verbrühschutz)"
         }
       },
       "bus": {
-        "name": "Bus/Transportation Safety",
-        "description": "Safety checklist for school bus and student transportation vehicles, covering pre-trip inspections, emergency exits, and student count procedures",
+        "name": "Sicherheit Bus/Schülertransport",
+        "description": "Sicherheitscheckliste für Schulbusse und Fahrzeuge im Schülertransport mit Überprüfung der Vorfahrtinspektion, Notausgänge und Verfahren zur Fahrgastzählung",
         "items": {
-          "pre_trip_inspection": "Pre-trip vehicle inspection has been completed",
-          "first_aid_kit": "First aid kit is present and stocked",
-          "emergency_exits": "Emergency exits are functional and unobstructed",
-          "communication_device": "Communication device is working",
-          "student_count": "Student count procedure is in place",
-          "wheelchair_lift": "Wheelchair lift has been tested (if applicable)"
+          "pre_trip_inspection": "Vor Fahrtantritt wurde eine Fahrzeuginspektion durchgeführt",
+          "first_aid_kit": "Erste-Hilfe-Kasten ist vorhanden und bestückt",
+          "emergency_exits": "Notausgänge sind funktionsfähig und nicht blockiert",
+          "communication_device": "Kommunikationsgerät funktioniert",
+          "student_count": "Verfahren zur Schülerzählung ist vorhanden",
+          "wheelchair_lift": "Rollstuhllift wurde geprüft (falls zutreffend)"
         }
       }
     },
     "airports": {
-      "name": "Airports",
-      "description": "Safety checklists for airport operations, covering terminal safety, ground support equipment, ramp compliance, fueling operations, and contractor management",
+      "name": "Flughäfen",
+      "description": "Sicherheitschecklisten für Flughafenbetriebe mit den Schwerpunkten Terminalsicherheit, Bodenabfertigungsgeräte, Rampen-Compliance, Betankungsvorgänge und Auftragnehmermanagement",
       "escalator": {
-        "name": "Escalator/Elevator Safety",
-        "description": "Safety inspection of escalators and elevators in terminal buildings, verifying emergency stops, mechanical alignment, and communication systems",
+        "name": "Sicherheit Rolltreppe/Aufzug",
+        "description": "Sicherheitsinspektion von Rolltreppen und Aufzügen in Terminalgebäuden mit Überprüfung von Not-Aus, mechanischer Ausrichtung und Kommunikationssystemen",
         "items": {
-          "emergency_stop": "Emergency stop button is functioning",
-          "comb_plate": "Comb plate is intact and aligned",
-          "handrail_speed": "Handrail speed is matched to step speed",
-          "step_demarcation": "Step demarcation lines are visible",
-          "lighting": "Lighting is adequate at approaches and along the unit",
-          "intercom": "Intercom or emergency communication is working",
-          "maintenance_log": "Maintenance log is current"
+          "emergency_stop": "Not-Aus-Taste funktioniert",
+          "comb_plate": "Kammplatte ist intakt und ausgerichtet",
+          "handrail_speed": "Geschwindigkeit des Handlaufs entspricht der Stufengeschwindigkeit",
+          "step_demarcation": "Stufenmarkierungen sind sichtbar",
+          "lighting": "Beleuchtung an den Zugängen und entlang der Anlage ist ausreichend",
+          "intercom": "Gegensprechanlage oder Notfallkommunikation funktioniert",
+          "maintenance_log": "Wartungsprotokoll ist aktuell"
         }
       },
       "terminal_floor": {
-        "name": "Terminal Floor Hazard Walk",
-        "description": "Walkthrough of terminal floor areas to identify wet floor conditions, trip hazards, construction barriers, and crowd flow concerns",
+        "name": "Rundgang zu Gefahren auf dem Terminalboden",
+        "description": "Rundgang durch Terminalbereiche zur Identifizierung nasser Böden, Stolpergefahren, Baustellenabsperrungen und Problemen im Personenfluss",
         "items": {
-          "wet_floor_signage": "Wet floor areas are identified with proper signage",
-          "spill_cleanup": "Spills have been cleaned up promptly",
-          "trip_hazards": "No trip hazards (torn carpet, uneven tiles) are present",
-          "construction_barriers": "Construction barriers are secure and visible",
-          "lighting_functional": "All lighting in the terminal area is functional",
-          "crowd_flow": "Crowd flow is adequate and not creating safety hazards"
+          "wet_floor_signage": "Nasse Bodenbereiche sind mit korrekter Beschilderung gekennzeichnet",
+          "spill_cleanup": "Verschüttungen wurden umgehend beseitigt",
+          "trip_hazards": "Keine Stolpergefahren (zerrissener Teppich, unebene Fliesen) vorhanden",
+          "construction_barriers": "Baustellenabsperrungen sind sicher und sichtbar",
+          "lighting_functional": "Die gesamte Beleuchtung im Terminalbereich funktioniert",
+          "crowd_flow": "Personenfluss ist ausreichend und verursacht keine Sicherheitsgefahren"
         }
       },
       "aed": {
-        "name": "AED/First Aid Station Check",
-        "description": "Inspection of automated external defibrillators and first aid stations in the terminal, verifying readiness, supply levels, and trained responder availability",
+        "name": "Prüfung AED/Erste-Hilfe-Station",
+        "description": "Inspektion automatisierter externer Defibrillatoren und Erste-Hilfe-Stationen im Terminal mit Überprüfung der Einsatzbereitschaft, Materialbestände und Verfügbarkeit geschulter Ersthelfender",
         "items": {
-          "aed_powered": "AED is powered on and showing ready status",
-          "pads_not_expired": "AED pads are not expired",
-          "battery_charge": "Battery charge is adequate",
-          "first_aid_supplies": "First aid supplies are stocked",
-          "location_signage": "Station location signage is visible",
-          "trained_responder": "Nearest trained responder is listed and on duty"
+          "aed_powered": "AED ist eingeschaltet und zeigt Einsatzbereitschaft an",
+          "pads_not_expired": "AED-Elektroden sind nicht abgelaufen",
+          "battery_charge": "Batterieladung ist ausreichend",
+          "first_aid_supplies": "Erste-Hilfe-Materialien sind aufgefüllt",
+          "location_signage": "Beschilderung des Stationsstandorts ist sichtbar",
+          "trained_responder": "Nächstgelegene geschulte Einsatzkraft ist benannt und im Dienst"
         }
       },
       "emergency_evac": {
-        "name": "Emergency Evacuation Readiness",
-        "description": "Readiness assessment for terminal emergency evacuation, verifying exit signage, route clearance, PA system functionality, and staff assignment awareness",
+        "name": "Bereitschaft zur Notfallevakuierung",
+        "description": "Bereitschaftsbewertung für die Notfallevakuierung des Terminals mit Überprüfung von Ausgangsbeschilderung, freien Wegen, Funktionalität der Beschallungsanlage und Kenntnis der Personaleinsatzpläne",
         "items": {
-          "exit_signage": "Exit signage is illuminated throughout the terminal",
-          "evacuation_routes": "Evacuation routes are unobstructed",
-          "pa_system": "PA system has been tested and is functional",
-          "assembly_points": "Assembly points are marked and communicated",
-          "wheelchair_chairs": "Wheelchair evacuation chairs are staged at stairwells",
-          "staff_assignments": "Staff know their evacuation assignments"
+          "exit_signage": "Ausgangsbeschilderung ist im gesamten Terminal beleuchtet",
+          "evacuation_routes": "Evakuierungswege sind frei",
+          "pa_system": "Beschallungsanlage wurde getestet und ist funktionsfähig",
+          "assembly_points": "Sammelpunkte sind markiert und kommuniziert",
+          "wheelchair_chairs": "Evakuierungsstühle für Rollstuhlnutzende sind an den Treppenhäusern bereitgestellt",
+          "staff_assignments": "Mitarbeitende kennen ihre Evakuierungsaufgaben"
         }
       },
       "gse": {
-        "name": "GSE Pre-Use",
-        "description": "Pre-use inspection of ground support equipment including belt loaders, tugs, and baggage carts, verifying mechanical condition and operator certification",
+        "name": "Vorbenutzungsprüfung GSE",
+        "description": "Vorbenutzungsprüfung von Bodenabfertigungsgeräten einschließlich Förderbandladern, Schleppern und Gepäckwagen mit Überprüfung des mechanischen Zustands und der Bedienerqualifikation",
         "items": {
-          "belt_loader": "Belt loader operation is smooth and controlled",
-          "tug_brakes_lights": "Tug brakes and lights are functioning",
-          "baggage_cart": "Baggage cart coupling is secure",
-          "fuel_level": "Fuel level is adequate for the shift",
-          "fire_extinguisher": "Fire extinguisher is mounted and charged",
-          "backup_alarm": "Backup alarm is audible",
-          "tire_condition": "Tire condition is acceptable",
-          "operator_cert": "Operator certification is current"
+          "belt_loader": "Förderbandlader läuft ruhig und kontrolliert",
+          "tug_brakes_lights": "Bremsen und Leuchten des Schleppers funktionieren",
+          "baggage_cart": "Kupplung des Gepäckwagens ist gesichert",
+          "fuel_level": "Kraftstoffstand ist für die Schicht ausreichend",
+          "fire_extinguisher": "Feuerlöscher ist montiert und einsatzbereit",
+          "backup_alarm": "Rückfahrwarner ist hörbar",
+          "tire_condition": "Reifenzustand ist akzeptabel",
+          "operator_cert": "Bedienerqualifikation ist aktuell"
         }
       },
       "fod": {
-        "name": "FOD Walk",
-        "description": "Foreign object debris inspection of ramp and apron areas, verifying surface cleanliness, tool accountability, and debris documentation",
+        "name": "FOD-Rundgang",
+        "description": "Inspektion auf Fremdkörper auf Vorfeld- und Rampenflächen mit Überprüfung der Sauberkeit, Werkzeugkontrolle und Dokumentation von Fremdkörpern",
         "items": {
-          "ramp_clear": "Ramp area is clear of foreign object debris",
-          "tools_accounted": "All tools and equipment are accounted for",
-          "loose_items": "Loose items have been secured or removed",
-          "fod_bins": "FOD collection bins are available and not full",
-          "surface_condition": "Surface condition is safe (no ice, standing water)",
-          "debris_documented": "Any debris found has been documented and removed"
+          "ramp_clear": "Rampenbereich ist frei von Fremdkörpern",
+          "tools_accounted": "Alle Werkzeuge und Geräte sind erfasst",
+          "loose_items": "Lose Gegenstände wurden gesichert oder entfernt",
+          "fod_bins": "FOD-Sammelbehälter sind vorhanden und nicht voll",
+          "surface_condition": "Oberflächenzustand ist sicher (kein Eis, kein stehendes Wasser)",
+          "debris_documented": "Gefundene Fremdkörper wurden dokumentiert und entfernt"
         }
       },
       "fueling": {
-        "name": "Fueling Operation Safety",
-        "description": "Safety checklist for aircraft fueling operations, covering bonding/grounding, spill containment, ignition source control, and fuel quality verification",
+        "name": "Sicherheit bei Betankungsvorgängen",
+        "description": "Sicherheitscheckliste für die Betankung von Flugzeugen mit Überprüfung von Potentialausgleich/Erdung, Rückhalteeinrichtungen für Verschüttungen, Kontrolle von Zündquellen und Kraftstoffqualitätsprüfung",
         "items": {
-          "bonding_grounding": "Bonding and grounding connections are established",
-          "dead_man_switch": "Dead man switch is functional",
-          "spill_containment": "Spill containment equipment is staged",
-          "fire_extinguisher": "Fire extinguisher is accessible",
-          "no_ignition_sources": "No ignition sources are present in the fueling zone",
-          "fuel_sample": "Fuel sample is clear and uncontaminated",
-          "quantity_verified": "Fuel quantity has been verified against the order"
+          "bonding_grounding": "Potentialausgleichs- und Erdungsverbindungen sind hergestellt",
+          "dead_man_switch": "Totmannschalter funktioniert",
+          "spill_containment": "Ausrüstung zur Aufnahme von Verschüttungen ist bereitgestellt",
+          "fire_extinguisher": "Feuerlöscher ist zugänglich",
+          "no_ignition_sources": "Im Betankungsbereich sind keine Zündquellen vorhanden",
+          "fuel_sample": "Kraftstoffprobe ist klar und nicht verunreinigt",
+          "quantity_verified": "Kraftstoffmenge wurde mit dem Auftrag abgeglichen"
         }
       },
       "baggage": {
-        "name": "Baggage Handling System Audit",
-        "description": "Safety audit of baggage handling systems, verifying conveyor guarding, emergency stops, pinch point markings, and ergonomic lifting aid availability",
+        "name": "Audit des Gepäckfördersystems",
+        "description": "Sicherheitsaudit von Gepäckfördersystemen mit Überprüfung von Förderschutzvorrichtungen, Not-Aus, Quetschstellenmarkierungen und Verfügbarkeit ergonomischer Hebehilfen",
         "items": {
-          "conveyor_guarding": "Conveyor belt guards are in place",
-          "emergency_stops": "Emergency stop buttons are accessible and tested",
-          "pinch_points": "Pinch points are clearly marked",
-          "lighting": "Lighting in the baggage handling area is adequate",
-          "maintenance_access": "Maintenance access areas are properly secured",
-          "noise_levels": "Noise levels are within acceptable limits",
-          "ergonomic_aids": "Ergonomic lifting aids are available"
+          "conveyor_guarding": "Schutzvorrichtungen an Förderbändern sind vorhanden",
+          "emergency_stops": "Not-Aus-Tasten sind zugänglich und geprüft",
+          "pinch_points": "Quetschstellen sind deutlich markiert",
+          "lighting": "Beleuchtung im Gepäckabfertigungsbereich ist ausreichend",
+          "maintenance_access": "Wartungszugangsbereiche sind ordnungsgemäß gesichert",
+          "noise_levels": "Lärmpegel liegen innerhalb akzeptabler Grenzen",
+          "ergonomic_aids": "Ergonomische Hebehilfen sind verfügbar"
         }
       },
       "ramp": {
-        "name": "Ramp Safety Zone Compliance",
-        "description": "Compliance check of ramp safety zones, verifying jet blast clearance, equipment marshalling, vehicle speed limits, and PPE usage by ramp personnel",
+        "name": "Einhaltung der Sicherheitszone auf der Rampe",
+        "description": "Konformitätsprüfung der Sicherheitszonen auf der Rampe mit Überprüfung von Jetblast-Abständen, Einweisung von Geräten, Fahrzeuggeschwindigkeiten und PSA-Nutzung durch das Rampenpersonal",
         "items": {
-          "jet_blast_zone": "Jet blast zone is clear of personnel and equipment",
-          "equipment_marshalling": "Equipment marshalling is following proper procedures",
-          "vehicle_speed": "Vehicle speed limits are being observed",
-          "wing_walker": "Wing walker is present for pushback operations",
-          "hearing_protection": "Hearing protection is being worn by all ramp personnel",
-          "reflective_vests": "Reflective safety vests are being worn",
-          "headsets_tested": "Communication headsets have been tested"
+          "jet_blast_zone": "Jetblast-Zone ist frei von Personen und Ausrüstung",
+          "equipment_marshalling": "Einweisung und Positionierung der Geräte erfolgen gemäß Verfahren",
+          "vehicle_speed": "Geschwindigkeitsbegrenzungen für Fahrzeuge werden eingehalten",
+          "wing_walker": "Wing Walker ist bei Pushback-Vorgängen vorhanden",
+          "hearing_protection": "Gehörschutz wird von allen Rampenmitarbeitenden getragen",
+          "reflective_vests": "Reflektierende Sicherheitswesten werden getragen",
+          "headsets_tested": "Kommunikationsheadsets wurden getestet"
         }
       },
       "contractor": {
-        "name": "Multi-Contractor Compliance",
-        "description": "Compliance review of multiple ground handling contractors, verifying training currency, security badge validity, incident reporting, and corrective action closure",
+        "name": "Compliance mehrerer Auftragnehmer",
+        "description": "Compliance-Prüfung mehrerer Bodenabfertigungsunternehmen mit Überprüfung der Aktualität von Schulungen, Gültigkeit von Sicherheitsausweisen, Vorfallmeldungen und Abschluss von Korrekturmaßnahmen",
         "items": {
-          "handler_training": "Ground handler safety training is current",
-          "security_badges": "Security badge validity has been checked",
-          "ramp_driving_auth": "Ramp driving authorization is current",
-          "incident_reports": "Safety incident reports per handler are reviewed",
-          "audit_scores": "Audit scores by contractor are documented",
-          "corrective_actions": "Corrective action closure rates are tracked"
+          "handler_training": "Sicherheitsschulung des Bodenpersonals ist aktuell",
+          "security_badges": "Gültigkeit der Sicherheitsausweise wurde geprüft",
+          "ramp_driving_auth": "Fahrberechtigung für das Vorfeld ist aktuell",
+          "incident_reports": "Sicherheitsvorfallberichte je Dienstleister wurden geprüft",
+          "audit_scores": "Auditergebnisse nach Auftragnehmer sind dokumentiert",
+          "corrective_actions": "Abschlussquoten von Korrekturmaßnahmen werden nachverfolgt"
         }
       }
     }
@@ -2934,5 +2948,18 @@
       "createdAt": "Erstellt am",
       "mediaAttachments": "Medienanhänge"
     }
+  },
+  "dateRange": {
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "last7Days": "Letzte 7 Tage",
+    "last30Days": "Letzte 30 Tage",
+    "last90Days": "Letzte 90 Tage",
+    "last6Months": "Letzte 6 Monate",
+    "allTime": "Gesamter Zeitraum",
+    "customRange": "Benutzerdefinierter Zeitraum",
+    "selectDate": "Datum auswählen",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum"
   }
 }

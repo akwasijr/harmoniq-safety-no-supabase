@@ -5,17 +5,7 @@ import { Calendar, ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const dateRanges = [
-  { value: "today", label: "Today" },
-  { value: "yesterday", label: "Yesterday" },
-  { value: "last_7_days", label: "Last 7 days" },
-  { value: "last_30_days", label: "Last 30 days" },
-  { value: "last_90_days", label: "Last 90 days" },
-  { value: "last_6_months", label: "Last 6 months" },
-  { value: "all_time", label: "All time" },
-  { value: "custom", label: "Custom range" },
-];
+import { useTranslation } from "@/i18n";
 
 interface DateRangeDropdownProps {
   value: string;
@@ -24,11 +14,23 @@ interface DateRangeDropdownProps {
 }
 
 export function DateRangeDropdown({ value, onChange, className }: DateRangeDropdownProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = React.useState(false);
   const [showCustom, setShowCustom] = React.useState(false);
   const [customStart, setCustomStart] = React.useState("");
   const [customEnd, setCustomEnd] = React.useState("");
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const dateRanges = React.useMemo(() => ([
+    { value: "today", label: t("dateRange.today") },
+    { value: "yesterday", label: t("dateRange.yesterday") },
+    { value: "last_7_days", label: t("dateRange.last7Days") },
+    { value: "last_30_days", label: t("dateRange.last30Days") },
+    { value: "last_90_days", label: t("dateRange.last90Days") },
+    { value: "last_6_months", label: t("dateRange.last6Months") },
+    { value: "all_time", label: t("dateRange.allTime") },
+    { value: "custom", label: t("dateRange.customRange") },
+  ]), [t]);
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -65,7 +67,7 @@ export function DateRangeDropdown({ value, onChange, className }: DateRangeDropd
     if (value === "custom" && customStart && customEnd) {
       return `${new Date(customStart).toLocaleDateString()} - ${new Date(customEnd).toLocaleDateString()}`;
     }
-    return dateRanges.find(d => d.value === value)?.label || "Select date";
+    return dateRanges.find((d) => d.value === value)?.label || t("dateRange.selectDate");
   };
 
   return (
@@ -101,7 +103,7 @@ export function DateRangeDropdown({ value, onChange, className }: DateRangeDropd
           }}
         >
           {!showCustom ? (
-            <div className="w-48" role="listbox" aria-label="Date range options">
+              <div className="w-48" role="listbox" aria-label={t("common.filters")}>
               {dateRanges.map((range) => (
                 <button
                   key={range.value}
@@ -119,7 +121,7 @@ export function DateRangeDropdown({ value, onChange, className }: DateRangeDropd
           ) : (
             <div className="w-72 p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium">Custom Range</h4>
+                <h4 className="font-medium">{t("dateRange.customRange")}</h4>
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -131,7 +133,7 @@ export function DateRangeDropdown({ value, onChange, className }: DateRangeDropd
               </div>
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="start-date" className="text-xs">Start Date</Label>
+                  <Label htmlFor="start-date" className="text-xs">{t("dateRange.startDate")}</Label>
                   <Input
                     id="start-date"
                     type="date"
@@ -141,7 +143,7 @@ export function DateRangeDropdown({ value, onChange, className }: DateRangeDropd
                   />
                 </div>
                 <div>
-                  <Label htmlFor="end-date" className="text-xs">End Date</Label>
+                  <Label htmlFor="end-date" className="text-xs">{t("dateRange.endDate")}</Label>
                   <Input
                     id="end-date"
                     type="date"
@@ -158,7 +160,7 @@ export function DateRangeDropdown({ value, onChange, className }: DateRangeDropd
                   className="flex-1"
                   onClick={() => setShowCustom(false)}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button 
                   size="sm" 
@@ -166,7 +168,7 @@ export function DateRangeDropdown({ value, onChange, className }: DateRangeDropd
                   onClick={handleApplyCustom}
                   disabled={!customStart || !customEnd}
                 >
-                  Apply
+                  {t("common.apply")}
                 </Button>
               </div>
             </div>

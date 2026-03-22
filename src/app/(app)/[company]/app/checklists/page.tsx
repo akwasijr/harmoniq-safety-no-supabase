@@ -31,15 +31,20 @@ import { useAssetsStore } from "@/stores/assets-store";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
+import { useUsersStore } from "@/stores/users-store";
 import { cn } from "@/lib/utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation, LOCALE_DEFAULT_COUNTRY } from "@/i18n";
+import {
+  resolveRiskAssessmentCatalogCountry,
+  type RiskAssessmentCatalogCountry,
+} from "@/lib/country-config";
 import { TasksSkeleton } from "@/components/ui/loading";
+import { isVisibleToFieldApp } from "@/lib/template-activation";
 import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User } from "@/types";
 
 type TabType = "checklists" | "risk-assessment" | "reports";
-type CountryCode = "US" | "NL" | "SE";
 
 // Country-specific risk assessment forms
 const riskAssessmentForms = {
@@ -55,7 +60,10 @@ const riskAssessmentForms = {
     { id: "sam", name: "SAM", fullName: "SAM Assessment", icon: FileCheck },
     { id: "osa", name: "OSA", fullName: "Psykosocial Riskbed\u00f6mning", icon: ShieldAlert },
   ],
-};
+} satisfies Record<
+  RiskAssessmentCatalogCountry,
+  Array<{ id: string; name: string; fullName: string; icon: typeof FileCheck }>
+>;
 
 // Collapsible section component
 function Section({ 
@@ -392,6 +400,7 @@ function EmployeeChecklistsPageContent() {
   const { items: locations } = useLocationsStore();
   const { items: riskEvaluations } = useRiskEvaluationsStore();
   const { items: incidents } = useIncidentsStore();
+  const { items: users } = useUsersStore();
   const { currentCompany, user } = useAuth();
   
   const selectedLocation = locationParam 
@@ -399,11 +408,16 @@ function EmployeeChecklistsPageContent() {
     : null;
 
   // Derive country from user's locale first, fall back to company country, then US
-  const localeCountry = LOCALE_DEFAULT_COUNTRY[locale] as CountryCode | undefined;
-  const companyCountry: CountryCode = localeCountry || (currentCompany?.country as CountryCode) || "US";
+  const localeCountry = LOCALE_DEFAULT_COUNTRY[locale];
+  const companyCountry = resolveRiskAssessmentCatalogCountry(
+    currentCompany?.country,
+    localeCountry,
+  );
 
   const templates = checklistTemplates.filter(
-    (t) => t.publish_status === "published" || t.publish_status === undefined
+    (template) =>
+      template.company_id === user?.company_id &&
+      isVisibleToFieldApp(template),
   );
   const activeAssets = assets.filter((a) => a.status === "active");
 
@@ -452,8 +466,8 @@ function EmployeeChecklistsPageContent() {
         progress,
       };
     });
-  const completedAssessments = myAssessments
-    .filter((evaluation) => evaluation.status !== "draft")
+  const awaitingReviewAssessments = myAssessments
+    .filter((evaluation) => evaluation.status === "submitted")
     .map((evaluation) => {
       const location = locations.find((loc) => loc.id === evaluation.location_id);
       return {
@@ -462,7 +476,22 @@ function EmployeeChecklistsPageContent() {
         name: assessmentLabelMap[evaluation.form_type] || evaluation.form_type,
         location: location?.name || "Unassigned location",
         date: evaluation.submitted_at || evaluation.created_at,
-        status: evaluation.status,
+      };
+    });
+  const reviewedAssessments = myAssessments
+    .filter((evaluation) => evaluation.status === "reviewed")
+    .map((evaluation) => {
+      const location = locations.find((loc) => loc.id === evaluation.location_id);
+      const reviewerName = evaluation.reviewed_by
+        ? users.find((candidate) => candidate.id === evaluation.reviewed_by)?.full_name || "Reviewer"
+        : "Pending";
+      return {
+        id: evaluation.id,
+        formType: evaluation.form_type,
+        name: assessmentLabelMap[evaluation.form_type] || evaluation.form_type,
+        location: location?.name || "Unassigned location",
+        date: evaluation.reviewed_at || evaluation.submitted_at || evaluation.created_at,
+        reviewerName,
       };
     });
 
@@ -685,18 +714,55 @@ function EmployeeChecklistsPageContent() {
               </>
             )}
 
+            {awaitingReviewAssessments.length > 0 && (
+              <>
+                <Section
+                  title="Awaiting review"
+                  icon={ShieldAlert}
+                  iconColor="text-amber-500"
+                  count={awaitingReviewAssessments.length}
+                  countVariant="warning"
+                >
+                  {awaitingReviewAssessments.map((item) => {
+                    const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
+                    const TypeIcon = conf.icon;
+                    return (
+                      <Link key={item.id} href={`/${company}/app/risk-assessment/view/${item.id}`} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30">
+                        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
+                          <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
+                            <Badge variant="warning" className="text-[10px] h-4 shrink-0">
+                              Submitted
+                            </Badge>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {item.location} · Submitted {formatDate(new Date(item.date))}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                      </Link>
+                    );
+                  })}
+                </Section>
+                <div className="border-t" />
+              </>
+            )}
+
             <Section 
-              title={t("checklists.labels.completed")} 
+              title={t("checklists.labels.completed") || "Reviewed"} 
               icon={CheckCircle} 
               iconColor="text-success"
-              count={completedAssessments.length} 
+              count={reviewedAssessments.length} 
               countVariant="success"
               defaultOpen={false}
             >
-              {completedAssessments.length === 0 ? (
+              {reviewedAssessments.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-3">{t("checklists.noCompletedAssessments")}</p>
               ) : (
-                completedAssessments.map((item) => {
+                reviewedAssessments.map((item) => {
                   const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
                   const TypeIcon = conf.icon;
                   return (
@@ -705,8 +771,14 @@ function EmployeeChecklistsPageContent() {
                         <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{item.location} · {formatDate(new Date(item.date))}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
+                          <Badge variant="success" className="text-[10px] h-4 shrink-0">
+                            Reviewed
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{item.location} · Reviewed {formatDate(new Date(item.date))}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Reviewer: {item.reviewerName}</p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
                     </Link>

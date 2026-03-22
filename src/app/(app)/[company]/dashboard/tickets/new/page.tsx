@@ -17,11 +17,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { useNotificationsStore } from "@/stores/notifications-store";
 import { notifyAssignment } from "@/stores/notification-triggers";
-import { useUsersStore } from "@/stores/users-store";
-import { useIncidentsStore } from "@/stores/incidents-store";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import type { Ticket } from "@/types";
@@ -44,13 +43,13 @@ export default function NewTicketPage() {
   const { t } = useTranslation();
   const { add: addTicket } = useTicketsStore();
   const { add: addNotif } = useNotificationsStore();
-  const { items: users } = useUsersStore();
-  const { items: incidents } = useIncidentsStore();
+  const { users, teams, incidents } = useCompanyData();
   const [formData, setFormData] = React.useState({
     title: "",
     description: "",
     priority: "medium",
     assigned_to: "",
+    assigned_to_team_id: "",
     due_date: "",
     incident_id: "",
   });
@@ -92,7 +91,8 @@ export default function NewTicketPage() {
       status: "new",
       due_date: formData.due_date || null,
       assigned_to: formData.assigned_to || null,
-      assigned_groups: [],
+      assigned_to_team_id: formData.assigned_to_team_id || null,
+      assigned_groups: formData.assigned_to_team_id ? [formData.assigned_to_team_id] : [],
       incident_ids: formData.incident_id ? [formData.incident_id] : [],
       created_by: user?.id || users[0]?.id || "",
       created_at: now,
@@ -124,7 +124,7 @@ export default function NewTicketPage() {
         <div className="flex-1">
           <h1 className="text-2xl font-semibold">{t("tickets.createTicket")}</h1>
           <p className="text-sm text-muted-foreground">
-            Create a new work ticket for follow-up actions
+            Use tickets for incident follow-up and investigation coordination. Use work orders for maintenance and corrective actions for remediation.
           </p>
         </div>
         <Button onClick={handleSubmit} disabled={isSubmitting || Object.keys(errors).length > 0 || !formData.title}>
@@ -141,6 +141,9 @@ export default function NewTicketPage() {
               <CardTitle className="text-base">{t("tickets.title")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+                Tickets are best for coordination, investigation follow-up, and incident-linked tasks that do not need to be treated as maintenance work.
+              </div>
               <div>
                 <Label htmlFor="title">{t("tickets.labels.title")} *</Label>
                 <Input
@@ -256,6 +259,21 @@ export default function NewTicketPage() {
                 {assignees.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.full_name} ({user.role.replace("_", " ")})
+                  </option>
+                ))}
+              </select>
+
+              <Label htmlFor="assigned_to_team" className="mt-4 block">Assign team</Label>
+              <select
+                id="assigned_to_team"
+                value={formData.assigned_to_team_id}
+                onChange={(e) => setFormData({ ...formData, assigned_to_team_id: e.target.value })}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">No team</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
                   </option>
                 ))}
               </select>

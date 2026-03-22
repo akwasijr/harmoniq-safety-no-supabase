@@ -3,11 +3,8 @@
 import * as React from "react";
 import { useTranslation } from "@/i18n";
 import { useCompanyParam } from "@/hooks/use-company-param";
-import { useInspectionRoutesStore } from "@/stores/inspection-routes-store";
-import { useAssetsStore } from "@/stores/assets-store";
-import { useInspectionRoundsStore } from "@/stores/inspection-rounds-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
-import { useCompanyStore } from "@/stores/company-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,12 +49,9 @@ const CHECK_TYPE_KEYS: InspectionCheckType[] = ["visual", "auditory", "measureme
 export default function InspectionRoutesPage() {
   const { t } = useTranslation();
   const company = useCompanyParam();
-  const { items: routes, isLoading, add: addRoute, update: updateRoute, remove: removeRoute } = useInspectionRoutesStore();
-  const { items: assets } = useAssetsStore();
-  const { items: rounds } = useInspectionRoundsStore();
+  const { inspectionRoutes: routes, assets, inspectionRounds: rounds, companyId, stores } = useCompanyData();
+  const { isLoading, add: addRoute, update: updateRoute, remove: removeRoute } = stores.inspectionRoutes;
   const { toast } = useToast();
-  const { items: companies } = useCompanyStore();
-  const currentCompany = companies.find((c) => c.slug === company) || companies[0];
 
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [expandedRouteId, setExpandedRouteId] = React.useState<string | null>(null);
@@ -107,7 +101,7 @@ export default function InspectionRoutesPage() {
     const now = new Date().toISOString();
     const route: InspectionRoute = {
       id: `route_${Date.now()}`,
-      company_id: currentCompany?.id || "",
+      company_id: companyId || "",
       name: formName.trim(),
       description: formDescription.trim() || null,
       status: "active",

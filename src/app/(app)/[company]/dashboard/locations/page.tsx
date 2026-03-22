@@ -43,13 +43,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useLocationsStore } from "@/stores/locations-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { LoadingPage } from "@/components/ui/loading";
-import { useIncidentsStore } from "@/stores/incidents-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useAssetsStore } from "@/stores/assets-store";
 import { useToast } from "@/components/ui/toast";
-import { useCompanyStore } from "@/stores/company-store";
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "@/i18n";
@@ -111,12 +107,13 @@ function LocationsPageContent() {
   const [viewMode, setViewMode] = React.useState<"tree" | "map">("tree");
   const { toast } = useToast();
   const { t, formatDate, formatNumber } = useTranslation();
-  const { items: locations, isLoading, add: addLocation, update: updateLocation, remove: removeLocation } = useLocationsStore();
-  const { items: incidents } = useIncidentsStore();
-  const { items: users } = useUsersStore();
-  const { items: assets } = useAssetsStore();
-  const { items: companies } = useCompanyStore();
-  const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || "";
+  const { locations, incidents, users, assets, companyId, stores } = useCompanyData();
+  const {
+    isLoading,
+    add: addLocation,
+    update: updateLocation,
+    remove: removeLocation,
+  } = stores.locations;
 
   const [newLocation, setNewLocation] = React.useState({
     name: "",
@@ -194,7 +191,7 @@ function LocationsPageContent() {
     // Create the main location
     const mainLocation = {
       id: newId,
-      company_id: companyId,
+      company_id: companyId || "",
       parent_id: newLocation.parent_id || null,
       type: newLocation.type as "site" | "building" | "floor" | "zone" | "room",
       name: newLocation.name,
@@ -217,7 +214,7 @@ function LocationsPageContent() {
         const floorId = `${newId}_f${i}`;
         newLocations.push({
           id: floorId,
-          company_id: companyId,
+          company_id: companyId || "",
           parent_id: newId,
           type: "floor" as const,
           name: i === 1 ? "Ground Floor" : `Floor ${i}`,
@@ -240,7 +237,7 @@ function LocationsPageContent() {
         const zoneId = `${newId}_z${i}`;
         newLocations.push({
           id: zoneId,
-          company_id: companyId,
+          company_id: companyId || "",
           parent_id: newId,
           type: "zone" as const,
           name: `Zone ${i}`,
@@ -260,7 +257,7 @@ function LocationsPageContent() {
         const roomId = `${newId}_r${i}`;
         newLocations.push({
           id: roomId,
-          company_id: companyId,
+          company_id: companyId || "",
           parent_id: newId,
           type: "room" as const,
           name: `Room ${i}`,

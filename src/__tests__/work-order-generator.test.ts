@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
+  createCorrectiveActionFromInspection,
   createWorkOrderFromInspection,
   createWorkOrderFromMaintenance,
   getOverdueMaintenanceWorkOrders,
@@ -113,6 +114,36 @@ describe("createWorkOrderFromInspection", () => {
       inspectorId: "u",
     });
     expect(wo.priority).toBe("high");
+  });
+
+  it("links a generated work order to a corrective action when provided", () => {
+    const wo = createWorkOrderFromInspection({
+      inspection: { id: "insp-4", asset_id: "a", result: "needs_attention" },
+      asset: { id: "a", name: "Pump", company_id: "c" },
+      inspectorId: "u",
+      correctiveActionId: "ca-123",
+    });
+    expect(wo.corrective_action_id).toBe("ca-123");
+  });
+});
+
+describe("createCorrectiveActionFromInspection", () => {
+  it("generates a corrective action with inspection linkage and due date", () => {
+    const correctiveAction = createCorrectiveActionFromInspection({
+      inspection: { id: "insp-1", asset_id: "asset-1", result: "needs_attention", notes: "Broken guard" },
+      asset: { id: "asset-1", name: "Conveyor Belt", company_id: "company-1", criticality: "high" },
+    });
+
+    expect(correctiveAction.id).toBe("test-uuid-1234");
+    expect(correctiveAction.company_id).toBe("company-1");
+    expect(correctiveAction.asset_id).toBe("asset-1");
+    expect(correctiveAction.inspection_id).toBe("insp-1");
+    expect(correctiveAction.severity).toBe("high");
+    expect(correctiveAction.status).toBe("open");
+    expect(correctiveAction.assigned_to).toBeNull();
+    expect(correctiveAction.description).toContain("needs attention");
+    expect(correctiveAction.description).toContain("Broken guard");
+    expect(correctiveAction.due_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });
 

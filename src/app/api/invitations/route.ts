@@ -3,7 +3,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createRateLimiter } from "@/lib/rate-limit";
-import { sanitizeText, isValidEmail, isValidRole, isValidUUID, validateUUIDArray } from "@/lib/validation";
+import { sanitizeText, isValidEmail, isValidUUID, validateUUIDArray } from "@/lib/validation";
+import { addUserToTeam, removeUserFromTeam } from "@/lib/assignment-utils";
+import { canInviteRole } from "@/lib/invitations";
 
 // 10 invitation creates per IP per minute
 const inviteLimiter = createRateLimiter({ limit: 10, windowMs: 60_000, prefix: "invitations" });
@@ -52,8 +54,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
     }
 
-    if (!isValidRole(role)) {
-      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    if (!canInviteRole(inviter.role, role)) {
+      return NextResponse.json({ error: "Invalid role for invitation" }, { status: 403 });
     }
 
     if (company_id && !isValidUUID(company_id)) {
@@ -67,6 +69,23 @@ export async function POST(request: NextRequest) {
 
     if (!targetCompanyId) {
       return NextResponse.json({ error: "A target company is required to send invitations." }, { status: 400 });
+    }
+
+    const { data: selectedTeams, error: selectedTeamsError } = team_ids.length > 0
+      ? await supabase
+          .from("teams")
+          .select("id, member_ids")
+          .eq("company_id", targetCompanyId)
+          .in("id", team_ids)
+      : { data: [], error: null };
+
+    if (selectedTeamsError) {
+      console.error("[Invitations API] Failed to validate invited user teams:", selectedTeamsError);
+      return NextResponse.json({ error: "Failed to validate team assignments" }, { status: 500 });
+    }
+
+    if ((selectedTeams || []).length !== team_ids.length) {
+      return NextResponse.json({ error: "One or more selected teams are invalid for this company" }, { status: 400 });
     }
 
     // Check if user already exists
@@ -186,6 +205,44 @@ export async function POST(request: NextRequest) {
             { error: "Invitation email was sent, but the user profile could not be prepared. Please retry the invitation." },
             { status: 500 }
           );
+        }
+
+        const syncTime = new Date().toISOString();
+        const updatedTeamIds: string[] = [];
+        for (const team of selectedTeams || []) {
+          const { error: teamUpdateError } = await adminClient
+            .from("teams")
+            .update({
+              member_ids: addUserToTeam(team, createdUser.id),
+              updated_at: syncTime,
+            })
+            .eq("id", team.id);
+
+          if (teamUpdateError) {
+            console.error("[Invitations API] Failed to sync invited user team membership:", teamUpdateError);
+
+            for (const updatedTeamId of updatedTeamIds) {
+              const rollbackTeam = (selectedTeams || []).find((item) => item.id === updatedTeamId);
+              if (!rollbackTeam) continue;
+              await adminClient
+                .from("teams")
+                .update({
+                  member_ids: removeUserFromTeam(rollbackTeam, createdUser.id),
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", updatedTeamId);
+            }
+
+            await adminClient.from("users").delete().eq("id", createdUser.id);
+            await supabase.from("invitations").delete().eq("id", invitation.id);
+            await adminClient.auth.admin.deleteUser(inviteData.user.id);
+            return NextResponse.json(
+              { error: "Invitation email was sent, but team membership could not be prepared. Please retry the invitation." },
+              { status: 500 }
+            );
+          }
+
+          updatedTeamIds.push(team.id);
         }
 
         return NextResponse.json({

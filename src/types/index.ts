@@ -3,9 +3,9 @@
 // ============================================
 
 // Country and Language Types
-export type Country = "NL" | "SE" | "US" | "DE" | "FR" | "ES";
+export type Country = "NL" | "SE" | "US" | "GB" | "DE" | "FR" | "ES";
 export type Language = "en" | "nl" | "sv" | "de" | "fr" | "es";
-export type Currency = "USD" | "EUR" | "SEK";
+export type Currency = "USD" | "EUR" | "SEK" | "GBP";
 
 // Industry Types
 export type IndustryCode =
@@ -285,8 +285,8 @@ export interface User {
     news: boolean;
   };
   
-  // Team membership (optional - user can belong to multiple teams)
-  team_ids?: string[];
+  // Team membership
+  team_ids: string[];
   
   // Custom permissions (in addition to role-based defaults)
   custom_permissions?: Permission[];
@@ -375,6 +375,7 @@ export interface IncidentAction {
   actionType: "corrective" | "preventive";
   status: "pending" | "in_progress" | "completed";
   ticketId: string;
+  correctiveActionId?: string | null;
   ticketStatus: "open" | "in_progress" | "resolved";
   assignee: string;
   resolutionNotes?: string;
@@ -447,6 +448,7 @@ export interface Incident {
 
   // Assignment
   assigned_to?: string | null;
+  assigned_to_team_id?: string | null;
 
   // Documents
   documents?: IncidentDocument[];
@@ -897,7 +899,7 @@ export interface ChecklistItem {
   required: boolean;
   order: number;
   description?: string; // Helper text shown below the question
-  response_types?: Array<"yes_no_na" | "pass_fail" | "rating" | "text" | "number" | "photo" | "date" | "signature" | "select">; // Multiple response types allowed
+  response_types?: Array<"yes_no_na" | "pass_fail" | "rating" | "text" | "number" | "photo" | "date" | "signature" | "select">; // Legacy compatibility for older data; new items should use `type`
   options?: string[]; // For "select" type: list of choices
   image_url?: string; // Reference image/PDF file name (local upload)
   min_value?: number; // For "number" or "rating" type
@@ -1021,7 +1023,8 @@ export interface Ticket {
 
   due_date: string | null;
   assigned_to: string | null;
-  assigned_groups: string[];
+  assigned_to_team_id?: string | null;
+  assigned_groups: string[]; // Legacy compatibility; prefer assigned_to_team_id
 
   incident_ids: string[];
 
@@ -1213,6 +1216,7 @@ export interface CorrectiveAction {
   description: string;
   severity: Severity;
   assigned_to: string | null;
+  assigned_to_team_id?: string | null;
   due_date: string;
   status: CorrectiveActionStatus;
   resolution_notes: string | null;
@@ -1240,6 +1244,7 @@ export interface WorkOrder {
   status: WorkOrderStatus;
   requested_by: string;
   assigned_to: string | null;
+  assigned_to_team_id?: string | null;
   due_date: string | null;
   estimated_hours: number | null;
   actual_hours: number | null;

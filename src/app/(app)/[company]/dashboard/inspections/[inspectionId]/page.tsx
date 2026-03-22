@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -21,9 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
 import { useTranslation } from "@/i18n";
-import { useAssetInspectionsStore } from "@/stores/inspections-store";
-import { useAssetsStore } from "@/stores/assets-store";
-import { useUsersStore } from "@/stores/users-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { RoleGuard } from "@/components/auth/role-guard";
 
 export default function InspectionDetailPage() {
@@ -32,9 +31,18 @@ export default function InspectionDetailPage() {
   const company = routeParams.company as string;
   const inspectionId = routeParams.inspectionId as string;
   const { t, formatDate } = useTranslation();
-  const { items: inspections, isLoading } = useAssetInspectionsStore();
-  const { items: assets } = useAssetsStore();
-  const { items: users } = useUsersStore();
+  const {
+    checklistTemplates,
+    checklistSubmissions,
+    incidents,
+    inspections,
+    assets,
+    correctiveActions,
+    workOrders,
+    users,
+    stores,
+  } = useCompanyData();
+  const { isLoading } = stores.inspections;
   const [activeTab, setActiveTab] = React.useState("overview");
 
   const inspectionTabs: Tab[] = [
@@ -45,6 +53,26 @@ export default function InspectionDetailPage() {
   const inspection = inspections.find((i) => i.id === inspectionId);
   const asset = inspection ? assets.find((a) => a.id === inspection.asset_id) : null;
   const inspector = inspection ? users.find((u) => u.id === inspection.inspector_id) : null;
+  const checklistSubmission = inspection?.checklist_id
+    ? checklistSubmissions.find((submission) => submission.id === inspection.checklist_id)
+    : null;
+  const checklistTemplate = checklistSubmission
+    ? checklistTemplates.find((template) => template.id === checklistSubmission.template_id) || null
+    : inspection?.checklist_id
+      ? checklistTemplates.find((template) => template.id === inspection.checklist_id) || null
+      : null;
+  const linkedIncident = inspection?.incident_id
+    ? incidents.find((incident) => incident.id === inspection.incident_id) || null
+    : null;
+  const relatedCorrectiveActions = inspection
+    ? correctiveActions.filter((action) => action.inspection_id === inspectionId)
+    : [];
+  const relatedWorkOrders = relatedCorrectiveActions.length === 0
+    ? []
+    : workOrders.filter((workOrder) =>
+        workOrder.corrective_action_id != null &&
+        relatedCorrectiveActions.some((action) => action.id === workOrder.corrective_action_id),
+      );
 
   if (isLoading) {
     return <LoadingPage />;
@@ -144,13 +172,37 @@ export default function InspectionDetailPage() {
                   {inspection.checklist_id && (
                     <div>
                       <p className="text-sm text-muted-foreground">{t("inspections.labels.checklistId")}</p>
-                      <p className="font-medium mt-1">{inspection.checklist_id}</p>
+                      {checklistTemplate ? (
+                        <Link
+                          href={`/${company}/dashboard/checklists/${checklistSubmission?.id || checklistTemplate.id}`}
+                          className="mt-1 block rounded-lg border px-3 py-2 transition-colors hover:bg-muted/40"
+                        >
+                          <p className="font-medium">{checklistTemplate.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {checklistSubmission ? `Submission ${checklistSubmission.id}` : `Template ${checklistTemplate.id}`}
+                          </p>
+                        </Link>
+                      ) : (
+                        <p className="font-medium mt-1">{inspection.checklist_id}</p>
+                      )}
                     </div>
                   )}
                   {inspection.incident_id && (
                     <div>
                       <p className="text-sm text-muted-foreground">{t("inspections.labels.linkedIncident")}</p>
-                      <p className="font-medium mt-1">{inspection.incident_id}</p>
+                      {linkedIncident ? (
+                        <Link
+                          href={`/${company}/dashboard/incidents/${linkedIncident.id}`}
+                          className="mt-1 block rounded-lg border px-3 py-2 transition-colors hover:bg-muted/40"
+                        >
+                          <p className="font-medium">{linkedIncident.title}</p>
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {linkedIncident.status.replace(/_/g, " ")}
+                          </p>
+                        </Link>
+                      ) : (
+                        <p className="font-medium mt-1">{inspection.incident_id}</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -164,6 +216,78 @@ export default function InspectionDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="whitespace-pre-wrap">{inspection.notes}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {(inspection.result !== "pass" || relatedCorrectiveActions.length > 0) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Corrective actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {relatedCorrectiveActions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No corrective actions are linked to this inspection yet.
+                    </p>
+                  ) : (
+                    relatedCorrectiveActions.map((action) => (
+                      <Link
+                        key={action.id}
+                        href={`/${company}/dashboard/corrective-actions/${action.id}`}
+                        className="block rounded-lg border p-3 transition-colors hover:bg-muted/40"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium">{action.description}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Due {formatDate(action.due_date)} · Severity {action.severity}
+                            </p>
+                          </div>
+                          <Badge variant={action.status === "completed" ? "success" : action.status === "overdue" ? "destructive" : "warning"}>
+                            {action.status.replace(/_/g, " ")}
+                          </Badge>
+                        </div>
+                      </Link>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {relatedWorkOrders.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Linked work orders</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {relatedWorkOrders.map((workOrder) => (
+                    <Link
+                      key={workOrder.id}
+                      href={`/${company}/dashboard/work-orders/${workOrder.id}`}
+                      className="block rounded-lg border p-3 transition-colors hover:bg-muted/40"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium">{workOrder.title}</p>
+                          <p className="mt-1 text-xs text-muted-foreground capitalize">
+                            {workOrder.status.replace(/_/g, " ")}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={
+                            workOrder.status === "completed"
+                              ? "success"
+                              : workOrder.status === "cancelled"
+                                ? "destructive"
+                                : "warning"
+                          }
+                        >
+                          {workOrder.priority}
+                        </Badge>
+                      </div>
+                    </Link>
+                  ))}
                 </CardContent>
               </Card>
             )}
@@ -233,22 +357,28 @@ export default function InspectionDetailPage() {
                   </div>
                   <div className="p-4 rounded-lg bg-muted/50">
                     <p className="text-xs text-muted-foreground mb-1">{t("inspections.labels.assetId")}</p>
-                    <p className="font-mono text-sm">{inspection.asset_id}</p>
+                    <p className="text-sm font-medium">{asset?.name || inspection.asset_id}</p>
+                    <p className="font-mono text-xs text-muted-foreground mt-1">{inspection.asset_id}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-muted/50">
                     <p className="text-xs text-muted-foreground mb-1">{t("inspections.labels.inspectorId")}</p>
-                    <p className="font-mono text-sm">{inspection.inspector_id}</p>
+                    <p className="text-sm font-medium">{inspector?.full_name || inspection.inspector_id}</p>
+                    <p className="font-mono text-xs text-muted-foreground mt-1">{inspection.inspector_id}</p>
                   </div>
                   {inspection.checklist_id && (
                     <div className="p-4 rounded-lg bg-muted/50">
                       <p className="text-xs text-muted-foreground mb-1">{t("inspections.labels.checklistId")}</p>
-                      <p className="font-mono text-sm">{inspection.checklist_id}</p>
+                      <p className="text-sm font-medium">{checklistTemplate?.name || inspection.checklist_id}</p>
+                      <p className="font-mono text-xs text-muted-foreground mt-1">
+                        {checklistSubmission ? checklistSubmission.id : inspection.checklist_id}
+                      </p>
                     </div>
                   )}
                   {inspection.incident_id && (
                     <div className="p-4 rounded-lg bg-muted/50">
                       <p className="text-xs text-muted-foreground mb-1">{t("inspections.labels.incidentId")}</p>
-                      <p className="font-mono text-sm">{inspection.incident_id}</p>
+                      <p className="text-sm font-medium">{linkedIncident?.title || inspection.incident_id}</p>
+                      <p className="font-mono text-xs text-muted-foreground mt-1">{inspection.incident_id}</p>
                     </div>
                   )}
                   <div className="p-4 rounded-lg bg-muted/50">

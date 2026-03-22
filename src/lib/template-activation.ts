@@ -3,7 +3,9 @@ import type {
   ChecklistItem,
   IndustryChecklistTemplate,
   IndustryChecklistItem,
+  Country,
 } from "@/types";
+import { resolveTemplateRegulation } from "@/data/industry-templates";
 
 /**
  * Resolve an industry template into a company-owned ChecklistTemplate.
@@ -15,6 +17,7 @@ import type {
 export function activateIndustryTemplate(
   industryTemplate: IndustryChecklistTemplate,
   companyId: string,
+  companyCountry: Country,
   t: (key: string) => string,
 ): ChecklistTemplate {
   const now = new Date().toISOString();
@@ -50,10 +53,34 @@ export function activateIndustryTemplate(
     recurrence: recurrenceMap[industryTemplate.frequency] ?? "daily",
     items,
     source_template_id: industryTemplate.id,
-    regulation: industryTemplate.regulation,
+    regulation: resolveTemplateRegulation(industryTemplate, companyCountry),
     tags: [...industryTemplate.tags],
     publish_status: "draft",
     is_active: true,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+export function cloneChecklistTemplate(
+  template: ChecklistTemplate,
+  options?: {
+    nameSuffix?: string;
+  },
+): ChecklistTemplate {
+  const now = new Date().toISOString();
+  const nameSuffix = options?.nameSuffix ?? " (Copy)";
+
+  return {
+    ...template,
+    id: crypto.randomUUID(),
+    name: `${template.name}${nameSuffix}`,
+    items: template.items.map((item) => ({
+      ...item,
+      id: crypto.randomUUID(),
+    })),
+    publish_status: "draft",
+    is_active: false,
     created_at: now,
     updated_at: now,
   };
@@ -100,10 +127,21 @@ export function changePublishStatus(
 }
 
 /**
+ * Resolve a template's effective publish status.
+ * Missing publish_status is treated as draft so templates do not leak into the
+ * field app unless publication was made explicit.
+ */
+export function getTemplatePublishStatus(
+  template: Pick<ChecklistTemplate, "publish_status" | "is_active">,
+): "draft" | "published" | "archived" {
+  if (template.publish_status) return template.publish_status;
+  return "draft";
+}
+
+/**
  * Check if a template should be visible in the mobile field app.
- * Templates are visible if publish_status is "published",
- * or if publish_status is undefined (backward compat for manually created checklists).
+ * Only explicitly published templates, or legacy active templates, should surface.
  */
 export function isVisibleToFieldApp(template: ChecklistTemplate): boolean {
-  return template.publish_status === "published" || template.publish_status === undefined;
+  return getTemplatePublishStatus(template) === "published";
 }

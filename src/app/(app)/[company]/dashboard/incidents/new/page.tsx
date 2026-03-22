@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { AlertTriangle, Camera, X, Loader2 } from "lucide-react";
 import { LIMITS } from "@/lib/constants";
@@ -14,9 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useLocationsStore } from "@/stores/locations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
-import { useAssetsStore } from "@/stores/assets-store";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import { storeFile } from "@/lib/file-storage";
@@ -58,9 +57,8 @@ export default function NewIncidentPage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
-  const { items: locations } = useLocationsStore();
+  const { locations, assets: allAssets } = useCompanyData();
   const { add: addIncident } = useIncidentsStore();
-  const { items: allAssets } = useAssetsStore();
   const { toast } = useToast();
   
   // Form state matching IncidentFormData interface

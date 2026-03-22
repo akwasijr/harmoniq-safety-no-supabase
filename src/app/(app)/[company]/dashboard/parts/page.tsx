@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useCompanyParam } from "@/hooks/use-company-param";
 import {
   Plus,
   Package,
@@ -26,10 +25,9 @@ import { RoleGuard } from "@/components/auth/role-guard";
 
 export default function PartsPage() {
   const { t, formatNumber } = useTranslation();
-  const company = useCompanyParam();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { items: parts, add, update , isLoading } = usePartsStore();
+  const { items: parts, add, isLoading } = usePartsStore();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showCreate, setShowCreate] = React.useState(false);
   const [form, setForm] = React.useState({
@@ -103,42 +101,52 @@ export default function PartsPage() {
           addLabel={t("parts.addPart")}
         />
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((part) => {
-            const isLow = part.quantity_in_stock <= part.minimum_stock;
-            return (
-              <Card key={part.id} className={isLow ? "border-warning/50" : ""}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium">{part.name}</h3>
-                      <p className="text-xs text-muted-foreground font-mono">{part.part_number}</p>
-                    </div>
-                    {isLow && <Badge variant="warning">{t("parts.labels.lowStock")}</Badge>}
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">{t("parts.labels.inStock")}</p>
-                      <p className="font-medium">{part.quantity_in_stock}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">{t("parts.labels.unitCost")}</p>
-                      <p className="font-medium">${part.unit_cost.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">{t("parts.labels.minimumStock")}</p>
-                      <p className="font-medium">{part.minimum_stock}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">{t("parts.labels.supplier")}</p>
-                      <p className="font-medium truncate">{part.supplier || "—"}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("parts.title")}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted/40">
+                  <tr className="text-left">
+                    <th className="px-4 py-3 font-medium">{t("parts.labels.partName")}</th>
+                    <th className="px-4 py-3 font-medium">{t("parts.labels.supplier")}</th>
+                    <th className="px-4 py-3 font-medium">{t("parts.labels.unitCost")}</th>
+                    <th className="px-4 py-3 font-medium">{t("parts.labels.inStock")}</th>
+                    <th className="px-4 py-3 font-medium">{t("parts.labels.minimumStock")}</th>
+                    <th className="px-4 py-3 font-medium">Stock status</th>
+                    <th className="px-4 py-3 font-medium">Inventory value</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filtered.map((part) => {
+                    const isLow = part.quantity_in_stock <= part.minimum_stock;
+                    const inventoryValue = part.quantity_in_stock * part.unit_cost;
+                    return (
+                      <tr key={part.id} className="align-top">
+                        <td className="px-4 py-3">
+                          <div className="font-medium">{part.name}</div>
+                          <div className="font-mono text-xs text-muted-foreground">{part.part_number}</div>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{part.supplier || "—"}</td>
+                        <td className="px-4 py-3">${part.unit_cost.toFixed(2)}</td>
+                        <td className="px-4 py-3">{formatNumber(part.quantity_in_stock)}</td>
+                        <td className="px-4 py-3">{formatNumber(part.minimum_stock)}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant={isLow ? "warning" : "secondary"}>
+                            {isLow ? t("parts.labels.lowStock") : "In stock"}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">${formatNumber(inventoryValue)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Create Modal */}

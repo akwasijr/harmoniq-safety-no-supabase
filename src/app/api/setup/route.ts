@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { sanitizeText, isValidEmail, validatePassword } from "@/lib/validation";
+import { buildRegionalDefaults } from "@/lib/company-settings";
 
 // 5 setup attempts per IP per 10 minutes
 const setupLimiter = createRateLimiter({ limit: 5, windowMs: 600_000, prefix: "setup" });
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
     const password = typeof body.password === "string" ? body.password : "";
     const company_name = sanitizeText(body.company_name, 200);
     const country = sanitizeText(body.country || "US", 10);
+    const regionalDefaults = buildRegionalDefaults(country);
 
     if (!email || !password || !company_name) {
       return NextResponse.json(
@@ -71,11 +73,12 @@ export async function POST(request: NextRequest) {
         name: company_name,
         slug: slug || "harmoniq",
         app_name: company_name,
-        country: country,
-        language: "en",
+        country: regionalDefaults.country,
+        language: regionalDefaults.language,
         status: "active",
         tier: "enterprise",
         seat_limit: 999,
+        currency: regionalDefaults.currency,
       })
       .select()
       .single();
@@ -113,7 +116,7 @@ export async function POST(request: NextRequest) {
         user_type: "internal",
         account_type: "admin",
         status: "active",
-        language: "en",
+        language: regionalDefaults.language,
         theme: "system",
         two_factor_enabled: false,
       });

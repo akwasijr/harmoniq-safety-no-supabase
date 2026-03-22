@@ -113,6 +113,23 @@ export async function POST(request: NextRequest) {
     const location_id = body.location_id && isValidUUID(body.location_id) ? body.location_id : null;
     const parent_asset_id = body.parent_asset_id && isValidUUID(body.parent_asset_id) ? body.parent_asset_id : null;
 
+    if (parent_asset_id) {
+      const { data: parentAsset, error: parentAssetError } = await supabase
+        .from("assets")
+        .select("id, company_id, is_system")
+        .eq("id", parent_asset_id)
+        .maybeSingle();
+
+      if (parentAssetError) {
+        console.error("[Assets API] Parent asset validation error:", parentAssetError);
+        return NextResponse.json({ error: "Failed to validate parent asset" }, { status: 500 });
+      }
+
+      if (!parentAsset || parentAsset.company_id !== profile.company_id || !parentAsset.is_system) {
+        return NextResponse.json({ error: "Parent asset must be a system asset in the same company" }, { status: 400 });
+      }
+    }
+
     const now = new Date().toISOString();
     const assetTag = `AST-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
 
