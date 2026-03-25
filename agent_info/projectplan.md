@@ -89,65 +89,65 @@
 **Goal:** Add test coverage for critical flows — auth, API endpoints, authorization, and core business logic.
 
 ### Checkpoint 2.1: Testing Infrastructure Setup
-- [ ] Install Vitest, `@testing-library/react`, `@testing-library/jest-dom`
-- [ ] Install `msw` (Mock Service Worker) for API mocking
-- [ ] Configure Vitest (`vitest.config.ts`) with Next.js support
-- [ ] Add test scripts to `package.json` (`test`, `test:watch`, `test:coverage`)
-- [ ] Create test utilities:
+- [x] Install Vitest, `@testing-library/react`, `@testing-library/jest-dom`
+- [x] Install `msw` (Mock Service Worker) for API mocking
+- [x] Configure Vitest (`vitest.config.ts`) with Next.js support
+- [x] Add test scripts to `package.json` (`test`, `test:watch`, `test:coverage`)
+- [x] Create test utilities:
   - Render helper with all providers (Theme, Auth, i18n, AppData)
   - Mock Supabase client factory
   - Mock session/user factory
   - Mock entity data factories
-- [ ] Build and verify — no TypeScript errors
+- [x] Build and verify — no TypeScript errors
 
 ### Checkpoint 2.2: Unit Tests — Auth & Authorization
-- [ ] Test login flow with valid/invalid credentials (mock Supabase auth)
-- [ ] Test session hydration (user profile fetch after auth)
-- [ ] Test role-based permission helpers (`hasPermission`, `hasAllPermissions`, `hasAnyPermissions`)
-- [ ] Test `<RoleGuard>` component behavior for different roles
-- [ ] Test company switching for super_admin
-- [ ] Test middleware route protection logic
-- [ ] Test admin entry flag management
+- [x] Test login flow with valid/invalid credentials (mock Supabase auth)
+- [x] Test session hydration (user profile fetch after auth)
+- [x] Test role-based permission helpers (`hasPermission`, `hasAllPermissions`, `hasAnyPermissions`)
+- [x] Test `<RoleGuard>` component behavior for different roles
+- [x] Test company switching for super_admin
+- [x] Test middleware route protection logic
+- [x] Test admin entry flag management
 
 ### Checkpoint 2.3: Unit Tests — API Routes
-- [ ] Test `POST /api/contact` — valid submission, rate limiting, CAPTCHA validation
-- [ ] Test `GET /api/health` — healthy and unhealthy states
-- [ ] Test `POST /api/analytics` — event tracking
-- [ ] Test `GET /api/analytics` — data retrieval with auth check
-- [ ] Test `POST /api/invitations` — create invitation with auth
-- [ ] Test `GET /api/invitations/validate` — valid token, expired token, used token
-- [ ] Test `POST /api/setup` — initial setup flow
+- [x] Test `POST /api/contact` — valid submission, rate limiting, CAPTCHA validation
+- [x] Test `GET /api/health` — healthy and unhealthy states
+- [x] Test `POST /api/analytics` — event tracking
+- [x] Test `GET /api/analytics` — data retrieval with auth check
+- [x] Test `POST /api/invitations` — create invitation with auth
+- [x] Test `GET /api/invitations/validate` — valid token, expired token, used token
+- [x] Test `POST /api/setup` — initial setup flow
 
 ### Checkpoint 2.4: Unit Tests — Entity Stores
-- [ ] Test `createEntityStore` factory:
+- [x] Test `createEntityStore` factory:
   - Supabase mode: fetch, create, update, delete operations
   - localStorage fallback mode
   - Optimistic update and rollback behavior
   - Cross-tab sync
   - Error handling
-- [ ] Test at least 3 specific stores (e.g., incidents, assets, users) with realistic data
+- [x] Test at least 3 specific stores (e.g., incidents, assets, users) with realistic data
 
 ### Checkpoint 2.5: Unit Tests — Core Business Logic
-- [ ] Test incident creation and status transitions
-- [ ] Test invitation token generation, validation, and expiration
-- [ ] Test input validation and sanitization utilities
-- [ ] Test date utilities and localization helpers
-- [ ] Test CSV export functionality
-- [ ] Test rate limiter logic
+- [x] Test incident creation and status transitions
+- [x] Test invitation token generation, validation, and expiration
+- [x] Test input validation and sanitization utilities
+- [x] Test date utilities and localization helpers
+- [x] Test CSV export functionality
+- [x] Test rate limiter logic
 
 ### Checkpoint 2.6: Integration Tests — Key User Flows
-- [ ] Test login → session creation → dashboard redirect
-- [ ] Test invitation creation → token validation → acceptance
-- [ ] Test incident report submission → appears in dashboard list
-- [ ] Test contact form → rate limiting enforcement
-- [ ] Test company isolation — user A cannot see company B's data
+- [x] Test login → session creation → dashboard redirect
+- [x] Test invitation creation → token validation → acceptance
+- [x] Test incident report submission → appears in dashboard list
+- [x] Test contact form → rate limiting enforcement
+- [x] Test company isolation — user A cannot see company B's data
 
 ### Checkpoint 2.7: E2E Tests (Optional — If Time Permits)
-- [ ] Install Playwright
-- [ ] Test login flow end-to-end
-- [ ] Test incident reporting flow
-- [ ] Test dashboard navigation and data display
-- [ ] Run all tests and verify — no failures
+- [x] Install Playwright
+- [x] Test login flow end-to-end
+- [x] Test incident reporting flow
+- [x] Test dashboard navigation and data display
+- [x] Run all tests and verify — no failures
 
 ---
 
@@ -156,44 +156,44 @@
 **Goal:** Add production monitoring, error tracking, and structured logging.
 
 ### Checkpoint 3.1: Sentry Integration
-- [ ] Install `@sentry/nextjs`
-- [ ] Configure Sentry:
+- [x] Install `@sentry/nextjs`
+- [x] Configure Sentry:
   - `sentry.client.config.ts` — browser error capture
   - `sentry.server.config.ts` — server-side error capture
   - `sentry.edge.config.ts` — edge/middleware error capture
   - `next.config.ts` — wrap with `withSentryConfig`
-- [ ] Add `SENTRY_DSN` to environment variables
-- [ ] Add global error boundary with Sentry reporting
-- [ ] Configure source maps upload for readable stack traces
-- [ ] Test error capture in development (trigger intentional error)
-- [ ] Build and verify — no TypeScript errors
+- [x] Add `SENTRY_DSN` to environment variables
+- [x] Add global error boundary with Sentry reporting
+- [x] Configure source maps upload for readable stack traces
+- [x] Test error capture in development (trigger intentional error)
+- [x] Build and verify — no TypeScript errors
 
 ### Checkpoint 3.2: Structured Logging
-- [ ] Create lightweight logger utility (`src/lib/logger.ts`):
+- [x] Create lightweight logger utility (`src/lib/logger.ts`):
   - Structured JSON output for production
   - Human-readable console output for development
   - Log levels: `debug`, `info`, `warn`, `error`
   - Context fields: `requestId`, `userId`, `companyId`
-- [ ] Add request logging to all API routes:
+- [x] Add request logging to all API routes:
   - Method, path, status code, response time
   - User ID and company ID when authenticated
-- [ ] Add auth event logging:
+- [x] Add auth event logging:
   - Login success/failure (with anonymized identifier)
   - Logout events
   - Session refresh failures
   - Invitation creation and acceptance
-- [ ] Build and verify — no TypeScript errors
+- [x] Build and verify — no TypeScript errors
 
 ### Checkpoint 3.3: Health Check Enhancement
-- [ ] Update `/api/health` to report:
+- [x] Update `/api/health` to report:
   - Database connectivity status (Supabase ping)
   - Auth service status
   - Application version (from package.json or build env)
   - Uptime
   - Memory usage
-- [ ] Ensure health check is compatible with Sevalla's load balancer/health monitoring
-- [ ] Add `HEAD` method support for lightweight health probes
-- [ ] Build and verify — no TypeScript errors
+- [x] Ensure health check is compatible with Sevalla's load balancer/health monitoring
+- [x] Add `HEAD` method support for lightweight health probes
+- [x] Build and verify — no TypeScript errors
 
 ---
 
@@ -202,48 +202,48 @@
 **Goal:** Address remaining security gaps identified in audits.
 
 ### Checkpoint 4.1: Server-Side Authorization Enforcement
-- [ ] Audit all API routes to ensure auth is checked before processing:
+- [x] Audit all API routes to ensure auth is checked before processing:
   - `/api/analytics GET` — verify super_admin check is enforced
   - `/api/invitations` — verify company_admin+ role check
   - `/api/setup` — verify first-run-only guard
-- [ ] Ensure platform admin routes (`/dashboard/platform/*`) validate `super_admin` role server-side, not just via cookie
-- [ ] Add rate limiting to auth-related endpoints:
+- [x] Ensure platform admin routes (`/dashboard/platform/*`) validate `super_admin` role server-side, not just via cookie
+- [x] Add rate limiting to auth-related endpoints:
   - Login: max 10 attempts per IP per 15 minutes
   - Password reset: max 5 per IP per hour
   - Invitation validation: max 10 per IP per minute (verify existing implementation)
-- [ ] Build and verify — no TypeScript errors
+- [x] Build and verify — no TypeScript errors
 
 ### Checkpoint 4.2: XSS & Input Sanitization
-- [ ] Audit all `dangerouslySetInnerHTML` usage:
+- [x] Audit all `dangerouslySetInnerHTML` usage:
   - Content editor/viewer — ensure DOMPurify sanitization is applied before rendering
   - Any other instances
-- [ ] Validate all user inputs server-side in API routes (not just client-side Zod):
+- [x] Validate all user inputs server-side in API routes (not just client-side Zod):
   - Email format validation
   - Text length limits
   - HTML/script tag stripping
-- [ ] Sanitize company logo URLs (validate URL format, restrict to HTTPS)
-- [ ] Build and verify — no TypeScript errors
+- [x] Sanitize company logo URLs (validate URL format, restrict to HTTPS)
+- [x] Build and verify — no TypeScript errors
 
 ### Checkpoint 4.3: CSP & Security Headers
-- [ ] Review and tighten Content Security Policy in `next.config.ts`:
+- [x] Review and tighten Content Security Policy in `next.config.ts`:
   - Assess if `unsafe-inline` can be removed (may need nonces for Tailwind)
   - Assess if `unsafe-eval` can be removed
   - Restrict `connect-src` to known domains (Supabase, Sentry, analytics)
   - Restrict `img-src` to known domains
-- [ ] Verify all security headers are present:
+- [x] Verify all security headers are present:
   - `X-Frame-Options: DENY`
   - `X-Content-Type-Options: nosniff`
   - `Referrer-Policy: strict-origin-when-cross-origin`
   - `Permissions-Policy` (camera, microphone, geolocation as needed for QR scanning)
   - `Strict-Transport-Security` (HSTS)
-- [ ] Build and verify — no TypeScript errors
+- [x] Build and verify — no TypeScript errors
 
 ### Checkpoint 4.4: Dead Code & Unused Exports Cleanup
-- [ ] Remove unused Header component (250+ lines)
-- [ ] Remove dead code exports identified in SECURITY-DEADCODE-AUDIT.md (11 exports, 4 barrel files)
-- [ ] Remove unused utilities (`offline-queue.ts`, `slugify`, `truncate`, `generateRefNumber`, `formatCurrency`)
-- [ ] Fix `RoleGuard` calling `router.push()` in render (React anti-pattern)
-- [ ] Build and verify — no TypeScript errors
+- [x] Remove unused Header component (250+ lines)
+- [x] Remove dead code exports identified in SECURITY-DEADCODE-AUDIT.md (11 exports, 4 barrel files)
+- [x] Remove unused utilities (`offline-queue.ts`, `slugify`, `truncate`, `generateRefNumber`, `formatCurrency`)
+- [x] Fix `RoleGuard` calling `router.push()` in render (React anti-pattern)
+- [x] Build and verify — no TypeScript errors
 
 ---
 

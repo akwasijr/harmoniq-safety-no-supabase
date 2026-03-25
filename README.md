@@ -47,7 +47,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 Use these demo accounts to explore the app:
 
 - **Company Dashboard**: `admin@nexusmfg.com` → `/nexus/dashboard`
-- **Employee App**: `worker@nexusmfg.com` → `/nexus/app`  
+- **Employee App**: `worker@nexusmfg.com` → `/nexus/app`
 - **Super Admin**: `admin@harmoniq.io` → `/admin`
 
 ## Project Structure
@@ -107,74 +107,3 @@ Optional but recommended:
 - `SUPER_ADMIN_EMAILS` (mainly needed for first-time super-admin bootstrap flows)
 
 Use `.env.example` as the reference when entering secrets into Sevalla or another hosting provider.
-
-### Deploying to Sevalla / Self-Hosted Platforms
-
-1. Create a Sevalla **Application Hosting** service from this repository.
-2. Use the repository root (`.`) as the build path.
-3. Prefer explicit process commands:
-   - Build: `npm ci && npm run build`
-   - Start: `npm start`
-4. Configure the web process health check path as `/api/health`.
-5. Enter the required environment variables in the Sevalla dashboard rather than relying on `.env` files.
-6. Redeploy whenever `NEXT_PUBLIC_*` variables change, because Next.js bundles them into the client build.
-
-Recommended Sevalla environment values:
-
-| Variable | Value / notes |
-| --- | --- |
-| `NODE_ENV` | `production` |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Preferred browser key (`NEXT_PUBLIC_SUPABASE_ANON_KEY` also works) |
-| `SUPABASE_SECRET_KEY` | Preferred server/admin key (`SUPABASE_SERVICE_ROLE_KEY` also works) |
-| `NEXT_PUBLIC_SITE_URL` | **First deploy:** use the generated `https://<app>.sevalla.app` URL. **After custom-domain cutover:** change to `https://app.sevalla.com` and redeploy. |
-| `NEXT_PUBLIC_PLATFORM_SLUGS` | Optional override; defaults to `platform,admin,superadmin,harmoniq` |
-| `SUPER_ADMIN_EMAILS` | Optional unless you need first-time super-admin bootstrap behavior |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Optional; the contact form has a honeypot + timing fallback if Turnstile is not configured |
-
-Recommended rollout order:
-
-1. Deploy first to the generated `*.sevalla.app` domain.
-2. Add that preview URL to Supabase Auth while validating the first deploy:
-   - Site URL: `https://<app>.sevalla.app`
-   - Redirect URLs:
-     - `https://<app>.sevalla.app/auth/callback`
-     - `https://<app>.sevalla.app/auth/signup-callback`
-     - `https://<app>.sevalla.app/reset-password`
-3. Run `npm run smoke:test -- https://<app>.sevalla.app`.
-4. Apply `supabase/migrations/008_extend_site_analytics.sql` if production analytics has not been upgraded yet.
-5. Add `app.sevalla.com` in Sevalla Domains, complete the DNS verification records Sevalla shows you, then change `NEXT_PUBLIC_SITE_URL` to `https://app.sevalla.com` and redeploy.
-6. Update Supabase Auth again for the final production domain:
-   - Site URL: `https://app.sevalla.com`
-   - Redirect URLs:
-     - `https://app.sevalla.com/auth/callback`
-     - `https://app.sevalla.com/auth/signup-callback`
-     - `https://app.sevalla.com/reset-password`
-7. Run `npm run smoke:test -- https://app.sevalla.com`.
-
-Notes:
-
-- The app is configured with Next.js `output: "standalone"` for application hosting.
-- The repo now includes a production `Dockerfile`, so an existing Dockerfile-based Sevalla app can be repointed to this repository without changing hosting mode.
-- Node.js is pinned to `20.9+` in `package.json` and `.nvmrc`.
-- If Turnstile is unavailable, the contact form still has fallback protection via rate limiting, honeypot, and form-timing validation.
-
-### Design System
-
-- **Font**: Geist Sans
-- **Icons**: Lucide React (no emojis)
-- **Colors**: Neutral palette with semantic colors for status/severity
-- **Accessibility**: WCAG AA compliant (4.5:1 text contrast, 3:1 UI contrast)
-- **Touch targets**: Minimum 44x44px for mobile
-
-### URL Structure
-
-- `/` - Marketing landing page
-- `/login` - Authentication
-- `/admin/*` - Super Admin portal
-- `/{company}/dashboard/*` - Company dashboard
-- `/{company}/app/*` - Employee mobile app
-
-## License
-
-Proprietary - All rights reserved.
