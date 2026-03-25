@@ -1,9 +1,23 @@
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
+import { sanitizeText } from "@/lib/validation";
+
+/** Recursively sanitize all string values in an entity before writing. */
+function sanitizeEntity<T extends Record<string, unknown>>(entity: T): T {
+  const sanitized = { ...entity };
+  for (const key of Object.keys(sanitized)) {
+    if (typeof sanitized[key] === "string") {
+      (sanitized as Record<string, unknown>)[key] = sanitizeText(sanitized[key] as string);
+    }
+  }
+  return sanitized;
+}
+
 
 type IdEntity = { id: string };
 type CompanyEntity = IdEntity & { company_id: string };
@@ -95,9 +109,15 @@ export function createEntityStore<T extends IdEntity>(
   const Context = React.createContext<EntityStore<T> | undefined>(undefined);
 
   function Provider({ children }: { children: React.ReactNode }) {
-    const [items, setItems] = React.useState<T[]>(() =>
-      loadFromStorage(storageKey, isSupabaseConfigured ? [] : initialData)
-    );
+    const [items, setItems] = React.useState<T[]>(() => {
+      if (isSupabaseConfigured) return loadFromStorage(storageKey, []);
+      const cached = loadFromStorage<T[]>(storageKey, []);
+      if (cached.length === 0) return initialData;
+      // Merge any new mock items not in cache
+      const cachedIds = new Set(cached.map((item: any) => item.id));
+      const newItems = initialData.filter((item: any) => !cachedIds.has(item.id));
+      return newItems.length > 0 ? [...cached, ...newItems] : cached;
+    });
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const hasLoadedRef = React.useRef(!isSupabaseConfigured);
@@ -226,26 +246,43 @@ export function createEntityStore<T extends IdEntity>(
 
     const add = React.useCallback((item: T) => {
       setError(null);
+      const sanitizedItem = sanitizeEntity(item as unknown as Record<string, unknown>) as unknown as T;
       const previous = itemsRef.current;
-      const exists = previous.some((existing) => existing.id === item.id);
-      const next = exists ? previous.map((existing) => (existing.id === item.id ? item : existing)) : [...previous, item];
-      itemsRef.current = next;
-      // Optimistic update
-      setItems(next);
-      saveToStorage(storageKey, next);
+
+      try {
+        const exists = previous.some((existing) => existing.id === sanitizedItem.id);
+        const next = exists ? previous.map((existing) => (existing.id === sanitizedItem.id ? sanitizedItem : existing)) : [...previous, sanitizedItem];
+        itemsRef.current = next;
+        // Optimistic update
+        setItems(next);
+        saveToStorage(storageKey, next);
+
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[Harmoniq] Error in add for ${table}:`, msg);
+        // Targeted rollback: remove the item we just added
+        const rolledBack = itemsRef.current.filter((existing) => existing.id !== sanitizedItem.id);
+        itemsRef.current = rolledBack;
+        setItems(rolledBack);
+        toast.error("Failed to save item");
+        return;
+      }
 
       if (isSupabaseConfigured) {
         void (async () => {
           const supabase = createClient();
-          const mapped = mapToSupabase(item as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
+          const mapped = mapToSupabase(sanitizedItem as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
           const { error: persistError } = await supabase.from(table).upsert(mapped);
           if (persistError) {
-            console.error(`[Harmoniq] Error adding to ${table}:`, persistError.message, persistError.details);
+            console.warn(`[Harmoniq] Error adding to ${table}:`, persistError.message, persistError.details);
             if (!isMountedRef.current) return;
-            itemsRef.current = previous;
-            setItems(previous);
-            saveToStorage(storageKey, previous);
+            // Targeted rollback: remove only this item instead of restoring full snapshot
+            const rolledBack = itemsRef.current.filter((existing) => existing.id !== sanitizedItem.id);
+            itemsRef.current = rolledBack;
+            setItems(rolledBack);
+            saveToStorage(storageKey, rolledBack);
             setError(persistError.message);
+            toast.error("Failed to save item");
           }
         })();
       }
@@ -253,25 +290,47 @@ export function createEntityStore<T extends IdEntity>(
 
     const update = React.useCallback((id: string, updates: Partial<T>) => {
       setError(null);
-      const previous = itemsRef.current;
-      const next = previous.map((item) => (item.id === id ? { ...item, ...updates } : item));
-      itemsRef.current = next;
-      // Optimistic update
-      setItems(next);
-      saveToStorage(storageKey, next);
+      const sanitizedUpdates = sanitizeEntity(updates as unknown as Record<string, unknown>) as unknown as Partial<T>;
+      // Capture only the item being updated for targeted rollback
+      const previousItem = itemsRef.current.find((item) => item.id === id);
+
+      try {
+        const next = itemsRef.current.map((item) => (item.id === id ? { ...item, ...sanitizedUpdates } : item));
+        itemsRef.current = next;
+        // Optimistic update
+        setItems(next);
+        saveToStorage(storageKey, next);
+
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[Harmoniq] Error in update for ${table}:`, msg);
+        // Targeted rollback: restore only this item to its pre-update state
+        if (previousItem) {
+          const rolledBack = itemsRef.current.map((item) => (item.id === id ? previousItem : item));
+          itemsRef.current = rolledBack;
+          setItems(rolledBack);
+        }
+        toast.error("Failed to update item");
+        return;
+      }
 
       if (isSupabaseConfigured) {
         void (async () => {
           const supabase = createClient();
-          const mapped = mapToSupabase(updates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
+          const mapped = mapToSupabase(sanitizedUpdates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
           const { error: persistError } = await supabase.from(table).update(mapped).eq("id", id);
           if (persistError) {
-            console.error(`[Harmoniq] Error updating ${table}:`, persistError.message, persistError.details);
+            console.warn(`[Harmoniq] Error updating ${table}:`, persistError.message, persistError.details);
             if (!isMountedRef.current) return;
-            itemsRef.current = previous;
-            setItems(previous);
-            saveToStorage(storageKey, previous);
+            // Targeted rollback: restore only this item to its pre-update state
+            if (previousItem) {
+              const rolledBack = itemsRef.current.map((item) => (item.id === id ? previousItem : item));
+              itemsRef.current = rolledBack;
+              setItems(rolledBack);
+              saveToStorage(storageKey, rolledBack);
+            }
             setError(persistError.message);
+            toast.error("Failed to update item");
           }
         })();
       }
@@ -279,24 +338,46 @@ export function createEntityStore<T extends IdEntity>(
 
     const remove = React.useCallback((id: string) => {
       setError(null);
-      const previous = itemsRef.current;
-      const next = previous.filter((item) => item.id !== id);
-      itemsRef.current = next;
-      // Optimistic update
-      setItems(next);
-      saveToStorage(storageKey, next);
+      // Capture the item being removed for targeted rollback
+      const removedItem = itemsRef.current.find((item) => item.id === id);
+
+      try {
+        const next = itemsRef.current.filter((item) => item.id !== id);
+        itemsRef.current = next;
+        // Optimistic update
+        setItems(next);
+        saveToStorage(storageKey, next);
+
+
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[Harmoniq] Error in remove for ${table}:`, msg);
+        // Targeted rollback: re-add the removed item
+        if (removedItem) {
+          const rolledBack = [...itemsRef.current, removedItem];
+          itemsRef.current = rolledBack;
+          setItems(rolledBack);
+        }
+        toast.error("Failed to remove item");
+        return;
+      }
 
       if (isSupabaseConfigured) {
         void (async () => {
           const supabase = createClient();
           const { error: persistError } = await supabase.from(table).delete().eq("id", id);
           if (persistError) {
-            console.error(`[Harmoniq] Error deleting from ${table}:`, persistError.message);
+            console.warn(`[Harmoniq] Error deleting from ${table}:`, persistError.message);
             if (!isMountedRef.current) return;
-            itemsRef.current = previous;
-            setItems(previous);
-            saveToStorage(storageKey, previous);
+            // Targeted rollback: re-add the removed item
+            if (removedItem) {
+              const rolledBack = [...itemsRef.current, removedItem];
+              itemsRef.current = rolledBack;
+              setItems(rolledBack);
+              saveToStorage(storageKey, rolledBack);
+            }
             setError(persistError.message);
+            toast.error("Failed to remove item");
           }
         })();
       }
@@ -304,8 +385,8 @@ export function createEntityStore<T extends IdEntity>(
 
     const itemsForCompany = React.useCallback(
       (companyId: string | null | undefined) => {
-        // With Supabase, RLS already filters by company — but filter client-side too for safety
-        if (!companyId) return items;
+        // With Supabase, RLS already filters by company, but filter client-side too for safety
+        if (!companyId) return [];
         return items.filter(
           (item) => "company_id" in item && (item as unknown as CompanyEntity).company_id === companyId
         );
@@ -328,7 +409,7 @@ export function createEntityStore<T extends IdEntity>(
       if (!options?.skipLoad) {
         ctx.ensureLoaded();
       }
-    }, [ctx, options?.skipLoad]);
+    }, [ctx.ensureLoaded, options?.skipLoad]);
     return ctx;
   }
 

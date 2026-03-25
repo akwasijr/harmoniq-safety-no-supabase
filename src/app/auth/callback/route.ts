@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { buildCompanyDestination } from "@/lib/navigation";
+import { INVITE_TOKEN_PATTERN, isInvitableRole } from "@/lib/invitations";
 import { getPlatformSlugFilterList, getPlatformSlugs, isPlatformSlug } from "@/lib/platform-config";
 import { getSuperAdminEmails } from "@/lib/server-config";
 
@@ -121,6 +122,10 @@ async function acceptInviteIfPending(
 ): Promise<NextResponse | null> {
   const email = user.email?.toLowerCase() || "";
 
+  if (!INVITE_TOKEN_PATTERN.test(inviteToken)) {
+    return redirectToLoginError(requestUrl, "Invalid invitation. Contact your administrator for a new invite.");
+  }
+
   // Validate the invite token
   const { data: invitation } = await supabase
     .from("invitations")
@@ -131,7 +136,11 @@ async function acceptInviteIfPending(
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
 
-  if (!invitation) return null; // No valid invite — fall through to normal routing
+  if (!invitation) return null; // No valid invite, fall through to normal routing
+
+  if (!isInvitableRole(invitation.role)) {
+    return redirectToLoginError(requestUrl, "Invalid invitation. Contact your administrator for a new invite.");
+  }
 
   // Check if user profile already exists
   const { data: existingProfile } = await supabase
@@ -177,7 +186,6 @@ async function acceptInviteIfPending(
     .update({ accepted_at: new Date().toISOString() })
     .eq("id", invitation.id);
 
-  await logAudit(supabase, user.id, "invite_accepted", request);
 
   // Redirect to company app
   const { data: company } = await supabase
@@ -260,7 +268,6 @@ async function routeAuthenticatedUser(
       }]);
 
       // Log and redirect to platform
-      await logAudit(supabase, user.id, "login_success", request);
       const requestedApp = resolveAppChoice("super_admin", appChoiceCookie);
       if (!isChoiceAllowed("super_admin", requestedApp)) {
         return await denyAccess();
@@ -285,18 +292,22 @@ async function routeAuthenticatedUser(
       return NextResponse.redirect(new URL(dest, requestUrl.origin));
     }
 
-    // Non-super-admin without profile — must have been invited
+    // Non-super-admin without profile, must have been invited
     // Check for pending invitation
     const { data: invitation } = await supabase
       .from("invitations")
       .select("*")
       .eq("email", email)
       .is("accepted_at", null)
-      .gt("expires_at", new Date().toISOString())
-      .maybeSingle();
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
 
     if (invitation) {
-      // Accept invitation — create user profile
+      if (!isInvitableRole(invitation.role)) {
+        return await denyAccess();
+      }
+
+      // Accept invitation, create user profile
       await supabase.from("users").insert([{
         id: user.id,
         email: email,
@@ -316,7 +327,6 @@ async function routeAuthenticatedUser(
         .update({ accepted_at: new Date().toISOString() })
         .eq("id", invitation.id);
 
-      await logAudit(supabase, user.id, "login_success", request);
 
       // Get company slug for redirect
       const { data: company } = await supabase
@@ -333,15 +343,14 @@ async function routeAuthenticatedUser(
       return NextResponse.redirect(new URL(dest, requestUrl.origin));
     }
 
-    // No profile, no invitation — deny access
+    // No profile, no invitation. Deny access
     await supabase.auth.signOut();
     return NextResponse.redirect(
       new URL("/login?error=No+account+found.+Contact+your+administrator+for+an+invitation.", requestUrl.origin)
     );
   }
 
-  // User profile exists — route based on role
-  await logAudit(supabase, user.id, "login_success", request);
+  // User profile exists, route based on role
   if (profile) {
     const updates: Record<string, string> = {
       last_login_at: new Date().toISOString(),
@@ -427,22 +436,4 @@ async function routeAuthenticatedUser(
 
   const dest = buildCompanyDestination(slug, requestedApp);
   return NextResponse.redirect(new URL(dest, requestUrl.origin));
-}
-
-async function logAudit(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  action: string,
-  request: NextRequest
-) {
-  try {
-    await supabase.from("audit_logs").insert([{
-      user_id: userId,
-      action,
-      resource: "auth",
-      ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined,
-    }]);
-  } catch (error) {
-    console.error("[Auth Callback] Failed to write audit log:", error);
-  }
 }

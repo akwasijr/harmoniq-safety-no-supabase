@@ -205,6 +205,10 @@ export default function ArbowetFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.companyName.trim() || !formData.auditor.trim() || !formData.auditDate.trim()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");
@@ -229,13 +233,13 @@ export default function ArbowetFormPage() {
     };
     addEvaluation(evaluation);
     toast("Assessment submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment&id=${evaluation.id}`);
   };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
@@ -248,7 +252,7 @@ export default function ArbowetFormPage() {
           </div>
           <span className="text-xs text-muted-foreground">NL</span>
         </div>
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentSection + 1) / sections.length) * 100}%` }}
@@ -266,7 +270,7 @@ export default function ArbowetFormPage() {
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.auditDetails")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.auditDetails")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.basicAuditInfo")}</p>
               </div>
             </div>
@@ -342,7 +346,7 @@ export default function ArbowetFormPage() {
                   <Scale className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">{t("riskAssessment.complianceCheck")}</h2>
+                  <h2 className="text-lg font-bold">{t("riskAssessment.complianceCheck")}</h2>
                   <p className="text-sm text-muted-foreground">
                     {t("riskAssessment.itemsAssessed", { assessed: String(assessedItems), total: String(totalItems) })}
                   </p>
@@ -490,7 +494,7 @@ export default function ArbowetFormPage() {
                 <FileCheck className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.summaryAndActions")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.summaryAndActions")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.overallAssessment")}</p>
               </div>
             </div>
@@ -519,7 +523,7 @@ export default function ArbowetFormPage() {
               <Card className="border-red-200">
                 <CardHeader className="py-3">
                   <CardTitle className="text-sm text-red-600">
-                    ⚠️ {t("riskAssessment.nonCompliantItems", { count: String(nonCompliantCount) })}
+                    {t("riskAssessment.nonCompliantItems", { count: String(nonCompliantCount) })}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -583,7 +587,7 @@ export default function ArbowetFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSubmit")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSubmit")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.confirmSubmitAudit")}</p>
               </div>
             </div>
@@ -652,7 +656,7 @@ export default function ArbowetFormPage() {
               <Card className="bg-warning/10 border-warning">
                 <CardContent className="py-4">
                   <p className="text-sm font-medium text-warning">
-                    ⚠️ {nonCompliantCount} non-compliant item{nonCompliantCount > 1 ? "s" : ""} found
+                    {nonCompliantCount} non-compliant item{nonCompliantCount > 1 ? "s" : ""} found
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     These must be addressed to achieve full Arbowet compliance. 

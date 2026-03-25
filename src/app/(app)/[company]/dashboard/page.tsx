@@ -13,15 +13,17 @@ import {
   Clock,
 } from "lucide-react";
 import { KPICard } from "@/components/ui/kpi-card";
-import { FilterPanel, commonFilterOptions } from "@/components/ui/filter-panel";
+import { FilterPanel, useFilterOptions } from "@/components/ui/filter-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChartCard, AreaChart, BarChart, DonutChart, COLORS } from "@/components/charts";
+import { OnboardingChecklist } from "@/components/onboarding/onboarding-checklist";
 import { useCompanyStore } from "@/stores/company-store";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const PLATFORM_SLUGS =
   (process.env.NEXT_PUBLIC_PLATFORM_SLUGS || "platform,admin,superadmin")
@@ -73,6 +75,7 @@ function getDateRangeFilter(dateRange: string): { start: Date; end: Date } {
 export default function DashboardPage() {
   const company = useCompanyParam();
   const { t, formatDate, formatNumber } = useTranslation();
+  const filterOptions = useFilterOptions();
   const [dateRange, setDateRange] = React.useState("last_30_days");
   
   // Filter states
@@ -105,95 +108,6 @@ export default function DashboardPage() {
     }
   }, [isSuperAdmin, hasSelectedCompany, allCompanies, switchCompany]);
 
-  if (isSuperAdmin && !hasSelectedCompany) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-sm text-muted-foreground">Selecting a company workspace…</div>
-      </div>
-    );
-  }
-
-  const openIncidents = incidents.filter((i) => i.status === "new" || i.status === "in_progress");
-  const resolvedToday = incidents.filter((i) => {
-    if (i.status !== "resolved" && i.status !== "archived") return false;
-    const today = new Date().toISOString().slice(0, 10);
-    return i.updated_at?.slice(0, 10) === today || i.resolved_at?.slice(0, 10) === today;
-  });
-  const avgResolutionHours = (() => {
-    const resolved = incidents.filter(i => i.resolved_at && i.created_at);
-    if (!resolved.length) return 0;
-    const total = resolved.reduce((sum, i) => {
-      return sum + (new Date(i.resolved_at!).getTime() - new Date(i.created_at).getTime()) / 3600000;
-    }, 0);
-    return Math.round(total / resolved.length);
-  })();
-
-  const stats = {
-    open_incidents: openIncidents.length,
-    total_incidents: incidents.length,
-    resolved_today: resolvedToday.length,
-    avg_resolution_time_hours: avgResolutionHours,
-    ltir: incidents.length > 0 ? Math.round((openIncidents.length / Math.max(incidents.length, 1)) * 100) / 10 : 0,
-    compliance_rate: incidents.length > 0 ? Math.round(((incidents.length - openIncidents.length) / Math.max(incidents.length, 1)) * 1000) / 10 : 100,
-  };
-  const recentIncidents = incidents.slice(0, 5);
-
-  // Compute asset expiry alerts (warranty, calibration, maintenance)
-  const now = new Date();
-  const in30Days = new Date();
-  in30Days.setDate(now.getDate() + 30);
-  
-  const expiryAlerts = allAssets.filter(a => a.status === "active").flatMap(asset => {
-    const alerts: Array<{ asset_id: string; asset_name: string; type: string; date: string; daysLeft: number }> = [];
-    const checkDate = (date: string | null, type: string) => {
-      if (!date) return;
-      const d = new Date(date);
-      if (d <= in30Days) {
-        alerts.push({ asset_id: asset.id, asset_name: asset.name, type, date, daysLeft: Math.ceil((d.getTime() - now.getTime()) / 86400000) });
-      }
-    };
-    checkDate(asset.warranty_expiry, "Warranty");
-    checkDate(asset.next_calibration_date, "Calibration");
-    checkDate(asset.next_maintenance_date, "Maintenance");
-    return alerts;
-  }).sort((a, b) => a.daysLeft - b.daysLeft).slice(0, 5);
-
-  const locationOptions = locations.map((loc) => ({
-    value: loc.id,
-    label: loc.name,
-  }));
-
-  const filters = [
-    {
-      id: "location",
-      label: t("dashboard.allLocations"),
-      options: locationOptions,
-      value: locationFilter,
-      onChange: setLocationFilter,
-    },
-    {
-      id: "type",
-      label: t("dashboard.allTypes"),
-      options: commonFilterOptions.incidentType,
-      value: typeFilter,
-      onChange: setTypeFilter,
-    },
-    {
-      id: "severity",
-      label: t("dashboard.allSeverities"),
-      options: commonFilterOptions.severity,
-      value: severityFilter,
-      onChange: setSeverityFilter,
-    },
-    {
-      id: "department",
-      label: t("dashboard.allDepartments"),
-      options: commonFilterOptions.department,
-      value: departmentFilter,
-      onChange: setDepartmentFilter,
-    },
-  ];
-
   // Apply filters to incidents
   const dateRangeFilter = getDateRangeFilter(dateRange);
   const filteredIncidents = React.useMemo(() => {
@@ -211,9 +125,12 @@ export default function DashboardPage() {
       // Severity filter
       if (severityFilter && inc.severity !== severityFilter) return false;
       
+      // Department filter
+      if (departmentFilter && (inc as unknown as Record<string, unknown>).department !== departmentFilter) return false;
+      
       return true;
     });
-  }, [incidents, dateRangeFilter.start, dateRangeFilter.end, locationFilter, typeFilter, severityFilter]);
+  }, [incidents, dateRangeFilter.start, dateRangeFilter.end, locationFilter, typeFilter, severityFilter, departmentFilter]);
 
   // Compute chart data from filtered incidents
   const incidentTrendData = React.useMemo(() => {
@@ -287,13 +204,6 @@ export default function DashboardPage() {
     ];
   }, [filteredIncidents]);
 
-  // Update stats to use filtered data
-  const filteredStats = {
-    ...stats,
-    open_incidents: filteredIncidents.filter((i) => i.status === "new" || i.status === "in_progress").length,
-    total_incidents: filteredIncidents.length,
-  };
-
   // Compute trend (compare to previous period)
   const previousPeriodFilter = React.useMemo(() => {
     const duration = dateRangeFilter.end.getTime() - dateRangeFilter.start.getTime();
@@ -317,9 +227,106 @@ export default function DashboardPage() {
     return Math.round(((current - previous) / previous) * 100);
   }, [filteredIncidents.length, previousPeriodIncidents.length]);
 
+
+  if (isSuperAdmin && !hasSelectedCompany) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-sm text-muted-foreground">Selecting a company workspace…</div>
+      </div>
+    );
+  }
+
+  const openIncidents = incidents.filter((i) => i.status === "new" || i.status === "in_progress");
+  const resolvedToday = incidents.filter((i) => {
+    if (i.status !== "resolved" && i.status !== "archived") return false;
+    const today = new Date().toISOString().slice(0, 10);
+    return i.updated_at?.slice(0, 10) === today || i.resolved_at?.slice(0, 10) === today;
+  });
+  const avgResolutionHours = (() => {
+    const resolved = incidents.filter(i => i.resolved_at && i.created_at);
+    if (!resolved.length) return 0;
+    const total = resolved.reduce((sum, i) => {
+      return sum + (new Date(i.resolved_at!).getTime() - new Date(i.created_at).getTime()) / 3600000;
+    }, 0);
+    return Math.round(total / resolved.length);
+  })();
+
+  const stats = {
+    open_incidents: openIncidents.length,
+    total_incidents: incidents.length,
+    resolved_today: resolvedToday.length,
+    avg_resolution_time_hours: avgResolutionHours,
+    ltir: incidents.length > 0 ? Math.round((openIncidents.length / Math.max(incidents.length, 1)) * 100) / 10 : 0,
+    compliance_rate: incidents.length > 0 ? Math.round(((incidents.length - openIncidents.length) / Math.max(incidents.length, 1)) * 1000) / 10 : 100,
+  };
+  const recentIncidents = incidents.slice(0, 5);
+
+  // Compute asset expiry alerts (warranty, calibration, maintenance)
+  const now = new Date();
+  const in30Days = new Date();
+  in30Days.setDate(now.getDate() + 30);
+  
+  const expiryAlerts = allAssets.filter(a => a.status === "active").flatMap(asset => {
+    const alerts: Array<{ asset_id: string; asset_name: string; type: string; date: string; daysLeft: number }> = [];
+    const checkDate = (date: string | null, type: string) => {
+      if (!date) return;
+      const d = new Date(date);
+      if (d <= in30Days) {
+        alerts.push({ asset_id: asset.id, asset_name: asset.name, type, date, daysLeft: Math.ceil((d.getTime() - now.getTime()) / 86400000) });
+      }
+    };
+    checkDate(asset.warranty_expiry, "Warranty");
+    checkDate(asset.next_maintenance_date, "Maintenance");
+    return alerts;
+  }).sort((a, b) => a.daysLeft - b.daysLeft).slice(0, 5);
+
+  const locationOptions = locations.map((loc) => ({
+    value: loc.id,
+    label: loc.name,
+  }));
+
+  const filters = [
+    {
+      id: "location",
+      label: t("dashboard.allLocations"),
+      options: locationOptions,
+      value: locationFilter,
+      onChange: setLocationFilter,
+    },
+    {
+      id: "type",
+      label: t("dashboard.allTypes"),
+      options: filterOptions.incidentType,
+      value: typeFilter,
+      onChange: setTypeFilter,
+    },
+    {
+      id: "severity",
+      label: t("dashboard.allSeverities"),
+      options: filterOptions.severity,
+      value: severityFilter,
+      onChange: setSeverityFilter,
+    },
+    {
+      id: "department",
+      label: t("dashboard.allDepartments"),
+      options: filterOptions.department,
+      value: departmentFilter,
+      onChange: setDepartmentFilter,
+    },
+  ];
+
+  // Update stats to use filtered data
+  const filteredStats = {
+    ...stats,
+    open_incidents: filteredIncidents.filter((i) => i.status === "new" || i.status === "in_progress").length,
+    total_incidents: filteredIncidents.length,
+  };
+
   const recentFilteredIncidents = filteredIncidents.slice(0, 5);
 
   return (
+    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -333,6 +340,9 @@ export default function DashboardPage() {
           />
         </div>
       </div>
+
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist />
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -414,7 +424,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-base font-medium">{t("dashboard.recentIncidents")}</CardTitle>
-              <Link href={company ? `/${company}/dashboard/incidents` : "#"}>
+              <Link href={`/${company}/dashboard/incidents`}>
                 <Button variant="ghost" size="sm" className="gap-1">
                   {t("common.viewAll")} <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -427,7 +437,7 @@ export default function DashboardPage() {
                 ) : recentFilteredIncidents.map((incident) => (
                   <Link
                     key={incident.id}
-                    href={company ? `/${company}/dashboard/incidents/${incident.id}` : "#"}
+                    href={`/${company}/dashboard/incidents/${incident.id}`}
                     className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
                   >
                     <div className="space-y-1">
@@ -458,5 +468,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

@@ -3,171 +3,141 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
-import { Building2, Loader } from "lucide-react";
+import { Lock } from "lucide-react";
+import { useTranslation } from "@/i18n";
 
 export default function SignupPage() {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState("");
-  const [formData, setFormData] = React.useState({
-    company_name: "",
-    country: "US",
-  });
+  const { t } = useTranslation();
+  const [email, setEmail] = React.useState("");
+  const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
 
-  const handleOAuthSignUp = async (provider: "google" | "azure") => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/signup-callback`,
-        },
-      });
-      if (authError) {
-        setError(`OAuth error: ${authError.message}`);
-        setIsLoading(false);
-      }
-    } catch (err: any) {
-      setError(`Error: ${err.message}`);
-      setIsLoading(false);
-    }
-  };
-
-  const handleCompanySubmit = async (e: React.FormEvent) => {
+  const handleWaitlist = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
+    if (!email.trim()) return;
+    setStatus("loading");
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        setError("User not authenticated");
-        setIsLoading(false);
-        return;
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      if (res.ok) {
+        if (typeof window !== "undefined") {
+          const existing = JSON.parse(localStorage.getItem("harmoniq_waitlist") || "[]");
+          existing.push({ email: email.trim(), timestamp: new Date().toISOString() });
+          localStorage.setItem("harmoniq_waitlist", JSON.stringify(existing));
+        }
+        setStatus("success");
+      } else {
+        setStatus("error");
       }
-
-      // Create company
-      const { data: company, error: companyError } = await supabase
-        .from("companies")
-        .insert([{
-          name: formData.company_name,
-          slug: formData.company_name.toLowerCase().replace(/\s+/g, "-"),
-          country: formData.country,
-          language: "en",
-          status: "active",
-          tier: "starter",
-          seat_limit: 10,
-          currency: formData.country === "US" ? "USD" : formData.country === "SE" ? "SEK" : "EUR",
-        }])
-        .select()
-        .single();
-
-      if (companyError) {
-        setError(companyError.message);
-        setIsLoading(false);
-        return;
-      }
-
-      // Create admin user
-      const { error: userError } = await supabase
-        .from("users")
-        .insert([{
-          id: user.id,
-          company_id: company.id,
-          email: user.email,
-          first_name: user.user_metadata?.given_name || "Admin",
-          last_name: user.user_metadata?.family_name || "User",
-          role: "super_admin",
-          status: "active",
-          email_verified_at: new Date().toISOString(),
-          oauth_provider: "google",
-          oauth_id: user.id,
-        }]);
-
-      if (userError) {
-        setError(userError.message);
-        setIsLoading(false);
-        return;
-      }
-
-      // Redirect to dashboard
-      window.location.href = `/${company.slug}/dashboard`;
-    } catch (err: any) {
-      setError(err.message);
-      setIsLoading(false);
+    } catch {
+      setStatus("error");
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 flex flex-col items-center justify-center gap-3">
-          <Image 
-            src="/favicon.svg" 
-            alt="Harmoniq Logo" 
-            width={48} 
-            height={48}
-            className="h-12 w-12"
-          />
-          <span className="text-2xl font-semibold">Harmoniq Safety</span>
+    <div className="relative flex min-h-screen items-center justify-center px-4" style={{ background: 'white' }}>
+      <div aria-hidden="true" style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute', top: '-15%', right: '-8%', width: '45%', height: '80%',
+          background: 'linear-gradient(160deg, hsla(200,90%,78%,0.5), hsla(240,75%,68%,0.45), hsla(265,70%,55%,0.5), hsla(280,65%,48%,0.45), hsla(210,85%,75%,0.4))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(40px)',
+          borderRadius: '40% 60% 50% 50%',
+          animation: 'auth-flow 8s ease-in-out infinite, auth-morph 12s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', top: '5%', right: '-2%', width: '30%', height: '60%',
+          background: 'linear-gradient(170deg, hsla(195,90%,80%,0.45), hsla(230,80%,72%,0.4), hsla(260,65%,58%,0.45), hsla(195,85%,78%,0.35))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(35px)',
+          borderRadius: '50% 40% 55% 45%',
+          animation: 'auth-flow 6s ease-in-out infinite reverse, auth-morph 10s ease-in-out infinite reverse',
+          animationDelay: '-3s',
+        }} />
+        <div style={{
+          position: 'absolute', top: '-8%', right: '3%', width: '22%', height: '50%',
+          background: 'linear-gradient(150deg, hsla(210,95%,82%,0.4), hsla(255,70%,65%,0.35), hsla(275,60%,50%,0.3), hsla(210,90%,78%,0.35))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(30px)',
+          borderRadius: '45% 55% 40% 60%',
+          animation: 'auth-flow 10s ease-in-out infinite, auth-morph 14s ease-in-out infinite',
+          animationDelay: '-6s',
+        }} />
+      </div>
+      <div className="relative z-10 w-full max-w-[420px]">
+        <div className="mb-6 flex flex-col items-center gap-2">
+          <Image src="/favicon.svg" alt="Harmoniq Logo" width={40} height={40} className="h-10 w-10" />
+          <span className="text-lg font-semibold">Harmoniq</span>
         </div>
 
-        <div className="rounded-lg border bg-white p-8 shadow-sm">
-          <h1 className="text-center text-xl font-semibold mb-2">Create your account</h1>
-          <p className="text-center text-sm text-gray-600 mb-6">Sign up with your corporate account</p>
-
-          {error && (
-            <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-3">
-            <button
-              onClick={() => handleOAuthSignUp("google")}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-            >
-              {isLoading ? (
-                <Loader className="h-4 w-4 animate-spin" />
-              ) : (
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-              )}
-              Sign up with Google
-            </button>
-
-            <button
-              onClick={() => handleOAuthSignUp("azure")}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-            >
-              {isLoading ? (
-                <Loader className="h-4 w-4 animate-spin" />
-              ) : (
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"/>
-                </svg>
-              )}
-              Sign up with Microsoft
-            </button>
+        <div className="rounded-xl border bg-background p-8 shadow-sm text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <Lock className="h-6 w-6 text-primary" />
           </div>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
-            Already have an account? <Link href="/login" className="font-semibold hover:underline">Log in</Link>
+          <h1 className="text-2xl font-bold tracking-tight mb-2">
+            {t("auth.signupUnavailable") || "Sign up is not yet available"}
+          </h1>
+
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            {t("auth.signupUnavailableDesc") || "Harmoniq Safety is currently in private access. To get started, please contact your company administrator or reach out to our team for an invitation."}
           </p>
+
+          <Link
+            href="/contact"
+            className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            {t("auth.contactUs") || "Contact us"}
+          </Link>
+
+          <div className="mt-6 pt-6 border-t border-border">
+            {status === "success" ? (
+              <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                You&apos;re on the list! We&apos;ll notify you when spots open.
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Or join the waitlist and we&apos;ll notify you when spots open.
+                </p>
+                <form onSubmit={handleWaitlist} className="flex gap-2">
+                  <input
+                    type="email"
+                    required
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <button
+                    type="submit"
+                    disabled={status === "loading"}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    {status === "loading" ? "..." : "Join"}
+                  </button>
+                </form>
+                {status === "error" && (
+                  <p className="mt-2 text-xs text-red-500">Something went wrong. Try again.</p>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
-          <Link href="/" className="hover:underline">← Back to home</Link>
+        <div className="mt-5 rounded-lg border border-border bg-card/60 dark:bg-white/5 py-3 text-center text-sm text-muted-foreground">
+          {t("auth.alreadyHaveAccount") || "Already have an account?"}{" "}
+          <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+            {t("auth.signIn") || "Sign in"}
+          </Link>
+        </div>
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-foreground transition-colors">
+            {t("auth.backToHome")}
+          </Link>
         </p>
       </div>
     </div>

@@ -16,15 +16,17 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingPage } from "@/components/ui/loading";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KPICard } from "@/components/ui/kpi-card";
-import { useLocationsStore } from "@/stores/locations-store";
-import { useAssetsStore } from "@/stores/assets-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import QRCode from "qrcode";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 type QRCodeItem = {
   id: string;
@@ -52,8 +54,8 @@ export default function QRCodesPage() {
   const company = useCompanyParam();
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const { items: locations } = useLocationsStore();
-  const { items: allAssets , isLoading } = useAssetsStore();
+  const { locations, assets: allAssets, stores } = useCompanyData();
+  const { isLoading } = stores.assets;
   const { toast } = useToast();
   const [qrCodes, setQrCodes] = React.useState<QRCodeItem[]>(() =>
     loadFromStorage(STORAGE_KEY, initialQRCodes)
@@ -157,7 +159,12 @@ export default function QRCodesPage() {
       .catch(() => toast("Unable to copy link"));
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
+    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -201,11 +208,13 @@ export default function QRCodesPage() {
       {/* QR Codes Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredCodes.length === 0 ? (
-          <Card className="md:col-span-2 lg:col-span-3">
-            <CardContent className="py-10 text-center text-muted-foreground">
-              No QR codes match your search.
-            </CardContent>
-          </Card>
+          <div className="md:col-span-2 lg:col-span-3">
+            <NoDataEmptyState
+              entityName="QR codes"
+              onAdd={() => setShowCreateModal(true)}
+              addLabel={t("qrCodes.generateNew")}
+            />
+          </div>
         ) : (
           filteredCodes.map((qr) => (
             <Card key={qr.id}>
@@ -218,6 +227,7 @@ export default function QRCodesPage() {
                           src={qrDataUrls[qr.id]} 
                           alt={`QR code for ${qr.name}`} 
                           className="h-14 w-14"
+                          loading="lazy"
                         />
                       ) : (
                         <QrCode className="h-10 w-10 text-muted-foreground" />
@@ -268,7 +278,7 @@ export default function QRCodesPage() {
                     <Printer className="h-3 w-3" />
                     {t("qrCodes.buttons.print")}
                   </Button>
-                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => handleCopyLink(qr)}>
+                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => handleCopyLink(qr)} aria-label="Copy link">
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
@@ -328,7 +338,7 @@ export default function QRCodesPage() {
           <div className="w-full max-w-md rounded-lg bg-background shadow-lg">
             <div className="flex items-center justify-between border-b p-4">
               <h2 className="text-lg font-semibold">{t("qrCodes.createQrCode")}</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowCreateModal(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowCreateModal(false)} aria-label="Close">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -337,7 +347,7 @@ export default function QRCodesPage() {
                 <Label htmlFor="qr-name">{t("qrCodes.labels.name")}</Label>
                 <Input
                   id="qr-name"
-                  placeholder="e.g., Main Entrance"
+                  placeholder={t("qrCodes.placeholders.name")}
                   className="mt-1"
                   value={formData.name}
                   onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
@@ -363,7 +373,7 @@ export default function QRCodesPage() {
                 <Label htmlFor="qr-desc">{t("qrCodes.labels.description")}</Label>
                 <Input
                   id="qr-desc"
-                  placeholder="Short description for this QR code"
+                  placeholder={t("qrCodes.placeholders.description")}
                   className="mt-1"
                   value={formData.description}
                   onChange={(event) => setFormData((prev) => ({ ...prev, description: event.target.value }))}
@@ -409,5 +419,6 @@ export default function QRCodesPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

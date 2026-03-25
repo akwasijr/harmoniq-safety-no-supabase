@@ -16,6 +16,8 @@ import { usePartsStore } from "@/stores/parts-store";
 import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useMeterReadingsStore } from "@/stores/meter-readings-store";
 import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
+import { useInspectionRoutesStore } from "@/stores/inspection-routes-store";
+import { useInspectionRoundsStore } from "@/stores/inspection-rounds-store";
 
 /**
  * Returns all entity stores with items pre-filtered by the current user's company.
@@ -43,6 +45,8 @@ export function useCompanyData() {
   const correctiveActionsStore = useCorrectiveActionsStore();
   const meterReadingsStore = useMeterReadingsStore();
   const riskEvaluationsStore = useRiskEvaluationsStore();
+  const inspectionRoutesStore = useInspectionRoutesStore();
+  const inspectionRoundsStore = useInspectionRoundsStore();
 
   const incidents = useMemo(() => incidentsStore.itemsForCompany(companyId), [incidentsStore, companyId]);
   const assets = useMemo(() => assetsStore.itemsForCompany(companyId), [assetsStore, companyId]);
@@ -59,6 +63,8 @@ export function useCompanyData() {
   const correctiveActions = useMemo(() => correctiveActionsStore.itemsForCompany(companyId), [correctiveActionsStore, companyId]);
   const meterReadings = useMemo(() => meterReadingsStore.itemsForCompany(companyId), [meterReadingsStore, companyId]);
   const riskEvaluations = useMemo(() => riskEvaluationsStore.itemsForCompany(companyId), [riskEvaluationsStore, companyId]);
+  const inspectionRoutes = useMemo(() => inspectionRoutesStore.itemsForCompany(companyId), [inspectionRoutesStore, companyId]);
+  const inspectionRounds = useMemo(() => inspectionRoundsStore.itemsForCompany(companyId), [inspectionRoundsStore, companyId]);
 
   return {
     incidents,
@@ -76,6 +82,8 @@ export function useCompanyData() {
     correctiveActions,
     meterReadings,
     riskEvaluations,
+    inspectionRoutes,
+    inspectionRounds,
     // Expose raw stores for mutations (add/update/remove don't need filtering)
     stores: {
       incidents: incidentsStore,
@@ -93,6 +101,8 @@ export function useCompanyData() {
       correctiveActions: correctiveActionsStore,
       meterReadings: meterReadingsStore,
       riskEvaluations: riskEvaluationsStore,
+      inspectionRoutes: inspectionRoutesStore,
+      inspectionRounds: inspectionRoundsStore,
     },
     companyId,
   };

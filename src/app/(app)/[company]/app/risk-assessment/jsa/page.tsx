@@ -182,6 +182,10 @@ export default function JSAFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.date.trim() || !formData.time.trim() || !formData.jobDescription.trim() || !formData.location.trim()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");
@@ -206,13 +210,13 @@ export default function JSAFormPage() {
     };
     addEvaluation(evaluation);
     toast("Assessment submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment&id=${evaluation.id}`);
   };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
@@ -226,7 +230,7 @@ export default function JSAFormPage() {
           <span className="text-xs text-muted-foreground">Daily</span>
         </div>
         {/* Progress bar */}
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentSection + 1) / sections.length) * 100}%` }}
@@ -244,7 +248,7 @@ export default function JSAFormPage() {
                 <FileCheck className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.jobDetails")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.jobDetails")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.dailyPreWork")}</p>
               </div>
             </div>
@@ -341,7 +345,7 @@ export default function JSAFormPage() {
                   <AlertTriangle className="h-5 w-5 text-warning" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">{t("riskAssessment.preWorkChecklist")}</h2>
+                  <h2 className="text-lg font-bold">{t("riskAssessment.preWorkChecklist")}</h2>
                   <p className="text-sm text-muted-foreground">
                     {t("riskAssessment.itemsChecked", { completed: String(completedCount), total: String(totalItems) })}
                   </p>
@@ -415,7 +419,7 @@ export default function JSAFormPage() {
                 <AlertTriangle className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.hazardsAndControls")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.hazardsAndControls")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.identifyHazards")}</p>
               </div>
             </div>
@@ -464,7 +468,7 @@ export default function JSAFormPage() {
                 <Card className="bg-red-50 border-red-200">
                   <CardContent className="py-4">
                     <p className="text-sm font-medium text-red-800">
-                      ⚠️ {failCount} checklist item{failCount > 1 ? "s" : ""} failed
+                      {failCount} checklist item{failCount > 1 ? "s" : ""} failed
                     </p>
                     <p className="text-xs text-red-700 mt-1">
                       Review failed items and ensure corrective actions are in place before proceeding.
@@ -484,7 +488,7 @@ export default function JSAFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSignoff")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSignoff")}</h2>
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.confirmAndSubmit")}</p>
               </div>
             </div>

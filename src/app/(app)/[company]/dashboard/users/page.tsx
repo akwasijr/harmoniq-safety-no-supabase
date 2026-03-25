@@ -22,16 +22,29 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { commonFilterOptions } from "@/components/ui/filter-panel";
+import { useFilterOptions } from "@/components/ui/filter-panel";
 import { RoleGuard } from "@/components/auth/role-guard";
-import { useUsersStore } from "@/stores/users-store";
-import { useTeamsStore } from "@/stores/teams-store";
-import { useCompanyStore } from "@/stores/company-store";
+import { useCompanyData } from "@/hooks/use-company-data";
+import { LoadingPage } from "@/components/ui/loading";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
+import { PAGINATION } from "@/lib/constants";
+import { addUserToTeam } from "@/lib/assignment-utils";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
+
+interface Invitation {
+  id: string;
+  email: string;
+  role: string;
+  expires_at: string;
+  accepted_at: string | null;
+  token: string;
+  company_id: string;
+  invite_url?: string | null;
+  company_name?: string | null;
+}
 
 // Tab type
 type TabType = "users" | "invitations" | "teams";
@@ -44,7 +57,7 @@ export default function UsersPage() {
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [showAddTeamModal, setShowAddTeamModal] = React.useState(false);
   const [isInviting, setIsInviting] = React.useState(false);
-  const [invitations, setInvitations] = React.useState<any[]>([]);
+  const [invitations, setInvitations] = React.useState<Invitation[]>([]);
   const [isInvitesLoading, setIsInvitesLoading] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -75,10 +88,10 @@ export default function UsersPage() {
   });
 
   const { toast } = useToast();
-  const { items: companies } = useCompanyStore();
-  const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || "";
-  const { items: users, add: addUser } = useUsersStore();
-  const { items: teams, add: addTeam } = useTeamsStore();
+  const filterOptions = useFilterOptions();
+  const { companyId, users, teams, stores } = useCompanyData();
+  const { isLoading, add: addUser } = stores.users;
+  const { add: addTeam, update: updateTeam } = stores.teams;
 
   const fetchInvitations = React.useCallback(async () => {
     try {
@@ -86,7 +99,7 @@ export default function UsersPage() {
       const res = await fetch("/api/invitations");
       const data = await res.json();
       if (res.ok) {
-        setInvitations(data.invitations || []);
+        setInvitations((data.invitations || []).filter((invite: Invitation) => invite.company_id === companyId));
       }
     } catch {
       setInvitations([]);
@@ -115,7 +128,7 @@ export default function UsersPage() {
     const matchesRole = roleFilter === "" || user.role === roleFilter;
     const matchesStatus = statusFilter === "" || user.status === statusFilter;
     const matchesDepartment = departmentFilter === "" || user.department === departmentFilter;
-    const matchesTeam = teamFilter === "" || (user.team_ids?.includes(teamFilter) ?? false);
+    const matchesTeam = teamFilter === "" || user.team_ids.includes(teamFilter);
     return matchesSearch && matchesRole && matchesStatus && matchesDepartment && matchesTeam;
   });
 
@@ -157,14 +170,14 @@ export default function UsersPage() {
     {
       id: "role",
       label: "All roles",
-      options: commonFilterOptions.userRole,
+      options: filterOptions.userRole,
       value: roleFilter,
       onChange: (v: string) => { setRoleFilter(v); setCurrentPage(1); },
     },
     {
       id: "status",
       label: "All statuses",
-      options: commonFilterOptions.userStatus,
+      options: filterOptions.userStatus,
       value: statusFilter,
       onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
     },
@@ -206,7 +219,7 @@ export default function UsersPage() {
         body: JSON.stringify({
           email: newUser.email,
           role: newUser.role,
-          company_id: companyId,
+          company_id: companyId || "",
           first_name: newUser.first_name,
           last_name: newUser.last_name,
           department: newUser.department,
@@ -223,6 +236,14 @@ export default function UsersPage() {
 
       if (data.user) {
         addUser(data.user);
+        newUser.team_ids.forEach((teamId) => {
+          const team = teams.find((item) => item.id === teamId);
+          if (!team) return;
+          updateTeam(team.id, {
+            member_ids: addUserToTeam(team, data.user.id),
+            updated_at: new Date().toISOString(),
+          });
+        });
       }
 
       if (data.email_sent) {
@@ -242,8 +263,8 @@ export default function UsersPage() {
       setShowAddModal(false);
       fetchInvitations();
       setNewUser({ first_name: "", last_name: "", email: "", role: "employee", department: "", team_ids: [] });
-    } catch (err: any) {
-      toast(err?.message || "Failed to create invitation");
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Failed to create invitation");
     } finally {
       setIsInviting(false);
     }
@@ -272,7 +293,7 @@ export default function UsersPage() {
     const newId = `team_new_${Date.now()}`;
     const newTeamData = {
       id: newId,
-      company_id: companyId,
+      company_id: companyId || "",
       name: newTeam.name,
       description: newTeam.description || null,
       color: newTeam.color,
@@ -299,6 +320,10 @@ export default function UsersPage() {
     if (!teamIds || teamIds.length === 0) return [];
     return teamIds.map(id => teams.find(t => t.id === id)?.name).filter(Boolean);
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard anyPermission={["users.view", "users.create", "users.edit"]}>
@@ -491,11 +516,27 @@ export default function UsersPage() {
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                  <Button key={i + 1} variant={currentPage === i + 1 ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(i + 1)}>
-                    {i + 1}
-                  </Button>
-                ))}
+                {(() => {
+                  const pages: (number | "...")[] = totalPages <= 7
+                    ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                    : (() => {
+                        const p: (number | "...")[] = [1];
+                        if (currentPage > 3) p.push("...");
+                        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) p.push(i);
+                        if (currentPage < totalPages - 2) p.push("...");
+                        p.push(totalPages);
+                        return p;
+                      })();
+                  return pages.map((p, idx) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
+                    ) : (
+                      <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p as number)}>
+                        {p}
+                      </Button>
+                    )
+                  );
+                })()}
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -544,7 +585,7 @@ export default function UsersPage() {
               </div>
               <div>
                 <Label htmlFor="department">{t("users.labels.department")}</Label>
-                <Input id="department" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} placeholder="e.g., Operations, Safety" className="mt-1" />
+                <Input id="department" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} placeholder={t("users.placeholders.department")} className="mt-1" />
               </div>
             </div>
 
@@ -654,69 +695,59 @@ export default function UsersPage() {
             showDateRange={false}
           />
 
-          {/* Teams grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Teams table */}
+          <div className="rounded-md border">
             {paginatedTeams.length === 0 ? (
-              <Card className="col-span-full">
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  {t("users.noTeamsFound")}
-                </CardContent>
-              </Card>
+              <div className="py-8 text-center text-muted-foreground">
+                {t("users.noTeamsFound")}
+              </div>
             ) : (
-              paginatedTeams.map((team) => {
-                const leader = team.leader_id ? getUserById(team.leader_id) : null;
-                return (
-                  <Card 
-                    key={team.id}
-                    className="cursor-pointer hover:border-primary/50 transition-colors"
-                    onClick={() => router.push(`/${company}/dashboard/users/teams/${team.id}`)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="h-10 w-10 rounded-lg flex items-center justify-center text-white font-semibold"
-                            style={{ backgroundColor: team.color }}
-                          >
-                            {team.name.slice(0, 2).toUpperCase()}
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("teams.table.team") || "Team"}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("teams.table.leader") || "Leader"}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("teams.table.members") || "Members"}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("teams.table.status") || "Status"}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedTeams.map((team) => {
+                    const leader = team.leader_id ? getUserById(team.leader_id) : null;
+                    return (
+                      <tr
+                        key={team.id}
+                        className="border-b cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => router.push(`/${company}/dashboard/users/teams/${team.id}`)}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                              style={{ backgroundColor: team.color || '#6366f1' }}
+                            >
+                              {team.name.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{team.name}</p>
+                              {team.description && <p className="text-xs text-muted-foreground line-clamp-1">{team.description}</p>}
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-base">{team.name}</CardTitle>
-                            <p className="text-xs text-muted-foreground">{formatNumber(team.member_count)} {team.member_count !== 1 ? t("users.members") : t("users.member")}</p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{team.status}</span>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                        {team.description || t("users.noDescription")}
-                      </p>
-                      {leader && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <UserCog className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">{t("users.leader")}:</span>
-                          <span>{leader.full_name}</span>
-                        </div>
-                      )}
-                      {team.permissions && team.permissions.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-3">
-                          {team.permissions.slice(0, 3).map((perm) => (
-                            <span key={perm} className="text-xs text-muted-foreground">
-                              {perm.replace(/_/g, " ")}
-                            </span>
-                          ))}
-                          {team.permissions.length > 3 && (
-                            <span className="text-xs text-muted-foreground">
-                              +{team.permissions.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })
+                        </td>
+                        <td className="px-4 py-3 text-sm">{leader?.full_name || "—"}</td>
+                        <td className="px-4 py-3 text-sm">{formatNumber(team.member_count)}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            team.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                          }`}>
+                            {team.status || 'active'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
 
@@ -730,11 +761,27 @@ export default function UsersPage() {
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                  <Button key={i + 1} variant={currentPage === i + 1 ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(i + 1)}>
-                    {i + 1}
-                  </Button>
-                ))}
+                {(() => {
+                  const pages: (number | "...")[] = totalPages <= 7
+                    ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                    : (() => {
+                        const p: (number | "...")[] = [1];
+                        if (currentPage > 3) p.push("...");
+                        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) p.push(i);
+                        if (currentPage < totalPages - 2) p.push("...");
+                        p.push(totalPages);
+                        return p;
+                      })();
+                  return pages.map((p, idx) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
+                    ) : (
+                      <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p as number)}>
+                        {p}
+                      </Button>
+                    )
+                  );
+                })()}
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -763,7 +810,7 @@ export default function UsersPage() {
                       id="team_name" 
                       value={newTeam.name} 
                       onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })} 
-                      placeholder="e.g., Safety Committee"
+                      placeholder={t("users.placeholders.teamName")}
                       className="mt-1" 
                     />
                   </div>
@@ -773,7 +820,7 @@ export default function UsersPage() {
                       id="team_description" 
                       value={newTeam.description} 
                       onChange={(e) => setNewTeam({ ...newTeam, description: e.target.value })} 
-                      placeholder="Brief description of team's purpose"
+                      placeholder={t("users.placeholders.teamDescription")}
                       className="mt-1" 
                     />
                   </div>

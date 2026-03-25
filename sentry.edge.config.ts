@@ -6,5 +6,9 @@ Sentry.init({
   // Only enable in production
   enabled: process.env.NODE_ENV === "production",
 
+  // Sample 10% of transactions
   tracesSampleRate: 0.1,
+
+  // Tag with environment
+  environment: process.env.NODE_ENV,
 });

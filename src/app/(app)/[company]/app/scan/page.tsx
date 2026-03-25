@@ -23,7 +23,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useCompanyData } from "@/hooks/use-company-data";
+import { useAssetsStore } from "@/stores/assets-store";
 import { useTranslation } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/components/ui/toast";
+import { LoadingPage } from "@/components/ui/loading";
 
 type ScanMode = "camera" | "manual";
 type ScanState = "scanning" | "found" | "not-found";
@@ -32,7 +36,10 @@ export default function ScanAssetPage() {
   const router = useRouter();
   const company = useCompanyParam();
   const { assets, locations } = useCompanyData();
+  const { isLoading } = useAssetsStore();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const [mode, setMode] = React.useState<ScanMode>("camera");
   const [scanState, setScanState] = React.useState<ScanState>("scanning");
@@ -46,12 +53,13 @@ export default function ScanAssetPage() {
   const scanIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const [lastScannedCode, setLastScannedCode] = React.useState<string | null>(null);
 
-  const foundAsset = foundAssetId ? assets.find((a) => a.id === foundAssetId) : null;
+  const rawFoundAsset = foundAssetId ? assets.find((a) => a.id === foundAssetId) : null;
+  const foundAsset = rawFoundAsset && user?.company_id && rawFoundAsset.company_id !== user.company_id ? null : rawFoundAsset;
   const foundLocation = foundAsset?.location_id
     ? locations.find((l) => l.id === foundAsset.location_id)
     : null;
 
-  // Look up asset by tag, QR code, serial number, barcode, or ID
+  // Look up asset by tag, QR code, serial number, or ID
   const lookupAsset = React.useCallback(
     (query: string): string | null => {
       const q = query.trim().toLowerCase();
@@ -62,8 +70,7 @@ export default function ScanAssetPage() {
           a.id.toLowerCase() === q ||
           a.asset_tag.toLowerCase() === q ||
           a.qr_code?.toLowerCase() === q ||
-          a.serial_number?.toLowerCase() === q ||
-          a.barcode?.toLowerCase() === q
+          a.serial_number?.toLowerCase() === q
       );
       return match?.id || null;
     },
@@ -136,9 +143,7 @@ export default function ScanAssetPage() {
               }
               return; // Stop scanning
             } else {
-              // QR code found but not matching any asset
-              // Keep scanning but show a brief indicator
-              console.log("QR code detected but no matching asset:", scannedData);
+              // QR code found but not matching any asset, keep scanning
             }
           }
           
@@ -187,18 +192,19 @@ export default function ScanAssetPage() {
     
     // Check if torch is supported
     const capabilities = track.getCapabilities?.() as MediaTrackCapabilities & { torch?: boolean };
-    if (!capabilities?.torch) {
-      console.log("Torch not supported on this device");
-      return;
-    }
+    if (!capabilities?.torch) return;
     
     // Apply torch constraint
     track.applyConstraints({
       advanced: [{ torch: isTorchOn } as MediaTrackConstraintSet],
-    }).catch((err) => {
-      console.warn("Failed to toggle torch:", err);
+    }).catch(() => {
+      toast(t("scan.torchFailed"), "error");
     });
-  }, [isTorchOn]);
+  }, [isTorchOn, toast, t]);
+
+  if (!user || isLoading) {
+    return <LoadingPage message="Loading assets..." />;
+  }
 
   const handleManualSearch = () => {
     const assetId = lookupAsset(manualInput);
@@ -255,7 +261,7 @@ export default function ScanAssetPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+        <header className="sticky top-14 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={handleReset}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -358,7 +364,7 @@ export default function ScanAssetPage() {
   if (scanState === "not-found") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+        <header className="sticky top-14 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={handleReset}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -369,7 +375,7 @@ export default function ScanAssetPage() {
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
             <X className="h-8 w-8 text-destructive" />
           </div>
-          <h2 className="text-lg font-semibold mb-1">{t("scan.notFound")}</h2>
+          <h2 className="text-lg font-bold mb-1">{t("scan.notFound")}</h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-xs">
             {t("scan.notFoundDesc")}
           </p>
@@ -396,7 +402,7 @@ export default function ScanAssetPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+      <header className="sticky top-14 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -469,7 +475,7 @@ export default function ScanAssetPage() {
             <div className="absolute bottom-6 left-0 right-0 text-center">
               {lastScannedCode ? (
                 <p className="text-white text-sm font-medium bg-warning/80 inline-block px-4 py-2 rounded-full">
-                  Code detected: {lastScannedCode.substring(0, 20)}{lastScannedCode.length > 20 ? "..." : ""} — No matching asset
+                  Code detected: {lastScannedCode.substring(0, 20)}{lastScannedCode.length > 20 ? "..." : ""}. No matching asset
                 </p>
               ) : (
                 <p className="text-white text-sm font-medium bg-black/40 inline-block px-4 py-2 rounded-full">
@@ -503,7 +509,7 @@ export default function ScanAssetPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
               <Keyboard className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="text-lg font-semibold">{t("scan.manualEntry")}</h2>
+            <h2 className="text-lg font-bold">{t("scan.manualEntry")}</h2>
             <p className="text-sm text-muted-foreground mt-1 text-center max-w-xs">
               {t("scan.manualEntryDesc")}
             </p>

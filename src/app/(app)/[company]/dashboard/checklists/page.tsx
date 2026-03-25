@@ -23,73 +23,39 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
-import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
-import { useAssetInspectionsStore } from "@/stores/inspections-store";
-import { useAssetsStore } from "@/stores/assets-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useLocationsStore } from "@/stores/locations-store";
+import { useCompanyData } from "@/hooks/use-company-data";
+import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
+import { getTemplatePublishStatus } from "@/lib/template-activation";
 import type { ChecklistTemplate } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
+import { PAGINATION } from "@/lib/constants";
+import {
+  mockRiskTemplates,
+  mockRiskAssessments,
+  mockInspections,
+  mockInspectionTemplates,
+} from "@/mocks/data";
 
 type MainTabType = "checklists" | "risk-assessment" | "inspection";
-type SubTabType = "submissions" | "templates";
+type SubTabType = "submissions" | "active";
+type InspectionSubmissionRow = {
+  id: string;
+  asset: string;
+  assetId: string;
+  template: string;
+  templateSource?: string;
+  date: string;
+  status: string;
+  by: string;
+  issues: number;
+  followUpCount?: number;
+  nextDue: string;
+};
 
-const ITEMS_PER_PAGE = 10;
-
-// Risk assessment templates
-const mockRiskTemplates = [
-  // USA Templates (OSHA)
-  { id: "jha", name: "Job Hazard Analysis (JHA)", type: "JHA", sections: 5, submissions: 45, status: "active", locked: true, 
-    description: "OSHA-compliant step-by-step task analysis with hazard identification and control hierarchy" },
-  { id: "jsa", name: "Job Safety Analysis (JSA)", type: "JSA", sections: 4, submissions: 32, status: "active", locked: true,
-    description: "Daily pre-work safety checklist for crew briefings" },
-  
-  // Netherlands Templates (Arbowet)
-  { id: "rie", name: "RI&E Assessment", type: "RIE", sections: 5, submissions: 28, status: "active", locked: true,
-    description: "Risico-Inventarisatie en -Evaluatie per Arbowet Article 5" },
-  { id: "arbowet", name: "Arbowet Compliance Audit", type: "ARBOWET", sections: 4, submissions: 15, status: "active", locked: true,
-    description: "Dutch Working Conditions Act compliance check (Articles 3, 5, 8, 13, 14)" },
-  
-  // Sweden Templates (AFS)
-  { id: "sam", name: "SAM Assessment", type: "SAM", sections: 4, submissions: 22, status: "active", locked: true,
-    description: "Systematiskt Arbetsmiljöarbete per AFS 2023:1" },
-  { id: "osa", name: "OSA - Psykosocial Riskbedömning", type: "OSA", sections: 8, submissions: 18, status: "active", locked: true,
-    description: "Organisatorisk och Social Arbetsmiljö per AFS 2015:4" },
-];
-
-// Mock risk assessment submissions
-const mockRiskAssessments = [
-  { id: "ra1", template: "Job Hazard Analysis (JHA)", templateId: "jha", type: "JHA", location: "Warehouse A", date: "2024-01-28", status: "completed", by: "John Doe", riskLevel: "medium", riskScore: 9 },
-  { id: "ra2", template: "RI&E Assessment", templateId: "rie", type: "RIE", location: "Amsterdam Office", date: "2024-01-27", status: "in_progress", by: "Jan van Berg", riskLevel: "high", riskScore: 16 },
-  { id: "ra3", template: "SAM Assessment", templateId: "sam", type: "SAM", location: "Stockholm Plant", date: "2024-01-25", status: "completed", by: "Erik Lindqvist", riskLevel: "low", riskScore: 4 },
-  { id: "ra4", template: "Job Safety Analysis (JSA)", templateId: "jsa", type: "JSA", location: "Production Floor", date: "2024-01-24", status: "completed", by: "Sarah Wilson", riskLevel: "low", riskScore: 3 },
-  { id: "ra5", template: "OSA - Psykosocial Riskbedömning", templateId: "osa", type: "OSA", location: "Malmö Warehouse", date: "2024-01-22", status: "completed", by: "Anna Svensson", riskLevel: "medium", riskScore: 8 },
-  { id: "ra6", template: "Arbowet Compliance Audit", templateId: "arbowet", type: "ARBOWET", location: "Rotterdam Factory", date: "2024-01-20", status: "completed", by: "Pieter de Jong", riskLevel: "high", riskScore: 15 },
-];
-
-
-// Mock data for inspections
-const mockInspections = [
-  { id: "ins1", asset: "Forklift FL-001", assetId: "asset1", template: "Heavy Machinery Inspection", date: "2024-01-28", status: "passed", by: "John Doe", issues: 0, nextDue: "2024-02-28" },
-  { id: "ins2", asset: "Crane CR-003", assetId: "asset2", template: "Heavy Machinery Inspection", date: "2024-01-27", status: "failed", by: "Jane Smith", issues: 2, nextDue: "2024-02-03" },
-  { id: "ins3", asset: "Safety Harness SH-012", assetId: "asset3", template: "PPE Equipment Check", date: "2024-01-26", status: "passed", by: "Mike Johnson", issues: 0, nextDue: "2024-04-26" },
-  { id: "ins4", asset: "Delivery Truck DT-007", assetId: "asset4", template: "Vehicle Pre-Trip Inspection", date: "2024-01-25", status: "passed", by: "Sarah Wilson", issues: 1, nextDue: "2024-01-26" },
-  { id: "ins5", asset: "Welding Machine WM-002", assetId: "asset5", template: "Electrical Equipment Check", date: "2024-01-24", status: "passed", by: "Tom Brown", issues: 0, nextDue: "2024-03-24" },
-  { id: "ins6", asset: "Fire Extinguisher FE-101", assetId: "asset6", template: "Fire Safety Equipment Check", date: "2024-01-23", status: "passed", by: "Emma Davis", issues: 0, nextDue: "2024-07-23" },
-];
-
-// Industry-standard inspection templates by category
-const mockInspectionTemplates = [
-  { id: "it1", name: "Heavy Machinery Inspection", category: "machinery", checkpoints: 24, used: 145, status: "active", description: "Comprehensive check for forklifts, cranes, and industrial equipment" },
-  { id: "it2", name: "Vehicle Pre-Trip Inspection", category: "vehicle", checkpoints: 18, used: 256, status: "active", description: "DOT-compliant pre-trip inspection for commercial vehicles" },
-  { id: "it3", name: "Fire Safety Equipment Check", category: "fire_safety", checkpoints: 10, used: 189, status: "active", description: "Extinguishers, alarms, sprinklers, and emergency lighting" },
-  { id: "it4", name: "PPE Equipment Check", category: "ppe", checkpoints: 8, used: 98, status: "active", description: "Harnesses, helmets, gloves, and safety footwear" },
-  { id: "it5", name: "Electrical Equipment Check", category: "electrical", checkpoints: 15, used: 67, status: "active", description: "Welding machines, power tools, and electrical panels" },
-  { id: "it6", name: "Scaffolding Inspection", category: "construction", checkpoints: 20, used: 34, status: "active", description: "Scaffold structure, platforms, and fall protection" },
-];
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 // Helper to get readable form type name
 function getFormTypeName(formType: string): string {
@@ -124,13 +90,19 @@ function ChecklistsPageContent() {
     }
   }, [searchParams]);
 
-  const { items: checklistTemplatesStore } = useChecklistTemplatesStore();
-  const { items: checklistSubmissionsStore } = useChecklistSubmissionsStore();
-  const { items: riskEvaluations } = useRiskEvaluationsStore();
-  const { items: inspections } = useAssetInspectionsStore();
-  const { items: assets } = useAssetsStore();
-  const { items: users } = useUsersStore();
-  const { items: locations } = useLocationsStore();
+  const {
+    checklistTemplates: checklistTemplatesStore,
+    checklistSubmissions: checklistSubmissionsStore,
+    riskEvaluations,
+    inspections,
+    assets,
+    correctiveActions,
+    users,
+    locations,
+    workOrders,
+    stores,
+  } = useCompanyData();
+  const { isLoading } = stores.checklistTemplates;
   const { t, formatDate, formatNumber } = useTranslation();
 
   // Map store risk evaluations to the display format
@@ -138,6 +110,19 @@ function ChecklistsPageContent() {
     return riskEvaluations.map(re => {
       const submitter = users.find(u => u.id === re.submitter_id);
       const location = locations.find(l => l.id === re.location_id);
+      // Parse risk from responses
+      const responses = re.responses as Record<string, unknown>;
+      const jobSteps = responses?.job_steps as Array<{ severity?: number; probability?: number }> | undefined;
+      let riskScore = 0;
+      let riskLevel: "low" | "medium" | "high" | "critical" = "low";
+      if (jobSteps && Array.isArray(jobSteps) && jobSteps.length > 0) {
+        const scores = jobSteps.map(s => (s.severity ?? 3) * (s.probability ?? 3));
+        riskScore = Math.max(...scores);
+        if (riskScore >= 16) riskLevel = "critical";
+        else if (riskScore >= 10) riskLevel = "high";
+        else if (riskScore >= 5) riskLevel = "medium";
+        else riskLevel = "low";
+      }
       return {
         id: re.id,
         template: getFormTypeName(re.form_type),
@@ -147,8 +132,8 @@ function ChecklistsPageContent() {
         date: re.submitted_at.split("T")[0],
         status: re.status === "reviewed" ? "completed" : re.status === "submitted" ? "in_progress" : "draft",
         by: submitter?.full_name || "Unknown",
-        riskLevel: "medium" as const,
-        riskScore: 0,
+        riskLevel,
+        riskScore,
       };
     });
   }, [riskEvaluations, users, locations]);
@@ -162,30 +147,59 @@ function ChecklistsPageContent() {
   }, [storeRiskAssessments]);
 
   // Map store inspections to the display format
-  const storeInspectionsList = React.useMemo(() => {
+  const storeInspectionsList = React.useMemo<InspectionSubmissionRow[]>(() => {
     return inspections.map(ins => {
       const asset = assets.find(a => a.id === ins.asset_id);
       const inspector = users.find(u => u.id === ins.inspector_id);
+      const checklistSubmission = ins.checklist_id
+        ? checklistSubmissionsStore.find((submission) => submission.id === ins.checklist_id)
+        : null;
+      const checklistTemplate = checklistSubmission
+        ? checklistTemplatesStore.find((template) => template.id === checklistSubmission.template_id)
+        : ins.checklist_id
+          ? checklistTemplatesStore.find((template) => template.id === ins.checklist_id)
+          : null;
+      const relatedActions = correctiveActions.filter((action) => action.inspection_id === ins.id);
+      const relatedWorkOrders = workOrders.filter((workOrder) =>
+        workOrder.corrective_action_id != null &&
+        relatedActions.some((action) => action.id === workOrder.corrective_action_id),
+      );
       return {
         id: ins.id,
         asset: asset?.name || "Unknown Asset",
         assetId: ins.asset_id,
-        template: "Equipment Inspection",
+        template: checklistTemplate?.name || (ins.checklist_id ? "Linked checklist" : "Direct asset inspection"),
+        templateSource: checklistSubmission
+          ? `Submission ${checklistSubmission.id}`
+          : checklistTemplate
+            ? `Template ${checklistTemplate.id}`
+            : ins.checklist_id
+              ? `Checklist ${ins.checklist_id}`
+              : "No checklist linked",
         date: ins.inspected_at.split("T")[0],
         status: ins.result === "pass" ? "passed" : ins.result === "fail" ? "failed" : "pending",
         by: inspector?.full_name || "Unknown",
-        issues: 0, // AssetInspection doesn't track individual issues
+        issues: relatedActions.length,
+        followUpCount: relatedActions.length + relatedWorkOrders.length,
         nextDue: "—", // No next inspection date in this type
       };
     });
-  }, [inspections, assets, users]);
+  }, [
+    inspections,
+    assets,
+    users,
+    checklistSubmissionsStore,
+    checklistTemplatesStore,
+    correctiveActions,
+    workOrders,
+  ]);
 
   // Combine store data with mock data
-  const combinedInspections = React.useMemo(() => {
+  const combinedInspections = React.useMemo<InspectionSubmissionRow[]>(() => {
     if (storeInspectionsList.length > 0) {
       return storeInspectionsList;
     }
-    return mockInspections;
+    return mockInspections as InspectionSubmissionRow[];
   }, [storeInspectionsList]);
 
   const deriveChecklistCategory = (template: ChecklistTemplate) => {
@@ -207,7 +221,7 @@ function ChecklistsPageContent() {
 
   const subTabs = [
     { id: "submissions" as SubTabType, label: "Submissions" },
-    { id: "templates" as SubTabType, label: "Templates" },
+    { id: "active" as SubTabType, label: "Active" },
   ];
 
   const getFilters = () => {
@@ -217,6 +231,8 @@ function ChecklistsPageContent() {
         label: "All statuses",
         options: [
           { value: "active", label: "Active" },
+          { value: "draft", label: "Draft" },
+          { value: "archived", label: "Archived" },
           { value: "completed", label: "Completed" },
           { value: "in_progress", label: "In Progress" },
           { value: "passed", label: "Passed" },
@@ -240,7 +256,12 @@ function ChecklistsPageContent() {
         description: template.description || "",
         items: template.items.length,
         used,
-        status: template.is_active ? "active" : "inactive",
+        status:
+          getTemplatePublishStatus(template) === "published"
+            ? "active"
+            : getTemplatePublishStatus(template) === "archived"
+              ? "archived"
+              : "draft",
         category: deriveChecklistCategory(template),
       };
     });
@@ -363,9 +384,9 @@ function ChecklistsPageContent() {
 
   // Calculate totals and pagination
   const getTableLength = () => {
-    if (activeTab === "checklists") return subTab === "templates" ? checklistTemplates.length : checklistSubmissions.length;
-    if (activeTab === "risk-assessment") return subTab === "templates" ? riskTemplates.length : riskSubmissions.length;
-    if (activeTab === "inspection") return subTab === "templates" ? inspectionTemplates.length : inspectionSubmissions.length;
+    if (activeTab === "checklists") return subTab === "active" ? checklistTemplates.length : checklistSubmissions.length;
+    if (activeTab === "risk-assessment") return subTab === "active" ? riskTemplates.length : riskSubmissions.length;
+    if (activeTab === "inspection") return subTab === "active" ? inspectionTemplates.length : inspectionSubmissions.length;
     return 0;
   };
 
@@ -389,9 +410,9 @@ function ChecklistsPageContent() {
   }, [activeTab]);
 
   const getAddButtonLabel = () => {
-    if (activeTab === "checklists") return "Create Checklist";
-    if (activeTab === "risk-assessment") return subTab === "templates" ? "Templates are standard" : t("checklists.buttons.newAssessment");
-    if (activeTab === "inspection") return subTab === "templates" ? "Create Template" : "New Inspection";
+    if (activeTab === "checklists") return "New Checklist";
+    if (activeTab === "risk-assessment") return t("checklists.buttons.newAssessment");
+    if (activeTab === "inspection") return "New Inspection";
     return "Create";
   };
 
@@ -452,31 +473,34 @@ function ChecklistsPageContent() {
   };
 
   const handleAddButtonClick = () => {
-    if (activeTab === "risk-assessment" && subTab === "submissions") {
+    if (activeTab === "risk-assessment") {
       setShowNewAssessmentModal(true);
     } else if (activeTab === "checklists") {
       router.push(`/${company}/dashboard/checklists/new`);
-    } else if (activeTab === "inspection" && subTab === "submissions") {
-      router.push(`/${company}/dashboard/inspections/new`);
-    } else if (activeTab === "inspection" && subTab === "templates") {
-      router.push(`/${company}/dashboard/checklists/new?type=inspection`);
+    } else if (activeTab === "inspection") {
+      router.push(`/${company}/dashboard/inspection-routes`);
     }
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold truncate">{t("checklists.safetyTasks")}</h1>
-        <Button 
-          size="sm" 
-          className="gap-2"
-          onClick={handleAddButtonClick}
-          disabled={activeTab === "risk-assessment" && subTab === "templates"}
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          {getAddButtonLabel()}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            className="gap-2"
+            onClick={handleAddButtonClick}
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            {getAddButtonLabel()}
+          </Button>
+        </div>
       </div>
 
       {/* New Assessment Modal */}
@@ -485,7 +509,7 @@ function ChecklistsPageContent() {
           <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
             <div className="flex items-center justify-between border-b p-4">
               <h2 className="text-lg font-semibold">Start New Risk Assessment</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowNewAssessmentModal(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowNewAssessmentModal(false)} aria-label="Close">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -586,7 +610,7 @@ function ChecklistsPageContent() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">
-              {tableLength} {subTab === "templates" ? "template" : "record"}{tableLength !== 1 ? "s" : ""}
+              {tableLength} {subTab === "active" ? "active task" : "record"}{tableLength !== 1 ? "s" : ""}
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages || 1}
@@ -596,7 +620,7 @@ function ChecklistsPageContent() {
         <CardContent>
           <div className="overflow-x-auto">
             {/* Checklists Templates Table */}
-            {activeTab === "checklists" && subTab === "templates" && (
+            {activeTab === "checklists" && subTab === "active" && (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
@@ -637,7 +661,7 @@ function ChecklistsPageContent() {
                         </td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{template.used} times</td>
                         <td className="py-3">
-                          <Badge variant={template.status === "active" ? "success" : "secondary"} className="text-xs capitalize">
+                          <Badge variant={template.status === "active" ? "success" : template.status === "draft" ? "warning" : "secondary"} className="text-xs capitalize">
                             {template.status}
                           </Badge>
                         </td>
@@ -714,7 +738,7 @@ function ChecklistsPageContent() {
             )}
 
             {/* Risk Assessment Templates Table */}
-            {activeTab === "risk-assessment" && subTab === "templates" && (
+            {activeTab === "risk-assessment" && subTab === "active" && (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
@@ -829,7 +853,7 @@ function ChecklistsPageContent() {
             )}
 
             {/* Inspection Templates Table */}
-            {activeTab === "inspection" && subTab === "templates" && (
+            {activeTab === "inspection" && subTab === "active" && (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
@@ -868,7 +892,7 @@ function ChecklistsPageContent() {
                         <td className="hidden py-3 md:table-cell text-xs">{template.checkpoints} {t("checklists.labels.items")}</td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{template.used} times</td>
                         <td className="py-3">
-                          <Badge variant={template.status === "active" ? "success" : "secondary"} className="text-xs capitalize">{template.status}</Badge>
+                          <Badge variant={template.status === "active" ? "success" : template.status === "draft" ? "warning" : "secondary"} className="text-xs capitalize">{template.status}</Badge>
                         </td>
                         <td className="py-3">
                           <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -889,7 +913,7 @@ function ChecklistsPageContent() {
                     <th className="pb-3 font-medium">Template</th>
                     <th className="hidden pb-3 font-medium md:table-cell">By</th>
                     <th className="hidden pb-3 font-medium lg:table-cell">Next Due</th>
-                    <th className="pb-3 font-medium">Issues</th>
+                     <th className="pb-3 font-medium">Follow-up</th>
                     <th className="pb-3 font-medium">Result</th>
                     <th className="pb-3 font-medium w-10"></th>
                   </tr>
@@ -917,16 +941,23 @@ function ChecklistsPageContent() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 text-xs">{inspection.template}</td>
-                        <td className="hidden py-3 md:table-cell text-xs text-muted-foreground">{inspection.by}</td>
-                        <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{inspection.nextDue}</td>
-                        <td className="py-3 text-xs">
-                          {inspection.issues > 0 ? (
-                            <Badge variant="warning" className="text-xs">{inspection.issues} issue{inspection.issues > 1 ? "s" : ""}</Badge>
-                          ) : (
-                            <span className="text-muted-foreground">None</span>
-                          )}
-                        </td>
+                         <td className="py-3">
+                           <div>
+                             <p className="text-xs font-medium">{inspection.template}</p>
+                             <p className="text-[11px] text-muted-foreground">{inspection.templateSource}</p>
+                           </div>
+                         </td>
+                         <td className="hidden py-3 md:table-cell text-xs text-muted-foreground">{inspection.by}</td>
+                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{inspection.nextDue}</td>
+                         <td className="py-3 text-xs">
+                           {(inspection.followUpCount ?? inspection.issues) > 0 ? (
+                             <Badge variant="warning" className="text-xs">
+                               {inspection.followUpCount ?? inspection.issues} linked item{(inspection.followUpCount ?? inspection.issues) > 1 ? "s" : ""}
+                             </Badge>
+                           ) : (
+                             <span className="text-muted-foreground">None</span>
+                           )}
+                         </td>
                         <td className="py-3">
                           <Badge variant={inspection.status === "passed" ? "success" : "destructive"} className="text-xs capitalize">{inspection.status}</Badge>
                         </td>
@@ -951,11 +982,27 @@ function ChecklistsPageContent() {
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                  <Button key={i + 1} variant={currentPage === i + 1 ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(i + 1)}>
-                    {i + 1}
-                  </Button>
-                ))}
+                {(() => {
+                  const pages: (number | "...")[] = totalPages <= 7
+                    ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                    : (() => {
+                        const p: (number | "...")[] = [1];
+                        if (currentPage > 3) p.push("...");
+                        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) p.push(i);
+                        if (currentPage < totalPages - 2) p.push("...");
+                        p.push(totalPages);
+                        return p;
+                      })();
+                  return pages.map((p, idx) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
+                    ) : (
+                      <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p as number)}>
+                        {p}
+                      </Button>
+                    )
+                  );
+                })()}
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -970,6 +1017,7 @@ function ChecklistsPageContent() {
 
 export default function ChecklistsPage() {
   return (
+    <RoleGuard requiredPermission="checklists.view">
     <React.Suspense
       fallback={
         <div className="flex min-h-[400px] items-center justify-center">
@@ -979,5 +1027,6 @@ export default function ChecklistsPage() {
     >
       <ChecklistsPageContent />
     </React.Suspense>
+    </RoleGuard>
   );
 }

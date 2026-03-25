@@ -3,8 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { AlertTriangle, Camera, X, Loader2 } from "lucide-react";
+import { LIMITS } from "@/lib/constants";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,13 +15,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useLocationsStore } from "@/stores/locations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
-import { useAssetsStore } from "@/stores/assets-store";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
+import { storeFile } from "@/lib/file-storage";
 import type { Incident, IncidentType, Severity, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const INCIDENT_TYPES: { value: IncidentType; label: string }[] = [
   { value: "injury", label: "Injury" },
@@ -41,12 +43,12 @@ const SEVERITY_LEVELS: { value: Severity; label: string }[] = [
   { value: "critical", label: "Critical" },
 ];
 
-const PRIORITY_LEVELS: { value: Priority; label: string }[] = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "critical", label: "Critical" },
-];
+/** Derive priority from severity — matches mobile field worker logic */
+function derivePriority(severity: Severity): Priority {
+  if (severity === "critical" || severity === "high") return "high";
+  if (severity === "medium") return "medium";
+  return "low";
+}
 
 export default function NewIncidentPage() {
   const router = useRouter();
@@ -55,9 +57,8 @@ export default function NewIncidentPage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
-  const { items: locations } = useLocationsStore();
+  const { locations, assets: allAssets } = useCompanyData();
   const { add: addIncident } = useIncidentsStore();
-  const { items: allAssets } = useAssetsStore();
   const { toast } = useToast();
   
   // Form state matching IncidentFormData interface
@@ -65,7 +66,6 @@ export default function NewIncidentPage() {
     type: "near_miss" as IncidentType,
     type_other: "",
     severity: "medium" as Severity,
-    priority: "medium" as Priority,
     title: "",
     description: "",
     incident_date: new Date().toISOString().split("T")[0],
@@ -81,19 +81,21 @@ export default function NewIncidentPage() {
     location_description: "",
     asset_id: "",
   });
-  const [photos, setPhotos] = React.useState<string[]>([]);
+  const [photos, setPhotos] = React.useState<{ id: string; name: string; url: string }[]>([]);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     
-    Array.from(files).slice(0, 5 - photos.length).forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotos((prev) => [...prev, reader.result as string].slice(0, 5));
-      };
-      reader.readAsDataURL(file);
-    });
+    const filesToProcess = Array.from(files).slice(0, 5 - photos.length);
+    for (const file of filesToProcess) {
+      try {
+        const stored = await storeFile(file, "incident", "draft", user?.id || "unknown");
+        setPhotos((prev) => [...prev, { id: stored.id, name: stored.name, url: stored.dataUrl }].slice(0, 5));
+      } catch {
+        toast("Failed to store photo", "error");
+      }
+    }
     e.target.value = "";
   };
 
@@ -112,7 +114,7 @@ export default function NewIncidentPage() {
       type: formData.type,
       type_other: formData.type === "other" ? formData.type_other || null : null,
       severity: formData.severity,
-      priority: formData.priority,
+      priority: derivePriority(formData.severity),
       title: formData.title,
       description: formData.description,
       incident_date: formData.incident_date,
@@ -129,7 +131,7 @@ export default function NewIncidentPage() {
       gps_lng: null,
       location_description: formData.location_description || null,
       asset_id: formData.asset_id || null,
-      media_urls: photos,
+      media_urls: photos.map((p) => p.url),
       status: "new",
       flagged: false,
       resolved_at: null,
@@ -147,6 +149,7 @@ export default function NewIncidentPage() {
   const isValid = formData.title.trim() && formData.description.trim();
 
   return (
+    <RoleGuard requiredPermission="incidents.create">
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -171,9 +174,10 @@ export default function NewIncidentPage() {
               <Label htmlFor="title">{t("incidents.labels.title")} *</Label>
               <Input 
                 id="title" 
-                placeholder="Brief description of the incident"
+                placeholder={t("incidents.placeholders.briefDescription")}
                 value={formData.title}
                 onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                maxLength={200}
               />
             </div>
 
@@ -198,9 +202,10 @@ export default function NewIncidentPage() {
                   <Label htmlFor="type_other">Specify type</Label>
                   <Input
                     id="type_other"
-                    placeholder="Describe type"
+                    placeholder={t("incidents.placeholders.describeType")}
                     value={formData.type_other}
                     onChange={(e) => setFormData((prev) => ({ ...prev, type_other: e.target.value }))}
+                    maxLength={100}
                   />
                 </div>
               )}
@@ -221,18 +226,11 @@ export default function NewIncidentPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{t("incidents.labels.priority")} *</Label>
-                <Select 
-                  value={formData.priority} 
-                  onValueChange={(v) => setFormData((prev) => ({ ...prev, priority: v as Priority }))}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {PRIORITY_LEVELS.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>{t("incidents.labels.priority")}</Label>
+                <div className="flex h-10 items-center rounded-md border bg-muted/50 px-3 text-sm capitalize text-muted-foreground">
+                  {derivePriority(formData.severity)}
+                  <span className="ml-auto text-xs text-muted-foreground/60">Auto from severity</span>
+                </div>
               </div>
             </div>
 
@@ -244,6 +242,8 @@ export default function NewIncidentPage() {
                   type="date"
                   value={formData.incident_date}
                   onChange={(e) => setFormData((prev) => ({ ...prev, incident_date: e.target.value }))}
+                  max={new Date().toISOString().split("T")[0]}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -261,11 +261,13 @@ export default function NewIncidentPage() {
               <Label htmlFor="description">{t("incidents.labels.description")} *</Label>
               <Textarea
                 id="description"
-                placeholder="Describe what happened, who was involved, and any immediate actions taken…"
+                placeholder={t("incidents.placeholders.describeWhatHappened")}
                 rows={5}
                 value={formData.description}
                 onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                maxLength={LIMITS.MAX_DESCRIPTION_LENGTH}
               />
+              <p className="text-xs text-muted-foreground text-right">{formData.description.length}/{LIMITS.MAX_DESCRIPTION_LENGTH}</p>
             </div>
 
             <div className="flex items-center justify-between rounded-lg border p-3">
@@ -320,7 +322,7 @@ export default function NewIncidentPage() {
                   value={formData.location_id} 
                   onValueChange={(v) => setFormData((prev) => ({ ...prev, location_id: v }))}
                 >
-                  <SelectTrigger><SelectValue placeholder="Select a location" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("incidents.placeholders.selectLocation")} /></SelectTrigger>
                   <SelectContent>
                     {locations.map((loc) => (
                       <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
@@ -334,36 +336,40 @@ export default function NewIncidentPage() {
                   <Label htmlFor="building">Building</Label>
                   <Input
                     id="building"
-                    placeholder="Building A"
+                    placeholder={t("incidents.placeholders.building")}
                     value={formData.building}
                     onChange={(e) => setFormData((prev) => ({ ...prev, building: e.target.value }))}
+                    maxLength={100}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="floor">Floor</Label>
                   <Input
                     id="floor"
-                    placeholder="2nd Floor"
+                    placeholder={t("incidents.placeholders.floor")}
                     value={formData.floor}
                     onChange={(e) => setFormData((prev) => ({ ...prev, floor: e.target.value }))}
+                    maxLength={100}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="zone">Zone</Label>
                   <Input
                     id="zone"
-                    placeholder="Loading dock"
+                    placeholder={t("incidents.placeholders.zone")}
                     value={formData.zone}
                     onChange={(e) => setFormData((prev) => ({ ...prev, zone: e.target.value }))}
+                    maxLength={100}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="room">Room</Label>
                   <Input
                     id="room"
-                    placeholder="Room 203"
+                    placeholder={t("incidents.placeholders.room")}
                     value={formData.room}
                     onChange={(e) => setFormData((prev) => ({ ...prev, room: e.target.value }))}
+                    maxLength={100}
                   />
                 </div>
               </div>
@@ -372,11 +378,13 @@ export default function NewIncidentPage() {
                 <Label htmlFor="location_description">Location description</Label>
                 <Textarea
                   id="location_description"
-                  placeholder="Additional details about the exact location…"
+                  placeholder={t("incidents.placeholders.locationDescription")}
                   rows={2}
                   value={formData.location_description}
                   onChange={(e) => setFormData((prev) => ({ ...prev, location_description: e.target.value }))}
+                  maxLength={2000}
                 />
+                <p className="text-xs text-muted-foreground text-right">{formData.location_description.length}/2000</p>
               </div>
             </CardContent>
           </Card>
@@ -392,7 +400,7 @@ export default function NewIncidentPage() {
                 value={formData.asset_id} 
                 onValueChange={(v) => setFormData((prev) => ({ ...prev, asset_id: v }))}
               >
-                <SelectTrigger><SelectValue placeholder="Select an asset" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("incidents.placeholders.selectAsset")} /></SelectTrigger>
                 <SelectContent>
                   {allAssets.filter(a => a.status !== "retired").map((asset) => (
                     <SelectItem key={asset.id} value={asset.id}>
@@ -419,7 +427,7 @@ export default function NewIncidentPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/gif,image/webp"
                 multiple
                 className="hidden"
                 onChange={handlePhotoUpload}
@@ -428,8 +436,8 @@ export default function NewIncidentPage() {
               {photos.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
                   {photos.map((photo, index) => (
-                    <div key={photo} className="relative aspect-square rounded-lg overflow-hidden border">
-                      <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
+                    <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden border">
+                      <img src={photo.url} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                       <Button
                         variant="destructive"
                         size="icon"
@@ -476,5 +484,6 @@ export default function NewIncidentPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

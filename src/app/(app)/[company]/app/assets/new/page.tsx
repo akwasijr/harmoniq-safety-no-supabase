@@ -31,6 +31,9 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
+import { LoadingPage } from "@/components/ui/loading";
+import { GpsPicker } from "@/components/shared/gps-picker";
+import { storeFile, FileValidationError } from "@/lib/file-storage";
 import type { AssetCategory, AssetCondition, AssetCriticality } from "@/types";
 
 type Step = "info" | "details" | "location" | "review";
@@ -68,7 +71,7 @@ export default function NewAssetPage() {
   const router = useRouter();
   const company = useCompanyParam();
   const { add: addAsset, items: existingAssets } = useAssetsStore();
-  const { items: locations } = useLocationsStore();
+  const { items: locations, isLoading: isLocationsLoading } = useLocationsStore();
   const { user } = useAuth();
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -76,7 +79,9 @@ export default function NewAssetPage() {
   const [step, setStep] = React.useState<Step>("info");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [photos, setPhotos] = React.useState<string[]>([]);
+  const [photoUrls, setPhotoUrls] = React.useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [assetDraftId] = React.useState(() => `draft_asset_${Date.now()}`);
 
   // Form state
   const [name, setName] = React.useState("");
@@ -90,15 +95,20 @@ export default function NewAssetPage() {
   const [condition, setCondition] = React.useState<AssetCondition>("good");
   const [criticality, setCriticality] = React.useState<AssetCriticality>("medium");
   const [locationId, setLocationId] = React.useState<string>("");
+  const [gpsLat, setGpsLat] = React.useState<number | null>(null);
+  const [gpsLng, setGpsLng] = React.useState<number | null>(null);
   const [safetyInstructions, setSafetyInstructions] = React.useState("");
   const [notes, setNotes] = React.useState("");
-  const [showLocationPicker, setShowLocationPicker] = React.useState(false);
 
   const currentStepIndex = STEPS.indexOf(step);
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === STEPS.length - 1;
 
   const selectedLocation = locationId ? locations.find((l) => l.id === locationId) : null;
+
+  if (isLocationsLoading) {
+    return <LoadingPage />;
+  }
 
   // Generate a unique asset tag
   const generateAssetTag = (): string => {
@@ -123,26 +133,40 @@ export default function NewAssetPage() {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
     const remainingSlots = 3 - photos.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
-    filesToProcess.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotos((prev) => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+    for (const file of filesToProcess) {
+      try {
+        const stored = await storeFile(
+          file,
+          "asset",
+          assetDraftId,
+          user?.id || "unknown",
+        );
+        setPhotos((prev) => [...prev, stored.dataUrl]);
+        setPhotoUrls((prev) => [...prev, stored.dataUrl]);
+      } catch (err) {
+        if (err instanceof FileValidationError) {
+          toast(err.message, "error");
+        } else if (err instanceof Error && err.message === "QUOTA_EXCEEDED") {
+          toast("Storage is full. Delete some files and try again.", "error");
+        } else {
+          toast(`Failed to upload ${(file as File).name}`, "error");
+        }
+      }
+    }
 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const removePhoto = (index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotoUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleNext = () => {
@@ -183,7 +207,6 @@ export default function NewAssetPage() {
           name: name.trim(),
           asset_tag: assetTag,
           serial_number: serialNumber.trim() || null,
-          barcode: null,
           qr_code: `AST-${assetTag}`,
           category: category as AssetCategory,
           sub_category: null,
@@ -192,15 +215,11 @@ export default function NewAssetPage() {
           department: department.trim() || null,
           manufacturer: manufacturer.trim() || null,
           model: model.trim() || null,
-          model_number: null,
-          specifications: notes.trim() || null,
-          manufactured_date: null,
           purchase_date: null,
           installation_date: now.split("T")[0],
           warranty_expiry: warrantyExpiry || null,
           expected_life_years: null,
           condition,
-      condition_notes: null,
       last_condition_assessment: now.split("T")[0],
       purchase_cost: null,
       current_value: null,
@@ -209,16 +228,13 @@ export default function NewAssetPage() {
       maintenance_frequency_days: null,
       last_maintenance_date: null,
       next_maintenance_date: null,
-      maintenance_notes: null,
       requires_certification: false,
-      requires_calibration: false,
-      calibration_frequency_days: null,
-      last_calibration_date: null,
-      next_calibration_date: null,
       safety_instructions: safetyInstructions.trim() || null,
+      notes: notes.trim() || null,
+      media_urls: photoUrls,
+      gps_lat: gpsLat,
+      gps_lng: gpsLng,
       status: "active",
-      decommission_date: null,
-      disposal_method: null,
       created_at: now,
       updated_at: now,
     });
@@ -232,7 +248,7 @@ export default function NewAssetPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background border-b">
+      <header className="sticky top-14 z-10 bg-background border-b">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
@@ -457,13 +473,13 @@ export default function NewAssetPage() {
                   capture="environment"
                   onChange={handlePhotoUpload}
                   className="hidden"
-                  aria-label="Upload photo"
+                  aria-label={t("common.uploadPhoto")}
                 />
                 {photos.length > 0 && (
                   <div className="flex gap-2 mb-2">
                     {photos.map((photo, index) => (
                       <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border">
-                        <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
+                        <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                         <button
                           type="button"
                           aria-label={`Remove photo ${index + 1}`}
@@ -559,6 +575,18 @@ export default function NewAssetPage() {
               </div>
             </div>
 
+            {/* GPS Coordinates */}
+            <div className="space-y-2">
+              <GpsPicker
+                lat={gpsLat}
+                lng={gpsLng}
+                onChange={(lat, lng) => {
+                  setGpsLat(lat);
+                  setGpsLng(lng);
+                }}
+              />
+            </div>
+
             {/* Safety instructions */}
             <div className="space-y-2">
               <Label htmlFor="safety">{t("newAsset.safetyInstructions")}</Label>
@@ -618,7 +646,7 @@ export default function NewAssetPage() {
                 <div className="border-t pt-4 space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("newAsset.category")}</span>
-                    <span className="font-medium capitalize">{category || "—"}</span>
+                    <span className="font-medium capitalize">{category || "N/A"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("newAsset.assetType")}</span>
@@ -656,6 +684,12 @@ export default function NewAssetPage() {
                     <span className="text-muted-foreground">{t("newAsset.location")}</span>
                     <span>{selectedLocation?.name || t("newAsset.notAssigned")}</span>
                   </div>
+                  {gpsLat != null && gpsLng != null && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">GPS</span>
+                      <span className="font-mono text-xs">{gpsLat.toFixed(6)}, {gpsLng.toFixed(6)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {safetyInstructions && (

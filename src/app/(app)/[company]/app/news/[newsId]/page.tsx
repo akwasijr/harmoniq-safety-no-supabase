@@ -17,13 +17,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { useContentStore } from "@/stores/content-store";
 import { useToast } from "@/components/ui/toast";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { useTranslation } from "@/i18n";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function NewsDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const company = params.company as string;
   const newsId = params.newsId as string;
+  const { settings } = useFieldAppSettings();
+  const bookmarksKey = `harmoniq_${company}_bookmarks`;
   const [isBookmarked, setIsBookmarked] = React.useState(false);
   const [showShareSuccess, setShowShareSuccess] = React.useState(false);
   const [showDownloadSuccess, setShowDownloadSuccess] = React.useState(false);
@@ -31,20 +37,34 @@ export default function NewsDetailPage() {
   const { items: contentItems , isLoading } = useContentStore();
   const { toast } = useToast();
 
+  React.useEffect(() => {
+    if (!settings.newsEnabled) {
+      router.replace(`/${company}/app`);
+    }
+  }, [company, router, settings.newsEnabled]);
+
   // Load bookmark state from localStorage
   React.useEffect(() => {
     if (newsId && typeof window !== "undefined") {
       try {
-        const bookmarks = JSON.parse(localStorage.getItem("harmoniq_bookmarks") || "[]");
+        const bookmarks = JSON.parse(localStorage.getItem(bookmarksKey) || "[]");
         setIsBookmarked(bookmarks.includes(newsId));
       } catch {
         // Invalid JSON, ignore
         setIsBookmarked(false);
       }
     }
-  }, [newsId]);
+  }, [newsId, bookmarksKey]);
 
   const article = contentItems.find((c) => c.id === newsId);
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
+  if (!settings.newsEnabled) {
+    return <LoadingPage />;
+  }
 
   const copyToClipboard = async () => {
     try {
@@ -57,15 +77,7 @@ export default function NewsDetailPage() {
   };
 
   const handleShare = async () => {
-      if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
-
-  if (!article) return;
+    if (!article) return;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -88,7 +100,7 @@ export default function NewsDetailPage() {
     
     let bookmarks: string[] = [];
     try {
-      bookmarks = JSON.parse(localStorage.getItem("harmoniq_bookmarks") || "[]");
+      bookmarks = JSON.parse(localStorage.getItem(bookmarksKey) || "[]");
     } catch {
       // Invalid JSON in localStorage, reset
       bookmarks = [];
@@ -96,11 +108,11 @@ export default function NewsDetailPage() {
     
     if (isBookmarked) {
       const newBookmarks = bookmarks.filter((id: string) => id !== newsId);
-      localStorage.setItem("harmoniq_bookmarks", JSON.stringify(newBookmarks));
+      localStorage.setItem(bookmarksKey, JSON.stringify(newBookmarks));
       setIsBookmarked(false);
     } else {
       bookmarks.push(newsId);
-      localStorage.setItem("harmoniq_bookmarks", JSON.stringify(bookmarks));
+      localStorage.setItem(bookmarksKey, JSON.stringify(bookmarks));
       setIsBookmarked(true);
     }
   };
@@ -112,7 +124,7 @@ export default function NewsDetailPage() {
     setTimeout(() => setShowDownloadSuccess(false), 2000);
     
     // Create a simple text file as demo
-    const content = `${article.title}\n\n${article.content || "No content available."}\n\nDownloaded from Harmoniq Safety`;
+    const content = `${article.title}\n\n${article.content || t("news.noContent") || "No content available."}\n\nDownloaded from Harmoniq Safety`;
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -161,16 +173,23 @@ export default function NewsDetailPage() {
 
   if (!article) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">{t("newsApp.articleNotFound")}</p>
-      </div>
+      <EmptyState
+        icon={FileText}
+        title="Article not found"
+        description="This article may have been removed or is no longer available."
+        action={
+          <Button variant="outline" onClick={() => router.back()}>
+            Go Back
+          </Button>
+        }
+      />
     );
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
@@ -213,6 +232,7 @@ export default function NewsDetailPage() {
               src={article.featured_image} 
               alt={article.title}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           </div>
         ) : (
@@ -247,7 +267,7 @@ export default function NewsDetailPage() {
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content || "") }}
             />
 
-            {/* Key Points — extracted from content sentences */}
+            {/* Key Points, extracted from content sentences */}
             {article.content && article.content.length > 50 && (() => {
               // Strip HTML tags before extracting sentences
               const plainText = article.content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();

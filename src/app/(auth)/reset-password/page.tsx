@@ -28,7 +28,8 @@ function ResetPasswordContent() {
     let active = true;
     const supabase = createClient();
 
-    const initialError = searchParams.get("error_description") || searchParams.get("error");
+    const rawError = searchParams.get("error_description") || searchParams.get("error");
+    const initialError = rawError ? rawError.replace(/<[^>]*>/g, "") : null;
     if (initialError) {
       setError(initialError);
       setState("invalid");
@@ -124,7 +125,7 @@ function ResetPasswordContent() {
             </div>
             <CardTitle className="text-xl">Reset your password</CardTitle>
             <CardDescription>
-              Create a new password for your Harmoniq Safety account.
+              Create a new password for your Harmoniq account.
             </CardDescription>
           </CardHeader>
           <CardContent>

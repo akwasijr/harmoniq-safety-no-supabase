@@ -17,13 +17,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useTicketsStore } from "@/stores/tickets-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useIncidentsStore } from "@/stores/incidents-store";
+import { useNotificationsStore } from "@/stores/notifications-store";
+import { notifyAssignment } from "@/stores/notification-triggers";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import type { Ticket } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const priorities = [
   { value: "low", label: "Low", color: "bg-green-100 text-green-800" },
@@ -40,16 +42,39 @@ export default function NewTicketPage() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const { add: addTicket } = useTicketsStore();
-  const { items: users } = useUsersStore();
-  const { items: incidents } = useIncidentsStore();
+  const { add: addNotif } = useNotificationsStore();
+  const { users, teams, incidents } = useCompanyData();
   const [formData, setFormData] = React.useState({
     title: "",
     description: "",
     priority: "medium",
     assigned_to: "",
+    assigned_to_team_id: "",
     due_date: "",
     incident_id: "",
   });
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  const validateField = (field: string, value: string) => {
+    const next = { ...errors };
+    if (field === "title") {
+      if (!value.trim()) {
+        next.title = t("validation.required");
+      } else if (value.trim().length < 3) {
+        next.title = t("validation.minLength", { min: "3" });
+      } else {
+        delete next.title;
+      }
+    }
+    if (field === "description") {
+      if (value.trim().length > 0 && value.trim().length < 10) {
+        next.description = t("validation.minLength", { min: "10" });
+      } else {
+        delete next.description;
+      }
+    }
+    setErrors(next);
+  };
 
   const assignees = users.filter((u) => u.role === "company_admin" || u.role === "manager");
   const openIncidents = incidents.filter((i) => i.status !== "resolved");
@@ -66,18 +91,30 @@ export default function NewTicketPage() {
       status: "new",
       due_date: formData.due_date || null,
       assigned_to: formData.assigned_to || null,
-      assigned_groups: [],
+      assigned_to_team_id: formData.assigned_to_team_id || null,
+      assigned_groups: formData.assigned_to_team_id ? [formData.assigned_to_team_id] : [],
       incident_ids: formData.incident_id ? [formData.incident_id] : [],
       created_by: user?.id || users[0]?.id || "",
       created_at: now,
       updated_at: now,
     };
     addTicket(ticket);
+    if (ticket.assigned_to) {
+      notifyAssignment(addNotif, {
+        userId: ticket.assigned_to,
+        companyId: ticket.company_id,
+        entityType: "ticket",
+        entityTitle: ticket.title,
+        entityId: ticket.id,
+        assignedBy: user?.full_name || "Someone",
+      });
+    }
     toast("Ticket created successfully");
     router.push(`/${company}/dashboard/tickets`);
   };
 
   return (
+    <RoleGuard requiredPermission="incidents.create">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -87,10 +124,10 @@ export default function NewTicketPage() {
         <div className="flex-1">
           <h1 className="text-2xl font-semibold">{t("tickets.createTicket")}</h1>
           <p className="text-sm text-muted-foreground">
-            Create a new work ticket for follow-up actions
+            Use tickets for incident follow-up and investigation coordination. Use work orders for maintenance and corrective actions for remediation.
           </p>
         </div>
-        <Button onClick={handleSubmit} disabled={isSubmitting || !formData.title}>
+        <Button onClick={handleSubmit} disabled={isSubmitting || Object.keys(errors).length > 0 || !formData.title}>
           <Save className="h-4 w-4 mr-2" />
           {t("tickets.createTicket")}
         </Button>
@@ -104,15 +141,23 @@ export default function NewTicketPage() {
               <CardTitle className="text-base">{t("tickets.title")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+                Tickets are best for coordination, investigation follow-up, and incident-linked tasks that do not need to be treated as maintenance work.
+              </div>
               <div>
                 <Label htmlFor="title">{t("tickets.labels.title")} *</Label>
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Brief description of the task"
-                  className="mt-1"
+                  onChange={(e) => {
+                    setFormData({ ...formData, title: e.target.value });
+                    if (errors.title) validateField("title", e.target.value);
+                  }}
+                  onBlur={(e) => validateField("title", e.target.value)}
+                  placeholder={t("tickets.placeholders.briefDescription")}
+                  className={cn("mt-1", errors.title && "border-red-500")}
                 />
+                {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
               </div>
 
               <div>
@@ -120,11 +165,16 @@ export default function NewTicketPage() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Detailed description of what needs to be done..."
+                  onChange={(e) => {
+                    setFormData({ ...formData, description: e.target.value });
+                    if (errors.description) validateField("description", e.target.value);
+                  }}
+                  onBlur={(e) => validateField("description", e.target.value)}
+                  placeholder={t("tickets.placeholders.detailedDescription")}
                   rows={6}
-                  className="mt-1"
+                  className={cn("mt-1", errors.description && "border-red-500")}
                 />
+                {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description}</p>}
               </div>
             </CardContent>
           </Card>
@@ -212,6 +262,21 @@ export default function NewTicketPage() {
                   </option>
                 ))}
               </select>
+
+              <Label htmlFor="assigned_to_team" className="mt-4 block">Assign team</Label>
+              <select
+                id="assigned_to_team"
+                value={formData.assigned_to_team_id}
+                onChange={(e) => setFormData({ ...formData, assigned_to_team_id: e.target.value })}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">No team</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
             </CardContent>
           </Card>
 
@@ -251,5 +316,6 @@ export default function NewTicketPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

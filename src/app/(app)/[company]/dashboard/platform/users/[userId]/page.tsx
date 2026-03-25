@@ -3,6 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ArrowLeft,
   Globe,
@@ -24,16 +26,7 @@ import { useToast } from "@/components/ui/toast";
 import { useUsersStore } from "@/stores/users-store";
 import type { User } from "@/types";
 import { useTranslation } from "@/i18n";
-
-// Mock activity data for the user
-const mockActivity = [
-  { id: "1", action: "Logged in", timestamp: "2024-07-20T10:00:00Z", ip: "192.168.1.100" },
-  { id: "2", action: "Viewed company: Harmoniq Safety", timestamp: "2024-07-20T10:05:00Z", ip: "192.168.1.100" },
-  { id: "3", action: "Created company: New Corp", timestamp: "2024-07-19T14:30:00Z", ip: "192.168.1.100" },
-  { id: "4", action: "Updated platform settings", timestamp: "2024-07-18T09:15:00Z", ip: "192.168.1.100" },
-  { id: "5", action: "Deactivated user account", timestamp: "2024-07-17T16:45:00Z", ip: "10.0.0.5" },
-  { id: "6", action: "Logged in", timestamp: "2024-07-17T08:00:00Z", ip: "10.0.0.5" },
-];
+import { mockActivity } from "@/mocks/data";
 
 export default function PlatformUserDetailPage() {
   const params = useParams();
@@ -55,31 +48,23 @@ export default function PlatformUserDetailPage() {
   }, [user?.id]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!user || !editedUser) {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      );
-    }
     return (
       <RoleGuard requireSuperAdmin>
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">Platform user not found</p>
-          <Link href={`/${company}/dashboard/platform/users`}>
-            <Button variant="link" className="mt-2">
-              {t("common.back")} to platform users
-            </Button>
-          </Link>
-        </div>
+        <EmptyState
+          title="Platform user not found"
+          description="The requested platform user could not be found."
+          action={
+            <Link href={`/${company}/dashboard/platform/users`}>
+              <Button variant="link" className="mt-2">
+                {t("common.back")} to platform users
+              </Button>
+            </Link>
+          }
+        />
       </RoleGuard>
     );
   }
@@ -120,8 +105,8 @@ export default function PlatformUserDetailPage() {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">
-                {user.first_name.charAt(0)}
-                {user.last_name.charAt(0)}
+                {(user.first_name || "").charAt(0)}
+                {(user.last_name || "").charAt(0)}
               </div>
               <div>
                 <h1 className="heading-2">{user.full_name}</h1>

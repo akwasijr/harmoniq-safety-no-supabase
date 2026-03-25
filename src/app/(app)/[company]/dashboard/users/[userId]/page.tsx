@@ -2,7 +2,11 @@
 
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
+import { getRoleVariant } from "@/lib/status-utils";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
+  AlertTriangle,
   ArrowLeft,
   Save,
   Trash2,
@@ -30,11 +34,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { useUsersStore } from "@/stores/users-store";
-import { useLocationsStore } from "@/stores/locations-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
 import { ROLE_PERMISSIONS, type Permission } from "@/types";
 import { useTranslation } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const tabs: Tab[] = [
   { id: "info", label: "Information", icon: Info },
@@ -54,8 +59,10 @@ export default function UserDetailPage() {
   const { t, formatDate, formatNumber } = useTranslation();
 
   const { toast } = useToast();
-  const { items: users, update: updateUser, remove: removeUser } = useUsersStore();
-  const { items: locations } = useLocationsStore();
+  const { hasPermission: currentUserCan } = useAuth();
+  const canDeleteUser = currentUserCan("users.delete");
+  const { users, locations, stores } = useCompanyData();
+  const { isLoading, update: updateUser, remove: removeUser } = stores.users;
   const baseUser = users.find((u) => u.id === userId);
   
   // Get user's assigned location
@@ -63,6 +70,10 @@ export default function UserDetailPage() {
     ? locations.find(l => l.id === baseUser.location_id)
     : null;
   
+  const canManageRoles = currentUserCan("users.manage_roles");
+
+  const [notificationPref, setNotificationPref] = React.useState("all");
+
   // Editable user state
   const [editedUser, setEditedUser] = React.useState({
     first_name: baseUser?.first_name || "",
@@ -72,6 +83,8 @@ export default function UserDetailPage() {
     job_title: baseUser?.job_title || "",
     phone: "",
     location_id: baseUser?.location_id || "",
+    role: baseUser?.role || "employee",
+    status: baseUser?.status || "active",
   });
   
   // Update edited user when base user changes
@@ -85,23 +98,33 @@ export default function UserDetailPage() {
       job_title: baseUser.job_title || "",
       phone: "",
       location_id: baseUser.location_id || "",
+      role: baseUser.role,
+      status: baseUser.status || "active",
     });
   }, [baseUser]);
   
-  if (!baseUser) {
+  if (!isLoading && !baseUser) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">{t("users.userNotFound")}</p>
-      </div>
+      <EmptyState
+        icon={AlertTriangle}
+        title="User not found"
+        description="This user may have been removed."
+        action={
+          <Button variant="outline" size="sm" onClick={() => router.push(`/${company}/dashboard/users`)}>
+            Back to Users
+          </Button>
+        }
+      />
     );
   }
+  if (!baseUser) return <LoadingPage />;
 
   // Use edited values when editing, otherwise use base user
   const user = isEditing ? { ...baseUser, ...editedUser } : baseUser;
   
   const handleSave = () => {
     if (!baseUser) return;
-    updateUser(baseUser.id, {
+    const updates: Record<string, unknown> = {
       first_name: editedUser.first_name,
       last_name: editedUser.last_name,
       email: editedUser.email,
@@ -110,7 +133,11 @@ export default function UserDetailPage() {
       location_id: editedUser.location_id || null,
       full_name: `${editedUser.first_name} ${editedUser.last_name}`,
       updated_at: new Date().toISOString(),
-    });
+    };
+    if (canManageRoles && editedUser.role !== baseUser.role) {
+      updates.role = editedUser.role;
+    }
+    updateUser(baseUser.id, updates);
     toast("User updated successfully");
     setIsEditing(false);
   };
@@ -212,9 +239,10 @@ export default function UserDetailPage() {
     );
   }
 
-  const roleColor = user.role === "company_admin" ? "destructive" : user.role === "manager" ? "warning" : "secondary";
+  const roleColor = getRoleVariant(user.role);
 
   return (
+    <RoleGuard requiredPermission="users.view">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -223,7 +251,7 @@ export default function UserDetailPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">
-            {user.full_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+            {(user.full_name || "").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
           </div>
           <div>
             <div className="flex items-center gap-3">
@@ -243,6 +271,11 @@ export default function UserDetailPage() {
           ) : (
             <Button onClick={() => setIsEditing(true)} className="gap-2">
               <Edit className="h-4 w-4" /> {t("common.edit")}
+            </Button>
+          )}
+          {canDeleteUser && (
+            <Button variant="destructive" className="gap-2" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="h-4 w-4" /> {t("common.delete")}
             </Button>
           )}
         </div>
@@ -266,7 +299,12 @@ export default function UserDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">{t("users.fullName")}</p>
                       {isEditing ? (
-                        <Input defaultValue={user.full_name} className="mt-1 h-8" />
+                        <Input value={`${editedUser.first_name} ${editedUser.last_name}`} className="mt-1 h-8" onChange={(e) => {
+                          const parts = e.target.value.split(" ");
+                          const firstName = parts[0] || "";
+                          const lastName = parts.slice(1).join(" ") || "";
+                          setEditedUser(prev => ({ ...prev, first_name: firstName, last_name: lastName }));
+                        }} />
                       ) : (
                         <p className="font-medium">{user.full_name}</p>
                       )}
@@ -277,7 +315,7 @@ export default function UserDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">{t("users.labels.email")}</p>
                       {isEditing ? (
-                        <Input defaultValue={user.email} className="mt-1 h-8" />
+                        <Input value={editedUser.email} className="mt-1 h-8" onChange={(e) => setEditedUser(prev => ({ ...prev, email: e.target.value }))} />
                       ) : (
                         <p className="font-medium">{user.email}</p>
                       )}
@@ -288,7 +326,7 @@ export default function UserDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">{t("users.labels.department")}</p>
                       {isEditing ? (
-                        <Input defaultValue={user.department || ""} className="mt-1 h-8" />
+                        <Input value={editedUser.department} className="mt-1 h-8" onChange={(e) => setEditedUser(prev => ({ ...prev, department: e.target.value }))} />
                       ) : (
                         <p className="font-medium">{user.department || "—"}</p>
                       )}
@@ -323,7 +361,7 @@ export default function UserDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">{t("users.jobTitle")}</p>
                       {isEditing ? (
-                        <Input defaultValue={user.job_title || ""} className="mt-1 h-8" />
+                        <Input value={editedUser.job_title} className="mt-1 h-8" onChange={(e) => setEditedUser(prev => ({ ...prev, job_title: e.target.value }))} />
                       ) : (
                         <p className="font-medium">{user.job_title || "—"}</p>
                       )}
@@ -381,10 +419,10 @@ export default function UserDetailPage() {
                 <CardTitle className="text-base">{t("users.quickActions")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full gap-2">
+                <Button variant="outline" className="w-full gap-2" onClick={() => toast("Password reset email sent")}>
                   <Key className="h-4 w-4" /> {t("users.resetPassword")}
                 </Button>
-                <Button variant="outline" className="w-full gap-2">
+                <Button variant="outline" className="w-full gap-2" onClick={() => toast("Message feature coming soon")}>
                   <Mail className="h-4 w-4" /> {t("users.sendMessage")}
                 </Button>
               </CardContent>
@@ -429,13 +467,24 @@ export default function UserDetailPage() {
                   <select 
                     title="Select role"
                     aria-label="Select role"
-                    className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    defaultValue={user.role}
+                    className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    value={editedUser.role}
+                    disabled={!canManageRoles}
+                    onChange={(e) => {
+                      setEditedUser((prev) => ({ ...prev, role: e.target.value as import("@/types").UserRole }));
+                      if (!isEditing) {
+                        updateUser(baseUser!.id, { role: e.target.value as import("@/types").UserRole, updated_at: new Date().toISOString() });
+                        toast("Role updated successfully");
+                      }
+                    }}
                   >
                     <option value="employee">Employee</option>
                     <option value="manager">Manager</option>
                     <option value="company_admin">Company Admin</option>
                   </select>
+                  {!canManageRoles && (
+                    <p className="text-xs text-muted-foreground mt-1">{t("common.noPermission")}</p>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {t("users.roleDescription")}
@@ -602,20 +651,38 @@ export default function UserDetailPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label>{t("users.labels.status")}</Label>
-                <select title="Select status" aria-label="Select status" className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select
+                  title="Select status"
+                  aria-label="Select status"
+                  className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={user.status === "active" ? "active" : "inactive"}
+                  onChange={(e) => {
+                    if (!baseUser) return;
+                    const newStatus = e.target.value as "active" | "inactive";
+                    updateUser(baseUser.id, {
+                      status: newStatus,
+                      updated_at: new Date().toISOString(),
+                    });
+                    setEditedUser((prev) => ({ ...prev, status: newStatus }));
+                    toast(newStatus === "active" ? "User activated" : "User deactivated", "info");
+                  }}
+                >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
               <div>
                 <Label>Notification Preferences</Label>
-                <select title="Select notification preferences" aria-label="Select notification preferences" className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select title="Select notification preferences" aria-label="Select notification preferences" className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm" value={notificationPref} onChange={(e) => setNotificationPref(e.target.value)}>
                   <option value="all">All notifications</option>
                   <option value="important">Important only</option>
                   <option value="none">None</option>
                 </select>
               </div>
-              <Button>{t("users.saveSettings")}</Button>
+              <Button onClick={() => {
+                updateUser(baseUser.id, { notification_prefs: { push: notificationPref !== "none", email: notificationPref !== "none", incidents: true, tasks: notificationPref === "all", news: notificationPref === "all" }, updated_at: new Date().toISOString() } as Partial<import("@/types").User>);
+                toast("Settings saved successfully");
+              }}>{t("users.saveSettings")}</Button>
             </CardContent>
           </Card>
 
@@ -631,6 +698,7 @@ export default function UserDetailPage() {
                 </div>
                 <Button variant="outline" onClick={handleDeactivate}>{t("users.deactivate")}</Button>
               </div>
+              {canDeleteUser && (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{t("users.deleteUser")}</p>
@@ -640,6 +708,7 @@ export default function UserDetailPage() {
                   <Trash2 className="h-4 w-4" /> Delete
                 </Button>
               </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -676,5 +745,6 @@ export default function UserDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

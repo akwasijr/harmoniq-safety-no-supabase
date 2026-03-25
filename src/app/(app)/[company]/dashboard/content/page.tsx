@@ -17,14 +17,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { commonFilterOptions } from "@/components/ui/filter-panel";
+import { useFilterOptions } from "@/components/ui/filter-panel";
 import { RoleGuard } from "@/components/auth/role-guard";
-import { useContentStore } from "@/stores/content-store";
+import { useCompanyData } from "@/hooks/use-company-data";
+import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import { useTranslation } from "@/i18n";
+import { PAGINATION } from "@/lib/constants";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 type ContentTabType = "news" | "documents" | "training" | "events";
 
@@ -37,6 +39,7 @@ const contentTabs = [
 
 export default function ContentPage() {
   const { t, formatDate } = useTranslation();
+  const filterOptions = useFilterOptions();
   const router = useRouter();
   const company = useCompanyParam();
   const [activeTab, setActiveTab] = React.useState<ContentTabType>("news");
@@ -47,7 +50,8 @@ export default function ContentPage() {
   // Filters
   const [statusFilter, setStatusFilter] = React.useState("");
 
-  const { items: content } = useContentStore();
+  const { content, stores } = useCompanyData();
+  const { isLoading } = stores.content;
 
   // Get current tab's content type
   const currentTabConfig = contentTabs.find(t => t.value === activeTab);
@@ -75,7 +79,7 @@ export default function ContentPage() {
     {
       id: "status",
       label: "All statuses",
-      options: commonFilterOptions.contentStatus,
+      options: filterOptions.contentStatus,
       value: statusFilter,
       onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
     },
@@ -93,6 +97,10 @@ export default function ContentPage() {
     const Icon = currentTabConfig?.icon || FileText;
     return <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />;
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard allowedRoles={["super_admin", "company_admin", "manager"]}>
@@ -216,11 +224,27 @@ export default function ContentPage() {
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                  <Button key={i + 1} variant={currentPage === i + 1 ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(i + 1)}>
-                    {i + 1}
-                  </Button>
-                ))}
+                {(() => {
+                  const pages: (number | "...")[] = totalPages <= 7
+                    ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                    : (() => {
+                        const p: (number | "...")[] = [1];
+                        if (currentPage > 3) p.push("...");
+                        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) p.push(i);
+                        if (currentPage < totalPages - 2) p.push("...");
+                        p.push(totalPages);
+                        return p;
+                      })();
+                  return pages.map((p, idx) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
+                    ) : (
+                      <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p as number)}>
+                        {p}
+                      </Button>
+                    )
+                  );
+                })()}
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>

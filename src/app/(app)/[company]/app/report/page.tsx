@@ -6,6 +6,7 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
+import { TIMEOUTS } from "@/lib/constants";
 import {
   ArrowLeft,
   ArrowRight,
@@ -37,6 +38,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import type { Incident, IncidentType, Severity, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
+import { storeFile, getFilesForEntity, deleteFile, FileValidationError, type StoredFile } from "@/lib/file-storage";
 
 const TOTAL_STEPS = 7;
 
@@ -90,21 +92,64 @@ const severityLevels = [
   },
 ];
 
+const STEP_ICONS: Record<number, React.ComponentType<{ className?: string }>> = {
+  1: AlertTriangle,
+  2: ShieldAlert,
+  3: FileText,
+  4: FileText,
+  5: MapPin,
+  6: Calendar,
+  7: Camera,
+};
+
 function ReportIncidentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locationParam = searchParams.get("location");
+  const assetParam = searchParams.get("asset");
   const company = useCompanyParam();
   const [currentStep, setCurrentStep] = React.useState(1);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGettingLocation, setIsGettingLocation] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const refCounterRef = React.useRef(0);
   const { items: locations } = useLocationsStore();
   const { add: addIncident } = useIncidentsStore({ skipLoad: true });
   const { toast } = useToast();
   const { user } = useAuth();
 
   const { t } = useTranslation();
+
+  const [stepErrors, setStepErrors] = React.useState<Record<string, string>>({});
+
+  const validateStep = (step: number): boolean => {
+    const next: Record<string, string> = {};
+    switch (step) {
+      case 1:
+        if (!formData.type) next.type = t("validation.selectOption");
+        break;
+      case 2:
+        if (!formData.severity) next.severity = t("validation.selectOption");
+        break;
+      case 3:
+        if (!formData.title.trim()) {
+          next.title = t("validation.required");
+        } else if (formData.title.trim().length < 3) {
+          next.title = t("validation.minLength", { min: "3" });
+        }
+        break;
+      case 4:
+        if (formData.description.trim().length > 0 && formData.description.trim().length < 10) {
+          next.description = t("validation.minLength", { min: "10" });
+        }
+        break;
+      case 6:
+        if (!formData.date) next.date = t("validation.required");
+        break;
+    }
+    setStepErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   const selectedLocation = locationParam
     ? locations.find((location) => location.id === locationParam)
@@ -120,12 +165,15 @@ function ReportIncidentPageContent() {
     date: new Date().toISOString().split("T")[0],
     time: new Date().toTimeString().slice(0, 5),
     photos: [] as string[],
+    photoFileIds: [] as string[],
     lostTime: false,
     activeHazard: false,
     reporterId: user?.id || "",
     gpsLat: null as number | null,
     gpsLng: null as number | null,
   });
+
+  const [incidentDraftId] = React.useState(() => `draft_${Date.now()}`);
 
   React.useEffect(() => {
     if (!selectedLocation) return;
@@ -151,7 +199,6 @@ function ReportIncidentPageContent() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        // Store both display text and actual coordinates
         const locationText = `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
         setFormData({ 
           ...formData, 
@@ -165,38 +212,49 @@ function ReportIncidentPageContent() {
         setIsGettingLocation(false);
         toast("Unable to get your location. Please enter it manually.");
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: TIMEOUTS.GPS_LOCATION }
     );
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     
     const remainingSlots = 4 - formData.photos.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
     
-    filesToProcess.forEach((file) => {
-      if (file.size > 10 * 1024 * 1024) {
-        toast(`File ${file.name} is too large. Max size is 10MB.`);
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
+    for (const file of filesToProcess) {
+      try {
+        const stored = await storeFile(
+          file,
+          "incident",
+          incidentDraftId,
+          user?.id || "unknown",
+        );
         setFormData((prev) => ({
           ...prev,
-          photos: [...prev.photos, reader.result as string],
+          photos: [...prev.photos, stored.dataUrl],
+          photoFileIds: [...prev.photoFileIds, stored.id],
         }));
-      };
-      reader.readAsDataURL(file);
-    });
+      } catch (err) {
+        if (err instanceof FileValidationError) {
+          toast(err.message, "error");
+        } else if (err instanceof Error && err.message === "QUOTA_EXCEEDED") {
+          toast("Storage is full. Delete some files and try again.", "error");
+        } else {
+          toast(`Failed to upload ${file.name}`, "error");
+        }
+      }
+    }
   };
 
   const removePhoto = (index: number) => {
+    const fileId = formData.photoFileIds[index];
+    if (fileId) deleteFile(fileId);
     setFormData((prev) => ({
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index),
+      photoFileIds: prev.photoFileIds.filter((_, i) => i !== index),
     }));
   };
 
@@ -204,8 +262,8 @@ function ReportIncidentPageContent() {
     switch (currentStep) {
       case 1: return !!formData.type;
       case 2: return !!formData.severity;
-      case 3: return formData.title.length >= 5;
-      case 4: return formData.description.length >= 10;
+      case 3: return formData.title.length >= 3;
+      case 4: return formData.description.length === 0 || formData.description.length >= 10;
       case 5: return true; // Location is optional
       case 6: return !!formData.date && !!formData.time;
       case 7: return true; // Photos are optional
@@ -214,6 +272,7 @@ function ReportIncidentPageContent() {
   };
 
   const handleNext = () => {
+    if (!validateStep(currentStep)) return;
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
     }
@@ -235,7 +294,8 @@ function ReportIncidentPageContent() {
       return;
     }
     const now = new Date();
-    const refNumber = `INC-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
+    refCounterRef.current = (refCounterRef.current % 999) + 1;
+    const refNumber = `INC-${now.getFullYear()}-${String(refCounterRef.current).padStart(3, "0")}`;
     const incident: Incident = {
       id: crypto.randomUUID(),
       company_id: user.company_id || "",
@@ -244,7 +304,7 @@ function ReportIncidentPageContent() {
       type: formData.type as IncidentType,
       type_other: formData.type === "other" ? "Other" : null,
       severity: formData.severity as Severity,
-      priority: formData.severity as Priority,
+      priority: (formData.severity === "critical" || formData.severity === "high" ? "high" : formData.severity === "medium" ? "medium" : "low") as Priority,
       title: formData.title,
       description: formData.description,
       incident_date: formData.date,
@@ -260,7 +320,7 @@ function ReportIncidentPageContent() {
       gps_lat: formData.gpsLat,
       gps_lng: formData.gpsLng,
       location_description: formData.location || null,
-      asset_id: null,
+      asset_id: assetParam || null,
       media_urls: formData.photos,
       status: "new",
       flagged: false,
@@ -272,7 +332,7 @@ function ReportIncidentPageContent() {
     };
     addIncident(incident);
     toast("Incident submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&id=${incident.id}`);
   };
 
   const getStepTitle = () => {
@@ -288,25 +348,12 @@ function ReportIncidentPageContent() {
     }
   };
 
-  const getStepIcon = () => {
-    switch (currentStep) {
-      case 1: return AlertTriangle;
-      case 2: return ShieldAlert;
-      case 3: return FileText;
-      case 4: return FileText;
-      case 5: return MapPin;
-      case 6: return Calendar;
-      case 7: return Camera;
-      default: return AlertTriangle;
-    }
-  };
-
-  const StepIcon = getStepIcon();
+  const StepIcon = STEP_ICONS[currentStep] ?? AlertTriangle;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button
             variant="ghost"
@@ -322,7 +369,7 @@ function ReportIncidentPageContent() {
           </div>
         </div>
         {/* Progress bar */}
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((currentStep / TOTAL_STEPS) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((currentStep / TOTAL_STEPS) * 100)}>
           <div 
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
@@ -342,6 +389,7 @@ function ReportIncidentPageContent() {
 
         {/* Step 1: Incident Type */}
         {currentStep === 1 && (
+          <>
           <div className="grid grid-cols-2 gap-3">
             {incidentTypes.map((type) => {
               const Icon = type.icon;
@@ -350,10 +398,10 @@ function ReportIncidentPageContent() {
                 <button
                   key={type.value}
                   type="button"
-                  onClick={() => setFormData({ ...formData, type: type.value })}
+                  onClick={() => { setFormData({ ...formData, type: type.value }); setStepErrors({}); }}
                   className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
                     isSelected
-                      ? "border-primary bg-primary text-white shadow-md"
+                      ? "border-primary bg-primary text-white shadow-sm"
                       : "border-border hover:border-primary/50 hover:bg-muted/50"
                   }`}
                 >
@@ -365,6 +413,8 @@ function ReportIncidentPageContent() {
               );
             })}
           </div>
+          {stepErrors.type && <p className="text-sm text-red-500 mt-3">{stepErrors.type}</p>}
+          </>
         )}
 
         {/* Step 2: Severity */}
@@ -377,10 +427,10 @@ function ReportIncidentPageContent() {
                 <button
                   key={level.value}
                   type="button"
-                  onClick={() => setFormData({ ...formData, severity: level.value })}
+                  onClick={() => { setFormData({ ...formData, severity: level.value }); setStepErrors({}); }}
                   className={`flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-all ${
                     isSelected
-                      ? "border-primary bg-primary text-white shadow-md"
+                      ? "border-primary bg-primary text-white shadow-sm"
                       : `border-border hover:border-primary/50 hover:bg-muted/50`
                   }`}
                 >
@@ -406,9 +456,15 @@ function ReportIncidentPageContent() {
             <Input
               placeholder={t("report.titlePlaceholder")}
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="h-14 text-lg"
+              onChange={(e) => {
+                setFormData({ ...formData, title: e.target.value });
+                if (stepErrors.title) setStepErrors({});
+              }}
+              onBlur={() => validateStep(3)}
+              className={`h-14 text-lg ${stepErrors.title ? "border-red-500" : ""}`}
+              maxLength={200}
             />
+            {stepErrors.title && <p className="text-sm text-red-500">{stepErrors.title}</p>}
             <p className="text-sm text-muted-foreground">
               {formData.title.length < 5 
                 ? t("report.titleMinChars", { count: String(formData.title.length) })
@@ -534,10 +590,15 @@ function ReportIncidentPageContent() {
               <Input
                 id="date"
                 type="date"
-                className="mt-2 h-12 text-base"
+                className={`mt-2 h-12 text-base ${stepErrors.date ? "border-red-500" : ""}`}
                 value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                max={new Date().toISOString().split("T")[0]}
+                onChange={(e) => {
+                  setFormData({ ...formData, date: e.target.value });
+                  if (stepErrors.date) setStepErrors({});
+                }}
               />
+              {stepErrors.date && <p className="text-sm text-red-500 mt-1">{stepErrors.date}</p>}
             </div>
             <div>
               <Label htmlFor="time" className="text-base">{t("report.approximateTime")}</Label>
@@ -561,12 +622,12 @@ function ReportIncidentPageContent() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/gif,image/webp"
               multiple
               capture="environment"
               onChange={handlePhotoUpload}
               className="hidden"
-              aria-label="Upload photos"
+              aria-label={t("common.uploadPhotos")}
             />
             
             {/* Photo grid */}
@@ -574,7 +635,7 @@ function ReportIncidentPageContent() {
               <div className="grid grid-cols-2 gap-3">
                 {formData.photos.map((photo, index) => (
                   <div key={index} className="relative aspect-square rounded-xl overflow-hidden border">
-                    <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
+                    <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                     <button
                       type="button"
                       aria-label={`Remove photo ${index + 1}`}
@@ -666,5 +727,15 @@ function ReportIncidentPageContent() {
 }
 
 export default function ReportIncidentPage() {
-  return <ReportIncidentPageContent />;
+  return (
+    <React.Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+        </div>
+      }
+    >
+      <ReportIncidentPageContent />
+    </React.Suspense>
+  );
 }

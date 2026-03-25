@@ -11,13 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLocationsStore } from "@/stores/locations-store";
-import { useTeamsStore } from "@/stores/teams-store";
 import { useUsersStore } from "@/stores/users-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import type { CompanyRole, UserType, AccountType, Gender, Language, User } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
+import { addUserToTeam } from "@/lib/assignment-utils";
 
 const ROLES: { value: CompanyRole; label: string }[] = [
   { value: "company_admin", label: "Company Admin" },
@@ -59,10 +60,10 @@ export default function NewUserPage() {
   const { toast } = useToast();
   const { items: companies } = useCompanyStore();
   const currentCompany = companies.find((c) => c.slug === company) || companies[0];
-  const { items: locations } = useLocationsStore();
-  const { items: teams } = useTeamsStore();
+  const { locations, teams, stores } = useCompanyData();
+  const { update: updateTeam } = stores.teams;
   const { add: addUser } = useUsersStore();
-  const { t, formatDate, formatNumber } = useTranslation();
+  const { t } = useTranslation();
 
   // Form state matching User interface
   const [formData, setFormData] = React.useState({
@@ -90,43 +91,59 @@ export default function NewUserPage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
-    const now = new Date().toISOString();
-    const newUser: User = {
-      id: `user_${Date.now()}`,
-      company_id: currentCompany?.id || "",
-      email: formData.email,
-      first_name: formData.first_name,
-      middle_name: formData.middle_name || null,
-      last_name: formData.last_name,
-      full_name: [formData.first_name, formData.middle_name, formData.last_name]
-        .filter(Boolean)
-        .join(" "),
-      role: formData.role,
-      user_type: formData.user_type,
-      account_type: formData.account_type,
-      gender: formData.gender || null,
-      department: formData.department || null,
-      job_title: formData.job_title || null,
-      employee_id: formData.employee_id || null,
-      status: "active",
-      location_id: formData.location_id || null,
-      language: formData.language,
-      theme: "system",
-      two_factor_enabled: false,
-      last_login_at: null,
-      created_at: now,
-      updated_at: now,
-      team_ids: formData.team_ids,
-    };
-    addUser(newUser);
-    toast("User created successfully");
+    try {
+      const now = new Date().toISOString();
+      const newUser: User = {
+        id: `user_${Date.now()}`,
+        company_id: currentCompany?.id || "",
+        email: formData.email,
+        first_name: formData.first_name,
+        middle_name: formData.middle_name || null,
+        last_name: formData.last_name,
+        full_name: [formData.first_name, formData.middle_name, formData.last_name]
+          .filter(Boolean)
+          .join(" "),
+        role: formData.role,
+        user_type: formData.user_type,
+        account_type: formData.account_type,
+        gender: formData.gender || null,
+        department: formData.department || null,
+        job_title: formData.job_title || null,
+        employee_id: formData.employee_id || null,
+        status: "active",
+        location_id: formData.location_id || null,
+        language: formData.language,
+        theme: "system",
+        two_factor_enabled: false,
+        last_login_at: null,
+        created_at: now,
+        updated_at: now,
+        team_ids: formData.team_ids,
+      };
+      addUser(newUser);
+      formData.team_ids.forEach((teamId) => {
+        const team = teams.find((item) => item.id === teamId);
+        if (!team) return;
+        updateTeam(team.id, {
+          member_ids: addUserToTeam(team, newUser.id),
+          updated_at: now,
+        });
+      });
+      toast("User created successfully");
 
-    router.push(`/${company}/dashboard/users`);
+      router.push(`/${company}/dashboard/users`);
+    } catch {
+      toast("Failed to create user");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const isValid = formData.email.trim() && formData.first_name.trim() && formData.last_name.trim();
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+  const isValid = formData.email.trim() && isValidEmail && formData.first_name.trim() && formData.last_name.trim();
 
   return (
+    <RoleGuard requiredPermission="users.create">
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -156,6 +173,8 @@ export default function NewUserPage() {
                   placeholder="Jane"
                   value={formData.first_name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, first_name: e.target.value }))}
+                  maxLength={100}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -165,6 +184,7 @@ export default function NewUserPage() {
                   placeholder="M."
                   value={formData.middle_name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, middle_name: e.target.value }))}
+                  maxLength={100}
                 />
               </div>
               <div className="space-y-2">
@@ -174,6 +194,8 @@ export default function NewUserPage() {
                   placeholder="Doe"
                   value={formData.last_name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, last_name: e.target.value }))}
+                  maxLength={100}
+                  required
                 />
               </div>
             </div>
@@ -186,7 +208,12 @@ export default function NewUserPage() {
                 placeholder="jane.doe@company.com"
                 value={formData.email}
                 onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                maxLength={255}
+                required
               />
+              {formData.email.trim() && !isValidEmail && (
+                <p className="text-xs text-destructive">Please enter a valid email address</p>
+              )}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -283,6 +310,7 @@ export default function NewUserPage() {
                   placeholder="Operations"
                   value={formData.department}
                   onChange={(e) => setFormData((prev) => ({ ...prev, department: e.target.value }))}
+                  maxLength={100}
                 />
               </div>
               <div className="space-y-2">
@@ -292,6 +320,7 @@ export default function NewUserPage() {
                   placeholder="Safety Officer"
                   value={formData.job_title}
                   onChange={(e) => setFormData((prev) => ({ ...prev, job_title: e.target.value }))}
+                  maxLength={100}
                 />
               </div>
             </div>
@@ -303,6 +332,7 @@ export default function NewUserPage() {
                 placeholder="EMP-001"
                 value={formData.employee_id}
                 onChange={(e) => setFormData((prev) => ({ ...prev, employee_id: e.target.value }))}
+                maxLength={50}
               />
             </div>
 
@@ -358,5 +388,6 @@ export default function NewUserPage() {
         </Button>
       </div>
     </div>
+    </RoleGuard>
   );
 }

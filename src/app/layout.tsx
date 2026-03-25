@@ -1,6 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
+import { Suspense } from "react";
+import {
+  Geist,
+  Geist_Mono,
+  IBM_Plex_Sans,
+  Inter,
+  Manrope,
+  Playfair_Display,
+  Plus_Jakarta_Sans,
+  Public_Sans,
+  Source_Sans_3,
+  Work_Sans,
+} from "next/font/google";
 import { ThemeProvider } from "@/components/shared/theme-provider";
+import { RouteProgress } from "@/components/shared/route-progress";
 import { validateEnv } from "@/lib/env";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
@@ -24,9 +37,45 @@ const playfair = Playfair_Display({
   weight: ["400", "500"],
 });
 
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const ibmPlexSans = IBM_Plex_Sans({
+  variable: "--font-ibm-plex-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta-sans",
+  subsets: ["latin"],
+});
+
+const publicSans = Public_Sans({
+  variable: "--font-public-sans",
+  subsets: ["latin"],
+});
+
+const sourceSans3 = Source_Sans_3({
+  variable: "--font-source-sans-3",
+  subsets: ["latin"],
+});
+
+const workSans = Work_Sans({
+  variable: "--font-work-sans",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: {
-    default: "Harmoniq Safety — Workplace Safety & Asset Management Platform",
+    default: "Harmoniq Safety: Workplace Safety & Asset Management Platform",
     template: "%s | Harmoniq Safety",
   },
   description:
@@ -51,8 +100,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Harmoniq Safety",
-    title: "Harmoniq Safety — Workplace Safety & Asset Management Platform",
-    description: "Report incidents, manage risks, track assets, and ensure compliance — all in one platform.",
+    title: "Harmoniq Safety: Workplace Safety & Asset Management Platform",
+    description: "Report incidents, manage risks, track assets, and ensure compliance, all in one platform.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Harmoniq Safety Platform" }],
   },
   twitter: {
@@ -102,7 +151,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} font-sans antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${inter.variable} ${ibmPlexSans.variable} ${manrope.variable} ${plusJakartaSans.variable} ${publicSans.variable} ${sourceSans3.variable} ${workSans.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -110,6 +159,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Suspense fallback={null}>
+            <RouteProgress />
+          </Suspense>
           <a href="#main-content" className="skip-link">
             Skip to main content
           </a>

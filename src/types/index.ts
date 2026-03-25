@@ -3,9 +3,23 @@
 // ============================================
 
 // Country and Language Types
-export type Country = "NL" | "SE" | "US";
-export type Language = "en" | "nl" | "sv";
-export type Currency = "USD" | "EUR" | "SEK";
+export type Country = "NL" | "SE" | "US" | "GB" | "DE" | "FR" | "ES";
+export type Language = "en" | "nl" | "sv" | "de" | "fr" | "es";
+export type Currency = "USD" | "EUR" | "SEK" | "GBP";
+
+// Industry Types
+export type IndustryCode =
+  | "construction"
+  | "manufacturing"
+  | "oil_gas"
+  | "healthcare"
+  | "warehousing"
+  | "mining"
+  | "food_beverage"
+  | "utilities"
+  | "transportation"
+  | "education"
+  | "airports";
 
 // User Roles
 export type SuperAdminRole = "super_admin";
@@ -49,12 +63,19 @@ export type Permission =
   // Settings
   | "settings.view"
   | "settings.edit"
-  | "settings.billing";
+  | "settings.billing"
+  // Work Orders
+  | "work_orders.view"
+  | "work_orders.view_all"
+  | "work_orders.create"
+  | "work_orders.edit"
+  | "work_orders.assign"
+  | "work_orders.complete"
+  | "work_orders.delete";
 
 // Role-based default permissions
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   super_admin: [
-    // Super admin has all permissions
     "incidents.view_own", "incidents.view_team", "incidents.view_all",
     "incidents.create", "incidents.edit_own", "incidents.edit_all",
     "incidents.delete", "incidents.assign", "incidents.investigate",
@@ -63,6 +84,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "users.view", "users.create", "users.edit", "users.delete", "users.manage_roles",
     "teams.view", "teams.create", "teams.edit", "teams.delete", "teams.manage_members",
     "settings.view", "settings.edit", "settings.billing",
+    "work_orders.view", "work_orders.view_all", "work_orders.create", "work_orders.edit",
+    "work_orders.assign", "work_orders.complete", "work_orders.delete",
   ],
   employee: [
     "incidents.view_own",
@@ -71,6 +94,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "checklists.view",
     "checklists.complete",
     "reports.view_own",
+    "work_orders.view",
+    "work_orders.create",
+    "work_orders.complete",
   ],
   manager: [
     "incidents.view_own",
@@ -89,6 +115,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "users.view",
     "teams.view",
     "teams.manage_members",
+    "work_orders.view",
+    "work_orders.view_all",
+    "work_orders.create",
+    "work_orders.edit",
+    "work_orders.assign",
+    "work_orders.complete",
   ],
   company_admin: [
     "incidents.view_own",
@@ -121,6 +153,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "settings.view",
     "settings.edit",
     "settings.billing",
+    "work_orders.view",
+    "work_orders.view_all",
+    "work_orders.create",
+    "work_orders.edit",
+    "work_orders.assign",
+    "work_orders.complete",
+    "work_orders.delete",
   ],
 };
 
@@ -170,6 +209,8 @@ export interface Company {
   app_name: string | null; // Custom display name employees see in the app header
   country: Country;
   language: Language;
+  industry?: IndustryCode; // Primary industry for template recommendations
+  industries?: IndustryCode[]; // Additional industries (multi-sector companies)
   status: CompanyStatus;
 
   // Branding
@@ -244,8 +285,8 @@ export interface User {
     news: boolean;
   };
   
-  // Team membership (optional - user can belong to multiple teams)
-  team_ids?: string[];
+  // Team membership
+  team_ids: string[];
   
   // Custom permissions (in addition to role-based defaults)
   custom_permissions?: Permission[];
@@ -295,6 +336,16 @@ export interface RCAAttachment {
   addedAt: string;
 }
 
+export interface IncidentDocument {
+  id: string;
+  name: string;
+  type: string;
+  url: string;
+  size: number;
+  uploadedAt: string;
+  uploadedBy: string;
+}
+
 export interface IncidentWitness {
   name: string;
   statement: string;
@@ -324,6 +375,7 @@ export interface IncidentAction {
   actionType: "corrective" | "preventive";
   status: "pending" | "in_progress" | "completed";
   ticketId: string;
+  correctiveActionId?: string | null;
   ticketStatus: "open" | "in_progress" | "resolved";
   assignee: string;
   resolutionNotes?: string;
@@ -393,6 +445,13 @@ export interface Incident {
 
   created_at: string;
   updated_at: string;
+
+  // Assignment
+  assigned_to?: string | null;
+  assigned_to_team_id?: string | null;
+
+  // Documents
+  documents?: IncidentDocument[];
 
   // Investigation & Workflow (persisted)
   investigation?: IncidentInvestigation | null;
@@ -487,7 +546,6 @@ export interface Asset {
   name: string;
   asset_tag: string; // Unique asset tag/ID
   serial_number: string | null;
-  barcode: string | null;
   qr_code: string | null;
   
   // Classification
@@ -500,11 +558,8 @@ export interface Asset {
   // Technical Specifications
   manufacturer: string | null;
   model: string | null;
-  model_number: string | null;
-  specifications: string | null;
   
   // Lifecycle Dates
-  manufactured_date: string | null;
   purchase_date: string | null;
   installation_date: string | null;
   warranty_expiry: string | null;
@@ -512,7 +567,6 @@ export interface Asset {
   
   // Condition & Performance
   condition: AssetCondition;
-  condition_notes: string | null;
   last_condition_assessment: string | null;
   
   // Financial
@@ -525,20 +579,21 @@ export interface Asset {
   maintenance_frequency_days: number | null;
   last_maintenance_date: string | null;
   next_maintenance_date: string | null;
-  maintenance_notes: string | null;
   
   // Compliance & Safety
   requires_certification: boolean;
-  requires_calibration: boolean;
-  calibration_frequency_days: number | null;
-  last_calibration_date: string | null;
-  next_calibration_date: string | null;
   safety_instructions: string | null;
   
+  // GPS
+  gps_lat?: number | null;
+  gps_lng?: number | null;
+
+  // Media & Notes
+  notes?: string | null;
+  media_urls?: string[];
+
   // Status
   status: AssetStatus;
-  decommission_date: string | null;
-  disposal_method: string | null;
 
   created_at: string;
   updated_at: string;
@@ -560,6 +615,10 @@ export interface AssetInspection {
   media_urls: string[];
 
   incident_id: string | null;
+
+  // GPS
+  gps_lat?: number | null;
+  gps_lng?: number | null;
 
   inspected_at: string;
   created_at: string;
@@ -836,9 +895,16 @@ export interface DowntimeLog {
 export interface ChecklistItem {
   id: string;
   question: string;
-  type: "yes_no_na" | "pass_fail" | "rating" | "text";
+  type: "yes_no_na" | "pass_fail" | "rating" | "text" | "number" | "photo" | "date" | "signature" | "select";
   required: boolean;
   order: number;
+  description?: string; // Helper text shown below the question
+  response_types?: Array<"yes_no_na" | "pass_fail" | "rating" | "text" | "number" | "photo" | "date" | "signature" | "select">; // Legacy compatibility for older data; new items should use `type`
+  options?: string[]; // For "select" type: list of choices
+  image_url?: string; // Reference image/PDF file name (local upload)
+  min_value?: number; // For "number" or "rating" type
+  max_value?: number; // For "number" or "rating" type
+  unit?: string; // For "number" type (e.g. "°C", "psi", "mm")
 }
 
 export interface ChecklistTemplate {
@@ -852,9 +918,48 @@ export interface ChecklistTemplate {
   recurrence?: "daily" | "weekly" | "monthly" | "once";
   items: ChecklistItem[];
 
+  // Industry template tracking
+  source_template_id?: string; // Links to the industry template it was activated from
+  regulation?: string; // Regulatory reference (e.g. "OSHA 29 CFR 1926")
+  tags?: string[]; // Searchable tags (e.g. ["fall_protection", "elevated_work"])
+
+  // Publish workflow:
+  //   draft     = admin activated from library, editing in progress (dashboard only)
+  //   published = pushed to field workers, visible in mobile app
+  //   archived  = hidden from field workers, kept for records
+  publish_status?: "draft" | "published" | "archived";
+
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// Industry Template Library types (for the pre-built template catalog)
+export interface IndustryChecklistItem {
+  key: string; // Stable identifier (e.g. "task_description")
+  question_key: string; // i18n key (e.g. "industry_templates.construction.jha.items.task_description")
+  type: "yes_no_na" | "pass_fail" | "rating" | "text" | "number" | "photo";
+  required: boolean;
+  order: number;
+}
+
+export interface IndustryChecklistTemplate {
+  id: string; // Stable ID (e.g. "construction_jha")
+  industry: IndustryCode;
+  name_key: string; // i18n key for template name
+  description_key: string; // i18n key for template description
+  category: string;
+  regulation: string;
+  frequency: "daily" | "weekly" | "monthly" | "quarterly" | "per_event" | "per_shift" | "continuous";
+  items: IndustryChecklistItem[];
+  tags: string[];
+}
+
+export interface IndustryTemplatePack {
+  industry: IndustryCode;
+  name_key: string; // i18n key (e.g. "industry_templates.construction.name")
+  description_key: string;
+  templates: IndustryChecklistTemplate[];
 }
 
 export interface ChecklistResponse {
@@ -874,7 +979,7 @@ export interface ChecklistSubmission {
   responses: ChecklistResponse[];
   general_comments: string | null;
 
-  status: "draft" | "submitted";
+  status: "draft" | "submitted" | "approved" | "rejected";
   submitted_at: string | null;
   created_at: string;
 
@@ -918,7 +1023,8 @@ export interface Ticket {
 
   due_date: string | null;
   assigned_to: string | null;
-  assigned_groups: string[];
+  assigned_to_team_id?: string | null;
+  assigned_groups: string[]; // Legacy compatibility; prefer assigned_to_team_id
 
   incident_ids: string[];
 
@@ -1110,6 +1216,7 @@ export interface CorrectiveAction {
   description: string;
   severity: Severity;
   assigned_to: string | null;
+  assigned_to_team_id?: string | null;
   due_date: string;
   status: CorrectiveActionStatus;
   resolution_notes: string | null;
@@ -1137,6 +1244,7 @@ export interface WorkOrder {
   status: WorkOrderStatus;
   requested_by: string;
   assigned_to: string | null;
+  assigned_to_team_id?: string | null;
   due_date: string | null;
   estimated_hours: number | null;
   actual_hours: number | null;
@@ -1144,6 +1252,11 @@ export interface WorkOrder {
   labor_cost: number | null;
   corrective_action_id: string | null;
   completed_at: string | null;
+
+  // GPS
+  location_lat?: number | null;
+  location_lng?: number | null;
+
   created_at: string;
   updated_at: string;
   
@@ -1251,6 +1364,8 @@ export interface InspectionRound {
   completed_at: string | null;
   checkpoint_results: InspectionCheckpointResult[];
   alerts_created: string[];
+  gps_lat?: number | null;
+  gps_lng?: number | null;
   created_at: string;
   updated_at: string;
 }

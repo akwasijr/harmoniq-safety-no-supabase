@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { notFound, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { EmployeeAppLayout } from "@/components/layouts/employee-app-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyParam } from "@/hooks/use-company-param";
@@ -9,14 +10,20 @@ import { useCompanyStore } from "@/stores/company-store";
 import { useContentStore } from "@/stores/content-store";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useTicketsStore } from "@/stores/tickets-store";
+import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
+import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
 import { useNotificationsStore } from "@/stores/notifications-store";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useLocationsStore } from "@/stores/locations-store";
-import { applyPrimaryColor } from "@/lib/branding";
+import { applyBranding, resetBranding } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { I18nProvider } from "@/i18n";
 import type { SupportedLocale } from "@/i18n";
+import { isVisibleToFieldApp } from "@/lib/template-activation";
+import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
+import { FieldAppSettingsProvider } from "@/components/providers/field-app-settings-provider";
 
 export default function EmployeeAppRootLayout({
   children,
@@ -27,10 +34,13 @@ export default function EmployeeAppRootLayout({
   const router = useRouter();
   const { user, currentCompany, isLoading } = useAuth();
   const { items: companies, isLoading: isCompaniesLoading } = useCompanyStore();
-  const { items: contentItems } = useContentStore();
+  useContentStore();
   const { items: checklistTemplates } = useChecklistTemplatesStore();
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { items: tickets } = useTicketsStore();
+  const { items: workOrders } = useWorkOrdersStore();
+  const { items: correctiveActions } = useCorrectiveActionsStore();
+  const { items: riskEvaluations } = useRiskEvaluationsStore();
   const { items: dbNotifications } = useNotificationsStore();
   // Prefetch additional stores so tab switching is instant
   useAssetsStore();
@@ -40,7 +50,7 @@ export default function EmployeeAppRootLayout({
   // Prefetch all tab routes so JS chunks are ready before user navigates
   React.useEffect(() => {
     if (!company) return;
-    const tabs = ["checklists", "assets", "news", "profile"];
+    const tabs = ["checklists", "assets", "news", "profile", "tasks", "my-tasks", "notifications", "location"];
     tabs.forEach((tab) => router.prefetch(`/${company}/app/${tab}`));
     router.prefetch(`/${company}/app`);
   }, [company, router]);
@@ -58,20 +68,55 @@ export default function EmployeeAppRootLayout({
         .filter((s) => s.submitter_id === user.id && s.status === "submitted")
         .map((s) => s.template_id)
     );
-    const pendingTasks = checklistTemplates.filter((t) => !completedIds.has(t.id)).length;
-    const openTickets = tickets.filter((t) => t.assigned_to === user.id && t.status === "new").length;
-    return unreadDb + pendingTasks + openTickets;
-  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets]);
+    const pendingTasks = checklistTemplates.filter(
+      (template) =>
+        template.company_id === user.company_id &&
+        isVisibleToFieldApp(template) &&
+        !completedIds.has(template.id),
+    ).length;
+    const openTickets = tickets.filter(
+      (ticket) =>
+        ticket.company_id === user.company_id &&
+        ticket.status === "new" &&
+        isAssignedToUserOrTeam(ticket, user),
+    ).length;
+    const openWorkOrders = workOrders.filter(
+      (workOrder) =>
+        workOrder.company_id === user.company_id &&
+        isAssignedToUserOrTeam(workOrder, user) &&
+        workOrder.status !== "completed" &&
+        workOrder.status !== "cancelled",
+    ).length;
+    const openActions = correctiveActions.filter(
+      (action) =>
+        action.company_id === user.company_id &&
+        isAssignedToUserOrTeam(action, user) &&
+        action.status !== "completed",
+    ).length;
+    const assessmentFollowUp = riskEvaluations.filter(
+      (evaluation) =>
+        evaluation.company_id === user.company_id &&
+        evaluation.submitter_id === user.id &&
+        (evaluation.status === "draft" || evaluation.status === "submitted"),
+    ).length;
+    return unreadDb + pendingTasks + openTickets + openWorkOrders + openActions + assessmentFollowUp;
+  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, workOrders, correctiveActions, riskEvaluations]);
 
-  // C5: Validate company slug against known companies
-  const isValidCompany = React.useMemo(
-    () => companies.some((c) => c.slug === company),
-    [companies, company]
-  );
+  const { resolvedTheme } = useTheme();
 
   React.useEffect(() => {
-    applyPrimaryColor(currentCompany?.primary_color);
-  }, [currentCompany?.primary_color]);
+    if (!currentCompany) return;
+    applyBranding(
+      {
+        primaryColor: currentCompany.primary_color,
+        secondaryColor: currentCompany.secondary_color,
+        fontFamily: currentCompany.font_family,
+        uiStyle: currentCompany.ui_style,
+      },
+      resolvedTheme || "light"
+    );
+    return () => resetBranding();
+  }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany]);
 
   React.useEffect(() => {
     applyDocumentLanguage(currentCompany?.language ?? user?.language);
@@ -101,14 +146,20 @@ export default function EmployeeAppRootLayout({
 
   return (
     <I18nProvider companyLocale={companyLocale}>
-      <EmployeeAppLayout
-        company={company}
-        companyName={currentCompany?.app_name || currentCompany?.name || "Safety App"}
-        companyLogo={currentCompany?.logo_url || null}
-        notificationCount={notificationCount}
+      <FieldAppSettingsProvider
+        companyId={currentCompany?.id}
+        industry={currentCompany?.industry}
+        language={currentCompany?.language}
       >
-        {children}
-      </EmployeeAppLayout>
+        <EmployeeAppLayout
+          company={company}
+          companyName={currentCompany?.app_name || currentCompany?.name || "Safety App"}
+          companyLogo={currentCompany?.logo_url || null}
+          notificationCount={notificationCount}
+        >
+          {children}
+        </EmployeeAppLayout>
+      </FieldAppSettingsProvider>
     </I18nProvider>
   );
 }

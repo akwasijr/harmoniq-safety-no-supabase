@@ -5,89 +5,46 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ClipboardCheck,
-  FileText,
   ChevronRight,
-  Clock,
-  AlertCircle,
-  Shield,
-  Flame,
-  Zap,
-  Sparkles,
-  Heart,
-  Megaphone,
-  CheckCircle,
   ChevronDown,
   ArrowRight,
+  ChevronLeft,
+  Newspaper,
   Wrench,
   Search,
   ScanLine,
-  Newspaper,
-  HardHat,
-  Eye,
-  Thermometer,
-  Lock,
-  Ear,
-  Footprints,
-  Siren,
-  HandMetal,
-  BookOpen,
-  Activity,
-  Stethoscope,
-  BellRing,
-  Users,
   ShieldCheck,
-  Truck,
-  RefreshCw,
-  Timer,
-  Gauge,
-  Hammer,
+  Lightbulb,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { useContentStore } from "@/stores/content-store";
-import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
+import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
+import type { Content } from "@/types";
+import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
+import {
+  type FieldAppQuickActionId,
+  getFieldAppQuickActionDefinition,
+  getFieldAppTip,
+} from "@/lib/field-app-settings";
 
-// 30 safety tips that cycle daily
-const SAFETY_TIPS = [
-  { tip: "Always inspect your PPE before starting a shift.", icon: Shield },
-  { tip: "Report near-misses — they prevent real incidents.", icon: AlertTriangle },
-  { tip: "Know your emergency exits and assembly points.", icon: Siren },
-  { tip: "Take regular breaks to stay alert and focused.", icon: Timer },
-  { tip: "Good housekeeping prevents slips, trips & falls.", icon: Sparkles },
-  { tip: "Never bypass safety guards on equipment.", icon: Lock },
-  { tip: "Communication saves lives — speak up about hazards.", icon: Megaphone },
-  { tip: "Wear appropriate footwear for your work environment.", icon: Footprints },
-  { tip: "Keep fire extinguishers accessible and know how to use them.", icon: Flame },
-  { tip: "Always follow lockout/tagout procedures.", icon: Lock },
-  { tip: "Lift with your legs, not your back.", icon: Activity },
-  { tip: "Store chemicals in labelled containers with SDS available.", icon: Thermometer },
-  { tip: "Keep walkways and emergency exits clear at all times.", icon: ArrowRight },
-  { tip: "Report damaged electrical cords or outlets immediately.", icon: Zap },
-  { tip: "Use hearing protection in high-noise areas.", icon: Ear },
-  { tip: "Wash your hands regularly, especially before eating.", icon: HandMetal },
-  { tip: "Know the location of first aid kits on your floor.", icon: Stethoscope },
-  { tip: "Never operate machinery you haven't been trained on.", icon: Gauge },
-  { tip: "Stay hydrated — dehydration reduces focus and reaction time.", icon: Heart },
-  { tip: "Secure loose clothing and hair near moving equipment.", icon: ShieldCheck },
-  { tip: "Report any spills immediately and clean them up.", icon: AlertCircle },
-  { tip: "Use the buddy system for high-risk tasks.", icon: Users },
-  { tip: "Check ladders for damage before climbing.", icon: Eye },
-  { tip: "Follow speed limits when driving forklifts or vehicles on-site.", icon: Truck },
-  { tip: "Stretch before physically demanding tasks.", icon: RefreshCw },
-  { tip: "Ensure proper ventilation when working with fumes.", icon: Activity },
-  { tip: "Attend all scheduled safety training sessions.", icon: BookOpen },
-  { tip: "Use the right tool for the job — improvising causes injuries.", icon: Hammer },
-  { tip: "Review risk assessments before starting unfamiliar work.", icon: ClipboardCheck },
-  { tip: "If in doubt, stop and ask your supervisor.", icon: BellRing },
-];
-
-// Rotating tip icons to keep it visually fresh
-const TIP_ICONS = [Zap, Flame, Shield, Eye, Activity, Sparkles, Heart];
+const QUICK_ACTION_ICON_MAP: Record<FieldAppQuickActionId, React.ComponentType<{ className?: string }>> = {
+  report_incident: AlertTriangle,
+  my_tasks: ClipboardCheck,
+  browse_assets: Search,
+  request_fix: Wrench,
+  scan_asset: ScanLine,
+  risk_check: ShieldCheck,
+  checklists: ClipboardCheck,
+  news: Newspaper,
+};
 
 function getGreetingKey(): string {
   if (typeof window === "undefined") return "app.goodMorning"; // SSR default
@@ -103,6 +60,156 @@ function getDayOfYear(): number {
   const start = new Date(now.getFullYear(), 0, 0);
   const diff = now.getTime() - start.getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+// Featured News Carousel (inspired by airport-style featured cards)
+function FeaturedNewsCarousel({
+  news,
+  company,
+  t,
+  formatDate,
+}: {
+  news: Content[];
+  company: string;
+  t: (key: string) => string;
+  formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
+}) {
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  const scroll = (dir: "left" | "right") => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const cardWidth = container.offsetWidth * 0.52;
+    const newIndex = dir === "left" ? Math.max(0, activeIndex - 1) : Math.min(news.length - 1, activeIndex + 1);
+    container.scrollTo({ left: newIndex * cardWidth, behavior: "smooth" });
+    setActiveIndex(newIndex);
+  };
+
+  // Track scroll position to update active dot
+  React.useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const cardWidth = container.offsetWidth * 0.52;
+      const idx = Math.round(container.scrollLeft / cardWidth);
+      setActiveIndex(idx);
+    };
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Placeholder colors for cards without images
+  const cardColors = [
+    "from-blue-500/20 to-blue-600/10",
+    "from-emerald-500/20 to-emerald-600/10",
+    "from-amber-500/20 to-amber-600/10",
+    "from-violet-500/20 to-violet-600/10",
+    "from-rose-500/20 to-rose-600/10",
+  ];
+
+  if (news.length === 0) {
+    return (
+      <div className="field-app-panel field-app-surface bg-card border border-border/50 px-4 py-6">
+        <div className="flex flex-col items-center justify-center text-center py-4">
+          <div className="rounded-full bg-muted p-3 mb-3">
+            <Newspaper className="h-6 w-6 text-muted-foreground/40" aria-hidden="true" />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground">{t("app.noNewsYet") || "No news yet"}</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noNewsDesc") || "Company news and updates will appear here"}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Header with arrows */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-bold">{t("app.featured") || "Featured"}</h2>
+        {news.length > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => scroll("left")}
+              disabled={activeIndex === 0}
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-border transition-colors disabled:opacity-30 hover:bg-muted"
+              aria-label="Previous"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              disabled={activeIndex === news.length - 1}
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-border transition-colors disabled:opacity-30 hover:bg-muted"
+              aria-label="Next"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Scrollable cards */}
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mr-4 pr-4 pl-4"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {news.map((item, i) => (
+          <Link
+            key={item.id}
+            href={`/${company}/app/news/${item.id}`}
+            className="field-app-panel field-app-surface flex-shrink-0 snap-start border bg-card overflow-hidden transition-shadow hover:shadow-md active:shadow-sm"
+            style={{ width: "52%" }}
+          >
+            {/* Image / gradient placeholder */}
+            <div className={`h-20 w-full bg-gradient-to-br ${cardColors[i % cardColors.length]} relative overflow-hidden`}>
+              {item.featured_image ? (
+                <img
+                  src={item.featured_image}
+                  alt="Featured image"
+                  className="h-full w-full object-cover object-center"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <Newspaper className="h-6 w-6 text-foreground/10" aria-hidden="true" />
+                </div>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="px-2.5 py-2 space-y-0.5">
+              <h3 className="font-semibold text-[11px] leading-snug line-clamp-1">{item.title}</h3>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground">
+                  {formatDate(new Date(item.published_at || item.created_at))}
+                </span>
+                <span className="text-[10px] font-medium text-primary flex items-center gap-0.5">
+                  {t("common.readMore") || "Read more"} <ArrowRight className="h-2.5 w-2.5" />
+                </span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Dot indicators */}
+      {news.length > 1 && (
+        <div className="flex justify-center gap-1.5">
+          {news.map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "h-1.5 rounded-full transition-all",
+                i === activeIndex ? "w-4 bg-primary" : "w-1.5 bg-muted-foreground/20"
+              )}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Collapsible section (shared mobile pattern)
@@ -159,15 +266,17 @@ function Section({
 export default function EmployeeAppHomePage() {
   const company = useCompanyParam();
   const { user, currentCompany } = useAuth();
+  const { settings: fieldAppSettings } = useFieldAppSettings();
   const { items: contentItems } = useContentStore();
-  const { items: checklistTemplates } = useChecklistTemplatesStore();
-  const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { items: incidents } = useIncidentsStore();
   const { items: tickets } = useTicketsStore();
+  const { items: workOrders } = useWorkOrdersStore();
+  const { items: correctiveActions } = useCorrectiveActionsStore();
   const { t, formatDate } = useTranslation();
 
   // Use state for time-dependent values to prevent hydration mismatch
   const [mounted, setMounted] = React.useState(false);
+  const [stableNow] = React.useState(() => Date.now());
   React.useEffect(() => {
     setMounted(true);
   }, []);
@@ -183,185 +292,110 @@ export default function EmployeeAppHomePage() {
   const userIncidents = incidents.filter((incident) => incident.reporter_id === user.id);
   const lastIncidentDate = userIncidents.length > 0
     ? new Date(Math.max(...userIncidents.map((incident) => new Date(incident.incident_date).getTime())))
-    : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    : new Date(stableNow - 30 * 24 * 60 * 60 * 1000);
   // Only compute time-sensitive values after mount to prevent hydration mismatch
-  const safeDays = mounted ? Math.floor((Date.now() - lastIncidentDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-  const userTickets = tickets.filter((ticket) => ticket.assigned_to === user.id);
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const safeDays = mounted ? Math.floor((stableNow - lastIncidentDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+  const userTickets = tickets.filter(
+    (ticket) =>
+      isAssignedToUserOrTeam(ticket, user),
+  );
+  const userWorkOrders = workOrders.filter((wo) => isAssignedToUserOrTeam(wo, user));
+  const userActions = correctiveActions.filter((ca) => isAssignedToUserOrTeam(ca, user));
+  const pendingTaskCount = userTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length
+    + userWorkOrders.filter((wo) => wo.status !== "completed" && wo.status !== "cancelled").length
+    + userActions.filter((ca) => ca.status !== "completed").length;
+  const oneWeekAgo = new Date(stableNow - 7 * 24 * 60 * 60 * 1000);
   const completedThisWeek = userTickets.filter(
     (ticket) => ticket.updated_at && new Date(ticket.updated_at) > oneWeekAgo
   ).length;
   
   // Data feeds
-  const recentNews = contentItems
-    .filter((item) => item.status === "published" && item.type === "news")
-    .slice(0, 2);
-  const completedTemplateIds = new Set(
-    checklistSubmissions
-      .filter((submission) => submission.submitter_id === user.id && submission.status === "submitted")
-      .map((submission) => submission.template_id)
+  const recentNews = fieldAppSettings.newsEnabled
+    ? contentItems.filter((item) => item.status === "published" && item.type === "news").slice(0, 5)
+    : [];
+  const tipText = getFieldAppTip(
+    currentCompany?.industry,
+    (currentCompany?.language ?? user.language) || "en",
+    getDayOfYear()
   );
-  const pendingChecklists = checklistTemplates.filter((template) => !completedTemplateIds.has(template.id)).slice(0, 2);
-
-  // Safety tip of the day (rotates daily)
-  const todayTip = SAFETY_TIPS[getDayOfYear() % SAFETY_TIPS.length];
   const greeting = t(getGreetingKey());
 
-  // Stats from computed user data
-  const safetyStreak = safeDays;
-
-  // Determine if we have enough data for the full feed view
-  const hasData = pendingChecklists.length > 0 || recentNews.length > 0;
-
-  // Quick action grid items (3 per row, 6 total, consistent neutral style)
-  const quickActions = [
-    { href: `/${company}/app/report`, icon: AlertTriangle, label: t("app.reportIncident") },
-    { href: `/${company}/app/checklists`, icon: ClipboardCheck, label: t("app.safetyTasks") },
-    { href: `/${company}/app/maintenance`, icon: Wrench, label: t("app.requestFix") },
-    { href: `/${company}/app/assets`, icon: Search, label: t("app.browseAssets") },
-    { href: `/${company}/app/scan`, icon: ScanLine, label: t("app.scanAsset") },
-    { href: `/${company}/app/checklists?tab=risk-assessment`, icon: ShieldCheck, label: t("app.riskAssessment") },
-  ];
-
-  // ── Shared hero section ──
-  const HeroSection = () => (
-    <div className="relative overflow-hidden px-5 pt-5 pb-8" style={{ minHeight: 160 }}>
-      {/* Background image with overlay */}
-      <>
-        <img
-          src={currentCompany?.hero_image_url || "/home-banner.jpg"}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
-      </>
-
-      <div className="relative z-10">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-white/70 text-sm font-medium">{greeting}</p>
-            <h1 className="text-xl font-bold text-white mt-0.5">
-              {user.first_name} {user.last_name}
-            </h1>
-          </div>
-        </div>
-
-        {/* Stats row */}
-        <div className="flex gap-3 mt-4">
-          <div className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1">
-            <Flame className="h-4 w-4 text-orange-300" aria-hidden="true" />
-            <div>
-              <p className="text-[11px] text-white/70 leading-none">{t("app.safeDays")}</p>
-              <p className="text-sm font-bold text-white mt-0.5">{safetyStreak}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm px-3 py-2 flex-1">
-            <CheckCircle className="h-4 w-4 text-emerald-300" aria-hidden="true" />
-            <div>
-              <p className="text-[11px] text-white/70 leading-none">{t("app.thisWeek")}</p>
-              <p className="text-sm font-bold text-white mt-0.5">{completedThisWeek} {t("app.tasks")}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // ── Tip of the Day card ──
-  const TipCard = () => {
-    const TipIcon = todayTip.icon;
-    return (
-      <div className="mx-4 -mt-4 relative z-10">
-        <div className="rounded-xl bg-card shadow-sm p-3.5 flex items-start gap-3">
-          <TipIcon className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" aria-hidden="true" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold text-orange-500 tracking-widest">{t("app.tipOfTheDay")}</p>
-            <p className="text-sm text-foreground mt-0.5 leading-snug">{todayTip.tip}</p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ── Quick Actions Grid (3 per row, 6 total, consistent neutral style) ──
-  const QuickActionsGrid = () => (
-    <div className="px-4 pt-5 pb-1">
-      <p className="text-[11px] font-semibold text-muted-foreground mb-3">{t("app.getStarted")}</p>
-      <div className="grid grid-cols-3 gap-2">
-        {quickActions.map((action) => (
-          <Link
-            key={action.href}
-            href={action.href}
-            className="flex flex-col items-center gap-2 rounded-lg bg-primary/10 p-4 transition-all active:scale-95 hover:bg-primary/15"
-          >
-            <action.icon className="h-8 w-8 text-primary" aria-hidden="true" />
-            <span className="text-xs font-medium text-center leading-tight text-foreground">{action.label}</span>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
+  const quickActions = fieldAppSettings.quickActions.map((actionId) => {
+    const definition = getFieldAppQuickActionDefinition(actionId);
+    return {
+      ...definition,
+      href: `/${company}${definition.href}`,
+      icon: QUICK_ACTION_ICON_MAP[actionId],
+    };
+  });
 
   // ── Always show full feed (no early return for empty state) ──
   return (
     <div className="flex flex-col min-h-full">
       {/* ── Hero Section ── */}
-      <HeroSection />
+      <div className="bg-brand-solid px-5 pt-6 pb-8">
+        <p className="text-brand-solid-foreground/60 text-sm">{greeting}</p>
+        <h1 className="text-2xl font-bold text-brand-solid-foreground mt-1">
+          {user?.first_name || t("app.welcome")}
+        </h1>
+
+        {/* Stats row - white/glass cards */}
+        <div className="grid grid-cols-3 gap-3 mt-5">
+          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm p-3 text-center">
+            <p className="text-2xl font-bold text-brand-solid-foreground">{safeDays}</p>
+            <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.safeDays")}</p>
+          </div>
+          <Link href={`/${company}/app/tasks`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm p-3 text-center">
+            <p className="text-2xl font-bold text-brand-solid-foreground">{pendingTaskCount}</p>
+            <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
+          </Link>
+          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm p-3 text-center">
+            <p className="text-2xl font-bold text-brand-solid-foreground">{completedThisWeek}</p>
+            <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.completedWeek") || "This Week"}</p>
+          </div>
+        </div>
+      </div>
 
       {/* ── Tip of the Day ── */}
-      <TipCard />
+      {fieldAppSettings.tipOfTheDayEnabled && (
+        <div className="mx-4 -mt-4 relative z-10">
+          <div className="field-app-panel field-app-surface bg-card border border-border/50 px-4 py-3 flex items-start gap-3">
+            <div className="field-app-control h-8 w-8 bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Lightbulb className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-primary tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{tipText}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Quick Actions ── */}
-      <QuickActionsGrid />
+      <div className="px-4 mt-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold">{t("app.quickActions") || "Quick Actions"}</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {quickActions.map((action) => (
+            <Link key={action.href + action.labelKey} href={action.href}
+              className="field-app-panel field-app-surface flex items-center gap-3 bg-card p-4 border border-border/50 active:scale-[0.98] transition-transform">
+              <div className="field-app-control h-12 w-12 bg-primary/10 flex items-center justify-center shrink-0">
+                <action.icon className="h-6 w-6 text-primary" />
+              </div>
+              <span className="text-sm font-medium">{t(action.labelKey) || action.fallbackLabel}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {/* ── Content Feed ── */}
-      <div className="px-4 pt-3 pb-4 space-y-1">
+      <div className="px-4 pt-5 pb-20 space-y-1">
 
-        {/* News & Updates — first */}
-        <Section
-          title={t("app.newsAndUpdates")}
-          icon={Newspaper}
-          iconColor="text-primary"
-          action={
-            recentNews.length > 0 ? (
-              <Link href={`/${company}/app/news`} className="text-xs text-primary font-medium flex items-center gap-0.5">
-                {t("common.viewAll")} <ArrowRight className="h-3 w-3" />
-              </Link>
-            ) : undefined
-          }
-        >
-          {recentNews.length > 0 ? (
-            recentNews.map((item) => (
-              <Link
-                key={item.id}
-                href={`/${company}/app/news/${item.id}`}
-                className="flex items-start gap-3 rounded-lg p-2.5 transition-colors active:bg-muted/60 hover:bg-muted/40"
-              >
-                <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm leading-tight line-clamp-2">{item.title}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Clock className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
-                    <span className="text-[11px] text-muted-foreground">
-                      {formatDate(new Date(item.published_at || item.created_at))}
-                    </span>
-                    {item.category && (
-                      <span className="text-[10px] text-muted-foreground">{item.category}</span>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            ))
-          ) : (
-            <div className="py-4 text-center">
-              <Newspaper className="h-6 w-6 text-muted-foreground/30 mx-auto" aria-hidden="true" />
-              <p className="text-xs font-medium text-muted-foreground mt-2">{t("app.noNewsYet")}</p>
-              <p className="text-[11px] text-muted-foreground/70 mt-0.5">{t("app.noNewsDesc")}</p>
-            </div>
-          )}
-        </Section>
-
+        {/* Featured News Carousel */}
+        {fieldAppSettings.newsEnabled && (
+          <FeaturedNewsCarousel news={recentNews} company={company} t={t} formatDate={formatDate} />
+        )}
 
       </div>
     </div>

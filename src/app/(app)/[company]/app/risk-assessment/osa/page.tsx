@@ -12,6 +12,9 @@ import {
   Users,
   Brain,
   Clock,
+  BarChart3,
+  Ban,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +33,7 @@ const OSA_SECTIONS = [
   {
     id: "workload",
     title: "Arbetsbelastning (Workload)",
-    icon: "📊",
+    icon: BarChart3,
     description: "Assessment of work demands and resources",
     questions: [
       { id: "wl_demands", label: "Work demands are reasonable", description: "Amount of work matches available time and resources" },
@@ -43,7 +46,7 @@ const OSA_SECTIONS = [
   {
     id: "workhours",
     title: "Arbetstid (Working Hours)",
-    icon: "🕐",
+    icon: Clock,
     description: "Assessment of working time arrangements",
     questions: [
       { id: "wh_schedule", label: "Work schedule is predictable", description: "Know schedule in advance, minimal last-minute changes" },
@@ -56,7 +59,7 @@ const OSA_SECTIONS = [
   {
     id: "harassment",
     title: "Kränkande särbehandling (Harassment)",
-    icon: "🚫",
+    icon: Ban,
     description: "Assessment of bullying, harassment, and discrimination",
     questions: [
       { id: "hr_policy", label: "Clear policy against harassment", description: "Written policy known to all employees" },
@@ -69,7 +72,7 @@ const OSA_SECTIONS = [
   {
     id: "social",
     title: "Socialt stöd (Social Support)",
-    icon: "👥",
+    icon: Users,
     description: "Assessment of support from colleagues and management",
     questions: [
       { id: "so_colleagues", label: "Support from colleagues", description: "Help available when needed" },
@@ -82,7 +85,7 @@ const OSA_SECTIONS = [
   {
     id: "control",
     title: "Inflytande (Control/Autonomy)",
-    icon: "🎯",
+    icon: Target,
     description: "Assessment of control over own work",
     questions: [
       { id: "co_methods", label: "Control over work methods", description: "Can decide how to perform tasks" },
@@ -222,6 +225,14 @@ export default function OSAFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.organizationName.trim()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
+    if (Object.keys(formData.responses).length === 0) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");
@@ -246,7 +257,7 @@ export default function OSAFormPage() {
     };
     addEvaluation(evaluation);
     toast("Assessment submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment&id=${evaluation.id}`);
   };
 
   // Get OSA section for assessment sections
@@ -263,7 +274,7 @@ export default function OSAFormPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
@@ -276,7 +287,7 @@ export default function OSAFormPage() {
           </div>
           <span className="text-xs text-muted-foreground">SE</span>
         </div>
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSectionIndex + 1) / sections.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSectionIndex + 1) / sections.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentSectionIndex + 1) / sections.length) * 100}%` }}
@@ -294,7 +305,7 @@ export default function OSAFormPage() {
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Psykosocial riskbedömning</h2>
+                <h2 className="text-lg font-bold">Psykosocial riskbedömning</h2>
                 <p className="text-sm text-muted-foreground">Organizational and Social Work Environment</p>
               </div>
             </div>
@@ -373,7 +384,7 @@ export default function OSAFormPage() {
               <div className="space-y-2">
                 {OSA_SECTIONS.map((section) => (
                   <div key={section.id} className="p-3 rounded-lg bg-muted/50 flex items-start gap-3">
-                    <span className="text-xl">{section.icon}</span>
+                    <section.icon className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                     <div>
                       <p className="font-medium text-sm">{section.title}</p>
                       <p className="text-xs text-muted-foreground">{section.description}</p>
@@ -399,10 +410,10 @@ export default function OSAFormPage() {
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
-                <span className="text-xl">{currentOSASection.icon}</span>
+                <currentOSASection.icon className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{currentOSASection.title}</h2>
+                <h2 className="text-lg font-bold">{currentOSASection.title}</h2>
                 <p className="text-sm text-muted-foreground">{currentOSASection.description}</p>
               </div>
             </div>
@@ -521,7 +532,7 @@ export default function OSAFormPage() {
                 <Brain className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Sammanfattning</h2>
+                <h2 className="text-lg font-bold">Sammanfattning</h2>
                 <p className="text-sm text-muted-foreground">Overall assessment and concerns</p>
               </div>
             </div>
@@ -539,7 +550,7 @@ export default function OSAFormPage() {
                     <CardContent className="py-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-xl">{section.icon}</span>
+                          <section.icon className="h-5 w-5 text-primary" />
                           <div>
                             <p className="font-medium text-sm">{section.title}</p>
                             {sectionConcerns > 0 && (
@@ -602,8 +613,8 @@ export default function OSAFormPage() {
             {concernCount > 0 && (
               <Card className="bg-warning/10 border-warning">
                 <CardContent className="py-4">
-                  <p className="text-sm font-medium text-warning">
-                    ⚠️ {concernCount} riskområde{concernCount > 1 ? "n" : ""} markerade
+                  <p className="text-sm font-medium text-warning flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4 shrink-0" /> {concernCount} riskområde{concernCount > 1 ? "n" : ""} markerade
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Dessa områden bör prioriteras för uppföljning och åtgärder.
@@ -622,7 +633,7 @@ export default function OSAFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSubmit")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSubmit")}</h2>
                 <p className="text-sm text-muted-foreground">Review before submitting</p>
               </div>
             </div>
@@ -680,7 +691,7 @@ export default function OSAFormPage() {
                 const avg = getSectionAverage(section.id);
                 return (
                   <div key={section.id} className="text-center">
-                    <span className="text-lg">{section.icon}</span>
+                    <section.icon className="h-5 w-5 text-primary mx-auto" />
                     <p className={cn(
                       "text-lg font-bold",
                       avg >= 4 ? "text-green-600" :

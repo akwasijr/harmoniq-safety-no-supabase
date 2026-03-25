@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useCompanyParam } from "@/hooks/use-company-param";
 import {
   Plus,
   Package,
@@ -11,6 +10,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingPage } from "@/components/ui/loading";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -20,13 +21,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import type { Part } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 export default function PartsPage() {
   const { t, formatNumber } = useTranslation();
-  const company = useCompanyParam();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { items: parts, add, update , isLoading } = usePartsStore();
+  const { items: parts, add, isLoading } = usePartsStore();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showCreate, setShowCreate] = React.useState(false);
   const [form, setForm] = React.useState({
@@ -68,7 +69,12 @@ export default function PartsPage() {
     setForm({ name: "", part_number: "", unit_cost: "", quantity_in_stock: "", minimum_stock: "", supplier: "" });
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
+    <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6">
       <div className="flex items-center justify-end">
         <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
@@ -79,7 +85,7 @@ export default function PartsPage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <KPICard title={t("parts.title")} value={totalParts} icon={Package} />
-        <KPICard title={t("parts.labels.inventoryValue")} value={`$${totalValue.toLocaleString()}`} icon={Package} />
+        <KPICard title={t("parts.labels.inventoryValue")} value={`$${formatNumber(totalValue)}`} icon={Package} />
         <KPICard title={t("parts.labels.lowStock")} value={lowStockCount} icon={AlertTriangle} />
       </div>
 
@@ -89,50 +95,58 @@ export default function PartsPage() {
       </div>
 
       {filtered.length === 0 ? (
+        <NoDataEmptyState
+          entityName="parts"
+          onAdd={() => setShowCreate(true)}
+          addLabel={t("parts.addPart")}
+        />
+      ) : (
         <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No parts in inventory</p>
-            <p className="text-sm">Add parts to track usage and costs across work orders</p>
+          <CardHeader>
+            <CardTitle>{t("parts.title")}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted/40">
+                  <tr className="text-left">
+                    <th className="px-4 py-3 font-medium">{t("parts.labels.partName")}</th>
+                    <th className="px-4 py-3 font-medium">{t("parts.labels.supplier")}</th>
+                    <th className="px-4 py-3 font-medium">{t("parts.labels.unitCost")}</th>
+                    <th className="px-4 py-3 font-medium">{t("parts.labels.inStock")}</th>
+                    <th className="px-4 py-3 font-medium">{t("parts.labels.minimumStock")}</th>
+                    <th className="px-4 py-3 font-medium">Stock status</th>
+                    <th className="px-4 py-3 font-medium">Inventory value</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filtered.map((part) => {
+                    const isLow = part.quantity_in_stock <= part.minimum_stock;
+                    const inventoryValue = part.quantity_in_stock * part.unit_cost;
+                    return (
+                      <tr key={part.id} className="align-top">
+                        <td className="px-4 py-3">
+                          <div className="font-medium">{part.name}</div>
+                          <div className="font-mono text-xs text-muted-foreground">{part.part_number}</div>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{part.supplier || "—"}</td>
+                        <td className="px-4 py-3">${part.unit_cost.toFixed(2)}</td>
+                        <td className="px-4 py-3">{formatNumber(part.quantity_in_stock)}</td>
+                        <td className="px-4 py-3">{formatNumber(part.minimum_stock)}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant={isLow ? "warning" : "secondary"}>
+                            {isLow ? t("parts.labels.lowStock") : "In stock"}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">${formatNumber(inventoryValue)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((part) => {
-            const isLow = part.quantity_in_stock <= part.minimum_stock;
-            return (
-              <Card key={part.id} className={isLow ? "border-warning/50" : ""}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium">{part.name}</h3>
-                      <p className="text-xs text-muted-foreground font-mono">{part.part_number}</p>
-                    </div>
-                    {isLow && <Badge variant="warning">{t("parts.labels.lowStock")}</Badge>}
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">{t("parts.labels.inStock")}</p>
-                      <p className="font-medium">{part.quantity_in_stock}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">{t("parts.labels.unitCost")}</p>
-                      <p className="font-medium">${part.unit_cost.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">{t("parts.labels.minimumStock")}</p>
-                      <p className="font-medium">{part.minimum_stock}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">{t("parts.labels.supplier")}</p>
-                      <p className="font-medium truncate">{part.supplier || "—"}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
       )}
 
       {/* Create Modal */}
@@ -146,11 +160,11 @@ export default function PartsPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label>{t("parts.labels.partName")}</Label>
-                <Input className="mt-1" placeholder="e.g. Hydraulic Filter" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
+                <Input className="mt-1" placeholder={t("parts.placeholders.partName")} value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
               </div>
               <div>
                 <Label>{t("parts.labels.partNumber")}</Label>
-                <Input className="mt-1" placeholder="e.g. HF-2045-A" value={form.part_number} onChange={(e) => setForm(p => ({ ...p, part_number: e.target.value }))} />
+                <Input className="mt-1" placeholder={t("parts.placeholders.partNumber")} value={form.part_number} onChange={(e) => setForm(p => ({ ...p, part_number: e.target.value }))} />
               </div>
               <div className="grid gap-4 grid-cols-2">
                 <div>
@@ -169,7 +183,7 @@ export default function PartsPage() {
                 </div>
                 <div>
                   <Label>{t("parts.labels.supplier")}</Label>
-                  <Input className="mt-1" placeholder="Supplier name" value={form.supplier} onChange={(e) => setForm(p => ({ ...p, supplier: e.target.value }))} />
+                  <Input className="mt-1" placeholder={t("parts.placeholders.supplier")} value={form.supplier} onChange={(e) => setForm(p => ({ ...p, supplier: e.target.value }))} />
                 </div>
               </div>
               <div className="flex gap-2 justify-end">
@@ -183,5 +197,6 @@ export default function PartsPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

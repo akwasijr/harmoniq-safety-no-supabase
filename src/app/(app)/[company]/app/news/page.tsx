@@ -2,20 +2,41 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FileText, ChevronRight, Clock, Tag, Newspaper, Calendar, FolderOpen, GraduationCap } from "lucide-react";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { useContentStore } from "@/stores/content-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
+import { LoadingPage } from "@/components/ui/loading";
 
 type TabType = "news" | "events" | "documents" | "training";
 
 export default function EmployeeNewsPage() {
   const company = useCompanyParam();
+  const router = useRouter();
+  const { user } = useAuth();
+  const { settings } = useFieldAppSettings();
   const { t, formatDate } = useTranslation();
   const [activeTab, setActiveTab] = React.useState<TabType>("news");
 
   const { items: contentItems , isLoading } = useContentStore();
+
+  React.useEffect(() => {
+    if (!settings.newsEnabled) {
+      router.replace(`/${company}/app`);
+    }
+  }, [company, router, settings.newsEnabled]);
+
+  if (!user) {
+    return <LoadingPage />;
+  }
+
+  if (!settings.newsEnabled) {
+    return <LoadingPage />;
+  }
   const content = contentItems.filter((c) => c.status === "published");
 
   // Group by type
@@ -28,7 +49,7 @@ export default function EmployeeNewsPage() {
     { id: "news" as TabType, label: t("newsApp.tabs.news"), icon: Newspaper, count: news.length },
     { id: "events" as TabType, label: t("newsApp.tabs.events"), icon: Calendar, count: events.length },
     { id: "documents" as TabType, label: t("newsApp.tabs.documents"), icon: FolderOpen, count: documents.length },
-    { id: "training" as TabType, label: "Training", icon: GraduationCap, count: training.length },
+    { id: "training" as TabType, label: t("newsApp.tabs.training") || "Training", icon: GraduationCap, count: training.length },
   ];
 
   const getActiveContent = () => {
@@ -43,13 +64,21 @@ export default function EmployeeNewsPage() {
 
   const activeContent = getActiveContent();
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-full pb-16">
+    <div className="flex flex-col min-h-full">
       {/* Header + Tabs */}
-      <div className="sticky top-0 z-10 bg-background border-b px-4 pt-4 pb-2">
+      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
         <h1 className="text-lg font-bold mb-3">{t("newsApp.title")}</h1>
 
-        {/* Sub-tabs — pill style matching Safety Tasks & Assets */}
+        {/* Sub-tabs, pill style matching Safety Tasks & Assets */}
         <div className="flex gap-1 bg-muted rounded-lg p-1" role="tablist">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -76,11 +105,11 @@ export default function EmployeeNewsPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 px-4 pt-3 pb-20 space-y-3">
         {activeContent.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-              <FileText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+              <FileText className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
             </div>
             <h3 className="mt-4 font-semibold">{t("newsApp.noContentYet", { tab: activeTab })}</h3>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -92,7 +121,7 @@ export default function EmployeeNewsPage() {
             <Link
               key={item.id}
               href={`/${company}/app/news/${item.id}`}
-              className="flex gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50 bg-card"
+              className="field-app-surface flex gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50 bg-card"
             >
               <div className={cn(
                 "flex h-12 w-12 items-center justify-center rounded-lg shrink-0",

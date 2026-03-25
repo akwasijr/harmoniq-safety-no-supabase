@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
+import { getUserDisplayName, getPriorityVariant } from "@/lib/status-utils";
 import {
   AlertCircle,
   ArrowLeft,
@@ -22,11 +23,14 @@ import {
   Timer,
   Shield,
   Package,
-  Image,
+  Image as ImageIcon,
   X,
   Ticket,
   ExternalLink,
   Upload,
+  Lock,
+  Download,
+  ChevronDown,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,14 +40,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingPage } from "@/components/ui/loading";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { useIncidentsStore } from "@/stores/incidents-store";
-import { useTicketsStore } from "@/stores/tickets-store";
-import { useUsersStore } from "@/stores/users-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
-import type { IncidentInvestigation, IncidentAction, IncidentComment, IncidentTimelineEvent, RCAAttachment } from "@/types";
+import { useAuth } from "@/hooks/use-auth";
+import { storeFile } from "@/lib/file-storage";
+import type { IncidentInvestigation, IncidentAction, IncidentComment, IncidentTimelineEvent, RCAAttachment, IncidentDocument, Priority } from "@/types";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const tabs: Tab[] = [
   { id: "details", label: "Details", icon: Info },
@@ -117,36 +123,85 @@ export default function IncidentDetailPage() {
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
-  const { items: incidents, isLoading, update: updateIncident, remove: removeIncident } = useIncidentsStore();
-  const { items: tickets } = useTicketsStore();
-  const { items: users } = useUsersStore();
+  const { user: authUser } = useAuth();
+  const { incidents, tickets, correctiveActions, users, teams, stores } = useCompanyData();
+  const { isLoading, update: updateIncident, remove: removeIncident } = stores.incidents;
+  const { add: addTicket, update: updateTicket } = stores.tickets;
+  const { add: addCorrectiveAction, update: updateCorrectiveAction } = stores.correctiveActions;
 
   const incident = incidents.find((i) => i.id === incidentId);
+  const isLocked = incident?.status === "resolved" || incident?.status === "archived";
   
   // Read investigation and actions from store (persisted)
   const investigation = incident?.investigation ?? null;
   const actions = incident?.actions ?? [];
   const comments = incident?.comments ?? [];
+  const documents = incident?.documents ?? [];
+
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+
+  // Documents state
+  const documentsInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Assignment dropdown state
+  const [showAssignDropdown, setShowAssignDropdown] = React.useState(false);
+
+  // Use refs for frequently-changing derived values to stabilize callbacks
+  const incidentRef = React.useRef(incident);
+  const actionsRef = React.useRef(actions);
+  const commentsRef = React.useRef(comments);
+  React.useEffect(() => {
+    incidentRef.current = incident;
+    actionsRef.current = actions;
+    commentsRef.current = comments;
+  }, [incident, actions, comments]);
 
   // Helper to update investigation in store
-  const setInvestigation = React.useCallback((newInvestigation: IncidentInvestigation | null) => {
-    if (!incident) return;
+  const setInvestigation = (newInvestigation: IncidentInvestigation | null) => {
+    if (!incidentRef.current) return;
     updateIncident(incidentId, { investigation: newInvestigation, updated_at: new Date().toISOString() });
-  }, [incident, incidentId, updateIncident]);
+  };
 
   // Helper to update actions in store
-  const setActions = React.useCallback((newActions: IncidentAction[] | ((prev: IncidentAction[]) => IncidentAction[])) => {
-    if (!incident) return;
-    const resolvedActions = typeof newActions === 'function' ? newActions(actions) : newActions;
+  const setActions = (newActions: IncidentAction[] | ((prev: IncidentAction[]) => IncidentAction[])) => {
+    if (!incidentRef.current) return;
+    const currentActions = actionsRef.current;
+    const resolvedActions = typeof newActions === 'function' ? newActions(currentActions) : newActions;
     updateIncident(incidentId, { actions: resolvedActions, updated_at: new Date().toISOString() });
-  }, [incident, incidentId, actions, updateIncident]);
+  };
+
+  const assignIncidentToUser = (userId: string) => {
+    const selectedUser = users.find((user) => user.id === userId);
+    if (!selectedUser) return;
+    updateIncident(incidentId, {
+      assigned_to: userId,
+      assigned_to_team_id: null,
+      updated_at: new Date().toISOString(),
+    });
+    setShowAssignDropdown(false);
+    toast(`Assigned to ${selectedUser.full_name}`, "success");
+  };
+
+  const assignIncidentToTeam = (teamId: string) => {
+    const selectedTeam = teams.find((team) => team.id === teamId);
+    if (!selectedTeam) return;
+    updateIncident(incidentId, {
+      assigned_to: null,
+      assigned_to_team_id: teamId,
+      updated_at: new Date().toISOString(),
+    });
+    setShowAssignDropdown(false);
+    toast(`Assigned to ${selectedTeam.name}`, "success");
+  };
 
   // Helper to add comment to store
-  const addComment = React.useCallback((comment: IncidentComment) => {
-    if (!incident) return;
-    const newComments = [...comments, comment];
+  const addComment = (comment: IncidentComment) => {
+    if (!incidentRef.current) return;
+    const currentComments = commentsRef.current;
+    const newComments = [...currentComments, comment];
     updateIncident(incidentId, { comments: newComments, updated_at: new Date().toISOString() });
-  }, [incident, incidentId, comments, updateIncident]);
+  };
 
   const handleStartInvestigation = (investigatorId: string) => {
     const newInvestigation: IncidentInvestigation = {
@@ -187,6 +242,9 @@ export default function IncidentDetailPage() {
 
   const reporter = users.find((u) => u.id === incident?.reporter_id);
   const relatedTickets = tickets.filter((t) => t.incident_ids?.includes(incidentId));
+  const correctiveIncidentActions = actions.filter((action) => action.actionType === "corrective");
+  const openCorrectiveActionCount = correctiveIncidentActions.filter((action) => action.status !== "completed").length;
+  const canResolveIncident = openCorrectiveActionCount === 0;
   const [statusValue, setStatusValue] = React.useState("new");
   const [investigatorIdValue, setInvestigatorIdValue] = React.useState("");
 
@@ -202,21 +260,10 @@ export default function IncidentDetailPage() {
   const totalActions = actions.length;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!incident) {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      );
-    }
     return (
       <EmptyState
         icon={AlertCircle}
@@ -234,8 +281,11 @@ export default function IncidentDetailPage() {
   const handleAddAction = () => {
     if (!newAction.title || !newAction.assignee || !newAction.dueDate) return;
     
-    const actionId = `act-${Date.now()}`;
-    const ticketId = `TKT-${Date.now()}`;
+    const actionId = `act-${crypto.randomUUID().slice(0, 8)}`;
+    const ticketId = `TKT-${crypto.randomUUID().slice(0, 8)}`;
+    const correctiveActionId = newAction.actionType === "corrective"
+      ? `ca-${crypto.randomUUID().slice(0, 8)}`
+      : null;
     
     const action: IncidentAction = {
       id: actionId,
@@ -245,6 +295,7 @@ export default function IncidentDetailPage() {
       dueDate: newAction.dueDate,
       status: "pending",
       ticketId: ticketId,
+      correctiveActionId,
       ticketStatus: "open",
       assignee: newAction.assignee,
       createdAt: new Date().toISOString(),
@@ -252,6 +303,43 @@ export default function IncidentDetailPage() {
     };
     
     setActions([...actions, action]);
+
+    // Create actual ticket in store so it appears in tickets list and mobile tasks
+    addTicket({
+      id: ticketId,
+      company_id: incident.company_id,
+      title: newAction.title,
+      description: newAction.description || `${newAction.actionType === "corrective" ? "Corrective" : "Preventive"} action from incident`,
+      priority: (newAction.priority === "urgent" ? "critical" : newAction.priority) as Priority,
+      status: "new",
+      due_date: newAction.dueDate || null,
+      assigned_to: newAction.assignee || null,
+      assigned_groups: [],
+      incident_ids: [incidentId],
+      created_by: incident.reporter_id || "",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    // Sync corrective actions to the corrective actions store
+    if (newAction.actionType === "corrective" && correctiveActionId) {
+      addCorrectiveAction({
+        id: correctiveActionId,
+        company_id: incident.company_id,
+        description: newAction.description || newAction.title,
+        severity: newAction.priority === "urgent" ? "critical" : newAction.priority === "high" ? "high" : newAction.priority === "low" ? "low" : "medium",
+        assigned_to: newAction.assignee || null,
+        asset_id: "",
+        inspection_id: null,
+        due_date: newAction.dueDate || new Date().toISOString(),
+        status: "open",
+        resolution_notes: null,
+        completed_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+
     setShowAddActionModal(false);
     setNewAction({ title: "", description: "", priority: "medium", dueDate: "", assignee: "", actionType: "corrective" });
     toast(`${action.actionType === 'corrective' ? 'Corrective' : 'Preventive'} action created.`, "success");
@@ -260,6 +348,19 @@ export default function IncidentDetailPage() {
   const handleTicketStatusChange = (actionId: string, newStatus: "open" | "in_progress" | "resolved", notes?: string) => {
     setActions((prev) => prev.map((a) => {
       if (a.id === actionId) {
+        const now = new Date().toISOString();
+        // Also update the ticket in the tickets store
+        if (a.ticketId) {
+          const ticketStatus = newStatus === "open" ? "new" : newStatus;
+          updateTicket(a.ticketId, { status: ticketStatus as "new" | "in_progress" | "resolved", updated_at: now });
+        }
+        if (a.correctiveActionId) {
+          updateCorrectiveAction(a.correctiveActionId, {
+            status: newStatus === "resolved" ? "completed" : newStatus === "in_progress" ? "in_progress" : "open",
+            completed_at: newStatus === "resolved" ? now : null,
+            updated_at: now,
+          });
+        }
         return {
           ...a,
           ticketStatus: newStatus,
@@ -293,19 +394,9 @@ export default function IncidentDetailPage() {
     })),
   ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const getAssigneeName = (userId: string) => {
-    const user = users.find((u) => u.id === userId);
-    return user?.full_name || "Unassigned";
-  };
+  const getAssigneeName = (userId: string) => getUserDisplayName(userId, users);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "urgent": return "destructive";
-      case "high": return "high";
-      case "medium": return "medium";
-      default: return "low";
-    }
-  };
+  const getPriorityColor = getPriorityVariant;
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -320,6 +411,7 @@ export default function IncidentDetailPage() {
   };
 
   return (
+    <RoleGuard requiredPermission="incidents.view_own">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -339,13 +431,73 @@ export default function IncidentDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">{t("incidents.buttons.export")}</Button>
-          <Button>{t("common.save")}</Button>
+          <Button variant="outline" onClick={() => {
+            const exportData = {
+              id: incident.id,
+              reference_number: incident.reference_number,
+              title: incident.title,
+              description: incident.description,
+              type: incident.type,
+              severity: incident.severity,
+              priority: incident.priority,
+              status: incident.status,
+              incident_date: incident.incident_date,
+              incident_time: incident.incident_time,
+              building: incident.building,
+              floor: incident.floor,
+              zone: incident.zone,
+              room: incident.room,
+              reporter: reporter?.full_name || "Unknown",
+              investigation: investigation ? {
+                status: investigation.status,
+                investigator: getAssigneeName(investigation.investigator),
+                rootCauseCategory: investigation.rootCauseCategory,
+                rootCauseDescription: investigation.rootCauseDescription,
+                contributingFactors: investigation.contributingFactors,
+                lessonsLearned: investigation.lessonsLearned,
+              } : null,
+              actions: actions.map(a => ({
+                title: a.title,
+                status: a.status,
+                priority: a.priority,
+                assignee: getAssigneeName(a.assignee),
+                dueDate: a.dueDate,
+              })),
+              comments: comments.map(c => ({
+                user: c.user,
+                text: c.text,
+                date: c.date,
+              })),
+              exported_at: new Date().toISOString(),
+            };
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${incident.reference_number || incident.id}-export.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast("Incident exported", "success");
+          }}>{t("incidents.buttons.export")}</Button>
+          <Button onClick={() => {
+            updateIncident(incidentId, { updated_at: new Date().toISOString() });
+            toast("Incident saved", "success");
+          }}>{t("common.save")}</Button>
         </div>
       </div>
 
+      {/* Locked banner */}
+      {isLocked && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900/50 dark:bg-amber-900/20">
+          <Lock className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">{t("incidents.locked")}</p>
+        </div>
+      )}
+
       {/* Tabs */}
-      <DetailTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <DetailTabs tabs={isLocked ? tabs.filter((tab) => tab.id !== "settings") : tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Tab Content */}
       {activeTab === "details" && (
@@ -357,6 +509,21 @@ export default function IncidentDetailPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">{incident.description}</p>
+                {incident.media_urls && incident.media_urls.length > 0 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      Photos & Media ({incident.media_urls.length})
+                    </p>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                      {incident.media_urls.map((url, idx) => (
+                        <div key={url || idx} className="aspect-square rounded-lg bg-muted border flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary cursor-pointer">
+                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -423,7 +590,10 @@ export default function IncidentDetailPage() {
                       <p className="text-sm text-muted-foreground">{t("incidents.labels.activeHazard")}</p>
                       <p className="font-medium">
                         {incident.active_hazard ? (
-                          <span className="text-destructive">⚠️ Yes - Hazard still present</span>
+                          <span className="text-destructive inline-flex items-center gap-1">
+                            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                            Yes - Hazard still present
+                          </span>
                         ) : (
                           <span className="text-success">No</span>
                         )}
@@ -534,14 +704,18 @@ export default function IncidentDetailPage() {
                       style={{ width: totalActions > 0 ? `${(completedActions / totalActions) * 100}%` : "0%" }}
                     />
                   </div>
-                  {allActionsComplete && totalActions > 0 ? (
+                  {canResolveIncident && totalActions > 0 ? (
                     <p className="text-sm text-success flex items-center gap-1">
-                      <CheckCircle className="h-4 w-4" /> All actions completed - incident can be closed
+                      <CheckCircle className="h-4 w-4" /> Corrective follow-up is complete - incident can be closed
                     </p>
                   ) : totalActions === 0 ? (
                     <p className="text-sm text-muted-foreground">No actions created yet</p>
                   ) : (
-                    <p className="text-sm text-muted-foreground">{totalActions - completedActions} action(s) pending</p>
+                    <p className="text-sm text-muted-foreground">
+                      {openCorrectiveActionCount > 0
+                        ? `${openCorrectiveActionCount} corrective action(s) still block closure`
+                        : `${totalActions - completedActions} action(s) pending`}
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -552,38 +726,187 @@ export default function IncidentDetailPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Quick Stats</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Days Open</span>
-                  <span className="font-medium">{Math.floor((Date.now() - new Date(incident.incident_date).getTime()) / 86400000)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Related Tickets</span>
-                  <span className="font-medium">{relatedTickets.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Comments</span>
-                  <span className="font-medium">{comments.length}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
                 <CardTitle className="text-base">Assigned To</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
-                    SM
-                  </div>
-                  <div>
-                    <p className="font-medium">Safety Manager</p>
-                    <p className="text-sm text-muted-foreground">Primary investigator</p>
-                  </div>
-                </div>
+                {(() => {
+                  const assignedUser = incident.assigned_to ? users.find((user) => user.id === incident.assigned_to) : null;
+                  const assignedTeam = incident.assigned_to_team_id ? teams.find((team) => team.id === incident.assigned_to_team_id) : null;
+                  if (assignedUser) {
+                    const initials = assignedUser.full_name
+                      .split(" ")
+                      .map(n => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2);
+                    return (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
+                            {initials}
+                          </div>
+                          <div>
+                            <p className="font-medium">{assignedUser.full_name}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{assignedUser.role.replace("_", " ")}</p>
+                          </div>
+                        </div>
+                        {!isLocked && (
+                          <div className="relative">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full gap-1"
+                              onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                            >
+                              Reassign <ChevronDown className="h-3 w-3" />
+                            </Button>
+                            {showAssignDropdown && (
+                              <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg max-h-48 overflow-y-auto">
+                                {users.map((u) => (
+                                  <button
+                                    key={u.id}
+                                    type="button"
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                    onClick={() => {
+                                      assignIncidentToUser(u.id);
+                                    }}
+                                  >
+                                    {u.full_name} <span className="text-muted-foreground capitalize">({u.role.replace("_", " ")})</span>
+                                  </button>
+                                ))}
+                                {teams.length > 0 && (
+                                  <>
+                                    <div className="border-t px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                      Teams
+                                    </div>
+                                    {teams.map((team) => (
+                                      <button
+                                        key={team.id}
+                                        type="button"
+                                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                        onClick={() => assignIncidentToTeam(team.id)}
+                                      >
+                                        {team.name}
+                                      </button>
+                                    ))}
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  if (assignedTeam) {
+                    return (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
+                            <User className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{assignedTeam.name}</p>
+                            <p className="text-sm text-muted-foreground">Team assignment</p>
+                          </div>
+                        </div>
+                        {!isLocked && (
+                          <div className="relative">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full gap-1"
+                              onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                            >
+                              Reassign <ChevronDown className="h-3 w-3" />
+                            </Button>
+                            {showAssignDropdown && (
+                              <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg max-h-48 overflow-y-auto">
+                                {users.map((u) => (
+                                  <button
+                                    key={u.id}
+                                    type="button"
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                    onClick={() => assignIncidentToUser(u.id)}
+                                  >
+                                    {u.full_name} <span className="text-muted-foreground capitalize">({u.role.replace("_", " ")})</span>
+                                  </button>
+                                ))}
+                                {teams.length > 0 && (
+                                  <>
+                                    <div className="border-t px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                      Teams
+                                    </div>
+                                    {teams.map((team) => (
+                                      <button
+                                        key={team.id}
+                                        type="button"
+                                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                        onClick={() => assignIncidentToTeam(team.id)}
+                                      >
+                                        {team.name}
+                                      </button>
+                                    ))}
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">Unassigned</p>
+                      {!isLocked && (
+                        <div className="relative">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full gap-1"
+                            onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                          >
+                            <Plus className="h-3 w-3" /> Assign
+                          </Button>
+                          {showAssignDropdown && (
+                            <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg max-h-48 overflow-y-auto">
+                              {users.map((u) => (
+                                <button
+                                  key={u.id}
+                                  type="button"
+                                  className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                  onClick={() => {
+                                    assignIncidentToUser(u.id);
+                                  }}
+                                >
+                                  {u.full_name} <span className="text-muted-foreground capitalize">({u.role.replace("_", " ")})</span>
+                                </button>
+                              ))}
+                              {teams.length > 0 && (
+                                <>
+                                  <div className="border-t px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                    Teams
+                                  </div>
+                                  {teams.map((team) => (
+                                    <button
+                                      key={team.id}
+                                      type="button"
+                                      className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                      onClick={() => assignIncidentToTeam(team.id)}
+                                    >
+                                      {team.name}
+                                    </button>
+                                  ))}
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </div>
@@ -718,11 +1041,11 @@ export default function IncidentDetailPage() {
                         </div>
                       )}
 
-                      {/* Notes / Comments — open field */}
+                      {/* Notes / Comments, open field */}
                       <div>
                         <Label className="text-muted-foreground">Notes & Comments</Label>
                         <Textarea
-                          placeholder="Add your notes, observations, or comments here…"
+                          placeholder={t("incidents.placeholders.addNotes")}
                           value={investigation.notes}
                           onChange={(e) => setInvestigation({ ...investigation, notes: e.target.value })}
                           rows={4}
@@ -730,7 +1053,7 @@ export default function IncidentDetailPage() {
                         />
                       </div>
 
-                      {/* Attachments — images & PDFs */}
+                      {/* Attachments, images & PDFs */}
                       <div>
                         <Label className="text-muted-foreground">Attachments</Label>
                         <div className="mt-2 space-y-3">
@@ -740,7 +1063,7 @@ export default function IncidentDetailPage() {
                               {investigation.attachments.map((file) => (
                                 <div key={file.id} className="flex items-center gap-2 rounded-lg border p-2">
                                   {file.type.startsWith("image/") ? (
-                                    <Image className="h-4 w-4 text-blue-500 shrink-0" />
+                                    <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" />
                                   ) : (
                                     <FileText className="h-4 w-4 text-red-500 shrink-0" />
                                   )}
@@ -772,19 +1095,26 @@ export default function IncidentDetailPage() {
                               className="hidden"
                               accept="image/*,.pdf"
                               multiple
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 const files = Array.from(e.target.files || []);
-                                const newAttachments: RCAAttachment[] = files.map((f) => ({
-                                  id: crypto.randomUUID(),
-                                  name: f.name,
-                                  type: f.type,
-                                  url: URL.createObjectURL(f),
-                                  addedAt: new Date().toISOString(),
-                                }));
-                                setInvestigation({
-                                  ...investigation,
-                                  attachments: [...investigation.attachments, ...newAttachments],
-                                });
+                                for (const f of files) {
+                                  try {
+                                    const stored = await storeFile(f, "incident-investigation", incidentId, authUser?.id || "");
+                                    const newAttachment: RCAAttachment = {
+                                      id: stored.id,
+                                      name: stored.name,
+                                      type: stored.type,
+                                      url: stored.dataUrl,
+                                      addedAt: new Date().toISOString(),
+                                    };
+                                    setInvestigation({
+                                      ...(incidentRef.current?.investigation ?? investigation!),
+                                      attachments: [...(incidentRef.current?.investigation?.attachments ?? investigation!.attachments), newAttachment],
+                                    });
+                                  } catch {
+                                    toast(`Failed to upload ${f.name}`, "error");
+                                  }
+                                }
                                 e.target.value = "";
                               }}
                             />
@@ -840,7 +1170,7 @@ export default function IncidentDetailPage() {
                   {showLessonsInput && !investigation.lessonsLearned ? (
                     <div className="space-y-3">
                       <Textarea
-                        placeholder="Enter lessons learned from this incident..."
+                        placeholder={t("incidents.placeholders.lessonsLearned")}
                         value={lessonsInputValue}
                         onChange={(e) => setLessonsInputValue(e.target.value)}
                         rows={3}
@@ -929,7 +1259,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Witness Name *</Label>
                     <Input 
-                      placeholder="Full name of witness"
+                      placeholder={t("incidents.placeholders.witnessName")}
                       value={newWitness.name}
                       onChange={(e) => setNewWitness({ ...newWitness, name: e.target.value })}
                     />
@@ -937,7 +1267,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Statement *</Label>
                     <Textarea 
-                      placeholder="What did the witness observe?"
+                      placeholder={t("incidents.placeholders.witnessStatement")}
                       value={newWitness.statement}
                       onChange={(e) => setNewWitness({ ...newWitness, statement: e.target.value })}
                       rows={4}
@@ -983,7 +1313,7 @@ export default function IncidentDetailPage() {
                     </select>
                     {investigation.rootCauseCategory === "other" && (
                       <Input
-                        placeholder="Please specify…"
+                        placeholder={t("incidents.placeholders.pleaseSpecify")}
                         value={investigation.rootCauseOther}
                         onChange={(e) => setInvestigation({ ...investigation, rootCauseOther: e.target.value })}
                         className="mt-2"
@@ -993,7 +1323,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Root Cause Description</Label>
                     <Textarea 
-                      placeholder="Describe the root cause in detail..."
+                      placeholder={t("incidents.placeholders.rootCauseDetail")}
                       value={investigation.rootCauseDescription}
                       onChange={(e) => setInvestigation({ ...investigation, rootCauseDescription: e.target.value })}
                       rows={3}
@@ -1024,7 +1354,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Lessons Learned</Label>
                     <Textarea 
-                      placeholder="What lessons can be shared to prevent similar incidents?"
+                      placeholder={t("incidents.placeholders.shareLessons")}
                       value={investigation.lessonsLearned}
                       onChange={(e) => setInvestigation({ ...investigation, lessonsLearned: e.target.value })}
                       rows={3}
@@ -1036,7 +1366,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Notes & Comments</Label>
                     <Textarea
-                      placeholder="Add any additional notes or comments…"
+                      placeholder={t("incidents.placeholders.additionalNotes")}
                       value={investigation.notes}
                       onChange={(e) => setInvestigation({ ...investigation, notes: e.target.value })}
                       rows={3}
@@ -1052,7 +1382,7 @@ export default function IncidentDetailPage() {
                         {investigation.attachments.map((file) => (
                           <div key={file.id} className="flex items-center gap-2 rounded border p-2 text-sm">
                             {file.type.startsWith("image/") ? (
-                              <Image className="h-4 w-4 text-blue-500 shrink-0" />
+                              <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" />
                             ) : (
                               <FileText className="h-4 w-4 text-red-500 shrink-0" />
                             )}
@@ -1082,19 +1412,26 @@ export default function IncidentDetailPage() {
                         className="hidden"
                         accept="image/*,.pdf"
                         multiple
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const files = Array.from(e.target.files || []);
-                          const newAttachments: RCAAttachment[] = files.map((f) => ({
-                            id: crypto.randomUUID(),
-                            name: f.name,
-                            type: f.type,
-                            url: URL.createObjectURL(f),
-                            addedAt: new Date().toISOString(),
-                          }));
-                          setInvestigation({
-                            ...investigation,
-                            attachments: [...investigation.attachments, ...newAttachments],
-                          });
+                          for (const f of files) {
+                            try {
+                              const stored = await storeFile(f, "incident-investigation", incidentId, authUser?.id || "");
+                              const newAttachment: RCAAttachment = {
+                                id: stored.id,
+                                name: stored.name,
+                                type: stored.type,
+                                url: stored.dataUrl,
+                                addedAt: new Date().toISOString(),
+                              };
+                              setInvestigation({
+                                ...(incidentRef.current?.investigation ?? investigation!),
+                                attachments: [...(incidentRef.current?.investigation?.attachments ?? investigation!.attachments), newAttachment],
+                              });
+                            } catch {
+                              toast(`Failed to upload ${f.name}`, "error");
+                            }
+                          }
                           e.target.value = "";
                         }}
                       />
@@ -1173,7 +1510,7 @@ export default function IncidentDetailPage() {
                         <div className="flex flex-wrap gap-4 text-sm">
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <User className="h-4 w-4" />
-                            {getAssigneeName(action.assignee)}
+                            {action.assignee ? getAssigneeName(action.assignee) : "Unassigned"}
                           </div>
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <Calendar className="h-4 w-4" />
@@ -1225,6 +1562,33 @@ export default function IncidentDetailPage() {
                             </div>
                           )}
                         </div>
+                        {action.correctiveActionId && (
+                          <div className="border rounded-lg p-3 bg-destructive/5">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-4 w-4 text-destructive" />
+                                <span className="text-sm font-medium">{action.correctiveActionId}</span>
+                                <Badge variant={
+                                  (correctiveActions.find((item) => item.id === action.correctiveActionId)?.status ?? "open") === "completed"
+                                    ? "success"
+                                    : (correctiveActions.find((item) => item.id === action.correctiveActionId)?.status ?? "open") === "in_progress"
+                                      ? "warning"
+                                      : "destructive"
+                                }>
+                                  {correctiveActions.find((item) => item.id === action.correctiveActionId)?.status?.replace(/_/g, " ") || "open"}
+                                </Badge>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="gap-1"
+                                onClick={() => router.push(`/${company}/dashboard/corrective-actions/${action.correctiveActionId}`)}
+                              >
+                                <ExternalLink className="h-3 w-3" /> View Corrective Action
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -1276,7 +1640,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Action Title *</Label>
                     <Input 
-                      placeholder="What needs to be done?"
+                      placeholder={t("incidents.placeholders.actionRequired")}
                       value={newAction.title}
                       onChange={(e) => setNewAction({ ...newAction, title: e.target.value })}
                     />
@@ -1284,7 +1648,7 @@ export default function IncidentDetailPage() {
                   <div>
                     <Label>Description</Label>
                     <Textarea 
-                      placeholder="Additional details..."
+                      placeholder={t("incidents.placeholders.additionalDetails")}
                       value={newAction.description}
                       onChange={(e) => setNewAction({ ...newAction, description: e.target.value })}
                       rows={3}
@@ -1376,10 +1740,10 @@ export default function IncidentDetailPage() {
             <div className="border-t pt-4">
               <div className="flex gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
-                  You
+                  {authUser?.full_name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "?"}
                 </div>
                 <div className="flex-1 space-y-2">
-                  <Textarea placeholder="Add a comment..." value={newComment} onChange={(e) => setNewComment(e.target.value)} rows={3} />
+                  <Textarea placeholder={t("incidents.placeholders.addComment")} value={newComment} onChange={(e) => setNewComment(e.target.value)} rows={3} />
                   <Button 
                     size="sm" 
                     disabled={!newComment.trim()}
@@ -1387,11 +1751,11 @@ export default function IncidentDetailPage() {
                       if (!newComment.trim()) return;
                       const comment: IncidentComment = {
                         id: `comment-${Date.now()}`,
-                        user: "Current User", // Would come from auth in production
-                        userId: "current-user",
+                        user: authUser?.full_name || "Unknown User",
+                        userId: authUser?.id || "unknown",
                         text: newComment.trim(),
                         date: new Date().toISOString(),
-                        avatar: "CU",
+                        avatar: authUser?.full_name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "?",
                       };
                       addComment(comment);
                       setNewComment("");
@@ -1413,7 +1777,7 @@ export default function IncidentDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Image className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" />
                 Photos & Media
               </CardTitle>
             </CardHeader>
@@ -1422,7 +1786,7 @@ export default function IncidentDetailPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {incident.media_urls.map((url, idx) => (
                     <div key={url || idx} className="aspect-square rounded-lg bg-muted border flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary cursor-pointer">
-                      <Image className="h-8 w-8 text-muted-foreground" />
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
                     </div>
                   ))}
                 </div>
@@ -1439,38 +1803,94 @@ export default function IncidentDetailPage() {
                 <FileText className="h-4 w-4" />
                 Documents
               </CardTitle>
-              <Button size="sm" variant="outline" className="gap-1"><Plus className="h-3 w-3" /> Upload</Button>
+              <Button size="sm" variant="outline" className="gap-1" onClick={() => documentsInputRef.current?.click()}>
+                <Plus className="h-3 w-3" /> Upload
+              </Button>
+              <input
+                ref={documentsInputRef}
+                type="file"
+                className="hidden"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                multiple
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files || []);
+                  for (const f of files) {
+                    try {
+                      const stored = await storeFile(f, "incident-document", incidentId, authUser?.id || "");
+                      const newDoc: IncidentDocument = {
+                        id: stored.id,
+                        name: stored.name,
+                        type: stored.type,
+                        url: stored.dataUrl,
+                        size: stored.size,
+                        uploadedAt: new Date().toISOString(),
+                        uploadedBy: authUser?.full_name || "Unknown",
+                      };
+                      const currentDocs = incidentRef.current?.documents ?? [];
+                      updateIncident(incidentId, {
+                        documents: [...currentDocs, newDoc],
+                        updated_at: new Date().toISOString(),
+                      });
+                      toast(`Uploaded ${stored.name}`, "success");
+                    } catch {
+                      toast(`Failed to upload ${f.name}`, "error");
+                    }
+                  }
+                  e.target.value = "";
+                }}
+              />
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">Incident Report.pdf</p>
-                    <p className="text-xs text-muted-foreground">2.3 MB • Uploaded today</p>
-                  </div>
+              {documents.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
+                  <Button size="sm" variant="outline" className="mt-3 gap-1" onClick={() => documentsInputRef.current?.click()}>
+                    <Upload className="h-3 w-3" /> Upload Document
+                  </Button>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">Witness Statement.docx</p>
-                    <p className="text-xs text-muted-foreground">145 KB • 2 days ago</p>
-                  </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 group">
+                      <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{doc.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(doc.size / 1024).toFixed(1)} KB • {doc.uploadedBy}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {doc.url && (
+                          <a href={doc.url} download={doc.name} className="inline-flex">
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <Download className="h-3 w-3" />
+                            </Button>
+                          </a>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                          onClick={() => {
+                            const updatedDocs = documents.filter(d => d.id !== doc.id);
+                            updateIncident(incidentId, { documents: updatedDocs, updated_at: new Date().toISOString() });
+                            toast("Document removed", "info");
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">Investigation Notes.pdf</p>
-                    <p className="text-xs text-muted-foreground">856 KB • 3 days ago</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
       )}
 
-      {activeTab === "settings" && (
+      {activeTab === "settings" && !isLocked && (
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -1487,11 +1907,16 @@ export default function IncidentDetailPage() {
                   value={statusValue}
                   onChange={(e) => {
                     const value = e.target.value;
-                    setStatusValue(value);
                     if (!incident) return;
+                    if (value === "resolved" && !canResolveIncident) {
+                      toast(`Cannot resolve incident while ${openCorrectiveActionCount} corrective action(s) remain open.`, "error");
+                      return;
+                    }
+                    setStatusValue(value);
                     updateIncident(incident.id, {
                       status: value as typeof incident.status,
                       resolved_at: value === "resolved" ? new Date().toISOString() : null,
+                      resolved_by: value === "resolved" ? (investigatorIdValue || incident.resolved_by || authUser?.id || null) : incident.resolved_by,
                       updated_at: new Date().toISOString(),
                     });
                     toast("Incident status updated");
@@ -1502,6 +1927,11 @@ export default function IncidentDetailPage() {
                   <option value="in_review">In Review</option>
                   <option value="resolved">Resolved</option>
                 </select>
+                {!canResolveIncident && (
+                  <p className="mt-2 text-sm text-destructive">
+                    Resolution is blocked until all corrective follow-up actions are completed.
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="assigned-investigator">Assigned Investigator</Label>
@@ -1546,8 +1976,7 @@ export default function IncidentDetailPage() {
                   onClick={() => {
                     if (!incident) return;
                     updateIncident(incident.id, {
-                      status: "resolved",
-                      resolved_at: new Date().toISOString(),
+                      status: "archived",
                       updated_at: new Date().toISOString(),
                     });
                     toast("Incident archived");
@@ -1565,12 +1994,7 @@ export default function IncidentDetailPage() {
                 <Button
                   variant="destructive"
                   className="gap-2"
-                  onClick={() => {
-                    if (!incident) return;
-                    removeIncident(incident.id);
-                    toast("Incident deleted", "info");
-                    router.push(`/${company}/dashboard/incidents`);
-                  }}
+                  onClick={() => setShowDeleteConfirm(true)}
                 >
                   <Trash2 className="h-4 w-4" /> Delete
                 </Button>
@@ -1580,5 +2004,38 @@ export default function IncidentDetailPage() {
         </div>
       )}
     </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="relative bg-background rounded-lg shadow-lg w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Delete Incident</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowDeleteConfirm(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to permanently delete this incident? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (!incident) return;
+                  removeIncident(incident.id);
+                  toast("Incident deleted", "info");
+                  router.push(`/${company}/dashboard/incidents`);
+                }}
+              >
+                Delete Permanently
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </RoleGuard>
   );
 }

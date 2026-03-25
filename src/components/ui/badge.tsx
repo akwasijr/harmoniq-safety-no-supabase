@@ -20,7 +20,7 @@ const badgeVariants = cva(
           "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
         info:
           "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-        outline: "text-foreground border-border",
+        outline: "text-foreground bg-muted/50 border-border",
         // Status variants for incidents (both dash and underscore versions)
         new: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
         "in-progress": "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
@@ -35,6 +35,19 @@ const badgeVariants = cva(
         medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200",
         high: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
         critical: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+        // Semantic status variants
+        expired:
+          "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+        overdue:
+          "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
+        inactive:
+          "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200",
+        active:
+          "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
+        completed:
+          "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
+        cancelled:
+          "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200",
       },
     },
     defaultVariants: {
@@ -44,12 +57,12 @@ const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <span className={cn(badgeVariants({ variant }), className)} {...props} />
   );
 }
 

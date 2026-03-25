@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getEnvStatus } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const healthLimiter = createRateLimiter({ limit: 60, windowMs: 60_000, prefix: "health" });
 
 export const dynamic = "force-dynamic";
 
@@ -40,25 +43,38 @@ interface HealthSnapshot {
 
 async function getHealthSnapshot(): Promise<HealthSnapshot> {
   const env = getEnvStatus();
+  const isMockMode = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true" && (!env.hasSupabaseUrl || !env.hasSupabasePublishableKey);
   const issues: string[] = [];
   const warnings: string[] = [];
   const database = {
-    ok: false,
+    ok: isMockMode,
     latency_ms: null as number | null,
     error: null as string | null,
   };
 
   if (!env.hasSupabaseUrl) {
-    issues.push("supabase_url_missing");
+    if (isMockMode) {
+      warnings.push("supabase_url_missing");
+    } else {
+      issues.push("supabase_url_missing");
+    }
   }
 
   if (!env.hasSupabasePublishableKey) {
-    issues.push("supabase_publishable_key_missing");
+    if (isMockMode) {
+      warnings.push("supabase_publishable_key_missing");
+    } else {
+      issues.push("supabase_publishable_key_missing");
+    }
   }
 
   if (!env.hasSupabaseAdminKey) {
-    issues.push("supabase_admin_key_missing");
-    database.error = "Supabase admin key missing";
+    if (isMockMode) {
+      warnings.push("supabase_admin_key_missing");
+    } else {
+      issues.push("supabase_admin_key_missing");
+      database.error = "Supabase admin key missing";
+    }
   }
 
   if (!env.hasConfiguredSiteUrl) {
@@ -91,7 +107,8 @@ async function getHealthSnapshot(): Promise<HealthSnapshot> {
 
       if (error) {
         issues.push("database_unreachable");
-        database.error = error.message;
+        console.error("[Health API] Database check failed:", error.message);
+        database.error = "Database connection failed";
       } else {
         database.ok = true;
       }
@@ -101,8 +118,8 @@ async function getHealthSnapshot(): Promise<HealthSnapshot> {
   // Memory usage
   const mem = process.memoryUsage();
 
-  const snapshot: HealthSnapshot = {
-    ok: issues.length === 0 && database.ok,
+  return {
+    ok: issues.length === 0 && (database.ok || isMockMode),
     timestamp: new Date().toISOString(),
     version: process.env.npm_package_version || "0.1.0",
     uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
@@ -126,8 +143,6 @@ async function getHealthSnapshot(): Promise<HealthSnapshot> {
       },
     },
   };
-
-  return snapshot;
 }
 
 function withNoStoreHeaders(response: NextResponse | Response) {
@@ -135,7 +150,10 @@ function withNoStoreHeaders(response: NextResponse | Response) {
   return response;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rl = healthLimiter.check(request);
+  if (!rl.allowed) return rl.response;
+
   const snapshot = await getHealthSnapshot();
   const status = snapshot.ok ? 200 : 503;
 

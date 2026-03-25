@@ -16,7 +16,8 @@ export function loadFromStorage<T>(key: string, fallback: T): T {
     // Non-array: verify it's the same type as fallback
     if (!Array.isArray(fallback) && typeof parsed !== typeof fallback) return fallback;
     return parsed as T;
-  } catch {
+  } catch (err) {
+    console.warn(`[Harmoniq] Failed to parse localStorage key "${key}":`, err);
     return fallback;
   }
 }
@@ -38,7 +39,8 @@ export function loadOptionalStringFromStorage(key: string): string | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return typeof parsed === "string" && parsed.length > 0 ? parsed : null;
-  } catch {
+  } catch (err) {
+    console.warn(`[Harmoniq] Failed to parse localStorage key "${key}":`, err);
     return null;
   }
 }

@@ -2,14 +2,17 @@
 
 import * as React from "react";
 
-// Import translation files statically (no dynamic import needed for 3 languages)
+// Import translation files statically
 import en from "./messages/en.json";
 import nl from "./messages/nl.json";
 import sv from "./messages/sv.json";
+import de from "./messages/de.json";
+import fr from "./messages/fr.json";
+import es from "./messages/es.json";
 
 // ---------- Types ----------
 
-export type SupportedLocale = "en" | "nl" | "sv";
+export type SupportedLocale = "en" | "nl" | "sv" | "de" | "fr" | "es";
 
 export interface LocaleConfig {
   code: SupportedLocale;
@@ -54,6 +57,33 @@ export const LOCALE_CONFIGS: Record<SupportedLocale, LocaleConfig> = {
     numberLocale: "sv-SE",
     direction: "ltr",
   },
+  de: {
+    code: "de",
+    name: "Deutsch",
+    englishName: "German",
+    flag: "🇩🇪",
+    dateLocale: "de-DE",
+    numberLocale: "de-DE",
+    direction: "ltr",
+  },
+  fr: {
+    code: "fr",
+    name: "Français",
+    englishName: "French",
+    flag: "🇫🇷",
+    dateLocale: "fr-FR",
+    numberLocale: "fr-FR",
+    direction: "ltr",
+  },
+  es: {
+    code: "es",
+    name: "Español",
+    englishName: "Spanish",
+    flag: "🇪🇸",
+    dateLocale: "es-ES",
+    numberLocale: "es-ES",
+    direction: "ltr",
+  },
 };
 
 export const SUPPORTED_LOCALES = Object.values(LOCALE_CONFIGS);
@@ -64,7 +94,19 @@ export const COUNTRY_DEFAULT_LOCALE: Record<string, SupportedLocale> = {
   NL: "nl",
   SE: "sv",
   GB: "en",
-  DE: "en", // fallback
+  DE: "de",
+  FR: "fr",
+  ES: "es",
+};
+
+// Locale → primary country mapping (inverse of above, picks first match)
+export const LOCALE_DEFAULT_COUNTRY: Record<SupportedLocale, string> = {
+  en: "US",
+  nl: "NL",
+  sv: "SE",
+  de: "DE",
+  fr: "FR",
+  es: "ES",
 };
 
 // ---------- Flatten helper ----------
@@ -88,6 +130,9 @@ const MESSAGE_BUNDLES: Record<SupportedLocale, Messages> = {
   en: flattenMessages(en as unknown as Record<string, unknown>),
   nl: flattenMessages(nl as unknown as Record<string, unknown>),
   sv: flattenMessages(sv as unknown as Record<string, unknown>),
+  de: flattenMessages(de as unknown as Record<string, unknown>),
+  fr: flattenMessages(fr as unknown as Record<string, unknown>),
+  es: flattenMessages(es as unknown as Record<string, unknown>),
 };
 
 // ---------- Context ----------
@@ -108,13 +153,15 @@ const I18nContext = React.createContext<I18nContextValue | null>(null);
 
 const STORAGE_KEY = "harmoniq_locale";
 
+function getStoredLocale(): SupportedLocale | null {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return stored && stored in MESSAGE_BUNDLES ? (stored as SupportedLocale) : null;
+}
+
 function getInitialLocale(companyLocale?: SupportedLocale): SupportedLocale {
   // Priority: localStorage user preference > company default > "en"
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && stored in MESSAGE_BUNDLES) return stored as SupportedLocale;
-  }
-  return companyLocale ?? "en";
+  return getStoredLocale() ?? companyLocale ?? "en";
 }
 
 export function I18nProvider({
@@ -136,6 +183,17 @@ export function I18nProvider({
       document.documentElement.setAttribute("data-language", newLocale);
     }
   }, []);
+
+  React.useEffect(() => {
+    const storedLocale = getStoredLocale();
+    if (storedLocale) {
+      setLocaleState((prev) => (prev === storedLocale ? prev : storedLocale));
+      return;
+    }
+
+    const nextLocale = companyLocale ?? "en";
+    setLocaleState((prev) => (prev === nextLocale ? prev : nextLocale));
+  }, [companyLocale]);
 
   // Sync HTML lang on mount
   React.useEffect(() => {

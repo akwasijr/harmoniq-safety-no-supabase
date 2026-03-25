@@ -7,13 +7,18 @@ import { useAuth } from "@/hooks/use-auth";
 import { useInspectionRoutesStore } from "@/stores/inspection-routes-store";
 import { useInspectionRoundsStore } from "@/stores/inspection-rounds-store";
 import { useAssetsStore } from "@/stores/assets-store";
+import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
+import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { createCorrectiveActionFromInspection, createWorkOrderFromInspection } from "@/lib/work-order-generator";
 import { useToast } from "@/components/ui/toast";
 import { useSync } from "@/hooks/use-sync";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { LoadingPage } from "@/components/ui/loading";
 import {
   ArrowLeft,
   ArrowRight,
@@ -34,6 +39,9 @@ import type {
   InspectionCheckpointResult,
   CheckpointResult,
 } from "@/types";
+import { useGps } from "@/hooks/use-gps";
+import { GpsCaptureButton } from "@/components/shared/gps-capture-button";
+import { storeFile, FileValidationError } from "@/lib/file-storage";
 
 const CHECK_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   visual: Eye,
@@ -50,43 +58,82 @@ function InspectionRoundContent() {
   const routeId = searchParams.get("route");
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { addToQueue, isOnline } = useSync();
 
-  const { items: routes } = useInspectionRoutesStore();
+  const { items: routes, isLoading: isRoutesLoading } = useInspectionRoutesStore();
   const { add: addRound } = useInspectionRoundsStore({ skipLoad: true });
-  const { items: assets } = useAssetsStore();
+  const { items: assets, isLoading: isAssetsLoading } = useAssetsStore();
+  const { add: addCorrectiveAction } = useCorrectiveActionsStore();
+  const { add: addWorkOrder } = useWorkOrdersStore();
 
   const route = routes.find((r) => r.id === routeId);
+  const visibleRoute =
+    route &&
+    user?.company_id &&
+    route.company_id === user.company_id &&
+    route.status === "active" &&
+    (
+      (!route.assigned_to_user_id && !route.assigned_to_team_id) ||
+      route.assigned_to_user_id === user.id ||
+      (route.assigned_to_team_id
+        ? user.team_ids?.includes(route.assigned_to_team_id)
+        : false)
+    )
+      ? route
+      : undefined;
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [results, setResults] = React.useState<Map<string, InspectionCheckpointResult>>(new Map());
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [roundStartedAt] = React.useState(new Date().toISOString());
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const gps = useGps();
 
-  if (!route || route.checkpoints.length === 0) {
+  // Auto-capture GPS on page load (field worker is at the location)
+  React.useEffect(() => {
+    gps.captureLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (isRoutesLoading || isAssetsLoading) {
+    return <LoadingPage />;
+  }
+
+  if (!visibleRoute || visibleRoute.checkpoints.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm">
           <CardContent className="pt-6 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-            <h2 className="font-semibold text-lg">Route not found</h2>
-            <p className="text-sm text-muted-foreground mt-1">This inspection route could not be loaded.</p>
-            <Button className="mt-4 w-full" onClick={() => router.back()}>Go Back</Button>
+            <h2 className="font-semibold text-lg">{t("inspectionRounds.routeNotFound")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("inspectionRounds.routeNotFoundDesc")}
+            </p>
+            <Button className="mt-4 w-full" onClick={() => router.back()}>
+              {t("common.goBack")}
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const checkpoints = route.checkpoints.sort((a, b) => a.order - b.order);
+  const checkpoints = visibleRoute.checkpoints.sort((a, b) => a.order - b.order);
   const checkpoint = checkpoints[currentIndex];
-  const asset = assets.find((a) => a.id === checkpoint.asset_id);
+  const asset = assets.find(
+    (a) => a.id === checkpoint.asset_id && a.company_id === user?.company_id,
+  );
   const totalCheckpoints = checkpoints.length;
   const completedCount = results.size;
   const progress = Math.round((completedCount / totalCheckpoints) * 100);
 
   const currentResult = results.get(checkpoint.id);
   const CheckIcon = CHECK_TYPE_ICONS[checkpoint.check_type] || Eye;
+  const resultLabels: Record<CheckpointResult, string> = {
+    pass: t("inspectionRounds.pass"),
+    fail: t("inspectionRounds.fail"),
+    needs_attention: t("inspectionRounds.needsAttention"),
+  };
 
   const setCheckpointResult = (update: Partial<InspectionCheckpointResult>) => {
     const existing = results.get(checkpoint.id);
@@ -126,14 +173,26 @@ function InspectionRoundContent() {
     setCheckpointResult({ result });
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setCheckpointResult({ photo_url: reader.result as string });
-    };
-    reader.readAsDataURL(file);
+    try {
+      const stored = await storeFile(
+        file,
+        "inspection_round",
+        visibleRoute.id,
+        user?.id || "unknown",
+      );
+      setCheckpointResult({ photo_url: stored.dataUrl });
+    } catch (err) {
+      if (err instanceof FileValidationError) {
+        toast(err.message);
+      } else if (err instanceof Error && err.message === "QUOTA_EXCEEDED") {
+        toast("Storage is full. Delete some files and try again.");
+      } else {
+        toast("Failed to upload photo");
+      }
+    }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -163,7 +222,7 @@ function InspectionRoundContent() {
 
     const roundData = {
       id: crypto.randomUUID(),
-      route_id: route.id,
+      route_id: visibleRoute.id,
       company_id: user?.company_id || "",
       inspector_id: user?.id || "",
       status: "completed" as const,
@@ -171,16 +230,53 @@ function InspectionRoundContent() {
       completed_at: now,
       checkpoint_results: Array.from(results.values()),
       alerts_created: alertsCreated,
+      gps_lat: gps.coords?.lat ?? null,
+      gps_lng: gps.coords?.lng ?? null,
       created_at: now,
       updated_at: now,
     };
 
     addRound(roundData);
 
+    // Auto-generate work orders for failed / needs_attention checkpoints
+    const failedResults = Array.from(results.values()).filter(
+      (r) => r.result === "fail" || r.result === "needs_attention",
+    );
+    for (const r of failedResults) {
+      const cpAsset = assets.find((a) => a.id === r.asset_id);
+      if (!cpAsset) continue;
+      const correctiveAction = createCorrectiveActionFromInspection({
+        inspection: {
+          id: roundData.id,
+          asset_id: r.asset_id,
+          result: r.result,
+          notes: "Auto-generated from inspection round",
+        },
+        asset: { id: cpAsset.id, name: cpAsset.name, company_id: cpAsset.company_id, criticality: cpAsset.criticality },
+      });
+      addCorrectiveAction(correctiveAction);
+      const wo = createWorkOrderFromInspection({
+        inspection: {
+          id: roundData.id,
+          asset_id: r.asset_id,
+          result: r.result,
+          notes: "Auto-generated from inspection round",
+        },
+        asset: { id: cpAsset.id, name: cpAsset.name, company_id: cpAsset.company_id, criticality: cpAsset.criticality },
+        inspectorId: user?.id || "",
+        correctiveActionId: correctiveAction.id,
+      });
+      addWorkOrder(wo);
+    }
+
     // Queue for sync (especially important when offline)
     addToQueue("inspection_round", roundData as unknown as Record<string, unknown>);
 
-    toast(isOnline ? "Inspection round completed" : "Inspection saved — will sync when online");
+    toast(
+      isOnline
+        ? t("inspectionRounds.completed")
+        : t("inspectionRounds.offline.queuedForSync")
+    );
     router.push(`/${company}/app/assets`);
   };
 
@@ -199,15 +295,19 @@ function InspectionRoundContent() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="font-semibold text-sm">{route.name}</h1>
+            <h1 className="font-semibold text-sm">{visibleRoute.name}</h1>
             <p className="text-xs text-muted-foreground">
-              Checkpoint {currentIndex + 1} of {totalCheckpoints} • {completedCount} done
+              {t("inspectionRounds.checkpointOf", {
+                current: String(currentIndex + 1),
+                total: String(totalCheckpoints),
+              })}{" "}
+              • {completedCount} {t("inspectionRounds.done")}
             </p>
           </div>
         </div>
@@ -231,7 +331,7 @@ function InspectionRoundContent() {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm">{asset?.name || "Unknown asset"}</p>
                 <p className="text-xs text-muted-foreground capitalize">
-                  {checkpoint.check_type} check
+                  {t(`inspectionRounds.checkType.${checkpoint.check_type}`)}
                   {asset?.location_id && (
                     <span className="ml-1">
                       <MapPin className="inline h-3 w-3" />
@@ -246,7 +346,7 @@ function InspectionRoundContent() {
                   currentResult.result === "fail" ? "bg-destructive/10 text-destructive" :
                   "bg-warning/10 text-warning"
                 )}>
-                  {currentResult.result.replace("_", " ")}
+                  {resultLabels[currentResult.result]}
                 </span>
               )}
             </div>
@@ -255,17 +355,17 @@ function InspectionRoundContent() {
 
         {/* Checkpoint label & instructions */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-1">{checkpoint.label}</h2>
+          <h2 className="text-lg font-bold mb-1">{checkpoint.label}</h2>
           {checkpoint.instructions && (
             <p className="text-sm text-muted-foreground">{checkpoint.instructions}</p>
           )}
           {(checkpoint.acceptable_min !== null || checkpoint.acceptable_max !== null) && (
             <div className="mt-2 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground">
               <Ruler className="h-3 w-3" />
-              Acceptable range:{" "}
-              {checkpoint.acceptable_min !== null ? checkpoint.acceptable_min : "—"}
+              {t("inspectionRounds.acceptableRange")}:{" "}
+              {checkpoint.acceptable_min !== null ? checkpoint.acceptable_min : "N/A"}
               {" – "}
-              {checkpoint.acceptable_max !== null ? checkpoint.acceptable_max : "—"}
+              {checkpoint.acceptable_max !== null ? checkpoint.acceptable_max : "N/A"}
               {checkpoint.unit ? ` ${checkpoint.unit}` : ""}
             </div>
           )}
@@ -273,7 +373,7 @@ function InspectionRoundContent() {
 
         {/* Result toggle */}
         <div className="mb-6">
-          <p className="text-sm font-medium mb-2">Result</p>
+          <p className="mb-2 text-sm font-medium">{t("inspectionRounds.result")}</p>
           <div className="grid grid-cols-3 gap-2">
             {(["pass", "fail", "needs_attention"] as CheckpointResult[]).map((r) => (
               <button
@@ -288,7 +388,7 @@ function InspectionRoundContent() {
                 {r === "pass" && <CheckCircle className="h-5 w-5" />}
                 {r === "fail" && <XCircle className="h-5 w-5" />}
                 {r === "needs_attention" && <AlertTriangle className="h-5 w-5" />}
-                <span className="capitalize text-xs">{r.replace("_", " ")}</span>
+                <span className="text-xs">{resultLabels[r]}</span>
               </button>
             ))}
           </div>
@@ -297,12 +397,13 @@ function InspectionRoundContent() {
         {/* Measurement input */}
         {(checkpoint.acceptable_min !== null || checkpoint.acceptable_max !== null) && (
           <div className="mb-6">
-            <p className="text-sm font-medium mb-2">
-              Measured value {checkpoint.unit ? `(${checkpoint.unit})` : ""}
+            <p className="mb-2 text-sm font-medium">
+              {t("inspectionRounds.measuredValue")} {checkpoint.unit ? `(${checkpoint.unit})` : ""}
             </p>
             <Input
               type="number"
-              placeholder="Enter value..."
+              placeholder="Enter measurement value"
+              aria-label="Measured value"
               value={currentResult?.measured_value ?? ""}
               onChange={(e) => {
                 const val = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -316,7 +417,7 @@ function InspectionRoundContent() {
             {currentResult?.out_of_range && (
               <p className="text-xs text-destructive mt-1 flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" />
-                Value is out of acceptable range — alert will be created
+                {t("inspectionRounds.outOfRange")}
               </p>
             )}
           </div>
@@ -324,7 +425,7 @@ function InspectionRoundContent() {
 
         {/* Photo */}
         <div className="mb-6">
-          <p className="text-sm font-medium mb-2">Photo (if abnormality found)</p>
+          <p className="mb-2 text-sm font-medium">{t("inspectionRounds.photo")}</p>
           <input
             ref={fileInputRef}
             type="file"
@@ -335,7 +436,7 @@ function InspectionRoundContent() {
           />
           {currentResult?.photo_url ? (
             <div className="relative w-full aspect-video rounded-xl overflow-hidden border">
-              <img src={currentResult.photo_url} alt="Checkpoint photo" className="h-full w-full object-cover" />
+              <img src={currentResult.photo_url} alt="Checkpoint photo" className="h-full w-full object-cover" loading="lazy" />
               <button
                 type="button"
                 onClick={() => setCheckpointResult({ photo_url: null })}
@@ -351,19 +452,30 @@ function InspectionRoundContent() {
               onClick={() => fileInputRef.current?.click()}
             >
               <Camera className="h-4 w-4" />
-              Take Photo
+              {t("inspectionRounds.takePhoto")}
             </Button>
           )}
         </div>
 
         {/* Notes */}
         <div className="mb-6">
-          <p className="text-sm font-medium mb-2">Notes</p>
+          <p className="mb-2 text-sm font-medium">{t("inspectionRounds.notes")}</p>
           <Textarea
-            placeholder="Add any observations..."
+            placeholder={t("inspectionRounds.addNotes")}
             value={currentResult?.notes || ""}
             onChange={(e) => setCheckpointResult({ notes: e.target.value || null })}
             rows={3}
+          />
+        </div>
+
+        {/* GPS Capture */}
+        <div className="mb-6">
+          <p className="mb-2 text-sm font-medium">{t("common.location") || "Location"}</p>
+          <GpsCaptureButton
+            coords={gps.coords}
+            loading={gps.loading}
+            error={gps.error}
+            onCapture={gps.captureLocation}
           />
         </div>
 
@@ -371,18 +483,20 @@ function InspectionRoundContent() {
         <div className="flex items-center justify-center gap-1.5 mb-4">
           {checkpoints.map((cp, i) => {
             const cpResult = results.get(cp.id);
+            const isIncomplete = !cpResult;
             return (
               <button
                 key={cp.id}
                 type="button"
                 onClick={() => setCurrentIndex(i)}
+                aria-label={`Checkpoint ${i + 1}${isIncomplete ? " (incomplete)" : ""}`}
                 className={cn(
                   "h-2.5 w-2.5 rounded-full transition-all",
                   i === currentIndex ? "w-6 bg-primary" :
                   cpResult?.result === "pass" ? "bg-success" :
                   cpResult?.result === "fail" ? "bg-destructive" :
                   cpResult?.result === "needs_attention" ? "bg-warning" :
-                  "bg-muted-foreground/30"
+                  "bg-muted-foreground/30 ring-1 ring-muted-foreground/20"
                 )}
               />
             );
@@ -392,32 +506,41 @@ function InspectionRoundContent() {
 
       {/* Footer navigation */}
       <div className="fixed bottom-16 left-0 right-0 border-t bg-background p-4 z-20">
-        <div className="flex gap-2 max-w-lg mx-auto">
-          <Button
-            variant="outline"
-            onClick={handlePrev}
-            disabled={currentIndex === 0}
-            className="h-12"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          {currentIndex < totalCheckpoints - 1 ? (
-            <Button onClick={handleNext} className="flex-1 h-12 gap-2">
-              Next Checkpoint
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          ) : (
+        <div className="flex flex-col gap-2 max-w-lg mx-auto">
+          <div className="flex gap-2">
             <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || completedCount < totalCheckpoints}
-              className="flex-1 h-12 gap-2"
+              variant="outline"
+              onClick={handlePrev}
+              disabled={currentIndex === 0}
+              className="h-12"
             >
-              <CheckCircle className="h-4 w-4" />
-              {completedCount < totalCheckpoints
-                ? `${totalCheckpoints - completedCount} remaining`
-                : "Submit Inspection"
-              }
+              <ArrowLeft className="h-4 w-4" />
             </Button>
+            {currentIndex < totalCheckpoints - 1 ? (
+              <Button onClick={handleNext} className="flex-1 h-12 gap-2">
+                {t("inspectionRounds.nextCheckpoint")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting || completedCount < totalCheckpoints}
+                className="flex-1 h-12 gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                {completedCount < totalCheckpoints
+                  ? t("inspectionRounds.remaining", {
+                      count: String(totalCheckpoints - completedCount),
+                    })
+                  : t("inspectionRounds.submitInspection")
+                }
+              </Button>
+            )}
+          </div>
+          {completedCount < totalCheckpoints && currentIndex === totalCheckpoints - 1 && (
+            <p className="text-xs text-center text-muted-foreground">
+              Complete all checkpoints to submit ({totalCheckpoints - completedCount} remaining)
+            </p>
           )}
         </div>
       </div>

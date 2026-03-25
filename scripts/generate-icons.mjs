@@ -1,8 +1,15 @@
 // Script to generate PWA icons from SVG
-// Run with: node scripts/generate-icons.js
+// Run with: node scripts/generate-icons.mjs
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// For production, use sharp or canvas to convert SVG to PNG
+// This is a placeholder that documents the required icons
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // For production, use sharp or canvas to convert SVG to PNG
 // This is a placeholder that documents the required icons

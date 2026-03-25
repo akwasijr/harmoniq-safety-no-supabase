@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Building,
   Palette,
@@ -12,7 +13,13 @@ import {
   Check,
   Upload,
   X,
+  Factory,
+  Smartphone,
+  ArrowUp,
+  ArrowDown,
+  RefreshCw,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,35 +28,50 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
-import { applyPrimaryColor } from "@/lib/branding";
+import { applyBranding } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
+import { COUNTRY_OPTIONS, getCountryConfig } from "@/lib/country-config";
+import {
+  buildRegionalDefaults,
+  CURRENCY_OPTIONS,
+  DATE_FORMAT_OPTIONS,
+  getCompanySettingsKey,
+  TIMEZONE_OPTIONS,
+  type MeasurementSystem,
+} from "@/lib/company-settings";
 import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
-import type { Company, Country, Language } from "@/types";
-import { useTranslation } from "@/i18n";
+import type { Company, Country, Currency, Language, IndustryCode } from "@/types";
+import { INDUSTRY_METADATA, getTemplatesByIndustry } from "@/data/industry-templates";
+import { SUPPORTED_LOCALES, useTranslation } from "@/i18n";
+import type { SupportedLocale } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
+import { FieldAppHomePreview } from "@/components/settings/field-app-home-preview";
+import {
+  type FieldAppQuickActionId,
+  type FieldAppSettings,
+  buildDefaultFieldAppSettings,
+  FIELD_APP_FONT_OPTIONS,
+  FIELD_APP_MIN_QUICK_ACTIONS,
+  FIELD_APP_QUICK_ACTION_DEFINITIONS,
+  FIELD_APP_SHADOW_OPTIONS,
+  FIELD_APP_SHAPE_OPTIONS,
+  getFieldAppTip,
+  normalizeFieldAppSettings,
+} from "@/lib/field-app-settings";
 
-type SettingsTabType = "general" | "branding" | "notifications" | "security" | "billing";
-
-const settingsTabs = [
-  { value: "general" as SettingsTabType, label: "General", icon: Building },
-  { value: "branding" as SettingsTabType, label: "Branding", icon: Palette },
-  { value: "notifications" as SettingsTabType, label: "Notifications", icon: Bell },
-  { value: "security" as SettingsTabType, label: "Security", icon: Shield },
-  { value: "billing" as SettingsTabType, label: "Billing", icon: CreditCard },
-];
-
-const countries = [
-  { code: "US", name: "United States", regulations: "OSHA (JHA/JSA)" },
-  { code: "NL", name: "Netherlands", regulations: "Arbowet (RI&E)" },
-  { code: "SE", name: "Sweden", regulations: "AFS (SAM)" },
-];
+type SettingsTabType = "general" | "branding" | "fieldApp" | "industry" | "notifications" | "security" | "billing";
 
 interface SettingsState {
   companyName: string;
+  appName: string;
   selectedCountry: string;
+  selectedIndustry: string;
   language: string;
+  currency: Currency;
   dateFormat: string;
   timezone: string;
+  measurementSystem: MeasurementSystem;
   primaryColor: string;
   secondaryColor: string;
   logoUrl: string | null;
@@ -62,6 +84,7 @@ interface SettingsState {
   ssoEnabled: boolean;
   sessionTimeout: string;
   passwordPolicy: string;
+  fieldApp: FieldAppSettings;
 }
 
 const defaultCompany: Company = {
@@ -69,16 +92,16 @@ const defaultCompany: Company = {
   name: "My Company",
   slug: "my-company",
   app_name: "Safety App",
-  country: "US" as any,
-  language: "en" as any,
-  status: "active" as any,
+  country: "US",
+  language: "en",
+  status: "active",
   logo_url: null,
   hero_image_url: null,
   primary_color: "#024E6E",
   secondary_color: "#029EDB",
   font_family: "Geist Sans",
-  ui_style: "rounded" as any,
-  tier: "professional" as any,
+  ui_style: "rounded",
+  tier: "professional",
   seat_limit: 50,
   currency: "USD",
   trial_ends_at: null,
@@ -88,43 +111,65 @@ const defaultCompany: Company = {
 
 const buildSettingsFromCompany = (company: Company | null | undefined): SettingsState => {
   const c = company ?? defaultCompany;
+  const regionalDefaults = buildRegionalDefaults(c.country);
   return {
-  companyName: c.name,
-  selectedCountry: c.country,
-  language: c.language,
-  dateFormat: c.country === "US" ? "MM/DD/YYYY" : "DD/MM/YYYY",
-  timezone:
-    c.country === "US"
-      ? "America/New_York"
-      : c.country === "NL"
-      ? "Europe/Amsterdam"
-      : "Europe/Stockholm",
-  primaryColor: c.primary_color || "#024E6E",
-  secondaryColor: c.secondary_color || "#029EDB",
-  logoUrl: c.logo_url,
-  notifCriticalAlerts: true,
-  notifDailyDigest: true,
-  notifChecklistReminders: false,
-  notifMaintenanceAlerts: true,
-  notifNewIncidents: true,
-  twoFactorEnabled: false,
-  ssoEnabled: false,
-  sessionTimeout: "30",
-  passwordPolicy: "strong",
+    companyName: c.name,
+    appName: c.app_name || c.name,
+    selectedCountry: c.country,
+    selectedIndustry: c.industry || "",
+    language: c.language,
+    currency: c.currency || regionalDefaults.currency,
+    dateFormat: regionalDefaults.dateFormat,
+    timezone: regionalDefaults.timezone,
+    measurementSystem: regionalDefaults.measurementSystem,
+    primaryColor: c.primary_color || "#024E6E",
+    secondaryColor: c.secondary_color || "#029EDB",
+    logoUrl: c.logo_url,
+    notifCriticalAlerts: true,
+    notifDailyDigest: true,
+    notifChecklistReminders: false,
+    notifMaintenanceAlerts: true,
+    notifNewIncidents: true,
+    twoFactorEnabled: false,
+    ssoEnabled: false,
+    sessionTimeout: "30",
+    passwordPolicy: "strong",
+    fieldApp: buildDefaultFieldAppSettings(c.industry),
   };
 };
 
-const getSettingsKey = (companyId?: string) =>
-  companyId ? `harmoniq_settings_${companyId}` : "harmoniq_settings";
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked ? "true" : "false"}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        checked ? "bg-primary" : "bg-muted"
+      )}
+    >
+      <span
+        className={cn(
+          "pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform",
+          checked ? "translate-x-5" : "translate-x-0"
+        )}
+      />
+    </button>
+  );
+}
 
 export default function SettingsPage() {
   const company = useCompanyParam();
-  const { currentCompany, isLoading: isAuthLoading } = useAuth();
+  const { currentCompany, isLoading: isAuthLoading, hasPermission: currentUserCan } = useAuth();
+  const canEditSettings = currentUserCan("settings.edit");
   const { items: companies } = useCompanyStore();
+  const { resolvedTheme } = useTheme();
   const fallbackCompany = React.useMemo(() => companies.find(c => c.slug === company) ?? null, [companies, company]);
   const activeCompany = currentCompany ?? fallbackCompany ?? defaultCompany;
   const settingsStorageKey = React.useMemo(
-    () => getSettingsKey(activeCompany?.id),
+    () => getCompanySettingsKey(activeCompany?.id),
     [activeCompany?.id]
   );
   const [activeTab, setActiveTab] = React.useState<SettingsTabType>("general");
@@ -136,12 +181,22 @@ export default function SettingsPage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { update: updateCompany } = useCompanyStore();
   const { toast } = useToast();
-  const { t, formatDate, formatNumber } = useTranslation();
+  const { t, setLocale } = useTranslation();
+
+  const settingsTabs = [
+    { value: "general" as SettingsTabType, label: t("settings.tabs.general"), icon: Building },
+    { value: "branding" as SettingsTabType, label: t("settings.tabs.branding"), icon: Palette },
+    { value: "fieldApp" as SettingsTabType, label: "Field App", icon: Smartphone },
+    { value: "industry" as SettingsTabType, label: "Industry", icon: Factory },
+    { value: "notifications" as SettingsTabType, label: t("settings.tabs.notifications"), icon: Bell },
+    { value: "security" as SettingsTabType, label: t("settings.tabs.security"), icon: Shield },
+    { value: "billing" as SettingsTabType, label: t("settings.tabs.billing"), icon: CreditCard },
+  ];
 
   // Load settings from localStorage on mount and apply branding
   React.useEffect(() => {
     if (typeof window === "undefined" || !activeCompany) return;
-    const storageKey = getSettingsKey(activeCompany.id);
+    const storageKey = getCompanySettingsKey(activeCompany.id);
     const legacySettings = localStorage.getItem("harmoniq_settings");
     const savedSettings = localStorage.getItem(storageKey) ?? legacySettings;
     let nextSettings = buildSettingsFromCompany(activeCompany);
@@ -149,15 +204,21 @@ export default function SettingsPage() {
       try {
         const parsed = JSON.parse(savedSettings);
         nextSettings = { ...nextSettings, ...parsed };
+        nextSettings.fieldApp = normalizeFieldAppSettings(
+          parsed.fieldApp,
+          (nextSettings.selectedIndustry || activeCompany.industry) as IndustryCode | undefined
+        );
         if (!localStorage.getItem(storageKey)) {
           localStorage.setItem(storageKey, JSON.stringify(parsed));
         }
       } catch {
         toast("Failed to load saved settings", "error");
       }
+    } else {
+      nextSettings.fieldApp = buildDefaultFieldAppSettings(activeCompany.industry);
     }
     setSettings(nextSettings);
-    applyPrimaryColor(nextSettings.primaryColor);
+    applyBranding({ primaryColor: nextSettings.primaryColor, secondaryColor: nextSettings.secondaryColor }, resolvedTheme || "light");
     applyDocumentLanguage(nextSettings.language);
   }, [activeCompany, toast]);
 
@@ -167,34 +228,119 @@ export default function SettingsPage() {
       return;
     }
     setSaving(true);
-    setTimeout(() => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
-        applyPrimaryColor(settings.primaryColor);
-        applyDocumentLanguage(settings.language);
-      }
+      setTimeout(() => {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
+          applyBranding({ primaryColor: settings.primaryColor, secondaryColor: settings.secondaryColor }, resolvedTheme || "light");
+          applyDocumentLanguage(settings.language);
+        }
       const nextCountry =
-        countries.find((country) => country.code === settings.selectedCountry)?.code ||
+        COUNTRY_OPTIONS.find((country) => country.code === settings.selectedCountry)?.code ||
         activeCompany.country;
       // Update the company store
-      updateCompany(activeCompany.id, {
-        name: settings.companyName,
+        updateCompany(activeCompany.id, {
+          name: settings.companyName,
+          app_name: settings.appName || settings.companyName,
         primary_color: settings.primaryColor,
         secondary_color: settings.secondaryColor,
         logo_url: settings.logoUrl,
-        language: settings.language as Language,
-        country: nextCountry as Country,
-      });
-      setSaving(false);
-      setSaved(true);
-      toast("Settings saved successfully");
+          language: settings.language as Language,
+          country: nextCountry as Country,
+          currency: settings.currency,
+          industry: (settings.selectedIndustry || undefined) as IndustryCode | undefined,
+        });
+        setLocale(settings.language as SupportedLocale);
+        setSaving(false);
+        setSaved(true);
+        toast("Settings saved successfully");
       setTimeout(() => setSaved(false), 2000);
     }, 500);
   };
 
   const updateSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
+    if (!canEditSettings) return;
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
+
+  const updateFieldAppSettings = React.useCallback(
+    (updater: (previous: FieldAppSettings) => FieldAppSettings) => {
+      if (!canEditSettings) return;
+      setSettings((prev) => ({
+        ...prev,
+        fieldApp: normalizeFieldAppSettings(
+          updater(prev.fieldApp),
+          (prev.selectedIndustry || undefined) as IndustryCode | undefined
+        ),
+      }));
+    },
+    [canEditSettings]
+  );
+
+  const toggleFieldQuickAction = React.useCallback(
+    (actionId: FieldAppQuickActionId) => {
+      updateFieldAppSettings((previous) => {
+        const isEnabled = previous.quickActions.includes(actionId);
+        if (isEnabled) {
+          if (previous.quickActions.length <= FIELD_APP_MIN_QUICK_ACTIONS) {
+            return previous;
+          }
+          return {
+            ...previous,
+            quickActions: previous.quickActions.filter((id) => id !== actionId),
+          };
+        }
+
+        return {
+          ...previous,
+          quickActions: [...previous.quickActions, actionId],
+        };
+      });
+    },
+    [updateFieldAppSettings]
+  );
+
+  const moveFieldQuickAction = React.useCallback(
+    (actionId: FieldAppQuickActionId, direction: "up" | "down") => {
+      updateFieldAppSettings((previous) => {
+        const index = previous.quickActions.indexOf(actionId);
+        if (index === -1) return previous;
+
+        const nextIndex = direction === "up" ? index - 1 : index + 1;
+        if (nextIndex < 0 || nextIndex >= previous.quickActions.length) return previous;
+
+        const quickActions = [...previous.quickActions];
+        const [moved] = quickActions.splice(index, 1);
+        quickActions.splice(nextIndex, 0, moved);
+
+        return {
+          ...previous,
+          quickActions,
+        };
+      });
+    },
+    [updateFieldAppSettings]
+  );
+
+  const resetFieldAppToIndustryPreset = React.useCallback(() => {
+    if (!canEditSettings) return;
+    setSettings((prev) => ({
+      ...prev,
+      fieldApp: buildDefaultFieldAppSettings((prev.selectedIndustry || undefined) as IndustryCode | undefined),
+    }));
+  }, [canEditSettings]);
+
+  const quickActionLabels = React.useMemo(
+    () =>
+      Object.fromEntries(
+        FIELD_APP_QUICK_ACTION_DEFINITIONS.map((action) => [action.id, t(action.labelKey) || action.fallbackLabel])
+      ) as Record<FieldAppQuickActionId, string>,
+    [t]
+  );
+
+  const fieldAppTipPreview = React.useMemo(
+    () => getFieldAppTip((settings.selectedIndustry || undefined) as IndustryCode | undefined, settings.language as Language, 0),
+    [settings.language, settings.selectedIndustry]
+  );
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -214,37 +360,23 @@ export default function SettingsPage() {
     }
   };
 
-  // Toggle switch component
-  const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
-    <button
-      role="switch"
-      aria-checked={checked ? "true" : "false"}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        checked ? "bg-primary" : "bg-muted"
-      )}
-    >
-      <span
-        className={cn(
-          "pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform",
-          checked ? "translate-x-5" : "translate-x-0"
-        )}
-      />
-    </button>
-  );
-
   return (
+    <RoleGuard requiredPermission="settings.view">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">{t("settings.title")}</h1>
-        <Button onClick={handleSave} disabled={saving} className="gap-2">
+        <Button onClick={handleSave} disabled={saving || !canEditSettings} className="gap-2">
           {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
           {saving ? t("settings.saving") : saved ? t("settings.saved") : t("settings.saveChanges")}
         </Button>
       </div>
+
+      {!canEditSettings && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-4 text-sm text-amber-800 dark:text-amber-200">
+          {t("common.noEditPermission")}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="border-b">
@@ -292,7 +424,21 @@ export default function SettingsPage() {
                       id="company-name" 
                       value={settings.companyName}
                       onChange={(e) => updateSetting("companyName", e.target.value)}
+                      maxLength={200}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="app-name">{t("settings.appDisplayName") || "App Display Name"}</Label>
+                    <Input 
+                      id="app-name" 
+                      value={settings.appName}
+                      onChange={(e) => updateSetting("appName", e.target.value)}
+                      placeholder={settings.companyName}
+                      maxLength={200}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("settings.appDisplayNameHint") || "Shown in the mobile app header. Defaults to company name."}
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="company-slug">{t("settings.urlSlug")}</Label>
@@ -313,10 +459,22 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-3">
-                  {countries.map((country) => (
+                  {COUNTRY_OPTIONS.map((country) => (
                     <button
                       key={country.code}
-                      onClick={() => updateSetting("selectedCountry", country.code)}
+                      onClick={() => {
+                        if (!canEditSettings) return;
+                        const regionalDefaults = buildRegionalDefaults(country.code);
+                        setSettings((prev) => ({
+                          ...prev,
+                          selectedCountry: country.code,
+                          language: regionalDefaults.language,
+                          currency: regionalDefaults.currency,
+                          dateFormat: regionalDefaults.dateFormat,
+                          timezone: regionalDefaults.timezone,
+                          measurementSystem: regionalDefaults.measurementSystem,
+                        }));
+                      }}
                       className={cn(
                         "flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-all text-center",
                         settings.selectedCountry === country.code
@@ -324,10 +482,12 @@ export default function SettingsPage() {
                           : "border-border hover:border-primary/50"
                       )}
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                        <Globe className="h-6 w-6 text-primary" />
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-2xl">
+                        <span aria-hidden="true">{country.flag}</span>
                       </div>
-                      <span className="text-sm font-bold text-muted-foreground">{country.code}</span>
+                      <span className="text-sm font-bold text-muted-foreground">
+                        {country.flag} {country.code}
+                      </span>
                       <div>
                         <p className={cn(
                           "font-semibold",
@@ -348,9 +508,7 @@ export default function SettingsPage() {
                 <div className="rounded-lg bg-muted p-4">
                   <p className="text-sm">
                     <strong>{t("settings.basedOnSelection")}</strong>{" "}
-                    {settings.selectedCountry === "US" && t("settings.usRegulations")}
-                    {settings.selectedCountry === "NL" && t("settings.nlRegulations")}
-                    {settings.selectedCountry === "SE" && t("settings.seRegulations")}
+                    {t(getCountryConfig(settings.selectedCountry).regulationMessageKey)}
                   </p>
                 </div>
               </CardContent>
@@ -363,7 +521,7 @@ export default function SettingsPage() {
                 <CardDescription>{t("settings.languageAndRegional")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                   <div className="space-y-2">
                     <Label htmlFor="language">{t("settings.defaultLanguage")}</Label>
                     <select
@@ -374,11 +532,28 @@ export default function SettingsPage() {
                       value={settings.language}
                       onChange={(e) => updateSetting("language", e.target.value)}
                     >
-                      <option value="en">English</option>
-                      <option value="nl">Nederlands (Dutch)</option>
-                      <option value="sv">Svenska (Swedish)</option>
-                      <option value="de">Deutsch (German)</option>
-                      <option value="fr">Français (French)</option>
+                      {SUPPORTED_LOCALES.map((locale) => (
+                        <option key={locale.code} value={locale.code}>
+                          {locale.flag} {locale.name} ({locale.englishName})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="currency">{t("settings.currency")}</Label>
+                    <select
+                      id="currency"
+                      title="Select currency"
+                      aria-label="Select currency"
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={settings.currency}
+                      onChange={(e) => updateSetting("currency", e.target.value as Currency)}
+                    >
+                      {CURRENCY_OPTIONS.map((currency) => (
+                        <option key={currency.value} value={currency.value}>
+                          {currency.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -391,9 +566,11 @@ export default function SettingsPage() {
                       value={settings.dateFormat}
                       onChange={(e) => updateSetting("dateFormat", e.target.value)}
                     >
-                      <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>
-                      <option value="DD-MM-YYYY">DD-MM-YYYY (EU)</option>
-                      <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
+                      {DATE_FORMAT_OPTIONS.map((format) => (
+                        <option key={format.value} value={format.value}>
+                          {format.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -406,13 +583,27 @@ export default function SettingsPage() {
                       value={settings.timezone}
                       onChange={(e) => updateSetting("timezone", e.target.value)}
                     >
-                      <option value="America/New_York">Eastern Time (ET)</option>
-                      <option value="America/Chicago">Central Time (CT)</option>
-                      <option value="America/Denver">Mountain Time (MT)</option>
-                      <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                      <option value="Europe/London">London (GMT)</option>
-                      <option value="Europe/Amsterdam">Amsterdam (CET)</option>
-                      <option value="Europe/Stockholm">Stockholm (CET)</option>
+                      {TIMEZONE_OPTIONS.map((timezone) => (
+                        <option key={timezone.value} value={timezone.value}>
+                          {timezone.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="measurement-system">{t("settings.measurementSystem")}</Label>
+                    <select
+                      id="measurement-system"
+                      title="Select measurement system"
+                      aria-label="Select measurement system"
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={settings.measurementSystem}
+                      onChange={(e) =>
+                        updateSetting("measurementSystem", e.target.value as MeasurementSystem)
+                      }
+                    >
+                      <option value="metric">{t("settings.metricUnits")}</option>
+                      <option value="imperial">{t("settings.imperialUnits")}</option>
                     </select>
                   </div>
                 </div>
@@ -436,7 +627,7 @@ export default function SettingsPage() {
                   <div className="relative flex h-20 w-20 items-center justify-center rounded-lg border bg-muted overflow-hidden">
                     {settings.logoUrl ? (
                       <>
-                        <img src={settings.logoUrl} alt="Company logo" className="h-full w-full object-contain" />
+                        <img src={settings.logoUrl} alt="Company logo" className="h-full w-full object-contain" loading="lazy" />
                         <button
                           onClick={removeLogo}
                           aria-label="Remove logo"
@@ -520,7 +711,7 @@ export default function SettingsPage() {
                       style={{ backgroundColor: settings.primaryColor }}
                     >
                       {settings.logoUrl ? (
-                        <img src={settings.logoUrl} alt="" className="h-8 w-8 object-contain" />
+                        <img src={settings.logoUrl} alt="Company logo" className="h-8 w-8 object-contain" loading="lazy" />
                       ) : (
                         settings.companyName.charAt(0)
                       )}
@@ -543,6 +734,312 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "fieldApp" && (
+          <div className="grid gap-6 xl:items-start xl:grid-cols-[minmax(0,1.35fr)_340px]">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Field App setup</CardTitle>
+                  <CardDescription>
+                    Control the mobile home experience without changing dashboard branding or layout.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-col gap-3 rounded-lg border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-medium">Quick setup from industry</p>
+                      <p className="text-sm text-muted-foreground">
+                        Start from your saved industry preset, then fine-tune the mobile app manually.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="gap-2"
+                      onClick={resetFieldAppToIndustryPreset}
+                      disabled={!canEditSettings}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Apply industry defaults
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="field-app-font">Mobile font</Label>
+                      <select
+                        id="field-app-font"
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={settings.fieldApp.fontId}
+                        onChange={(e) =>
+                          updateFieldAppSettings((previous) => ({
+                            ...previous,
+                            fontId: e.target.value as FieldAppSettings["fontId"],
+                          }))
+                        }
+                      >
+                        {FIELD_APP_FONT_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="field-app-shape">Buttons and cards</Label>
+                      <select
+                        id="field-app-shape"
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={settings.fieldApp.shape}
+                        onChange={(e) =>
+                          updateFieldAppSettings((previous) => ({
+                            ...previous,
+                            shape: e.target.value as FieldAppSettings["shape"],
+                          }))
+                        }
+                      >
+                        {FIELD_APP_SHAPE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="field-app-shadow">Shadow style</Label>
+                    <select
+                      id="field-app-shadow"
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={settings.fieldApp.shadow}
+                      onChange={(e) =>
+                        updateFieldAppSettings((previous) => ({
+                          ...previous,
+                          shadow: e.target.value as FieldAppSettings["shadow"],
+                        }))
+                      }
+                    >
+                      {FIELD_APP_SHADOW_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Home content</CardTitle>
+                  <CardDescription>
+                    Choose what appears on the field home screen. Quick actions always keep at least {FIELD_APP_MIN_QUICK_ACTIONS} items.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                      <div>
+                        <p className="font-medium">Tip of the Day</p>
+                        <p className="text-sm text-muted-foreground">
+                          Uses the selected company language and industry for the mobile home tip.
+                        </p>
+                      </div>
+                      <Toggle
+                        checked={settings.fieldApp.tipOfTheDayEnabled}
+                        onChange={(checked) =>
+                          updateFieldAppSettings((previous) => ({
+                            ...previous,
+                            tipOfTheDayEnabled: checked,
+                          }))
+                        }
+                        label="Toggle tip of the day"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                      <div>
+                        <p className="font-medium">News</p>
+                        <p className="text-sm text-muted-foreground">
+                          Hide the News tab and featured news block from the field app.
+                        </p>
+                      </div>
+                      <Toggle
+                        checked={settings.fieldApp.newsEnabled}
+                        onChange={(checked) =>
+                          updateFieldAppSettings((previous) => ({
+                            ...previous,
+                            newsEnabled: checked,
+                          }))
+                        }
+                        label="Toggle news in field app"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border">
+                    <div className="flex items-center justify-between border-b px-4 py-3">
+                      <div>
+                        <p className="font-medium">Quick actions</p>
+                        <p className="text-sm text-muted-foreground">
+                          Reorder the buttons workers see on the home screen.
+                        </p>
+                      </div>
+                      <Badge variant="secondary">{settings.fieldApp.quickActions.length} active</Badge>
+                    </div>
+
+                    <div className="divide-y">
+                      {FIELD_APP_QUICK_ACTION_DEFINITIONS.map((action) => {
+                        const enabled = settings.fieldApp.quickActions.includes(action.id);
+                        const activeIndex = settings.fieldApp.quickActions.indexOf(action.id);
+                        return (
+                          <div key={action.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="font-medium">{quickActionLabels[action.id]}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {enabled ? `Position ${activeIndex + 1} on the mobile home screen.` : "Hidden from the mobile home screen."}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {enabled && (
+                                <>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => moveFieldQuickAction(action.id, "up")}
+                                    disabled={activeIndex <= 0 || !canEditSettings}
+                                    aria-label={`Move ${quickActionLabels[action.id]} up`}
+                                  >
+                                    <ArrowUp className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => moveFieldQuickAction(action.id, "down")}
+                                    disabled={activeIndex === settings.fieldApp.quickActions.length - 1 || !canEditSettings}
+                                    aria-label={`Move ${quickActionLabels[action.id]} down`}
+                                  >
+                                    <ArrowDown className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                              <Button
+                                type="button"
+                                variant={enabled ? "outline" : "default"}
+                                onClick={() => toggleFieldQuickAction(action.id)}
+                                disabled={
+                                  !canEditSettings ||
+                                  (enabled && settings.fieldApp.quickActions.length <= FIELD_APP_MIN_QUICK_ACTIONS)
+                                }
+                              >
+                                {enabled ? "Hide" : "Show"}
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <Card className="xl:sticky xl:top-24">
+                <CardHeader>
+                  <CardTitle>Live preview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FieldAppHomePreview
+                    settings={settings.fieldApp}
+                    quickActionLabels={quickActionLabels}
+                    companyName={settings.appName || settings.companyName}
+                    tipText={fieldAppTipPreview}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Industry Tab */}
+        {activeTab === "industry" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Industry</CardTitle>
+              <CardDescription>
+                Select your company&apos;s industry to get recommended checklist templates and compliance guidance.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <Label>Primary Industry</Label>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {(Object.keys(INDUSTRY_METADATA) as IndustryCode[]).map((code) => {
+                    const meta = INDUSTRY_METADATA[code];
+                    const isSelected = settings.selectedIndustry === code;
+                    const templateCount = getTemplatesByIndustry(code).length;
+                    return (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => {
+                          updateSetting("selectedIndustry", code);
+                        }}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg border p-3 text-left transition-colors",
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:bg-muted/50"
+                        )}
+                      >
+                        <div
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md"
+                          style={{ backgroundColor: `${meta.color}15`, color: meta.color }}
+                        >
+                          <Factory className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">
+                            {t(`industry_templates.${code}.name`)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{templateCount} templates</p>
+                        </div>
+                        {isSelected && (
+                          <Check className="h-4 w-4 shrink-0 text-primary" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {settings.selectedIndustry && (
+                <div className="pt-4 border-t space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Recommended Templates</p>
+                      <p className="text-xs text-muted-foreground">
+                        {getTemplatesByIndustry(settings.selectedIndustry as IndustryCode).length} templates available for your industry
+                      </p>
+                    </div>
+                    <Link href={`/${company}/dashboard/checklists/templates`}>
+                      <Button variant="outline" size="sm">
+                        Browse Template Library
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -825,5 +1322,6 @@ export default function SettingsPage() {
         )}
       </div>
     </div>
+    </RoleGuard>
   );
 }

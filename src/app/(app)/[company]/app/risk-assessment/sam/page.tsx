@@ -10,6 +10,9 @@ import {
   AlertTriangle,
   Building2,
   Shield,
+  Zap,
+  BarChart3,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +32,7 @@ const SAM_CATEGORIES = [
   {
     id: "physical",
     title: "Fysiska arbetsmiljörisker",
-    icon: "💪",
+    icon: Zap,
     items: [
       { id: "phy_noise", label: "Buller (Noise)", description: "Noise levels above 80 dB" },
       { id: "phy_vibration", label: "Vibrationer (Vibration)", description: "Hand-arm or whole-body" },
@@ -42,7 +45,7 @@ const SAM_CATEGORIES = [
   {
     id: "accident",
     title: "Olycksrisker (Accident Risks)",
-    icon: "⚠️",
+    icon: AlertTriangle,
     items: [
       { id: "acc_fall", label: "Fallrisk (Fall hazard)", description: "Heights, slippery surfaces" },
       { id: "acc_machinery", label: "Maskiner (Machinery)", description: "Moving parts, entanglement" },
@@ -55,7 +58,7 @@ const SAM_CATEGORIES = [
   {
     id: "organizational",
     title: "Organisatoriska faktorer",
-    icon: "📊",
+    icon: BarChart3,
     items: [
       { id: "org_workload", label: "Arbetsbelastning (Workload)", description: "Work demands vs resources" },
       { id: "org_workhours", label: "Arbetstider (Working hours)", description: "Shift work, overtime" },
@@ -66,7 +69,7 @@ const SAM_CATEGORIES = [
   {
     id: "social",
     title: "Sociala faktorer",
-    icon: "👥",
+    icon: Users,
     items: [
       { id: "soc_harassment", label: "Kränkande särbehandling (Harassment)", description: "Bullying, discrimination" },
       { id: "soc_violence", label: "Hot och våld (Threats/Violence)", description: "From colleagues or external" },
@@ -123,10 +126,10 @@ const initialFormData: SAMFormData = {
 };
 
 function getRiskLevel(score: number): { level: string; color: string; bgColor: string; priority: number } {
-  if (score <= 4) return { level: "Låg (Low)", color: "text-green-700", bgColor: "bg-green-100", priority: 3 };
-  if (score <= 8) return { level: "Medel (Medium)", color: "text-yellow-700", bgColor: "bg-yellow-100", priority: 2 };
-  if (score <= 12) return { level: "Hög (High)", color: "text-orange-700", bgColor: "bg-orange-100", priority: 1 };
-  return { level: "Mycket hög (Very High)", color: "text-red-700", bgColor: "bg-red-100", priority: 0 };
+  if (score <= 4) return { level: "Låg (Low)", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950", priority: 3 };
+  if (score <= 8) return { level: "Medel (Medium)", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950", priority: 2 };
+  if (score <= 12) return { level: "Hög (High)", color: "text-orange-700 dark:text-orange-300", bgColor: "bg-orange-100 dark:bg-orange-950", priority: 1 };
+  return { level: "Mycket hög (Very High)", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950", priority: 0 };
 }
 
 export default function SAMFormPage() {
@@ -165,7 +168,7 @@ export default function SAMFormPage() {
       });
     } else {
       const newRisk: RiskItem = {
-        id: `${categoryId}_${itemId}_${Date.now()}`,
+        id: crypto.randomUUID(),
         categoryId,
         itemId,
         present: true,
@@ -219,6 +222,14 @@ export default function SAMFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.organizationName.trim()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
+    if (formData.risks.length === 0) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");
@@ -243,13 +254,13 @@ export default function SAMFormPage() {
     };
     addEvaluation(evaluation);
     toast("Assessment submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment&id=${evaluation.id}`);
   };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
@@ -262,7 +273,7 @@ export default function SAMFormPage() {
           </div>
           <span className="text-xs text-muted-foreground">SE</span>
         </div>
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentSection + 1) / sections.length) * 100}%` }}
@@ -280,7 +291,7 @@ export default function SAMFormPage() {
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Organisationsuppgifter</h2>
+                <h2 className="text-lg font-bold">Organisationsuppgifter</h2>
                 <p className="text-sm text-muted-foreground">Organization and workplace information</p>
               </div>
             </div>
@@ -369,7 +380,7 @@ export default function SAMFormPage() {
                   <AlertTriangle className="h-5 w-5 text-warning" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">Riskbedömning</h2>
+                  <h2 className="text-lg font-bold">Riskbedömning</h2>
                   <p className="text-sm text-muted-foreground">
                     {formData.risks.length} risker identifierade
                   </p>
@@ -414,7 +425,7 @@ export default function SAMFormPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-xl">{category.icon}</span>
+                          <category.icon className="h-5 w-5 text-primary" />
                           <div>
                             <p className="font-medium text-sm">{category.title}</p>
                             <p className="text-xs text-muted-foreground">
@@ -556,7 +567,7 @@ export default function SAMFormPage() {
                 <Shield className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Åtgärder</h2>
+                <h2 className="text-lg font-bold">Åtgärder</h2>
                 <p className="text-sm text-muted-foreground">Action plan for identified risks</p>
               </div>
             </div>
@@ -663,7 +674,7 @@ export default function SAMFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSubmit")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSubmit")}</h2>
                 <p className="text-sm text-muted-foreground">Review before submitting</p>
               </div>
             </div>

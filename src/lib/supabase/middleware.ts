@@ -1,6 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/public-env";
+import type { UserRole } from "@/types";
+
+interface AuthenticatedProfile {
+  role: UserRole;
+  company_id: string | null;
+}
 
 /**
  * Creates a Supabase client for use in middleware.
@@ -36,11 +42,28 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh the session — this is critical for keeping the user logged in.
+  // Refresh the session. This is critical for keeping the user logged in.
   // Do NOT remove this getUser() call.
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return { user, supabaseResponse };
+  let profile: AuthenticatedProfile | null = null;
+
+  if (user) {
+    const { data } = await supabase
+      .from("users")
+      .select("role, company_id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (data?.role) {
+      profile = {
+        role: data.role as UserRole,
+        company_id: data.company_id,
+      };
+    }
+  }
+
+  return { user, profile, supabaseResponse };
 }

@@ -18,19 +18,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
 import { useCompanyStore } from "@/stores/company-store";
+import { LoadingPage } from "@/components/ui/loading";
 import { useUsersStore } from "@/stores/users-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { cn } from "@/lib/utils";
 import { LOCALE_CONFIGS, SUPPORTED_LOCALES } from "@/i18n";
 import type { SupportedLocale } from "@/i18n";
+import { COUNTRY_OPTIONS, getCountryConfig } from "@/lib/country-config";
+import {
+  buildRegionalDefaults,
+  CURRENCY_OPTIONS,
+  DATE_FORMAT_OPTIONS,
+  getCompanySettingsKey,
+  TIMEZONE_OPTIONS,
+  type MeasurementSystem,
+} from "@/lib/company-settings";
+import { saveToStorage } from "@/lib/local-storage";
 import type { Company, Country, Language, SubscriptionTier, Currency, UIStyle } from "@/types";
 import { useTranslation } from "@/i18n";
 
-const SUPPORTED_COUNTRIES = [
-  { code: "US", name: "United States", currency: "USD", defaultLocale: "en" as SupportedLocale },
-  { code: "NL", name: "Netherlands", currency: "EUR", defaultLocale: "nl" as SupportedLocale },
-  { code: "SE", name: "Sweden", currency: "SEK", defaultLocale: "sv" as SupportedLocale },
-];
+const SUPPORTED_COUNTRIES = COUNTRY_OPTIONS;
 
 const PRICING_TIERS = [
   { value: "trial", label: "Trial", seats: 5, description: "60-day free trial" },
@@ -48,29 +55,43 @@ export default function PlatformCompaniesPage() {
   
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const { items: companies, add: addCompany } = useCompanyStore();
+  const { items: companies, isLoading, add: addCompany } = useCompanyStore();
   const { items: users, add: addUser } = useUsersStore();
   const { items: incidents } = useIncidentsStore();
   const { toast } = useToast();
 
   // Form state for Add Company modal
   const [newCompanyName, setNewCompanyName] = React.useState("");
-  const [newCompanyCountry, setNewCompanyCountry] = React.useState(SUPPORTED_COUNTRIES[0].code);
+  const [newCompanyCountry, setNewCompanyCountry] = React.useState<Country>(
+    SUPPORTED_COUNTRIES[0].code,
+  );
   const [newCompanyTier, setNewCompanyTier] = React.useState(PRICING_TIERS[0].value);
   const [newCompanyEmail, setNewCompanyEmail] = React.useState("");
   const [newAppName, setNewAppName] = React.useState("");
   const [newLanguage, setNewLanguage] = React.useState<SupportedLocale>("en");
+  const [newCurrency, setNewCurrency] = React.useState<Currency>("USD");
+  const [newDateFormat, setNewDateFormat] = React.useState("MM/DD/YYYY");
+  const [newTimezone, setNewTimezone] = React.useState("America/New_York");
+  const [newMeasurementSystem, setNewMeasurementSystem] =
+    React.useState<MeasurementSystem>("imperial");
   const [newPrimaryColor, setNewPrimaryColor] = React.useState("#2563eb");
   const [newSecondaryColor, setNewSecondaryColor] = React.useState("#1e40af");
   const [newUiStyle, setNewUiStyle] = React.useState<UIStyle>("rounded");
   const [formStep, setFormStep] = React.useState<"general" | "localization" | "branding">("general");
 
-  // Auto-set language + currency when country changes
+  const selectedCountryConfig = React.useMemo(
+    () => getCountryConfig(newCompanyCountry),
+    [newCompanyCountry],
+  );
+
+  // Auto-set regional defaults when country changes.
   React.useEffect(() => {
-    const country = SUPPORTED_COUNTRIES.find((c) => c.code === newCompanyCountry);
-    if (country) {
-      setNewLanguage(country.defaultLocale);
-    }
+    const defaults = buildRegionalDefaults(newCompanyCountry);
+    setNewLanguage(defaults.language);
+    setNewCurrency(defaults.currency);
+    setNewDateFormat(defaults.dateFormat);
+    setNewTimezone(defaults.timezone);
+    setNewMeasurementSystem(defaults.measurementSystem);
   }, [newCompanyCountry]);
 
   const filteredCompanies = React.useMemo(() => {
@@ -92,6 +113,10 @@ export default function PlatformCompaniesPage() {
     );
     return { userCount: companyUsers.length, incidentCount: openIncidents.length };
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard requireSuperAdmin>
@@ -139,7 +164,9 @@ export default function PlatformCompaniesPage() {
                       </div>
                       <div>
                         <CardTitle className="text-base">{comp.name}</CardTitle>
-                        <p className="text-xs text-muted-foreground">{comp.country}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {getCountryConfig(comp.country).flag} {comp.country}
+                        </p>
                       </div>
                     </div>
                     <Badge
@@ -184,7 +211,7 @@ export default function PlatformCompaniesPage() {
         )}
       </div>
 
-      {/* Add Company Modal — multi-step */}
+      {/* Add Company Modal, multi-step */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-lg bg-background shadow-lg max-h-[90vh] flex flex-col">
@@ -192,10 +219,10 @@ export default function PlatformCompaniesPage() {
               <div>
                 <h2 className="text-lg font-semibold">{t("companies.addCompany")}</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {formStep === "general" ? `Step 1 of 3 — ${t("companies.general")}` : formStep === "localization" ? `Step 2 of 3 — ${t("companies.localization")}` : `Step 3 of 3 — ${t("companies.branding")}`}
+                  {formStep === "general" ? `Step 1 of 3: ${t("companies.general")}` : formStep === "localization" ? `Step 2 of 3: ${t("companies.localization")}` : `Step 3 of 3: ${t("companies.branding")}`}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => { setShowAddModal(false); setFormStep("general"); }}>
+              <Button variant="ghost" size="icon" onClick={() => { setShowAddModal(false); setFormStep("general"); }} aria-label="Close">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -228,9 +255,9 @@ export default function PlatformCompaniesPage() {
                   </div>
                   <div>
                     <Label>{t("companies.country")} <span className="text-destructive">*</span></Label>
-                    <select title="Country" className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm" value={newCompanyCountry} onChange={(e) => setNewCompanyCountry(e.target.value)}>
+                    <select title="Country" className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm" value={newCompanyCountry} onChange={(e) => setNewCompanyCountry(e.target.value as Country)}>
                       {SUPPORTED_COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code}>{c.name}</option>
+                        <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
                       ))}
                     </select>
                   </div>
@@ -238,7 +265,7 @@ export default function PlatformCompaniesPage() {
                     <Label>{t("companies.plan")}</Label>
                     <select title="Plan" className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm" value={newCompanyTier} onChange={(e) => setNewCompanyTier(e.target.value)}>
                       {PRICING_TIERS.map((tier) => (
-                        <option key={tier.value} value={tier.value}>{tier.label} — {tier.description}</option>
+                        <option key={tier.value} value={tier.value}>{tier.label}: {tier.description}</option>
                       ))}
                     </select>
                   </div>
@@ -274,10 +301,74 @@ export default function PlatformCompaniesPage() {
                   <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
                     <p className="text-xs font-medium">Auto-configured from country:</p>
                     <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                      <div>Currency: <span className="font-medium text-foreground">{SUPPORTED_COUNTRIES.find((c) => c.code === newCompanyCountry)?.currency || "USD"}</span></div>
-                      <div>Date format: <span className="font-medium text-foreground">{LOCALE_CONFIGS[newLanguage]?.dateLocale || "en-US"}</span></div>
+                      <div>Country: <span className="font-medium text-foreground">{selectedCountryConfig.flag} {selectedCountryConfig.name}</span></div>
+                      <div>Currency: <span className="font-medium text-foreground">{newCurrency}</span></div>
+                      <div>Date format: <span className="font-medium text-foreground">{newDateFormat}</span></div>
+                      <div>Timezone: <span className="font-medium text-foreground">{newTimezone}</span></div>
+                      <div>Units: <span className="font-medium text-foreground">{newMeasurementSystem === "metric" ? "Metric" : "Imperial"}</span></div>
                       <div>Number format: <span className="font-medium text-foreground">{new Intl.NumberFormat(LOCALE_CONFIGS[newLanguage]?.numberLocale || "en-US").format(1234.56)}</span></div>
                       <div>Direction: <span className="font-medium text-foreground">LTR</span></div>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label>{t("settings.currency")}</Label>
+                      <select
+                        title="Currency"
+                        className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        value={newCurrency}
+                        onChange={(e) => setNewCurrency(e.target.value as Currency)}
+                      >
+                        {CURRENCY_OPTIONS.map((currency) => (
+                          <option key={currency.value} value={currency.value}>
+                            {currency.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>{t("settings.dateFormat")}</Label>
+                      <select
+                        title="Date format"
+                        className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        value={newDateFormat}
+                        onChange={(e) => setNewDateFormat(e.target.value)}
+                      >
+                        {DATE_FORMAT_OPTIONS.map((format) => (
+                          <option key={format.value} value={format.value}>
+                            {format.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>{t("settings.timezone")}</Label>
+                      <select
+                        title="Timezone"
+                        className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        value={newTimezone}
+                        onChange={(e) => setNewTimezone(e.target.value)}
+                      >
+                        {TIMEZONE_OPTIONS.map((timezone) => (
+                          <option key={timezone.value} value={timezone.value}>
+                            {timezone.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>{t("settings.measurementSystem")}</Label>
+                      <select
+                        title="Measurement system"
+                        className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        value={newMeasurementSystem}
+                        onChange={(e) =>
+                          setNewMeasurementSystem(e.target.value as MeasurementSystem)
+                        }
+                      >
+                        <option value="metric">{t("settings.metricUnits")}</option>
+                        <option value="imperial">{t("settings.imperialUnits")}</option>
+                      </select>
                     </div>
                   </div>
                   <div>
@@ -375,7 +466,9 @@ export default function PlatformCompaniesPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-sm" style={{ color: newPrimaryColor }}>{newAppName || newCompanyName || "Company Name"}</p>
-                        <p className="text-xs text-muted-foreground">{LOCALE_CONFIGS[newLanguage]?.flag} {LOCALE_CONFIGS[newLanguage]?.name} · {SUPPORTED_COUNTRIES.find((c) => c.code === newCompanyCountry)?.currency}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedCountryConfig.flag} {LOCALE_CONFIGS[newLanguage]?.name} · {newCurrency}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -413,7 +506,7 @@ export default function PlatformCompaniesPage() {
                       app_name: newAppName.trim() || null,
                       country: selectedCountry.code as Country,
                       language: newLanguage as Language,
-                      currency: selectedCountry.currency as Currency,
+                      currency: newCurrency,
                       tier: selectedTier.value as SubscriptionTier,
                       seat_limit: selectedTier.seats,
                       status: "trial",
@@ -428,6 +521,14 @@ export default function PlatformCompaniesPage() {
                       updated_at: new Date().toISOString(),
                     };
                     addCompany(newCompany);
+                    saveToStorage(getCompanySettingsKey(newCompany.id), {
+                      selectedCountry: newCompany.country,
+                      language: newLanguage,
+                      currency: newCurrency,
+                      dateFormat: newDateFormat,
+                      timezone: newTimezone,
+                      measurementSystem: newMeasurementSystem,
+                    });
                     // Create admin user for the new company if email provided
                     if (newCompanyEmail.trim()) {
                       addUser({
@@ -465,6 +566,10 @@ export default function PlatformCompaniesPage() {
                     setNewCompanyCountry(SUPPORTED_COUNTRIES[0].code);
                     setNewCompanyTier(PRICING_TIERS[0].value);
                     setNewLanguage("en");
+                    setNewCurrency("USD");
+                    setNewDateFormat("MM/DD/YYYY");
+                    setNewTimezone("America/New_York");
+                    setNewMeasurementSystem("imperial");
                     setNewPrimaryColor("#2563eb");
                     setNewSecondaryColor("#1e40af");
                     setNewUiStyle("rounded");

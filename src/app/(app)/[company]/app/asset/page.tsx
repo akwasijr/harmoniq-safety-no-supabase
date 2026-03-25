@@ -21,6 +21,8 @@ import { useAssetsStore } from "@/stores/assets-store";
 import { useTranslation } from "@/i18n";
 import { useAssetInspectionsStore } from "@/stores/inspections-store";
 import { useLocationsStore } from "@/stores/locations-store";
+import { useAuth } from "@/hooks/use-auth";
+import { LoadingPage } from "@/components/ui/loading";
 
 function AssetQuickViewPageContent() {
   const router = useRouter();
@@ -31,18 +33,16 @@ function AssetQuickViewPageContent() {
   const { items: inspections } = useAssetInspectionsStore();
   const { items: locations } = useLocationsStore();
 
+  const { user } = useAuth();
   const { t, formatDate } = useTranslation();
-  const asset = assets.find((a) => a.id === assetId);
+  const rawAsset = assets.find((a) => a.id === assetId);
+  const asset = rawAsset && user?.company_id && rawAsset.company_id !== user.company_id ? undefined : rawAsset;
   const assetInspections = inspections.filter((i) => i.asset_id === assetId);
   const lastInspection = [...assetInspections].sort((a, b) => new Date(b.inspected_at).getTime() - new Date(a.inspected_at).getTime())[0];
   const location = asset?.location_id ? locations.find((l) => l.id === asset.location_id) : null;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!asset) {
@@ -71,7 +71,7 @@ function AssetQuickViewPageContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+      <div className="sticky top-14 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -107,7 +107,7 @@ function AssetQuickViewPageContent() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">{t("assets.labels.assetType")}:</span>
-                <span className="capitalize">{asset.asset_type || "—"}</span>
+                <span className="capitalize">{asset.asset_type || "N/A"}</span>
               </div>
               {location && (
                 <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ function AssetQuickViewPageContent() {
                   <p className="font-medium capitalize">{lastInspection.result}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatDate(new Date(lastInspection.inspected_at))}
-                    {lastInspection.notes && ` — ${lastInspection.notes}`}
+                    {lastInspection.notes && `: ${lastInspection.notes}`}
                   </p>
                 </div>
               </div>
@@ -189,10 +189,10 @@ function AssetQuickViewPageContent() {
                 <span className="text-xs">{t("assets.reportIncident")}</span>
               </Button>
             </Link>
-            <Link href={`/${company}/dashboard/assets/${asset.id}`}>
+            <Link href={`/${company}/app/assets`}>
               <Button variant="outline" className="w-full h-20 flex-col gap-1">
                 <Package className="h-6 w-6" />
-                <span className="text-xs">{t("assets.fullDetails")}</span>
+                <span className="text-xs">{t("assets.browseAssets") || "Browse Assets"}</span>
               </Button>
             </Link>
           </div>

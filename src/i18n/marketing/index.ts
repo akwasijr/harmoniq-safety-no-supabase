@@ -1,10 +1,13 @@
 import en from "./en.json";
 import sv from "./sv.json";
 import nl from "./nl.json";
+import de from "./de.json";
+import fr from "./fr.json";
+import es from "./es.json";
 
-export type MarketingLocale = "en" | "sv" | "nl";
+export type MarketingLocale = "en" | "sv" | "nl" | "de" | "fr" | "es";
 
-const translations: Record<MarketingLocale, typeof en> = { en, sv, nl };
+const translations: Record<MarketingLocale, typeof en> = { en, sv, nl, de, fr, es };
 
 /**
  * Get a nested translation value by dot-path, e.g. "hero.title"
@@ -51,6 +54,9 @@ export function detectLocaleFromHeader(acceptLanguage: string | null): Marketing
   for (const lang of langs) {
     if (lang.startsWith("sv")) return "sv";
     if (lang.startsWith("nl")) return "nl";
+    if (lang.startsWith("de")) return "de";
+    if (lang.startsWith("fr")) return "fr";
+    if (lang.startsWith("es")) return "es";
   }
   return "en";
 }

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
-import type { SyncQueueItem, SyncItemType, SyncItemStatus } from "@/types";
+import type { SyncQueueItem, SyncItemType } from "@/types";
 
 const SYNC_QUEUE_KEY = "harmoniq_sync_queue";
 const OFFLINE_CACHE_KEY = "harmoniq_offline_cache";
@@ -27,7 +27,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     loadFromStorage<SyncQueueItem[]>(SYNC_QUEUE_KEY, [])
   );
 
-  // Monitor online/offline status
+  // Monitor online/offline status (uses syncNowRef defined below syncNow)
+  const syncNowRef = React.useRef<() => Promise<void>>(async () => {});
+
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     setIsOnline(navigator.onLine);
@@ -35,7 +37,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     const handleOnline = () => {
       setIsOnline(true);
       // Auto-sync when coming back online
-      syncNow();
+      syncNowRef.current();
     };
     const handleOffline = () => setIsOnline(false);
 
@@ -70,18 +72,27 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  // NOTE: No server sync endpoint exists yet. Items stay "pending" until a
+  // real API is wired up. When that happens, POST each item to the server and
+  // only mark "synced" on a 2xx response.
   const syncNow = React.useCallback(async () => {
     if (isSyncing) return;
+
+    const pending = queue.filter((item) => item.status === "pending");
+    if (pending.length === 0) return;
+
     setIsSyncing(true);
 
     try {
-      setQueue((prev) =>
-        prev.map((item) =>
-          item.status === "pending" ? { ...item, status: "synced" as SyncItemStatus, synced_at: new Date().toISOString() } : item
-        )
-      );
+      // TODO: Replace with real API calls, e.g.:
+      // for (const item of pending) {
+      //   const res = await fetch(`/api/sync`, { method: "POST", body: JSON.stringify(item) });
+      //   if (res.ok) markSynced(item.id);
+      // }
 
-      // Clean up synced items older than 24 hours
+      // For now, no-op — items remain pending until a server endpoint exists.
+
+      // Clean up synced items older than 24 hours (from future real syncs)
       const cutoff = Date.now() - 24 * 60 * 60 * 1000;
       setQueue((prev) =>
         prev.filter(
@@ -95,7 +106,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsSyncing(false);
     }
-  }, [isSyncing]);
+  }, [isSyncing, queue]);
+
+  // Keep syncNowRef up to date so the online listener always calls the latest version
+  React.useEffect(() => { syncNowRef.current = syncNow; }, [syncNow]);
 
   const cacheForOffline = React.useCallback((key: string, data: unknown) => {
     const cache = loadFromStorage<Record<string, unknown>>(OFFLINE_CACHE_KEY, {});

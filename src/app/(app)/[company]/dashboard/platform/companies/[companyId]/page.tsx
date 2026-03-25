@@ -3,6 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ArrowLeft,
   Save,
@@ -44,29 +46,21 @@ export default function PlatformCompanyDetailPage() {
   }, [targetCompany]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!targetCompany || !editedCompany) {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      );
-    }
     return (
       <RoleGuard requireSuperAdmin>
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">Company not found</p>
-          <Link href={`/${company}/dashboard/platform/companies`}>
-            <Button variant="link">Back to companies</Button>
-          </Link>
-        </div>
+        <EmptyState
+          title="Company not found"
+          description="The requested company could not be found."
+          action={
+            <Link href={`/${company}/dashboard/platform/companies`}>
+              <Button variant="link">Back to companies</Button>
+            </Link>
+          }
+        />
       </RoleGuard>
     );
   }

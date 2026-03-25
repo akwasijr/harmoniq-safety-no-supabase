@@ -18,19 +18,17 @@ function getSupabaseConnectSources() {
   return sources.join(" ");
 }
 
-const connectSrc = getSupabaseConnectSources();
-
-// Allow Sentry ingest domain in connect-src
-const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
-let sentryConnect = "";
-if (sentryDsn) {
+function getSentryConnectSource() {
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (!dsn) return "";
   try {
-    const parsed = new URL(sentryDsn);
-    sentryConnect = ` https://${parsed.host}`;
+    return new URL(dsn).origin;
   } catch {
-    // ignore invalid DSN
+    return "";
   }
 }
+
+const connectSrc = [getSupabaseConnectSources(), getSentryConnectSource()].filter(Boolean).join(" ");
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -68,12 +66,12 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",
               "media-src 'self' blob:",
-              `connect-src ${connectSrc}${sentryConnect}`,
+              `connect-src ${connectSrc}`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -87,16 +85,22 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  // Suppress Sentry CLI logs during build
-  silent: true,
+  // Suppress source map upload warnings when SENTRY_AUTH_TOKEN is not set
+  silent: !process.env.SENTRY_AUTH_TOKEN,
 
-  // Upload source maps for readable stack traces
+  // Don't widen the scope of the build process
+  disableLogger: true,
+
+  // Upload source maps for better stack traces (requires SENTRY_AUTH_TOKEN)
   widenClientFileUpload: true,
 
-  // Configure source maps (hide from users in production)
+  // Delete source maps after upload so they aren't served to users
   sourcemaps: {
-    deleteSourcemapsAfterUpload: true,
+    filesToDeleteAfterUpload: [".next/static/**/*.map"],
   },
+
+  // Automatically instrument API routes and server components
+  autoInstrumentServerFunctions: true,
 
   // Disable telemetry
   telemetry: false,

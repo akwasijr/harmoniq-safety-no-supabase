@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useParams, notFound } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
 import {
   ArrowLeft,
   Save,
@@ -21,10 +22,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { useTeamsStore } from "@/stores/teams-store";
-import { useUsersStore } from "@/stores/users-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
+import { RoleGuard } from "@/components/auth/role-guard";
+import { addTeamToUser, addUserToTeam, removeTeamFromUser, removeUserFromTeam } from "@/lib/assignment-utils";
 
 const tabs: Tab[] = [
   { id: "overview", label: "Overview", icon: Info },
@@ -44,31 +47,24 @@ export default function TeamDetailPage() {
   const { t, formatDate, formatNumber } = useTranslation();
 
   const { toast } = useToast();
-  const { items: teams, isLoading, update: updateTeam, remove: removeTeam } = useTeamsStore();
-  const { items: users, update: updateUser } = useUsersStore();
+  const { hasPermission: currentUserCan } = useAuth();
+  const canEditTeams = currentUserCan("teams.edit");
+  const canDeleteTeams = currentUserCan("teams.delete");
+  const canManageMembers = currentUserCan("teams.manage_members");
+  const { teams, users, stores } = useCompanyData();
+  const { isLoading, update: updateTeam, remove: removeTeam } = stores.teams;
+  const { update: updateUser } = stores.users;
   const baseTeam = teams.find((t) => t.id === teamId);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
-
-  // Team not found — trigger Next.js not-found boundary
-  if (!baseTeam) {
-    notFound();
-  }
-  
-  // Editable team state
+  // Editable team state (hooks must be above early returns)
   const [editedTeam, setEditedTeam] = React.useState({
-    name: baseTeam.name,
-    description: baseTeam.description || "",
-    color: baseTeam.color,
+    name: baseTeam?.name ?? "",
+    description: baseTeam?.description || "",
+    color: baseTeam?.color ?? "",
   });
 
   React.useEffect(() => {
+    if (!baseTeam) return;
     setEditedTeam({
       name: baseTeam.name,
       description: baseTeam.description || "",
@@ -76,16 +72,25 @@ export default function TeamDetailPage() {
     });
   }, [baseTeam]);
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
+  // Team not found. Trigger Next.js not-found boundary
+  if (!baseTeam) {
+    notFound();
+  }
+
   const team = isEditing ? { ...baseTeam, ...editedTeam } : baseTeam;
 
   // Get team members
-  const teamMembers = users.filter(u => u.team_ids?.includes(teamId));
+  const teamMembers = users.filter((user) => user.team_ids.includes(teamId));
   
   // Get team leader
   const teamLeader = team.leader_id ? users.find(u => u.id === team.leader_id) : null;
 
   // Get users not in this team for add member modal
-  const availableUsers = users.filter(u => !u.team_ids?.includes(teamId));
+  const availableUsers = users.filter((user) => !user.team_ids.includes(teamId));
 
   const handleSave = () => {
     updateTeam(baseTeam.id, {
@@ -101,7 +106,7 @@ export default function TeamDetailPage() {
   const handleDelete = () => {
     teamMembers.forEach((member) => {
       updateUser(member.id, {
-        team_ids: member.team_ids?.filter((id) => id !== teamId),
+        team_ids: removeTeamFromUser(member, teamId),
         updated_at: new Date().toISOString(),
       });
     });
@@ -115,13 +120,12 @@ export default function TeamDetailPage() {
     const user = users.find((u) => u.id === userId);
     if (!user) return;
     updateUser(user.id, {
-      team_ids: user.team_ids?.filter((id) => id !== teamId),
+      team_ids: removeTeamFromUser(user, teamId),
       updated_at: new Date().toISOString(),
     });
-    const nextMemberIds = (team.member_ids || []).filter((id) => id !== userId);
+    const nextMemberIds = removeUserFromTeam(team, userId);
     updateTeam(baseTeam.id, {
       member_ids: nextMemberIds,
-      member_count: nextMemberIds.length,
       updated_at: new Date().toISOString(),
     });
     toast("Member removed", "info");
@@ -131,13 +135,12 @@ export default function TeamDetailPage() {
     const user = users.find((u) => u.id === userId);
     if (!user) return;
     updateUser(user.id, {
-      team_ids: Array.from(new Set([...(user.team_ids || []), teamId])),
+      team_ids: addTeamToUser(user, teamId),
       updated_at: new Date().toISOString(),
     });
-    const nextMemberIds = Array.from(new Set([...(team.member_ids || []), userId]));
+    const nextMemberIds = addUserToTeam(team, userId);
     updateTeam(baseTeam.id, {
       member_ids: nextMemberIds,
-      member_count: nextMemberIds.length,
       updated_at: new Date().toISOString(),
     });
     setShowAddMemberModal(false);
@@ -157,6 +160,7 @@ export default function TeamDetailPage() {
   }
 
   return (
+    <RoleGuard requiredPermission="teams.view">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
@@ -164,6 +168,7 @@ export default function TeamDetailPage() {
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Go back"
             onClick={() => router.push(`/${company}/dashboard/users`)}
           >
             <ArrowLeft className="h-5 w-5" />
@@ -193,17 +198,21 @@ export default function TeamDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          {isEditing ? (
+          {canEditTeams && (
             <>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>{t("common.cancel")}</Button>
-              <Button className="gap-2" onClick={handleSave}>
-                <Save className="h-4 w-4" /> {t("common.save")}
-              </Button>
+              {isEditing ? (
+                <>
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>{t("common.cancel")}</Button>
+                  <Button className="gap-2" onClick={handleSave}>
+                    <Save className="h-4 w-4" /> {t("common.save")}
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => setIsEditing(true)} className="gap-2">
+                  <Edit className="h-4 w-4" /> {t("common.edit")}
+                </Button>
+              )}
             </>
-          ) : (
-            <Button onClick={() => setIsEditing(true)} className="gap-2">
-              <Edit className="h-4 w-4" /> {t("common.edit")}
-            </Button>
           )}
         </div>
       </div>
@@ -226,7 +235,7 @@ export default function TeamDetailPage() {
                     <Input
                       value={editedTeam.description}
                       onChange={(e) => setEditedTeam({ ...editedTeam, description: e.target.value })}
-                      placeholder="Team description..."
+                      placeholder={t("users.placeholders.teamDescription")}
                       className="mt-1"
                     />
                   ) : (
@@ -362,9 +371,11 @@ export default function TeamDetailPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">{t("users.members")} ({formatNumber(teamMembers.length)})</h2>
-            <Button size="sm" className="gap-2" onClick={() => setShowAddMemberModal(true)}>
-              <UserPlus className="h-4 w-4" /> Add Member
-            </Button>
+            {canManageMembers && (
+              <Button size="sm" className="gap-2" onClick={() => setShowAddMemberModal(true)}>
+                <UserPlus className="h-4 w-4" /> Add Member
+              </Button>
+            )}
           </div>
 
           <Card>
@@ -390,7 +401,7 @@ export default function TeamDetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="capitalize">{member.role}</Badge>
-                      {member.id !== team.leader_id && (
+                      {member.id !== team.leader_id && canManageMembers && (
                         <>
                           <Button
                             variant="ghost"
@@ -417,9 +428,11 @@ export default function TeamDetailPage() {
                   <div className="p-8 text-center text-muted-foreground">
                     <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>{t("users.noMembersYet")}</p>
-                    <Button size="sm" className="mt-4 gap-2" onClick={() => setShowAddMemberModal(true)}>
-                      <UserPlus className="h-4 w-4" /> Add First Member
-                    </Button>
+                    {canManageMembers && (
+                      <Button size="sm" className="mt-4 gap-2" onClick={() => setShowAddMemberModal(true)}>
+                        <UserPlus className="h-4 w-4" /> Add First Member
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -431,11 +444,19 @@ export default function TeamDetailPage() {
       {/* Settings Tab */}
       {activeTab === "settings" && (
         <div className="max-w-2xl space-y-6">
+          {!canEditTeams && !canDeleteTeams ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                {t("common.noPermission")}
+              </CardContent>
+            </Card>
+          ) : (
           <Card>
             <CardHeader>
               <CardTitle className="text-base text-destructive">{t("users.dangerZone")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {canEditTeams && (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{t("users.deactivateTeam")}</p>
@@ -443,6 +464,8 @@ export default function TeamDetailPage() {
                 </div>
                 <Button variant="outline">{t("users.deactivate")}</Button>
               </div>
+              )}
+              {canDeleteTeams && (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{t("users.deleteTeam")}</p>
@@ -456,8 +479,10 @@ export default function TeamDetailPage() {
                   <Trash2 className="h-4 w-4" /> Delete
                 </Button>
               </div>
+              )}
             </CardContent>
           </Card>
+          )}
         </div>
       )}
 
@@ -467,7 +492,7 @@ export default function TeamDetailPage() {
           <div className="relative z-50 w-full max-w-lg rounded-lg bg-background p-6 shadow-xl mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{t("users.addTeamMember")}</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowAddMemberModal(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowAddMemberModal(false)} aria-label="Close">
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -535,5 +560,6 @@ export default function TeamDetailPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

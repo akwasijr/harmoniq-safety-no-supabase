@@ -10,7 +10,7 @@ import {
   Save,
   Eye,
   FileText,
-  Image,
+  Image as ImageIcon,
   Newspaper,
   FolderOpen,
   HelpCircle,
@@ -37,8 +37,10 @@ import { useContentStore } from "@/stores/content-store";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyStore } from "@/stores/company-store";
+import { storeFile } from "@/lib/file-storage";
 import type { Content } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 const contentTypes = [
   { value: "news", label: "News Article", icon: Newspaper, description: "Company news and announcements" },
@@ -86,6 +88,8 @@ export default function NewContentPage() {
     event_time: "",
     send_notification: false,
     all_employees: true,
+    featured_image: "" as string | null,
+    file_url: "" as string | null,
   });
 
   const [featuredImage, setFeaturedImage] = React.useState<{ file: File; preview: string } | null>(null);
@@ -93,22 +97,36 @@ export default function NewContentPage() {
   const imageInputRef = React.useRef<HTMLInputElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.size <= 5 * 1024 * 1024) {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast("Image must be under 5MB", "error");
+      return;
+    }
+    try {
+      const stored = await storeFile(file, "content_image", "new", user?.id || "");
       const preview = URL.createObjectURL(file);
       setFeaturedImage({ file, preview });
-    } else if (file) {
-      toast("Image must be under 5MB", "error");
+      setFormData((prev) => ({ ...prev, featured_image: stored.dataUrl }));
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Image upload failed", "error");
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.size <= 10 * 1024 * 1024) {
-      setAttachedFile(file);
-    } else if (file) {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
       toast("File must be under 10MB", "error");
+      return;
+    }
+    try {
+      const stored = await storeFile(file, "content_file", "new", user?.id || "");
+      setAttachedFile(file);
+      setFormData((prev) => ({ ...prev, file_url: stored.dataUrl }));
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "File upload failed", "error");
     }
   };
 
@@ -119,32 +137,41 @@ export default function NewContentPage() {
 
   const handleSubmit = async (publish: boolean) => {
     setIsSubmitting(true);
-    const now = new Date().toISOString();
-    const contentItem: Content = {
-      id: crypto.randomUUID(),
-      company_id: companyId,
-      type: formData.type as Content["type"],
-      title: formData.title,
-      content: formData.content || null,
-      file_url: null,
-      video_url: null,
-      question: formData.type === "faq" ? formData.title : null,
-      answer: formData.type === "faq" ? formData.content || null : null,
-      event_date: formData.type === "event" ? formData.event_date || null : null,
-      event_time: formData.type === "event" ? formData.event_time || null : null,
-      event_location: null,
-      category: formData.category || null,
-      featured_image: null,
-      status: publish ? "published" : "draft",
-      published_at: publish ? now : null,
-      scheduled_for: !publish && formData.scheduled_date ? formData.scheduled_date : null,
-      created_by: user?.id || "",
-      created_at: now,
-      updated_at: now,
-    };
-    addContent(contentItem);
-    toast(publish ? "Content published" : "Content saved");
-    router.push(`/${company}/dashboard/content`);
+    try {
+      const editorContent = editorRef.current?.innerHTML
+        ? sanitizeHtml(editorRef.current.innerHTML)
+        : formData.content;
+      const now = new Date().toISOString();
+      const contentItem: Content = {
+        id: crypto.randomUUID(),
+        company_id: companyId,
+        type: formData.type as Content["type"],
+        title: formData.title,
+        content: editorContent || null,
+        file_url: formData.file_url || null,
+        video_url: null,
+        question: formData.type === "faq" ? formData.title : null,
+        answer: formData.type === "faq" ? editorContent || null : null,
+        event_date: formData.type === "event" ? formData.event_date || null : null,
+        event_time: formData.type === "event" ? formData.event_time || null : null,
+        event_location: null,
+        category: formData.category || null,
+        featured_image: formData.featured_image || null,
+        status: publish ? "published" : "draft",
+        published_at: publish ? now : null,
+        scheduled_for: !publish && formData.scheduled_date ? formData.scheduled_date : null,
+        created_by: user?.id || "",
+        created_at: now,
+        updated_at: now,
+      };
+      addContent(contentItem);
+      toast(publish ? "Content published" : "Content saved");
+      router.push(`/${company}/dashboard/content`);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to save content", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const canProceed = () => {
@@ -165,6 +192,7 @@ export default function NewContentPage() {
   const selectedType = contentTypes.find(t => t.value === formData.type);
 
   return (
+    <RoleGuard allowedRoles={["company_admin", "super_admin"]}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -342,7 +370,7 @@ export default function NewContentPage() {
                         <div className="absolute top-full left-0 z-10 mt-1 flex gap-1 rounded-md border bg-background p-2 shadow-md">
                           <input
                             type="url"
-                            placeholder="https://..."
+                            placeholder={t("content.placeholders.linkUrl")}
                             value={linkUrl}
                             onChange={(e) => setLinkUrl(e.target.value)}
                             onKeyDown={(e) => {
@@ -395,7 +423,7 @@ export default function NewContentPage() {
                     id="category"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="e.g., Safety, Training, Policy"
+                    placeholder={t("content.placeholders.category")}
                     className="mt-1"
                   />
                 </div>
@@ -437,7 +465,7 @@ export default function NewContentPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Image className="h-5 w-5" />
+                    <ImageIcon className="h-5 w-5" />
                     Featured Image
                   </CardTitle>
                 </CardHeader>
@@ -451,7 +479,7 @@ export default function NewContentPage() {
                   />
                   {featuredImage ? (
                     <div className="relative rounded-lg overflow-hidden">
-                      <img src={featuredImage.preview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
+                      <img src={featuredImage.preview} alt="Featured image preview" className="w-full h-48 object-cover rounded-lg" loading="lazy" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                         <Button size="sm" variant="secondary" onClick={() => imageInputRef.current?.click()}>
                           Change
@@ -711,5 +739,6 @@ export default function NewContentPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

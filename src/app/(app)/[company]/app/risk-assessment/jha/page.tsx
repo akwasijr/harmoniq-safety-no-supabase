@@ -13,7 +13,18 @@ import {
   Trash2,
   Info,
   Shield,
+  HardHat,
+  Glasses,
+  ShieldCheck,
+  Headphones,
+  Hand,
+  Footprints,
+  Shirt,
+  Wind,
+  Cable,
+  FlaskConical,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,17 +39,17 @@ import type { RiskEvaluation } from "@/types";
 import { useTranslation } from "@/i18n";
 
 // PPE Options (OSHA standard)
-const PPE_OPTIONS = [
-  { id: "hard_hat", label: "Hard Hat", icon: "🪖" },
-  { id: "safety_glasses", label: "Safety Glasses", icon: "🥽" },
-  { id: "face_shield", label: "Face Shield", icon: "😷" },
-  { id: "hearing_protection", label: "Hearing Protection", icon: "🎧" },
-  { id: "gloves", label: "Gloves", icon: "🧤" },
-  { id: "steel_toe_boots", label: "Steel-toe Boots", icon: "👢" },
-  { id: "high_vis_vest", label: "High-vis Vest", icon: "🦺" },
-  { id: "respirator", label: "Respirator", icon: "😮‍💨" },
-  { id: "fall_protection", label: "Fall Protection", icon: "🪢" },
-  { id: "chemical_suit", label: "Chemical Suit", icon: "🧪" },
+const PPE_OPTIONS: { id: string; label: string; icon: LucideIcon }[] = [
+  { id: "hard_hat", label: "Hard Hat", icon: HardHat },
+  { id: "safety_glasses", label: "Safety Glasses", icon: Glasses },
+  { id: "face_shield", label: "Face Shield", icon: ShieldCheck },
+  { id: "hearing_protection", label: "Hearing Protection", icon: Headphones },
+  { id: "gloves", label: "Gloves", icon: Hand },
+  { id: "steel_toe_boots", label: "Steel-toe Boots", icon: Footprints },
+  { id: "high_vis_vest", label: "High-vis Vest", icon: Shirt },
+  { id: "respirator", label: "Respirator", icon: Wind },
+  { id: "fall_protection", label: "Fall Protection", icon: Cable },
+  { id: "chemical_suit", label: "Chemical Suit", icon: FlaskConical },
 ];
 
 // Hazard types (OSHA Focus Four + additional)
@@ -119,9 +130,9 @@ const initialFormData: JHAFormData = {
 
 function getRiskLevel(score: number): { level: string; color: string; bgColor: string } {
   if (score === 0) return { level: "Not assessed", color: "text-muted-foreground", bgColor: "bg-muted" };
-  if (score <= 5) return { level: "Low", color: "text-green-700", bgColor: "bg-green-100" };
-  if (score <= 11) return { level: "Medium", color: "text-yellow-700", bgColor: "bg-yellow-100" };
-  return { level: "High", color: "text-red-700", bgColor: "bg-red-100" };
+  if (score <= 5) return { level: "Low", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950" };
+  if (score <= 11) return { level: "Medium", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950" };
+  return { level: "High", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950" };
 }
 
 export default function JHAFormPage() {
@@ -217,6 +228,14 @@ export default function JHAFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.jobTitle.trim() || !formData.location.trim() || !formData.department.trim() || !formData.date.trim()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
+    if (formData.jobSteps.length === 0) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");
@@ -241,7 +260,7 @@ export default function JHAFormPage() {
     };
     addEvaluation(evaluation);
     toast("Assessment submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment&id=${evaluation.id}`);
   };
 
   // Calculate total risk score for summary
@@ -251,7 +270,7 @@ export default function JHAFormPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
@@ -265,7 +284,7 @@ export default function JHAFormPage() {
           <span className="text-xs text-muted-foreground">OSHA</span>
         </div>
         {/* Progress bar */}
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentSection + 1) / sections.length) * 100}%` }}
@@ -283,7 +302,7 @@ export default function JHAFormPage() {
                 <FileCheck className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Job Information</h2>
+                <h2 className="text-lg font-bold">Job Information</h2>
                 <p className="text-sm text-muted-foreground">Basic details about the task being analyzed</p>
               </div>
             </div>
@@ -362,7 +381,7 @@ export default function JHAFormPage() {
                   <AlertTriangle className="h-5 w-5 text-warning" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">Hazard Analysis</h2>
+                  <h2 className="text-lg font-bold">Hazard Analysis</h2>
                   <p className="text-sm text-muted-foreground">Break down the job into steps and identify hazards</p>
                 </div>
               </div>
@@ -572,7 +591,7 @@ export default function JHAFormPage() {
                 <Shield className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">PPE Requirements</h2>
+                <h2 className="text-lg font-bold">PPE Requirements</h2>
                 <p className="text-sm text-muted-foreground">Select all required personal protective equipment</p>
               </div>
             </div>
@@ -589,7 +608,7 @@ export default function JHAFormPage() {
                       : "border-border hover:border-primary/50"
                   )}
                 >
-                  <span className="text-2xl">{ppe.icon}</span>
+                  <ppe.icon className="h-6 w-6" aria-hidden="true" />
                   <span className="font-medium text-sm">{ppe.label}</span>
                   {formData.ppeRequired.includes(ppe.id) && (
                     <CheckCircle className="h-5 w-5 text-primary ml-auto" />
@@ -634,7 +653,7 @@ export default function JHAFormPage() {
                 <Info className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Training & Precautions</h2>
+                <h2 className="text-lg font-bold">Training & Precautions</h2>
                 <p className="text-sm text-muted-foreground">Additional requirements and special instructions</p>
               </div>
             </div>
@@ -681,7 +700,7 @@ export default function JHAFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSubmit")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSubmit")}</h2>
                 <p className="text-sm text-muted-foreground">Review your JHA before submitting</p>
               </div>
             </div>
@@ -752,7 +771,7 @@ export default function JHAFormPage() {
                       const ppe = PPE_OPTIONS.find((p) => p.id === id);
                       return (
                         <span key={id} className="text-xs text-muted-foreground">
-                          {ppe?.icon} {ppe?.label}
+                          {ppe && <><ppe.icon className="h-4 w-4 inline-block mr-1" aria-hidden="true" />{ppe.label}</>}
                         </span>
                       );
                     })}

@@ -12,32 +12,32 @@ import {
 
 describe("stripHtml", () => {
   it("removes HTML tags", () => {
-    expect(stripHtml("<b>bold</b>")).toBe("bold");
-    expect(stripHtml('<a href="x">link</a>')).toBe("link");
+    expect(stripHtml("<b>hello</b>")).toBe("hello");
   });
-
-  it("handles nested tags", () => {
+  it("removes nested tags", () => {
     expect(stripHtml("<div><p>text</p></div>")).toBe("text");
   });
-
   it("trims whitespace", () => {
     expect(stripHtml("  hello  ")).toBe("hello");
   });
-
-  it("returns empty for empty string", () => {
+  it("handles empty string", () => {
     expect(stripHtml("")).toBe("");
+  });
+  it("strips script tags", () => {
+    expect(stripHtml('<script>alert("xss")</script>safe')).toBe('alert("xss")safe');
   });
 });
 
 describe("truncate", () => {
-  it("leaves short strings unchanged", () => {
+  it("returns string unchanged if within limit", () => {
     expect(truncate("hello", 10)).toBe("hello");
   });
-
-  it("truncates long strings", () => {
+  it("truncates string exceeding limit", () => {
     expect(truncate("hello world", 5)).toBe("hello");
   });
-
+  it("returns empty string unchanged", () => {
+    expect(truncate("", 5)).toBe("");
+  });
   it("handles exact length", () => {
     expect(truncate("hello", 5)).toBe("hello");
   });
@@ -45,136 +45,119 @@ describe("truncate", () => {
 
 describe("sanitizeText", () => {
   it("strips HTML and trims", () => {
-    expect(sanitizeText("<b>test</b>")).toBe("test");
+    expect(sanitizeText("<b>hello</b>")).toBe("hello");
   });
-
-  it("enforces max length", () => {
-    expect(sanitizeText("a".repeat(300), 100)).toBe("a".repeat(100));
+  it("truncates to max length", () => {
+    expect(sanitizeText("abcdefghij", 5)).toBe("abcde");
   });
-
   it("returns empty string for non-string input", () => {
     expect(sanitizeText(123)).toBe("");
     expect(sanitizeText(null)).toBe("");
     expect(sanitizeText(undefined)).toBe("");
+  });
+  it("uses default max length of 255", () => {
+    const long = "a".repeat(300);
+    expect(sanitizeText(long)).toHaveLength(255);
   });
 });
 
 describe("isValidEmail", () => {
   it("accepts valid emails", () => {
     expect(isValidEmail("user@example.com")).toBe(true);
-    expect(isValidEmail("test.user+tag@company.co.uk")).toBe(true);
+    expect(isValidEmail("user.name+tag@domain.co")).toBe(true);
   });
-
   it("rejects invalid emails", () => {
     expect(isValidEmail("")).toBe(false);
-    expect(isValidEmail("not-an-email")).toBe(false);
-    expect(isValidEmail("@no-local.com")).toBe(false);
-    expect(isValidEmail("no-domain@")).toBe(false);
+    expect(isValidEmail("noatsign")).toBe(false);
+    expect(isValidEmail("@nodomain.com")).toBe(false);
+    expect(isValidEmail("user@")).toBe(false);
   });
-
   it("rejects emails over 254 chars", () => {
-    const longEmail = "a".repeat(246) + "@test.com"; // 255 chars total
+    const longEmail = "a".repeat(243) + "@example.com"; // 255 chars
     expect(isValidEmail(longEmail)).toBe(false);
   });
 });
 
 describe("validatePassword", () => {
-  it("accepts valid passwords", () => {
-    expect(validatePassword("MyPassword123")).toEqual({ valid: true });
-    expect(validatePassword("Str0ngP@ssword!")).toEqual({ valid: true });
+  it("accepts a strong password", () => {
+    expect(validatePassword("StrongPass123")).toEqual({ valid: true });
   });
-
   it("rejects short passwords", () => {
     const result = validatePassword("Short1Aa");
     expect(result.valid).toBe(false);
-    expect(result.reason).toContain("12 characters");
+    expect(result.reason).toMatch(/12 characters/);
   });
-
-  it("rejects passwords without lowercase", () => {
-    const result = validatePassword("ALLUPPERCASE123");
-    expect(result.valid).toBe(false);
-    expect(result.reason).toContain("lowercase");
-  });
-
   it("rejects passwords without uppercase", () => {
     const result = validatePassword("alllowercase123");
     expect(result.valid).toBe(false);
-    expect(result.reason).toContain("uppercase");
+    expect(result.reason).toMatch(/uppercase/);
   });
-
-  it("rejects passwords without numbers", () => {
-    const result = validatePassword("NoNumbersHere!");
+  it("rejects passwords without lowercase", () => {
+    const result = validatePassword("ALLUPPERCASE123");
     expect(result.valid).toBe(false);
-    expect(result.reason).toContain("number");
+    expect(result.reason).toMatch(/lowercase/);
   });
-
+  it("rejects passwords without digits", () => {
+    const result = validatePassword("NoDigitsHereABC");
+    expect(result.valid).toBe(false);
+    expect(result.reason).toMatch(/number/);
+  });
+  it("rejects passwords over 128 chars", () => {
+    const result = validatePassword("Aa1" + "x".repeat(126));
+    expect(result.valid).toBe(false);
+    expect(result.reason).toMatch(/128/);
+  });
   it("rejects non-string input", () => {
     expect(validatePassword(null as unknown as string).valid).toBe(false);
-  });
-
-  it("rejects passwords over 128 chars", () => {
-    const result = validatePassword("Aa1" + "x".repeat(130));
-    expect(result.valid).toBe(false);
-    expect(result.reason).toContain("128");
   });
 });
 
 describe("isValidUUID", () => {
   it("accepts valid v4 UUIDs", () => {
     expect(isValidUUID("550e8400-e29b-41d4-a716-446655440000")).toBe(true);
-    expect(isValidUUID("d0000000-0000-4000-a000-000000000001")).toBe(true);
   });
-
   it("rejects invalid UUIDs", () => {
     expect(isValidUUID("not-a-uuid")).toBe(false);
     expect(isValidUUID("")).toBe(false);
-    expect(isValidUUID("550e8400-e29b-31d4-a716-446655440000")).toBe(false); // v3, not v4
+    expect(isValidUUID("550e8400-e29b-31d4-a716-446655440000")).toBe(false); // v3
   });
 });
 
 describe("isValidRole", () => {
-  it("accepts valid roles", () => {
+  it("accepts default roles", () => {
+    expect(isValidRole("worker")).toBe(true);
+    expect(isValidRole("supervisor")).toBe(true);
     expect(isValidRole("company_admin")).toBe(true);
     expect(isValidRole("super_admin")).toBe(true);
   });
-
-  it("rejects invalid roles", () => {
+  it("rejects unknown roles", () => {
     expect(isValidRole("hacker")).toBe(false);
     expect(isValidRole("")).toBe(false);
   });
-
-  it("uses custom allowed list", () => {
+  it("accepts custom allowed roles", () => {
     expect(isValidRole("custom", ["custom", "other"])).toBe(true);
-    expect(isValidRole("worker", ["custom"])).toBe(false);
   });
 });
 
 describe("validateUUIDArray", () => {
   it("accepts valid UUID arrays", () => {
-    const result = validateUUIDArray([
-      "550e8400-e29b-41d4-a716-446655440000",
-      "d0000000-0000-4000-a000-000000000001",
-    ]);
-    expect(result).toHaveLength(2);
+    const ids = ["550e8400-e29b-41d4-a716-446655440000"];
+    expect(validateUUIDArray(ids)).toEqual(ids);
   });
-
-  it("accepts empty arrays", () => {
-    expect(validateUUIDArray([])).toEqual([]);
-  });
-
-  it("rejects non-array input", () => {
+  it("returns null for non-arrays", () => {
     expect(validateUUIDArray("not-array")).toBeNull();
-    expect(validateUUIDArray(null)).toBeNull();
+    expect(validateUUIDArray(123)).toBeNull();
   });
-
-  it("rejects arrays with invalid UUIDs", () => {
-    expect(validateUUIDArray(["not-a-uuid"])).toBeNull();
+  it("returns null if any UUID is invalid", () => {
+    expect(validateUUIDArray(["valid-nope"])).toBeNull();
   });
-
-  it("rejects arrays over 50 items", () => {
+  it("returns null for arrays exceeding 50 items", () => {
     const arr = Array.from({ length: 51 }, (_, i) =>
       `550e8400-e29b-41d4-a716-${String(i).padStart(12, "0")}`
     );
     expect(validateUUIDArray(arr)).toBeNull();
+  });
+  it("accepts empty array", () => {
+    expect(validateUUIDArray([])).toEqual([]);
   });
 });

@@ -6,8 +6,17 @@ Sentry.init({
   // Only enable in production
   enabled: process.env.NODE_ENV === "production",
 
-  // Performance: sample 10% of transactions
+  // Sample 10% of transactions for performance monitoring
   tracesSampleRate: 0.1,
+
+  // Sample 100% of errors
+  sampleRate: 1.0,
+
+  // Don't send PII
+  sendDefaultPii: false,
+
+  // Tag with environment
+  environment: process.env.NODE_ENV,
 
   // Scrub sensitive data from server events
   beforeSend(event) {

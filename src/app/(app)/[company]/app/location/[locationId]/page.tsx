@@ -25,17 +25,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
+import { useAuth } from "@/hooks/use-auth";
 import { LocationType, LocationEmergencyContact, LocationSafetyNotice } from "@/types";
 import { useTranslation } from "@/i18n";
-
-// Location type configurations (matching dashboard)
-const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
-  site: "Campus",
-  building: "Building",
-  floor: "Floor",
-  zone: "Zone",
-  room: "Room",
-};
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const LOCATION_TYPE_ICONS: Record<LocationType, React.ComponentType<{ className?: string }>> = {
   site: Building2,
@@ -48,14 +42,46 @@ const LOCATION_TYPE_ICONS: Record<LocationType, React.ComponentType<{ className?
 export default function LocationLandingPage() {
   const router = useRouter();
   const routeParams = useParams();
-  const company = routeParams.company as string;
-  const locationId = routeParams.locationId as string;
+  const rawCompany = routeParams.company;
+  const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
+  const rawLocationId = routeParams.locationId;
+  const locationId = typeof rawLocationId === "string" ? rawLocationId : Array.isArray(rawLocationId) ? rawLocationId[0] : "";
 
-  const { items: locations } = useLocationsStore();
+  const { user } = useAuth();
+  const { items: locations, isLoading } = useLocationsStore();
   const { items: incidents } = useIncidentsStore();
   const { t } = useTranslation();
 
-  const location = locations.find((l) => l.id === locationId);
+  const locationTypeLabels: Record<string, string> = {
+    site: t("locations.types.site"),
+    building: t("locations.types.building"),
+    floor: t("locations.types.floor"),
+    zone: t("locations.types.zone"),
+    room: t("locations.types.room"),
+  };
+
+  const matchedLocation = locations.find((l) => l.id === locationId);
+  const location = matchedLocation && user?.company_id && matchedLocation.company_id !== user.company_id ? undefined : matchedLocation;
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
+  if (!location) {
+    return (
+      <EmptyState
+        icon={MapPin}
+        title="Location not found"
+        description="This location may have been removed or you don't have access."
+        action={
+          <Button variant="outline" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Go Back
+          </Button>
+        }
+      />
+    );
+  }
 
   // Get parent location if exists
   const parentLocation = location?.parent_id 
@@ -82,7 +108,7 @@ export default function LocationLandingPage() {
 
     // Default fallback
     return [
-      { id: "default_1", location_id: locationId, name: "Emergency Services", role: "Emergency", phone: "911", is_primary: true },
+      { id: "default_1", location_id: locationId, name: t("locations.emergency.services") || "Emergency Services", role: t("locations.emergency.role") || "Emergency", phone: "911", is_primary: true },
     ];
   };
 
@@ -171,29 +197,14 @@ export default function LocationLandingPage() {
       icon: Wrench,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
-      href: `/${company}/app/checklists?tab=inspections&location=${locationId}`,
+      href: `/${company}/app/inspection?location=${locationId}`,
     },
   ];
-
-  if (!location) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-6">
-        <MapPin className="h-16 w-16 text-muted-foreground mb-4" />
-        <h1 className="text-xl font-semibold mb-2">{t("locations.locationNotFound")}</h1>
-        <p className="text-muted-foreground text-center mb-6">
-          {t("locations.locationNotFoundDesc")}
-        </p>
-        <Button onClick={() => router.push(`/${company}/app`)}>
-          {t("locations.goToHome")}
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b">
+      <header className="sticky top-14 z-50 bg-background border-b">
         <div className="flex items-center justify-between p-4">
           <Button variant="ghost" size="sm" onClick={() => router.push(`/${company}/app`)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -229,7 +240,7 @@ export default function LocationLandingPage() {
                 )}
                 <div className="flex gap-2 mt-3">
                   <span className="text-xs text-muted-foreground">
-                    {LOCATION_TYPE_LABELS[location.type] || location.type}
+                    {locationTypeLabels[location.type] || location.type}
                   </span>
                 </div>
               </div>
@@ -271,7 +282,7 @@ export default function LocationLandingPage() {
         <div className="space-y-3">
           {quickActions.map((action) => (
             <Link key={action.id} href={action.href}>
-              <Card className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50">
+              <Card className="cursor-pointer transition-all hover:border-primary/50">
                 <CardContent className="flex items-center gap-4 py-4">
                   <div className={`rounded-full ${action.bgColor} p-3`}>
                     <action.icon className={`h-6 w-6 ${action.color}`} />

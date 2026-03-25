@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
 import { useUsersStore } from "@/stores/users-store";
+import { LoadingPage } from "@/components/ui/loading";
 import type { User } from "@/types";
 import { useTranslation } from "@/i18n";
 
@@ -27,7 +28,7 @@ export default function PlatformUsersPage() {
   const router = useRouter();
   const company = params.company as string;
 
-  const { items: allUsers, add: addUser, update: updateUser, remove: removeUser } = useUsersStore();
+  const { items: allUsers, isLoading, add: addUser, update: updateUser, remove: removeUser } = useUsersStore();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -68,13 +69,13 @@ export default function PlatformUsersPage() {
 
     const newUser: User = {
       id: `user_sa_${Date.now()}`,
-      company_id: "",
+      company_id: company || "",
       email: formData.email,
       first_name: formData.first_name,
       middle_name: null,
       last_name: formData.last_name,
       full_name: `${formData.first_name} ${formData.last_name}`,
-      role: "super_admin",
+      role: "company_admin",
       user_type: "internal",
       account_type: "admin",
       gender: null,
@@ -92,11 +93,20 @@ export default function PlatformUsersPage() {
       location_id: null,
     };
 
-    addUser(newUser);
+    try {
+      addUser(newUser);
+      toast(`Admin "${newUser.full_name}" created successfully`);
+    } catch (err) {
+      console.warn("Failed to create user:", err);
+      toast("Failed to create user. Please try again.", "error");
+    }
     setIsSubmitting(false);
     handleCloseModal();
-    toast(`Admin "${newUser.full_name}" created successfully`);
   };
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard requireSuperAdmin>
@@ -205,8 +215,8 @@ export default function PlatformUsersPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                            {user.first_name.charAt(0)}
-                            {user.last_name.charAt(0)}
+                            {(user.first_name || "").charAt(0)}
+                            {(user.last_name || "").charAt(0)}
                           </div>
                           <div>
                             <p className="font-medium">{user.full_name}</p>

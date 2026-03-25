@@ -2,6 +2,9 @@
 
 import * as React from "react";
 import { useRouter, useParams, notFound } from "next/navigation";
+import { LoadingPage } from "@/components/ui/loading";
+import { defaultTasks as defaultTasksData, defaultComments as defaultCommentsData } from "@/mocks/data";
+import type { TicketTask, TicketComment } from "@/mocks/data";
 import {
   ArrowLeft,
   Save,
@@ -25,10 +28,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
-import { useTicketsStore } from "@/stores/tickets-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
+import { RoleGuard } from "@/components/auth/role-guard";
+import { storeFile, getFilesForEntity } from "@/lib/file-storage";
+import type { StoredFile } from "@/lib/file-storage";
 
 export default function TicketDetailPage() {
   const router = useRouter();
@@ -39,51 +46,100 @@ export default function TicketDetailPage() {
   const [activeTab, setActiveTab] = React.useState<string>("info");
   const [newComment, setNewComment] = React.useState("");
   const [newTask, setNewTask] = React.useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
-  const { items: tickets, isLoading, update: updateTicket, remove: removeTicket } = useTicketsStore();
+  const { hasPermission, user } = useAuth();
+  const canDeleteTicket = hasPermission("incidents.delete");
+  const { tickets, users, stores } = useCompanyData();
+  const { isLoading, update: updateTicket, remove: removeTicket } = stores.tickets;
   const ticket = tickets.find((t) => t.id === ticketId);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
-
-  // Ticket not found — trigger Next.js not-found boundary
-  if (!ticket) {
-    notFound();
-  }
+  const assignee = ticket?.assigned_to ? users.find((u) => u.id === ticket.assigned_to) : undefined;
 
   const [editedDescription, setEditedDescription] = React.useState("");
+  const [documents, setDocuments] = React.useState<StoredFile[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (ticket) setEditedDescription(ticket.description);
   }, [ticket?.id]);
 
-  // Mock tasks
-  const [tasks, setTasks] = React.useState([
-    { id: "t1", title: "Review incident report", completed: true },
-    { id: "t2", title: "Contact witness", completed: true },
-    { id: "t3", title: "Order replacement parts", completed: false },
-    { id: "t4", title: "Schedule follow-up inspection", completed: false },
-  ]);
+  React.useEffect(() => {
+    if (ticketId) {
+      setDocuments(getFilesForEntity("ticket", ticketId));
+    }
+  }, [ticketId]);
 
-  // Mock comments
-  const [comments, setComments] = React.useState([
-    { id: "c1", author: "John Doe", text: "Started investigation", date: "2024-01-28 09:30", avatar: "JD" },
-    { id: "c2", author: "Jane Smith", text: "Parts ordered, ETA 3 days", date: "2024-01-28 14:15", avatar: "JS" },
-    { id: "c3", author: "Mike Johnson", text: "Confirmed with supplier - delivery on track", date: "2024-01-29 10:00", avatar: "MJ" },
-  ]);
+  type TicketTask = { id: string; title: string; completed: boolean };
+  const TASKS_KEY = `harmoniq_${company}_ticket_tasks_${ticketId}`;
+  const defaultTasks = defaultTasksData;
+  const [tasks, setTasks] = React.useState<TicketTask[]>(() => {
+    if (typeof window === "undefined") return defaultTasks;
+    try {
+      const stored = window.localStorage.getItem(TASKS_KEY);
+      return stored ? JSON.parse(stored) : defaultTasks;
+    } catch (err) {
+      console.warn("Failed to read ticket tasks from localStorage:", err);
+      return defaultTasks;
+    }
+  });
 
-  // Mock documents
-  const documents = [
-    { id: "d1", name: "Incident Report.pdf", size: "245 KB", uploaded: "2024-01-28", by: "John Doe" },
-    { id: "d2", name: "Photos.zip", size: "4.2 MB", uploaded: "2024-01-28", by: "Jane Smith" },
-  ];
+  type TicketComment = { id: string; author: string; text: string; date: string; avatar: string };
+  const COMMENTS_KEY = `harmoniq_${company}_ticket_comments_${ticketId}`;
+  const defaultComments = defaultCommentsData;
+  const [comments, setComments] = React.useState<TicketComment[]>(() => {
+    if (typeof window === "undefined") return defaultComments;
+    try {
+      const stored = window.localStorage.getItem(COMMENTS_KEY);
+      return stored ? JSON.parse(stored) : defaultComments;
+    } catch (err) {
+      console.warn("Failed to read ticket comments from localStorage:", err);
+      return defaultComments;
+    }
+  });
+
+  // Persist comments to localStorage
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
+    } catch (err) {
+      console.warn("Failed to write ticket comments to localStorage:", err);
+    }
+  }, [comments, COMMENTS_KEY]);
+
+  // Persist tasks to localStorage
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+    } catch (err) {
+      console.warn("Failed to write ticket tasks to localStorage:", err);
+    }
+  }, [tasks, TASKS_KEY]);
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
+  // Ticket not found. Trigger Next.js not-found boundary
+  if (!ticket) {
+    notFound();
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !ticket) return;
+    try {
+      const stored = await storeFile(file, "ticket", ticket.id, user?.id || "");
+      setDocuments((prev) => [...prev, stored]);
+      toast("File uploaded", "success");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Upload failed", "error");
+    }
+    e.target.value = "";
+  };
 
   const tabs: Tab[] = [
     { id: "info", label: "Details", icon: Info },
@@ -104,26 +160,20 @@ export default function TicketDetailPage() {
     }
   };
 
-  if (!ticket) {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      );
-    }
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Ticket not found</p>
-      </div>
-    );
-  }
+  const handleDeleteTicket = () => {
+    if (!ticket) return;
+    removeTicket(ticket.id);
+    toast("Ticket deleted", "info");
+    setShowDeleteConfirm(false);
+    router.push(`/${company}/dashboard/tickets`);
+  };
 
 
   const completedTasks = tasks.filter(t => t.completed).length;
   const taskProgress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
 
   return (
+    <RoleGuard requiredPermission="incidents.view_own">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -168,6 +218,12 @@ export default function TicketDetailPage() {
                 </Button>
               )}
             </>
+          )}
+          {canDeleteTicket && (
+            <Button variant="destructive" className="gap-2" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
           )}
         </div>
       </div>
@@ -215,7 +271,13 @@ export default function TicketDetailPage() {
                         <p className="font-medium">Incident #{ticket.incident_ids[0]}</p>
                         <p className="text-sm text-muted-foreground">Click to view details</p>
                       </div>
-                      <Button variant="outline" size="sm">View</Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push(`/${company}/dashboard/incidents/${ticket.incident_ids[0]}`)}
+                      >
+                        View
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -231,7 +293,22 @@ export default function TicketDetailPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label className="text-muted-foreground">{t("tickets.labels.status")}</Label>
-                    <p className="font-medium capitalize">{ticket.status.replace("_", " ")}</p>
+                    <select
+                      className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium capitalize"
+                      value={ticket.status}
+                      onChange={(e) => {
+                        updateTicket(ticket.id, {
+                          status: e.target.value as typeof ticket.status,
+                          updated_at: new Date().toISOString(),
+                        });
+                        toast("Status updated");
+                      }}
+                    >
+                      <option value="new">New</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">{t("tickets.labels.priority")}</Label>
@@ -239,7 +316,7 @@ export default function TicketDetailPage() {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">{t("tickets.labels.assignee")}</Label>
-                    <p className="font-medium">{ticket.assigned_to || "Unassigned"}</p>
+                    <p className="font-medium">{assignee?.full_name || "Unassigned"}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">{t("tickets.labels.dueDate")}</Label>
@@ -292,7 +369,7 @@ export default function TicketDetailPage() {
                 <Input
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
-                  placeholder="Add a new task..."
+                  placeholder={t("tickets.placeholders.addTask")}
                   onKeyDown={(e) => e.key === "Enter" && addTask()}
                 />
                 <Button onClick={addTask} disabled={!newTask.trim()}>
@@ -367,7 +444,7 @@ export default function TicketDetailPage() {
                 </div>
                 <div className="flex-1">
                   <Textarea
-                    placeholder="Add a comment..."
+                    placeholder={t("tickets.placeholders.addComment")}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     rows={2}
@@ -403,7 +480,14 @@ export default function TicketDetailPage() {
         {activeTab === "documents" && (
           <div className="space-y-6">
             <div className="flex justify-end">
-              <Button className="gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,text/csv"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <Button className="gap-2" onClick={() => fileInputRef.current?.click()}>
                 <Upload className="h-4 w-4" />
                 Upload File
               </Button>
@@ -428,11 +512,15 @@ export default function TicketDetailPage() {
                           <div>
                             <p className="font-medium">{doc.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {doc.size} • Uploaded by {doc.by} on {doc.uploaded}
+                              {(doc.size / 1024).toFixed(0)} KB • Uploaded {formatDate(new Date(doc.uploadedAt))}
                             </p>
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(doc.dataUrl, "_blank")}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                       </div>
@@ -472,6 +560,7 @@ export default function TicketDetailPage() {
                   Close Ticket
                 </Button>
               </div>
+              {canDeleteTicket && (
               <div className="flex items-center justify-between rounded-lg border border-destructive/50 p-4 bg-destructive/5">
                 <div>
                   <p className="font-medium text-destructive">Delete Ticket</p>
@@ -482,21 +571,49 @@ export default function TicketDetailPage() {
                 <Button
                   variant="destructive"
                   className="gap-2"
-                  onClick={() => {
-                    if (!ticket) return;
-                    removeTicket(ticket.id);
-                    toast("Ticket deleted", "info");
-                    router.push(`/${company}/dashboard/tickets`);
-                  }}
+                  onClick={() => setShowDeleteConfirm(true)}
                 >
                   <Trash2 className="h-4 w-4" />
                   Delete
                 </Button>
               </div>
+              )}
             </CardContent>
           </Card>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="relative z-50 w-full max-w-md rounded-lg bg-background p-6 shadow-xl mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="rounded-full bg-destructive/10 p-3">
+                <Trash2 className="h-6 w-6 text-destructive" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Delete Ticket</h2>
+                <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
+              </div>
+            </div>
+            
+            <p className="text-sm mb-4">
+              Are you sure you want to delete <strong>{ticket.title}</strong>? 
+              All associated data will be permanently removed.
+            </p>
+            
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setShowDeleteConfirm(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button variant="destructive" className="flex-1" onClick={handleDeleteTicket}>
+                Delete Ticket
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+    </RoleGuard>
   );
 }

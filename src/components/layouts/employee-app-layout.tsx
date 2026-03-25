@@ -4,6 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { Shield, Bell } from "lucide-react";
 import { BottomTabs } from "@/components/navigation/bottom-tabs";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
+import { getFieldAppShellStyle } from "@/lib/field-app-settings";
 
 interface EmployeeAppLayoutProps {
   children: React.ReactNode;
@@ -24,11 +26,17 @@ export function EmployeeAppLayout({
   headerTitle,
   notificationCount = 0,
 }: EmployeeAppLayoutProps) {
+  const { settings } = useFieldAppSettings();
+
   return (
-    <div className="flex min-h-screen flex-col bg-muted/30">
+    <div
+      className="field-app-shell flex min-h-screen flex-col bg-muted"
+      data-field-shadow={settings.shadow}
+      style={getFieldAppShellStyle(settings)}
+    >
       {/* Header */}
       {showHeader && (
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background px-4">
+        <header className="field-app-surface sticky top-0 z-30 flex h-14 items-center justify-between bg-brand-solid px-4">
           <Link href={`/${company}/app`} className="flex items-center gap-2">
             {companyLogo ? (
               <img
@@ -37,14 +45,14 @@ export function EmployeeAppLayout({
                 className="h-6 w-6 rounded object-contain"
               />
             ) : (
-              <Shield className="h-5 w-5" aria-hidden="true" />
+              <Shield className="h-5 w-5 text-brand-solid-foreground/80" aria-hidden="true" />
             )}
-            <span className="font-semibold">{headerTitle || companyName}</span>
+            <span className="font-semibold text-sm text-brand-solid-foreground">{headerTitle || companyName}</span>
           </Link>
-          <Link href={`/${company}/app/notifications`} className="relative" aria-label={`${notificationCount} notifications`}>
-            <Bell className="h-5 w-5 text-muted-foreground" />
+          <Link href={`/${company}/app/notifications`} className="relative p-2" aria-label={`${notificationCount} notifications`}>
+            <Bell className="h-5 w-5 text-brand-solid-foreground/80" />
             {notificationCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white px-1">
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                 {notificationCount > 99 ? "99+" : notificationCount}
               </span>
             )}

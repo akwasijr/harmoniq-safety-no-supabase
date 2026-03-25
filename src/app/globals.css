@@ -1,6 +1,133 @@
 @import "tailwindcss";
 
 /* ============================================
+   NPROGRESS — Route transition progress bar
+   ============================================ */
+
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: hsl(var(--primary));
+  position: fixed;
+  z-index: 99999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+}
+
+#nprogress .peg {
+  display: block;
+  position: absolute;
+  right: 0;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 10px hsl(var(--primary)), 0 0 5px hsl(var(--primary));
+  opacity: 1;
+  transform: rotate(3deg) translate(0px, -4px);
+}
+
+/* ============================================
+   STRIPE-STYLE CORNER GRADIENT — Auth pages
+   ============================================ */
+@keyframes auth-flow {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+@keyframes auth-morph {
+  0%   { border-radius: 40% 60% 50% 50%; transform: rotate(0deg) translate(0, 0); }
+  33%  { border-radius: 55% 45% 60% 40%; transform: rotate(5deg) translate(3%, -3%); }
+  66%  { border-radius: 45% 55% 40% 60%; transform: rotate(-4deg) translate(-2%, 3%); }
+  100% { border-radius: 40% 60% 50% 50%; transform: rotate(0deg) translate(0, 0); }
+}
+
+@layer base {
+  .auth-bg {
+    position: fixed;
+    inset: 0;
+    background: white;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .auth-bg::before {
+    content: "";
+    position: absolute;
+    top: -15%;
+    right: -5%;
+    width: 40%;
+    height: 70%;
+    background: linear-gradient(
+      160deg,
+      hsla(200, 90%, 78%, 0.35),
+      hsla(240, 75%, 68%, 0.3),
+      hsla(265, 70%, 55%, 0.35),
+      hsla(280, 65%, 48%, 0.3),
+      hsla(210, 85%, 75%, 0.3)
+    );
+    background-size: 300% 300%;
+    animation: auth-flow 8s ease-in-out infinite, auth-morph 12s ease-in-out infinite;
+    filter: blur(40px);
+    transform-origin: top right;
+  }
+
+  .auth-bg::after {
+    content: "";
+    position: absolute;
+    top: 5%;
+    right: -3%;
+    width: 28%;
+    height: 55%;
+    background: linear-gradient(
+      170deg,
+      hsla(195, 90%, 80%, 0.3),
+      hsla(230, 80%, 72%, 0.25),
+      hsla(260, 65%, 58%, 0.3),
+      hsla(195, 85%, 78%, 0.25)
+    );
+    background-size: 300% 300%;
+    animation: auth-flow 6s ease-in-out infinite reverse, auth-morph 10s ease-in-out infinite reverse;
+    filter: blur(35px);
+    transform-origin: top right;
+    animation-delay: -3s;
+  }
+
+  .auth-bg-accent {
+    position: absolute;
+    top: -8%;
+    right: 3%;
+    width: 20%;
+    height: 45%;
+    background: linear-gradient(
+      150deg,
+      hsla(210, 95%, 82%, 0.28),
+      hsla(255, 70%, 65%, 0.25),
+      hsla(275, 60%, 50%, 0.22),
+      hsla(210, 90%, 78%, 0.25)
+    );
+    background-size: 300% 300%;
+    animation: auth-flow 10s ease-in-out infinite, auth-morph 14s ease-in-out infinite;
+    filter: blur(30px);
+    transform-origin: top right;
+    animation-delay: -6s;
+  }
+}
+
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    .auth-bg::before,
+    .auth-bg::after,
+    .auth-bg-accent {
+      animation: none !important;
+    }
+  }
+}
+
+/* ============================================
    HARMONIQ SAFETY - DESIGN TOKENS
    ============================================ */
 
@@ -13,21 +140,21 @@
   --popover: 0 0% 100%;
   --popover-foreground: 240 10% 3.9%;
 
-  /* Primary - #024E6E - dark teal for main actions */
-  --primary: 197 96% 22%;
+  /* Primary - #2D1B69 - deep purple for main actions */
+  --primary: 260 59% 26%;
   --primary-foreground: 0 0% 98%;
 
-  /* Secondary - #029EDB - bright blue for accents */
-  --secondary: 199 98% 43%;
+  /* Secondary - lighter purple for accents */
+  --secondary: 260 50% 45%;
   --secondary-foreground: 0 0% 98%;
 
   /* Muted - for disabled states and placeholders */
   --muted: 240 4.8% 95.9%;
   --muted-foreground: 240 3.8% 46.1%;
 
-  /* Accent - matches secondary for consistency */
-  --accent: 199 98% 93%;
-  --accent-foreground: 197 96% 22%;
+  /* Accent - light purple tint */
+  --accent: 260 50% 93%;
+  --accent-foreground: 260 59% 26%;
 
   /* Semantic colors */
   --destructive: 0 84.2% 60.2%;
@@ -36,13 +163,13 @@
   --success-foreground: 0 0% 98%;
   --warning: 38 92% 50%;
   --warning-foreground: 0 0% 98%;
-  --info: 199 98% 43%;
+  --info: 260 50% 45%;
   --info-foreground: 0 0% 98%;
 
   /* Borders - subtle, not accent colored */
   --border: 240 5.9% 90%;
   --input: 240 5.9% 90%;
-  --ring: 197 96% 22%;
+  --ring: 260 59% 26%;
 
   /* Radius tokens */
   --radius: 0.5rem;
@@ -54,14 +181,14 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
   /* Sidebar - dashboard specific */
-  --sidebar-background: 197 96% 12%;
+  --sidebar-background: 260 59% 16%;
   --sidebar-foreground: 0 0% 98%;
-  --sidebar-primary: 199 98% 43%;
+  --sidebar-primary: 260 50% 55%;
   --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 197 96% 18%;
+  --sidebar-accent: 260 50% 22%;
   --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-border: 197 96% 25%;
-  --sidebar-ring: 199 98% 43%;
+  --sidebar-border: 260 40% 30%;
+  --sidebar-ring: 260 50% 55%;
 
   /* Chart colors */
   --chart-1: 12 76% 61%;
@@ -93,18 +220,18 @@
   --popover: 240 10% 3.9%;
   --popover-foreground: 0 0% 98%;
 
-  /* Primary - lighter version of #024E6E for dark mode */
-  --primary: 199 98% 50%;
-  --primary-foreground: 197 96% 10%;
+  /* Primary - lighter purple for dark mode */
+  --primary: 260 60% 55%;
+  --primary-foreground: 260 59% 10%;
 
-  /* Secondary - #029EDB stays similar */
-  --secondary: 197 96% 22%;
+  /* Secondary */
+  --secondary: 260 40% 22%;
   --secondary-foreground: 0 0% 98%;
 
   --muted: 240 3.7% 15.9%;
   --muted-foreground: 240 5% 64.9%;
 
-  --accent: 197 96% 18%;
+  --accent: 260 40% 18%;
   --accent-foreground: 0 0% 98%;
 
   --destructive: 0 62.8% 50.6%;
@@ -113,16 +240,16 @@
   --success-foreground: 0 0% 98%;
   --warning: 38 92% 50%;
   --warning-foreground: 0 0% 3.9%;
-  --info: 199 98% 55%;
+  --info: 260 60% 55%;
   --info-foreground: 0 0% 3.9%;
 
   --border: 240 3.7% 20%;
   --input: 240 3.7% 20%;
-  --ring: 199 98% 50%;
+  --ring: 260 60% 55%;
 
   --sidebar-background: 240 5.9% 10%;
   --sidebar-foreground: 240 4.8% 95.9%;
-  --sidebar-primary: 0 0% 98%;
+  --sidebar-primary: 260 60% 65%;
   --sidebar-primary-foreground: 240 5.9% 10%;
   --sidebar-accent: 240 3.7% 15.9%;
   --sidebar-accent-foreground: 240 4.8% 95.9%;
@@ -194,6 +321,8 @@
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-brand-solid: hsl(var(--brand-solid, var(--primary)));
+  --color-brand-solid-foreground: hsl(var(--brand-solid-foreground, var(--primary-foreground)));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-muted: hsl(var(--muted));
@@ -230,6 +359,30 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.field-app-shell {
+  font-family: var(--field-app-font-family, var(--font-sans));
+}
+
+.field-app-panel {
+  border-radius: var(--radius) !important;
+}
+
+.field-app-control {
+  border-radius: var(--radius) !important;
+}
+
+.field-app-shell[data-field-shadow="none"] .field-app-surface {
+  box-shadow: none;
+}
+
+.field-app-shell[data-field-shadow="subtle"] .field-app-surface {
+  box-shadow: 0 6px 18px -12px hsl(var(--foreground) / 0.22);
+}
+
+.field-app-shell[data-field-shadow="strong"] .field-app-surface {
+  box-shadow: 0 14px 32px -18px hsl(var(--foreground) / 0.3);
 }
 
 /* ============================================

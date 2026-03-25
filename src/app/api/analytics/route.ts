@@ -25,11 +25,42 @@ interface PageviewEvent {
 }
 
 const pageviews: PageviewEvent[] = [];
+let flushInProgress = false;
 
 function purgeOldEvents() {
   const cutoff = Date.now() - ANALYTICS_RETENTION_DAYS * 24 * 60 * 60 * 1000;
   while (pageviews.length > 0 && new Date(pageviews[0].timestamp).getTime() < cutoff) {
     pageviews.shift();
+  }
+}
+
+/**
+ * Attempt to flush in-memory fallback events to Supabase.
+ * Called on every new POST — retries previously failed events
+ * so they survive temporary Supabase outages.
+ */
+async function flushFallbackEvents() {
+  if (flushInProgress || pageviews.length === 0) return;
+  flushInProgress = true;
+
+  try {
+    const batch = pageviews.splice(0, Math.min(pageviews.length, 50));
+    const failed: PageviewEvent[] = [];
+
+    for (const event of batch) {
+      try {
+        await insertPageview(event);
+      } catch {
+        failed.push(event);
+      }
+    }
+
+    // Put failed events back at the front for next retry
+    if (failed.length > 0) {
+      pageviews.unshift(...failed);
+    }
+  } finally {
+    flushInProgress = false;
   }
 }
 
@@ -259,8 +290,10 @@ export async function POST(request: NextRequest) {
 
     try {
       await insertPageview(event);
+      // After a successful insert, try to flush any previously failed events
+      flushFallbackEvents().catch(() => {});
     } catch (insertError) {
-      console.error("Analytics persistence failed, using memory fallback:", insertError);
+      console.warn("Analytics persistence failed, using memory fallback:", insertError);
       storeFallbackEvent(event);
     }
 
@@ -271,6 +304,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limit reads
   // Rate limit reads
   const rl = analyticsReadLimiter.check(request);
   if (!rl.allowed) return rl.response;

@@ -12,6 +12,7 @@ import {
   Languages,
   CreditCard,
   Info,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,8 +22,29 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { DetailTabs, type Tab } from "@/components/ui/detail-tabs";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
+import { COUNTRY_OPTIONS } from "@/lib/country-config";
 import { useCompanyStore } from "@/stores/company-store";
 import { useTranslation } from "@/i18n";
+
+const COUNTRY_LANGUAGE_LABELS: Record<string, string> = {
+  US: "English",
+  GB: "English",
+  NL: "Dutch + English",
+  SE: "Swedish + English",
+  DE: "German + English",
+  FR: "French + English",
+  ES: "Spanish + English",
+};
+
+const COUNTRY_FORM_SUMMARIES: Record<string, string[]> = {
+  US: ["JHA", "JSA", "OSHA template library"],
+  GB: ["HSE mappings", "RIDDOR / COSHH / PUWER templates"],
+  NL: ["RI&E", "Arbowet Compliance"],
+  SE: ["SAM", "OSA / AFS Assessment"],
+  DE: ["ArbSchG mappings", "DGUV / BetrSichV templates"],
+  FR: ["DUERP mappings", "Code du travail templates"],
+  ES: ["PRL mappings", "Ley 31/1995 templates"],
+};
 
 export default function PlatformSettingsPage() {
   const params = useParams();
@@ -38,12 +60,11 @@ export default function PlatformSettingsPage() {
   const [settings, setSettings] = React.useState({
     // General
     platformName: "Harmoniq Safety",
-    supportEmail: "support@harmoniq.io",
-    supportUrl: "https://support.harmoniq.io",
+    supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@harmoniq.io",
+    supportUrl: process.env.NEXT_PUBLIC_SUPPORT_URL || "https://support.harmoniq.io",
 
     // Data Retention
     retentionYears: 5,
-    auditLogRetention: "indefinite",
 
     // Session
     superAdminSessionHours: 8,
@@ -72,7 +93,7 @@ export default function PlatformSettingsPage() {
     maintenanceMode: false,
 
     // Countries
-    enabledCountries: ["US", "NL", "SE"] as string[],
+    enabledCountries: COUNTRY_OPTIONS.map((country) => country.code),
 
     // Currencies
     defaultCurrency: "USD",
@@ -326,7 +347,10 @@ export default function PlatformSettingsPage() {
                   {/* Demo Banner */}
                   <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30 p-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-amber-600 dark:text-amber-400 text-sm font-medium">⚠️ Demo Mode</span>
+                      <span className="text-amber-600 dark:text-amber-400 text-sm font-medium inline-flex items-center gap-1">
+                        <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                        Demo Mode
+                      </span>
                     </div>
                     <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
                       Platform security settings are for demonstration only. In production, these would enforce actual security policies.
@@ -753,29 +777,7 @@ export default function PlatformSettingsPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {[
-                          {
-                            code: "US",
-                            name: "United States",
-                            language: "English",
-                            currency: "USD",
-                            forms: ["JHA", "JSA", "OSHA Incident Report"],
-                          },
-                          {
-                            code: "NL",
-                            name: "Netherlands",
-                            language: "Dutch + English",
-                            currency: "EUR",
-                            forms: ["RI&E", "Arbowet Compliance"],
-                          },
-                          {
-                            code: "SE",
-                            name: "Sweden",
-                            language: "Swedish + English",
-                            currency: "SEK",
-                            forms: ["SAM", "OSA / AFS Assessment"],
-                          },
-                        ].map((country) => {
+                        {COUNTRY_OPTIONS.map((country) => {
                           const isEnabled =
                             settings.enabledCountries.includes(country.code);
                           return (
@@ -789,7 +791,7 @@ export default function PlatformSettingsPage() {
                                     {country.name}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
-                                    {country.language} · {country.currency}
+                                    {COUNTRY_LANGUAGE_LABELS[country.code]} · {country.currency}
                                   </p>
                                 </div>
                                 <Switch
@@ -811,7 +813,7 @@ export default function PlatformSettingsPage() {
                               </div>
                               <div className="mt-2">
                                 <span className="text-xs text-muted-foreground">
-                                  {country.forms.join(", ")}
+                                  {COUNTRY_FORM_SUMMARIES[country.code].join(", ")}
                                 </span>
                               </div>
                             </div>
@@ -832,7 +834,7 @@ export default function PlatformSettingsPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="flex gap-2">
-                        {["USD", "EUR", "SEK"].map((currency) => (
+                        {["USD", "EUR", "SEK", "GBP"].map((currency) => (
                           <Button
                             key={currency}
                             variant={

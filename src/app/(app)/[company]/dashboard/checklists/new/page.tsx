@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCompanyStore } from "@/stores/company-store";
 import type { ChecklistTemplate } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
 
 export default function NewChecklistPage() {
   const { t } = useTranslation();
@@ -45,6 +46,7 @@ export default function NewChecklistPage() {
       category: "general",
       assignment: "all",
       recurrence: "daily",
+      publish_status: "draft",
       items: [
         {
           id: crypto.randomUUID(),
@@ -54,7 +56,7 @@ export default function NewChecklistPage() {
           order: 1,
         },
       ],
-      is_active: true,
+      is_active: false,
       created_at: now,
       updated_at: now,
     };
@@ -67,6 +69,7 @@ export default function NewChecklistPage() {
   const isValid = name.trim().length > 0;
 
   return (
+    <RoleGuard requiredPermission="checklists.create_templates">
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -89,7 +92,7 @@ export default function NewChecklistPage() {
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
-              placeholder="Daily forklift inspection"
+              placeholder={t("checklists.placeholders.checklistName")}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -107,5 +110,6 @@ export default function NewChecklistPage() {
         </CardContent>
       </Card>
     </div>
+    </RoleGuard>
   );
 }

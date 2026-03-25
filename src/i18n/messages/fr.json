@@ -1,0 +1,2965 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Continuer",
+    "submit": "Soumettre",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "search": "Rechercher",
+    "filter": "Filtre",
+    "filters": "Filtres",
+    "apply": "Appliquer",
+    "clear": "Effacer",
+    "loading": "Chargement...",
+    "tryAgain": "Réessayer",
+    "viewAll": "Tout voir",
+    "signOut": "Déconnexion",
+    "yes": "Oui",
+    "no": "Non",
+    "ok": "OK",
+    "confirm": "Confirmer",
+    "required": "Obligatoire",
+    "optional": "Facultatif",
+    "all": "Tous",
+    "home": "Accueil",
+    "continue": "Continuer",
+    "none": "Aucun",
+    "comingSoon": "Bientôt disponible",
+    "uploadPhoto": "Télécharger une photo",
+    "uploadPhotos": "Télécharger des photos",
+    "changeProfilePhoto": "Changer la photo de profil",
+    "notifications": "Notifications",
+    "goBack": "Retour",
+    "unread": "Non lu",
+    "completionProgress": "Progression",
+    "dismiss": "Ignorer",
+    "noPermission": "You don't have permission to perform this action",
+    "noEditPermission": "You don't have permission to edit settings. Contact your administrator for access.",
+    "readMore": "Lire la suite"
+  },
+  "nav": {
+    "home": "Accueil",
+    "homeShort": "Accueil",
+    "report": "Signaler",
+    "reportShort": "Signaler",
+    "tasks": "Tâches",
+    "tasksShort": "Tâches",
+    "news": "Actualités",
+    "profile": "Profil",
+    "profileShort": "Profil",
+    "dashboard": "Tableau de bord",
+    "analytics": "Analyses",
+    "incidents": "Incidents",
+    "safetyTasks": "Tâches de sécurité",
+    "usersTeams": "Utilisateurs & Équipes",
+    "locations": "Sites",
+    "assets": "Gestion des actifs",
+    "assetsShort": "Actifs",
+    "content": "Contenu",
+    "settings": "Paramètres",
+    "inspections": "Inspections",
+    "riskAssessments": "Évaluations des risques",
+    "qrCodes": "Codes QR",
+    "tickets": "Tickets",
+    "newsShort": "Actualités",
+    "myTasksShort": "Mes tâches",
+    "safetyShort": "Sécurité",
+    "safety": "Sécurité",
+    "templates": "Modèles de tâches"
+  },
+  "app": {
+    "goodMorning": "Bonjour",
+    "goodAfternoon": "Bon après-midi",
+    "goodEvening": "Bonsoir",
+    "safeDays": "Jours sans accident",
+    "thisWeek": "Cette semaine",
+    "tasks": "tâches",
+    "noTasks": "0 tâches",
+    "tipOfTheDay": "Conseil du jour",
+    "quickActions": "Actions rapides",
+    "reportIncident": "Signaler un incident",
+    "safetyTasks": "Tâches de sécurité",
+    "scanAsset": "Scanner un actif",
+    "pendingTasks": "Tâches en attente",
+    "newsAndUpdates": "Actualités & mises à jour",
+    "myReports": "Mes signalements",
+    "noNewsYet": "Pas encore d'actualités",
+    "noNewsDesc": "Updates and bulletins will appear here.",
+    "noReports": "Aucun signalement",
+    "noReportsDesc": "Tap \"Report Incident\" to file one.",
+    "allCaughtUp": "Tout est à jour !",
+    "noPendingTasks": "No pending tasks right now.",
+    "items": "éléments",
+    "welcomeDesc": "Your workplace safety hub.",
+    "getStarted": "Commencer",
+    "reportIncidentDesc": "Spot something unsafe? Let the team know right away.",
+    "safetyTasksDesc": "Complete daily checklists and inspections.",
+    "requestFix": "Demander une réparation",
+    "requestFixDesc": "Report broken equipment or request maintenance.",
+    "browseAssets": "Parcourir les actifs",
+    "browseAssetsDesc": "Look up equipment, scan QR codes, or check status.",
+    "newsDesc": "Stay up to date with company safety news and policies.",
+    "riskAssessment": "Évaluation des risques",
+    "myTasks": "Mes tâches",
+    "welcome": "Bienvenue",
+    "completedWeek": "Cette semaine",
+    "featured": "À la une"
+  },
+  "report": {
+    "title": "Signaler un incident",
+    "stepOf": "Step {current} of {total}",
+    "whatType": "What type of incident?",
+    "injury": "Blessure",
+    "nearMiss": "Presqu'accident",
+    "hazard": "Danger",
+    "propertyDamage": "Dommages matériels",
+    "environmental": "Environnemental",
+    "fire": "Incendie",
+    "security": "Sécurité",
+    "other": "Autre",
+    "whereHappen": "Where did it happen?",
+    "whenHappen": "When did it happen?",
+    "whatHappened": "Describe what happened",
+    "severity": "Quelle est la gravité ?",
+    "photos": "Ajouter des photos",
+    "review": "Vérifier et soumettre",
+    "success": {
+      "title": "Report submitted!",
+      "incidentTitle": "Incident reported!",
+      "checklistTitle": "Checklist completed!",
+      "inspectionTitle": "Inspection submitted!",
+      "assessmentTitle": "Assessment completed!",
+      "description": "Your report has been submitted successfully. The safety team will review it shortly.",
+      "incidentDescription": "Your incident report has been filed. The safety team will investigate and follow up.",
+      "checklistDescription": "Your checklist has been completed and recorded. Great job staying on top of safety tasks!",
+      "inspectionDescription": "Your inspection has been submitted. Results are now available for review.",
+      "assessmentDescription": "Your risk assessment has been completed and logged for compliance records.",
+      "backHome": "Back to home",
+      "newReport": "File another report",
+      "newChecklist": "Start another checklist",
+      "newInspection": "Start another inspection",
+      "newAssessment": "Start another assessment",
+      "referenceNumber": "Reference number",
+      "saveForRecords": "Save this number for your records",
+      "reportSubmitted": "Report submitted",
+      "reportSubmittedDesc": "Your incident report has been submitted successfully and is being reviewed.",
+      "reportAnother": "Report another incident",
+      "checklistCompleted": "Checklist completed",
+      "checklistCompletedDesc": "Your checklist has been submitted successfully. Great work staying safe!",
+      "startAnotherChecklist": "Start another checklist",
+      "inspectionSubmitted": "Inspection submitted",
+      "inspectionSubmittedDesc": "Your asset inspection has been submitted successfully and is being reviewed.",
+      "startAnotherInspection": "Start another inspection",
+      "assessmentSubmitted": "Assessment submitted",
+      "assessmentSubmittedDesc": "Your risk assessment has been submitted successfully and is being reviewed.",
+      "startAnotherAssessment": "Start another assessment"
+    },
+    "giveTitle": "Give it a title",
+    "howSerious": "How serious is it?",
+    "titlePlaceholder": "e.g., Slip and fall near loading dock",
+    "titleMinChars": "Please enter at least 5 characters ({count}/5)",
+    "titleHint": "A brief, clear title helps identify this incident",
+    "descriptionPlaceholder": "Describe what happened in detail. Include:\n• What occurred\n• Who was involved\n• Any injuries or damage\n• Witnesses present",
+    "descriptionMinChars": "Please enter at least 10 characters ({count}/10)",
+    "characters": "{count} characters",
+    "activeHazard": "Is there an active hazard?",
+    "activeHazardDesc": "Is the danger still present?",
+    "lostTime": "Did this result in lost time?",
+    "lostTimeDesc": "Was work stopped or someone unable to work?",
+    "locationDescription": "Location description",
+    "locationPlaceholder": "Building, floor, room, area...",
+    "or": "or",
+    "useCurrentLocation": "Use my current location",
+    "gettingLocation": "Getting location...",
+    "locationOptionalHint": "Location is optional but helps with investigation",
+    "dateOfIncident": "Date of incident",
+    "approximateTime": "Approximate time",
+    "timeEstimateHint": "If you are unsure of the exact time, provide your best estimate",
+    "takePhoto": "Take a photo",
+    "tapToUpload": "or tap to upload",
+    "chooseFromGallery": "Choose from gallery",
+    "photosOptional": "Photos are optional. You can add up to 4 photos (max 10MB each)",
+    "photosCount": "{count} of 4 photos added",
+    "skipOptionalSteps": "Skip optional steps",
+    "submitReport": "Submit report",
+    "continue": "Continuer",
+    "lowDesc": "Minor issue, no immediate risk",
+    "mediumDesc": "Moderate concern, needs attention",
+    "highDesc": "Serious issue, requires action",
+    "criticalDesc": "Immediate danger, urgent action needed",
+    "low": "Faible",
+    "medium": "Moyen",
+    "high": "Élevé",
+    "critical": "Critique"
+  },
+  "profile": {
+    "contactInfo": "Contact information",
+    "email": "E-mail",
+    "phone": "Phone",
+    "location": "Site",
+    "department": "Département",
+    "teams": "Équipes",
+    "settings": "Paramètres",
+    "notifications": "Notifications",
+    "notificationsDesc": "Manage push and email notifications",
+    "appearance": "Appearance",
+    "appearanceDesc": "Light, dark, or system theme",
+    "language": "Language",
+    "security": "Privacy and security",
+    "securityDesc": "Password and account settings",
+    "pushNotifications": "Push Notifications",
+    "pushNotificationsDesc": "Receive alerts on your device",
+    "emailNotifications": "Email Notifications",
+    "emailNotificationsDesc": "Receive updates via email",
+    "newIncidents": "New Incidents",
+    "newIncidentsDesc": "Alert when new incidents are reported",
+    "taskReminders": "Task Reminders",
+    "taskRemindersDesc": "Remind about pending tasks",
+    "newsAnnouncements": "News & Announcements",
+    "newsAnnouncementsDesc": "Company news and updates",
+    "savePreferences": "Save Preferences",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "twoFactor": "Two-Factor Authentication",
+    "twoFactorDesc": "Add extra security to your account",
+    "activeSessions": "Active Sessions",
+    "activeSessionsDesc": "Manage logged-in devices",
+    "enable": "Enable",
+    "view": "View",
+    "saveChanges": "Enregistrer les modifications",
+    "changePhoto": "Changer la photo de profil",
+    "photoUpdated": "Profile photo updated",
+    "photoTooLarge": "Image too large. Max size is 2MB.",
+    "selectImage": "Please select an image file.",
+    "notificationsSaved": "Notification preferences saved",
+    "language_changed": "Language updated",
+    "appVersion": "Harmoniq Safety v1.0.0",
+    "offline": "Offline mode",
+    "offlineDesc": "Some features require an internet connection",
+    "privacySecurity": "Privacy and Security",
+    "loading": "Loading profile...",
+    "about": "About",
+    "terms": "Terms & Conditions",
+    "privacy_policy": "Privacy Policy",
+    "appearance_description": "Light, dark, or system",
+    "notif_incidents": "New Incidents",
+    "notif_incidents_desc": "Alert when new incidents are reported",
+    "notif_tasks": "Task Reminders",
+    "notif_tasks_desc": "Remind about pending tasks",
+    "notif_news": "News & Announcements",
+    "notif_news_desc": "Company news and updates",
+    "save_preferences": "Save Preferences",
+    "privacy_security": "Privacy & Security",
+    "change_password": "Change Password",
+    "signOut": "Sign Out"
+  },
+  "dashboard": {
+    "openIncidents": "Incidents ouverts",
+    "totalIncidents": "Total des incidents",
+    "complianceRate": "Taux de conformité",
+    "avgResolutionTime": "Temps moyen de résolution",
+    "fromLastMonth": "du mois dernier",
+    "fromLastWeek": "de la semaine dernière",
+    "incidentTrend": "Tendance des incidents",
+    "last6Months": "6 derniers mois",
+    "byType": "Par type",
+    "distribution": "Répartition",
+    "bySeverity": "Par gravité",
+    "incidentBreakdown": "Répartition des incidents",
+    "recentIncidents": "Incidents récents",
+    "last30Days": "30 derniers jours",
+    "allLocations": "Tous les sites",
+    "allTypes": "Tous les types",
+    "allSeverities": "Toutes les gravités",
+    "allDepartments": "Tous les départements"
+  },
+  "companies": {
+    "allCompanies": "Toutes les entreprises",
+    "addCompany": "Ajouter une entreprise",
+    "searchCompanies": "Search companies...",
+    "companyName": "Nom de l'entreprise",
+    "companyNamePlaceholder": "Harmoniq Safety",
+    "country": "Pays",
+    "plan": "Forfait",
+    "adminEmail": "E-mail administrateur",
+    "adminEmailPlaceholder": "admin@company.com",
+    "createCompany": "Créer l'entreprise",
+    "appName": "App Display Name",
+    "appNamePlaceholder": "My Safety App",
+    "appNameHelp": "The name employees see in the app header. Defaults to company name.",
+    "defaultLanguage": "Default Language",
+    "defaultLanguageHelp": "The default UI language for new users in this company.",
+    "primaryColor": "Primary Color",
+    "secondaryColor": "Secondary Color",
+    "uiStyle": "UI Style",
+    "rounded": "Rounded",
+    "square": "Square",
+    "branding": "Image de marque",
+    "localization": "Localisation",
+    "general": "Général",
+    "users": "users",
+    "open": "open",
+    "seats": "seats",
+    "noCompaniesFound": "No companies found matching \"{query}\"",
+    "enterCompanyName": "Please enter a company name",
+    "companyCreated": "Company \"{name}\" created successfully"
+  },
+  "errors": {
+    "somethingWentWrong": "Une erreur s'est produite",
+    "unexpectedError": "An unexpected error occurred. Please try again or contact support if the problem persists.",
+    "pageNotFound": "Page introuvable",
+    "pageNotFoundDesc": "The page you're looking for doesn't exist or has been moved. Please check the URL or navigate back.",
+    "backToHome": "Back to home",
+    "goToLogin": "Go to login",
+    "networkError": "Connexion perdue",
+    "networkErrorDesc": "Please check your internet connection and try again. Your unsaved changes are preserved locally.",
+    "accessDenied": "Accès refusé",
+    "accessDeniedDesc": "You don't have permission to view this content. Contact your administrator if you believe this is an error.",
+    "sessionExpired": "Session expirée",
+    "sessionExpiredDesc": "Your session has expired for security. Please sign in again to continue.",
+    "dataLoadFailed": "Couldn't load data",
+    "dataLoadFailedDesc": "We had trouble loading this information. This could be a temporary issue.",
+    "saveFailed": "Couldn't save changes",
+    "saveFailedDesc": "Your changes couldn't be saved. They've been kept locally, try again in a moment.",
+    "timeout": "Délai d'attente dépassé",
+    "timeoutDesc": "The server is taking too long to respond. Please try again.",
+    "rateLimited": "Trop de requêtes",
+    "rateLimitedDesc": "You're making requests too quickly. Please wait a moment and try again.",
+    "maintenance": "En maintenance",
+    "maintenanceDesc": "We're performing scheduled maintenance. The platform will be back shortly.",
+    "offlineReady": "You're offline",
+    "offlineReadyDesc": "Some features are available offline. Your changes will sync when you're back online.",
+    "retrying": "Retrying...",
+    "retryIn": "Retry in {seconds}s"
+  },
+  "assets": {
+    "tabs": {
+      "assets": "Actifs",
+      "workOrders": "Ordres de travail",
+      "parts": "Pièces",
+      "correctiveActions": "Actions correctives",
+      "alerts": "Alerts",
+      "analytics": "Analyses"
+    },
+    "detailTabs": {
+      "overview": "Aperçu",
+      "timeline": "Chronologie",
+      "maintenance": "Maintenance",
+      "readings": "Relevés",
+      "downtime": "Temps d'arrêt",
+      "statistics": "Statistiques",
+      "inspections": "Inspections",
+      "documentsMedia": "Documents & Médias",
+      "settings": "Paramètres"
+    },
+    "labels": {
+      "name": "Nom",
+      "serialNumber": "Numéro de série",
+      "category": "Category",
+      "assetType": "Asset Type",
+      "department": "Département",
+      "status": "Statut",
+      "manufacturer": "Fabricant",
+      "model": "Modèle",
+      "purchaseDate": "Date d'achat",
+      "location": "Site",
+      "qrCode": "Code QR",
+      "warrantyExpiry": "Expiration de garantie",
+      "nextCalibration": "Prochaine calibration",
+      "nextMaintenance": "Prochaine maintenance",
+      "notAssigned": "Non assigné"
+    },
+    "statuses": {
+      "active": "Actif",
+      "inactive": "Inactif",
+      "maintenance": "Maintenance",
+      "retired": "Hors service"
+    },
+    "categories": {
+      "machinery": "Machines",
+      "vehicle": "Véhicule",
+      "safety_equipment": "Équipement de sécurité",
+      "tool": "Outil",
+      "electrical": "Électrique",
+      "other": "Autre"
+    },
+    "buttons": {
+      "newAsset": "New Asset",
+      "export": "Exporter",
+      "import": "Importer",
+      "addSchedule": "Add Schedule",
+      "complete": "Terminer",
+      "logDowntime": "Log Downtime",
+      "recordReading": "Record Reading",
+      "uploadFile": "Upload File",
+      "uploadImage": "Upload Image",
+      "retireAsset": "Retire Asset",
+      "deleteAsset": "Delete Asset"
+    },
+    "placeholders": {
+      "searchAssets": "Search assets...",
+      "searchByNameSerialTag": "Search by name, serial number, or tag...",
+      "assetName": "e.g., Forklift #12",
+      "serialNumber": "e.g., SN-12345",
+      "manufacturer": "e.g., Toyota",
+      "model": "e.g., 8FGU25",
+      "department": "e.g., Operations",
+      "completionNotes": "Add any notes about the work done...",
+      "scheduleName": "e.g., Oil Change, Filter Replacement",
+      "optionalDescription": "Optional description...",
+      "meterType": "e.g., Engine Hours, Odometer",
+      "notes": "Any notes"
+    },
+    "empty": {
+      "noAssets": "No assets",
+      "noAssetsDesc": "Register equipment and assets to track inspections and maintenance.",
+      "noMaintenanceSchedules": "No maintenance schedules",
+      "noDowntime": "No downtime recorded",
+      "noReadings": "No readings recorded",
+      "noInspections": "No inspections",
+      "noDocuments": "No documents",
+      "noCertifications": "No certifications"
+    },
+    "sections": {
+      "assetInformation": "Asset Information",
+      "relatedIncidents": "Related Incidents",
+      "preventiveMaintenanceSchedules": "Preventive Maintenance Schedules",
+      "recentMaintenanceHistory": "Recent Maintenance History",
+      "downtimeHistory": "Downtime History",
+      "healthScore": "Health Score",
+      "certifications": "Certifications",
+      "documents": "Documents",
+      "images": "Images",
+      "dangerZone": "Zone dangereuse"
+    },
+    "overdue": "En retard",
+    "dueSoon": "Bientôt dû",
+    "active": "Actif",
+    "schedules": "Plannings",
+    "history": "Historique",
+    "allStatuses": "Tous les statuts",
+    "allCategories": "Toutes les catégories",
+    "allLocations": "Tous les sites",
+    "assetsExported": "Assets exported",
+    "assetNotFound": "Asset Not Found",
+    "assetNotFoundDesc": "This QR code may not be linked to an asset.",
+    "goBack": "Go Back",
+    "assetDetails": "Asset Details",
+    "unknown": "Unknown",
+    "lastInspection": "Last Inspection",
+    "noInspectionsRecorded": "No inspections recorded",
+    "quickActions": "Quick Actions",
+    "startInspection": "Start Inspection",
+    "requestRepair": "Request Repair",
+    "reportIncident": "Report Incident",
+    "fullDetails": "Full Details",
+    "safetyInstructions": "Safety Instructions",
+    "noAssetsFound": "No assets found",
+    "tryDifferentSearch": "Try a different search term",
+    "noAssetsAvailable": "No assets available",
+    "openWorkOrders": "{count} Open Work Order",
+    "openWorkOrdersPlural": "{count} Open Work Orders",
+    "assignedToYou": "Assigned to you",
+    "assetCount": "{count} asset",
+    "assetCountPlural": "{count} assets",
+    "avgHealthScore": "Avg. Health",
+    "avgHealthScoreDesc": "Average health score across assets",
+    "certStatus": {
+      "valid": "Valid",
+      "expiring": "Expiring Soon",
+      "expired": "Expired"
+    },
+    "download": "Télécharger",
+    "noPreview": "No preview available",
+    "wizard": {
+      "basic": "Basic Info",
+      "technical": "Technical",
+      "location": "Site",
+      "lifecycle": "Lifecycle",
+      "compliance": "Compliance",
+      "next": "Next",
+      "back": "Retour",
+      "create": "Create Asset",
+      "step": "Step {current} of {total}",
+      "basicDesc": "Required fields and identification",
+      "technicalDesc": "Manufacturer and specifications",
+      "locationDesc": "Location and assignment",
+      "lifecycleDesc": "Purchase and warranty details",
+      "complianceDesc": "Certification and maintenance"
+    },
+    "kpi": {
+      "totalInspectionsDesc": "Number of inspections performed on this asset",
+      "passRateDesc": "Percentage of inspections that passed all checks",
+      "totalIncidentsDesc": "Safety incidents involving this asset",
+      "downtimeHoursDesc": "Total hours this asset was out of service",
+      "maintenanceComplianceDesc": "Percentage of on-time maintenance completions",
+      "lastInspectedDesc": "Days since the last inspection was performed"
+    },
+    "showAllIncidents": "Show all {count} incidents",
+    "showLess": "Show less",
+    "healthScore": {
+      "excellent": "Excellent",
+      "good": "Bon",
+      "fair": "Correct",
+      "poor": "Mauvais",
+      "howCalculated": "How this score is calculated",
+      "inspections": "Inspection Pass Rate",
+      "maintenance": "Maintenance Compliance",
+      "condition": "Condition Rating",
+      "downtime": "Downtime Impact",
+      "age": "Asset Age Factor"
+    },
+    "work_orders_empty_title": "Tout est à jour !",
+    "work_orders_empty_description": "No open work orders assigned to you",
+    "unknownAsset": "Unknown asset"
+  },
+  "incidents": {
+    "title": "Incidents",
+    "reportIncident": "Report Incident",
+    "newIncident": "New Incident",
+    "labels": {
+      "title": "Titre",
+      "type": "Type",
+      "severity": "Gravité",
+      "priority": "Priorité",
+      "date": "Date",
+      "time": "Heure",
+      "description": "Description",
+      "location": "Site",
+      "lostTime": "Lost Time",
+      "activeHazard": "Active Hazard",
+      "hoursLost": "Hours Lost",
+      "photos": "Photos",
+      "relatedAsset": "Related Asset"
+    },
+    "types": {
+      "injury": "Blessure",
+      "nearMiss": "Presqu'accident",
+      "equipmentFailure": "Panne d'équipement",
+      "fire": "Incendie",
+      "environmental": "Environnemental",
+      "other": "Autre",
+      "hazard": "Danger",
+      "propertyDamage": "Dommages matériels",
+      "security": "Sécurité"
+    },
+    "severities": {
+      "low": "Faible",
+      "medium": "Moyen",
+      "high": "Élevé",
+      "critical": "Critique"
+    },
+    "statuses": {
+      "new": "Nouveau",
+      "inProgress": "En cours",
+      "inReview": "En révision",
+      "resolved": "Résolu",
+      "archived": "Archivé"
+    },
+    "buttons": {
+      "submitIncident": "Submit Incident",
+      "export": "Exporter"
+    },
+    "placeholders": {
+      "searchIncidents": "Search incidents...",
+      "briefDescription": "Brief description...",
+      "describeWhatHappened": "Describe what happened...",
+      "describeType": "Describe type",
+      "selectLocation": "Select a location",
+      "building": "Building A",
+      "floor": "2nd Floor",
+      "zone": "Loading dock",
+      "room": "Room 203",
+      "locationDescription": "Additional details about the exact location…",
+      "selectAsset": "Select an asset",
+      "locationDetails": "e.g., Near the main entrance, by machine #3",
+      "addNotes": "Add your notes, observations, or comments here…",
+      "lessonsLearned": "Enter lessons learned from this incident...",
+      "witnessName": "Full name of witness",
+      "witnessStatement": "What did the witness observe?",
+      "pleaseSpecify": "Please specify…",
+      "rootCauseDetail": "Describe the root cause in detail...",
+      "shareLessons": "What lessons can be shared to prevent similar incidents?",
+      "additionalNotes": "Add any additional notes or comments…",
+      "actionRequired": "What needs to be done?",
+      "additionalDetails": "Additional details...",
+      "addComment": "Add a comment..."
+    },
+    "empty": {
+      "noIncidents": "No incidents reported"
+    },
+    "locked": "This incident report is locked and cannot be edited",
+    "lockedShort": "Locked",
+    "viewReport": "View Report",
+    "reportAnother": "Report Another",
+    "noDescription": "No description provided.",
+    "noMatch": "No reports match your search criteria.",
+    "report": "Signaler",
+    "reportAnIncident": "Report an Incident"
+  },
+  "tickets": {
+    "title": "Tickets",
+    "newTicket": "New Ticket",
+    "createTicket": "Create Ticket",
+    "labels": {
+      "title": "Titre",
+      "description": "Description",
+      "priority": "Priorité",
+      "assignee": "Assignee",
+      "dueDate": "Date d'échéance",
+      "status": "Statut",
+      "relatedIncident": "Related Incident"
+    },
+    "statuses": {
+      "new": "Nouveau",
+      "inProgress": "En cours",
+      "resolved": "Résolu"
+    },
+    "priorities": {
+      "low": "Faible",
+      "medium": "Moyen",
+      "high": "Élevé",
+      "critical": "Critique"
+    },
+    "placeholders": {
+      "searchTickets": "Search tickets...",
+      "briefDescription": "Brief description...",
+      "detailedDescription": "Detailed description of what needs to be done...",
+      "addTask": "Add a new task...",
+      "addComment": "Add a comment..."
+    },
+    "empty": {
+      "noTickets": "No tickets"
+    }
+  },
+  "users": {
+    "title": "Utilisateurs & Équipes",
+    "addUser": "Ajouter un utilisateur",
+    "addTeam": "Ajouter une équipe",
+    "tabs": {
+      "users": "Utilisateurs",
+      "teams": "Équipes"
+    },
+    "labels": {
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "E-mail",
+      "role": "Rôle",
+      "department": "Département",
+      "lastActive": "Dernière activité",
+      "status": "Statut",
+      "employeeId": "ID employé"
+    },
+    "roles": {
+      "employee": "Employé",
+      "manager": "Responsable",
+      "companyAdmin": "Administrateur"
+    },
+    "buttons": {
+      "addUser": "Ajouter un utilisateur",
+      "createTeam": "Créer une équipe"
+    },
+    "placeholders": {
+      "searchUsers": "Search users...",
+      "searchTeams": "Search teams...",
+      "department": "e.g., Operations, Safety",
+      "teamName": "e.g., Safety Committee",
+      "teamDescription": "Brief description of team's purpose"
+    },
+    "admins": "Admins",
+    "managers": "Managers",
+    "employees": "Employees",
+    "totalTeams": "Total Teams",
+    "activeTeams": "Active Teams",
+    "totalMembers": "Total Members",
+    "noUsersFound": "No users found",
+    "noTeamsFound": "No teams found",
+    "addNewUser": "Add New User",
+    "inviteTeamMember": "Invite a team member",
+    "searchByNameEmailId": "Search by name, email, or employee ID...",
+    "userCount": "{count} user(s)",
+    "page": "Page {current} of {total}",
+    "showing": "Showing {from} to {to} of {total}",
+    "noDescription": "No description",
+    "leader": "Leader",
+    "teamName": "Team Name",
+    "teamDescription": "Description",
+    "teamColor": "Team Color",
+    "teamLeader": "Team Leader",
+    "selectLeader": "Select a leader (optional)",
+    "createNewTeam": "Create New Team",
+    "organizeUsers": "Organize users into teams",
+    "member": "member",
+    "members": "members",
+    "addTeamMember": "Add Team Member",
+    "allUsersAlreadyMembers": "All users are already members of this team",
+    "noMembersInTeam": "No members in this team",
+    "noMembersYet": "No members in this team yet",
+    "addFirstMember": "Add First Member",
+    "teamInformation": "Team Information",
+    "noLeaderAssigned": "No leader assigned",
+    "recentMembers": "Recent Members",
+    "quickStats": "Quick Stats",
+    "created": "Created",
+    "overview": "Aperçu",
+    "deactivateTeam": "Deactivate Team",
+    "deactivateTeamDesc": "Temporarily disable this team",
+    "deleteTeam": "Delete Team",
+    "deleteTeamDesc": "Permanently remove this team",
+    "deleteTeamConfirm": "Are you sure you want to delete {name}?",
+    "deleteTeamWarning": "Warning: This team has {count} member(s) who will be removed from the team.",
+    "personalInformation": "Personal Information",
+    "basicDetails": "Basic details for the user account",
+    "workDetails": "Work details",
+    "roleDeptLocation": "Role, department, and location assignment",
+    "middleName": "Middle name",
+    "gender": "Gender",
+    "selectGender": "Select gender",
+    "preferredLanguage": "Preferred language",
+    "userType": "User type",
+    "accountType": "Account type",
+    "jobTitle": "Job title",
+    "assignedLocation": "Assigned location",
+    "selectLocation": "Select location",
+    "teamAssignment": "Team assignment",
+    "selectTeam": "Select team",
+    "additionalTeamsLater": "Users can be added to additional teams later",
+    "backToUsers": "Back to users",
+    "createAndSendInvite": "Create & send invite",
+    "creating": "Creating…",
+    "createInviteDesc": "Create a new user account and send an invitation",
+    "fullName": "Full Name",
+    "noDepartment": "No department",
+    "assignedLocationLabel": "Assigned Location",
+    "noLocationAssigned": "No location assigned",
+    "notAssigned": "Non assigné",
+    "memberSince": "Member Since",
+    "statistics": "Statistiques",
+    "incidentsReported": "Incidents Reported",
+    "checklistsCompleted": "Checklists Completed",
+    "trainingCompletion": "Training Completion",
+    "lastLogin": "Last Login",
+    "never": "Never",
+    "quickActions": "Quick Actions",
+    "resetPassword": "Reset Password",
+    "sendMessage": "Send Message",
+    "activityLog": "Activity Log",
+    "information": "Informations",
+    "activity": "Activité",
+    "permissions": "Permissions",
+    "currentRole": "Current Role",
+    "roleSummary": "Role Summary:",
+    "roleDescription": "Role determines base permissions. Custom permissions can be added below.",
+    "employeeDesc": "Basic access: View own incidents, complete checklists",
+    "managerDesc": "Team access: Manage team incidents, view team reports, assign work",
+    "adminDesc": "Full access: All features, user management, settings",
+    "security": "Sécurité",
+    "twoFactorAuth": "Two-Factor Authentication",
+    "twoFactorDesc": "Add an extra layer of security to your account",
+    "enabled": "Activé",
+    "disable": "Désactiver",
+    "enable2FA": "Enable 2FA",
+    "password": "Mot de passe",
+    "lastChanged": "Last changed: {date}",
+    "changePassword": "Change Password",
+    "activeSessions": "Active Sessions",
+    "activeSessionsDesc": "Manage devices where this account is logged in",
+    "revokeAll": "Revoke All",
+    "current": "Actuel",
+    "revoke": "Révoquer",
+    "recentLoginHistory": "Recent Login History",
+    "accountSettings": "Account Settings",
+    "status": "Statut",
+    "notificationPreferences": "Notification Preferences",
+    "allNotifications": "All notifications",
+    "importantOnly": "Important only",
+    "none": "Aucun",
+    "saveSettings": "Save Settings",
+    "dangerZone": "Zone dangereuse",
+    "deactivateUser": "Deactivate User",
+    "deactivateUserDesc": "Temporarily disable user access",
+    "deactivate": "Désactiver",
+    "deleteUser": "Delete User",
+    "deleteUserDesc": "Permanently remove this user",
+    "deleteUserConfirm": "Are you sure you want to delete {name}? All their data will be permanently removed.",
+    "cannotBeUndone": "This action cannot be undone",
+    "userNotFound": "User not found",
+    "userAddedSuccess": "User added successfully",
+    "teamCreatedSuccess": "Team created successfully",
+    "userUpdatedSuccess": "User updated successfully",
+    "userDeleted": "User deleted",
+    "userDeactivated": "User deactivated",
+    "userActivated": "User activated",
+    "teamUpdatedSuccess": "Team updated successfully",
+    "teamDeleted": "Team deleted",
+    "memberRemoved": "Member removed",
+    "memberAdded": "Member added",
+    "teamLeaderUpdated": "Team leader updated",
+    "userCreatedSuccess": "User created successfully"
+  },
+  "locations": {
+    "types": {
+      "site": "Campus",
+      "campus": "Campus",
+      "building": "Bâtiment",
+      "floor": "Étage",
+      "zone": "Zone",
+      "room": "Salle"
+    },
+    "labels": {
+      "name": "Nom",
+      "type": "Type",
+      "parentLocation": "Parent Location",
+      "description": "Description"
+    },
+    "buttons": {
+      "addLocation": "Ajouter un site"
+    },
+    "empty": {
+      "noLocations": "No locations"
+    },
+    "title": "Sites",
+    "locationHierarchy": "Hiérarchie des sites",
+    "expandAll": "Tout développer",
+    "noLocationsYet": "No locations yet",
+    "addFirstLocation": "Add first location",
+    "addCampus": "Add Campus",
+    "selectLocation": "Select a location",
+    "selectLocationDesc": "Click on a location in the tree to view details",
+    "locationQRCode": "Location QR Code",
+    "copy": "Copier",
+    "download": "Télécharger",
+    "statistics": "Statistiques",
+    "buildings": "Buildings",
+    "floors": "Floors",
+    "zones": "Zones",
+    "rooms": "Rooms",
+    "employees": "Employees",
+    "assets": "Actifs",
+    "daysSafe": "Days Safe",
+    "subLocations": "Sub-locations",
+    "more": "+{count} more",
+    "assignedEmployees": "Assigned Employees ({count})",
+    "moreEmployees": "+{count} more employees",
+    "assignedAssets": "Assigned Assets ({count})",
+    "moreAssets": "+{count} more assets",
+    "deleteLocation": "Delete Location",
+    "deleteLocationConfirm": "Are you sure you want to delete {name}?",
+    "deleteLocationWarning": "Warning: This will also delete {count} sub-location(s).",
+    "cannotBeUndone": "This action cannot be undone",
+    "addNewCampus": "Add New Campus",
+    "addLocationType": "Add {type}",
+    "under": "Under: {name}",
+    "locationName": "Location Name",
+    "locationType": "Location Type",
+    "numberOfFloors": "Number of Floors",
+    "floorsCreatedAuto": "{count} floor(s) will be created automatically",
+    "numberOfZones": "Number of Zones",
+    "numberOfRooms": "Number of Rooms",
+    "optional": "Facultatif",
+    "parentLocation": "Parent Location",
+    "selectParentLocation": "Select parent location",
+    "address": "Address",
+    "addressOptional": "Address (Optional)",
+    "addressFormats": "Supports US and European formats",
+    "editLocationType": "Edit {type}",
+    "name": "Nom",
+    "saveChanges": "Enregistrer les modifications",
+    "locationAdded": "Location added successfully",
+    "locationUpdated": "Location updated",
+    "locationDeleted": "Location deleted",
+    "redirecting": "Redirecting to location tree view...",
+    "topLevel": "Top-level location",
+    "buildingWithinCampus": "A building within a campus",
+    "floorWithinBuilding": "A floor within a building",
+    "zoneArea": "Zone / Area",
+    "zoneDesc": "An area within a floor",
+    "specificRoom": "A specific room",
+    "locationNotFound": "Location Not Found",
+    "locationNotFoundDesc": "This QR code may be invalid or the location has been removed.",
+    "goToHome": "Go to Home",
+    "scannedLocation": "Scanned Location",
+    "home": "Accueil",
+    "quickActions": "Quick Actions",
+    "reportIncident": "Report Incident",
+    "reportIncidentDesc": "Report a safety incident at this location",
+    "completeChecklist": "Complete Checklist",
+    "completeChecklistDesc": "Start a safety checklist or inspection",
+    "assetInspection": "Asset Inspection",
+    "assetInspectionDesc": "Inspect equipment at this location",
+    "emergencyContacts": "Emergency Contacts",
+    "locationInfo": "Location Info",
+    "workers": "Workers",
+    "emergency": {
+      "services": "Emergency Services",
+      "role": "Emergency"
+    },
+    "wizard": {
+      "chooseType": "Choose Type",
+      "details": "Details",
+      "confirm": "Confirmer",
+      "preview": "This will create",
+      "building1Floor": "1 building with {count} floor(s)",
+      "floor1Zone": "1 floor with {zones} zone(s) and {rooms} room(s)",
+      "reviewSummary": "Review what will be created"
+    },
+    "mapView": "Map",
+    "treeView": "Tree",
+    "noGpsData": "No locations with GPS coordinates"
+  },
+  "analytics": {
+    "title": "Analyses",
+    "metrics": {
+      "ltir": "LTIR",
+      "trir": "TRIR",
+      "avgResolution": "Avg. Resolution",
+      "complianceRate": "Taux de conformité"
+    },
+    "charts": {
+      "incidentTrend": "Incident Trend",
+      "resolutionTimeTrend": "Resolution Time Trend",
+      "incidentsByType": "Incidents by Type",
+      "complianceTrend": "Compliance Trend"
+    },
+    "table": {
+      "monthlySummary": "Résumé mensuel",
+      "month": "Mois",
+      "incidents": "Incidents",
+      "resolved": "Résolu",
+      "avgTime": "Avg. Time",
+      "compliance": "Compliance",
+      "status": "Statut",
+      "onTrack": "En bonne voie",
+      "behind": "En retard"
+    }
+  },
+  "checklists": {
+    "title": "Listes de contrôle",
+    "safetyTasks": "Tâches de sécurité",
+    "tabs": {
+      "checklists": "Listes de contrôle",
+      "assessments": "Évaluations",
+      "inspections": "Inspections",
+      "reports": "Rapports",
+      "tasks": "Tâches"
+    },
+    "labels": {
+      "pending": "En attente",
+      "inProgress": "En cours",
+      "completed": "Terminé",
+      "completedToday": "Terminé aujourd'hui",
+      "items": "Éléments"
+    },
+    "buttons": {
+      "newAssessment": "Nouvelle évaluation",
+      "scanQrCode": "Scanner le code QR",
+      "resume": "Reprendre"
+    },
+    "empty": {
+      "noChecklists": "No checklists",
+      "noSubmissions": "No submissions",
+      "noActiveAssets": "No active assets"
+    },
+    "allChecklists": "All checklists",
+    "noSubmissionsToday": "No submissions yet today.",
+    "newAssessment": "New assessment",
+    "noCompletedAssessments": "No completed assessments yet",
+    "scanQrCode": "Scan QR code",
+    "quicklyStartInspection": "Quickly start an asset inspection",
+    "noActiveAssetsToInspect": "No active assets to inspect",
+    "dueForInspection": "Due for inspection",
+    "allAssets": "All assets",
+    "noActiveAssets": "No active assets",
+    "recent": "Recent",
+    "done": "Done",
+    "checklistNotFound": "Checklist not found.",
+    "itemOf": "{current} of {total} items",
+    "item": "Item {number}",
+    "yes": "Oui",
+    "no": "Non",
+    "na": "N/A",
+    "skip": "Skip",
+    "pass": "Réussi",
+    "fail": "Échoué",
+    "hideNotes": "Hide notes",
+    "addNotes": "Add notes",
+    "notes": "Notes",
+    "addNotesPlaceholder": "Add any additional notes...",
+    "addPhoto": "Add Photo",
+    "addAnotherPhoto": "Add Another Photo",
+    "yesPass": "Yes/Pass",
+    "noFail": "No/Fail",
+    "remaining": "Remaining",
+    "submitting": "Submitting...",
+    "completeChecklist": "Complete Checklist",
+    "nextItem": "Next Item",
+    "enterResponse": "Enter your response...",
+    "placeholders": {
+      "checklistName": "Daily forklift inspection"
+    },
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "approved": "Approuvé",
+    "rejected": "Rejected",
+    "submittedBy": "Submitted by"
+  },
+  "content": {
+    "title": "Contenu",
+    "types": {
+      "news": "Actualités",
+      "documents": "Documents",
+      "training": "Formation",
+      "events": "Événements"
+    },
+    "statuses": {
+      "draft": "Brouillon",
+      "published": "Publié"
+    },
+    "buttons": {
+      "create": "Créer"
+    },
+    "placeholders": {
+      "searchContent": "Search content...",
+      "linkUrl": "https://...",
+      "category": "e.g., Safety, Training, Policy"
+    }
+  },
+  "qrCodes": {
+    "title": "Codes QR",
+    "createQrCode": "Create QR Code",
+    "labels": {
+      "totalQrCodes": "Total QR Codes",
+      "totalScans": "Total Scans",
+      "linkedLocations": "Linked Locations",
+      "name": "Nom",
+      "linkToLocation": "Link to Location",
+      "description": "Description",
+      "linkToAsset": "Link to Asset"
+    },
+    "steps": {
+      "generate": "Generate",
+      "place": "Place",
+      "scanAndReport": "Scan & Report"
+    },
+    "buttons": {
+      "download": "Télécharger",
+      "print": "Imprimer",
+      "cancel": "Annuler",
+      "create": "Créer"
+    },
+    "placeholders": {
+      "searchQrCodes": "Search QR codes...",
+      "qrCodeName": "QR code name...",
+      "name": "e.g., Main Entrance",
+      "description": "Short description for this QR code"
+    }
+  },
+  "workOrders": {
+    "title": "Ordres de travail",
+    "newWorkOrder": "Nouvel ordre de travail",
+    "labels": {
+      "title": "Titre",
+      "description": "Description",
+      "asset": "Asset",
+      "priority": "Priorité",
+      "dueDate": "Date d'échéance",
+      "assignTo": "Assigner à",
+      "estimatedHours": "Heures estimées",
+      "totalCost": "Coût total",
+      "partsUsed": "Pièces utilisées"
+    },
+    "statuses": {
+      "requested": "Demandé",
+      "approved": "Approuvé",
+      "inProgress": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé"
+    },
+    "buttons": {
+      "approve": "Approuver",
+      "start": "Démarrer",
+      "complete": "Terminer",
+      "cancel": "Annuler",
+      "create": "Créer"
+    },
+    "placeholders": {
+      "searchWorkOrders": "Search work orders...",
+      "title": "Work order title",
+      "description": "Describe the work needed",
+      "selectAsset": "Select asset",
+      "selectUser": "Select user",
+      "estimatedHours": "e.g. 2.5"
+    },
+    "detail": {
+      "title": "Work Order Details",
+      "requestedBy": "Requested by",
+      "assignedTo": "Assigned to",
+      "relatedAsset": "Related asset",
+      "notes": "Notes",
+      "changeStatus": "Change status",
+      "notFound": "Work order not found",
+      "laborCost": "Labor cost",
+      "actualHours": "Actual hours",
+      "created": "Created",
+      "completedAt": "Terminé"
+    }
+  },
+  "correctiveActions": {
+    "title": "Actions correctives",
+    "newAction": "Nouvelle action",
+    "labels": {
+      "asset": "Asset",
+      "description": "Description",
+      "severity": "Gravité",
+      "dueDate": "Date d'échéance",
+      "assignTo": "Assigner à"
+    },
+    "statuses": {
+      "open": "Ouvert",
+      "inProgress": "En cours",
+      "overdue": "En retard",
+      "completed": "Terminé"
+    },
+    "buttons": {
+      "start": "Démarrer",
+      "complete": "Terminer",
+      "createWo": "Create Work Order",
+      "create": "Créer"
+    },
+    "placeholders": {
+      "searchActions": "Search actions...",
+      "whatNeedsCorrected": "What needs to be corrected...",
+      "selectAsset": "Select asset",
+      "selectUser": "Select user"
+    },
+    "detail": {
+      "title": "Corrective Action Details",
+      "linkedIncident": "Linked incident",
+      "linkedAsset": "Linked asset",
+      "assignedTo": "Assigned to",
+      "overdue": "En retard",
+      "notFound": "Corrective action not found",
+      "resolutionNotes": "Resolution notes",
+      "resolutionNotesPlaceholder": "Add resolution notes...",
+      "noResolutionNotes": "No resolution notes yet",
+      "created": "Created",
+      "completedAt": "Terminé"
+    }
+  },
+  "parts": {
+    "title": "Pièces",
+    "addPart": "Ajouter une pièce",
+    "labels": {
+      "partName": "Nom de la pièce",
+      "partNumber": "Numéro de pièce",
+      "unitCost": "Coût unitaire",
+      "qtyInStock": "Qty in Stock",
+      "minimumStock": "Minimum Stock",
+      "supplier": "Fournisseur",
+      "inventoryValue": "Inventory Value",
+      "lowStock": "Stock faible",
+      "inStock": "En stock"
+    },
+    "buttons": {
+      "addPart": "Ajouter une pièce"
+    },
+    "placeholders": {
+      "searchParts": "Search parts...",
+      "partName": "e.g., Hydraulic Filter",
+      "partNumber": "e.g., HF-2045-A",
+      "supplier": "Supplier name"
+    }
+  },
+  "maintenance": {
+    "title": "Request Maintenance",
+    "labels": {
+      "asset": "Asset",
+      "whatNeedsFixing": "What needs fixing?",
+      "description": "Description",
+      "priority": "Priorité"
+    },
+    "buttons": {
+      "submitRequest": "Submit Request"
+    },
+    "submitWorkOrder": "Submit a work order for repair or service",
+    "selectAsset": "Select asset (optional)",
+    "briefTitle": "Brief title",
+    "describeTheProblem": "Describe the problem in detail..."
+  },
+  "settings": {
+    "title": "Paramètres",
+    "tabs": {
+      "general": "Général",
+      "branding": "Image de marque",
+      "notifications": "Notifications",
+      "security": "Sécurité",
+      "billing": "Facturation"
+    },
+    "labels": {
+      "companyName": "Nom de l'entreprise",
+      "urlSlug": "URL Slug",
+      "country": "Pays",
+      "defaultLanguage": "Default Language",
+      "saveChanges": "Enregistrer les modifications",
+      "saving": "Enregistrement...",
+      "saved": "Enregistré"
+    },
+    "sections": {
+      "companyInformation": "Company Information",
+      "countryAndRegulations": "Pays & Réglementations",
+      "localization": "Localisation"
+    },
+    "saving": "Enregistrement...",
+    "saved": "Enregistré !",
+    "saveChanges": "Enregistrer les modifications",
+    "basicInfo": "Basic information about your organization",
+    "companyName": "Nom de l'entreprise",
+    "urlSlug": "URL",
+    "countryAndRegulations": "Pays & Réglementations",
+    "countryDesc": "Sélectionnez votre pays d'exploitation pour aligner les réglementations de sécurité et les modèles recommandés",
+    "selected": "Selected",
+    "basedOnSelection": "Based on your selection:",
+    "usRegulations": "Votre bibliothèque de modèles de checklists utilisera des références américaines comme OSHA, NFPA et FDA.",
+    "gbRegulations": "Votre bibliothèque de modèles de checklists utilisera des références britanniques comme HSE, RIDDOR, COSHH et PUWER.",
+    "nlRegulations": "Votre bibliothèque de modèles de checklists utilisera des références néerlandaises comme Arbowet, RI&E et NEN 3140.",
+    "seRegulations": "Votre bibliothèque de modèles de checklists utilisera des références suédoises comme AFS, SAM et ESA.",
+    "deRegulations": "Votre bibliothèque de modèles de checklists utilisera des références allemandes comme ArbSchG, BetrSichV et DGUV.",
+    "frRegulations": "Votre bibliothèque de modèles de checklists utilisera des références françaises comme le Code du travail, le DUERP et le CACES.",
+    "esRegulations": "Votre bibliothèque de modèles de checklists utilisera des références espagnoles comme la Ley 31/1995, la PRL et le RD 1215/1997.",
+    "localization": "Localisation",
+    "languageAndRegional": "Language and regional preferences",
+    "defaultLanguage": "Langue par défaut",
+    "dateFormat": "Format de date",
+    "timezone": "Fuseau horaire",
+    "branding": "Image de marque",
+    "customizeLook": "Customize the look of your company portal",
+    "companyLogo": "Logo de l'entreprise",
+    "uploadLogo": "Télécharger le logo",
+    "logoHint": "PNG, JPG or SVG. Max 2MB.",
+    "primaryColor": "Couleur primaire",
+    "secondaryColor": "Couleur secondaire",
+    "preview": "Aperçu",
+    "primaryButton": "Bouton principal",
+    "secondaryButton": "Bouton secondaire",
+    "notifications": "Notifications",
+    "configureNotifications": "Configure email and push notification settings",
+    "criticalAlerts": "Critical incident alerts",
+    "criticalAlertsDesc": "Notify admins immediately for critical severity incidents",
+    "newIncidentReports": "New incident reports",
+    "newIncidentReportsDesc": "Get notified when new incidents are reported",
+    "dailyDigest": "Daily digest",
+    "dailyDigestDesc": "Summary of daily activity sent to managers",
+    "checklistReminders": "Checklist reminders",
+    "checklistRemindersDesc": "Remind employees about pending checklists",
+    "maintenanceAlerts": "Maintenance alerts",
+    "maintenanceAlertsDesc": "Get notified about upcoming and overdue maintenance",
+    "authentication": "Authentication",
+    "configureAuth": "Configure authentication and access control",
+    "twoFactor": "Two-factor authentication",
+    "twoFactorDesc": "Require 2FA for all admin users",
+    "sso": "Single Sign-On (SSO)",
+    "ssoDesc": "Enable SSO with your identity provider",
+    "sessionAndPassword": "Session & Password",
+    "sessionPasswordDesc": "Configure session timeout and password policies",
+    "sessionTimeout": "Session timeout (minutes)",
+    "passwordPolicy": "Password policy",
+    "billing": "Facturation",
+    "currentPlan": "Current Plan",
+    "subscriptionDetails": "Your subscription and usage details",
+    "plan": "{tier} Plan",
+    "active": "Actif",
+    "changePlan": "Change plan",
+    "usage": "Usage",
+    "activeUsers": "Active users",
+    "storageUsed": "Storage used",
+    "paymentMethod": "Payment Method",
+    "managePayment": "Manage your payment information",
+    "expires": "Expires {date}",
+    "update": "Update",
+    "billingHistory": "Billing History",
+    "viewInvoices": "View your past invoices",
+    "professionalPlan": "Professional Plan",
+    "paid": "Paid",
+    "companyInformation": "Company Information",
+    "security": "Sécurité",
+    "demoMode": "Demo Mode",
+    "securityDemoMessage": "Security settings are for demonstration only. In production, these would integrate with your identity provider.",
+    "billingDemoMessage": "Billing information shown is for demonstration purposes. No actual charges will be made.",
+    "platformSecurityDemoMessage": "Platform security settings are for demonstration only. In production, these would enforce actual security policies.",
+    "currency": "Devise",
+    "measurementSystem": "Système d’unités",
+    "metricUnits": "Unités métriques",
+    "imperialUnits": "Unités impériales"
+  },
+  "newsApp": {
+    "title": "News & Updates",
+    "tabs": {
+      "news": "Actualités",
+      "events": "Événements",
+      "documents": "Documents",
+      "training": "Formation"
+    },
+    "empty": {
+      "noContent": "No content available",
+      "checkBackLater": "Check back later for updates"
+    },
+    "stayInformed": "Stay informed about company news and policies",
+    "noContentYet": "No {tab} yet",
+    "articleNotFound": "Article not found",
+    "keyPoints": "Key Points",
+    "nextSteps": "Next Steps",
+    "nextStepsDesc": "Please review this information and acknowledge that you have read and understood the content. If you need any clarification, don't hesitate to contact the safety team.",
+    "attachments": "Attachments",
+    "downloadDocument": "Download Document",
+    "downloaded": "Downloaded!",
+    "addToCalendar": "Add to Calendar"
+  },
+  "inspection": {
+    "assetNotFound": "Asset not found",
+    "inspecting": "Inspecting: {name}",
+    "checkOf": "{current} of {total} checks",
+    "passed": "Réussi",
+    "failed": "Échoué",
+    "notesRequiredForFailed": "Notes (required for failed items)",
+    "describeIssue": "Describe the issue...",
+    "completeInspection": "Complete Inspection",
+    "nextCheck": "Next Check",
+    "enterNotes": "Enter notes or observations...",
+    "enterValue": "Enter value",
+    "optional": "Facultatif"
+  },
+  "scan": {
+    "title": "Scanner un actif",
+    "assetFound": "Actif trouvé",
+    "assetIdentified": "Asset successfully identified",
+    "viewAssetDetails": "View Asset Details",
+    "scanAnother": "Scan Another Asset",
+    "notFound": "Asset Not Found",
+    "notFoundDesc": "No asset matches that code. Check the code and try again, or register it as a new asset.",
+    "tryAgain": "Réessayer",
+    "registerNew": "Register New Asset",
+    "pointAtQR": "Point camera at QR code",
+    "demoHint": "Tap an asset tag to simulate scanning",
+    "manualEntry": "Manual Entry",
+    "manualEntryDesc": "Enter an asset tag, serial number, or QR code to look it up.",
+    "enterAssetCode": "Asset tag, serial number, or QR code...",
+    "lookupAsset": "Look Up Asset",
+    "recentAssets": "Recent assets",
+    "loginRequired": "Please log in to continue",
+    "torchFailed": "Could not toggle flashlight"
+  },
+  "newAsset": {
+    "title": "Register Asset",
+    "registerShort": "Register",
+    "stepOf": "Step {current} of {total}",
+    "basicInfo": "Basic Information",
+    "basicInfoDesc": "What type of asset are you registering?",
+    "assetName": "Asset Name",
+    "assetNamePlaceholder": "e.g., Forklift #3, Fire Extinguisher A1",
+    "category": "Category",
+    "assetType": "Asset Type",
+    "assetTypeStatic": "Static",
+    "assetTypeMovable": "Movable",
+    "technicalDetails": "Technical Details",
+    "technicalDetailsDesc": "Add manufacturer and condition info (optional).",
+    "serialNumber": "Numéro de série",
+    "serialNumberPlaceholder": "e.g., SN-2024-12345",
+    "manufacturer": "Fabricant",
+    "manufacturerPlaceholder": "e.g., Caterpillar",
+    "model": "Modèle",
+    "modelPlaceholder": "e.g., DP25NT",
+    "department": "Département",
+    "departmentPlaceholder": "e.g., Operations",
+    "warrantyExpiry": "Expiration de garantie",
+    "condition": "Condition",
+    "criticality": "Criticality",
+    "photos": "Photos",
+    "addPhoto": "Take or Upload Photo",
+    "assignLocation": "Assign Location",
+    "assignLocationDesc": "Where is this asset located?",
+    "selectLocation": "Select a location",
+    "safetyInstructions": "Safety Instructions",
+    "safetyInstructionsPlaceholder": "e.g., PPE required, certified operators only...",
+    "additionalNotes": "Additional Notes",
+    "additionalNotesPlaceholder": "Any other relevant information...",
+    "reviewTitle": "Review & Register",
+    "reviewDesc": "Confirm the details below are correct.",
+    "location": "Site",
+    "notAssigned": "Non assigné",
+    "qrCodeGenerated": "QR Code Auto-Generated",
+    "qrCodeDesc": "A scannable QR code will be created for this asset.",
+    "registerAsset": "Register Asset",
+    "registering": "Registering...",
+    "created": "Asset registered successfully!"
+  },
+  "inspectionRounds": {
+    "title": "Rondes",
+    "noRoutes": "No inspection routes",
+    "noRoutesDesc": "Your admin will create inspection routes for you.",
+    "checkpoints": "checkpoints",
+    "checkpoint": "Point de contrôle",
+    "checkpointOf": "Checkpoint {current} of {total}",
+    "done": "done",
+    "result": "Result",
+    "pass": "Réussi",
+    "fail": "Échoué",
+    "needsAttention": "Needs Attention",
+    "measuredValue": "Measured Value",
+    "acceptableRange": "Acceptable range",
+    "outOfRange": "Value is out of acceptable range, alert will be created",
+    "photo": "Photo (if abnormality found)",
+    "takePhoto": "Take Photo",
+    "notes": "Notes",
+    "addNotes": "Add any observations...",
+    "nextCheckpoint": "Next Checkpoint",
+    "submitInspection": "Submit Inspection",
+    "remaining": "{count} remaining",
+    "completed": "Inspection round completed",
+    "routeNotFound": "Route not found",
+    "routeNotFoundDesc": "This inspection route could not be loaded.",
+    "checkType": {
+      "visual": "Visual check",
+      "auditory": "Auditory check",
+      "measurement": "Measurement",
+      "functional": "Functional test",
+      "safety": "Safety check"
+    },
+    "recurrence": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "once": "One-time"
+    },
+    "offline": {
+      "downloadRoute": "Download for offline",
+      "offlineReady": "Ready for offline use",
+      "pendingSync": "{count} items pending sync",
+      "syncing": "Syncing...",
+      "synced": "All synced",
+      "conflict": "Sync conflict detected",
+      "offlineIndicator": "You are offline",
+      "queuedForSync": "Queued for sync"
+    }
+  },
+  "riskAssessment": {
+    "section": "Section {current} of {total}",
+    "enterAnswer": "Enter your answer",
+    "submitAssessment": "Submit Assessment",
+    "submitting": "Submitting...",
+    "continue": "Continuer",
+    "jsaTitle": "Job Safety Analysis (JSA)",
+    "jobDetails": "Job Details",
+    "dailyPreWork": "Daily pre-work safety briefing",
+    "jsaNote": "JSA is a simplified daily safety analysis. Complete this at the start of each shift before beginning work.",
+    "preWorkChecklist": "Pre-Work Checklist",
+    "itemsChecked": "{completed}/{total} items checked",
+    "hazardsAndControls": "Hazards & Controls",
+    "identifyHazards": "Identify hazards specific to today's work",
+    "identifiedHazards": "Identified Hazards *",
+    "controlMeasures": "Control Measures *",
+    "stopWorkConditions": "Stop Work Conditions",
+    "reviewAndSignoff": "Review & Sign-off",
+    "confirmAndSubmit": "Confirm and submit the JSA",
+    "jsaSummary": "JSA Summary",
+    "checklistResults": "Checklist Results",
+    "crewAcknowledgment": "Crew Acknowledgment",
+    "crewAcknowledgmentDesc": "All crew members have participated in this JSA briefing, understand the hazards and control measures, and are prepared to perform the work safely.",
+    "jsaComplianceNote": "This JSA will be recorded for compliance purposes. If conditions change during the shift, a new JSA should be completed.",
+    "submitJSA": "Submit JSA",
+    "arbowetTitle": "Arbowet Compliance Audit",
+    "auditDetails": "Audit Details",
+    "basicAuditInfo": "Basic audit information",
+    "complianceCheck": "Compliance Check",
+    "itemsAssessed": "{assessed}/{total} items assessed",
+    "summaryAndActions": "Summary & Actions",
+    "overallAssessment": "Overall assessment and next steps",
+    "reviewAndSubmit": "Review & Submit",
+    "confirmSubmitAudit": "Confirm and submit audit results",
+    "overallComplianceScore": "Overall Compliance Score",
+    "nonCompliantItems": "Non-Compliant Items ({count})",
+    "overallAssessmentLabel": "Overall Assessment *",
+    "priorityActions": "Priority Actions",
+    "nextAuditDate": "Next Audit Date",
+    "auditSummary": "Audit Summary",
+    "complianceBreakdown": "Compliance Breakdown",
+    "compliant": "Conforme",
+    "partial": "Partiel",
+    "nonCompliant": "Non conforme",
+    "submitAudit": "Submit Audit",
+    "notSpecified": "Not specified",
+    "complianceScore": "Compliance Score:",
+    "articlesCovered": "Articles Covered",
+    "complete": "complete",
+    "issue": "issue",
+    "issues": "issues",
+    "jhaTitle": "Job Hazard Analysis (JHA)",
+    "osaTitle": "OSA - Organisatorisk och Social Arbetsmiljö",
+    "rieTitle": "RI&E (Risico-Inventarisatie en -Evaluatie)",
+    "samTitle": "SAM - Systematiskt Arbetsmiljöarbete",
+    "riskScoreLabel": "Score de risque",
+    "riskLevelLabel": "Niveau de risque",
+    "likelihood": "Probabilité",
+    "severity": "Gravité",
+    "low": "Faible",
+    "medium": "Moyen",
+    "high": "Élevé",
+    "critical": "Critique",
+    "riskMatrix": "Matrice de risque",
+    "notFound": "Modèle non trouvé",
+    "notFoundDesc": "Le modèle d'évaluation des risques demandé est introuvable.",
+    "submissionNotFound": "Soumission non trouvée",
+    "submissionNotFoundDesc": "La soumission d'évaluation des risques demandée est introuvable.",
+    "tabs": {
+      "hazards": "Dangers et risques",
+      "controls": "Mesures de contrôle"
+    },
+    "startAssessment": "Démarrer l'évaluation",
+    "approve": "Approuver",
+    "approved": "Approuvé",
+    "requestRevision": "Demander une révision",
+    "returnedForRevision": "Évaluation renvoyée pour révision.",
+    "approvedSuccess": "Évaluation approuvée avec succès.",
+    "hazardsIdentified": "{count} dangers identifiés",
+    "controlMeasuresSummary": "Résumé des mesures de contrôle",
+    "requiredPPE": "EPI requis",
+    "riskLabel": "Risque",
+    "standard": "Standard"
+  },
+  "auth": {
+    "welcomeBack": "Bon retour",
+    "signInToAccount": "Connectez-vous à votre compte",
+    "createAccount": "Créer votre compte",
+    "signUpCorporate": "Sign up with your corporate account",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "emailPlaceholder": "name@company.com",
+    "passwordPlaceholder": "Enter your password",
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "signingIn": "Connexion...",
+    "forgotPassword": "Mot de passe oublié ?",
+    "forgotPasswordTitle": "Réinitialiser votre mot de passe",
+    "forgotPasswordDesc": "Enter your email and we'll send you a reset link",
+    "sendResetLink": "Send reset link",
+    "sendingResetLink": "Sending…",
+    "resetLinkSent": "Check your email for a password reset link",
+    "resetPassword": "Reset password",
+    "resetPasswordTitle": "Set new password",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "updatePassword": "Mettre à jour le mot de passe",
+    "updatingPassword": "Mise à jour...",
+    "passwordUpdated": "Mot de passe mis à jour avec succès",
+    "magicLink": "Sign in with magic link instead",
+    "passwordMode": "Sign in with password instead",
+    "sendMagicLink": "Send magic link",
+    "sendingMagicLink": "Sending…",
+    "magicLinkSent": "Check your email for a magic link",
+    "chooseApp": "Choisir l'application",
+    "dashboard": "Tableau de bord",
+    "mobileApp": "Mobile App",
+    "signUpGoogle": "Sign up with Google",
+    "signUpMicrosoft": "Sign up with Microsoft",
+    "alreadyHaveAccount": "Already have an account?",
+    "logIn": "Se connecter",
+    "backToHome": "← Back to home",
+    "companyName": "Nom de l'entreprise",
+    "country": "Pays",
+    "accountLocked": "Account temporarily locked",
+    "attemptsRemaining": "attempts remaining",
+    "tryAgainIn": "Try again in",
+    "minutes": "minutes"
+  },
+  "tasks": {
+    "title": "Mes tâches",
+    "all": "Tous",
+    "tickets": "Tickets",
+    "workOrders": "Ordres de travail",
+    "actions": "Actions",
+    "empty": "No tasks assigned to you",
+    "emptyTickets": "No tickets assigned",
+    "emptyWorkOrders": "No work orders",
+    "emptyActions": "No corrective actions",
+    "assignedBy": "Assigned by",
+    "requestedBy": "Requested by",
+    "due": "Due",
+    "overdue": "En retard",
+    "relatedAsset": "Asset",
+    "viewAll": "View all tasks",
+    "startWork": "Start Work",
+    "markComplete": "Mark Complete",
+    "start": "Démarrer",
+    "resolve": "Resolve",
+    "complete": "Terminer",
+    "statusUpdated": "Status updated",
+    "mine": "Mine",
+    "assigned": "Assigned",
+    "completed": "Terminé",
+    "searchPlaceholder": "Search tasks...",
+    "allTypes": "All Types",
+    "task": "task",
+    "tasksPlural": "tâches",
+    "active": "Actif",
+    "accept": "Accept",
+    "overdueByDay": "Overdue by {days} day",
+    "overdueByDays": "Overdue by {days} days",
+    "dueToday": "Due today",
+    "dueTomorrow": "Due tomorrow",
+    "dueInDays": "Due in {days} days",
+    "assignedTasks": "assigned tasks",
+    "completedTasks": "completed tasks",
+    "comments": {
+      "title": "Comments ({count})",
+      "placeholder": "Add a comment...",
+      "post": "Post Comment",
+      "added": "Comment added",
+      "empty": "No comments yet",
+      "emptyHint": "Be the first to add a comment",
+      "loadError": "Failed to load comments",
+      "saveError": "Failed to save comment"
+    },
+    "documents": {
+      "title": "Files ({count})",
+      "upload": "Upload File",
+      "uploadHint": "PNG, JPG, GIF, WebP, PDF, CSV — max 5 MB",
+      "uploaded": "File uploaded",
+      "removed": "File removed",
+      "empty": "No files attached",
+      "emptyHint": "Upload documents, photos, or reports",
+      "uploadFailed": "Upload failed",
+      "deleteFailed": "Failed to delete file"
+    }
+  },
+  "app.pending": "En attente",
+  "errors.network": "Network error",
+  "errors.networkDesc": "Please check your internet connection and try again.",
+  "errors.notFound": "Page introuvable",
+  "errors.notFoundDesc": "The page you're looking for doesn't exist or has been moved.",
+  "errors.permission": "Accès refusé",
+  "errors.permissionDesc": "You don't have permission to view this page.",
+  "errors.timeout": "Délai d'attente dépassé",
+  "errors.timeoutDesc": "The server took too long to respond. Please try again.",
+  "errors.server": "Server error",
+  "errors.serverDesc": "Something went wrong on our end. Please try again later.",
+  "errors.maintenance": "En maintenance",
+  "errors.maintenanceDesc": "We're performing scheduled maintenance. Please check back soon.",
+  "errors.rateLimit": "Trop de requêtes",
+  "errors.rateLimitDesc": "Please wait a moment before trying again.",
+  "errors.generic": "Une erreur s'est produite",
+  "errors.genericDesc": "An unexpected error occurred. Please try again.",
+  "errors.tryAgain": "Réessayer",
+  "errors.goBack": "Retour",
+  "errors.goHome": "Aller à l'accueil",
+  "errors.refresh": "Actualiser la page",
+  "errors.sessionExpired": "Session expirée",
+  "errors.sessionExpiredDesc": "Your session has expired. Please sign in again to continue.",
+  "errors.signIn": "Se connecter",
+  "common.filters": "Filtres",
+  "common.clearAll": "Clear all",
+  "common.apply": "Appliquer",
+  "validation.required": "Ce champ est obligatoire",
+  "validation.minLength": "Must be at least {min} characters",
+  "validation.invalidDate": "Please enter a valid date",
+  "validation.selectOption": "Please select an option",
+  "inspectionRoutes": {
+    "title": "Inspection Routes",
+    "createRoute": "Create Route",
+    "createInspectionRoute": "Create Inspection Route",
+    "checkpoints": "Checkpoints",
+    "checkpoint": "Point de contrôle",
+    "completed": "completed",
+    "unknownAsset": "Unknown asset",
+    "activate": "Activer",
+    "deactivate": "Désactiver",
+    "addCheckpoint": "Add Checkpoint",
+    "kpi": {
+      "activeRoutes": "Active Routes",
+      "totalRoutes": "Total Routes",
+      "completedRounds": "Completed Rounds"
+    },
+    "empty": {
+      "title": "No inspection routes yet",
+      "description": "Create a route to start scheduled inspections."
+    },
+    "labels": {
+      "routeName": "Route Name",
+      "description": "Description",
+      "recurrence": "Recurrence",
+      "asset": "Asset",
+      "checkType": "Check Type",
+      "whatToCheck": "What to check",
+      "instructions": "Instructions",
+      "min": "Min",
+      "max": "Max",
+      "unit": "Unit"
+    },
+    "recurrence": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "once": "One-time"
+    },
+    "checkTypes": {
+      "visual": "Visual",
+      "auditory": "Auditory",
+      "measurement": "Measurement",
+      "functional": "Functional",
+      "safety": "Sécurité"
+    },
+    "placeholders": {
+      "routeName": "e.g., Morning Safety Walk",
+      "description": "Describe the inspection route...",
+      "selectAsset": "Select asset...",
+      "whatToCheck": "e.g., Check belt tension",
+      "instructions": "Detailed instructions...",
+      "unit": "e.g., °C, psi"
+    },
+    "toast": {
+      "routeCreated": "Inspection route created",
+      "routeActivated": "Route activated",
+      "routeDeactivated": "Route deactivated",
+      "routeDeleted": "Route deleted"
+    },
+    "validation": {
+      "nameAndCheckpointRequired": "Name and at least one checkpoint are required"
+    }
+  },
+  "onboarding": {
+    "title": "Premiers pas",
+    "description": "Complete these steps to set up your workspace",
+    "completed": "completed",
+    "addLocation": "Add your first location",
+    "addLocationDesc": "Set up the physical locations your team works at",
+    "inviteTeam": "Invite team members",
+    "inviteTeamDesc": "Add colleagues to start collaborating",
+    "addAsset": "Register an asset",
+    "addAssetDesc": "Track equipment and machinery",
+    "createChecklist": "Create a safety checklist",
+    "createChecklistDesc": "Build inspection templates for your team",
+    "customizeSettings": "Customize your settings",
+    "customizeSettingsDesc": "Brand your workspace and set preferences"
+  },
+  "invite": {
+    "title": "You've Been Invited",
+    "loading": "Validating invitation...",
+    "joinCompany": "Join {company}",
+    "role": "Rôle",
+    "invitedBy": "Invited by",
+    "accept": "Accept Invitation",
+    "expired": "This invitation has expired",
+    "expiredDescription": "The invitation link you followed is no longer valid. Please ask the person who invited you to send a new invitation.",
+    "invalid": "Invalid invitation link",
+    "invalidDescription": "This invitation link is not valid. Please check the link and try again, or contact your administrator.",
+    "alreadyAccepted": "This invitation has already been accepted",
+    "alreadyAcceptedDescription": "This invitation has already been used. You can sign in to your account."
+  },
+  "forgotPassword": {
+    "title": "Forgot Password",
+    "description": "Enter your email and we'll send you a reset link",
+    "send": "Send Reset Link",
+    "sent": "Check your email",
+    "sentDescription": "If an account exists with that email, we've sent a password reset link.",
+    "backToLogin": "Retour à la connexion",
+    "rateLimited": "Too many attempts. Please try again later."
+  },
+  "validation": {
+    "invalidEmail": "Please enter a valid email address"
+  },
+  "gps": {
+    "useMyLocation": "Use My Location",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "clickToPlace": "Click map to set location",
+    "clear": "Effacer"
+  },
+  "teams": {
+    "table": {
+      "team": "Team",
+      "leader": "Leader",
+      "members": "Members",
+      "status": "Statut"
+    }
+  },
+  "tasks.emptyHint": "Items assigned to you will appear here",
+  "notifications": {
+    "title": "Notifications",
+    "empty_title": "Aucune notification",
+    "empty_description": "You're all caught up! Notifications about tasks, news, and incidents will appear here."
+  },
+  "news": {
+    "noContent": "No content available."
+  },
+  "auth.signupUnavailable": "Sign up is not yet available",
+  "auth.signupUnavailableDesc": "Harmoniq is currently in private access. To get started, please contact your company administrator or reach out to our team for an invitation.",
+  "auth.contactUs": "Contactez-nous",
+  "auth.noAccount": "Pas encore de compte ?",
+  "auth.chooseApp": "Choisir l'application",
+  "auth.dashboard": "Tableau de bord admin",
+  "auth.mobileApp": "Agent de terrain",
+  "filterOptions": {
+    "severity": {
+      "low": "Faible",
+      "medium": "Moyen",
+      "high": "Élevé",
+      "critical": "Critique"
+    },
+    "incidentType": {
+      "injury": "Blessure",
+      "near_miss": "Presqu'accident",
+      "hazard": "Danger",
+      "equipment_failure": "Panne d'équipement",
+      "environmental": "Environnemental",
+      "fire": "Incendie",
+      "property_damage": "Dommages matériels"
+    },
+    "incidentStatus": {
+      "new": "Nouveau",
+      "in_progress": "En cours",
+      "in_review": "En révision",
+      "resolved": "Résolu"
+    },
+    "ticketStatus": {
+      "open": "Ouvert",
+      "in_progress": "En cours",
+      "resolved": "Résolu",
+      "closed": "Fermé"
+    },
+    "ticketPriority": {
+      "low": "Faible",
+      "medium": "Moyen",
+      "high": "Élevé",
+      "urgent": "Urgent"
+    },
+    "userRole": {
+      "admin": "Administrateur",
+      "manager": "Responsable",
+      "supervisor": "Superviseur",
+      "employee": "Employé"
+    },
+    "userStatus": {
+      "active": "Actif",
+      "inactive": "Inactif",
+      "pending": "En attente"
+    },
+    "assetStatus": {
+      "active": "Actif",
+      "maintenance": "Maintenance",
+      "retired": "Hors service"
+    },
+    "assetCondition": {
+      "excellent": "Excellent",
+      "good": "Bon",
+      "fair": "Correct",
+      "poor": "Mauvais"
+    },
+    "contentType": {
+      "news": "Actualités",
+      "announcement": "Annonce",
+      "alert": "Alerte",
+      "policy": "Politique",
+      "training": "Formation"
+    },
+    "contentStatus": {
+      "draft": "Brouillon",
+      "published": "Publié",
+      "archived": "Archivé"
+    },
+    "checklistStatus": {
+      "active": "Actif",
+      "draft": "Brouillon",
+      "archived": "Archivé"
+    },
+    "department": {
+      "operations": "Opérations",
+      "warehouse": "Entrepôt",
+      "production": "Production",
+      "office": "Bureau",
+      "maintenance": "Maintenance"
+    }
+  },
+  "priority": {
+    "critical": "Critique",
+    "high": "Élevé",
+    "medium": "Moyen",
+    "low": "Faible"
+  },
+  "emptyState": {
+    "noResults": "Aucun résultat trouvé",
+    "noResultsFilterDesc": "Try adjusting your search or filter criteria to find what you're looking for.",
+    "noResultsSearchDesc": "No items match your search. Try a different search term.",
+    "clearFilters": "Effacer les filtres",
+    "noData": "No {entity} yet",
+    "noDataDesc": "{entity} will appear here once created.",
+    "addEntity": "Add {entity}",
+    "offline": "You're offline",
+    "offlineDesc": "This content isn't available offline. Connect to the internet and try again.",
+    "retry": "Réessayer",
+    "loadFailed": "Échec du chargement des données",
+    "loadFailedDesc": "Something went wrong while fetching the data. Please try again."
+  },
+  "industry_templates": {
+    "_ui": {
+      "templateLibrary": "Bibliothèque de modèles",
+      "browseTemplates": "Parcourir les modèles de listes de contrôle par secteur",
+      "activate": "Activer",
+      "activateTemplate": "Activer le modèle",
+      "alreadyActivated": "Déjà activé",
+      "preview": "Aperçu",
+      "previewItems": "Aperçu des éléments",
+      "items": "éléments",
+      "regulation": "Réglementation",
+      "frequency": "Fréquence",
+      "category": "Catégorie",
+      "tags": "Étiquettes",
+      "filterByIndustry": "Filtrer par secteur",
+      "allIndustries": "Tous les secteurs",
+      "searchTemplates": "Rechercher des modèles...",
+      "noTemplatesFound": "Aucun modèle ne correspond à votre recherche",
+      "activateConfirm": "Cela créera une nouvelle liste de contrôle à partir de ce modèle. Vous pourrez la modifier avant de la publier à votre équipe.",
+      "activatedSuccess": "Modèle activé. Vous pouvez maintenant le modifier et le publier.",
+      "publishToApp": "Publier dans l’application terrain",
+      "unpublish": "Dépublier",
+      "archive": "Archiver",
+      "restore": "Restaurer",
+      "publishConfirm": "Cette liste de contrôle sera visible par les équipes terrain dans l’application mobile.",
+      "unpublishConfirm": "Cela retirera la liste de contrôle de l’application mobile. Les soumissions existantes seront conservées.",
+      "publishedSuccess": "Liste de contrôle publiée dans l’application terrain",
+      "unpublishedSuccess": "Liste de contrôle retirée de l’application terrain",
+      "archivedSuccess": "Liste de contrôle archivée",
+      "restoredSuccess": "Liste de contrôle restaurée au brouillon",
+      "draft": "Brouillon",
+      "published": "Publié",
+      "archived": "Archivé",
+      "recommendedForYou": "Recommandé pour votre secteur",
+      "otherIndustries": "Autres secteurs",
+      "templateCount": "{count} modèles disponibles",
+      "fromTemplate": "À partir d’un modèle",
+      "myTemplates": "Mes modèles",
+      "createTemplate": "Créer un modèle",
+      "recommended": "Recommandé",
+      "viewMyTemplates": "Voir dans Mes modèles",
+      "editRefine": "Cloner et modifier",
+      "pushAsIs": "Publier tel quel"
+    },
+    "_frequencies": {
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuel",
+      "quarterly": "Trimestriel",
+      "per_event": "Par événement",
+      "per_shift": "Par poste",
+      "continuous": "Continu"
+    },
+    "construction": {
+      "name": "Construction",
+      "description": "Listes de contrôle de sécurité pour les chantiers de construction, couvrant la protection contre les chutes, les échafaudages, l’excavation et les opérations d’équipement lourd",
+      "jha": {
+        "name": "Analyse des risques liés à la tâche (JHA)",
+        "description": "Processus systématique visant à identifier les dangers au travail avant chaque tâche, à évaluer la gravité des risques et à définir des mesures de maîtrise pour protéger les travailleurs",
+        "items": {
+          "task_description": "Décrire la tâche à effectuer",
+          "step_sequence": "Lister les étapes dans le bon ordre",
+          "hazards_per_step": "Identifier les dangers pour chaque étape",
+          "risk_severity": "Évaluer la gravité des risques identifiés (1-5)",
+          "risk_probability": "Évaluer la probabilité d’occurrence (1-5)",
+          "control_measures": "Décrire les mesures de maîtrise pour chaque danger",
+          "ppe_required": "Tous les EPI requis ont été identifiés et sont disponibles",
+          "responsible_person": "Nom de la personne responsable de cette tâche",
+          "workers_briefed": "Tous les travailleurs ont été informés des dangers et des mesures de maîtrise",
+          "sign_off": "Validation du superviseur effectuée"
+        }
+      },
+      "fall_protection": {
+        "name": "Audit de protection contre les chutes",
+        "description": "Inspection complète des systèmes de protection contre les chutes, notamment les garde-corps, les harnais, les points d’ancrage et les filets de sécurité, afin d’assurer la conformité aux règles de sécurité en hauteur",
+        "items": {
+          "guardrail_integrity": "Les garde-corps sont intacts et correctement fixés",
+          "harness_webbing": "Les sangles du harnais sont exemptes de coupures, d’effilochage ou de dommages",
+          "harness_d_ring": "L’anneau en D n’est ni plié, ni fissuré, ni corrodé",
+          "harness_stitching": "Toutes les coutures sont intactes, sans fils tirés",
+          "anchor_point_rating": "Le point d’ancrage est homologué pour la capacité de charge requise",
+          "safety_net_condition": "Les filets de sécurité sont correctement positionnés et en bon état",
+          "hole_covers_secured": "Tous les couvercles d’ouverture de plancher ou de toiture sont fixés et étiquetés",
+          "ladder_tie_off": "Les échelles sont correctement attachées ou sécurisées en tête"
+        }
+      },
+      "scaffold": {
+        "name": "Inspection des échafaudages",
+        "description": "Inspection détaillée des structures d’échafaudage afin de vérifier leur intégrité, leur montage correct et leur conformité aux normes de sécurité avant chaque utilisation",
+        "items": {
+          "base_plate_mudsill": "Les plaques d’assise et semelles sont en bon état",
+          "cross_bracing": "Le contreventement est bien fixé et correctement installé",
+          "planking_complete": "Le platelage est complet, sans espace supérieur à 1 pouce",
+          "guardrails_height": "Les garde-corps sont installés à 42 pouces de hauteur",
+          "toe_boards": "Des plinthes sont en place sur tous les côtés ouverts",
+          "access_ladder": "L’échelle d’accès est correctement sécurisée",
+          "load_capacity_posted": "La capacité de charge est clairement affichée",
+          "weather_damage": "Aucun dommage visible lié aux intempéries sur les composants de l’échafaudage"
+        }
+      },
+      "toolbox_talk": {
+        "name": "Compte rendu de briefing sécurité",
+        "description": "Documentation des briefings sécurité quotidiens réalisés sur site, incluant le sujet traité, les participants et les actions de suivi identifiées",
+        "items": {
+          "topic_covered": "Sujet abordé lors du briefing sécurité",
+          "presenter_name": "Nom de l’intervenant",
+          "attendee_count": "Nombre de participants présents",
+          "attendees_signed": "Tous les participants ont signé la feuille de présence",
+          "questions_raised": "Questions ou préoccupations soulevées pendant le briefing",
+          "follow_up_actions": "Actions de suivi identifiées et attribuées"
+        }
+      },
+      "excavation": {
+        "name": "Inspection des excavations et tranchées",
+        "description": "Inspection de sécurité des travaux d’excavation et de tranchée, vérifiant la classification du sol, les systèmes de protection et les accès sécurisés avant l’entrée des travailleurs dans la tranchée",
+        "items": {
+          "soil_classification": "Le sol a été correctement classifié",
+          "shoring_adequate": "L’étayage ou le talutage est adapté à la profondeur",
+          "spoil_pile_distance": "Le tas de déblais se trouve à au moins 2 pieds du bord de la tranchée",
+          "water_accumulation": "Aucune accumulation d’eau dangereuse dans la tranchée",
+          "atmospheric_testing": "Les contrôles atmosphériques ont été réalisés lorsque requis",
+          "egress_points": "Des points de sortie sont disponibles tous les 25 pieds",
+          "utilities_marked": "Tous les réseaux souterrains ont été localisés et marqués"
+        }
+      },
+      "crane": {
+        "name": "Contrôle pré-opération d’une grue ou d’un appareil de levage",
+        "description": "Contrôle de sécurité avant utilisation des grues et appareils de levage, vérifiant l’état mécanique, les qualifications de l’opérateur et la préparation du plan de levage",
+        "items": {
+          "wire_rope_condition": "Le câble métallique est exempt de torsions, de formation en cage d’oiseau et de torons cassés",
+          "hook_latch": "Le linguet de sécurité du crochet fonctionne",
+          "outriggers_deployed": "Les stabilisateurs sont entièrement déployés et reposent sur un sol stable",
+          "load_chart_available": "L’abaque de charge est disponible et lisible dans la cabine",
+          "swing_radius": "Le rayon de rotation est balisé et dégagé de tout personnel",
+          "operator_certification": "La certification de l’opérateur est en cours de validité",
+          "pre_lift_meeting": "La réunion préalable au levage a été réalisée"
+        }
+      }
+    },
+    "manufacturing": {
+      "name": "Fabrication",
+      "description": "Listes de contrôle de sécurité pour les sites de fabrication, couvrant le cadenassage/étiquetage, la protection des machines, l’ergonomie et la sécurité des ateliers de production",
+      "loto": {
+        "name": "Vérification du cadenassage/étiquetage",
+        "description": "Liste de contrôle de vérification des procédures de cadenassage/étiquetage afin de confirmer que les sources d’énergie dangereuses sont correctement isolées avant tout entretien ou opération de maintenance",
+        "items": {
+          "machine_identified": "La machine ou l’équipement a été correctement identifié",
+          "energy_sources_listed": "Toutes les sources d’énergie ont été identifiées et listées",
+          "isolation_devices": "Des dispositifs d’isolement ont été appliqués à toutes les sources d’énergie",
+          "stored_energy_released": "Toute énergie stockée ou résiduelle a été libérée",
+          "verification_attempted": "La vérification de l’isolement a été tentée",
+          "authorized_employee": "L’employé autorisé a validé le cadenassage",
+          "group_lockout": "Les procédures de cadenassage collectif ont été suivies (le cas échéant)",
+          "tags_attached": "Les étiquettes de cadenassage sont correctement fixées et lisibles"
+        }
+      },
+      "machine_guarding": {
+        "name": "Inspection de la protection des machines",
+        "description": "Inspection des dispositifs de protection des machines afin de vérifier que les protecteurs sont en place, que les interverrouillages fonctionnent et que les arrêts d’urgence sont accessibles et testés",
+        "items": {
+          "point_of_operation": "Les protecteurs du point d’opération sont en place et sécurisés",
+          "interlock_functioning": "Les interverrouillages de sécurité fonctionnent correctement",
+          "emergency_stop": "Le bouton d’arrêt d’urgence est accessible et testé",
+          "light_curtain": "L’alignement du rideau lumineux est correct (le cas échéant)",
+          "guard_mounting": "Les fixations des protecteurs sont serrées et sécurisées",
+          "no_bypass": "Aucun dispositif de contournement n’est présent sur les systèmes de sécurité",
+          "warning_labels": "Les étiquettes d’avertissement sont visibles et lisibles"
+        }
+      },
+      "ergonomic": {
+        "name": "Évaluation ergonomique",
+        "description": "Évaluation ergonomique du poste de travail afin d’identifier les risques liés aux mouvements répétitifs, aux postures contraignantes et aux efforts requis, avec des recommandations d’amélioration",
+        "items": {
+          "repetitive_motion": "La fréquence des mouvements répétitifs a été évaluée",
+          "force_requirements": "Les efforts requis restent dans des limites acceptables",
+          "awkward_postures": "Les postures contraignantes ont été identifiées et documentées",
+          "workstation_height": "La hauteur du poste de travail est adaptée au travailleur",
+          "tool_grip": "La conception de la prise en main de l’outil limite les contraintes",
+          "rest_breaks": "Un planning de pauses adapté est en place",
+          "modifications": "Les modifications recommandées ont été documentées"
+        }
+      },
+      "forklift": {
+        "name": "Contrôle quotidien avant utilisation du chariot élévateur",
+        "description": "Inspection quotidienne avant utilisation des chariots élévateurs et autres engins industriels motorisés, vérifiant les systèmes mécaniques, les dispositifs de sécurité et la préparation de l’opérateur",
+        "items": {
+          "tires_wheels": "Les pneus et les roues sont en bon état",
+          "forks_condition": "Les fourches ne présentent ni fissures, ni pliures, ni usure excessive",
+          "hydraulic_lines": "Les flexibles hydrauliques ne présentent ni fuite ni dommage",
+          "mast_chains": "Le mât et les chaînes fonctionnent correctement",
+          "horn_working": "Le klaxon fonctionne",
+          "lights_working": "Tous les feux fonctionnent (phares, feux arrière, gyrophare)",
+          "backup_alarm": "L’alarme de recul est audible",
+          "seatbelt": "La ceinture de sécurité est présente et fonctionnelle",
+          "brakes_tested": "Les freins ont été testés et répondent correctement",
+          "steering": "La direction répond correctement",
+          "battery_fuel": "Le niveau de charge de la batterie ou de carburant est suffisant",
+          "fire_extinguisher": "L’extincteur est monté et chargé"
+        }
+      },
+      "chemical_spill": {
+        "name": "Préparation à l’intervention en cas de déversement chimique",
+        "description": "Évaluation de la préparation à une intervention en cas de déversement chimique, vérifiant le contenu de la trousse d’intervention, l’équipement d’urgence, la disponibilité des EPI et l’accessibilité des voies d’évacuation",
+        "items": {
+          "spill_kit_location": "L’emplacement de la trousse d’intervention est connu et accessible",
+          "spill_kit_contents": "Le contenu de la trousse d’intervention est complet et non expiré",
+          "sds_binder": "Le classeur des FDS est à jour et accessible",
+          "eyewash_tested": "La douche oculaire a été testée (rinçage hebdomadaire)",
+          "shower_tested": "La douche d’urgence a été testée",
+          "ppe_available": "Les EPI requis pour l’intervention sont disponibles",
+          "emergency_contacts": "Les coordonnées d’urgence sont affichées",
+          "evacuation_route": "L’itinéraire d’évacuation est dégagé et signalé"
+        }
+      },
+      "safety_walk": {
+        "name": "Ronde de sécurité de l’atelier de production",
+        "description": "Ronde générale de sécurité de l’atelier de production afin d’évaluer le rangement, le port des EPI, l’état de préparation des équipements d’urgence et les conditions globales de sécurité",
+        "items": {
+          "aisles_clear": "Les allées et passages sont dégagés et sans obstacle",
+          "ppe_compliance": "Tous les travailleurs portent les EPI requis",
+          "housekeeping": "Le niveau d’ordre et de propreté est satisfaisant dans toute la zone",
+          "emergency_exits": "Les sorties de secours sont dégagées et signalées",
+          "fire_extinguishers": "Les extincteurs sont accessibles et inspectés",
+          "noise_levels": "Les niveaux de bruit restent dans des limites acceptables",
+          "first_aid_kit": "La trousse de premiers secours est complète et accessible",
+          "general_observations": "Observations ou préoccupations supplémentaires en matière de sécurité"
+        }
+      }
+    },
+    "oil_gas": {
+      "name": "Pétrole et gaz",
+      "description": "Listes de contrôle de sécurité pour les opérations pétrolières et gazières, couvrant les permis de travail, l’entrée en espace confiné, la sécurité H2S et les inspections de site de puits",
+      "ptw": {
+        "name": "Permis de travail",
+        "description": "Processus d’autorisation formel pour les activités à haut risque, garantissant que les dangers sont identifiés, que les mesures de maîtrise sont en place et que toutes les parties ont examiné le périmètre des travaux",
+        "items": {
+          "work_description": "Les travaux à réaliser ont été clairement décrits",
+          "hazards_identified": "Tous les dangers ont été identifiés et documentés",
+          "gas_test_results": "Les résultats des tests de gaz sont dans des limites sûres",
+          "isolation_verified": "L’isolement des sources d’énergie a été vérifié",
+          "ppe_specified": "Les EPI requis ont été précisés et sont disponibles",
+          "emergency_procedures": "Les procédures d’urgence ont été communiquées",
+          "time_validity": "La durée de validité du permis a été définie et communiquée",
+          "supervisor_authorization": "Le superviseur a autorisé les travaux"
+        }
+      },
+      "confined_space": {
+        "name": "Entrée en espace confiné",
+        "description": "Liste de contrôle du permis d’entrée en espace confiné, incluant la surveillance atmosphérique, la mise en place de la ventilation, la planification du sauvetage et les exigences de surveillance continue",
+        "items": {
+          "atmospheric_o2": "Le taux d’oxygène est compris entre 19,5 % et 23,5 %",
+          "atmospheric_lel": "La valeur de la LIE est inférieure à 10 % de la limite inférieure d’explosivité",
+          "atmospheric_h2s": "Le niveau de H2S est inférieur au seuil d’action",
+          "atmospheric_co": "Le niveau de CO est inférieur à la limite d’exposition admissible",
+          "ventilation_setup": "L’équipement de ventilation est installé et fonctionne",
+          "rescue_plan": "Le plan de sauvetage a été examiné et est en place",
+          "attendant_assigned": "Un surveillant qualifié a été désigné",
+          "communication_method": "Le mode de communication a été défini et testé",
+          "entry_permit_signed": "Le permis d’entrée a été rempli et signé",
+          "continuous_monitoring": "La surveillance atmosphérique continue est active"
+        }
+      },
+      "h2s": {
+        "name": "Contrôle de sécurité H2S",
+        "description": "Vérification de sécurité avant travaux dans les zones exposées au sulfure d’hydrogène, couvrant les détecteurs individuels, les appareils respiratoires et les protocoles de travail en binôme",
+        "items": {
+          "personal_monitor": "Le détecteur individuel H2S est étalonné et fonctionne",
+          "wind_sock": "La manche à air ou l’indicateur de direction du vent est visible",
+          "muster_points": "Les points de rassemblement ont été identifiés et communiqués",
+          "scba_staged": "L’appareil respiratoire isolant est prêt à l’emploi",
+          "buddy_system": "Le travail en binôme est confirmé et appliqué",
+          "h2s_training": "La formation H2S est à jour pour tout le personnel sur site",
+          "alarm_threshold": "Le seuil d’alarme est réglé à 10 ppm"
+        }
+      },
+      "hot_work": {
+        "name": "Permis de travaux à chaud",
+        "description": "Liste de contrôle de sécurité pour les travaux à chaud tels que le soudage, la découpe ou le meulage dans les zones présentant un risque d’incendie ou d’explosion",
+        "items": {
+          "fire_watch": "Un surveillant incendie a été désigné et est en poste",
+          "radius_cleared": "La zone dans un rayon de 35 pieds a été dégagée de toute matière combustible",
+          "fire_extinguisher": "Un extincteur est disponible à portée de main",
+          "gas_test_lel": "Le test de gaz confirme un niveau inférieur à 10 % de la LIE",
+          "ventilation": "Une ventilation adéquate a été confirmée",
+          "post_work_watch": "Une surveillance incendie de 30 minutes après les travaux est prévue",
+          "hot_work_area": "La zone de travaux à chaud a été correctement délimitée"
+        }
+      },
+      "well_site": {
+        "name": "Inspection du site de puits",
+        "description": "Inspection de routine des opérations et équipements du site de puits, couvrant le fonctionnement du BOP, l’intégrité des conduites, le confinement et la préparation aux situations d’urgence",
+        "items": {
+          "bop_function": "Le BOP a fait l’objet d’un essai fonctionnel",
+          "flowline_integrity": "Les conduites sont intactes et ne présentent aucune fuite visible",
+          "tank_levels": "Les niveaux des cuves se situent dans la plage acceptable",
+          "containment_integrity": "Le confinement secondaire est intact",
+          "flare_operation": "Le système de torchère fonctionne correctement",
+          "road_conditions": "Les conditions de la route d’accès sont sûres",
+          "signage_visible": "La signalisation requise est visible et lisible",
+          "emergency_equipment": "L’équipement d’urgence est accessible et fonctionnel"
+        }
+      },
+      "contractor": {
+        "name": "Accueil sécurité des sous-traitants",
+        "description": "Liste de contrôle d’accueil sécurité pour les sous-traitants entrant sur le site, vérifiant la réalisation de l’intégration, la connaissance des dangers, les EPI et la documentation requise",
+        "items": {
+          "safety_induction": "Le sous-traitant a suivi l’accueil sécurité",
+          "site_hazards": "Les dangers spécifiques au site ont été passés en revue",
+          "emergency_procedures": "Les procédures d’urgence ont été comprises",
+          "ppe_verified": "Les EPI ont été fournis et vérifiés",
+          "work_permit": "Le permis de travail a été obtenu",
+          "insurance_docs": "Les documents d’assurance sont au dossier"
+        }
+      }
+    },
+    "healthcare": {
+      "name": "Santé",
+      "description": "Listes de contrôle de sécurité pour les établissements de santé, couvrant la prévention des infections, l’élimination des objets piquants et tranchants, la sécurité des patients et l’état de préparation des équipements d’urgence",
+      "infection_control": {
+        "name": "Ronde de prévention des infections",
+        "description": "Ronde de prévention des infections visant à vérifier la disponibilité des dispositifs d’hygiène des mains, le niveau de stock des EPI, les protocoles d’isolement et le respect de la désinfection des surfaces",
+        "items": {
+          "hand_hygiene_stations": "Les stations d’hygiène des mains sont approvisionnées en savon et en solution hydroalcoolique",
+          "ppe_supply": "Le stock d’EPI est suffisant pour l’unité",
+          "isolation_signage": "La signalisation d’isolement est correcte et en place",
+          "sharps_containers": "Les collecteurs d’objets piquants et tranchants ne sont pas trop remplis (sous la ligne des 3/4)",
+          "surface_disinfection": "Le planning de désinfection des surfaces est respecté",
+          "patient_placement": "Le placement du patient est adapté à son statut infectieux"
+        }
+      },
+      "sharps": {
+        "name": "Audit d’élimination des objets piquants et tranchants",
+        "description": "Audit des pratiques d’élimination des objets piquants et tranchants et de la gestion des collecteurs afin d’assurer une manipulation sûre et la conformité réglementaire dans les zones cliniques",
+        "items": {
+          "container_fill_level": "Le niveau de remplissage du collecteur est inférieur à la ligne des 3/4",
+          "mounting_secure": "Le collecteur est solidement fixé",
+          "no_protruding_items": "Aucun objet ne dépasse du collecteur",
+          "label_visible": "L’étiquette du collecteur est visible et lisible",
+          "replacements_available": "Des collecteurs de remplacement sont disponibles à proximité",
+          "disposal_log": "Le registre d’élimination est à jour",
+          "needle_free_systems": "Des systèmes sans aiguille sont utilisés lorsque cela s’applique"
+        }
+      },
+      "patient_safety": {
+        "name": "Ronde de sécurité des patients",
+        "description": "Ronde de sécurité au chevet visant à vérifier l’identification du patient, l’évaluation du risque de chute, la vérification des médicaments et l’actualisation du plan de soins",
+        "items": {
+          "bed_rails": "Les barrières de lit sont adaptées aux besoins du patient",
+          "call_bell": "La sonnette d’appel est à portée du patient",
+          "fall_risk": "Le risque de chute a été évalué et documenté",
+          "medication_verification": "La vérification des médicaments a été effectuée",
+          "id_band": "Le bracelet d’identification du patient est présent et correct",
+          "allergies_documented": "Les allergies sont documentées et visibles",
+          "care_plan": "Le plan de soins est à jour"
+        }
+      },
+      "emergency_equip": {
+        "name": "Contrôle de l’équipement d’urgence",
+        "description": "Inspection des équipements d’urgence cliniques, notamment les chariots d’urgence, les défibrillateurs, les dispositifs d’aspiration et les médicaments d’urgence, afin de vérifier leur disponibilité immédiate",
+        "items": {
+          "crash_cart_sealed": "Le chariot d’urgence est scellé et l’indicateur d’intégrité est intact",
+          "defibrillator": "Le défibrillateur est chargé et l’autotest est réussi",
+          "suction_working": "L’équipement d’aspiration fonctionne",
+          "o2_supply": "L’approvisionnement en oxygène est suffisant",
+          "emergency_meds": "Les médicaments d’urgence ne sont pas périmés",
+          "resuscitation_bag": "Le ballon de réanimation et le masque sont intacts"
+        }
+      },
+      "hand_hygiene": {
+        "name": "Observation de l’hygiène des mains",
+        "description": "Audit par observation directe de la conformité à l’hygiène des mains selon les cinq moments de l’OMS, documentant la technique et les taux de conformité",
+        "items": {
+          "before_patient": "L’hygiène des mains a été réalisée avant le contact avec le patient",
+          "after_patient": "L’hygiène des mains a été réalisée après le contact avec le patient",
+          "after_surroundings": "L’hygiène des mains a été réalisée après contact avec l’environnement du patient",
+          "before_clean_procedure": "L’hygiène des mains a été réalisée avant un geste propre ou aseptique",
+          "after_body_fluid": "L’hygiène des mains a été réalisée après exposition à des liquides biologiques",
+          "technique_correct": "La technique d’hygiène des mains observée est correcte",
+          "compliance_notes": "Observations complémentaires sur la conformité"
+        }
+      },
+      "fire_life": {
+        "name": "Ronde de sécurité incendie et protection des personnes",
+        "description": "Ronde de l’établissement visant à vérifier la conformité en matière de sécurité incendie et de protection des personnes, y compris la signalisation des sorties, les portes coupe-feu, le dégagement des couloirs et le bon fonctionnement des détecteurs",
+        "items": {
+          "exit_signs": "Les panneaux de sortie sont éclairés et visibles",
+          "fire_doors": "Les portes coupe-feu se ferment correctement",
+          "corridors_clear": "Les couloirs sont dégagés de tout équipement et obstacle",
+          "extinguishers": "Les extincteurs sont inspectés et accessibles",
+          "smoke_detectors": "Les détecteurs de fumée sont testés et fonctionnels",
+          "evacuation_plan": "Le plan d’évacuation est affiché et à jour"
+        }
+      }
+    },
+    "warehousing": {
+      "name": "Entreposage",
+      "description": "Listes de contrôle de sécurité pour les opérations d’entrepôt, couvrant les inspections de chariots élévateurs, la sécurité des quais, la protection incendie et la gestion des zones piétonnes",
+      "forklift": {
+        "name": "Contrôle quotidien avant utilisation du chariot élévateur",
+        "description": "Inspection quotidienne avant utilisation des chariots élévateurs d’entrepôt, couvrant l’état mécanique, les dispositifs de sécurité et la vérification de la certification de l’opérateur",
+        "items": {
+          "tires_wheels": "Les pneus et les roues sont en bon état",
+          "forks_condition": "Les fourches ne présentent ni fissures, ni pliures, ni usure excessive",
+          "hydraulic_lines": "Les flexibles hydrauliques ne présentent ni fuite ni dommage",
+          "mast_chains": "Le mât et les chaînes fonctionnent correctement",
+          "horn_working": "Le klaxon fonctionne",
+          "lights_working": "Tous les feux fonctionnent",
+          "backup_alarm": "L’alarme de recul est audible",
+          "seatbelt": "La ceinture de sécurité est présente et fonctionnelle",
+          "brakes_tested": "Les freins ont été testés et répondent correctement",
+          "steering": "La direction répond correctement",
+          "battery_fuel": "Le niveau de charge de la batterie ou de carburant est suffisant",
+          "fire_extinguisher": "L’extincteur est monté et chargé",
+          "operator_cert": "La certification de l’opérateur est enregistrée et à jour"
+        }
+      },
+      "dock": {
+        "name": "Contrôle de sécurité du quai",
+        "description": "Contrôle de sécurité avant chargement pour les opérations de quai, vérifiant les plaques de quai, les cales de roues, l’arrimage de la remorque et les conditions d’éclairage",
+        "items": {
+          "dock_plate": "La plaque ou le pont de quai est en bon état",
+          "wheel_chocks": "Les cales de roues sont en place et sécurisées",
+          "trailer_secured": "La remorque est sécurisée (barre ICC engagée)",
+          "dock_leveler": "Le niveleur de quai fonctionne correctement",
+          "lighting": "L’éclairage de la zone de chargement est suffisant",
+          "gap_check": "Aucun espace dangereux entre la remorque et le quai"
+        }
+      },
+      "fire_extinguisher": {
+        "name": "Inspection mensuelle des extincteurs",
+        "description": "Inspection visuelle mensuelle des extincteurs afin de vérifier leur accessibilité, leur niveau de charge, leur état physique et la validité de l’étiquette d’inspection",
+        "items": {
+          "accessible": "L’extincteur n’est pas obstrué et reste accessible",
+          "charge_gauge": "Le manomètre se trouve dans la zone verte",
+          "pin_seal": "La goupille et le scellé sont intacts",
+          "no_damage": "Aucun dommage visible sur le corps de l’extincteur",
+          "mounting_height": "La hauteur de fixation est correcte",
+          "inspection_tag": "L’étiquette d’inspection est à jour et signée",
+          "correct_type": "Le type d’extincteur est adapté aux risques de la zone"
+        }
+      },
+      "rack": {
+        "name": "Audit d’intégrité des rayonnages",
+        "description": "Audit de l’intégrité structurelle des rayonnages d’entrepôt, vérifiant l’absence de dommages, le bon ancrage, le respect de la capacité de charge et la sécurité des connecteurs",
+        "items": {
+          "upright_damage": "Les montants ne présentent ni bosses, ni déformation, ni torsion",
+          "beam_connectors": "Les verrous des connecteurs de lisses sont en place",
+          "base_plate": "L’ancrage de la plaque de base est sécurisé",
+          "load_capacity": "Les étiquettes de capacité de charge sont affichées et visibles",
+          "overloading": "Aucun signe de surcharge au-delà de la capacité nominale",
+          "wire_decking": "Le platelage grillagé est en bon état (le cas échéant)"
+        }
+      },
+      "pedestrian": {
+        "name": "Contrôle des zones de sécurité piétonnes",
+        "description": "Inspection des zones de sécurité piétonnes dans l’entrepôt, vérifiant les marquages au sol, les barrières, les miroirs et la séparation entre les flux piétons et véhicules",
+        "items": {
+          "floor_markings": "Les marquages au sol sont visibles et non usés",
+          "barriers_intact": "Les barrières sont intactes et correctement positionnées",
+          "blind_corner_mirrors": "Des miroirs sont en place dans les angles morts",
+          "speed_limit_signs": "Les panneaux de limitation de vitesse sont affichés et visibles",
+          "pedestrian_crossings": "Les passages piétons sont clairement matérialisés",
+          "separate_paths": "Des cheminements séparés existent pour les piétons et les véhicules"
+        }
+      },
+      "receiving": {
+        "name": "Ronde de sécurité du quai de réception",
+        "description": "Ronde de sécurité de la zone de réception afin d’évaluer le nettoyage des déversements, les risques de glissade, l’éclairage, le port des EPI et les pratiques de manutention sécurisées",
+        "items": {
+          "spills_cleaned": "Tous les déversements ont été nettoyés",
+          "slip_hazards": "Aucun risque de glissade ou de trébuchement n’a été identifié",
+          "lighting_working": "Tout l’éclairage de la zone de réception fonctionne",
+          "ppe_compliance": "Les travailleurs portent les EPI requis (chaussures de sécurité, gants, gilet)",
+          "box_cutter_safety": "Les cutters sont utilisés en toute sécurité avec des lames rétractables",
+          "ergonomic_lifting": "Les bonnes techniques de levage sont respectées"
+        }
+      }
+    },
+    "mining": {
+      "name": "Exploitation minière",
+      "description": "Listes de contrôle de sécurité pour les opérations minières, couvrant l’évaluation des terrains, la ventilation, le tir, les équipements mobiles et les procédures d’évacuation d’urgence",
+      "strata": {
+        "name": "Évaluation des terrains avant poste",
+        "description": "Évaluation avant poste des conditions du terrain, incluant la stabilité du toit, l’intégrité des parois, l’état des piliers et l’adéquation des soutènements avant le début des travaux souterrains",
+        "items": {
+          "roof_condition": "L’état du toit est stable et ne montre aucun signe de détérioration",
+          "rib_stability": "Les parois sont stables et ne s’écaillent pas",
+          "pillar_condition": "Les piliers de soutènement sont intacts et correctement dimensionnés",
+          "scaling_needed": "Les roches instables ont été purgées ou sont absentes",
+          "support_installation": "L’installation du soutènement du toit est adéquate",
+          "geological_changes": "Aucun changement géologique inattendu n’a été observé",
+          "water_ingress": "Les infiltrations d’eau sont maîtrisées ou absentes"
+        }
+      },
+      "ventilation": {
+        "name": "Contrôle du système de ventilation",
+        "description": "Vérification des systèmes de ventilation souterrains, y compris le fonctionnement des ventilateurs, la vitesse de l’air, les niveaux de gaz et la conformité au plan de ventilation",
+        "items": {
+          "fan_operation": "Le ventilateur principal de ventilation fonctionne correctement",
+          "air_velocity": "Les mesures de vitesse d’air se situent dans la plage requise",
+          "methane_levels": "Les niveaux de méthane sont inférieurs à 1 %",
+          "co_levels": "Les niveaux de monoxyde de carbone restent dans des limites sûres",
+          "dust_levels": "Les niveaux de poussière respectent les limites d’exposition admissibles",
+          "ventilation_controls": "Les portes et rideaux de ventilation sont en place",
+          "air_direction": "La direction de l’air est conforme au plan de ventilation"
+        }
+      },
+      "blast": {
+        "name": "Sécurité de la zone de tir",
+        "description": "Liste de contrôle de sécurité avant et après tir couvrant l’évacuation du personnel, les postes de garde, les signaux d’avertissement et la vérification avant réintégration",
+        "items": {
+          "personnel_cleared": "Tout le personnel a été évacué de la zone de tir",
+          "guard_posts": "Des postes de garde ont été établis à tous les points d’accès",
+          "warning_signals": "Les signaux d’avertissement ont été donnés conformément à la procédure",
+          "blast_pattern": "Le plan de tir a été vérifié par le boutefeu",
+          "misfire_check": "Les vérifications de ratés ont été effectuées",
+          "reentry_time": "Le délai d’attente avant réintégration a été respecté",
+          "post_blast_ventilation": "La ventilation après tir a été rétablie"
+        }
+      },
+      "ppe": {
+        "name": "Contrôle de conformité des EPI",
+        "description": "Inspection de conformité des EPI du personnel minier, vérifiant l’état et l’utilisation correcte de tous les équipements de sécurité requis",
+        "items": {
+          "hard_hat": "Le casque est porté et en bon état",
+          "safety_glasses": "Les lunettes de sécurité sont portées et ne sont ni rayées ni endommagées",
+          "steel_toe_boots": "Les chaussures de sécurité sont portées et en bon état",
+          "hearing_protection": "La protection auditive est portée dans les zones désignées",
+          "reflective_vest": "Le gilet haute visibilité est porté et visible",
+          "self_rescuer": "L’appareil autosauveteur est accessible et inspecté",
+          "cap_lamp": "La lampe de casque fonctionne et est entièrement chargée",
+          "gloves": "Les gants adaptés à la tâche sont portés"
+        }
+      },
+      "mobile_equip": {
+        "name": "Contrôle pré-opération des équipements mobiles",
+        "description": "Inspection pré-opération des équipements miniers mobiles couvrant les freins, la direction, l’éclairage, la lutte contre l’incendie et les systèmes de protection contre le renversement",
+        "items": {
+          "brakes": "Les freins de service et de stationnement fonctionnent",
+          "steering": "La direction est réactive et correcte",
+          "lights": "Tous les feux fonctionnent (phares, feux arrière, feux de gabarit)",
+          "horn": "Le klaxon est audible",
+          "backup_alarm": "L’alarme de recul fonctionne",
+          "fire_suppression": "Le système de lutte contre l’incendie est chargé et prêt",
+          "seatbelt": "La ceinture de sécurité est fonctionnelle",
+          "tires": "Les pneus sont dans un état acceptable",
+          "hydraulics": "Le système hydraulique ne présente aucune fuite",
+          "rollover_protection": "La structure de protection contre le renversement est intacte",
+          "operator_cert": "La certification de l’opérateur est à jour"
+        }
+      },
+      "emergency_escape": {
+        "name": "Exercice d’évacuation d’urgence",
+        "description": "Compte rendu d’un exercice d’évacuation d’urgence, documentant la participation, les tests d’itinéraires, les temps d’enfilage des autosauveteurs et la performance globale d’évacuation",
+        "items": {
+          "all_workers": "Tous les travailleurs du poste ont participé à l’exercice",
+          "primary_exit": "L’itinéraire d’évacuation principal a été testé avec succès",
+          "secondary_exit": "L’itinéraire d’évacuation secondaire a été testé avec succès",
+          "self_rescuer_donning": "Le temps d’enfilage de l’autosauveteur a été enregistré",
+          "refuge_chamber": "La chambre de refuge a été localisée et inspectée",
+          "communication_check": "Les systèmes de communication ont été testés",
+          "evacuation_time": "Le temps total d’évacuation a été enregistré"
+        }
+      }
+    },
+    "food_beverage": {
+      "name": "Agroalimentaire",
+      "description": "Listes de contrôle de sécurité et de qualité pour les opérations agroalimentaires, couvrant le HACCP, la gestion des allergènes, la chaîne du froid, l’hygiène sanitaire et l’hygiène des employés",
+      "haccp": {
+        "name": "Inspection HACCP",
+        "description": "Inspection HACCP visant à vérifier la surveillance des points critiques de contrôle, la conformité des températures et la documentation des actions correctives",
+        "items": {
+          "ccp_monitoring": "Les points critiques de contrôle sont surveillés selon le planning",
+          "temp_receiving": "Les températures à la réception sont dans la plage acceptable",
+          "temp_storage": "Les températures de stockage sont dans la plage acceptable",
+          "temp_cooking": "Les températures de cuisson respectent les exigences minimales",
+          "temp_holding": "Les températures de maintien sont dans la plage de sécurité",
+          "corrective_actions": "Les actions correctives sont documentées en cas d’écart",
+          "verification": "Les activités de vérification sont réalisées conformément au plan",
+          "records_reviewed": "Les enregistrements HACCP ont été relus et signés"
+        }
+      },
+      "allergen": {
+        "name": "Audit de gestion des allergènes",
+        "description": "Audit des pratiques de gestion des allergènes, incluant la vérification du nettoyage, l’exactitude de l’étiquetage, la séparation des ingrédients et la conformité de la formation du personnel",
+        "items": {
+          "cleaning_verified": "Le nettoyage entre les séries de production contenant des allergènes est vérifié",
+          "label_accuracy": "Les étiquettes des produits mentionnent correctement tous les allergènes",
+          "ingredient_segregation": "Les ingrédients allergènes sont correctement séparés au stockage",
+          "shared_equipment": "Les protocoles liés aux équipements partagés sont respectés",
+          "staff_training": "La formation du personnel à la gestion des allergènes est à jour"
+        }
+      },
+      "cold_chain": {
+        "name": "Journal de température de la chaîne du froid",
+        "description": "Journal de suivi des températures pour garantir l’intégrité de la chaîne du froid, couvrant les réfrigérateurs, congélateurs, zones de réception et véhicules de transport, avec gestion des écarts",
+        "items": {
+          "refrigerator_temps": "Les températures des réfrigérateurs sont inférieures à 40 °F / 4 °C",
+          "freezer_temps": "Les températures des congélateurs sont inférieures ou égales à 0 °F / -18 °C",
+          "receiving_temps": "Les températures des produits à la réception sont dans la plage attendue",
+          "transport_temps": "Les températures du véhicule de transport ont été vérifiées",
+          "deviation_response": "Les écarts de température ont été documentés et traités"
+        }
+      },
+      "sanitation": {
+        "name": "Audit sanitaire",
+        "description": "Audit d’hygiène des installations couvrant les surfaces en contact avec les aliments, les siphons de sol, la lutte antiparasitaire, les postes de lavage des mains et le stockage des produits chimiques",
+        "items": {
+          "food_contact_surfaces": "Les surfaces en contact avec les aliments sont nettoyées et désinfectées",
+          "floor_drains": "Les siphons de sol sont dégagés et fonctionnels",
+          "pest_control": "Les postes de lutte antiparasitaire sont contrôlés et entretenus",
+          "hand_wash_stations": "Les postes de lavage des mains sont approvisionnés (savon, essuie-mains, désinfectant)",
+          "chemical_storage": "Les produits chimiques de nettoyage sont correctement stockés et étiquetés"
+        }
+      },
+      "hygiene": {
+        "name": "Contrôle de l’hygiène des employés",
+        "description": "Contrôle du respect des règles d’hygiène du personnel dans les zones de production alimentaire, vérifiant les tenues, les dispositifs de retenue des cheveux, la politique bijoux, la protection des plaies et le lavage des mains",
+        "items": {
+          "clean_uniform": "L’employé porte une tenue de travail propre",
+          "hair_restraint": "La charlotte, casquette ou protection de barbe est correctement portée",
+          "no_jewelry": "Aucun bijou n’est porté dans la zone de production",
+          "wounds_covered": "Toute coupure ou plaie est correctement protégée",
+          "illness_reporting": "Les consignes de déclaration de maladie ont été communiquées",
+          "handwashing": "Un lavage des mains correct a été observé",
+          "glove_use": "Les gants sont utilisés et changés de manière appropriée"
+        }
+      },
+      "shipping": {
+        "name": "Inspection expédition/réception",
+        "description": "Inspection des expéditions entrantes et sortantes du point de vue de la sécurité alimentaire, vérifiant la propreté des véhicules, les températures, l’intégrité des emballages et la traçabilité des lots",
+        "items": {
+          "vehicle_cleanliness": "Le véhicule de livraison est propre et exempt de contamination",
+          "temperature_verified": "Les températures des produits ont été vérifiées à l’arrivée",
+          "packaging_integrity": "L’emballage est intact, sans dommage ni altération",
+          "date_codes": "Les codes date ont été contrôlés et sont acceptables",
+          "rejected_items": "Les articles refusés ont été documentés et séparés",
+          "lot_traceability": "Les numéros de lot ont été enregistrés pour assurer la traçabilité"
+        }
+      }
+    },
+    "utilities": {
+      "name": "Services publics",
+      "description": "Listes de contrôle de sécurité pour les opérations de réseaux électriques, couvrant la conformité au risque d’arc électrique, les inspections de postes électriques, le dégagement des lignes et les procédures de manœuvre",
+      "arc_flash": {
+        "name": "Vérification de conformité au risque d’arc électrique",
+        "description": "Vérification de conformité pour la gestion du risque d’arc électrique, garantissant l’analyse de l’énergie incidente, l’adéquation de la catégorie d’EPI et l’autorisation des travaux sous tension",
+        "items": {
+          "incident_energy": "Le niveau d’énergie incidente a été déterminé pour la zone de travail",
+          "ppe_category": "La catégorie d’EPI correspond au niveau d’énergie incidente",
+          "approach_boundaries": "Les limites d’approche sont matérialisées et communiquées",
+          "energized_permit": "Un permis de travail sous tension a été obtenu",
+          "buddy_system": "Le travail en binôme est en place pour les interventions sous tension",
+          "de_energize_eval": "L’évaluation visant à mettre hors tension en priorité a été réalisée"
+        }
+      },
+      "substation": {
+        "name": "Inspection de poste électrique",
+        "description": "Inspection de routine des équipements et infrastructures de poste électrique, couvrant les transformateurs, les disjoncteurs, les réseaux de terre et la sécurité périmétrique",
+        "items": {
+          "transformer_oil": "Les niveaux d’huile du transformateur sont dans la plage normale",
+          "breaker_operation": "Le nombre de manœuvres du disjoncteur est enregistré",
+          "ground_grid": "Les connexions du réseau de terre sont intactes",
+          "fence_security": "La clôture périmétrique est sécurisée et ne présente aucune brèche",
+          "signage_visible": "La signalisation d’avertissement et d’identification est visible",
+          "vegetation_clearance": "Le dégagement de la végétation autour des équipements est maintenu",
+          "animal_guards": "Les protections contre les animaux sont en place et intactes"
+        }
+      },
+      "vegetation": {
+        "name": "Audit de gestion de la végétation",
+        "description": "Audit des pratiques de gestion de la végétation le long des couloirs de lignes électriques, vérifiant les distances de dégagement, les plannings d’élagage et la conformité environnementale",
+        "items": {
+          "row_clearance": "Les distances de dégagement de l’emprise respectent les exigences",
+          "trimming_completed": "L’élagage prévu des arbres a été réalisé",
+          "growth_assessment": "L’évaluation du taux de croissance est documentée",
+          "herbicide_records": "Les enregistrements d’application d’herbicides sont à jour",
+          "endangered_species": "Le contrôle relatif aux espèces protégées a été réalisé",
+          "access_road": "L’état de la voie d’accès est acceptable"
+        }
+      },
+      "line_clearance": {
+        "name": "Audit de dégagement des lignes",
+        "description": "Audit de sécurité pour les travaux de dégagement sur des lignes électriques hors tension, vérifiant l’isolement, la mise à la terre de protection et le respect des distances minimales d’approche",
+        "items": {
+          "line_identified": "La ligne a été identifiée et son isolement confirmé",
+          "grounds_installed": "Les mises à la terre de protection ont été installées",
+          "approach_distance": "La distance minimale d’approche est respectée",
+          "rubber_goods": "Les équipements isolants en caoutchouc sont testés et dans leur période de certification",
+          "traffic_control": "La gestion de la circulation est en place lorsque requis"
+        }
+      },
+      "switching": {
+        "name": "Procédure de manœuvre",
+        "description": "Liste de contrôle de procédure de manœuvre pas à pas pour les réseaux de distribution électrique, garantissant la vérification à deux personnes, le contrôle de tension et la coordination avec le centre de conduite",
+        "items": {
+          "procedure_printed": "La procédure de manœuvre pas à pas est imprimée et disponible",
+          "two_person_rule": "La règle des deux personnes est respectée",
+          "isolation_verified": "Les points d’isolement ont été vérifiés",
+          "voltage_test": "La vérification de tension test-mise à la terre-test a été effectuée",
+          "scada_notification": "Le centre de conduite SCADA a été informé",
+          "operating_log": "Le journal d’exploitation a été mis à jour"
+        }
+      },
+      "pole_climbing": {
+        "name": "Sécurité pour l’ascension des poteaux et pylônes",
+        "description": "Liste de contrôle de sécurité avant ascension pour les travaux sur poteaux et pylônes, vérifiant les équipements antichute, l’intégrité de la structure et la disponibilité des dispositifs de sauvetage",
+        "items": {
+          "fall_protection": "Les équipements de protection contre les chutes ont été inspectés",
+          "climbing_equipment": "L’équipement d’ascension est adapté et homologué",
+          "pole_tested": "Le poteau en bois a été testé (essai au marteau/perçage)",
+          "structure_integrity": "L’intégrité de la structure a été vérifiée",
+          "rescue_device": "Un dispositif de sauvetage individuel est disponible",
+          "communication": "La communication avec l’équipe au sol a été établie"
+        }
+      }
+    },
+    "transportation": {
+      "name": "Transport",
+      "description": "Listes de contrôle de sécurité pour les opérations de transport commercial, couvrant les inspections de véhicules, l’arrimage des chargements, les heures de service et le transport de matières dangereuses",
+      "pre_trip": {
+        "name": "Inspection pré-départ du véhicule",
+        "description": "Inspection complète avant départ des véhicules commerciaux couvrant les pneus, les freins, les feux, les rétroviseurs, les dispositifs d’attelage et les équipements d’urgence",
+        "items": {
+          "tires": "Les pneus présentent une profondeur de sculpture suffisante et une pression correcte",
+          "brakes_air": "La pression d’air est suffisante et le système de freinage fonctionne",
+          "lights_all": "Tous les feux fonctionnent (phares, feux arrière, feux de gabarit, clignotants)",
+          "mirrors": "Les rétroviseurs sont propres, correctement réglés et en bon état",
+          "windshield": "Le pare-brise est propre et ne présente aucune fissure gênant la visibilité",
+          "horn": "Le klaxon fonctionne",
+          "coupling_devices": "Les dispositifs d’attelage sont sécurisés (sellette, crochet d’attelage)",
+          "cargo_securement": "Les dispositifs d’arrimage du chargement sont suffisants et en place",
+          "emergency_equipment": "Les équipements d’urgence sont présents (triangles, extincteur)"
+        }
+      },
+      "driver_scorecard": {
+        "name": "Fiche d’évaluation sécurité du conducteur",
+        "description": "Revue périodique de la performance sécurité du conducteur couvrant les taux de réussite aux inspections, l’historique des incidents, la conformité aux heures de service et l’achèvement des formations",
+        "items": {
+          "inspection_pass_rate": "Évaluer le taux de réussite aux inspections du conducteur sur cette période",
+          "incident_history": "Documenter les incidents survenus pendant la période d’évaluation",
+          "hos_compliance": "La conformité aux heures de service a été vérifiée",
+          "training_completion": "Les modules de formation requis ont été complétés",
+          "moving_violations": "Documenter les infractions au code de la route",
+          "preventable_accidents": "Documenter les accidents évitables"
+        }
+      },
+      "cargo": {
+        "name": "Contrôle d’arrimage du chargement",
+        "description": "Vérification de l’arrimage des chargements afin de s’assurer qu’ils respectent les limites de poids, qu’ils sont correctement sanglés, calés et maintenus avant le transport",
+        "items": {
+          "weight_limits": "Le chargement respecte les limites de poids du véhicule et de l’itinéraire",
+          "tiedowns_rated": "Les dispositifs d’arrimage sont homologués et en quantité suffisante",
+          "header_board": "La paroi avant ou la cloison est en bon état",
+          "blocking_bracing": "Le calage et le maintien sont sécurisés",
+          "load_shift": "Le contrôle du déplacement de charge a été effectué",
+          "hazmat_placards": "Les plaques matières dangereuses sont affichées (le cas échéant)"
+        }
+      },
+      "hos": {
+        "name": "Conformité aux heures de service",
+        "description": "Vérification de la conformité aux heures de service pour les conducteurs professionnels, contrôlant le bon fonctionnement du dispositif de consignation électronique, le temps de conduite disponible, les pauses obligatoires et la documentation des exceptions",
+        "items": {
+          "eld_functioning": "Le dispositif de consignation électronique fonctionne correctement",
+          "drive_time": "Le temps de conduite disponible respecte les limites réglementaires",
+          "rest_break": "La pause obligatoire a été prise",
+          "sleeper_berth": "Les règles relatives au couchage en cabine sont respectées (le cas échéant)",
+          "adverse_conditions": "L’exception liée aux conditions de conduite défavorables est documentée (si utilisée)"
+        }
+      },
+      "hazmat": {
+        "name": "Liste de contrôle du transport de matières dangereuses",
+        "description": "Liste de contrôle avant transport pour les expéditions de matières dangereuses, vérifiant les documents d’expédition, les plaques, l’intégrité des emballages et l’habilitation du conducteur",
+        "items": {
+          "shipping_papers": "Les documents d’expédition sont complets et exacts",
+          "placards_correct": "Les plaques du véhicule correspondent au chargement",
+          "packaging_integrity": "L’intégrité des emballages a été vérifiée",
+          "compatibility": "La compatibilité du chargement a été vérifiée",
+          "emergency_info": "Les informations d’intervention d’urgence sont accessibles",
+          "driver_endorsement": "L’habilitation matières dangereuses du conducteur est à jour"
+        }
+      },
+      "post_trip": {
+        "name": "Rapport d’inspection post-trajet",
+        "description": "Inspection du véhicule en fin de trajet documentant les défauts, la performance des freins, l’état des pneus, les fuites de fluides et la préparation de l’aire de chargement pour le prochain transport",
+        "items": {
+          "defects_discovered": "Documenter tout défaut constaté pendant le trajet",
+          "brake_performance": "La performance des freins a été satisfaisante pendant le trajet",
+          "tire_condition": "L’état des pneus après le trajet chargé est acceptable",
+          "fluid_leaks": "Aucune nouvelle fuite de fluide n’a été observée",
+          "body_damage": "Aucun nouveau dommage de carrosserie n’a été observé",
+          "cargo_area": "L’aire de chargement a été nettoyée et est prête",
+          "report_signed": "Le rapport d’inspection post-trajet a été signé"
+        }
+      }
+    },
+    "education": {
+      "name": "Éducation",
+      "description": "Listes de contrôle de sécurité pour les établissements scolaires, couvrant les inspections des aires de jeux, la sécurité des laboratoires, les exercices d’urgence et les rondes de sécurité des bâtiments",
+      "playground": {
+        "name": "Inspection de sécurité de l’aire de jeux",
+        "description": "Inspection de routine des équipements et surfaces de l’aire de jeux afin d’identifier les dangers, de vérifier l’adéquation à l’âge des utilisateurs et d’assurer la conformité des zones de chute",
+        "items": {
+          "equipment_integrity": "Les équipements ne présentent ni arêtes vives, ni boulons desserrés, ni dommages",
+          "fall_zone_surfacing": "Le revêtement des zones de chute est adéquat (épaisseur et couverture)",
+          "age_appropriate": "La signalisation adaptée à l’âge est affichée",
+          "entrapment_hazards": "Aucun risque de coincement n’est présent",
+          "drain_covers": "Les couvercles de drainage sont sécurisés et affleurants",
+          "general_condition": "L’état général de l’aire de jeux est satisfaisant"
+        }
+      },
+      "lab": {
+        "name": "Inspection de sécurité du laboratoire",
+        "description": "Inspection de sécurité des laboratoires pédagogiques, vérifiant les équipements d’urgence, le stockage des produits chimiques, le fonctionnement de la hotte et la disponibilité des EPI",
+        "items": {
+          "eyewash_tested": "La station de rinçage oculaire a été testée et est fonctionnelle",
+          "shower_tested": "La douche d’urgence a été testée et est fonctionnelle",
+          "fume_hood": "La hotte fonctionne et le débit d’air est suffisant",
+          "chemical_storage": "Les produits chimiques sont correctement stockés et étiquetés",
+          "sds_accessible": "Les fiches de données de sécurité sont accessibles",
+          "ppe_available": "Les EPI sont disponibles (lunettes, gants, tabliers)",
+          "emergency_shutoffs": "Les coupures d’urgence sont identifiées et accessibles",
+          "glassware_disposal": "Des conteneurs pour la verrerie cassée sont disponibles"
+        }
+      },
+      "emergency_drill": {
+        "name": "Compte rendu d’exercice d’urgence",
+        "description": "Documentation de la réalisation d’un exercice d’urgence, incluant le type d’exercice, le temps d’évacuation, le contrôle des effectifs et les axes d’amélioration",
+        "items": {
+          "drill_type": "Type d’exercice réalisé (incendie, confinement, séisme, tornade)",
+          "weather_conditions": "Conditions météorologiques pendant l’exercice",
+          "evacuation_time": "Temps total d’évacuation en minutes",
+          "headcount_reconciled": "Le comptage a été rapproché des registres de présence",
+          "areas_of_delay": "Zones de retard ou d’encombrement identifiées",
+          "communication_effectiveness": "Les systèmes de communication ont fonctionné efficacement",
+          "special_needs": "Les mesures prévues pour les besoins spécifiques ont été correctement appliquées"
+        }
+      },
+      "visitor": {
+        "name": "Journal de gestion des visiteurs",
+        "description": "Journal d’accueil et de suivi des visiteurs sur les campus scolaires, documentant la vérification d’identité, la remise de badges et les exigences d’accompagnement",
+        "items": {
+          "visitor_id_checked": "L’identité du visiteur a été vérifiée",
+          "purpose_of_visit": "Le motif de la visite a été documenté",
+          "badge_issued": "Un badge visiteur a été remis",
+          "escort_assigned": "Un accompagnateur a été désigné (si nécessaire)",
+          "sign_out_time": "L’heure de sortie a été enregistrée",
+          "restricted_areas": "Les zones restreintes ont été communiquées"
+        }
+      },
+      "building": {
+        "name": "Ronde de sécurité du bâtiment",
+        "description": "Ronde de sécurité des bâtiments scolaires, vérifiant les panneaux de sortie, les extincteurs, l’état de préparation du défibrillateur et les conditions générales du bâtiment",
+        "items": {
+          "exit_signs": "Les panneaux de sortie sont éclairés et visibles",
+          "fire_extinguishers": "Les extincteurs sont inspectés et accessibles",
+          "aed_checked": "Le défibrillateur a été contrôlé et est prêt",
+          "stairwell_lighting": "L’éclairage des cages d’escalier fonctionne",
+          "trip_hazards": "Aucun risque de trébuchement dans les couloirs ou circulations",
+          "hvac_functioning": "Le système CVC fonctionne correctement",
+          "water_temperature": "La température de l’eau a été contrôlée (prévention des brûlures)"
+        }
+      },
+      "bus": {
+        "name": "Sécurité des bus et transports scolaires",
+        "description": "Liste de contrôle de sécurité pour les bus scolaires et autres véhicules de transport d’élèves, couvrant les inspections avant départ, les sorties de secours et les procédures de comptage des élèves",
+        "items": {
+          "pre_trip_inspection": "L’inspection du véhicule avant départ a été effectuée",
+          "first_aid_kit": "Une trousse de premiers secours est présente et complète",
+          "emergency_exits": "Les sorties de secours sont fonctionnelles et dégagées",
+          "communication_device": "Le dispositif de communication fonctionne",
+          "student_count": "La procédure de comptage des élèves est en place",
+          "wheelchair_lift": "L’élévateur pour fauteuil roulant a été testé (le cas échéant)"
+        }
+      }
+    },
+    "airports": {
+      "name": "Aéroports",
+      "description": "Listes de contrôle de sécurité pour les opérations aéroportuaires, couvrant la sécurité des terminaux, les équipements d’assistance au sol, la conformité sur l’aire de trafic, les opérations de ravitaillement et la gestion des sous-traitants",
+      "escalator": {
+        "name": "Sécurité des escaliers mécaniques et ascenseurs",
+        "description": "Inspection de sécurité des escaliers mécaniques et ascenseurs dans les terminaux, vérifiant les arrêts d’urgence, l’alignement mécanique et les systèmes de communication",
+        "items": {
+          "emergency_stop": "Le bouton d’arrêt d’urgence fonctionne",
+          "comb_plate": "La plaque de peigne est intacte et alignée",
+          "handrail_speed": "La vitesse de la main courante correspond à celle des marches",
+          "step_demarcation": "Les lignes de démarcation des marches sont visibles",
+          "lighting": "L’éclairage est suffisant aux abords et le long de l’équipement",
+          "intercom": "L’interphone ou le système de communication d’urgence fonctionne",
+          "maintenance_log": "Le registre de maintenance est à jour"
+        }
+      },
+      "terminal_floor": {
+        "name": "Ronde des dangers au sol du terminal",
+        "description": "Ronde des zones ouvertes au public du terminal afin d’identifier les sols mouillés, les risques de trébuchement, les barrières de chantier et les problèmes de circulation des passagers",
+        "items": {
+          "wet_floor_signage": "Les zones de sol mouillé sont signalées de manière appropriée",
+          "spill_cleanup": "Les déversements ont été nettoyés rapidement",
+          "trip_hazards": "Aucun risque de trébuchement (moquette déchirée, dalles inégales) n’est présent",
+          "construction_barriers": "Les barrières de chantier sont sécurisées et visibles",
+          "lighting_functional": "Tout l’éclairage de la zone terminale fonctionne",
+          "crowd_flow": "La circulation des passagers est maîtrisée et ne crée pas de danger"
+        }
+      },
+      "aed": {
+        "name": "Contrôle des stations DAE et premiers secours",
+        "description": "Inspection des défibrillateurs automatisés externes et des stations de premiers secours dans le terminal, vérifiant leur état de préparation, les niveaux de fournitures et la disponibilité de personnels formés",
+        "items": {
+          "aed_powered": "Le DAE est sous tension et indique un état prêt",
+          "pads_not_expired": "Les électrodes du DAE ne sont pas périmées",
+          "battery_charge": "Le niveau de batterie est suffisant",
+          "first_aid_supplies": "Les fournitures de premiers secours sont approvisionnées",
+          "location_signage": "La signalisation indiquant l’emplacement de la station est visible",
+          "trained_responder": "Le secouriste formé le plus proche est identifié et en service"
+        }
+      },
+      "emergency_evac": {
+        "name": "Préparation à l’évacuation d’urgence",
+        "description": "Évaluation de la préparation du terminal à une évacuation d’urgence, vérifiant la signalisation des sorties, le dégagement des itinéraires, le fonctionnement de la sonorisation et la connaissance des rôles par le personnel",
+        "items": {
+          "exit_signage": "La signalisation des sorties est éclairée dans tout le terminal",
+          "evacuation_routes": "Les itinéraires d’évacuation sont dégagés",
+          "pa_system": "Le système de sonorisation a été testé et fonctionne",
+          "assembly_points": "Les points de rassemblement sont identifiés et communiqués",
+          "wheelchair_chairs": "Des chaises d’évacuation pour fauteuil roulant sont positionnées dans les cages d’escalier",
+          "staff_assignments": "Le personnel connaît ses rôles en cas d’évacuation"
+        }
+      },
+      "gse": {
+        "name": "Contrôle préalable des équipements d’assistance au sol",
+        "description": "Inspection avant utilisation des équipements d’assistance au sol, y compris les tapis chargeurs, tracteurs et chariots bagages, vérifiant l’état mécanique et la certification de l’opérateur",
+        "items": {
+          "belt_loader": "Le fonctionnement du tapis chargeur est fluide et maîtrisé",
+          "tug_brakes_lights": "Les freins et feux du tracteur fonctionnent",
+          "baggage_cart": "L’attelage du chariot à bagages est sécurisé",
+          "fuel_level": "Le niveau de carburant est suffisant pour le poste",
+          "fire_extinguisher": "L’extincteur est monté et chargé",
+          "backup_alarm": "L’alarme de recul est audible",
+          "tire_condition": "L’état des pneus est acceptable",
+          "operator_cert": "La certification de l’opérateur est à jour"
+        }
+      },
+      "fod": {
+        "name": "Ronde FOD",
+        "description": "Inspection des débris étrangers sur les aires de trafic et de stationnement, vérifiant la propreté des surfaces, la gestion des outils et la documentation des débris trouvés",
+        "items": {
+          "ramp_clear": "L’aire de trafic est exempte de débris étrangers",
+          "tools_accounted": "Tous les outils et équipements sont comptabilisés",
+          "loose_items": "Les objets non fixés ont été sécurisés ou retirés",
+          "fod_bins": "Les bacs de collecte FOD sont disponibles et non pleins",
+          "surface_condition": "L’état de la surface est sûr (pas de glace, pas d’eau stagnante)",
+          "debris_documented": "Tout débris trouvé a été documenté et retiré"
+        }
+      },
+      "fueling": {
+        "name": "Sécurité des opérations de ravitaillement",
+        "description": "Liste de contrôle de sécurité pour les opérations de ravitaillement des aéronefs, couvrant les liaisons équipotentielles et la mise à la terre, la rétention des déversements, le contrôle des sources d’inflammation et la vérification de la qualité du carburant",
+        "items": {
+          "bonding_grounding": "Les liaisons équipotentielles et la mise à la terre sont établies",
+          "dead_man_switch": "Le dispositif homme-mort fonctionne",
+          "spill_containment": "Le matériel de rétention des déversements est pré-positionné",
+          "fire_extinguisher": "L’extincteur est accessible",
+          "no_ignition_sources": "Aucune source d’inflammation n’est présente dans la zone de ravitaillement",
+          "fuel_sample": "L’échantillon de carburant est clair et non contaminé",
+          "quantity_verified": "La quantité de carburant a été vérifiée par rapport à la commande"
+        }
+      },
+      "baggage": {
+        "name": "Audit du système de traitement des bagages",
+        "description": "Audit de sécurité des systèmes de traitement des bagages, vérifiant la protection des convoyeurs, les arrêts d’urgence, le marquage des points de pincement et la disponibilité des aides ergonomiques au levage",
+        "items": {
+          "conveyor_guarding": "Les protecteurs des convoyeurs sont en place",
+          "emergency_stops": "Les boutons d’arrêt d’urgence sont accessibles et testés",
+          "pinch_points": "Les points de pincement sont clairement signalés",
+          "lighting": "L’éclairage de la zone de traitement des bagages est suffisant",
+          "maintenance_access": "Les zones d’accès maintenance sont correctement sécurisées",
+          "noise_levels": "Les niveaux de bruit restent dans des limites acceptables",
+          "ergonomic_aids": "Des aides ergonomiques au levage sont disponibles"
+        }
+      },
+      "ramp": {
+        "name": "Conformité des zones de sécurité de l’aire de trafic",
+        "description": "Contrôle de conformité des zones de sécurité sur l’aire de trafic, vérifiant le dégagement des zones de souffle réacteur, le placement des équipements, le respect des vitesses véhicules et le port des EPI par le personnel piste",
+        "items": {
+          "jet_blast_zone": "La zone de souffle réacteur est dégagée de tout personnel et équipement",
+          "equipment_marshalling": "Le placement des équipements suit les procédures prévues",
+          "vehicle_speed": "Les limitations de vitesse des véhicules sont respectées",
+          "wing_walker": "Un guide d’aile est présent lors des opérations de pushback",
+          "hearing_protection": "La protection auditive est portée par tout le personnel de piste",
+          "reflective_vests": "Les gilets de sécurité haute visibilité sont portés",
+          "headsets_tested": "Les casques de communication ont été testés"
+        }
+      },
+      "contractor": {
+        "name": "Conformité multi-sous-traitants",
+        "description": "Revue de conformité de plusieurs sous-traitants d’assistance au sol, vérifiant la validité des formations, des badges de sûreté, la remontée des incidents et la clôture des actions correctives",
+        "items": {
+          "handler_training": "La formation sécurité des agents d’assistance au sol est à jour",
+          "security_badges": "La validité des badges de sûreté a été vérifiée",
+          "ramp_driving_auth": "L’autorisation de conduite sur l’aire de trafic est à jour",
+          "incident_reports": "Les rapports d’incident sécurité par prestataire sont examinés",
+          "audit_scores": "Les scores d’audit par sous-traitant sont documentés",
+          "corrective_actions": "Le taux de clôture des actions correctives est suivi"
+        }
+      }
+    }
+  },
+  "inspections": {
+    "title": "Détails de l'inspection",
+    "notFound": "Inspection non trouvée",
+    "notFoundDesc": "L'inspection demandée est introuvable.",
+    "tabs": {
+      "overview": "Aperçu",
+      "details": "Détails"
+    },
+    "result": {
+      "pass": "Réussi",
+      "fail": "Échoué",
+      "needs_attention": "Attention requise"
+    },
+    "resultSummary": "Inspection {result}",
+    "resultLabel": "Résultat",
+    "labels": {
+      "asset": "Équipement",
+      "inspector": "Inspecteur",
+      "inspectedAt": "Inspecté le",
+      "result": "Résultat",
+      "checklistId": "ID de liste",
+      "linkedIncident": "Incident lié",
+      "notes": "Notes",
+      "assetInfo": "Informations sur l'équipement",
+      "assetName": "Nom",
+      "assetTag": "Identifiant",
+      "assetStatus": "Statut",
+      "assetNotAvailable": "Informations sur l'équipement non disponibles",
+      "location": "Emplacement",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "fullRecord": "Rapport d'inspection complet",
+      "inspectionId": "ID d'inspection",
+      "assetId": "ID d'équipement",
+      "inspectorId": "ID d'inspecteur",
+      "incidentId": "ID d'incident",
+      "createdAt": "Créé le",
+      "mediaAttachments": "Pièces jointes"
+    }
+  },
+  "dateRange": {
+    "today": "Aujourd’hui",
+    "yesterday": "Hier",
+    "last7Days": "7 derniers jours",
+    "last30Days": "30 derniers jours",
+    "last90Days": "90 derniers jours",
+    "last6Months": "6 derniers mois",
+    "allTime": "Toute la période",
+    "customRange": "Période personnalisée",
+    "selectDate": "Sélectionner une date",
+    "startDate": "Date de début",
+    "endDate": "Date de fin"
+  }
+}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 import {
   Shield,
   ArrowRight,
@@ -25,32 +25,54 @@ import {
   Cross,
   Fuel,
   Truck,
+  CheckCircle2,
+  Mail,
+  HardHat,
+  Droplets,
+  Stethoscope,
+  Warehouse,
+  UtensilsCrossed,
+  BatteryCharging,
+  GraduationCap,
+  Plane,
 } from "lucide-react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 
+const EASE_OUT_CUBIC: [number, number, number, number] = [0.4, 0, 0.2, 1];
+
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" as const } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const fadeIn = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.8, ease: "easeOut" as const } },
+  visible: { opacity: 1, transition: { duration: 0.8, ease: EASE_OUT_CUBIC } },
 };
 
 const slideLeft = {
   hidden: { opacity: 0, x: -60 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: "easeOut" as const } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const slideRight = {
   hidden: { opacity: 0, x: 60 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: "easeOut" as const } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
+};
+
+const slideFromLeft = {
+  hidden: { opacity: 0, x: -120 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: EASE_OUT_CUBIC } },
+};
+
+const slideFromRight = {
+  hidden: { opacity: 0, x: 120 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: EASE_OUT_CUBIC, delay: 0.1 } },
 };
 
 const scaleUp = {
   hidden: { opacity: 0, scale: 0.9 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" as const } },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: EASE_OUT_CUBIC } },
 };
 
 const stagger = {
@@ -58,10 +80,35 @@ const stagger = {
 };
 
 const staggerSlow = {
-  visible: { transition: { staggerChildren: 0.15 } },
+  visible: { transition: { staggerChildren: 0.18 } },
 };
 
+const staggerDramatic = {
+  visible: { transition: { staggerChildren: 0.14 } },
+};
+
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return reduced;
+}
+
+function useParallaxOffset(ref: React.RefObject<HTMLElement | null>, range: number = 40) {
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  return useTransform(scrollYProgress, [0, 1], [range, -range]);
+}
+
 export default function Home() {
+  const prefersReducedMotion = useReducedMotion();
   const ipadRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ipadRef,
@@ -73,7 +120,29 @@ export default function Home() {
 
   const heroRef = useRef<HTMLDivElement>(null);
 
+  // Section refs for scroll-based parallax
+  const trustRef = useRef<HTMLElement>(null);
+  const featuresRef = useRef<HTMLElement>(null);
+  const testimonialRef = useRef<HTMLElement>(null);
+  const servicesRef = useRef<HTMLElement>(null);
+  const mobileRef = useRef<HTMLElement>(null);
+  const statsRef = useRef<HTMLElement>(null);
+  const industryRef = useRef<HTMLElement>(null);
+  const benefitsRef = useRef<HTMLElement>(null);
+  const faqRef = useRef<HTMLElement>(null);
+
+  const trustY = useParallaxOffset(trustRef, 30);
+  const featuresY = useParallaxOffset(featuresRef, 35);
+  const testimonialY = useParallaxOffset(testimonialRef, 25);
+  const servicesY = useParallaxOffset(servicesRef, 30);
+  const mobileY = useParallaxOffset(mobileRef, 35);
+  const statsY = useParallaxOffset(statsRef, 30);
+  const industryY = useParallaxOffset(industryRef, 28);
+  const benefitsY = useParallaxOffset(benefitsRef, 25);
+  const faqY = useParallaxOffset(faqRef, 20);
+
   const [scrolled, setScrolled] = useState(false);
+  const [selectedIndustry, setSelectedIndustry] = useState(0);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -82,7 +151,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white overflow-x-hidden">
-      {/* Video background — desktop only */}
+      {/* Video background, desktop only */}
       <div className="absolute top-0 left-0 right-0 h-screen z-0 pointer-events-none overflow-hidden hidden md:block">
         <video
           autoPlay
@@ -122,16 +191,14 @@ export default function Home() {
           </Link>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors">Product</a>
+            <a href="#industries" className="text-sm text-zinc-400 hover:text-white transition-colors">Industries</a>
             <a href="#services" className="text-sm text-zinc-400 hover:text-white transition-colors">Solutions</a>
             <a href="#stats" className="text-sm text-zinc-400 hover:text-white transition-colors">Resources</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="hidden sm:inline text-sm text-zinc-400 hover:text-white transition-colors">
-              Log in
-            </Link>
-            <Link href="/login" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+            <a href="/login" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
               Get Started
-            </Link>
+            </a>
           </div>
         </motion.div>
       </header>
@@ -155,11 +222,11 @@ export default function Home() {
               Report incidents, manage assets, run inspections, and ensure compliance, all in one powerful platform built for modern operations teams.
             </motion.p>
             <motion.div variants={fadeUp} className="mt-4 flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
-                Get Started
+              <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+                Join the Waitlist
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
+              </a>
+              <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
                 Contact Sales
               </Link>
             </motion.div>
@@ -198,17 +265,19 @@ export default function Home() {
 
       {/* ── Trust / Community Statement ── */}
       <motion.section
+        ref={trustRef}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
         variants={fadeUp}
+        style={prefersReducedMotion ? undefined : { y: trustY }}
         className="py-24 lg:py-32 relative z-10"
       >
         <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <p className="text-3xl sm:text-4xl lg:text-5xl font-light leading-snug text-zinc-300">
               Trusted by <span className="text-white font-semibold">operations teams</span> across industries worldwide.
-              A growing community committed to <span className="text-[#8B5CF6] font-semibold">protecting their people and assets</span> while
+              A growing community committed to <span className="text-white font-bold">protecting their people and assets</span> while
               staying compliant.
             </p>
           </div>
@@ -228,12 +297,12 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* ── Features — Floating Pills Layout ── */}
-      <section id="features" className="py-24 lg:py-40 relative z-10 overflow-hidden">
-        <div className="container mx-auto px-4 lg:px-8">
+      {/* ── Features: Floating Pills Layout ── */}
+      <section id="features" ref={featuresRef} className="py-24 lg:py-40 relative z-10 overflow-hidden">
+        <motion.div style={prefersReducedMotion ? undefined : { y: featuresY }} className="container mx-auto px-4 lg:px-8">
           <div className="relative max-w-6xl mx-auto min-h-[600px] lg:min-h-[700px] flex items-center justify-center">
 
-            {/* Floating feature pills — parallax fly-in from off-screen */}
+            {/* Floating feature pills, parallax fly-in from off-screen */}
             {features.map((feature, i) => {
               const isLeft = i % 2 === 0;
               const isTop = i < 4;
@@ -242,8 +311,8 @@ export default function Home() {
                   key={feature.title}
                   initial={{
                     opacity: 0,
-                    x: isLeft ? -60 : 60,
-                    y: isTop ? -20 : 20,
+                    x: isLeft ? -80 : 80,
+                    y: isTop ? -30 : 30,
                   }}
                   whileInView={{
                     opacity: 1,
@@ -251,7 +320,7 @@ export default function Home() {
                     y: 0,
                   }}
                   viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.8, delay: i * 0.07, ease: "easeOut" as const }}
+                  transition={{ duration: 0.9, delay: i * 0.12, ease: EASE_OUT_CUBIC }}
                   className={`absolute hidden lg:flex items-center gap-3 rounded-full bg-zinc-800/60 backdrop-blur-sm px-5 py-3 ${featurePositions[i]}`}
                 >
                   <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${i % 2 === 0 ? "bg-[#8B5CF6]" : "bg-[#8B5CF6]/20"}`}>
@@ -281,9 +350,9 @@ export default function Home() {
                 Our platform offers a range of tools designed to help you stay organized, manage safety & assets, and achieve your compliance goals.
               </motion.p>
               <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
-                  Get Started
-                </Link>
+                <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+                  Join the Waitlist
+                </a>
                 <a href="#services" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
                   Learn More
                 </a>
@@ -303,12 +372,11 @@ export default function Home() {
             </div>
 
           </div>
-        </div>
+        </motion.div>
       </section>
-
       {/* ── Testimonial + Screenshot Section ── */}
-      <section className="py-24 lg:py-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8">
+      <section ref={testimonialRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: testimonialY }} className="container mx-auto px-4 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -322,7 +390,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-br from-zinc-700/30 to-zinc-900/50" />
                 <div className="relative z-10 flex items-end h-full p-8 lg:p-10">
                   <blockquote className="text-2xl lg:text-3xl font-medium text-white leading-snug">
-                    &ldquo;Harmoniq transformed our workplace safety — incident reporting went from days to minutes.&rdquo;
+                    &ldquo;Harmoniq transformed our workplace safety. Incident reporting went from days to minutes.&rdquo;
                   </blockquote>
                 </div>
               </div>
@@ -346,12 +414,10 @@ export default function Home() {
               />
             </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
-
-      {/* ── Services Card 1 — Analytics ── */}
-      <section id="services" className="py-24 lg:py-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8">
+      <section id="services" ref={servicesRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: servicesY }} className="container mx-auto px-4 lg:px-8">
           <motion.h2
             initial="hidden"
             whileInView="visible"
@@ -409,10 +475,8 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
-
-      {/* ── Services Card 2 — Tracking ── */}
       <section className="pb-24 lg:pb-32 relative z-10">
         <div className="container mx-auto px-4 lg:px-8">
           <motion.div
@@ -453,7 +517,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl lg:text-3xl font-bold mb-4">Incident & Asset Tracking</h3>
                 <p className="text-zinc-400 leading-relaxed mb-6">
-                  Track every incident from report to resolution. Manage asset lifecycles, inspections, maintenance schedules, and work orders — all connected in one system.
+                  Track every incident from report to resolution. Manage asset lifecycles, inspections, maintenance schedules, and work orders, all connected in one system.
                 </p>
                 <Link href="/login" className="inline-flex items-center gap-2 text-[#8B5CF6] font-medium hover:underline">
                   Read More <ArrowRight className="h-4 w-4" />
@@ -465,8 +529,8 @@ export default function Home() {
       </section>
 
       {/* ── Mobile App Showcase ── */}
-      <section className="py-24 lg:py-32 relative z-10 overflow-hidden">
-        <div className="container mx-auto px-4 lg:px-8 relative">
+      <section ref={mobileRef} className="py-24 lg:py-32 relative z-10 overflow-hidden">
+        <motion.div style={prefersReducedMotion ? undefined : { y: mobileY }} className="container mx-auto px-4 lg:px-8 relative">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -479,7 +543,7 @@ export default function Home() {
                 Safety & assets in your pocket
               </h2>
               <p className="text-zinc-400 text-lg leading-relaxed mb-8">
-                Empower workers with a mobile app for instant incident reporting, asset inspections, QR code scanning, and real-time alerts — even offline.
+                Empower workers with a mobile app for instant incident reporting, asset inspections, QR code scanning, and real-time alerts, even offline.
               </p>
               <div className="space-y-4">
                 {[
@@ -497,10 +561,19 @@ export default function Home() {
                 ))}
               </div>
             </motion.div>
-            {/* Two phone frames */}
-            <motion.div variants={slideRight} className="flex justify-center gap-4">
+            {/* Two phone frames — slide from opposite sides */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              className="flex justify-center gap-4"
+            >
               {[0, 1].map(i => (
-                <div key={i} className={`w-[180px] h-[360px] rounded-[28px] bg-zinc-900 p-2 shadow-xl ${i === 1 ? "mt-12" : ""}`}>
+                <motion.div
+                  key={i}
+                  variants={i === 0 ? slideFromLeft : slideFromRight}
+                  className={`w-[180px] h-[360px] rounded-[28px] bg-zinc-900 p-2 shadow-xl ${i === 1 ? "mt-12" : ""}`}
+                >
                   <div className="w-full h-full rounded-[22px] bg-zinc-950 overflow-hidden flex flex-col">
                     {/* Status bar */}
                     <div className="h-6 px-3 flex items-center justify-between">
@@ -579,16 +652,16 @@ export default function Home() {
                       </>)}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── Stats 3-Column ── */}
-      <section id="stats" className="py-24 lg:py-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8">
+      <section id="stats" ref={statsRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: statsY }} className="container mx-auto px-4 lg:px-8">
           <motion.h2
             initial="hidden"
             whileInView="visible"
@@ -602,7 +675,7 @@ export default function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
-            variants={staggerSlow}
+            variants={staggerDramatic}
             className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
           >
             <motion.div variants={scaleUp} className="rounded-3xl bg-zinc-900/40 p-8">
@@ -652,12 +725,151 @@ export default function Home() {
               </div>
             </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
+      </section>
+
+      {/* ── Industry Showcase ── */}
+      <section id="industries" ref={industryRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: industryY }} className="container mx-auto px-4 lg:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={stagger}
+            className="max-w-5xl mx-auto"
+          >
+            <motion.div variants={fadeUp} className="mb-16">
+              <h2
+                className="text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-4"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                Your industry. Your safety.
+              </h2>
+              <p className="text-zinc-400 text-lg">
+                Harmoniq adapts to the regulations, hazards, and workflows that matter in your world.
+              </p>
+            </motion.div>
+
+            {(() => {
+              const industries = [
+                {
+                  icon: HardHat,
+                  name: "Construction",
+                  description: "Every shift begins with a Job Hazard Analysis right on your crew's phones. Fall protection audits, scaffold inspections, toolbox talks: all tracked automatically. When your superintendent walks a new job site, the pre-task checklist is already loaded based on the scope of work. Photos of hazards get GPS-tagged and timestamped. If OSHA visits, your documentation is audit-ready before they finish parking.",
+                  features: ["Job Hazard Analysis (JHA)", "Fall protection audits", "Scaffold inspection checklists", "Toolbox talk tracking", "Photo-documented hazard reporting", "OSHA compliance reports"],
+                },
+                {
+                  icon: Factory,
+                  name: "Manufacturing",
+                  description: "Lockout/tagout compliance becomes part of the machine changeover process, not a separate safety exercise. Ergonomic assessments for repetitive tasks, machine guarding inspections on every press and conveyor, near-miss reporting from the production floor: everything flows into one dashboard. Floor managers track completion rates in real time without leaving the line. When a line goes down for maintenance, the safety protocol follows automatically.",
+                  features: ["Lockout/tagout compliance", "Machine guarding inspections", "Ergonomic assessments", "Near-miss reporting", "Production floor dashboards", "Maintenance safety protocols"],
+                },
+                {
+                  icon: Droplets,
+                  name: "Oil & Gas",
+                  description: "Permit-to-work management, confined space entry, H2S monitoring: digitized for remote well sites where connectivity is unreliable. Your crew completes inspections offline and everything syncs when signal returns. Hot work permits route through the approval chain on mobile. Contractor orientation checklists ensure every person on your lease is trained and documented before they touch a valve.",
+                  features: ["Permit-to-work management", "Confined space entry logs", "Offline inspection sync", "Hot work permit approvals", "Contractor orientation checklists", "H2S monitoring records"],
+                },
+                {
+                  icon: Stethoscope,
+                  name: "Healthcare",
+                  description: "Infection control rounds, sharps disposal tracking, patient safety audits: all designed for the pace of clinical work. Nurses complete hand hygiene observations between patient rooms in seconds. OSHA bloodborne pathogen compliance is built into the daily workflow, not a quarterly scramble. Incident reports for needle sticks or patient falls trigger the right notifications to risk management immediately.",
+                  features: ["Infection control rounds", "Sharps disposal tracking", "Patient safety audits", "Hand hygiene observations", "Bloodborne pathogen compliance", "Incident auto-notifications"],
+                },
+                {
+                  icon: Warehouse,
+                  name: "Warehousing & Logistics",
+                  description: "Forklift operators scan a QR code to start their pre-shift inspection. Dock safety checks, fire extinguisher rounds, rack integrity audits: all scheduled, all tracked, all completed on mobile. Warehouse managers see which zones have open items before the morning standup. When a rack shows damage, the escalation path from photo to work order to repair confirmation is fully digital.",
+                  features: ["QR code asset scanning", "Forklift pre-shift inspections", "Fire extinguisher rounds", "Rack integrity audits", "Zone-based compliance tracking", "Photo-to-work-order escalation"],
+                },
+                {
+                  icon: Pickaxe,
+                  name: "Mining",
+                  description: "Ground control monitoring, ventilation system checks, blast area safety protocols: built for both underground and surface operations. Each shift starts with a strata assessment on the crew leader's device. PPE compliance is tracked per worker, per shift, per zone. When conditions change mid-shift, updated risk assessments push to every device in the section. Your safety record stays clean because the system catches gaps before regulators do.",
+                  features: ["Ground control monitoring", "Ventilation system checks", "Blast area safety protocols", "PPE compliance per worker", "Live risk assessment updates", "Shift-based strata assessments"],
+                },
+                {
+                  icon: UtensilsCrossed,
+                  name: "Food & Beverage",
+                  description: "HACCP inspections, allergen management, cold chain monitoring with automated escalation. A missed temperature check triggers an alert to the shift supervisor within minutes, not hours. Sanitation audits follow your cleaning schedules automatically. When an allergen protocol changes, every relevant checklist updates across all your facilities. Auditors see a complete digital trail from receiving dock to shipping bay.",
+                  features: ["HACCP inspections", "Allergen management", "Cold chain temperature monitoring", "Automated sanitation schedules", "Cross-facility checklist sync", "Full audit trail export"],
+                },
+                {
+                  icon: BatteryCharging,
+                  name: "Utilities & Energy",
+                  description: "Arc flash compliance, substation inspections, vegetation management workflows for field crews managing critical infrastructure across dispersed service territories. Line clearance audits follow your reliability standards. When a crew arrives at a transformer, the inspection form loads based on equipment class and last service date. Switching procedures and safety protocols travel with the work order, not in a binder back at the office.",
+                  features: ["Arc flash compliance", "Substation inspections", "Vegetation management workflows", "Equipment-based form loading", "Line clearance audits", "Mobile switching procedures"],
+                },
+                {
+                  icon: Truck,
+                  name: "Transportation",
+                  description: "Pre-trip vehicle inspections that DOT auditors actually accept. Drivers complete the walk-around on their phone: tires, brakes, lights, cargo securement. Defects route to maintenance automatically. Dispatchers see fleet compliance at a glance before releasing loads. Driver safety scoring aggregates inspection data, incident history, and training records into one profile. CSA scores improve because the documentation is always current.",
+                  features: ["Pre-trip vehicle inspections", "DOT-compliant documentation", "Automatic defect routing", "Fleet compliance dashboard", "Driver safety scoring", "Cargo securement checklists"],
+                },
+                {
+                  icon: GraduationCap,
+                  name: "Education",
+                  description: "Playground safety checks before the first bell. Chemistry lab inspections before every class period. Emergency drill tracking with timestamps and headcount verification. Visitor management logs who entered, when, and which areas they accessed. Facilities teams manage building safety, grounds maintenance, and fire code compliance from a single dashboard instead of scattered spreadsheets across departments.",
+                  features: ["Playground safety checks", "Lab safety inspections", "Emergency drill tracking", "Visitor management logs", "Fire code compliance", "Facilities maintenance dashboard"],
+                },
+                {
+                  icon: Plane,
+                  name: "Airports & Aviation",
+                  description: "Terminal operations and airside logistics each carry their own safety demands. Passenger-facing areas need escalator inspections, wet floor tracking, AED station checks, and emergency evacuation drill documentation. Behind the scenes, baggage handling systems require conveyor safety audits, ground support equipment pre-use inspections, and ramp area FOD walks. Fueling operations follow strict fire safety protocols. With hundreds of contractors operating in shared spaces, Harmoniq tracks who completed what training, which zones are cleared, and whether every vehicle on the apron passed its daily check, all from a single dashboard that security, operations, and ground handling teams can access by role.",
+                  features: ["GSE pre-use inspections", "Ramp FOD walk checklists", "Terminal safety audits", "Baggage system conveyor checks", "Fueling fire safety protocols", "Multi-contractor compliance tracking"],
+                },
+              ];
+              const current = industries[selectedIndustry];
+              return (
+                <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-0 lg:gap-12">
+                  <div className="flex flex-col">
+                    {industries.map((industry, i) => {
+                      const Icon = industry.icon;
+                      const isActive = selectedIndustry === i;
+                      return (
+                        <button
+                          key={industry.name}
+                          onClick={() => setSelectedIndustry(i)}
+                          className={`flex items-center gap-3 py-3 px-2 text-left transition-colors duration-150 ${
+                            isActive
+                              ? "text-white"
+                              : "text-zinc-500 hover:text-zinc-300"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          <span className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}>
+                            {industry.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="pt-6 lg:pt-3">
+                    <h3 className="text-xl font-semibold text-white mb-3">
+                      {current.name}
+                    </h3>
+                    <p className="text-zinc-400 leading-relaxed mb-6">
+                      {current.description}
+                    </p>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                      {current.features.map((feature) => (
+                        <div key={feature} className="flex items-center gap-2 text-sm text-zinc-300">
+                          <div className="h-1 w-1 rounded-full bg-[#8B5CF6] shrink-0" />
+                          {feature}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })()}
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* ── Platform Benefits ── */}
-      <section className="py-24 lg:py-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8">
+      <section ref={benefitsRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: benefitsY }} className="container mx-auto px-4 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -667,12 +879,11 @@ export default function Home() {
           >
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-6">
-                  Built for teams that take safety & asset management{" "}
-                  <span className="text-[#8B5CF6]">seriously</span>
+                <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-6 text-white">
+                  Built for teams that take safety & asset management seriously
                 </h2>
                 <p className="text-zinc-400 leading-relaxed mb-8">
-                  Whether you have 10 employees or 10,000, Harmoniq scales with your organization — managing safety incidents, asset lifecycles, and compliance in one place.
+                  Whether you have 10 employees or 10,000, Harmoniq scales with your organization, managing safety incidents, asset lifecycles, and compliance in one place.
                 </p>
                 <div className="space-y-3">
                   {[
@@ -712,12 +923,12 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-24 lg:py-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8 max-w-3xl">
+      <section ref={faqRef} className="py-24 lg:py-32 relative z-10">
+        <motion.div style={prefersReducedMotion ? undefined : { y: faqY }} className="container mx-auto px-4 lg:px-8 max-w-3xl">
           <motion.h2
             initial="hidden"
             whileInView="visible"
@@ -741,35 +952,10 @@ export default function Home() {
               </motion.div>
             ))}
           </motion.div>
-        </div>
+        </motion.div>
       </section>
-
-      {/* ── Pre-footer CTA ── */}
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={fadeUp}
-        className="py-24 lg:py-32 relative z-10"
-      >
-        <div className="container mx-auto px-4 lg:px-8 relative text-center max-w-3xl">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-            Ready to streamline safety & asset management?
-          </h2>
-          <p className="mt-6 text-lg text-zinc-400 leading-relaxed">
-            Join hundreds of organizations that use Harmoniq to protect their teams, manage assets, and stay compliant.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
-              Get Started Free
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
-              Contact Sales
-            </Link>
-          </div>
-        </div>
-      </motion.section>
+      {/* ── Waitlist CTA ── */}
+      <WaitlistSection />
 
       {/* ── Footer ── */}
       <footer className="py-16 relative z-10">
@@ -782,9 +968,9 @@ export default function Home() {
               </p>
               <div className="flex gap-4 mt-6">
                 {["X", "in", "f"].map(social => (
-                  <a key={social} href="#" className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800/50 text-xs text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors">
+                  <button key={social} type="button" className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800/50 text-xs text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors">
                     {social}
-                  </a>
+                  </button>
                 ))}
               </div>
             </div>
@@ -792,7 +978,7 @@ export default function Home() {
               <h4 className="font-semibold text-white text-sm mb-4">Product</h4>
               <ul className="space-y-3">
                 {["Features", "Integrations", "Mobile App", "Changelog"].map(item => (
-                  <li key={item}><a href="#" className="text-sm text-zinc-500 hover:text-white transition-colors">{item}</a></li>
+                  <li key={item}><button type="button" className="text-sm text-zinc-500 hover:text-white transition-colors">{item}</button></li>
                 ))}
               </ul>
             </div>
@@ -800,26 +986,26 @@ export default function Home() {
               <h4 className="font-semibold text-white text-sm mb-4">Company</h4>
               <ul className="space-y-3">
                 {["About", "Blog", "Careers", "Contact"].map(item => (
-                  <li key={item}><a href="#" className="text-sm text-zinc-500 hover:text-white transition-colors">{item}</a></li>
+                  <li key={item}><button type="button" className="text-sm text-zinc-500 hover:text-white transition-colors">{item}</button></li>
                 ))}
               </ul>
             </div>
             <div>
               <h4 className="font-semibold text-white text-sm mb-4">Legal</h4>
               <ul className="space-y-3">
-                <li><a href="/privacy" className="text-sm text-zinc-500 hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="/terms" className="text-sm text-zinc-500 hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="/cookies" className="text-sm text-zinc-500 hover:text-white transition-colors">Cookie Policy</a></li>
-                <li><a href="/gdpr" className="text-sm text-zinc-500 hover:text-white transition-colors">GDPR</a></li>
+                <li><Link href="/privacy" className="text-sm text-zinc-500 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-sm text-zinc-500 hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/cookies" className="text-sm text-zinc-500 hover:text-white transition-colors">Cookie Policy</Link></li>
+                <li><Link href="/gdpr" className="text-sm text-zinc-500 hover:text-white transition-colors">GDPR</Link></li>
               </ul>
             </div>
           </div>
           <div className="mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-zinc-600">© {new Date().getFullYear()} Harmoniq. All rights reserved.</p>
             <div className="flex gap-6">
-              <a href="/privacy" className="text-sm text-zinc-600 hover:text-white transition-colors">Privacy</a>
-              <a href="/terms" className="text-sm text-zinc-600 hover:text-white transition-colors">Terms</a>
-              <a href="/cookies" className="text-sm text-zinc-600 hover:text-white transition-colors">Cookies</a>
+              <Link href="/privacy" className="text-sm text-zinc-600 hover:text-white transition-colors">Privacy</Link>
+              <Link href="/terms" className="text-sm text-zinc-600 hover:text-white transition-colors">Terms</Link>
+              <Link href="/cookies" className="text-sm text-zinc-600 hover:text-white transition-colors">Cookies</Link>
             </div>
           </div>
         </div>
@@ -855,8 +1041,8 @@ const features = [
 
 const faqs = [
   {
-    q: "How quickly can we get started?",
-    a: "Most teams are up and running within minutes. Create your company, invite your team, and start reporting — no complex setup required.",
+    q: "How can I get access?",
+    a: "Harmoniq is currently in private testing with select companies. We\u2019re refining the platform with real feedback before opening up. Join our waitlist below and we\u2019ll notify you as soon as spots open.",
   },
   {
     q: "Which compliance standards do you support?",
@@ -868,7 +1054,7 @@ const faqs = [
   },
   {
     q: "What languages are supported?",
-    a: "Currently available in English, Dutch, and Swedish — with locale-aware dates, numbers, and compliance forms for each region.",
+    a: "Currently available in English, Dutch, and Swedish, with locale-aware dates, numbers, and compliance forms for each region.",
   },
 ];
 
@@ -887,6 +1073,106 @@ const pillsRow2 = [
   "Work Orders",
   "Mobile App",
 ];
+
+function WaitlistSection() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // Also store locally
+        const existing = JSON.parse(localStorage.getItem("harmoniq_waitlist") || "[]");
+        existing.push({ email: email.trim(), timestamp: new Date().toISOString() });
+        localStorage.setItem("harmoniq_waitlist", JSON.stringify(existing));
+        setStatus("success");
+        setMessage(data.message);
+      } else {
+        setStatus("error");
+        setMessage(data.message || "Something went wrong.");
+      }
+    } catch {
+      setStatus("error");
+      setMessage("Network error. Please try again.");
+    }
+  }
+
+  return (
+    <motion.section
+      id="waitlist"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeUp}
+      className="py-24 lg:py-32 relative z-10"
+    >
+      <div className="container mx-auto px-4 lg:px-8 relative text-center max-w-2xl">
+        {status === "success" ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, ease: EASE_OUT_CUBIC }}
+            className="rounded-3xl bg-zinc-900/40 p-10"
+          >
+            <CheckCircle2 className="h-12 w-12 text-green-400 mx-auto mb-4" />
+            <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-3">
+              You&apos;re on the list!
+            </h2>
+            <p className="text-lg text-zinc-400 leading-relaxed">
+              {message || "We\u2019ll reach out as soon as a spot opens up."}
+            </p>
+          </motion.div>
+        ) : (
+          <div className="rounded-3xl bg-zinc-900/40 p-10">
+            <Mail className="h-10 w-10 text-[#8B5CF6] mx-auto mb-4" />
+            <h2 className="text-4xl sm:text-5xl font-bold leading-tight mb-3">
+              Join the Waitlist
+            </h2>
+            <p className="text-lg text-zinc-400 leading-relaxed mb-8">
+              Harmoniq is in private beta. Drop your email and we&apos;ll let you know when it&apos;s your turn.
+            </p>
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                className="flex-1 rounded-full bg-zinc-800/60 px-5 py-3 text-base text-white placeholder-zinc-500 border border-zinc-700/50 focus:border-[#8B5CF6] focus:outline-none transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={status === "loading"}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {status === "loading" ? "Joining\u2026" : "Join Waitlist"}
+                {status !== "loading" && <ArrowRight className="h-4 w-4" />}
+              </button>
+            </form>
+            {status === "error" && (
+              <p className="mt-3 text-sm text-red-400">{message}</p>
+            )}
+            <p className="mt-4 text-xs text-zinc-600">
+              No spam, ever. We&apos;ll only email you about access.
+            </p>
+          </div>
+        )}
+      </div>
+    </motion.section>
+  );
+}
 
 function ScrollingPills({
   items,

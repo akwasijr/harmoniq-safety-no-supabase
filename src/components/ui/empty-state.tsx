@@ -4,6 +4,7 @@ import * as React from "react";
 import { Search, Filter, RefreshCw, Inbox, Plus, WifiOff, FileX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n";
 
 interface EmptyStateProps {
   icon?: React.ComponentType<{ className?: string }>;
@@ -64,25 +65,26 @@ export function NoResultsEmptyState({
   onClearFilters?: () => void;
   hasFilters?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <EmptyState
       icon={hasFilters ? Filter : Search}
-      title="No results found"
+      title={t("emptyState.noResults")}
       description={hasFilters 
-        ? "Try adjusting your search or filter criteria to find what you're looking for."
-        : "No items match your search. Try a different search term."
+        ? t("emptyState.noResultsFilterDesc")
+        : t("emptyState.noResultsSearchDesc")
       }
       action={hasFilters && onClearFilters && (
         <Button variant="outline" size="sm" onClick={onClearFilters} className="gap-2">
           <RefreshCw className="h-4 w-4" />
-          Clear filters
+          {t("emptyState.clearFilters")}
         </Button>
       )}
     />
   );
 }
 
-// Empty collection — "No X yet" pattern
+// Empty collection: "No X yet" pattern
 export function NoDataEmptyState({
   entityName,
   onAdd,
@@ -92,15 +94,17 @@ export function NoDataEmptyState({
   onAdd?: () => void;
   addLabel?: string;
 }) {
+  const { t } = useTranslation();
+  const capitalized = entityName.charAt(0).toUpperCase() + entityName.slice(1);
   return (
     <EmptyState
       icon={Inbox}
-      title={`No ${entityName} yet`}
-      description={`${entityName.charAt(0).toUpperCase() + entityName.slice(1)} will appear here once created.`}
+      title={t("emptyState.noData", { entity: entityName })}
+      description={t("emptyState.noDataDesc", { entity: capitalized })}
       action={onAdd && (
         <Button size="sm" onClick={onAdd} className="gap-2">
           <Plus className="h-4 w-4" />
-          {addLabel || `Add ${entityName}`}
+          {addLabel || t("emptyState.addEntity", { entity: entityName })}
         </Button>
       )}
     />
@@ -109,33 +113,35 @@ export function NoDataEmptyState({
 
 // Offline empty state
 export function OfflineEmptyState({ onRetry }: { onRetry?: () => void }) {
+  const { t } = useTranslation();
   return (
     <EmptyState
       icon={WifiOff}
-      title="You're offline"
-      description="This content isn't available offline. Connect to the internet and try again."
+      title={t("emptyState.offline")}
+      description={t("emptyState.offlineDesc")}
       action={onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry} className="gap-2">
           <RefreshCw className="h-4 w-4" />
-          Retry
+          {t("emptyState.retry")}
         </Button>
       )}
     />
   );
 }
 
-// Data load failure — inline card variant
+// Data load failure: inline card variant
 export function LoadFailedEmptyState({ onRetry }: { onRetry?: () => void }) {
+  const { t } = useTranslation();
   return (
     <EmptyState
       icon={FileX}
-      title="Failed to load data"
-      description="Something went wrong while fetching the data. Please try again."
+      title={t("emptyState.loadFailed")}
+      description={t("emptyState.loadFailedDesc")}
       compact
       action={onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry} className="gap-2">
           <RefreshCw className="h-3.5 w-3.5" />
-          Retry
+          {t("emptyState.retry")}
         </Button>
       )}
     />

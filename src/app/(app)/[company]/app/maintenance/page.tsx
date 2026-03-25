@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import type { WorkOrder, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
+import { LoadingPage } from "@/components/ui/loading";
 
 function RequestMaintenancePageContent() {
   const router = useRouter();
@@ -23,7 +24,7 @@ function RequestMaintenancePageContent() {
   const preselectedAssetId = searchParams.get("asset") || "";
   const { user } = useAuth();
   const { toast } = useToast();
-  const { items: assets } = useAssetsStore();
+  const { items: assets, isLoading } = useAssetsStore();
   const { add: addWorkOrder } = useWorkOrdersStore();
   const { t } = useTranslation();
   const [form, setForm] = React.useState({
@@ -34,6 +35,10 @@ function RequestMaintenancePageContent() {
   });
 
   const selectedAsset = form.asset_id ? assets.find(a => a.id === form.asset_id) : null;
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   const handleSubmit = () => {
     if (!form.title.trim() || !form.description.trim()) return;
@@ -64,7 +69,7 @@ function RequestMaintenancePageContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+      <div className="sticky top-14 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>

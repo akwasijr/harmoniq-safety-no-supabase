@@ -23,17 +23,18 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { commonFilterOptions } from "@/components/ui/filter-panel";
-import { useTicketsStore } from "@/stores/tickets-store";
-import { useIncidentsStore } from "@/stores/incidents-store";
-import { useUsersStore } from "@/stores/users-store";
+import { useFilterOptions } from "@/components/ui/filter-panel";
+import { useCompanyData } from "@/hooks/use-company-data";
+import { LoadingPage } from "@/components/ui/loading";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import type { Ticket as TicketType } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
+import { PAGINATION } from "@/lib/constants";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 export default function TicketsPage() {
   const router = useRouter();
@@ -53,16 +54,17 @@ export default function TicketsPage() {
     description: "",
     priority: "medium",
     assigned_to: "",
+    assigned_to_team_id: "",
     incident_id: "",
     due_date: "",
   });
 
-  const { items: tickets, add: addTicket } = useTicketsStore();
-  const { items: incidents } = useIncidentsStore();
-  const { items: users } = useUsersStore();
+  const { tickets, incidents, users, teams, stores } = useCompanyData();
+  const { isLoading, add: addTicket } = stores.tickets;
   const { toast } = useToast();
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
+  const filterOptions = useFilterOptions();
 
   const assigneeOptions = users.map((u) => ({ value: u.id, label: u.full_name }));
 
@@ -95,14 +97,14 @@ export default function TicketsPage() {
     {
       id: "status",
       label: "All statuses",
-      options: commonFilterOptions.ticketStatus,
+      options: filterOptions.ticketStatus,
       value: statusFilter,
       onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
     },
     {
       id: "priority",
       label: "All priorities",
-      options: commonFilterOptions.ticketPriority,
+      options: filterOptions.ticketPriority,
       value: priorityFilter,
       onChange: (v: string) => { setPriorityFilter(v); setCurrentPage(1); },
     },
@@ -130,7 +132,8 @@ export default function TicketsPage() {
       status: "new",
       due_date: newTicket.due_date || null,
       assigned_to: newTicket.assigned_to || null,
-      assigned_groups: [],
+      assigned_to_team_id: newTicket.assigned_to_team_id || null,
+      assigned_groups: newTicket.assigned_to_team_id ? [newTicket.assigned_to_team_id] : [],
       incident_ids: newTicket.incident_id ? [newTicket.incident_id] : [],
       created_by: user?.id || users[0]?.id || "",
       created_at: now,
@@ -140,16 +143,22 @@ export default function TicketsPage() {
     toast("Ticket created successfully");
     setShowAddModal(false);
     setNewTicket({
-      title: "",
-      description: "",
-      priority: "medium",
-      assigned_to: "",
-      incident_id: "",
-      due_date: "",
-    });
+        title: "",
+        description: "",
+        priority: "medium",
+        assigned_to: "",
+        assigned_to_team_id: "",
+        incident_id: "",
+        due_date: "",
+      });
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
+    <RoleGuard requiredPermission="incidents.view_own">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -225,6 +234,8 @@ export default function TicketsPage() {
                 ) : (
                   paginatedTickets.map((ticket) => {
                     const assignee = users.find((u) => u.id === ticket.assigned_to);
+                    const assignedTeamId = ticket.assigned_to_team_id || ticket.assigned_groups[0] || "";
+                    const assignedTeam = assignedTeamId ? teams.find((team) => team.id === assignedTeamId) : null;
                     return (
                       <tr 
                         key={ticket.id} 
@@ -250,7 +261,7 @@ export default function TicketsPage() {
                         <td className="hidden py-3 md:table-cell">
                           <div className="flex items-center gap-2">
                             <User className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs">{assignee?.full_name || "Unassigned"}</span>
+                            <span className="text-xs">{assignee?.full_name || assignedTeam?.name || "Unassigned"}</span>
                           </div>
                         </td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">
@@ -282,11 +293,27 @@ export default function TicketsPage() {
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                  <Button key={i + 1} variant={currentPage === i + 1 ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(i + 1)}>
-                    {i + 1}
-                  </Button>
-                ))}
+                {(() => {
+                  const pages: (number | "...")[] = totalPages <= 7
+                    ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                    : (() => {
+                        const p: (number | "...")[] = [1];
+                        if (currentPage > 3) p.push("...");
+                        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) p.push(i);
+                        if (currentPage < totalPages - 2) p.push("...");
+                        p.push(totalPages);
+                        return p;
+                      })();
+                  return pages.map((p, idx) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
+                    ) : (
+                      <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p as number)}>
+                        {p}
+                      </Button>
+                    )
+                  );
+                })()}
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -305,7 +332,7 @@ export default function TicketsPage() {
                 <h2 className="text-xl font-semibold">{t("tickets.createTicket")}</h2>
                 <p className="text-sm text-muted-foreground">Fill in the ticket details</p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setShowAddModal(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowAddModal(false)} aria-label="Close">
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -317,7 +344,7 @@ export default function TicketsPage() {
                   id="title"
                   value={newTicket.title}
                   onChange={(e) => setNewTicket({ ...newTicket, title: e.target.value })}
-                  placeholder="Brief description of the issue"
+                  placeholder={t("tickets.placeholders.briefDescription")}
                   className="mt-1"
                 />
               </div>
@@ -328,7 +355,7 @@ export default function TicketsPage() {
                   id="description"
                   value={newTicket.description}
                   onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
-                  placeholder="Detailed description..."
+                  placeholder={t("tickets.placeholders.detailedDescription")}
                   rows={3}
                   className="mt-1"
                 />
@@ -367,6 +394,22 @@ export default function TicketsPage() {
                 </div>
               </div>
 
+              <div>
+                <Label>Assign team</Label>
+                <select
+                  title="Select team"
+                  aria-label="Select team"
+                  value={newTicket.assigned_to_team_id}
+                  onChange={(e) => setNewTicket({ ...newTicket, assigned_to_team_id: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">No team</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>{team.name}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Related incident</Label>
@@ -403,5 +446,6 @@ export default function TicketsPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

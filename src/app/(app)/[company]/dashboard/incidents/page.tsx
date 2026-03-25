@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { getUserDisplayName } from "@/lib/status-utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
   Plus,
@@ -29,11 +30,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { commonFilterOptions } from "@/components/ui/filter-panel";
-import { useIncidentsStore } from "@/stores/incidents-store";
-import { useLocationsStore } from "@/stores/locations-store";
-import { useTicketsStore } from "@/stores/tickets-store";
-import { useUsersStore } from "@/stores/users-store";
+import { useFilterOptions } from "@/components/ui/filter-panel";
+import { useCompanyData } from "@/hooks/use-company-data";
+import { LoadingPage } from "@/components/ui/loading";
+import { useNotificationsStore } from "@/stores/notifications-store";
+import { notifyCriticalIncident } from "@/stores/notification-triggers";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
@@ -41,10 +42,12 @@ import { downloadCsv } from "@/lib/csv";
 import { useAuth } from "@/hooks/use-auth";
 import type { Incident } from "@/types";
 import { useTranslation } from "@/i18n";
+import { RoleGuard } from "@/components/auth/role-guard";
+import { PAGINATION } from "@/lib/constants";
 
 type SubTabType = "incidents" | "tickets";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 const incidentTypes = [
   { value: "injury", label: "Injury", icon: AlertCircle },
@@ -98,11 +101,11 @@ export default function IncidentsPage() {
 
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
+  const filterOptions = useFilterOptions();
   const { toast } = useToast();
-  const { items: incidents, add: addIncident } = useIncidentsStore();
-  const { items: tickets } = useTicketsStore();
-  const { items: locations } = useLocationsStore();
-  const { items: users } = useUsersStore();
+  const { incidents, tickets, locations, users, stores } = useCompanyData();
+  const { isLoading, add: addIncident } = stores.incidents;
+  const { add: addNotif } = useNotificationsStore();
 
   // Filter incidents
   const filteredIncidents = incidents.filter((incident) => {
@@ -149,21 +152,21 @@ export default function IncidentsPage() {
     {
       id: "status",
       label: "All statuses",
-      options: commonFilterOptions.incidentStatus,
+      options: filterOptions.incidentStatus,
       value: statusFilter,
       onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
     },
     {
       id: "severity",
       label: "All severities",
-      options: commonFilterOptions.severity,
+      options: filterOptions.severity,
       value: severityFilter,
       onChange: (v: string) => { setSeverityFilter(v); setCurrentPage(1); },
     },
     {
       id: "type",
       label: "All types",
-      options: commonFilterOptions.incidentType,
+      options: filterOptions.incidentType,
       value: typeFilter,
       onChange: (v: string) => { setTypeFilter(v); setCurrentPage(1); },
     },
@@ -210,6 +213,13 @@ export default function IncidentsPage() {
       updated_at: now.toISOString(),
     };
     addIncident(incident);
+    if (incident.severity === "critical") {
+      notifyCriticalIncident(addNotif, {
+        companyId: incident.company_id,
+        incidentTitle: incident.title,
+        incidentId: incident.id,
+      });
+    }
     toast("Incident created successfully");
     setShowAddModal(false);
     setNewIncident({
@@ -228,14 +238,14 @@ export default function IncidentsPage() {
     {
       id: "status",
       label: "All statuses",
-      options: commonFilterOptions.ticketStatus,
+      options: filterOptions.ticketStatus,
       value: ticketStatusFilter,
       onChange: (v: string) => { setTicketStatusFilter(v); setCurrentPage(1); },
     },
     {
       id: "priority",
       label: "All priorities",
-      options: commonFilterOptions.ticketPriority,
+      options: filterOptions.ticketPriority,
       value: ticketPriorityFilter,
       onChange: (v: string) => { setTicketPriorityFilter(v); setCurrentPage(1); },
     },
@@ -263,11 +273,7 @@ export default function IncidentsPage() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const getAssigneeName = (userId?: string | null) => {
-    if (!userId) return "Unassigned";
-    const user = users.find((u) => u.id === userId);
-    return user?.full_name || "Unknown";
-  };
+  const getAssigneeName = (userId?: string | null) => getUserDisplayName(userId, users);
 
   const getIncidentRef = (incidentIds?: string[]) => {
     if (!incidentIds || incidentIds.length === 0) return "—";
@@ -281,7 +287,12 @@ export default function IncidentsPage() {
     setSearchQuery("");
   }, [activeSubTab]);
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
+    <RoleGuard requiredPermission="incidents.view_own">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -495,19 +506,27 @@ export default function IncidentsPage() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const page = i + 1;
-                  return (
-                    <Button
-                      key={page}
-                      variant={currentPage === page ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(page)}
-                    >
-                      {page}
-                    </Button>
+                {(() => {
+                  const pages: (number | "...")[] = totalPages <= 7
+                    ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                    : (() => {
+                        const p: (number | "...")[] = [1];
+                        if (currentPage > 3) p.push("...");
+                        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) p.push(i);
+                        if (currentPage < totalPages - 2) p.push("...");
+                        p.push(totalPages);
+                        return p;
+                      })();
+                  return pages.map((p, idx) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
+                    ) : (
+                      <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p as number)}>
+                        {p}
+                      </Button>
+                    )
                   );
-                })}
+                })()}
                 <Button
                   variant="outline"
                   size="sm"
@@ -764,7 +783,7 @@ export default function IncidentsPage() {
                   id="title"
                   value={newIncident.title}
                   onChange={(e) => setNewIncident({ ...newIncident, title: e.target.value })}
-                  placeholder="Brief description of the incident"
+                  placeholder={t("incidents.placeholders.briefDescription")}
                   className="mt-1"
                 />
               </div>
@@ -776,7 +795,7 @@ export default function IncidentsPage() {
                   id="description"
                   value={newIncident.description}
                   onChange={(e) => setNewIncident({ ...newIncident, description: e.target.value })}
-                  placeholder="Describe what happened in detail..."
+                  placeholder={t("incidents.placeholders.describeWhatHappened")}
                   rows={4}
                   className="mt-1"
                 />
@@ -807,7 +826,7 @@ export default function IncidentsPage() {
                   id="location_desc"
                   value={newIncident.location_description}
                   onChange={(e) => setNewIncident({ ...newIncident, location_description: e.target.value })}
-                  placeholder="e.g., Near the main entrance, by machine #3"
+                  placeholder={t("incidents.placeholders.locationDetails")}
                   className="mt-1"
                 />
               </div>
@@ -828,5 +847,6 @@ export default function IncidentsPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

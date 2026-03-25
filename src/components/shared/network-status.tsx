@@ -68,7 +68,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
     <NetworkStatusContext.Provider value={{ isOnline, wasOffline }}>
       {children}
 
-      {/* Offline banner — fixed at top */}
+      {/* Offline banner, fixed at top */}
       {showBanner && (
         <div
           className={cn(
@@ -103,7 +103,7 @@ export function NetworkStatusProvider({ children }: { children: React.ReactNode 
           aria-live="polite"
         >
           <Wifi className="h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>Back online — your connection has been restored.</span>
+          <span>Back online. Your connection has been restored.</span>
         </div>
       )}
     </NetworkStatusContext.Provider>

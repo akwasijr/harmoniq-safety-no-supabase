@@ -11,6 +11,11 @@ import {
   Building2,
   Users,
   Shield,
+  Zap,
+  Brain,
+  Bug,
+  FlaskConical,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +35,7 @@ const RISK_CATEGORIES = [
   {
     id: "physical",
     title: "Fysieke Belasting (Physical Hazards)",
-    icon: "💪",
+    icon: Zap,
     items: [
       { id: "ph_noise", label: "Lawaai (Noise)", description: ">80 dB exposure" },
       { id: "ph_vibration", label: "Trillingen (Vibration)", description: "Hand-arm or whole-body" },
@@ -43,7 +48,7 @@ const RISK_CATEGORIES = [
   {
     id: "psychosocial",
     title: "Psychosociale Arbeidsbelasting (PSA)",
-    icon: "🧠",
+    icon: Brain,
     items: [
       { id: "psa_workload", label: "Werkdruk (Workload)", description: "High demands, time pressure" },
       { id: "psa_harassment", label: "Intimidatie (Harassment)", description: "Bullying, discrimination" },
@@ -55,7 +60,7 @@ const RISK_CATEGORIES = [
   {
     id: "biological",
     title: "Biologische Agentia (Biological Agents)",
-    icon: "🦠",
+    icon: Bug,
     items: [
       { id: "bio_infection", label: "Infectierisico (Infection)", description: "Pathogens exposure" },
       { id: "bio_allergen", label: "Allergenen (Allergens)", description: "Dust, mold, animal materials" },
@@ -65,7 +70,7 @@ const RISK_CATEGORIES = [
   {
     id: "chemical",
     title: "Gevaarlijke Stoffen (Hazardous Substances)",
-    icon: "⚗️",
+    icon: FlaskConical,
     items: [
       { id: "chem_toxic", label: "Toxische stoffen (Toxic)", description: "Poisons, carcinogens" },
       { id: "chem_irritant", label: "Irriterende stoffen (Irritants)", description: "Skin, eyes, respiratory" },
@@ -76,7 +81,7 @@ const RISK_CATEGORIES = [
   {
     id: "safety",
     title: "Arbeidsveiligheid (Work Safety)",
-    icon: "🔧",
+    icon: Wrench,
     items: [
       { id: "saf_machines", label: "Machines (Machinery)", description: "Moving parts, guards" },
       { id: "saf_electrical", label: "Elektriciteit (Electrical)", description: "Shock, arc flash" },
@@ -152,9 +157,9 @@ function calculateRiskScore(severity: number, probability: number, exposure: num
 }
 
 function getRiskPriority(score: number): { priority: "low" | "medium" | "high"; color: string; bgColor: string } {
-  if (score <= 3) return { priority: "low", color: "text-green-700", bgColor: "bg-green-100" };
-  if (score <= 9) return { priority: "medium", color: "text-yellow-700", bgColor: "bg-yellow-100" };
-  return { priority: "high", color: "text-red-700", bgColor: "bg-red-100" };
+  if (score <= 3) return { priority: "low", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950" };
+  if (score <= 9) return { priority: "medium", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950" };
+  return { priority: "high", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950" };
 }
 
 export default function RIEFormPage() {
@@ -194,7 +199,7 @@ export default function RIEFormPage() {
       });
     } else {
       const newRisk: RiskItem = {
-        id: `${categoryId}_${itemId}_${Date.now()}`,
+        id: crypto.randomUUID(),
         categoryId,
         itemId,
         present: true,
@@ -250,6 +255,14 @@ export default function RIEFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (!formData.companyName.trim() || !formData.address.trim() || !formData.employeeCount.trim() || !formData.assessmentDate.trim() || !formData.assessor.trim()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
+    if (formData.risks.length === 0) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");
@@ -274,13 +287,13 @@ export default function RIEFormPage() {
     };
     addEvaluation(evaluation);
     toast("Assessment submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment&id=${evaluation.id}`);
   };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
@@ -293,7 +306,7 @@ export default function RIEFormPage() {
           </div>
           <span className="text-xs text-muted-foreground">Arbowet</span>
         </div>
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentSection + 1) / sections.length) * 100}%` }}
@@ -311,7 +324,7 @@ export default function RIEFormPage() {
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Bedrijfsgegevens</h2>
+                <h2 className="text-lg font-bold">Bedrijfsgegevens</h2>
                 <p className="text-sm text-muted-foreground">Company information per Arbowet Article 5</p>
               </div>
             </div>
@@ -333,6 +346,8 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                   placeholder="Enter company name"
                   className="h-12"
+                  maxLength={200}
+                  required
                 />
               </div>
 
@@ -343,6 +358,9 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, kvkNumber: e.target.value })}
                   placeholder="e.g., 12345678"
                   className="h-12"
+                  maxLength={8}
+                  pattern="[0-9]{8}"
+                  title="KvK number must be exactly 8 digits"
                 />
               </div>
 
@@ -353,6 +371,8 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="Street, City, Postal Code"
                   className="h-12"
+                  maxLength={500}
+                  required
                 />
               </div>
 
@@ -364,6 +384,7 @@ export default function RIEFormPage() {
                     onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
                     placeholder="e.g., Manufacturing"
                     className="h-12"
+                    maxLength={200}
                   />
                 </div>
                 <div className="space-y-2">
@@ -373,6 +394,7 @@ export default function RIEFormPage() {
                     onChange={(e) => setFormData({ ...formData, employeeCount: e.target.value })}
                     placeholder="Number of employees"
                     className="h-12"
+                    maxLength={10}
                   />
                 </div>
               </div>
@@ -394,6 +416,8 @@ export default function RIEFormPage() {
                     onChange={(e) => setFormData({ ...formData, assessor: e.target.value })}
                     placeholder="Assessor name"
                     className="h-12"
+                    maxLength={200}
+                    required
                   />
                 </div>
               </div>
@@ -434,7 +458,7 @@ export default function RIEFormPage() {
                 <Users className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Werkplekinformatie</h2>
+                <h2 className="text-lg font-bold">Werkplekinformatie</h2>
                 <p className="text-sm text-muted-foreground">Describe the work environment</p>
               </div>
             </div>
@@ -447,6 +471,7 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, workplaceDescription: e.target.value })}
                   placeholder="Describe the physical workplace: buildings, departments, outdoor areas..."
                   className="min-h-[100px]"
+                  maxLength={5000}
                 />
               </div>
 
@@ -457,6 +482,7 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, activities: e.target.value })}
                   placeholder="List the main work activities performed..."
                   className="min-h-[100px]"
+                  maxLength={5000}
                 />
               </div>
 
@@ -467,6 +493,7 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
                   placeholder="e.g., Day shift 07:00-15:00, Night shift 23:00-07:00"
                   className="h-12"
+                  maxLength={200}
                 />
               </div>
 
@@ -477,6 +504,7 @@ export default function RIEFormPage() {
                   onChange={(e) => setFormData({ ...formData, specialGroups: e.target.value })}
                   placeholder="Young workers (<18), pregnant workers, temporary/flex workers, disabled workers..."
                   className="min-h-[80px]"
+                  maxLength={2000}
                 />
               </div>
             </div>
@@ -492,7 +520,7 @@ export default function RIEFormPage() {
                   <AlertTriangle className="h-5 w-5 text-warning" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">Risico-inventarisatie</h2>
+                  <h2 className="text-lg font-bold">Risico-inventarisatie</h2>
                   <p className="text-sm text-muted-foreground">
                     {formData.risks.length} risico&apos;s geïdentificeerd
                   </p>
@@ -537,7 +565,7 @@ export default function RIEFormPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-xl">{category.icon}</span>
+                          <category.icon className="h-5 w-5 text-primary" />
                           <div>
                             <p className="font-medium text-sm">{category.title}</p>
                             <p className="text-xs text-muted-foreground">
@@ -699,7 +727,7 @@ export default function RIEFormPage() {
                 <Shield className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Plan van Aanpak</h2>
+                <h2 className="text-lg font-bold">Plan van Aanpak</h2>
                 <p className="text-sm text-muted-foreground">Action plan for identified risks</p>
               </div>
             </div>
@@ -785,6 +813,7 @@ export default function RIEFormPage() {
                 onChange={(e) => setFormData({ ...formData, generalMeasures: e.target.value })}
                 placeholder="General safety measures applicable across the organization..."
                 className="min-h-[100px]"
+                maxLength={5000}
               />
             </div>
 
@@ -795,6 +824,7 @@ export default function RIEFormPage() {
                 onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
                 placeholder="Any additional notes or observations..."
                 className="min-h-[80px]"
+                maxLength={2000}
               />
             </div>
           </div>
@@ -808,7 +838,7 @@ export default function RIEFormPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{t("riskAssessment.reviewAndSubmit")}</h2>
+                <h2 className="text-lg font-bold">{t("riskAssessment.reviewAndSubmit")}</h2>
                 <p className="text-sm text-muted-foreground">Review your RI&E before submitting</p>
               </div>
             </div>
@@ -868,7 +898,7 @@ export default function RIEFormPage() {
               <Card className="bg-warning/10 border-warning">
                 <CardContent className="py-4">
                   <p className="text-sm font-medium text-warning">
-                    ⚠️ Toetsing verplicht
+                    Toetsing verplicht
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     This RI&E must be reviewed by a certified arbo-professional (preventiemedewerker) 

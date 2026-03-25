@@ -162,8 +162,9 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
-          <label className="mb-2 block text-sm font-medium text-zinc-300">{t.name} *</label>
+          <label htmlFor="contact-name" className="mb-2 block text-sm font-medium text-zinc-300">{t.name} *</label>
           <input
+            id="contact-name"
             type="text"
             required
             value={formData.name}
@@ -173,8 +174,9 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
           />
         </div>
         <div>
-          <label className="mb-2 block text-sm font-medium text-zinc-300">{t.email} *</label>
+          <label htmlFor="contact-email" className="mb-2 block text-sm font-medium text-zinc-300">{t.email} *</label>
           <input
+            id="contact-email"
             type="email"
             required
             value={formData.email}
@@ -203,8 +205,9 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-zinc-300">{t.company}</label>
+        <label htmlFor="contact-company" className="mb-2 block text-sm font-medium text-zinc-300">{t.company}</label>
         <input
+          id="contact-company"
           type="text"
           value={formData.company}
           onChange={(e) => setFormData((f) => ({ ...f, company: e.target.value }))}
@@ -214,8 +217,9 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-zinc-300">{t.message} *</label>
+        <label htmlFor="contact-message" className="mb-2 block text-sm font-medium text-zinc-300">{t.message} *</label>
         <textarea
+          id="contact-message"
           required
           rows={5}
           value={formData.message}

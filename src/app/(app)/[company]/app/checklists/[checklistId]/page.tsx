@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,13 +20,28 @@ import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stor
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
+import { isVisibleToFieldApp } from "@/lib/template-activation";
 import type { ChecklistResponse } from "@/types";
 
 export default function ChecklistFormPage() {
+  return (
+    <React.Suspense fallback={<LoadingPage />}>
+      <ChecklistFormPageContent />
+    </React.Suspense>
+  );
+}
+
+function ChecklistFormPageContent() {
   const router = useRouter();
   const routeParams = useParams();
-  const company = routeParams.company as string;
-  const checklistId = routeParams.checklistId as string;
+  const searchParams = useSearchParams();
+  const rawCompany = routeParams.company;
+  const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
+  const rawChecklistId = routeParams.checklistId;
+  const checklistId = typeof rawChecklistId === "string" ? rawChecklistId : Array.isArray(rawChecklistId) ? rawChecklistId[0] : "";
+  const draftId = searchParams.get("draft");
   const [currentItem, setCurrentItem] = React.useState(0);
   const [answers, setAnswers] = React.useState<Record<string, string>>({});
   const [notes, setNotes] = React.useState<Record<string, string>>({});
@@ -35,19 +50,68 @@ export default function ChecklistFormPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [generalComments, setGeneralComments] = React.useState("");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const { items: templates } = useChecklistTemplatesStore();
-  const { add: addSubmission } = useChecklistSubmissionsStore();
+  const { items: templates, isLoading: isTemplatesLoading } = useChecklistTemplatesStore();
+  const { items: submissions, add: addSubmission } = useChecklistSubmissionsStore();
   const { user } = useAuth();
   const { toast } = useToast();
 
   const { t } = useTranslation();
 
-  const template = templates.find((tpl) => tpl.id === checklistId);
+  const matchedTemplate = templates.find((tpl) => tpl.id === checklistId);
+  const template =
+    matchedTemplate &&
+    user?.company_id &&
+    matchedTemplate.company_id === user.company_id &&
+    isVisibleToFieldApp(matchedTemplate)
+      ? matchedTemplate
+      : undefined;
+
+  // Resume draft if ?draft=id is present
+  const draftInitialized = React.useRef(false);
+  React.useEffect(() => {
+    if (draftInitialized.current || !draftId) return;
+    const draft = submissions.find((s) => s.id === draftId);
+    if (draft && draft.responses) {
+      const restoredAnswers: Record<string, string> = {};
+      const restoredNotes: Record<string, string> = {};
+      const restoredPhotos: Record<string, string[]> = {};
+      for (const r of draft.responses) {
+        if (r.value === true) restoredAnswers[r.item_id] = "yes";
+        else if (r.value === false) restoredAnswers[r.item_id] = "no";
+        else if (r.value === null || r.value === "na" || r.value === "n/a") restoredAnswers[r.item_id] = "na";
+        else if (typeof r.value === "number") restoredAnswers[r.item_id] = String(r.value);
+        else if (typeof r.value === "string") restoredAnswers[r.item_id] = r.value;
+        if (r.comment) restoredNotes[r.item_id] = r.comment;
+        if (r.photo_urls && r.photo_urls.length > 0) restoredPhotos[r.item_id] = r.photo_urls;
+      }
+      setAnswers(restoredAnswers);
+      setNotes(restoredNotes);
+      setPhotos(restoredPhotos);
+      if (draft.general_comments) setGeneralComments(draft.general_comments);
+      // Jump to first unanswered item
+      const items = template?.items || [];
+      const firstUnanswered = items.findIndex((item) => !restoredAnswers[item.id]);
+      if (firstUnanswered > 0) setCurrentItem(firstUnanswered);
+    }
+    draftInitialized.current = true;
+  }, [draftId, submissions, template?.items]);
+
+  if (isTemplatesLoading) {
+    return <LoadingPage />;
+  }
+
   if (!template) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-sm text-muted-foreground">{t("checklists.checklistNotFound")}</div>
-      </div>
+      <EmptyState
+        icon={ClipboardCheck}
+        title="Checklist not found"
+        description="This checklist may have been removed or is no longer available."
+        action={
+          <Button variant="outline" onClick={() => router.back()}>
+            Go Back
+          </Button>
+        }
+      />
     );
   }
   const items = template.items || [];
@@ -141,7 +205,7 @@ export default function ChecklistFormPage() {
     const now = new Date();
     const refNumber = `CHK-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const submission = getSubmissionData();
-    addSubmission({
+    await addSubmission({
       id: crypto.randomUUID(),
       company_id: user.company_id || "",
       created_at: now.toISOString(),
@@ -151,14 +215,6 @@ export default function ChecklistFormPage() {
     router.push(`/${company}/app/report/success?ref=${refNumber}&type=checklist`);
   };
 
-  if (!template || items.length === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">{t("checklists.checklistNotFound")}</p>
-      </div>
-    );
-  }
-
   // Calculate progress
   const yesCount = Object.values(answers).filter((a) => a === "yes" || a === "pass").length;
   const noCount = Object.values(answers).filter((a) => a === "no" || a === "fail").length;
@@ -166,7 +222,7 @@ export default function ChecklistFormPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button
             variant="ghost"
@@ -183,7 +239,7 @@ export default function ChecklistFormPage() {
           </div>
         </div>
         {/* Progress bar */}
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentItem + 1) / items.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentItem + 1) / items.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentItem + 1) / items.length) * 100}%` }}
@@ -335,7 +391,7 @@ export default function ChecklistFormPage() {
           accept="image/*"
           onChange={handlePhotoUpload}
           className="hidden"
-          aria-label="Upload photo"
+          aria-label={t("common.uploadPhoto")}
         />
         
         {/* Photo previews */}
@@ -343,7 +399,7 @@ export default function ChecklistFormPage() {
           <div className="flex gap-2 mt-4">
             {photos[currentQuestion.id].map((photo, index) => (
               <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden border">
-                <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
+                <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                 <button
                   type="button"
                   aria-label={`Remove photo ${index + 1}`}

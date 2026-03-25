@@ -17,10 +17,18 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useAssetInspectionsStore } from "@/stores/inspections-store";
+import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
+import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { createCorrectiveActionFromInspection, createWorkOrderFromInspection } from "@/lib/work-order-generator";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
+import { useGps } from "@/hooks/use-gps";
+import { GpsCaptureButton } from "@/components/shared/gps-capture-button";
+import { storeFile, FileValidationError } from "@/lib/file-storage";
 import { INSPECTION_TEMPLATES, type AssetCategory } from "@/types";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // Fallback / default inspection items (used when template not available)
 const defaultInspectionItems = [
@@ -44,15 +52,25 @@ export default function AssetInspectionPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showNotes, setShowNotes] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const gps = useGps();
+
+  // Auto-capture GPS on mount (field worker is at the location)
+  React.useEffect(() => {
+    gps.captureLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { items: assets , isLoading } = useAssetsStore();
   const { add: addInspection } = useAssetInspectionsStore();
+  const { add: addCorrectiveAction } = useCorrectiveActionsStore();
+  const { add: addWorkOrder } = useWorkOrdersStore();
   const { user } = useAuth();
   const { toast } = useToast();
 
   const { t } = useTranslation();
 
-  const asset = assets.find((a) => a.id === assetId);
+  const rawAsset = assets.find((a) => a.id === assetId);
+  const asset = rawAsset && user?.company_id && rawAsset.company_id !== user.company_id ? undefined : rawAsset;
   
   // Get inspection template based on asset category
   const inspectionItems = React.useMemo(() => {
@@ -67,7 +85,7 @@ export default function AssetInspectionPage() {
   const passCount = Object.values(answers).filter((a) => a === "pass").length;
   const failCount = Object.values(answers).filter((a) => a === "fail").length;
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || !currentQuestion) return;
     
@@ -75,16 +93,28 @@ export default function AssetInspectionPage() {
     const remainingSlots = 2 - currentPhotos.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
     
-    filesToProcess.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
+    for (const file of filesToProcess) {
+      try {
+        const stored = await storeFile(
+          file,
+          "inspection",
+          assetId,
+          user?.id || "unknown",
+        );
         setPhotos((prev) => ({
           ...prev,
-          [currentQuestion.id]: [...(prev[currentQuestion.id] || []), reader.result as string],
+          [currentQuestion.id]: [...(prev[currentQuestion.id] || []), stored.dataUrl],
         }));
-      };
-      reader.readAsDataURL(file);
-    });
+      } catch (err) {
+        if (err instanceof FileValidationError) {
+          toast(err.message);
+        } else if (err instanceof Error && err.message === "QUOTA_EXCEEDED") {
+          toast("Storage is full. Delete some files and try again.");
+        } else {
+          toast(`Failed to upload photo`);
+        }
+      }
+    }
     
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -128,42 +158,71 @@ export default function AssetInspectionPage() {
       .join("\n")
       .trim();
     const mediaUrls = Object.values(photos).flat();
+    const result = failCount > 0 ? "needs_attention" : "pass";
+    const inspectionId = crypto.randomUUID();
     addInspection({
-      id: crypto.randomUUID(),
+      id: inspectionId,
       asset_id: asset.id,
       inspector_id: user.id,
       checklist_id: null,
-      result: failCount > 0 ? "needs_attention" : "pass",
+      result,
       notes: combinedNotes || null,
       media_urls: mediaUrls,
       incident_id: null,
+      gps_lat: gps.coords?.lat ?? null,
+      gps_lng: gps.coords?.lng ?? null,
       inspected_at: now.toISOString(),
       created_at: now.toISOString(),
     });
-    toast("Inspection submitted");
+
+    // Auto-generate work order for failed inspections
+    if (result === "needs_attention") {
+      const correctiveAction = createCorrectiveActionFromInspection({
+        inspection: { id: inspectionId, asset_id: asset.id, result, notes: combinedNotes || "Auto-generated from failed inspection" },
+        asset: { id: asset.id, name: asset.name, company_id: asset.company_id, criticality: asset.criticality },
+      });
+      addCorrectiveAction(correctiveAction);
+
+      const wo = createWorkOrderFromInspection({
+        inspection: { id: inspectionId, asset_id: asset.id, result, notes: combinedNotes || "Auto-generated from failed inspection" },
+        asset: { id: asset.id, name: asset.name, company_id: asset.company_id, criticality: asset.criticality },
+        inspectorId: user.id,
+        correctiveActionId: correctiveAction.id,
+      });
+      addWorkOrder(wo);
+    }
+
+    if (result === "needs_attention") {
+      toast("Inspection submitted — corrective action and work order created for follow-up");
+    } else {
+      toast("Inspection submitted");
+    }
     router.push(`/${company}/app/report/success?ref=${refNumber}&type=inspection`);
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!asset) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">{t("inspection.assetNotFound")}</p>
-      </div>
+      <EmptyState
+        icon={Wrench}
+        title={t("inspection.assetNotFound")}
+        description="The asset you're trying to inspect could not be found."
+        action={
+          <Button variant="outline" onClick={() => router.back()}>
+            Go Back
+          </Button>
+        }
+      />
     );
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button
             variant="ghost"
@@ -180,7 +239,7 @@ export default function AssetInspectionPage() {
           </div>
         </div>
         {/* Progress bar */}
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentItem + 1) / inspectionItems.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentItem + 1) / inspectionItems.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentItem + 1) / inspectionItems.length) * 100}%` }}
@@ -335,7 +394,7 @@ export default function AssetInspectionPage() {
           capture="environment"
           onChange={handlePhotoUpload}
           className="hidden"
-          aria-label="Upload photo"
+          aria-label={t("common.uploadPhoto")}
         />
         
         {/* Photo previews */}
@@ -343,7 +402,7 @@ export default function AssetInspectionPage() {
           <div className="flex gap-2 mb-2">
             {photos[currentQuestion.id].map((photo, index) => (
               <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden border">
-                <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
+                <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                 <button
                   type="button"
                   aria-label={`Remove photo ${index + 1}`}
@@ -367,6 +426,17 @@ export default function AssetInspectionPage() {
             {photos[currentQuestion.id]?.length ? t("checklists.addAnotherPhoto") : t("checklists.addPhoto")}
           </Button>
         )}
+
+        {/* GPS Capture */}
+        <div className="mt-6">
+          <p className="mb-2 text-sm font-medium">{t("common.location") || "Location"}</p>
+          <GpsCaptureButton
+            coords={gps.coords}
+            loading={gps.loading}
+            error={gps.error}
+            onCapture={gps.captureLocation}
+          />
+        </div>
 
         {/* Summary */}
         <div className="mt-8 grid grid-cols-3 gap-4 text-center">

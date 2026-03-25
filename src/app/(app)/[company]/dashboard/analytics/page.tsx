@@ -12,31 +12,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { KPICard } from "@/components/ui/kpi-card";
-import { FilterPanel, commonFilterOptions } from "@/components/ui/filter-panel";
+import { FilterPanel, useFilterOptions } from "@/components/ui/filter-panel";
 import { ChartCard, AreaChart, DonutChart, LineChart, COLORS } from "@/components/charts";
 import { RoleGuard } from "@/components/auth/role-guard";
-import { useIncidentsStore } from "@/stores/incidents-store";
-import { useLocationsStore } from "@/stores/locations-store";
+import { useCompanyData } from "@/hooks/use-company-data";
+import { LoadingPage } from "@/components/ui/loading";
 import { downloadCsv } from "@/lib/csv";
 import { capitalize } from "@/lib/utils";
 import { getDateRangeFromValue, isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import { useTranslation } from "@/i18n";
 
-/**
- * Format a Date into a month label.
- * - If the range spans more than 12 months, include the year: "Jan '24"
- * - Otherwise just "Jan"
- */
-function formatMonthLabel(date: Date, includeYear: boolean): string {
-  const month = date.toLocaleString("default", { month: "short" });
-  if (includeYear) {
-    return `${month} '${String(date.getFullYear()).slice(2)}`;
-  }
-  return month;
-}
-
 export default function AnalyticsPage() {
-  const { t, formatDate, formatNumber } = useTranslation();
+  const { t, formatDate } = useTranslation();
+  const filterOptions = useFilterOptions();
+
+  const formatMonthLabel = React.useCallback(
+    (date: Date, includeYear: boolean): string => {
+      const month = formatDate(date, { month: "short" });
+      if (includeYear) {
+        return `${month} '${String(date.getFullYear()).slice(2)}`;
+      }
+      return month;
+    },
+    [formatDate]
+  );
+
   const [dateRange, setDateRange] = React.useState("last_6_months");
   
   // Filter states
@@ -44,8 +44,8 @@ export default function AnalyticsPage() {
   const [typeFilter, setTypeFilter] = React.useState("");
   const [severityFilter, setSeverityFilter] = React.useState("");
 
-  const { items: incidents } = useIncidentsStore();
-  const { items: locations } = useLocationsStore();
+  const { incidents, locations, stores } = useCompanyData();
+  const { isLoading } = stores.incidents;
 
   const filteredIncidents = React.useMemo(
     () =>
@@ -64,7 +64,7 @@ export default function AnalyticsPage() {
     [locations]
   );
 
-  // Build months array — for "all_time", cap to earliest incident date instead of epoch
+  // Build months array. For "all_time", cap to earliest incident date instead of epoch
   const { months, spansMultipleYears } = React.useMemo(() => {
     const range = getDateRangeFromValue(dateRange as DateRangeValue);
     let effectiveStart = range.start;
@@ -77,7 +77,7 @@ export default function AnalyticsPage() {
       }, new Date());
       effectiveStart = earliestDate;
     } else if (dateRange === "all_time") {
-      // No incidents — show last 12 months
+      // No incidents, show last 12 months
       effectiveStart = new Date();
       effectiveStart.setMonth(effectiveStart.getMonth() - 12);
     }
@@ -131,7 +131,7 @@ export default function AnalyticsPage() {
           resolved: stats?.resolved || 0,
         };
       }),
-    [months, incidentStatsByMonth, spansMultipleYears]
+    [months, incidentStatsByMonth, spansMultipleYears, formatMonthLabel]
   );
 
   const resolutionTimeData = React.useMemo(
@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
           hours: avgHours,
         };
       }),
-    [months, incidentStatsByMonth, spansMultipleYears]
+    [months, incidentStatsByMonth, spansMultipleYears, formatMonthLabel]
   );
 
   const complianceData = React.useMemo(
@@ -163,7 +163,7 @@ export default function AnalyticsPage() {
           rate,
         };
       }),
-    [months, incidentStatsByMonth, spansMultipleYears]
+    [months, incidentStatsByMonth, spansMultipleYears, formatMonthLabel]
   );
 
   const incidentsByTypeData = React.useMemo(
@@ -212,18 +212,22 @@ export default function AnalyticsPage() {
     {
       id: "type",
       label: "All types",
-      options: commonFilterOptions.incidentType,
+      options: filterOptions.incidentType,
       value: typeFilter,
       onChange: setTypeFilter,
     },
     {
       id: "severity",
       label: "All severities",
-      options: commonFilterOptions.severity,
+      options: filterOptions.severity,
       value: severityFilter,
       onChange: setSeverityFilter,
     },
   ];
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard allowedRoles={["super_admin", "company_admin", "manager"]}>

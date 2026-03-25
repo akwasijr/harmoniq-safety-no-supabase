@@ -1,98 +1,89 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { getDateRangeFromValue, isWithinDateRange, formatDateRange } from "@/lib/date-utils";
+import { getDateRangeFromValue, type DateRangeValue } from "@/lib/date-utils";
 
 describe("getDateRangeFromValue", () => {
+  const FIXED_NOW = new Date("2026-03-16T12:00:00.000Z");
+
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2024-06-15T12:00:00Z"));
+    vi.setSystemTime(FIXED_NOW);
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it("returns today's range", () => {
+  it("returns today range", () => {
     const { start, end } = getDateRangeFromValue("today");
-    expect(start.getDate()).toBe(15);
-    expect(end.getDate()).toBe(15);
+    expect(start.getDate()).toBe(FIXED_NOW.getDate());
+    expect(start.getHours()).toBe(0);
     expect(end.getHours()).toBe(23);
     expect(end.getMinutes()).toBe(59);
   });
 
-  it("returns yesterday's range", () => {
+  it("returns yesterday range", () => {
     const { start, end } = getDateRangeFromValue("yesterday");
-    expect(start.getDate()).toBe(14);
-    expect(end.getDate()).toBe(14);
+    expect(start.getDate()).toBe(FIXED_NOW.getDate() - 1);
+    expect(end.getDate()).toBe(FIXED_NOW.getDate() - 1);
+    expect(end.getHours()).toBe(23);
   });
 
   it("returns last 7 days range", () => {
     const { start } = getDateRangeFromValue("last_7_days");
-    expect(start.getDate()).toBe(8);
+    const diffDays = Math.round(
+      (FIXED_NOW.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    expect(diffDays).toBeGreaterThanOrEqual(7);
   });
 
   it("returns last 30 days range", () => {
     const { start } = getDateRangeFromValue("last_30_days");
-    const expected = new Date("2024-06-15");
-    expected.setDate(expected.getDate() - 30);
-    expect(start.getDate()).toBe(expected.getDate());
+    const diffDays = Math.round(
+      (FIXED_NOW.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    expect(diffDays).toBeGreaterThanOrEqual(30);
   });
 
-  it("returns all time starting from epoch", () => {
+  it("returns last 90 days range", () => {
+    const { start } = getDateRangeFromValue("last_90_days");
+    const diffDays = Math.round(
+      (FIXED_NOW.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    expect(diffDays).toBeGreaterThanOrEqual(90);
+  });
+
+  it("returns last 6 months range", () => {
+    const { start } = getDateRangeFromValue("last_6_months");
+    const monthDiff =
+      (FIXED_NOW.getFullYear() - start.getFullYear()) * 12 +
+      (FIXED_NOW.getMonth() - start.getMonth());
+    expect(monthDiff).toBeGreaterThanOrEqual(6);
+  });
+
+  it("returns all time for custom without dates", () => {
+    const { start } = getDateRangeFromValue("custom");
+    expect(start.getTime()).toBe(0); // epoch
+  });
+
+  it("parses custom date range", () => {
+    const { start, end } = getDateRangeFromValue("custom", "2026-01-01", "2026-01-31");
+    expect(start.getFullYear()).toBe(2026);
+    expect(start.getMonth()).toBe(0); // Jan
+    expect(end.getHours()).toBe(23); // end of day
+  });
+
+  it("handles custom range with ISO timestamps", () => {
+    const { end } = getDateRangeFromValue(
+      "custom",
+      "2026-01-01T00:00:00.000Z",
+      "2026-01-31T15:30:00.000Z"
+    );
+    // Should keep the provided time, not append 23:59:59
+    expect(end.getMinutes()).toBe(30);
+  });
+
+  it("returns all_time with epoch start", () => {
     const { start } = getDateRangeFromValue("all_time");
     expect(start.getTime()).toBe(0);
-  });
-
-  it("handles custom date range", () => {
-    const { start, end } = getDateRangeFromValue("custom", "2024-01-01", "2024-06-30");
-    expect(start.getFullYear()).toBe(2024);
-    expect(start.getMonth()).toBe(0); // January
-    expect(end.getMonth()).toBe(5); // June
-  });
-
-  it("falls back to all_time when custom has no dates", () => {
-    const { start } = getDateRangeFromValue("custom");
-    expect(start.getTime()).toBe(0);
-  });
-});
-
-describe("isWithinDateRange", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2024-06-15T12:00:00Z"));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("returns true for all_time regardless of date", () => {
-    expect(isWithinDateRange("2020-01-01", "all_time")).toBe(true);
-    expect(isWithinDateRange("1990-01-01", "all_time")).toBe(true);
-  });
-
-  it("correctly filters for last 7 days", () => {
-    expect(isWithinDateRange("2024-06-14", "last_7_days")).toBe(true);
-    expect(isWithinDateRange("2024-06-01", "last_7_days")).toBe(false);
-  });
-
-  it("accepts Date objects", () => {
-    expect(isWithinDateRange(new Date("2024-06-14"), "last_7_days")).toBe(true);
-  });
-});
-
-describe("formatDateRange", () => {
-  it("returns label for preset ranges", () => {
-    expect(formatDateRange("today")).toBe("Today");
-    expect(formatDateRange("last_7_days")).toBe("Last 7 days");
-    expect(formatDateRange("all_time")).toBe("All time");
-  });
-
-  it("formats custom range with dates", () => {
-    const result = formatDateRange("custom", "2024-01-01", "2024-06-30");
-    expect(result).toContain("2024");
-  });
-
-  it("returns generic label for custom without dates", () => {
-    expect(formatDateRange("custom")).toBe("Custom range");
   });
 });

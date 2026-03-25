@@ -3,11 +3,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Mail, Loader, Eye, EyeOff } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Mail, Loader, Eye, EyeOff, Lock, LayoutDashboard, HardHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
@@ -15,14 +14,44 @@ import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { clearClientCookie, setClientCookie } from "@/lib/client-cookies";
 import { type AppChoice, buildCompanyDestination, buildPlatformAnalyticsDestination } from "@/lib/navigation";
 import { getPlatformSlugFilterList, isPlatformSlug } from "@/lib/platform-config";
+import { useTranslation } from "@/i18n";
+import { mockLogin, IS_MOCK_MODE } from "@/hooks/use-auth";
+import { DEFAULT_COMPANY_SLUG } from "@/mocks/data";
 
 const APP_CHOICE_STORAGE_KEY = "harmoniq_app_choice";
 const APP_CHOICE_COOKIE = "harmoniq_app_choice";
 const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 const SELECTED_COMPANY_STORAGE_KEY = "harmoniq_selected_company";
+const LOGIN_ATTEMPTS_KEY = "harmoniq_login_attempts";
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+interface LoginAttemptData {
+  count: number;
+  lockedUntil: number | null;
+}
+
+function getLoginAttempts(): LoginAttemptData {
+  try {
+    const raw = sessionStorage.getItem(LOGIN_ATTEMPTS_KEY);
+    if (!raw) return { count: 0, lockedUntil: null };
+    return JSON.parse(raw);
+  } catch {
+    return { count: 0, lockedUntil: null };
+  }
+}
+
+function setLoginAttempts(data: LoginAttemptData) {
+  sessionStorage.setItem(LOGIN_ATTEMPTS_KEY, JSON.stringify(data));
+}
+
+function clearLoginAttempts() {
+  sessionStorage.removeItem(LOGIN_ATTEMPTS_KEY);
+}
 
 function LoginForm() {
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
@@ -32,11 +61,27 @@ function LoginForm() {
   const [passwordError, setPasswordError] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const [loginMode, setLoginMode] = React.useState<"password" | "magic">("password");
-  const [appChoice, setAppChoice] = React.useState<"dashboard" | "app">(() => {
-    if (typeof window === "undefined") return "dashboard";
+  const [lockoutRemaining, setLockoutRemaining] = React.useState(0);
+  const [failedAttempts, setFailedAttempts] = React.useState(0);
+  const [isMobile, setIsMobile] = React.useState(false);
+  const [hasMounted, setHasMounted] = React.useState(false);
+  const [appChoice, setAppChoice] = React.useState<"dashboard" | "app">("dashboard");
+
+  React.useEffect(() => {
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
     const stored = window.localStorage.getItem(APP_CHOICE_STORAGE_KEY);
-    return stored === "app" || stored === "dashboard" ? stored : "dashboard";
-  });
+    setAppChoice(mobile ? "app" : (stored === "app" || stored === "dashboard" ? stored : "dashboard"));
+    setHasMounted(true);
+
+    const onResize = () => {
+      const m = window.innerWidth < 768;
+      setIsMobile(m);
+      if (m) setAppChoice("app");
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   React.useEffect(() => {
     const errorParam = searchParams.get("error");
@@ -56,6 +101,47 @@ function LoginForm() {
   // Supabase .not("col","in","(val1,val2)") requires NO quotes around values
   const PLATFORM_SLUGS_LIST = getPlatformSlugFilterList();
 
+  // Check lockout state on mount and run countdown timer
+  React.useEffect(() => {
+    const checkLockout = () => {
+      const attempts = getLoginAttempts();
+      setFailedAttempts(attempts.count);
+      if (attempts.lockedUntil && attempts.lockedUntil > Date.now()) {
+        setLockoutRemaining(Math.ceil((attempts.lockedUntil - Date.now()) / 1000));
+      } else if (attempts.lockedUntil && attempts.lockedUntil <= Date.now()) {
+        clearLoginAttempts();
+        setFailedAttempts(0);
+        setLockoutRemaining(0);
+      }
+    };
+    checkLockout();
+    const interval = setInterval(() => {
+      const attempts = getLoginAttempts();
+      if (attempts.lockedUntil && attempts.lockedUntil > Date.now()) {
+        setLockoutRemaining(Math.ceil((attempts.lockedUntil - Date.now()) / 1000));
+      } else if (attempts.lockedUntil) {
+        clearLoginAttempts();
+        setFailedAttempts(0);
+        setLockoutRemaining(0);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const isLockedOut = lockoutRemaining > 0;
+  const attemptsRemaining = MAX_ATTEMPTS - failedAttempts;
+
+  const recordFailedAttempt = () => {
+    const attempts = getLoginAttempts();
+    const newCount = attempts.count + 1;
+    const lockedUntil = newCount >= MAX_ATTEMPTS ? Date.now() + LOCKOUT_DURATION_MS : null;
+    setLoginAttempts({ count: newCount, lockedUntil });
+    setFailedAttempts(newCount);
+    if (lockedUntil) {
+      setLockoutRemaining(Math.ceil(LOCKOUT_DURATION_MS / 1000));
+    }
+  };
+
   const getAllowedApps = (role: string): AppChoice[] => {
     if (role === "employee") return ["app"];
     // super_admin, company_admin, manager can access both
@@ -65,12 +151,37 @@ function LoginForm() {
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLockedOut) return;
     try {
       setIsLoading(true);
       setError("");
       setSuccess("");
       setEmailError("");
       setPasswordError("");
+
+      // Mock mode: authenticate against local mock users (password: demo123)
+      if (IS_MOCK_MODE) {
+        if (password !== "demo123") {
+          recordFailedAttempt();
+          setPasswordError("Invalid password. Use 'demo123' for mock mode.");
+          setIsLoading(false);
+          return;
+        }
+        const mockUser = mockLogin(email);
+        if (!mockUser) {
+          setError("No mock user found with that email.");
+          setIsLoading(false);
+          return;
+        }
+        clearLoginAttempts();
+        const allowedApps = getAllowedApps(mockUser.role);
+        const dest = allowedApps.includes(appChoice) ? appChoice : allowedApps[0];
+        setClientCookie(APP_CHOICE_COOKIE, dest, 30);
+        saveToStorage(APP_CHOICE_STORAGE_KEY, dest);
+        const slug = DEFAULT_COMPANY_SLUG;
+        window.location.href = buildCompanyDestination(slug, dest);
+        return;
+      }
 
       const supabase = createClient();
 
@@ -87,7 +198,7 @@ function LoginForm() {
       } catch (abortErr: unknown) {
         clearTimeout(timeout);
         if ((abortErr instanceof Error && abortErr.name === "AbortError") || controller.signal.aborted) {
-          setError("Login timed out. The server may be starting up — please try again in a moment.");
+          setError("Login timed out. The server may be starting up, please try again in a moment.");
           setIsLoading(false);
           return;
         }
@@ -99,6 +210,7 @@ function LoginForm() {
 
       if (authError) {
         if (authError.message.toLowerCase().includes("invalid login credentials")) {
+          recordFailedAttempt();
           setPasswordError("Email or password is incorrect.");
         } else {
           setError(authError.message);
@@ -107,6 +219,10 @@ function LoginForm() {
         return;
       }
 
+      // Successful auth, clear lockout tracking
+      clearLoginAttempts();
+      setFailedAttempts(0);
+
         if (data.session) {
           await supabase.auth.setSession({
             access_token: data.session.access_token,
@@ -114,7 +230,7 @@ function LoginForm() {
           });
         }
 
-      // Route based on user profile — wrap in a 10s timeout to prevent infinite spinner
+      // Route based on user profile. Wrap in a 10s timeout to prevent infinite spinner
       const userId = data.user?.id;
       if (!userId) {
         setError("Login succeeded but no user returned.");
@@ -223,7 +339,7 @@ function LoginForm() {
         }
         saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
       } else {
-        // No company_id on profile — try to find one
+        // No company_id on profile, try to find one
         const { data: firstCompany } = await supabase
           .from("companies")
           .select("id, slug")
@@ -244,7 +360,7 @@ function LoginForm() {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes("abort")) return;
       setError(message.includes("timed out")
-        ? "Connection timed out. The server may be starting up — please try again in a moment."
+        ? "Connection timed out. The server may be starting up, please try again in a moment."
         : `Error: ${message}`);
       setIsLoading(false);
     }
@@ -313,180 +429,228 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center justify-center gap-3">
-          <Image
-            src="/favicon.svg"
-            alt="Harmoniq Logo"
-            width={48}
-            height={48}
-            className="h-12 w-12"
-          />
-          <span className="text-2xl font-semibold">Harmoniq Safety</span>
+    <div className="relative flex min-h-screen items-center justify-center px-4" style={{ background: 'white' }}>
+      {/* Animated gradient background — top-right corner */}
+      <div aria-hidden="true" style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute', top: '-15%', right: '-8%', width: '45%', height: '80%',
+          background: 'linear-gradient(160deg, hsla(200,90%,78%,0.5), hsla(240,75%,68%,0.45), hsla(265,70%,55%,0.5), hsla(280,65%,48%,0.45), hsla(210,85%,75%,0.4))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(40px)',
+          borderRadius: '40% 60% 50% 50%',
+          animation: 'auth-flow 8s ease-in-out infinite, auth-morph 12s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', top: '5%', right: '-2%', width: '30%', height: '60%',
+          background: 'linear-gradient(170deg, hsla(195,90%,80%,0.45), hsla(230,80%,72%,0.4), hsla(260,65%,58%,0.45), hsla(195,85%,78%,0.35))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(35px)',
+          borderRadius: '50% 40% 55% 45%',
+          animation: 'auth-flow 6s ease-in-out infinite reverse, auth-morph 10s ease-in-out infinite reverse',
+          animationDelay: '-3s',
+        }} />
+        <div style={{
+          position: 'absolute', top: '-8%', right: '3%', width: '22%', height: '50%',
+          background: 'linear-gradient(150deg, hsla(210,95%,82%,0.4), hsla(255,70%,65%,0.35), hsla(275,60%,50%,0.3), hsla(210,90%,78%,0.35))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(30px)',
+          borderRadius: '45% 55% 40% 60%',
+          animation: 'auth-flow 10s ease-in-out infinite, auth-morph 14s ease-in-out infinite',
+          animationDelay: '-6s',
+        }} />
+      </div>
+      <div className="relative z-10 w-full max-w-[420px]">
+        <div className="mb-6 flex flex-col items-center gap-2">
+          <Image src="/favicon.svg" alt="Harmoniq Logo" width={40} height={40} className="h-10 w-10" />
+          <span className="text-lg font-semibold">Harmoniq</span>
         </div>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl">Welcome back</CardTitle>
-            <CardDescription>
-              Sign in to your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {error && (
-                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
-                  {error}
-                </div>
-              )}
+        <div className="rounded-xl border bg-background p-8 shadow-sm">
+          {/* Header */}
+          <h1 className="text-2xl font-bold tracking-tight mb-1">
+            {t("auth.welcomeBack") || "Sign in to your account"}
+          </h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            {t("auth.signInToAccount") || "Enter your credentials to continue"}
+          </p>
 
-              {success && (
-                <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
-                  {success}
-                </div>
-              )}
-
+          {/* Alerts */}
+          {isLockedOut && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300 flex items-center gap-2 mb-4">
+              <Lock className="h-4 w-4 flex-shrink-0" />
               <div>
-                <Label>Choose app</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
+                <p className="font-medium">{t("auth.accountLocked") || "Account temporarily locked"}</p>
+                <p>{t("auth.tryAgainIn") || "Try again in"} {Math.ceil(lockoutRemaining / 60)} {t("auth.minutes") || "minutes"}</p>
+              </div>
+            </div>
+          )}
+
+          {!isLockedOut && failedAttempts >= 3 && attemptsRemaining > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300 mb-4">
+              {attemptsRemaining} {t("auth.attemptsRemaining") || "attempts remaining"}
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300 mb-4">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300 mb-4">
+              {success}
+            </div>
+          )}
+
+          {/* Email */}
+          <div className="mb-4">
+            <Label htmlFor="email" required error={Boolean(emailError)} className="text-sm font-medium mb-1.5">
+              {t("auth.email")}
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
+              placeholder="you@company.com"
+              error={Boolean(emailError)}
+              errorMessage={emailError}
+              required
+              disabled={isLoading}
+              className="h-11 rounded-lg bg-muted/40"
+            />
+          </div>
+
+          {loginMode === "password" ? (
+            <form onSubmit={handleEmailSignIn} className="space-y-4">
+              {/* Password */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label htmlFor="password" required error={Boolean(passwordError)} className="text-sm font-medium">
+                    {t("auth.password")}
+                  </Label>
+                  <button
                     type="button"
-                    onClick={() => setAppChoice("dashboard")}
-                    disabled={isLoading}
-                    variant={appChoice === "dashboard" ? "default" : "outline"}
-                    className="w-full"
+                    onClick={handleForgotPassword}
+                    className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                   >
-                    Dashboard
-                  </Button>
-                  <Button
+                    {t("auth.forgotPassword")}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setPasswordError(""); }}
+                    placeholder="••••••••"
+                    required
+                    disabled={isLoading}
+                    error={Boolean(passwordError)}
+                    errorMessage={passwordError}
+                    className="h-11 rounded-lg bg-muted/40 pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
+                  />
+                  <button
                     type="button"
-                    onClick={() => setAppChoice("app")}
-                    disabled={isLoading}
-                    variant={appChoice === "app" ? "default" : "outline"}
-                    className="w-full"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-0 h-11 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    Mobile App
-                  </Button>
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
 
-              {/* Email field — shared between both modes */}
-              <div>
-                <Label htmlFor="email" required error={Boolean(emailError)}>
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setEmailError("");
-                  }}
-                  placeholder="you@company.com"
-                  error={Boolean(emailError)}
-                  errorMessage={emailError}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              {loginMode === "password" ? (
-                /* Password mode */
-                <form onSubmit={handleEmailSignIn} className="space-y-3">
-                  <div>
-                    <Label htmlFor="password" required error={Boolean(passwordError)}>
-                      Password
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          setPasswordError("");
-                        }}
-                        placeholder="••••••••"
-                        required
-                        disabled={isLoading}
-                        error={Boolean(passwordError)}
-                        errorMessage={passwordError}
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-4 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        tabIndex={-1}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
+              {/* App chooser — hidden on mobile (auto-selects Field Worker) */}
+              {hasMounted && !isMobile && (
+                <div role="radiogroup" aria-label={t("auth.chooseApp") || "Choose app"}>
+                  <Label className="text-sm font-medium mb-1.5">{t("auth.chooseApp") || "Choose app"}</Label>
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={handleForgotPassword}
-                      className="text-xs text-muted-foreground hover:text-foreground"
+                      role="radio"
+                      aria-checked={appChoice === "dashboard"}
+                      onClick={() => setAppChoice("dashboard")}
+                      disabled={isLoading}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
                     >
-                      Forgot password?
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "dashboard" ? "border-primary bg-primary" : "border-muted-foreground/40"}`} />
+                      <LayoutDashboard className="h-4 w-4" />
+                      {t("auth.dashboard")}
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={appChoice === "app"}
+                      onClick={() => setAppChoice("app")}
+                      disabled={isLoading}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "app" ? "border-primary bg-primary" : "border-muted-foreground/40"}`} />
+                      <HardHat className="h-4 w-4" />
+                      {t("auth.mobileApp")}
                     </button>
                   </div>
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full"
-                    loading={isLoading}
-                  >
-                    Sign in with password
-                  </Button>
-                </form>
-              ) : (
-                /* Magic link mode */
-                <Button
-                  type="button"
-                  onClick={handleMagicLink}
-                  disabled={isLoading || !email}
-                  className="w-full"
-                >
-                  {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  Send magic link
-                </Button>
+                </div>
               )}
 
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or</span>
-                </div>
-              </div>
-
-              {/* Toggle between modes */}
+              {/* Sign in button */}
               <Button
-                type="button"
-                onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
-                disabled={isLoading}
-                variant="outline"
-                className="w-full"
+                type="submit"
+                disabled={isLoading || isLockedOut}
+                className="w-full h-11 rounded-lg text-sm font-semibold"
+                loading={isLoading}
               >
-                <Mail className="h-4 w-4" />
-                {loginMode === "password" ? "Sign in with magic link instead" : "Sign in with password instead"}
+                {t("auth.signIn")}
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </form>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleMagicLink}
+              disabled={isLoading || !email}
+              className="w-full h-11 rounded-lg text-sm font-semibold"
+            >
+              {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+              {t("auth.sendMagicLink")}
+            </Button>
+          )}
 
-        {/* Back to home */}
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-foreground">
-            ← Back to home
+          {/* Divider */}
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">OR</span>
+            </div>
+          </div>
+
+          {/* Toggle login mode */}
+          <button
+            type="button"
+            onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+          >
+            <Mail className="h-4 w-4" />
+            {loginMode === "password" ? t("auth.magicLink") : t("auth.passwordMode")}
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-5 rounded-lg border border-border bg-card/60 dark:bg-white/5 py-3 text-center text-sm text-muted-foreground">
+          {t("auth.noAccount") || "Don't have an account?"}{" "}
+          <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+            {t("auth.createAccount") || "Create account"}
+          </Link>
+        </div>
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-foreground transition-colors">
+            {t("auth.backToHome")}
           </Link>
         </p>
       </div>

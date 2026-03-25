@@ -3,12 +3,14 @@
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   CheckCircle,
   FileCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -253,7 +255,25 @@ export default function RiskAssessmentFormPage() {
 
   const { t } = useTranslation();
 
-  const config = formConfigs[formId] || defaultConfig;
+  // Validate that formId is a known form type to prevent arbitrary ID lookups
+  const knownFormIds = Object.keys(formConfigs);
+  if (!knownFormIds.includes(formId)) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="Assessment not found"
+        description="This risk assessment form does not exist."
+        action={
+          <Button variant="outline" size="sm" onClick={() => router.push(`/${company}/app/risk-assessment`)}>
+            Back to Risk Assessments
+          </Button>
+        }
+      />
+    );
+  }
+  const config = formConfigs[formId];
+  // Note: This page uses static form configs (not DB entities), so company_id is
+  // enforced at submission via user.company_id on the RiskEvaluation record.
   const currentSectionData = config.sections[currentSection];
   const isLastSection = currentSection === config.sections.length - 1;
 
@@ -270,6 +290,10 @@ export default function RiskAssessmentFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (Object.keys(answers).length === 0) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     if (!user) {
       toast("Unable to submit without a user session.");
@@ -294,13 +318,13 @@ export default function RiskAssessmentFormPage() {
     };
     addEvaluation(evaluation);
     toast("Assessment submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment`);
+    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment&id=${evaluation.id}`);
   };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-14 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button
             variant="ghost"
@@ -317,7 +341,7 @@ export default function RiskAssessmentFormPage() {
           </div>
         </div>
         {/* Progress bar */}
-        <div className="h-1 bg-muted" role="progressbar" aria-label="Completion progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / config.sections.length) * 100)}>
+        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / config.sections.length) * 100)}>
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((currentSection + 1) / config.sections.length) * 100}%` }}
@@ -332,7 +356,7 @@ export default function RiskAssessmentFormPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
               <FileCheck className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-lg font-semibold">{currentSectionData.title}</h2>
+            <h2 className="text-lg font-bold">{currentSectionData.title}</h2>
           </div>
         </div>
 

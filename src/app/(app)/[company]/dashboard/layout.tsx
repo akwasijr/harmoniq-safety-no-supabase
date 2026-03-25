@@ -2,10 +2,14 @@
 
 import * as React from "react";
 import { useParams, useRouter, notFound } from "next/navigation";
+import { useTheme } from "next-themes";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useCompanyStore } from "@/stores/company-store";
-import { applyPrimaryColor } from "@/lib/branding";
+import { useNotificationsStore } from "@/stores/notifications-store";
+import { checkOverdueItems } from "@/stores/notification-triggers";
+import { applyBranding, resetBranding } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { I18nProvider } from "@/i18n";
 import type { SupportedLocale } from "@/i18n";
@@ -20,6 +24,8 @@ export default function DashboardRootLayout({
   const company = params.company as string;
   const { user, currentCompany, isSuperAdmin, isEmployee, isLoading } = useAuth();
   const { items: companies, isLoading: isCompaniesLoading } = useCompanyStore();
+  const { tickets, workOrders, correctiveActions } = useCompanyData();
+  const { add: addNotification } = useNotificationsStore();
 
   // Validate company slug only after companies have loaded
   const isValidCompany = React.useMemo(
@@ -27,16 +33,28 @@ export default function DashboardRootLayout({
     [companies, company, isCompaniesLoading]
   );
 
-  // Apply saved branding color on mount — must be before any early returns to preserve hook order
+  const { resolvedTheme } = useTheme();
+
+  // Apply saved branding on mount, and re-apply when theme/company changes
   React.useEffect(() => {
-    applyPrimaryColor(currentCompany?.primary_color);
-  }, [currentCompany?.primary_color]);
+    if (!currentCompany) return;
+    applyBranding(
+      {
+        primaryColor: currentCompany.primary_color,
+        secondaryColor: currentCompany.secondary_color,
+        fontFamily: currentCompany.font_family,
+        uiStyle: currentCompany.ui_style,
+      },
+      resolvedTheme || "light"
+    );
+    return () => resetBranding();
+  }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany]);
 
   React.useEffect(() => {
     applyDocumentLanguage(currentCompany?.language ?? user?.language);
   }, [currentCompany?.language, user?.language]);
 
-  // C3: Redirect employees away from dashboard — they should use the employee app
+  // C3: Redirect employees away from dashboard. They should use the employee app
   React.useEffect(() => {
     if (!isLoading && user && isEmployee) {
       router.replace(`/${company}/app`);
@@ -49,6 +67,26 @@ export default function DashboardRootLayout({
       router.replace("/login");
     }
   }, [isLoading, user, router]);
+
+  // Check for overdue items once per hour per session
+  React.useEffect(() => {
+    if (!isLoading && user?.id && user?.company_id) {
+      const checkedKey = `harmoniq_overdue_checked_${user.id}`;
+      const lastChecked = sessionStorage.getItem(checkedKey);
+      const now = Date.now();
+      if (!lastChecked || now - parseInt(lastChecked) > 3600000) {
+        checkOverdueItems({
+          userId: user.id,
+          companyId: user.company_id,
+          tickets,
+          workOrders,
+          correctiveActions,
+          addNotification,
+        });
+        sessionStorage.setItem(checkedKey, String(now));
+      }
+    }
+  }, [user?.id, user?.company_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading || !user) {
     return (

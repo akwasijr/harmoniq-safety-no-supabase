@@ -26,7 +26,20 @@
     "optional": "Valfritt",
     "all": "Alla",
     "home": "Hem",
-    "continue": "Fortsätt"
+    "continue": "Fortsätt",
+    "none": "Ingen",
+    "comingSoon": "Kommer snart",
+    "uploadPhoto": "Ladda upp foto",
+    "uploadPhotos": "Ladda upp foton",
+    "changeProfilePhoto": "Ändra profilbild",
+    "notifications": "Aviseringar",
+    "goBack": "Gå tillbaka",
+    "unread": "Oläst",
+    "completionProgress": "Slutförandeförlopp",
+    "dismiss": "Stäng",
+    "noPermission": "Du har inte behörighet att utföra denna åtgärd",
+    "noEditPermission": "Du har inte behörighet att redigera inställningar. Kontakta din administratör för åtkomst.",
+    "readMore": "Läs mer"
   },
   "nav": {
     "home": "Hem",
@@ -52,7 +65,11 @@
     "riskAssessments": "Riskbedömningar",
     "qrCodes": "QR-koder",
     "tickets": "Ärenden",
-    "newsShort": "Nyheter"
+    "newsShort": "Nyheter",
+    "myTasksShort": "Mina Uppgifter",
+    "safetyShort": "Säkerhet",
+    "safety": "Säkerhet",
+    "templates": "Uppgiftsmallar"
   },
   "app": {
     "goodMorning": "God morgon",
@@ -86,7 +103,11 @@
     "browseAssets": "Bläddra tillgångar",
     "browseAssetsDesc": "Sök utrustning, skanna QR-koder eller kontrollera status.",
     "newsDesc": "Håll dig uppdaterad med företagets säkerhetsnyheter och policyer.",
-    "riskAssessment": "Riskbedömning"
+    "riskAssessment": "Riskbedömning",
+    "myTasks": "Mina Uppgifter",
+    "welcome": "Välkommen",
+    "completedWeek": "Denna Vecka",
+    "featured": "Utvalda"
   },
   "report": {
     "title": "Rapportera incident",
@@ -219,7 +240,23 @@
     "language_changed": "Språk uppdaterat",
     "appVersion": "Harmoniq Safety v1.0.0",
     "offline": "Offlineläge",
-    "offlineDesc": "Vissa funktioner kräver internetanslutning"
+    "offlineDesc": "Vissa funktioner kräver internetanslutning",
+    "privacySecurity": "Integritet och säkerhet",
+    "loading": "Laddar profil...",
+    "about": "Om",
+    "terms": "Villkor",
+    "privacy_policy": "Integritetspolicy",
+    "appearance_description": "Ljust, mörkt eller system",
+    "notif_incidents": "Nya incidenter",
+    "notif_incidents_desc": "Avisering när nya incidenter rapporteras",
+    "notif_tasks": "Uppgiftspåminnelser",
+    "notif_tasks_desc": "Påminnelse om väntande uppgifter",
+    "notif_news": "Nyheter & meddelanden",
+    "notif_news_desc": "Företagsnyheter och uppdateringar",
+    "save_preferences": "Spara inställningar",
+    "privacy_security": "Integritet & säkerhet",
+    "change_password": "Ändra lösenord",
+    "signOut": "Logga ut"
   },
   "dashboard": {
     "openIncidents": "Öppna incidenter",
@@ -288,7 +325,7 @@
     "dataLoadFailed": "Kunde inte ladda data",
     "dataLoadFailedDesc": "Det uppstod problem med att ladda denna information. Det kan vara ett tillfälligt problem.",
     "saveFailed": "Kunde inte spara ändringar",
-    "saveFailedDesc": "Dina ändringar kunde inte sparas. De har bevarats lokalt — försök igen om en stund.",
+    "saveFailedDesc": "Dina ändringar kunde inte sparas. De har bevarats lokalt, försök igen om en stund.",
     "timeout": "Begäran avbröts",
     "timeoutDesc": "Servern svarar för långsamt. Försök igen.",
     "rateLimited": "För många begäranden",
@@ -300,47 +337,14 @@
     "retrying": "Försöker igen...",
     "retryIn": "Försök igen om {seconds}s"
   },
-  "empty": {
-    "noResults": "Inga resultat hittades",
-    "noResultsFilterDesc": "Försök justera dina sök- eller filterkriterier för att hitta det du letar efter.",
-    "noResultsSearchDesc": "Inga objekt matchar din sökning. Försök med en annan sökterm.",
-    "clearFilters": "Rensa filter",
-    "noIncidents": "Inga incidenter",
-    "noIncidentsDesc": "Inga incidenter har rapporterats ännu. Det är goda nyheter för säkerheten!",
-    "noTasks": "Inga uppgifter tilldelade",
-    "noTasksDesc": "Du är i kapp! Nya säkerhetsuppgifter visas här när de tilldelas.",
-    "noUsers": "Inga användare",
-    "noUsersDesc": "Inga användare har lagts till i detta företag ännu.",
-    "noLocations": "Inga platser",
-    "noLocationsDesc": "Lägg till platser för att organisera din arbetsmiljöhantering.",
-    "noAssets": "Inga tillgångar",
-    "noAssetsDesc": "Registrera utrustning och tillgångar för att spåra inspektioner och underhåll.",
-    "noContent": "Inget innehåll",
-    "noContentDesc": "Skapa säkerhetsbulletiner, policyer och utbildningsmaterial för ditt team.",
-    "noNotifications": "Allt uppdaterat!",
-    "noNotificationsDesc": "Du har inga nya aviseringar just nu.",
-    "noChecklists": "Inga checklistor",
-    "noChecklistsDesc": "Säkerhetschecklistor och inspektioner visas här när de skapas.",
-    "noRiskAssessments": "Inga riskbedömningar",
-    "noRiskAssessmentsDesc": "Riskbedömningsformulär visas här när de är tillgängliga.",
-    "noTeams": "Inga team",
-    "noTeamsDesc": "Skapa team för att organisera anställda och tilldela säkerhetsansvar."
-  },
-  "time": {
-    "justNow": "Just nu",
-    "minutesAgo": "{count} min sedan",
-    "hoursAgo": "{count}t sedan",
-    "daysAgo": "{count}d sedan",
-    "today": "Idag",
-    "yesterday": "Igår"
-  },
   "assets": {
     "tabs": {
       "assets": "Tillgångar",
       "workOrders": "Arbetsordrar",
       "parts": "Delar",
       "correctiveActions": "Korrigerande åtgärder",
-      "alerts": "Varningar"
+      "alerts": "Varningar",
+      "analytics": "Analys"
     },
     "detailTabs": {
       "overview": "Översikt",
@@ -367,7 +371,8 @@
       "qrCode": "QR-kod",
       "warrantyExpiry": "Garantiutgång",
       "nextCalibration": "Nästa kalibrering",
-      "nextMaintenance": "Nästa underhåll"
+      "nextMaintenance": "Nästa underhåll",
+      "notAssigned": "Inte tilldelad"
     },
     "statuses": {
       "active": "Aktiv",
@@ -398,7 +403,17 @@
     },
     "placeholders": {
       "searchAssets": "Sök tillgångar...",
-      "searchByNameSerialTag": "Sök på namn, serienummer eller tagg..."
+      "searchByNameSerialTag": "Sök på namn, serienummer eller tagg...",
+      "assetName": "t.ex. Gaffeltruck #12",
+      "serialNumber": "t.ex. SN-12345",
+      "manufacturer": "t.ex. Toyota",
+      "model": "t.ex. 8FGU25",
+      "department": "t.ex. Drift",
+      "completionNotes": "Lägg till eventuella kommentarer om utfört arbete...",
+      "scheduleName": "t.ex. Oljebyte, Filterbyte",
+      "optionalDescription": "Valfri beskrivning...",
+      "meterType": "t.ex. Motortimmar, Mätarställning",
+      "notes": "Eventuella anteckningar"
     },
     "empty": {
       "noAssets": "Inga tillgångar",
@@ -451,7 +466,57 @@
     "openWorkOrdersPlural": "{count} Öppna arbetsordrar",
     "assignedToYou": "Tilldelad till dig",
     "assetCount": "{count} tillgång",
-    "assetCountPlural": "{count} tillgångar"
+    "assetCountPlural": "{count} tillgångar",
+    "avgHealthScore": "Snitt hälsa",
+    "avgHealthScoreDesc": "Genomsnittlig hälsopoäng",
+    "certStatus": {
+      "valid": "Giltig",
+      "expiring": "Löper ut snart",
+      "expired": "Utgånget"
+    },
+    "download": "Ladda ner",
+    "noPreview": "Ingen förhandsgranskning tillgänglig",
+    "wizard": {
+      "basic": "Grundinfo",
+      "technical": "Teknisk",
+      "location": "Plats",
+      "lifecycle": "Livscykel",
+      "compliance": "Efterlevnad",
+      "next": "Nästa",
+      "back": "Tillbaka",
+      "create": "Skapa tillgång",
+      "step": "Steg {current} av {total}",
+      "basicDesc": "Obligatoriska fält och identifiering",
+      "technicalDesc": "Tillverkare och specifikationer",
+      "locationDesc": "Plats och tilldelning",
+      "lifecycleDesc": "Inköps- och garantiuppgifter",
+      "complianceDesc": "Certifiering och underhåll"
+    },
+    "kpi": {
+      "totalInspectionsDesc": "Antal inspektioner utförda på denna tillgång",
+      "passRateDesc": "Andel inspektioner som klarade alla kontroller",
+      "totalIncidentsDesc": "Säkerhetsincidenter som involverar denna tillgång",
+      "downtimeHoursDesc": "Totala timmar denna tillgång var ur drift",
+      "maintenanceComplianceDesc": "Andel underhåll slutfört i tid",
+      "lastInspectedDesc": "Dagar sedan senaste inspektionen"
+    },
+    "showAllIncidents": "Visa alla {count} incidenter",
+    "showLess": "Visa färre",
+    "healthScore": {
+      "excellent": "Utmärkt",
+      "good": "Bra",
+      "fair": "Acceptabel",
+      "poor": "Dålig",
+      "howCalculated": "Hur detta betyg beräknas",
+      "inspections": "Inspektionens godkännandegrad",
+      "maintenance": "Underhållsefterlevnad",
+      "condition": "Tillståndsbetyg",
+      "downtime": "Driftstoppseffekt",
+      "age": "Åldersfaktor"
+    },
+    "work_orders_empty_title": "Allt klart!",
+    "work_orders_empty_description": "Inga öppna arbetsordrar tilldelade till dig",
+    "unknownAsset": "[SV] Unknown asset"
   },
   "incidents": {
     "title": "Incidenter",
@@ -493,7 +558,8 @@
       "new": "Ny",
       "inProgress": "Pågående",
       "inReview": "Under granskning",
-      "resolved": "Löst"
+      "resolved": "Löst",
+      "archived": "[SV] Archived"
     },
     "buttons": {
       "submitIncident": "Skicka in incident",
@@ -502,11 +568,39 @@
     "placeholders": {
       "searchIncidents": "Sök incidenter...",
       "briefDescription": "Kort beskrivning...",
-      "describeWhatHappened": "Beskriv vad som hände..."
+      "describeWhatHappened": "Beskriv vad som hände...",
+      "describeType": "Beskriv typ",
+      "selectLocation": "Välj en plats",
+      "building": "Byggnad A",
+      "floor": "2:a våningen",
+      "zone": "Lastkaj",
+      "room": "Rum 203",
+      "locationDescription": "Ytterligare detaljer om den exakta platsen…",
+      "selectAsset": "Välj en tillgång",
+      "locationDetails": "t.ex. Vid huvudentrén, bredvid maskin #3",
+      "addNotes": "Lägg till dina anteckningar, observationer eller kommentarer här…",
+      "lessonsLearned": "Ange lärdomar från denna incident...",
+      "witnessName": "Fullständigt namn på vittne",
+      "witnessStatement": "Vad observerade vittnet?",
+      "pleaseSpecify": "Vänligen specificera…",
+      "rootCauseDetail": "Beskriv grundorsaken i detalj...",
+      "shareLessons": "Vilka lärdomar kan delas för att förhindra liknande incidenter?",
+      "additionalNotes": "Lägg till eventuella ytterligare anteckningar eller kommentarer…",
+      "actionRequired": "Vad behöver göras?",
+      "additionalDetails": "Ytterligare detaljer...",
+      "addComment": "Lägg till en kommentar..."
     },
     "empty": {
       "noIncidents": "Inga incidenter rapporterade"
-    }
+    },
+    "locked": "Denna incidentrapport är låst och kan inte redigeras",
+    "lockedShort": "Låst",
+    "viewReport": "Visa rapport",
+    "reportAnother": "Rapportera en till",
+    "noDescription": "Ingen beskrivning angiven.",
+    "noMatch": "Inga rapporter matchar dina sökkriterier.",
+    "report": "[SV] Report",
+    "reportAnIncident": "[SV] Report an Incident"
   },
   "tickets": {
     "title": "Ärenden",
@@ -535,7 +629,9 @@
     "placeholders": {
       "searchTickets": "Sök ärenden...",
       "briefDescription": "Kort beskrivning...",
-      "detailedDescription": "Detaljerad beskrivning..."
+      "detailedDescription": "Detaljerad beskrivning av vad som behöver göras...",
+      "addTask": "Lägg till en ny uppgift...",
+      "addComment": "Lägg till en kommentar..."
     },
     "empty": {
       "noTickets": "Inga ärenden"
@@ -570,7 +666,10 @@
     },
     "placeholders": {
       "searchUsers": "Sök användare...",
-      "searchTeams": "Sök team..."
+      "searchTeams": "Sök team...",
+      "department": "t.ex. Drift, Säkerhet",
+      "teamName": "t.ex. Säkerhetskommitté",
+      "teamDescription": "Kort beskrivning av teamets syfte"
     },
     "admins": "Administratörs",
     "managers": "Chefs",
@@ -705,6 +804,7 @@
   },
   "locations": {
     "types": {
+      "site": "Campus",
       "campus": "Campus",
       "building": "Byggnad",
       "floor": "Våning",
@@ -794,7 +894,23 @@
     "assetInspectionDesc": "Inspektera utrustning på denna plats",
     "emergencyContacts": "Nödsituation Kontakts",
     "locationInfo": "Plats Info",
-    "workers": "Arbetare"
+    "workers": "Arbetare",
+    "emergency": {
+      "services": "Räddningstjänst",
+      "role": "Nödsituation"
+    },
+    "wizard": {
+      "chooseType": "Välj typ",
+      "details": "Detaljer",
+      "confirm": "Bekräfta",
+      "preview": "Detta kommer att skapa",
+      "building1Floor": "1 byggnad med {count} våning(ar)",
+      "floor1Zone": "1 våning med {zones} zon(er) och {rooms} rum",
+      "reviewSummary": "Granska vad som kommer att skapas"
+    },
+    "mapView": "Karta",
+    "treeView": "Träd",
+    "noGpsData": "Inga platser med GPS-koordinater"
   },
   "analytics": {
     "title": "Analys",
@@ -829,7 +945,8 @@
       "checklists": "Checklistor",
       "assessments": "Bedömningar",
       "inspections": "Inspektioner",
-      "reports": "Rapporter"
+      "reports": "Rapporter",
+      "tasks": "Uppgifter"
     },
     "labels": {
       "pending": "Väntande",
@@ -881,7 +998,15 @@
     "submitting": "Skickar in...",
     "completeChecklist": "Slutför checklista",
     "nextItem": "Nästa Item",
-    "enterResponse": "Ange ditt svar..."
+    "enterResponse": "Ange ditt svar...",
+    "placeholders": {
+      "checklistName": "Daglig gaffeltruckinspektion"
+    },
+    "approve": "Godkänn",
+    "reject": "Avvisa",
+    "approved": "Godkänd",
+    "rejected": "Avvisad",
+    "submittedBy": "Inskickad av"
   },
   "content": {
     "title": "Innehåll",
@@ -899,7 +1024,9 @@
       "create": "Skapa"
     },
     "placeholders": {
-      "searchContent": "Sök innehåll..."
+      "searchContent": "Sök innehåll...",
+      "linkUrl": "https://...",
+      "category": "t.ex. Säkerhet, Utbildning, Policy"
     }
   },
   "qrCodes": {
@@ -927,7 +1054,9 @@
     },
     "placeholders": {
       "searchQrCodes": "Sök QR-koder...",
-      "qrCodeName": "QR-kodnamn..."
+      "qrCodeName": "QR-kodnamn...",
+      "name": "t.ex. Huvudentré",
+      "description": "Kort beskrivning för denna QR-kod"
     }
   },
   "workOrders": {
@@ -959,7 +1088,25 @@
       "create": "Skapa"
     },
     "placeholders": {
-      "searchWorkOrders": "Sök arbetsordrar..."
+      "searchWorkOrders": "Sök arbetsordrar...",
+      "title": "Arbetsordertitel",
+      "description": "Beskriv det arbete som behövs",
+      "selectAsset": "Välj tillgång",
+      "selectUser": "Välj användare",
+      "estimatedHours": "t.ex. 2,5"
+    },
+    "detail": {
+      "title": "Arbetsorderdetaljer",
+      "requestedBy": "Begärd av",
+      "assignedTo": "Tilldelad till",
+      "relatedAsset": "Relaterad tillgång",
+      "notes": "Anteckningar",
+      "changeStatus": "Ändra status",
+      "notFound": "Arbetsorder hittades inte",
+      "laborCost": "Arbetskostnad",
+      "actualHours": "Faktiska timmar",
+      "created": "Skapad",
+      "completedAt": "Slutförd"
     }
   },
   "correctiveActions": {
@@ -986,7 +1133,22 @@
     },
     "placeholders": {
       "searchActions": "Sök åtgärder...",
-      "whatNeedsCorrected": "Vad behöver korrigeras..."
+      "whatNeedsCorrected": "Vad behöver korrigeras...",
+      "selectAsset": "Välj tillgång",
+      "selectUser": "Välj användare"
+    },
+    "detail": {
+      "title": "Korrigerande åtgärdsdetaljer",
+      "linkedIncident": "Länkad incident",
+      "linkedAsset": "Länkad tillgång",
+      "assignedTo": "Tilldelad till",
+      "overdue": "Försenad",
+      "notFound": "Korrigerande åtgärd hittades inte",
+      "resolutionNotes": "Åtgärdsanteckningar",
+      "resolutionNotesPlaceholder": "Lägg till åtgärdsanteckningar...",
+      "noResolutionNotes": "Inga åtgärdsanteckningar ännu",
+      "created": "Skapad",
+      "completedAt": "Slutförd"
     }
   },
   "parts": {
@@ -1007,7 +1169,10 @@
       "addPart": "Lägg till del"
     },
     "placeholders": {
-      "searchParts": "Sök delar..."
+      "searchParts": "Sök delar...",
+      "partName": "t.ex. Hydraulfilter",
+      "partNumber": "t.ex. HF-2045-A",
+      "supplier": "Leverantörsnamn"
     }
   },
   "maintenance": {
@@ -1056,12 +1221,16 @@
     "companyName": "Företagsnamn",
     "urlSlug": "URL-slug",
     "countryAndRegulations": "Land och föreskrifter",
-    "countryDesc": "Välj ditt verksamhetsland för att få rätt säkerhetsföreskrifter och riskbedömningsformulär",
+    "countryDesc": "Välj verksamhetsland för att anpassa säkerhetsregler och rekommenderade mallar",
     "selected": "Vald",
     "basedOnSelection": "Baserat på ditt val:",
-    "usRegulations": "Dina anställda kommer att se Job Hazard Analysis (JHA)- och Job Safety Analysis (JSA)-formulär för OSHA-efterlevnad.",
-    "nlRegulations": "Dina anställda kommer att se RI&E (Risico-Inventarisatie en -Evaluatie)-formulär för Arbowet-efterlevnad.",
-    "seRegulations": "Dina anställda kommer att se SAM (Systematiskt Arbetsmiljöarbete)-formulär för AFS 2023:1-efterlevnad.",
+    "usRegulations": "Din checklistebibliotek använder amerikanska referenser som OSHA, NFPA och FDA.",
+    "gbRegulations": "Din checklistebibliotek använder brittiska referenser som HSE, RIDDOR, COSHH och PUWER.",
+    "nlRegulations": "Din checklistebibliotek använder nederländska referenser som Arbowet, RI&E och NEN 3140.",
+    "seRegulations": "Din checklistebibliotek använder svenska referenser som AFS, SAM och ESA.",
+    "deRegulations": "Din checklistebibliotek använder tyska referenser som ArbSchG, BetrSichV och DGUV.",
+    "frRegulations": "Din checklistebibliotek använder franska referenser som Code du travail, DUERP och CACES.",
+    "esRegulations": "Din checklistebibliotek använder spanska referenser som Ley 31/1995, PRL och RD 1215/1997.",
     "localization": "Lokalisering",
     "languageAndRegional": "Språk- och regionala inställningar",
     "defaultLanguage": "Standardspråk",
@@ -1121,14 +1290,19 @@
     "demoMode": "Demoläge",
     "securityDemoMessage": "Säkerhetsinställningar är endast för demonstration. I produktion skulle dessa integreras med din identitetsleverantör.",
     "billingDemoMessage": "Faktureringsinformation visas endast i demonstrationssyfte. Inga faktiska avgifter kommer att debiteras.",
-    "platformSecurityDemoMessage": "Plattformssäkerhetsinställningar är endast för demonstration. I produktion skulle faktiska säkerhetspolicyer tillämpas."
+    "platformSecurityDemoMessage": "Plattformssäkerhetsinställningar är endast för demonstration. I produktion skulle faktiska säkerhetspolicyer tillämpas.",
+    "currency": "Valuta",
+    "measurementSystem": "Enhetssystem",
+    "metricUnits": "Metriska enheter",
+    "imperialUnits": "Imperiala enheter"
   },
   "newsApp": {
     "title": "Nyheter & uppdateringar",
     "tabs": {
       "news": "Nyheter",
       "events": "Evenemang",
-      "documents": "Dokument"
+      "documents": "Dokument",
+      "training": "Utbildning"
     },
     "empty": {
       "noContent": "Inget innehåll tillgängligt",
@@ -1176,7 +1350,8 @@
     "enterAssetCode": "Tillgångstagg, serienummer eller QR-kod...",
     "lookupAsset": "Sök tillgång",
     "recentAssets": "Senaste tillgångar",
-    "loginRequired": "Logga in för att fortsätta"
+    "loginRequired": "Logga in för att fortsätta",
+    "torchFailed": "[SV] Could not toggle flashlight"
   },
   "newAsset": {
     "title": "Registrera tillgång",
@@ -1236,7 +1411,7 @@
     "needsAttention": "Behöver uppmärksamhet",
     "measuredValue": "Uppmätt värde",
     "acceptableRange": "Acceptabelt intervall",
-    "outOfRange": "Värdet ligger utanför acceptabelt intervall — varning skapas",
+    "outOfRange": "Värdet ligger utanför acceptabelt intervall, varning skapas",
     "photo": "Foto (vid avvikelse)",
     "takePhoto": "Ta foto",
     "notes": "Anteckningar",
@@ -1325,6 +1500,1466 @@
     "jhaTitle": "Job Hazard Analysis (JHA)",
     "osaTitle": "OSA - Organisatorisk och Social Arbetsmiljö",
     "rieTitle": "RI&E (Risico-Inventarisatie en -Evaluatie)",
-    "samTitle": "SAM - Systematiskt Arbetsmiljöarbete"
+    "samTitle": "SAM - Systematiskt Arbetsmiljöarbete",
+    "riskScoreLabel": "Riskpoäng",
+    "riskLevelLabel": "Risknivå",
+    "likelihood": "Sannolikhet",
+    "severity": "Allvarlighetsgrad",
+    "low": "Låg",
+    "medium": "Medel",
+    "high": "Hög",
+    "critical": "Kritisk",
+    "riskMatrix": "Riskmatris",
+    "notFound": "Mall hittades inte",
+    "notFoundDesc": "Den begärda riskbedömningsmallen kunde inte hittas.",
+    "submissionNotFound": "Inskickning hittades inte",
+    "submissionNotFoundDesc": "Den begärda riskbedömningsinskickningen kunde inte hittas.",
+    "tabs": {
+      "hazards": "Faror och risker",
+      "controls": "Kontrollåtgärder"
+    },
+    "startAssessment": "Starta bedömning",
+    "approve": "Godkänn",
+    "approved": "Godkänd",
+    "requestRevision": "Begär revision",
+    "returnedForRevision": "Bedömning returnerad för revision.",
+    "approvedSuccess": "Bedömning godkänd.",
+    "hazardsIdentified": "{count} faror identifierade",
+    "controlMeasuresSummary": "Sammanfattning av kontrollåtgärder",
+    "requiredPPE": "Krävd skyddsutrustning",
+    "riskLabel": "Risk",
+    "standard": "Standard"
+  },
+  "auth": {
+    "welcomeBack": "Välkommen tillbaka",
+    "signInToAccount": "Logga in på ditt konto",
+    "createAccount": "Skapa ditt konto",
+    "signUpCorporate": "Registrera dig med ditt företagskonto",
+    "email": "E-post",
+    "password": "Lösenord",
+    "emailPlaceholder": "namn@foretag.se",
+    "passwordPlaceholder": "Ange ditt lösenord",
+    "signIn": "Logga in",
+    "signUp": "Registrera",
+    "signingIn": "Loggar in…",
+    "forgotPassword": "Glömt lösenord?",
+    "forgotPasswordTitle": "Återställ ditt lösenord",
+    "forgotPasswordDesc": "Ange din e-post så skickar vi en återställningslänk",
+    "sendResetLink": "Skicka återställningslänk",
+    "sendingResetLink": "Skickar…",
+    "resetLinkSent": "Kontrollera din e-post för en lösenordsåterställningslänk",
+    "resetPassword": "Återställ lösenord",
+    "resetPasswordTitle": "Ange nytt lösenord",
+    "newPassword": "Nytt lösenord",
+    "confirmPassword": "Bekräfta lösenord",
+    "updatePassword": "Uppdatera lösenord",
+    "updatingPassword": "Uppdaterar…",
+    "passwordUpdated": "Lösenordet har uppdaterats",
+    "magicLink": "Logga in med magic link istället",
+    "passwordMode": "Logga in med lösenord istället",
+    "sendMagicLink": "Skicka magic link",
+    "sendingMagicLink": "Skickar…",
+    "magicLinkSent": "Kontrollera din e-post för en magic link",
+    "chooseApp": "Välj app",
+    "dashboard": "Dashboard",
+    "mobileApp": "Mobilapp",
+    "signUpGoogle": "Registrera med Google",
+    "signUpMicrosoft": "Registrera med Microsoft",
+    "alreadyHaveAccount": "Har du redan ett konto?",
+    "logIn": "Logga in",
+    "backToHome": "← Tillbaka till startsidan",
+    "companyName": "Företagsnamn",
+    "country": "Land",
+    "accountLocked": "Konto tillfälligt låst",
+    "attemptsRemaining": "försök kvar",
+    "tryAgainIn": "Försök igen om",
+    "minutes": "minuter"
+  },
+  "tasks": {
+    "title": "Mina Uppgifter",
+    "all": "Alla",
+    "tickets": "Ärenden",
+    "workOrders": "Arbetsorder",
+    "actions": "Åtgärder",
+    "empty": "Inga uppgifter tilldelade dig",
+    "emptyTickets": "Inga ärenden tilldelade",
+    "emptyWorkOrders": "Inga arbetsorder",
+    "emptyActions": "Inga korrigerande åtgärder",
+    "assignedBy": "Tilldelad av",
+    "requestedBy": "Begärd av",
+    "due": "Förfaller",
+    "overdue": "Försenad",
+    "relatedAsset": "Tillgång",
+    "viewAll": "Visa alla uppgifter",
+    "startWork": "Starta arbete",
+    "markComplete": "Markera som klar",
+    "start": "Starta",
+    "resolve": "Lös",
+    "complete": "Slutför",
+    "statusUpdated": "Status uppdaterad",
+    "mine": "Mina",
+    "assigned": "Tilldelade",
+    "completed": "Slutförda",
+    "searchPlaceholder": "Sök uppgifter...",
+    "allTypes": "Alla typer",
+    "task": "uppgift",
+    "tasksPlural": "uppgifter",
+    "active": "[SV] Active",
+    "accept": "[SV] Accept",
+    "overdueByDay": "[SV] Overdue by {days} day",
+    "overdueByDays": "[SV] Overdue by {days} days",
+    "dueToday": "[SV] Due today",
+    "dueTomorrow": "[SV] Due tomorrow",
+    "dueInDays": "[SV] Due in {days} days",
+    "assignedTasks": "[SV] assigned tasks",
+    "completedTasks": "[SV] completed tasks",
+    "comments": {
+      "title": "[SV] Comments ({count})",
+      "placeholder": "[SV] Add a comment...",
+      "post": "[SV] Post Comment",
+      "added": "[SV] Comment added",
+      "empty": "[SV] No comments yet",
+      "emptyHint": "[SV] Be the first to add a comment",
+      "loadError": "[SV] Failed to load comments",
+      "saveError": "[SV] Failed to save comment"
+    },
+    "documents": {
+      "title": "[SV] Files ({count})",
+      "upload": "[SV] Upload File",
+      "uploadHint": "[SV] PNG, JPG, GIF, WebP, PDF, CSV — max 5 MB",
+      "uploaded": "[SV] File uploaded",
+      "removed": "[SV] File removed",
+      "empty": "[SV] No files attached",
+      "emptyHint": "[SV] Upload documents, photos, or reports",
+      "uploadFailed": "[SV] Upload failed",
+      "deleteFailed": "[SV] Failed to delete file"
+    }
+  },
+  "app.pending": "Väntande",
+  "errors.network": "Nätverksfel",
+  "errors.networkDesc": "Kontrollera din internetanslutning och försök igen.",
+  "errors.notFound": "Sidan hittades inte",
+  "errors.notFoundDesc": "Sidan du letar efter finns inte eller har flyttats.",
+  "errors.permission": "Åtkomst nekad",
+  "errors.permissionDesc": "Du har inte behörighet att visa denna sida.",
+  "errors.timeout": "Begäran tidsgräns",
+  "errors.timeoutDesc": "Servern svarade för långsamt. Försök igen.",
+  "errors.server": "Serverfel",
+  "errors.serverDesc": "Något gick fel på vår sida. Försök igen senare.",
+  "errors.maintenance": "Underhåll",
+  "errors.maintenanceDesc": "Vi utför planerat underhåll. Kom tillbaka snart.",
+  "errors.rateLimit": "För många förfrågningar",
+  "errors.rateLimitDesc": "Vänta en stund innan du försöker igen.",
+  "errors.generic": "Något gick fel",
+  "errors.genericDesc": "Ett oväntat fel uppstod. Försök igen.",
+  "errors.tryAgain": "Försök igen",
+  "errors.goBack": "Gå tillbaka",
+  "errors.goHome": "Gå till startsidan",
+  "errors.refresh": "Uppdatera sidan",
+  "errors.sessionExpired": "Sessionen har löpt ut",
+  "errors.sessionExpiredDesc": "Din session har löpt ut. Logga in igen för att fortsätta.",
+  "errors.signIn": "Logga in",
+  "common.filters": "Filter",
+  "common.clearAll": "Rensa alla",
+  "common.apply": "Tillämpa",
+  "validation.required": "Detta fält är obligatoriskt",
+  "validation.minLength": "Måste vara minst {min} tecken",
+  "validation.invalidDate": "Ange ett giltigt datum",
+  "validation.selectOption": "Välj ett alternativ",
+  "inspectionRoutes": {
+    "title": "Inspektionsrutter",
+    "createRoute": "Skapa rutt",
+    "createInspectionRoute": "Skapa inspektionsrutt",
+    "checkpoints": "Kontrollpunkter",
+    "checkpoint": "Kontrollpunkt",
+    "completed": "slutförda",
+    "unknownAsset": "Okänd tillgång",
+    "activate": "Aktivera",
+    "deactivate": "Inaktivera",
+    "addCheckpoint": "Lägg till kontrollpunkt",
+    "kpi": {
+      "activeRoutes": "Aktiva rutter",
+      "totalRoutes": "Totalt rutter",
+      "completedRounds": "Slutförda rundor"
+    },
+    "empty": {
+      "title": "Inga inspektionsrutter ännu",
+      "description": "Skapa en rutt för att starta schemalagda inspektioner."
+    },
+    "labels": {
+      "routeName": "Ruttnamn",
+      "description": "Beskrivning",
+      "recurrence": "Upprepning",
+      "asset": "Tillgång",
+      "checkType": "Kontrolltyp",
+      "whatToCheck": "Vad ska kontrolleras",
+      "instructions": "Instruktioner",
+      "min": "Min",
+      "max": "Max",
+      "unit": "Enhet"
+    },
+    "recurrence": {
+      "daily": "Dagligen",
+      "weekly": "Veckovis",
+      "monthly": "Månadsvis",
+      "once": "Engångs"
+    },
+    "checkTypes": {
+      "visual": "Visuell",
+      "auditory": "Auditiv",
+      "measurement": "Mätning",
+      "functional": "Funktionell",
+      "safety": "Säkerhet"
+    },
+    "placeholders": {
+      "routeName": "t.ex. Morgonens säkerhetsrunda",
+      "description": "Beskriv inspektionsrutten...",
+      "selectAsset": "Välj tillgång...",
+      "whatToCheck": "t.ex. Kontrollera remspänning",
+      "instructions": "Detaljerade instruktioner...",
+      "unit": "t.ex. °C, psi"
+    },
+    "toast": {
+      "routeCreated": "Inspektionsrutt skapad",
+      "routeActivated": "Rutt aktiverad",
+      "routeDeactivated": "Rutt inaktiverad",
+      "routeDeleted": "Rutt borttagen"
+    },
+    "validation": {
+      "nameAndCheckpointRequired": "Namn och minst en kontrollpunkt krävs"
+    }
+  },
+  "onboarding": {
+    "title": "Kom igång",
+    "description": "Slutför dessa steg för att konfigurera din arbetsyta",
+    "completed": "slutförda",
+    "addLocation": "Lägg till din första plats",
+    "addLocationDesc": "Ställ in de fysiska platser där ditt team arbetar",
+    "inviteTeam": "Bjud in teammedlemmar",
+    "inviteTeamDesc": "Lägg till kollegor för att börja samarbeta",
+    "addAsset": "Registrera en tillgång",
+    "addAssetDesc": "Spåra utrustning och maskiner",
+    "createChecklist": "Skapa en säkerhetschecklista",
+    "createChecklistDesc": "Bygg inspektionsmallar för ditt team",
+    "customizeSettings": "Anpassa dina inställningar",
+    "customizeSettingsDesc": "Varumärk din arbetsyta och ange preferenser"
+  },
+  "invite": {
+    "title": "Du har blivit inbjuden",
+    "loading": "Validerar inbjudan...",
+    "joinCompany": "Gå med i {company}",
+    "role": "Roll",
+    "invitedBy": "Inbjuden av",
+    "accept": "Acceptera inbjudan",
+    "expired": "Denna inbjudan har gått ut",
+    "expiredDescription": "Inbjudningslänken du följde är inte längre giltig. Be personen som bjöd in dig att skicka en ny inbjudan.",
+    "invalid": "Ogiltig inbjudningslänk",
+    "invalidDescription": "Denna inbjudningslänk är inte giltig. Kontrollera länken och försök igen, eller kontakta din administratör.",
+    "alreadyAccepted": "Denna inbjudan har redan accepterats",
+    "alreadyAcceptedDescription": "Denna inbjudan har redan använts. Du kan logga in på ditt konto."
+  },
+  "forgotPassword": {
+    "title": "Glömt lösenord",
+    "description": "Ange din e-post så skickar vi en återställningslänk",
+    "send": "Skicka återställningslänk",
+    "sent": "Kontrollera din e-post",
+    "sentDescription": "Om ett konto finns med den e-postadressen har vi skickat en länk för lösenordsåterställning.",
+    "backToLogin": "Tillbaka till inloggning",
+    "rateLimited": "För många försök. Försök igen senare."
+  },
+  "validation": {
+    "invalidEmail": "Ange en giltig e-postadress"
+  },
+  "gps": {
+    "useMyLocation": "Använd min plats",
+    "latitude": "Latitud",
+    "longitude": "Longitud",
+    "clickToPlace": "Klicka på kartan för att ställa in plats",
+    "clear": "Rensa"
+  },
+  "teams": {
+    "table": {
+      "team": "Team",
+      "leader": "Ledare",
+      "members": "Medlemmar",
+      "status": "Status"
+    }
+  },
+  "tasks.emptyHint": "Uppgifter tilldelade dig visas här",
+  "notifications": {
+    "title": "Aviseringar",
+    "empty_title": "Inga aviseringar",
+    "empty_description": "Du är helt i kapp! Aviseringar om uppgifter, nyheter och incidenter visas här."
+  },
+  "news": {
+    "noContent": "Inget innehåll tillgängligt."
+  },
+  "auth.signupUnavailable": "Registrering är ännu inte tillgänglig",
+  "auth.signupUnavailableDesc": "Harmoniq är för närvarande i privat åtkomst. Kontakta din företagsadministratör eller vårt team för en inbjudan.",
+  "auth.contactUs": "Kontakta oss",
+  "auth.noAccount": "Har du inget konto?",
+  "auth.chooseApp": "Välj app",
+  "auth.dashboard": "Harmoniq Admin",
+  "auth.mobileApp": "Harmoniq Field",
+  "filterOptions": {
+    "severity": {
+      "low": "Låg",
+      "medium": "Medel",
+      "high": "Hög",
+      "critical": "Kritisk"
+    },
+    "incidentType": {
+      "injury": "Skada",
+      "near_miss": "Tillbud",
+      "hazard": "Fara",
+      "equipment_failure": "Utrustningsfel",
+      "environmental": "Miljöincident",
+      "fire": "Brand",
+      "property_damage": "Egendomsskada"
+    },
+    "incidentStatus": {
+      "new": "Ny",
+      "in_progress": "Pågående",
+      "in_review": "Under granskning",
+      "resolved": "Löst"
+    },
+    "ticketStatus": {
+      "open": "Öppen",
+      "in_progress": "Pågående",
+      "resolved": "Löst",
+      "closed": "Stängd"
+    },
+    "ticketPriority": {
+      "low": "Låg",
+      "medium": "Medel",
+      "high": "Hög",
+      "urgent": "Brådskande"
+    },
+    "userRole": {
+      "admin": "Administratör",
+      "manager": "Chef",
+      "supervisor": "Arbetsledare",
+      "employee": "Anställd"
+    },
+    "userStatus": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "pending": "Väntande"
+    },
+    "assetStatus": {
+      "active": "Aktiv",
+      "maintenance": "Underhåll",
+      "retired": "Avvecklad"
+    },
+    "assetCondition": {
+      "excellent": "Utmärkt",
+      "good": "Bra",
+      "fair": "Godtagbar",
+      "poor": "Dålig"
+    },
+    "contentType": {
+      "news": "Nyheter",
+      "announcement": "Meddelande",
+      "alert": "Varning",
+      "policy": "Policy",
+      "training": "Utbildning"
+    },
+    "contentStatus": {
+      "draft": "Utkast",
+      "published": "Publicerad",
+      "archived": "Arkiverad"
+    },
+    "checklistStatus": {
+      "active": "Aktiv",
+      "draft": "Utkast",
+      "archived": "Arkiverad"
+    },
+    "department": {
+      "operations": "Drift",
+      "warehouse": "Lager",
+      "production": "Produktion",
+      "office": "Kontor",
+      "maintenance": "Underhåll"
+    }
+  },
+  "priority": {
+    "critical": "[SV] Critical",
+    "high": "[SV] High",
+    "medium": "[SV] Medium",
+    "low": "[SV] Low"
+  },
+  "emptyState": {
+    "noResults": "[SV] No results found",
+    "noResultsFilterDesc": "[SV] Try adjusting your search or filter criteria to find what you're looking for.",
+    "noResultsSearchDesc": "[SV] No items match your search. Try a different search term.",
+    "clearFilters": "[SV] Clear filters",
+    "noData": "[SV] No {entity} yet",
+    "noDataDesc": "[SV] {entity} will appear here once created.",
+    "addEntity": "[SV] Add {entity}",
+    "offline": "[SV] You're offline",
+    "offlineDesc": "[SV] This content isn't available offline. Connect to the internet and try again.",
+    "retry": "[SV] Retry",
+    "loadFailed": "[SV] Failed to load data",
+    "loadFailedDesc": "[SV] Something went wrong while fetching the data. Please try again."
+  },
+  "inspections": {
+    "title": "Inspektionsdetaljer",
+    "notFound": "Inspektion hittades inte",
+    "notFoundDesc": "Den begärda inspektionen kunde inte hittas.",
+    "tabs": {
+      "overview": "Översikt",
+      "details": "Detaljer"
+    },
+    "result": {
+      "pass": "Godkänd",
+      "fail": "Underkänd",
+      "needs_attention": "Kräver uppmärksamhet"
+    },
+    "resultSummary": "Inspektion {result}",
+    "resultLabel": "Resultat",
+    "labels": {
+      "asset": "Tillgång",
+      "inspector": "Inspektör",
+      "inspectedAt": "Inspekterad",
+      "result": "Resultat",
+      "checklistId": "Checklista-ID",
+      "linkedIncident": "Kopplad incident",
+      "notes": "Anteckningar",
+      "assetInfo": "Tillgångsinformation",
+      "assetName": "Namn",
+      "assetTag": "Etikett",
+      "assetStatus": "Status",
+      "assetNotAvailable": "Tillgångsinformation ej tillgänglig",
+      "location": "Plats",
+      "latitude": "Latitud",
+      "longitude": "Longitud",
+      "fullRecord": "Fullständig inspektionsrapport",
+      "inspectionId": "Inspektions-ID",
+      "assetId": "Tillgångs-ID",
+      "inspectorId": "Inspektörs-ID",
+      "incidentId": "Incident-ID",
+      "createdAt": "Skapad",
+      "mediaAttachments": "Bifogade filer"
+    }
+  },
+  "industry_templates": {
+    "_ui": {
+      "templateLibrary": "Mallbibliotek",
+      "browseTemplates": "Bläddra bland branschspecifika checklistmallar",
+      "activate": "Aktivera",
+      "activateTemplate": "Aktivera mall",
+      "alreadyActivated": "Redan aktiverad",
+      "preview": "Förhandsgranska",
+      "previewItems": "Förhandsgranska punkter",
+      "items": "punkter",
+      "regulation": "Föreskrift",
+      "frequency": "Frekvens",
+      "category": "Kategori",
+      "tags": "Taggar",
+      "filterByIndustry": "Filtrera efter bransch",
+      "allIndustries": "Alla branscher",
+      "searchTemplates": "Sök mallar...",
+      "noTemplatesFound": "Inga mallar matchar din sökning",
+      "activateConfirm": "Detta skapar en ny checklista från denna mall. Du kan redigera den innan du publicerar till ditt team.",
+      "activatedSuccess": "Mall aktiverad. Du kan nu redigera och publicera den.",
+      "publishToApp": "Publicera i fältappen",
+      "unpublish": "Avpublicera",
+      "archive": "Arkivera",
+      "restore": "Återställ",
+      "publishConfirm": "Denna checklista blir synlig för fältarbetare i mobilappen.",
+      "unpublishConfirm": "Detta tar bort checklistan från mobilappen. Befintliga inlämningar sparas.",
+      "publishedSuccess": "Checklista publicerad i fältappen",
+      "unpublishedSuccess": "Checklista avpublicerad från fältappen",
+      "archivedSuccess": "Checklista arkiverad",
+      "restoredSuccess": "Checklista återställd till utkast",
+      "draft": "Utkast",
+      "published": "Publicerad",
+      "archived": "Arkiverad",
+      "recommendedForYou": "Rekommenderade för din bransch",
+      "otherIndustries": "Andra branscher",
+      "templateCount": "{count} tillgängliga mallar",
+      "fromTemplate": "Från mall",
+      "myTemplates": "Mina mallar",
+      "createTemplate": "Skapa mall",
+      "recommended": "Rekommenderad",
+      "viewMyTemplates": "Visa i Mina mallar",
+      "editRefine": "Klona och redigera",
+      "pushAsIs": "Publicera som den är"
+    },
+    "_frequencies": {
+      "daily": "Dagligen",
+      "weekly": "Veckovis",
+      "monthly": "Månadsvis",
+      "quarterly": "Kvartalsvis",
+      "per_event": "Per händelse",
+      "per_shift": "Per skift",
+      "continuous": "Kontinuerlig"
+    },
+    "construction": {
+      "name": "Byggverksamhet",
+      "description": "Säkerhetschecklistor för byggarbetsplatser, som täcker fallskydd, ställningar, schaktning och tunga maskiner",
+      "jha": {
+        "name": "Arbetsriskanalys (JHA)",
+        "description": "Systematisk process för att identifiera arbetsplatsrisker före varje uppgift, bedöma riskens allvarlighetsgrad och fastställa skyddsåtgärder för arbetarskydd",
+        "items": {
+          "task_description": "Beskriv arbetsuppgiften som ska utföras",
+          "step_sequence": "Lista stegen i rätt ordning",
+          "hazards_per_step": "Identifiera risker för varje steg",
+          "risk_severity": "Bedöm de identifierade riskernas allvarlighetsgrad (1-5)",
+          "risk_probability": "Bedöm sannolikheten för att risken inträffar (1-5)",
+          "control_measures": "Beskriv skyddsåtgärder för varje risk",
+          "ppe_required": "All nödvändig personlig skyddsutrustning har identifierats och finns tillgänglig",
+          "responsible_person": "Namn på ansvarig person för denna uppgift",
+          "workers_briefed": "Alla arbetare har informerats om riskerna och skyddsåtgärderna",
+          "sign_off": "Arbetsledares godkännande slutfört"
+        }
+      },
+      "fall_protection": {
+        "name": "Granskning av fallskydd",
+        "description": "Omfattande inspektion av fallskyddssystem inklusive räcken, sele, förankringspunkter och skyddsnät för att säkerställa efterlevnad av höjdsäkerhetsföreskrifter",
+        "items": {
+          "guardrail_integrity": "Räcken är intakta och ordentligt fästa",
+          "harness_webbing": "Selens band är fria från skärningar, fransar eller skador",
+          "harness_d_ring": "D-ringen är inte böjd, sprucken eller korroderad",
+          "harness_stitching": "Alla sömmar är intakta utan lösa trådar",
+          "anchor_point_rating": "Förankringspunkten är klassad för erforderlig lastkapacitet",
+          "safety_net_condition": "Skyddsnät är korrekt placerade och i gott skick",
+          "hole_covers_secured": "Alla golv-/taköppningsskydd är säkrade och märkta",
+          "ladder_tie_off": "Stegar är korrekt säkrade eller bundna upptill"
+        }
+      },
+      "scaffold": {
+        "name": "Ställningsinspektion",
+        "description": "Detaljerad inspektion av ställningskonstruktioner för strukturell integritet, korrekt montering och efterlevnad av säkerhetsstandarder före varje användning",
+        "items": {
+          "base_plate_mudsill": "Bottenplattor och syllar är i gott skick",
+          "cross_bracing": "Korsavstyvning är säker och korrekt installerad",
+          "planking_complete": "Gångplankor är kompletta utan glapp större än 2,5 cm",
+          "guardrails_height": "Räcken är installerade på 107 cm höjd",
+          "toe_boards": "Fotlister finns på alla öppna sidor",
+          "access_ladder": "Tillträdesstege är ordentligt säkrad",
+          "load_capacity_posted": "Lastkapaciteten är tydligt angiven",
+          "weather_damage": "Inga synliga väderskador på ställningskomponenter"
+        }
+      },
+      "toolbox_talk": {
+        "name": "Säkerhetsgenomgång",
+        "description": "Dokumentation av dagliga säkerhetsgenomgångar på plats, inklusive ämne som behandlats, deltagare och eventuella uppföljningsåtgärder",
+        "items": {
+          "topic_covered": "Ämne som diskuterades under säkerhetsgenomgången",
+          "presenter_name": "Namn på presentatör",
+          "attendee_count": "Antal närvarande deltagare",
+          "attendees_signed": "Alla deltagare har skrivit under närvarolistan",
+          "questions_raised": "Frågor eller farhågor som togs upp under genomgången",
+          "follow_up_actions": "Uppföljningsåtgärder identifierade och tilldelade"
+        }
+      },
+      "excavation": {
+        "name": "Schaktnings-/grävningsinspektion",
+        "description": "Säkerhetsinspektion för schaktnings- och grävningsarbete, verifiering av jordklassificering, skyddssystem och säker åtkomst innan arbetare går ner i schaktet",
+        "items": {
+          "soil_classification": "Jord har klassificerats korrekt",
+          "shoring_adequate": "Spontning eller släntning är tillräcklig för djupet",
+          "spoil_pile_distance": "Schaktmassor ligger minst 60 cm från schaktkanten",
+          "water_accumulation": "Ingen farlig vattenansamling i schaktet",
+          "atmospheric_testing": "Atmosfärisk testning genomförd vid behov",
+          "egress_points": "Utgångspunkter finns var 7,5:e meter",
+          "utilities_marked": "Alla underjordiska ledningar har lokaliserats och märkts"
+        }
+      },
+      "crane": {
+        "name": "Kran/lyft förkontroll",
+        "description": "Säkerhetskontroll före drift av kranar och lyftutrustning, verifiering av mekaniskt tillstånd, förarkvalifikationer och beredskap för lyftplan",
+        "items": {
+          "wire_rope_condition": "Vajern är fri från knyckar, fågelburar och brutna trådar",
+          "hook_latch": "Krokens säkerhetsspärr är funktionell",
+          "outriggers_deployed": "Stödben är helt utfällda och på fast mark",
+          "load_chart_available": "Lastdiagram finns tillgängligt och läsbart i hytten",
+          "swing_radius": "Svängradien är avspärrad och fri från personal",
+          "operator_certification": "Förarens certifiering är aktuell och giltig",
+          "pre_lift_meeting": "Möte före lyft har genomförts"
+        }
+      }
+    },
+    "manufacturing": {
+      "name": "Tillverkning",
+      "description": "Säkerhetschecklistor för tillverkningsanläggningar, som täcker låsning/märkning, maskinskydd, ergonomi och säkerhet på produktionsgolvet",
+      "loto": {
+        "name": "Verifiering av låsning/märkning",
+        "description": "Verifieringschecklista för låsnings-/märkningsprocedurer för att bekräfta att farliga energikällor är korrekt isolerade före service eller underhållsarbete",
+        "items": {
+          "machine_identified": "Maskin eller utrustning har identifierats korrekt",
+          "energy_sources_listed": "Alla energikällor har identifierats och listats",
+          "isolation_devices": "Isoleringsanordningar har tillämpats på alla energikällor",
+          "stored_energy_released": "All lagrad eller kvarvarande energi har frigjorts",
+          "verification_attempted": "Verifiering av isolering har utförts",
+          "authorized_employee": "Auktoriserad medarbetare har godkänt låsningen",
+          "group_lockout": "Grupplåsningsprocedurer har följts (om tillämpligt)",
+          "tags_attached": "Låsnings-/märkningslappar är korrekt fästa och läsbara"
+        }
+      },
+      "machine_guarding": {
+        "name": "Inspektion av maskinskydd",
+        "description": "Inspektion av maskinskyddssystem för att verifiera att skydd är på plats, spärrmekanismer fungerar och nödstopp är tillgängliga och testade",
+        "items": {
+          "point_of_operation": "Skydd vid arbetsområdet är på plats och säkrade",
+          "interlock_functioning": "Säkerhetsspärrar fungerar korrekt",
+          "emergency_stop": "Nödstoppsknapp är tillgänglig och testad",
+          "light_curtain": "Ljusgardinens inriktning är korrekt (om tillämpligt)",
+          "guard_mounting": "Skyddets monteringsbeslag är åtdragna och säkra",
+          "no_bypass": "Inga förbikopplingsanordningar finns på säkerhetssystemen",
+          "warning_labels": "Varningsetiketter är synliga och läsbara"
+        }
+      },
+      "ergonomic": {
+        "name": "Ergonomisk bedömning",
+        "description": "Ergonomisk utvärdering av arbetsstation för att identifiera repetitiva rörelserisker, besvärliga arbetsställningar och kraftkrav, med rekommendationer för förbättring",
+        "items": {
+          "repetitive_motion": "Frekvens av repetitiva rörelser har bedömts",
+          "force_requirements": "Kraftkrav ligger inom acceptabla gränser",
+          "awkward_postures": "Besvärliga arbetsställningar har identifierats och dokumenterats",
+          "workstation_height": "Arbetsstationens höjd är lämplig för arbetaren",
+          "tool_grip": "Verktygets grepp minimerar påfrestning",
+          "rest_breaks": "Tillräckligt schema för vilopauser finns på plats",
+          "modifications": "Rekommenderade förbättringar har dokumenterats"
+        }
+      },
+      "forklift": {
+        "name": "Gaffeltruckens dagliga förkontroll",
+        "description": "Daglig inspektion före användning av gaffeltruckar och motoriserade industritruckar, verifiering av mekaniska system, säkerhetsanordningar och förarberedskap",
+        "items": {
+          "tires_wheels": "Däck och hjul är i gott skick",
+          "forks_condition": "Gafflarna är fria från sprickor, böjningar eller kraftigt slitage",
+          "hydraulic_lines": "Hydraulslangar visar inga läckor eller skador",
+          "mast_chains": "Mast och kedjor fungerar smidigt",
+          "horn_working": "Tutan fungerar",
+          "lights_working": "Alla lampor fungerar (framljus, bakljus, varningsljus)",
+          "backup_alarm": "Backlarm är hörbart",
+          "seatbelt": "Säkerhetsbälte finns och är funktionellt",
+          "brakes_tested": "Bromsarna har testats och är responsiva",
+          "steering": "Styrningen fungerar korrekt",
+          "battery_fuel": "Batteriladdning eller bränslenivå är tillräcklig",
+          "fire_extinguisher": "Brandsläckare är monterad och laddad"
+        }
+      },
+      "chemical_spill": {
+        "name": "Beredskap för kemikalieutsläpp",
+        "description": "Beredskapsbedömning för hantering av kemikalieutsläpp, verifiering av saneringskit, nödutrustning, tillgång till personlig skyddsutrustning och framkomliga utrymningsvägar",
+        "items": {
+          "spill_kit_location": "Saneringskit är känt och tillgängligt",
+          "spill_kit_contents": "Saneringskit är komplett och inte utgånget",
+          "sds_binder": "SDS-pärm är aktuell och tillgänglig",
+          "eyewash_tested": "Ögonduschstation har testats (veckovis spolning)",
+          "shower_tested": "Nöddusch har testats",
+          "ppe_available": "Nödvändig personlig skyddsutrustning för saneringsinsats finns tillgänglig",
+          "emergency_contacts": "Nödkontaktinformation är uppsatt",
+          "evacuation_route": "Utrymningsväg är fri och markerad"
+        }
+      },
+      "safety_walk": {
+        "name": "Säkerhetsrond på produktionsgolvet",
+        "description": "Allmän säkerhetsgenomgång av produktionsgolvet för att bedöma ordning och reda, användning av personlig skyddsutrustning, nödutrustningens beredskap och de övergripande säkerhetsförhållandena",
+        "items": {
+          "aisles_clear": "Gångar och passager är fria och oförhindrade",
+          "ppe_compliance": "Alla arbetare bär nödvändig personlig skyddsutrustning",
+          "housekeeping": "Ordning och reda är acceptabel i hela området",
+          "emergency_exits": "Nödutgångar är oförhindrade och markerade",
+          "fire_extinguishers": "Brandsläckare är tillgängliga och inspekterade",
+          "noise_levels": "Ljudnivåer ligger inom acceptabla gränser",
+          "first_aid_kit": "Första hjälpen-låda är påfylld och tillgänglig",
+          "general_observations": "Ytterligare säkerhetsobservationer eller farhågor"
+        }
+      }
+    },
+    "oil_gas": {
+      "name": "Olja och gas",
+      "description": "Säkerhetschecklistor för olje- och gasverksamhet, inklusive arbetstillstånd, arbete i slutna utrymmen, H2S-säkerhet och inspektioner av brunnsplatser",
+      "ptw": {
+        "name": "Arbetstillstånd",
+        "description": "Formell godkännandeprocess för högriskarbeten som säkerställer att risker identifieras, att säkerhetsåtgärder finns på plats och att alla parter har granskat arbetsomfattningen",
+        "items": {
+          "work_description": "Arbetet som ska utföras har beskrivits tydligt",
+          "hazards_identified": "Alla risker har identifierats och dokumenterats",
+          "gas_test_results": "Gastestresultat ligger inom säkra gränsvärden",
+          "isolation_verified": "Isolering av energikällor har verifierats",
+          "ppe_specified": "Nödvändig skyddsutrustning har specificerats och finns tillgänglig",
+          "emergency_procedures": "Nödprocedurer har kommunicerats",
+          "time_validity": "Tillståndets giltighetstid har fastställts och kommunicerats",
+          "supervisor_authorization": "Arbetsledare har godkänt arbetet"
+        }
+      },
+      "confined_space": {
+        "name": "Arbete i slutna utrymmen",
+        "description": "Checklista för tillträde till slutna utrymmen, inklusive atmosfärsövervakning, ventilationsuppsättning, räddningsplanering och krav på kontinuerlig övervakning",
+        "items": {
+          "atmospheric_o2": "Syrenivån är mellan 19,5 % och 23,5 %",
+          "atmospheric_lel": "LEL-värdet är under 10 % av den nedre explosionsgränsen",
+          "atmospheric_h2s": "H2S-nivån är under åtgärdsnivån",
+          "atmospheric_co": "CO-nivån är under tillåten exponeringsgräns",
+          "ventilation_setup": "Ventilationsutrustning är installerad och fungerar",
+          "rescue_plan": "Räddningsplan har granskats och finns på plats",
+          "attendant_assigned": "Kvalificerad vakthållare har utsetts",
+          "communication_method": "Kommunikationsmetod har fastställts och testats",
+          "entry_permit_signed": "Tillträdesintyg har fyllts i och undertecknats",
+          "continuous_monitoring": "Kontinuerlig atmosfärsövervakning är aktiv"
+        }
+      },
+      "h2s": {
+        "name": "H2S-säkerhetskontroll",
+        "description": "Säkerhetsverifiering före arbete i områden med potentiell svavelväteexponering, omfattar personliga mätare, andningsskydd och rutiner för kamratkontroll",
+        "items": {
+          "personal_monitor": "Personlig H2S-mätare är kalibrerad och fungerar",
+          "wind_sock": "Vindstrut eller vindriktningsindikator är synlig",
+          "muster_points": "Samlingsplatser har identifierats och kommunicerats",
+          "scba_staged": "SCBA-utrustning är placerad och redo för användning",
+          "buddy_system": "Kamratsystem är bekräftat och i kraft",
+          "h2s_training": "H2S-utbildning är aktuell för all personal på plats",
+          "alarm_threshold": "Larmgräns är inställd på 10 ppm"
+        }
+      },
+      "hot_work": {
+        "name": "Tillstånd för heta arbeten",
+        "description": "Säkerhetschecklista för heta arbeten såsom svetsning, skärning eller slipning i områden där brand- eller explosionsrisker kan föreligga",
+        "items": {
+          "fire_watch": "Brandvakt har utsetts och är på plats",
+          "radius_cleared": "Området inom 10 meter har rensats från brännbart material",
+          "fire_extinguisher": "Brandsläckare är placerad inom räckhåll",
+          "gas_test_lel": "Gastest bekräftar under 10 % LEL",
+          "ventilation": "Tillräcklig ventilation har bekräftats",
+          "post_work_watch": "30 minuters brandvakt efter arbetet har schemalagts",
+          "hot_work_area": "Området för heta arbeten har markerats korrekt"
+        }
+      },
+      "well_site": {
+        "name": "Inspektion av brunnsplats",
+        "description": "Rutinkontroll av verksamhet och utrustning på brunnsplatsen, omfattar funktion hos utblåsningsskydd, flödesledningars integritet, inneslutning och beredskap för nödsituationer",
+        "items": {
+          "bop_function": "BOP har funktionstestats",
+          "flowline_integrity": "Flödesledningar är intakta utan synliga läckor",
+          "tank_levels": "Tanknivåer ligger inom acceptabelt intervall",
+          "containment_integrity": "Sekundär inneslutning är intakt",
+          "flare_operation": "Fackelsystem fungerar korrekt",
+          "road_conditions": "Tillfartsvägens skick är säkert",
+          "signage_visible": "Obligatorisk skyltning är synlig och läsbar",
+          "emergency_equipment": "Nödutrustning är tillgänglig och funktionsduglig"
+        }
+      },
+      "contractor": {
+        "name": "Entreprenörsintroduktion",
+        "description": "Säkerhetsintroduktionschecklista för entreprenörer som kommer till arbetsplatsen, verifierar genomförd introduktion, riskmedvetenhet, skyddsutrustning och nödvändig dokumentation",
+        "items": {
+          "safety_induction": "Entreprenör har genomfört säkerhetsintroduktion",
+          "site_hazards": "Platsspecifika risker har granskats",
+          "emergency_procedures": "Nödprocedurer har förståtts",
+          "ppe_verified": "Skyddsutrustning har tillhandahållits och verifierats",
+          "work_permit": "Arbetstillstånd har erhållits",
+          "insurance_docs": "Försäkringsdokumentation finns arkiverad"
+        }
+      }
+    },
+    "healthcare": {
+      "name": "Hälso- och sjukvård",
+      "description": "Säkerhetschecklistor för vårdanläggningar, omfattar infektionskontroll, avfallshantering av vassa föremål, patientsäkerhet och beredskap för akututrustning",
+      "infection_control": {
+        "name": "Infektionskontrollrond",
+        "description": "Rutinmässig rond för infektionsförebyggande arbete som verifierar tillgång till handhygien, skyddsutrustning, isoleringsrutiner och efterlevnad av ytdesinfektion",
+        "items": {
+          "hand_hygiene_stations": "Handhygienstationer är försedda med tvål och handsprit",
+          "ppe_supply": "Tillgången på skyddsutrustning är tillräcklig för enheten",
+          "isolation_signage": "Isoleringsskyltning är korrekt och på plats",
+          "sharps_containers": "Behållare för stickande/skärande avfall är inte överfyllda (under 3/4-linjen)",
+          "surface_disinfection": "Schema för ytdesinfektion följs",
+          "patient_placement": "Patientplacering är lämplig utifrån infektionsstatus"
+        }
+      },
+      "sharps": {
+        "name": "Revision av hantering av stickande/skärande avfall",
+        "description": "Granskning av rutiner för hantering av stickande/skärande avfall och behållare för att säkerställa säker hantering och regelefterlevnad inom kliniska områden",
+        "items": {
+          "container_fill_level": "Behållarens fyllnadsnivå är under 3/4-linjen",
+          "mounting_secure": "Behållaren är säkert monterad",
+          "no_protruding_items": "Inga föremål sticker ut från behållaren",
+          "label_visible": "Behållarens etikett är synlig och läsbar",
+          "replacements_available": "Ersättningsbehållare finns tillgängliga i närheten",
+          "disposal_log": "Avfallsloggen är aktuell",
+          "needle_free_systems": "Kanylfri utrustning används där det är tillämpligt"
+        }
+      },
+      "patient_safety": {
+        "name": "Patientsäkerhetsrond",
+        "description": "Säkerhetsrond vid sängkanten för att verifiera patientidentifiering, bedömning av fallrisk, läkemedelsverifiering och att vårdplanen är aktuell",
+        "items": {
+          "bed_rails": "Sänggrindarna är lämpliga för patientens behov",
+          "call_bell": "Larmknappen är inom patientens räckhåll",
+          "fall_risk": "Fallrisk har bedömts och dokumenterats",
+          "medication_verification": "Läkemedelsverifiering har genomförts",
+          "id_band": "Patientens identifikationsarmband finns och är korrekt",
+          "allergies_documented": "Allergier är dokumenterade och synliga",
+          "care_plan": "Vårdplanen är aktuell och uppdaterad"
+        }
+      },
+      "emergency_equip": {
+        "name": "Kontroll av akututrustning",
+        "description": "Inspektion av klinisk akututrustning inklusive akutvagnar, defibrillatorer, sugutrustning och akutläkemedel för att säkerställa beredskap",
+        "items": {
+          "crash_cart_sealed": "Akutvagnen är förseglad med intakt manipuleringsskydd",
+          "defibrillator": "Defibrillatorn är laddad och har klarat självtest",
+          "suction_working": "Sugutrustning fungerar",
+          "o2_supply": "Syrgastillgången är tillräcklig",
+          "emergency_meds": "Akutläkemedel har inte gått ut",
+          "resuscitation_bag": "Andningspåse och mask är intakta"
+        }
+      },
+      "hand_hygiene": {
+        "name": "Observation av handhygien",
+        "description": "Direkt observationsrevision av efterlevnad av handhygien baserat på WHO:s fem moment, dokumenterar teknik och efterlevnadsgrad",
+        "items": {
+          "before_patient": "Handhygien utförd före patientkontakt",
+          "after_patient": "Handhygien utförd efter patientkontakt",
+          "after_surroundings": "Handhygien utförd efter beröring av patientens omgivning",
+          "before_clean_procedure": "Handhygien utförd före ren eller aseptisk åtgärd",
+          "after_body_fluid": "Handhygien utförd efter exponering för kroppsvätska",
+          "technique_correct": "Korrekt handhygienteknik observerad",
+          "compliance_notes": "Ytterligare observationer om efterlevnad"
+        }
+      },
+      "fire_life": {
+        "name": "Brand- och livssäkerhetsgenomgång",
+        "description": "Anläggningsgenomgång för att verifiera efterlevnad av brand- och livssäkerhet, inklusive utrymningsskyltar, branddörrar, fri passage i korridorer och funktionalitet hos detektorer",
+        "items": {
+          "exit_signs": "Utrymningsskyltar är upplysta och synliga",
+          "fire_doors": "Branddörrar stängs korrekt",
+          "corridors_clear": "Korridorer är fria från utrustning och hinder",
+          "extinguishers": "Brandsläckare är inspekterade och tillgängliga",
+          "smoke_detectors": "Rökdetektorer är testade och fungerar",
+          "evacuation_plan": "Utrymningsplan är uppsatt och aktuell"
+        }
+      }
+    },
+    "warehousing": {
+      "name": "Lagerhantering",
+      "description": "Säkerhetschecklistor för lagerverksamhet, omfattar truckinspektioner, lastkajesäkerhet, brandskydd och hantering av gångzoner",
+      "forklift": {
+        "name": "Truck daglig kontroll före användning",
+        "description": "Daglig kontroll före användning av lagertruck, omfattar mekaniskt tillstånd, säkerhetsfunktioner och verifiering av förarcertifiering",
+        "items": {
+          "tires_wheels": "Däck och hjul är i gott skick",
+          "forks_condition": "Gafflarna är fria från sprickor, böjningar eller kraftigt slitage",
+          "hydraulic_lines": "Hydraulledningar visar inga läckor eller skador",
+          "mast_chains": "Mast och kedjor fungerar smidigt",
+          "horn_working": "Signalhornet fungerar",
+          "lights_working": "Alla lampor fungerar",
+          "backup_alarm": "Backlarm är hörbart",
+          "seatbelt": "Säkerhetsbälte finns och fungerar",
+          "brakes_tested": "Bromsar har testats och är responsiva",
+          "steering": "Styrningen fungerar korrekt",
+          "battery_fuel": "Batteriladdning eller bränslenivå är tillräcklig",
+          "fire_extinguisher": "Brandsläckare är monterad och laddad",
+          "operator_cert": "Förarcertifiering finns arkiverad och är giltig"
+        }
+      },
+      "dock": {
+        "name": "Lastkajsäkerhetskontroll",
+        "description": "Säkerhetskontroll före lastning för lastkajeverksamhet, verifierar bryggplattor, hjulklossar, trailersäkring och ljusförhållanden",
+        "items": {
+          "dock_plate": "Bryggplatta eller bryggbord är i gott skick",
+          "wheel_chocks": "Hjulklossar är på plats och säkra",
+          "trailer_secured": "Trailer är säkrad (ICC-bom aktiverad)",
+          "dock_leveler": "Utjämningsbrygga fungerar korrekt",
+          "lighting": "Belysning i lastområdet är tillräcklig",
+          "gap_check": "Ingen farlig lucka mellan trailer och lastkaj"
+        }
+      },
+      "fire_extinguisher": {
+        "name": "Brandsläckare månadskontroll",
+        "description": "Månadsvis visuell inspektion av brandsläckare för att verifiera tillgänglighet, laddningsstatus, fysiskt tillstånd och inspektionstaggens giltighet",
+        "items": {
+          "accessible": "Brandsläckaren är inte blockerad och är tillgänglig",
+          "charge_gauge": "Laddningsmätaren är i grönt område",
+          "pin_seal": "Säkerhetspinne och försegling är intakta",
+          "no_damage": "Inga synliga skador på brandsläckarens hölje",
+          "mounting_height": "Monteringshöjden är korrekt",
+          "inspection_tag": "Inspektionstagg är aktuell och signerad",
+          "correct_type": "Brandsläckartyp är korrekt för områdets risker"
+        }
+      },
+      "rack": {
+        "name": "Kontroll av pallställsintegritet",
+        "description": "Strukturell integritetskontroll av lagerställ, kontrollerar skador, korrekt förankring, efterlevnad av lastkapacitet och säkerhet hos kopplingar",
+        "items": {
+          "upright_damage": "Stolpar är fria från bucklor, böjningar eller vridningar",
+          "beam_connectors": "Balkopplingsbeslag är på plats",
+          "base_plate": "Grundplattans förankring är säker",
+          "load_capacity": "Märkning av lastkapacitet är uppsatt och synlig",
+          "overloading": "Inga tecken på överbelastning utöver märkt kapacitet",
+          "wire_decking": "Trådgaller är i gott skick (om tillämpligt)"
+        }
+      },
+      "pedestrian": {
+        "name": "Gångzonssäkerhetskontroll",
+        "description": "Inspektion av gångzonssäkerhet inom lagret, verifierar golvmarkeringar, barriärer, speglar och separation mellan gång- och fordonstrafikområden",
+        "items": {
+          "floor_markings": "Golvmarkeringar är synliga och inte utslitna",
+          "barriers_intact": "Barriärer är intakta och korrekt placerade",
+          "blind_corner_mirrors": "Speglar är monterade vid döda vinklar",
+          "speed_limit_signs": "Hastighetsbegränsningsskyltar är uppsatta och synliga",
+          "pedestrian_crossings": "Gångpassager är tydligt markerade",
+          "separate_paths": "Separata vägar finns för gående och fordon"
+        }
+      },
+      "receiving": {
+        "name": "Mottagningskaj säkerhetsrond",
+        "description": "Säkerhetsrond i mottagningskajområdet för att bedöma sanering av spill, halkrisker, belysning, användning av personlig skyddsutrustning och säkra hanteringsrutiner",
+        "items": {
+          "spills_cleaned": "Alla spill har sanerats",
+          "slip_hazards": "Inga halka- eller snubbelrisker identifierade",
+          "lighting_working": "All belysning i mottagningsområdet fungerar",
+          "ppe_compliance": "Arbetare bär föreskriven personlig skyddsutrustning (skyddsskor, handskar, varselväst)",
+          "box_cutter_safety": "Kartongknivar används säkert med infällbara blad",
+          "ergonomic_lifting": "Korrekta lyfttekniker observeras"
+        }
+      }
+    },
+    "mining": {
+      "name": "Gruvdrift",
+      "description": "Säkerhetschecklistor för gruvverksamhet, omfattar bergartsbedömning, ventilation, sprängning, mobil utrustning och nödutrymningsförfaranden",
+      "strata": {
+        "name": "Bergartsbedömning före skift",
+        "description": "Bedömning av markförhållanden före skift inklusive takstabilitet, sidoväggsintegritet, pelarskick och stödtillräcklighet innan underjordsarbete påbörjas",
+        "items": {
+          "roof_condition": "Takförhållandet är stabilt utan tecken på försämring",
+          "rib_stability": "Sidoväggar är stabila och inte avfjällande",
+          "pillar_condition": "Stödpelare är intakta och korrekt dimensionerade",
+          "scaling_needed": "Löst berg har avlägsnats eller finns inte",
+          "support_installation": "Installation av takstöd är tillräcklig",
+          "geological_changes": "Inga oväntade geologiska förändringar observerade",
+          "water_ingress": "Vatteninträngning är kontrollerad eller frånvarande"
+        }
+      },
+      "ventilation": {
+        "name": "Ventilationssystemkontroll",
+        "description": "Verifiering av underjordiska ventilationssystem inklusive fläktdrift, lufthastighet, gasnivåer och efterlevnad av ventilationsplanen",
+        "items": {
+          "fan_operation": "Huvudventilationsfläkt fungerar korrekt",
+          "air_velocity": "Lufthastighetsmätningar ligger inom erforderligt område",
+          "methane_levels": "Metannivåer är under 1 %",
+          "co_levels": "Kolmonoxidnivåer är inom säkra gränser",
+          "dust_levels": "Dammnivåer är inom tillåtna exponeringsgränser",
+          "ventilation_controls": "Ventilationsdörrar och gardiner är på plats",
+          "air_direction": "Luftriktning är korrekt enligt ventilationsplanen"
+        }
+      },
+      "blast": {
+        "name": "Sprängningsområdessäkerhet",
+        "description": "Säkerhetschecklista före och efter sprängning omfattar personalevakuering, vaktposter, varningssignaler och verifiering av återinträde",
+        "items": {
+          "personnel_cleared": "All personal har evakuerats från sprängningsområdet",
+          "guard_posts": "Vaktposter har etablerats vid alla åtkomstpunkter",
+          "warning_signals": "Varningssignaler har givits enligt förfarande",
+          "blast_pattern": "Sprängmönstret har verifierats av sprängledare",
+          "misfire_check": "Kontroller av blindgång har genomförts",
+          "reentry_time": "Väntetid för återinträde har respekterats",
+          "post_blast_ventilation": "Ventilation efter sprängning har etablerats"
+        }
+      },
+      "ppe": {
+        "name": "Kontroll av personlig skyddsutrustning",
+        "description": "Kontroll av efterlevnad av personlig skyddsutrustning för gruvpersonal, verifierar skick och korrekt användning av all föreskriven säkerhetsutrustning",
+        "items": {
+          "hard_hat": "Skyddshjälm bärs och är i gott skick",
+          "safety_glasses": "Skyddsglasögon bärs och är inte repade eller skadade",
+          "steel_toe_boots": "Stålhättekängor bärs och är i gott skick",
+          "hearing_protection": "Hörselskydd bärs i märkta områden",
+          "reflective_vest": "Reflekterande varselväst bärs och är synlig",
+          "self_rescuer": "Självräddare är tillgänglig och inspekterad",
+          "cap_lamp": "Hjälmlampa fungerar och är fulladdad",
+          "gloves": "Lämpliga handskar bärs för uppgiften"
+        }
+      },
+      "mobile_equip": {
+        "name": "Mobil utrustning förkontroll",
+        "description": "Förkontroll av mobil gruvutrustning omfattar bromsar, styrning, ljus, brandsläckningssystem och rollskyddssystem",
+        "items": {
+          "brakes": "Service- och parkeringsbromsar fungerar",
+          "steering": "Styrningen är responsiv och korrekt",
+          "lights": "Alla lampor fungerar (strålkastare, bakljus, positionsljus)",
+          "horn": "Signalhornet är hörbart",
+          "backup_alarm": "Backlarm fungerar",
+          "fire_suppression": "Brandsläckningssystem är laddat och klart",
+          "seatbelt": "Säkerhetsbälte är funktionellt",
+          "tires": "Däck är i acceptabelt skick",
+          "hydraulics": "Hydraulsystem visar inga läckor",
+          "rollover_protection": "Rollskyddsstruktur är intakt",
+          "operator_cert": "Förarcertifiering är giltig"
+        }
+      },
+      "emergency_escape": {
+        "name": "Nödutrymningsövning",
+        "description": "Protokoll för genomförd nödutrymningsövning som dokumenterar deltagande, testning av flyktvägar, påtagningstid för självräddare och total evakueringstid",
+        "items": {
+          "all_workers": "Alla arbetare i skiftet deltog i övningen",
+          "primary_exit": "Primär flyktväg testades framgångsrikt",
+          "secondary_exit": "Sekundär flyktväg testades framgångsrikt",
+          "self_rescuer_donning": "Påtagningstid för självräddare registrerades",
+          "refuge_chamber": "Skyddsrum lokaliserades och inspekterades",
+          "communication_check": "Kommunikationssystem testades",
+          "evacuation_time": "Total evakueringstid registrerades"
+        }
+      }
+    },
+    "food_beverage": {
+      "name": "Mat och dryck",
+      "description": "Säkerhets- och kvalitetschecklistor för livsmedels- och dryckesverksamhet, omfattande HACCP, allergenhantering, kylkedja, sanering och personalhygien",
+      "haccp": {
+        "name": "HACCP-inspektion",
+        "description": "Riskanalys och kontroll av kritiska kontrollpunkter för att verifiera övervakning av kritiska kontrollpunkter, temperaturefterlevnad och dokumentation av korrigerande åtgärder",
+        "items": {
+          "ccp_monitoring": "Kritiska kontrollpunkter övervakas enligt schema",
+          "temp_receiving": "Mottagningstemperaturer ligger inom godtagbart intervall",
+          "temp_storage": "Lagringstemperaturer ligger inom godtagbart intervall",
+          "temp_cooking": "Tillagningstemperaturer uppfyller minimikrav",
+          "temp_holding": "Varmhållningstemperaturer ligger inom säkert intervall",
+          "corrective_actions": "Korrigerande åtgärder dokumenteras vid avvikelser",
+          "verification": "Verifieringsaktiviteter genomförs enligt plan",
+          "records_reviewed": "HACCP-dokumentation har granskats och signerats"
+        }
+      },
+      "allergen": {
+        "name": "Allergenkontroll",
+        "description": "Granskning av allergenhantering inklusive rengöringsverifiering, märkningsnoggrannhet, ingrediensseparering och personalutbildning",
+        "items": {
+          "cleaning_verified": "Rengöring mellan allergena produktionskörningar är verifierad",
+          "label_accuracy": "Produktmärkning anger korrekt alla allergener",
+          "ingredient_segregation": "Allergena ingredienser förvaras separat i lager",
+          "shared_equipment": "Rutiner för delad utrustning följs",
+          "staff_training": "Personalens allergenmedvetenhet är aktuell"
+        }
+      },
+      "cold_chain": {
+        "name": "Temperaturlogg för kylkedja",
+        "description": "Temperaturövervakning för kylkedjans integritet, spårning av kyl-, frys-, mottagnings- och transporttemperaturer med avvikelsehantering",
+        "items": {
+          "refrigerator_temps": "Kylskåpstemperaturer är under 4 °C",
+          "freezer_temps": "Frystemperaturer är vid eller under -18 °C",
+          "receiving_temps": "Produkttemperaturer vid mottagning ligger inom intervall",
+          "transport_temps": "Transportfordonstemperaturer är verifierade",
+          "deviation_response": "Temperaturavvikelser har dokumenterats och åtgärdats"
+        }
+      },
+      "sanitation": {
+        "name": "Saneringskontroll",
+        "description": "Anläggningssanering omfattande livsmedelsytor, golvbrunnar, skadedjursbekämpning, handtvättstationer och kemikalielagring",
+        "items": {
+          "food_contact_surfaces": "Livsmedelsytor är rengjorda och sanerade",
+          "floor_drains": "Golvbrunnar är fria och fungerar",
+          "pest_control": "Skadedjursstationer är kontrollerade och underhållna",
+          "hand_wash_stations": "Handtvättstationer är påfyllda (tvål, pappershanddukar, handsprit)",
+          "chemical_storage": "Rengöringskemikalier är korrekt lagrade och märkta"
+        }
+      },
+      "hygiene": {
+        "name": "Personalhygienkontroll",
+        "description": "Kontroll av personalhygien i livsmedelsproduktion, verifiering av uniformer, hårskydd, smyckespolicy, sårtäckning och handtvätt",
+        "items": {
+          "clean_uniform": "Medarbetaren bär ren uniform eller arbetskläder",
+          "hair_restraint": "Hårskydd (hårnät, mössa, skäggskydd) används korrekt",
+          "no_jewelry": "Inga smycken bärs i produktionsområdet",
+          "wounds_covered": "Alla sår eller skador är korrekt täckta",
+          "illness_reporting": "Krav på sjukdomsrapportering har kommunicerats",
+          "handwashing": "Korrekt handtvätt har observerats",
+          "glove_use": "Handskar används och byts vid behov"
+        }
+      },
+      "shipping": {
+        "name": "Leverans-/mottagningsinspektion",
+        "description": "Inspektion av inkommande och utgående leveranser för livsmedelssäkerhet, verifiering av fordonsrenlighet, temperaturer, förpackningsintegritet och spårbarhet",
+        "items": {
+          "vehicle_cleanliness": "Leveransfordon är rent och fritt från kontaminering",
+          "temperature_verified": "Produkttemperaturer har verifierats vid ankomst",
+          "packaging_integrity": "Förpackningar är intakta utan skador eller manipulation",
+          "date_codes": "Datumkoder har kontrollerats och är godtagbara",
+          "rejected_items": "Avvisade varor har dokumenterats och separerats",
+          "lot_traceability": "Partinummer har registrerats för spårbarhet"
+        }
+      }
+    },
+    "utilities": {
+      "name": "Energiförsörjning",
+      "description": "Säkerhetschecklistor för elförsörjning, omfattande ljusbågsrisk, transformatorstationer, ledningsröjning och kopplingsrutiner",
+      "arc_flash": {
+        "name": "Kontroll av ljusbågsrisk",
+        "description": "Efterlevnadskontroll för ljusbågsrisk som säkerställer analys av incidentenergi, att rätt kategori av personlig skyddsutrustning används och att tillstånd för spänningssatt arbete finns",
+        "items": {
+          "incident_energy": "Incidentenerginivå har fastställts för arbetsområdet",
+          "ppe_category": "Kategorin för personlig skyddsutrustning matchar incidentenerginivån",
+          "approach_boundaries": "Närmandegränser är markerade och kommunicerade",
+          "energized_permit": "Tillstånd för spänningssatt arbete har erhållits",
+          "buddy_system": "Tvåmanssystem tillämpas för spänningssatt arbete",
+          "de_energize_eval": "Utvärdering av frånkoppling har genomförts"
+        }
+      },
+      "substation": {
+        "name": "Transformatorstationsinspektion",
+        "description": "Rutininspektion av utrustning och infrastruktur i transformatorstationer, omfattande transformatorer, brytare, jordningsnät och perimetersäkerhet",
+        "items": {
+          "transformer_oil": "Transformatoroljenivåer ligger inom normalintervall",
+          "breaker_operation": "Antal brytarmanövrer är registrerat",
+          "ground_grid": "Jordningsnätsanslutningar är intakta",
+          "fence_security": "Perimeterstängsel är säkert utan brister",
+          "signage_visible": "Varnings- och identifieringsskyltar är synliga",
+          "vegetation_clearance": "Vegetationsröjning är upprätthållen runt utrustning",
+          "animal_guards": "Djurskydd är på plats och oskadade"
+        }
+      },
+      "vegetation": {
+        "name": "Vegetationshantering",
+        "description": "Granskning av vegetationshantering längs kraftledningskorridorer, verifiering av röjningsavstånd, beskärningsscheman och miljöefterlevnad",
+        "items": {
+          "row_clearance": "Röjningsavstånd i ledningsgatan uppfyller kraven",
+          "trimming_completed": "Schemalagd trädbeskärning har genomförts",
+          "growth_assessment": "Bedömning av tillväxthastighet är dokumenterad",
+          "herbicide_records": "Herbicidanvändning är aktuellt dokumenterad",
+          "endangered_species": "Kontroll av hotade arter har genomförts",
+          "access_road": "Tillfartsvägens skick är godtagbart"
+        }
+      },
+      "line_clearance": {
+        "name": "Ledningsröjningskontroll",
+        "description": "Säkerhetsgranskning för arbete med spänningslösa kraftledningar, verifiering av isolering, skyddsjordning och minsta närmandeavstånd",
+        "items": {
+          "line_identified": "Ledningen har identifierats och bekräftats isolerad",
+          "grounds_installed": "Skyddsjordning har installerats",
+          "approach_distance": "Minsta närmandeavstånd iakttas",
+          "rubber_goods": "Gummiskyddsutrustning är testad och inom certifieringsdatum",
+          "traffic_control": "Trafikstyrning är på plats där det krävs"
+        }
+      },
+      "switching": {
+        "name": "Kopplingsrutin",
+        "description": "Steg-för-steg-rutin för koppling i eldistributionssystem som säkerställer tvåpersonsverifiering, spänningsprovning och samordning med kontrollcentral",
+        "items": {
+          "procedure_printed": "Steg-för-steg-rutin för koppling är utskriven och tillgänglig",
+          "two_person_rule": "Tvåpersonsregeln följs",
+          "isolation_verified": "Isoleringspunkter har verifierats",
+          "voltage_test": "Test-jorda-test-spänningsverifiering genomförd",
+          "scada_notification": "SCADA-kontrollcentral har underrättats",
+          "operating_log": "Driftlogg har uppdaterats"
+        }
+      },
+      "pole_climbing": {
+        "name": "Säkerhet vid stolp-/mastklättring",
+        "description": "Säkerhetschecklista före klättring för stolp- och mastarbete, verifiering av fallskyddsutrustning, strukturintegritet och räddningsutrustning",
+        "items": {
+          "fall_protection": "Fallskyddsutrustning har inspekterats",
+          "climbing_equipment": "Klätterutrustning är korrekt klassad",
+          "pole_tested": "Trästolpe har testats (hammar-/borrtest)",
+          "structure_integrity": "Strukturintegritet har verifierats",
+          "rescue_device": "Personlig räddningsutrustning är tillgänglig",
+          "communication": "Kommunikation med markbesättning är etablerad"
+        }
+      }
+    },
+    "transportation": {
+      "name": "Transport",
+      "description": "Säkerhetschecklistor för kommersiella transportverksamheter som omfattar fordonsinspektioner, lastsäkring, arbetstidsregler och transport av farligt gods",
+      "pre_trip": {
+        "name": "Föravgångskontroll av fordon",
+        "description": "Omfattande föravgångskontroll av kommersiella fordon som täcker däck, bromsar, belysning, speglar, kopplingsanordningar och nödutrustning",
+        "items": {
+          "tires": "Däcken har tillräckligt mönsterdjup och korrekt lufttryck",
+          "brakes_air": "Lufttrycket är tillräckligt och bromssystemet är funktionellt",
+          "lights_all": "All belysning fungerar (strålkastare, bakljus, sidomarkeringar, blinkers)",
+          "mirrors": "Speglarna är rena, korrekt inställda och oskadade",
+          "windshield": "Vindrutan är ren utan sprickor som försämrar sikten",
+          "horn": "Signalhornet fungerar",
+          "coupling_devices": "Kopplingsanordningarna är säkra (vändskiva, dragkrok)",
+          "cargo_securement": "Lastsäkringsutrustning är tillräcklig och på plats",
+          "emergency_equipment": "Nödutrustning finns (varningstrianglar, brandsläckare)"
+        }
+      },
+      "driver_scorecard": {
+        "name": "Förarens säkerhetsbedömning",
+        "description": "Periodisk genomgång av förarens säkerhetsprestanda som omfattar godkännande vid kontroller, incidenthistorik, efterlevnad av arbetstidsregler och genomförd utbildning",
+        "items": {
+          "inspection_pass_rate": "Bedöm förarens godkännandegrad vid kontroller för denna period",
+          "incident_history": "Dokumentera eventuella incidenter under granskningsperioden",
+          "hos_compliance": "Efterlevnad av arbetstidsregler har verifierats",
+          "training_completion": "Obligatoriska utbildningsmoduler har genomförts",
+          "moving_violations": "Dokumentera eventuella trafikförseelser",
+          "preventable_accidents": "Dokumentera eventuella förebyggbara olyckor"
+        }
+      },
+      "cargo": {
+        "name": "Lastsäkringskontroll",
+        "description": "Verifiering av lastsäkring för att säkerställa att laster ligger inom viktgränser och är korrekt fastsurrade, blockerade och stödda före transport",
+        "items": {
+          "weight_limits": "Lasten ligger inom viktgränser för fordonet och rutten",
+          "tiedowns_rated": "Surrbanden är klassade och finns i tillräckligt antal",
+          "header_board": "Frontskydd eller skott är i gott skick",
+          "blocking_bracing": "Blockering och stödning är säker",
+          "load_shift": "Kontroll av lastförskjutning har utförts",
+          "hazmat_placards": "Skyltar för farligt gods är uppsatta (om tillämpligt)"
+        }
+      },
+      "hos": {
+        "name": "Efterlevnad av arbetstidsregler",
+        "description": "Verifiering av arbetstidsregler för kommersiella förare, kontroll av färdskrivare, tillgänglig körtid, vilopauser och undantagsdokumentation",
+        "items": {
+          "eld_functioning": "Elektronisk färdskrivare fungerar korrekt",
+          "drive_time": "Tillgänglig körtid ligger inom lagstadgade gränser",
+          "rest_break": "Obligatorisk vilopaus har tagits",
+          "sleeper_berth": "Bestämmelser för sovhytt följs (om tillämpligt)",
+          "adverse_conditions": "Undantag för svåra körförhållanden dokumenterat (om använt)"
+        }
+      },
+      "hazmat": {
+        "name": "Checklista för transport av farligt gods",
+        "description": "Checklista före transport av farligt gods, verifiering av frakthandlingar, varningsskyltar, förpackningsintegritet och förarens behörighet",
+        "items": {
+          "shipping_papers": "Frakthandlingar är kompletta och korrekta",
+          "placards_correct": "Fordonsskyltar är korrekta för lasten",
+          "packaging_integrity": "Förpackningsintegritet har verifierats",
+          "compatibility": "Lastkompatibilitet har verifierats",
+          "emergency_info": "Nödinsatsinformation är tillgänglig",
+          "driver_endorsement": "Förarens behörighet för farligt gods är giltig"
+        }
+      },
+      "post_trip": {
+        "name": "Efterkontroll av fordon",
+        "description": "Fordonskontroll efter avslutad resa som dokumenterar defekter, bromsprestanda, däckskick, vätskeläckage och lastutrymmets färdigställande för nästa last",
+        "items": {
+          "defects_discovered": "Dokumentera eventuella defekter som upptäckts under resan",
+          "brake_performance": "Bromsprestanda var tillfredsställande under resan",
+          "tire_condition": "Däckskick efter den lastade resan är acceptabelt",
+          "fluid_leaks": "Inga nya vätskeläckage observerade",
+          "body_damage": "Inga nya karosseriskador observerade",
+          "cargo_area": "Lastutrymmet har rengjorts och är klart",
+          "report_signed": "Efterkontrollrapporten har signerats"
+        }
+      }
+    },
+    "education": {
+      "name": "Utbildning",
+      "description": "Säkerhetschecklistor för utbildningsanläggningar som omfattar lekplatsinspektioner, laboratoriesäkerhet, utrymningsövningar och byggnadssäkerhetsronder",
+      "playground": {
+        "name": "Säkerhetsinspektion av lekplats",
+        "description": "Rutininspektion av lekplatsutrustning och underlag för att identifiera faror, verifiera åldersanpassad utformning och säkerställa efterlevnad av fallzon",
+        "items": {
+          "equipment_integrity": "Utrustningen är fri från vassa kanter, lösa bultar och skador",
+          "fall_zone_surfacing": "Fallzonens underlag är tillräckligt (djup och täckning)",
+          "age_appropriate": "Åldersanpassad skyltning är uppsatt",
+          "entrapment_hazards": "Inga inklämningsrisker förekommer",
+          "drain_covers": "Brunnslock är säkra och i jämnhöjd",
+          "general_condition": "Lekplatsens allmänna skick är tillfredsställande"
+        }
+      },
+      "lab": {
+        "name": "Laboratoriesäkerhetsinspektion",
+        "description": "Säkerhetsinspektion för laboratorielokaler inom utbildning, verifiering av nödutrustning, kemikalieförvaring, dragskåpsfunktion och tillgång till skyddsutrustning",
+        "items": {
+          "eyewash_tested": "Ögonduschstation har testats och fungerar",
+          "shower_tested": "Nöddusch har testats och fungerar",
+          "fume_hood": "Dragskåp fungerar och luftflödet är tillräckligt",
+          "chemical_storage": "Kemikalier är korrekt förvarade och märkta",
+          "sds_accessible": "Säkerhetsdatablad är tillgängliga",
+          "ppe_available": "Skyddsutrustning finns tillgänglig (skyddsglasögon, handskar, förkläden)",
+          "emergency_shutoffs": "Nödavstängningar är märkta och tillgängliga",
+          "glassware_disposal": "Behållare för glasavfall finns tillgängliga"
+        }
+      },
+      "emergency_drill": {
+        "name": "Dokumentation av utrymningsövning",
+        "description": "Dokumentation av genomförd utrymningsövning inklusive typ av övning, utrymningstid, avstämning av närvaro och områden för förbättring",
+        "items": {
+          "drill_type": "Typ av övning som genomfördes (brand, inrymning, jordbävning, tornado)",
+          "weather_conditions": "Väderförhållanden under övningen",
+          "evacuation_time": "Total utrymningstid i minuter",
+          "headcount_reconciled": "Närvarokontroll har stämts av mot närvarolista",
+          "areas_of_delay": "Områden med förseningar eller trängsel identifierade",
+          "communication_effectiveness": "Kommunikationssystemen fungerade effektivt",
+          "special_needs": "Särskilda behov hanterades korrekt"
+        }
+      },
+      "visitor": {
+        "name": "Besökshanteringslogg",
+        "description": "Incheckning och spårning av besökare på utbildningscampus, dokumenterar ID-verifiering, passerkortsutfärdande och eskortbehov",
+        "items": {
+          "visitor_id_checked": "Besökarens legitimation har kontrollerats",
+          "purpose_of_visit": "Besökets syfte har dokumenterats",
+          "badge_issued": "Besöksmärke har utfärdats",
+          "escort_assigned": "Eskort har tilldelats (om det krävs)",
+          "sign_out_time": "Utcheckningstid har registrerats",
+          "restricted_areas": "Begränsade områden har kommunicerats"
+        }
+      },
+      "building": {
+        "name": "Byggnadssäkerhetsrond",
+        "description": "Säkerhetsgenomgång av utbildningsbyggnader, kontroll av utrymningsskyltar, brandsläckare, hjärtstartare och allmänna byggnadsförhållanden",
+        "items": {
+          "exit_signs": "Utrymningsskyltar är upplysta och synliga",
+          "fire_extinguishers": "Brandsläckare är besiktigade och tillgängliga",
+          "aed_checked": "Hjärtstartare har kontrollerats och är redo",
+          "stairwell_lighting": "Trapphusbelysning fungerar",
+          "trip_hazards": "Inga snubbelrisker i korridorer eller gångvägar",
+          "hvac_functioning": "Ventilationssystemet fungerar korrekt",
+          "water_temperature": "Vattentemperatur har testats (skållningsskydd)"
+        }
+      },
+      "bus": {
+        "name": "Buss-/transportsäkerhet",
+        "description": "Säkerhetschecklista för skolbussar och elevtransportfordon, omfattar föravgångskontroller, nödutgångar och rutiner för elevräkning",
+        "items": {
+          "pre_trip_inspection": "Föravgångskontroll av fordon har genomförts",
+          "first_aid_kit": "Första hjälpen-kit finns och är komplett",
+          "emergency_exits": "Nödutgångar är funktionella och fria från hinder",
+          "communication_device": "Kommunikationsenhet fungerar",
+          "student_count": "Rutin för elevräkning är etablerad",
+          "wheelchair_lift": "Rullstolslift har testats (om tillämpligt)"
+        }
+      }
+    },
+    "airports": {
+      "name": "Flygplatser",
+      "description": "Säkerhetschecklistor för flygplatsverksamhet, omfattande terminalsäkerhet, markserviceutrustning, rampsäkerhet, tankningsverksamhet och entreprenörshantering",
+      "escalator": {
+        "name": "Rulltrappa/hiss-säkerhet",
+        "description": "Säkerhetsinspektion av rulltrappor och hissar i terminalbyggnader, verifiering av nödstopp, mekanisk justering och kommunikationssystem",
+        "items": {
+          "emergency_stop": "Nödstoppsknapp fungerar",
+          "comb_plate": "Kamplatta är intakt och justerad",
+          "handrail_speed": "Ledstångens hastighet matchar steghastigheten",
+          "step_demarcation": "Stegavgränsningslinjer är synliga",
+          "lighting": "Belysningen är tillräcklig vid infarterna och längs enheten",
+          "intercom": "Interkom eller nödkommunikation fungerar",
+          "maintenance_log": "Underhållsloggen är aktuell"
+        }
+      },
+      "terminal_floor": {
+        "name": "Riskgenomgång av terminalgolv",
+        "description": "Genomgång av terminalytor för att identifiera våta golv, snubbelrisker, byggbarriärer och problem med personflödet",
+        "items": {
+          "wet_floor_signage": "Våta golvytor är markerade med lämplig skyltning",
+          "spill_cleanup": "Spill har städats upp omgående",
+          "trip_hazards": "Inga snubbelrisker (sliten matta, ojämna plattor) förekommer",
+          "construction_barriers": "Byggbarriärer är säkra och synliga",
+          "lighting_functional": "All belysning i terminalområdet fungerar",
+          "crowd_flow": "Personflödet är tillräckligt och skapar inga säkerhetsrisker"
+        }
+      },
+      "aed": {
+        "name": "Kontroll av AED/förstahjälpenstation",
+        "description": "Inspektion av hjärtstartare och förstahjälpenstationer i terminalen, verifiering av beredskap, förnödenhetsnivåer och tillgång till utbildad personal",
+        "items": {
+          "aed_powered": "AED är påslagen och visar statusen redo",
+          "pads_not_expired": "AED-plattor har inte gått ut",
+          "battery_charge": "Batteriladdningen är tillräcklig",
+          "first_aid_supplies": "Förstahjälpenförnödenheter är påfyllda",
+          "location_signage": "Stationens lägesskyltar är synliga",
+          "trained_responder": "Närmaste utbildade räddare är listad och i tjänst"
+        }
+      },
+      "emergency_evac": {
+        "name": "Beredskap för nödevakuering",
+        "description": "Beredskapsbedömning för terminalens nödevakuering, verifiering av utgångsskyltar, fria evakueringsvägar, fungerande högtalarsystem och personalens kännedom om sina uppgifter",
+        "items": {
+          "exit_signage": "Utgångsskyltningen är upplyst i hela terminalen",
+          "evacuation_routes": "Evakueringsvägar är fria från hinder",
+          "pa_system": "Högtalarsystemet har testats och fungerar",
+          "assembly_points": "Samlingsplatser är markerade och kommunicerade",
+          "wheelchair_chairs": "Evakueringsstolar för rullstolar är placerade vid trapphus",
+          "staff_assignments": "Personalen känner till sina evakueringsuppgifter"
+        }
+      },
+      "gse": {
+        "name": "Förkontroll av GSE",
+        "description": "Förkontroll av markserviceutrustning inklusive bandlastare, dragfordon och bagagevagnar, verifiering av mekaniskt skick och operatörscertifiering",
+        "items": {
+          "belt_loader": "Bandlastaren fungerar smidigt och kontrollerat",
+          "tug_brakes_lights": "Dragfordonets bromsar och lampor fungerar",
+          "baggage_cart": "Bagagevagnens koppling är säker",
+          "fuel_level": "Bränslenivån är tillräcklig för skiftet",
+          "fire_extinguisher": "Brandsläckare är monterad och laddad",
+          "backup_alarm": "Backlarm är hörbart",
+          "tire_condition": "Däckens skick är acceptabelt",
+          "operator_cert": "Operatörscertifiering är aktuell"
+        }
+      },
+      "fod": {
+        "name": "FOD-rond",
+        "description": "Inspektion av främmande föremål på ramp- och apronområden, verifiering av ytrenlighet, verktygsredovisning och dokumentation av skräp",
+        "items": {
+          "ramp_clear": "Rampområdet är fritt från främmande föremål",
+          "tools_accounted": "Alla verktyg och all utrustning är redovisade",
+          "loose_items": "Lösa föremål har säkrats eller avlägsnats",
+          "fod_bins": "FOD-insamlingskärl är tillgängliga och inte fulla",
+          "surface_condition": "Ytskicket är säkert (ingen is, inget stillastående vatten)",
+          "debris_documented": "Eventuellt skräp som hittats har dokumenterats och avlägsnats"
+        }
+      },
+      "fueling": {
+        "name": "Säkerhet vid tankning",
+        "description": "Säkerhetschecklista för flygplanstankning, omfattande potentialutjämning/jordning, spilluppsamling, kontroll av tändkällor och verifiering av bränslekvalitet",
+        "items": {
+          "bonding_grounding": "Potentialutjämnings- och jordningsanslutningar är upprättade",
+          "dead_man_switch": "Dödmansgreppet fungerar",
+          "spill_containment": "Spilluppsamlingsutrustning är uppställd",
+          "fire_extinguisher": "Brandsläckare är tillgänglig",
+          "no_ignition_sources": "Inga tändkällor förekommer i tankningszonen",
+          "fuel_sample": "Bränsleprovet är klart och oförorenat",
+          "quantity_verified": "Bränslemängden har verifierats mot beställningen"
+        }
+      },
+      "baggage": {
+        "name": "Granskning av bagagehanteringssystem",
+        "description": "Säkerhetsgranskning av bagagehanteringssystem, verifiering av transportbandsskydd, nödstopp, markering av klämrisker och tillgång till ergonomiska lyfthjälpmedel",
+        "items": {
+          "conveyor_guarding": "Transportbandsskydd är på plats",
+          "emergency_stops": "Nödstoppsknappar är tillgängliga och testade",
+          "pinch_points": "Klämställen är tydligt markerade",
+          "lighting": "Belysningen i bagagehanteringsområdet är tillräcklig",
+          "maintenance_access": "Underhållsområden är ordentligt säkrade",
+          "noise_levels": "Ljudnivåer är inom acceptabla gränser",
+          "ergonomic_aids": "Ergonomiska lyfthjälpmedel är tillgängliga"
+        }
+      },
+      "ramp": {
+        "name": "Efterlevnad av rampsäkerhetszoner",
+        "description": "Efterlevnadskontroll av rampsäkerhetszoner, verifiering av fria jetblåszoner, korrekt placering av utrustning, fordonsfartgränser och användning av personlig skyddsutrustning av ramppersonal",
+        "items": {
+          "jet_blast_zone": "Jetblåszonen är fri från personal och utrustning",
+          "equipment_marshalling": "Placering och dirigering av utrustning följer korrekta rutiner",
+          "vehicle_speed": "Fordonens hastighetsbegränsningar följs",
+          "wing_walker": "Vingvakt finns på plats vid pushback",
+          "hearing_protection": "Hörselskydd bärs av all ramppersonal",
+          "reflective_vests": "Reflekterande säkerhetsvästar bärs",
+          "headsets_tested": "Kommunikationsheadset har testats"
+        }
+      },
+      "contractor": {
+        "name": "Efterlevnad för flera entreprenörer",
+        "description": "Efterlevnadsgranskning av flera entreprenörer inom markhantering, verifiering av aktuell utbildning, giltiga säkerhetskort, incidentrapportering och slutförande av korrigerande åtgärder",
+        "items": {
+          "handler_training": "Markpersonalens säkerhetsutbildning är aktuell",
+          "security_badges": "Säkerhetskortens giltighet har kontrollerats",
+          "ramp_driving_auth": "Behörighet för rampkörning är aktuell",
+          "incident_reports": "Säkerhetsincidentrapporter per entreprenör har granskats",
+          "audit_scores": "Revisionsresultat per entreprenör är dokumenterade",
+          "corrective_actions": "Andel slutförda korrigerande åtgärder följs upp"
+        }
+      }
+    }
+  },
+  "dateRange": {
+    "today": "Idag",
+    "yesterday": "Igår",
+    "last7Days": "Senaste 7 dagarna",
+    "last30Days": "Senaste 30 dagarna",
+    "last90Days": "Senaste 90 dagarna",
+    "last6Months": "Senaste 6 månaderna",
+    "allTime": "Hela perioden",
+    "customRange": "Anpassat intervall",
+    "selectDate": "Välj datum",
+    "startDate": "Startdatum",
+    "endDate": "Slutdatum"
   }
 }

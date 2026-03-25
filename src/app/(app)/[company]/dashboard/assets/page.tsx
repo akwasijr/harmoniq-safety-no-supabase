@@ -9,6 +9,7 @@ import {
   Package,
   AlertTriangle,
   CheckCircle,
+  Check,
   Clock,
   X,
   MapPin,
@@ -24,6 +25,8 @@ import {
   Wrench,
   ClipboardList,
   Cog,
+  Shield,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,21 +35,20 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
-import { commonFilterOptions } from "@/components/ui/filter-panel";
-import { useAssetsStore } from "@/stores/assets-store";
-import { useLocationsStore } from "@/stores/locations-store";
-import { useUsersStore } from "@/stores/users-store";
+import { useFilterOptions } from "@/components/ui/filter-panel";
+import { useCompanyData } from "@/hooks/use-company-data";
+import { LoadingPage } from "@/components/ui/loading";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { DetailTabs } from "@/components/ui/detail-tabs";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
-import CorrectiveActionsContent from "@/app/(app)/[company]/dashboard/corrective-actions/page";
-import WorkOrdersContent from "@/app/(app)/[company]/dashboard/work-orders/page";
-import PartsContent from "@/app/(app)/[company]/dashboard/parts/page";
-import type { Asset, Alert } from "@/types";
 
-const ITEMS_PER_PAGE = 10;
+import type { Asset, Alert } from "@/types";
+import { RoleGuard } from "@/components/auth/role-guard";
+import { PAGINATION } from "@/lib/constants";
+
+const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 export default function AssetsPage() {
   const router = useRouter();
@@ -59,6 +61,7 @@ export default function AssetsPage() {
   const [expandedSystems, setExpandedSystems] = React.useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = React.useState<"assets" | "alerts" | "corrective-actions" | "work-orders" | "parts">("assets");
   const [alertSeverityFilter, setAlertSeverityFilter] = React.useState<string>("");
+  const [stableNow] = React.useState(() => Date.now());
 
   // Filters
   const [statusFilter, setStatusFilter] = React.useState("");
@@ -71,18 +74,38 @@ export default function AssetsPage() {
     category: "machinery",
     manufacturer: "",
     model: "",
+    condition: "good" as string,
     location_id: "",
     purchase_date: "",
     asset_type: "static",
     department: "",
     warranty_expiry: "",
+    criticality: "medium" as string,
+    parent_asset_id: "",
+    purchase_cost: "",
+    currency: "USD",
+    expected_life_years: "",
+    installation_date: "",
+    requires_certification: false,
+    maintenance_frequency_days: "",
+    safety_instructions: "",
   });
 
-  const { items: assets, add: addAsset } = useAssetsStore();
-  const { items: locations } = useLocationsStore();
-  const { items: users } = useUsersStore();
+  // Wizard step tracking
+  const [wizardStep, setWizardStep] = React.useState(0);
+  const wizardSteps = [
+    { id: "basic", titleKey: "assets.wizard.basic", descKey: "assets.wizard.basicDesc", icon: Package },
+    { id: "technical", titleKey: "assets.wizard.technical", descKey: "assets.wizard.technicalDesc", icon: Wrench },
+    { id: "location", titleKey: "assets.wizard.location", descKey: "assets.wizard.locationDesc", icon: MapPin },
+    { id: "lifecycle", titleKey: "assets.wizard.lifecycle", descKey: "assets.wizard.lifecycleDesc", icon: Calendar },
+    { id: "compliance", titleKey: "assets.wizard.compliance", descKey: "assets.wizard.complianceDesc", icon: Shield },
+  ] as const;
+
+  const { assets, locations, users, stores } = useCompanyData();
+  const { isLoading, add: addAsset } = stores.assets;
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
+  const filterOptions = useFilterOptions();
 
   const departmentOptions = Array.from(
     new Set(users.map((u) => u.department).filter((d): d is string => !!d))
@@ -117,45 +140,48 @@ export default function AssetsPage() {
       const lines = text.split("\n").filter(l => l.trim());
       if (lines.length < 2) { toast("No data rows found in CSV"); return; }
       const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim());
+      const existingAssetTags = new Set(assets.map((asset) => asset.asset_tag));
       let imported = 0;
       for (let i = 1; i < lines.length; i++) {
         const vals = lines[i].match(/(".*?"|[^,]*)/g)?.map(v => v.replace(/^"|"$/g, "").replace(/""/g, '"').trim()) || [];
         const row: Record<string, string> = {};
         headers.forEach((h, idx) => { row[h] = vals[idx] || ""; });
         if (!row.name) continue;
+        const requestedAssetTag = row.asset_tag?.trim();
+        const assetTag = requestedAssetTag && !existingAssetTags.has(requestedAssetTag)
+          ? requestedAssetTag
+          : `AST-${Date.now()}-${i}`;
+        existingAssetTags.add(assetTag);
         addAsset({
           id: `asset_import_${Date.now()}_${i}`,
-          company_id: "",
+          company_id: company || "",
           location_id: row.location_id || null,
           parent_asset_id: null,
           is_system: false,
           name: row.name,
-          asset_tag: row.asset_tag || `AST-${Date.now()}-${i}`,
+          asset_tag: assetTag,
           serial_number: row.serial_number || null,
-          barcode: null, qr_code: null,
+          qr_code: null,
           category: (row.category as Asset["category"]) || "other",
           sub_category: null,
           asset_type: (row.asset_type as Asset["asset_type"]) || "static",
           criticality: "medium",
           department: row.department || null,
           manufacturer: row.manufacturer || null,
-          model: row.model || null, model_number: null,
-          specifications: null, manufactured_date: null,
+          model: row.model || null,
           purchase_date: row.purchase_date || null,
           installation_date: null,
           warranty_expiry: row.warranty_expiry || null,
           expected_life_years: null,
           condition: (row.condition as Asset["condition"]) || "good",
-          condition_notes: null, last_condition_assessment: null,
+          last_condition_assessment: null,
           purchase_cost: row.purchase_cost ? parseFloat(row.purchase_cost) : null,
           current_value: null, depreciation_rate: null, currency: "USD",
           maintenance_frequency_days: null, last_maintenance_date: null,
-          next_maintenance_date: null, maintenance_notes: null,
-          requires_certification: false, requires_calibration: false,
-          calibration_frequency_days: null, last_calibration_date: null,
-          next_calibration_date: null, safety_instructions: null,
+          next_maintenance_date: null,
+          requires_certification: false,
+          safety_instructions: null,
           status: (row.status as Asset["status"]) || "active",
-          decommission_date: null, disposal_method: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
@@ -169,7 +195,7 @@ export default function AssetsPage() {
   
   // Compute alerts from asset data
   const computedAlerts = React.useMemo(() => {
-    const now = new Date();
+    const now = new Date(stableNow);
     const alerts: Alert[] = [];
     const DAY = 24 * 60 * 60 * 1000;
 
@@ -208,31 +234,6 @@ export default function AssetsPage() {
         }
       }
 
-      if (asset.next_calibration_date && asset.requires_calibration) {
-        const due = new Date(asset.next_calibration_date);
-        const diff = due.getTime() - now.getTime();
-        if (diff <= 90 * DAY) {
-          const s = severity(due);
-          alerts.push({
-            id: `alert_calibration_${asset.id}`,
-            company_id: asset.company_id,
-            type: diff < 0 ? "calibration_overdue" : "calibration_due",
-            asset_id: asset.id,
-            schedule_id: null,
-            title: `${asset.name}: Calibration ${diff < 0 ? "overdue" : "due"}`,
-            description: `Calibration ${diff < 0 ? "was due" : "due"} on ${formatDate(due)}`,
-            due_date: asset.next_calibration_date,
-            severity: s,
-            is_dismissed: false,
-            dismissed_by_user_id: null,
-            dismissed_at: null,
-            is_resolved: false,
-            resolved_at: null,
-            created_at: now.toISOString(),
-          });
-        }
-      }
-
       if (asset.next_maintenance_date) {
         const due = new Date(asset.next_maintenance_date);
         const diff = due.getTime() - now.getTime();
@@ -259,7 +260,7 @@ export default function AssetsPage() {
       }
     }
     return alerts;
-  }, [assets]);
+  }, [assets, stableNow, formatDate]);
 
   // Alerts - active (not dismissed/resolved)
   const activeAlerts = computedAlerts.filter(a => !a.is_dismissed && !a.is_resolved);
@@ -268,8 +269,8 @@ export default function AssetsPage() {
   const infoAlerts = activeAlerts.filter(a => a.severity === "info");
   
   // Upcoming alerts (due within next 30 days)
-  const today = new Date();
-  const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const today = new Date(stableNow);
+  const thirtyDaysFromNow = new Date(stableNow + 30 * 24 * 60 * 60 * 1000);
   const upcomingAlerts = activeAlerts.filter(a => {
     const dueDate = new Date(a.due_date);
     return dueDate >= today && dueDate <= thirtyDaysFromNow;
@@ -311,7 +312,7 @@ export default function AssetsPage() {
   ];
 
   // Filter assets
-  const filteredAssets = assets.filter((asset) => {
+  const filteredAssets = React.useMemo(() => assets.filter((asset) => {
     const matchesSearch = searchQuery === "" || 
       asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (asset.serial_number?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
@@ -321,7 +322,7 @@ export default function AssetsPage() {
     const matchesLocation = locationFilter === "" || asset.location_id === locationFilter;
     const matchesDate = asset.purchase_date ? isWithinDateRange(asset.purchase_date, dateRange as DateRangeValue) : true;
     return matchesSearch && matchesStatus && matchesCategory && matchesLocation && matchesDate;
-  });
+  }), [assets, searchQuery, statusFilter, categoryFilter, locationFilter, dateRange]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAssets.length / ITEMS_PER_PAGE);
@@ -336,11 +337,23 @@ export default function AssetsPage() {
     retired: assets.filter((a) => a.status === "retired").length,
   };
 
+  const avgHealthScore = React.useMemo(() => {
+    const activeAssets = filteredAssets.filter(a => a.status !== "retired");
+    if (activeAssets.length === 0) return 0;
+    const conditionScores: Record<string, number> = { excellent: 100, good: 80, fair: 60, poor: 40, failed: 10 };
+    return Math.round(
+      activeAssets.reduce((sum, asset) => {
+        const statusPenalty = asset.status === "active" ? 0 : asset.status === "maintenance" ? -10 : -30;
+        return sum + (conditionScores[asset.condition] || 60) + statusPenalty;
+      }, 0) / activeAssets.length
+    );
+  }, [filteredAssets]);
+
   const filters = [
     {
       id: "status",
       label: t("assets.allStatuses"),
-      options: commonFilterOptions.assetStatus,
+      options: filterOptions.assetStatus,
       value: statusFilter,
       onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
     },
@@ -370,69 +383,73 @@ export default function AssetsPage() {
       id: `asset_${Date.now()}`,
       company_id: company || "",
       location_id: newAsset.location_id || null,
-      parent_asset_id: null,
+      parent_asset_id: newAsset.parent_asset_id || null,
       is_system: false,
       name: newAsset.name,
       asset_tag: `AST-${Date.now().toString().slice(-6)}`,
       serial_number: newAsset.serial_number || null,
-      barcode: null,
       qr_code: null,
       category: newAsset.category as Asset["category"],
       sub_category: null,
       asset_type: newAsset.asset_type as Asset["asset_type"],
-      criticality: "medium",
+      criticality: (newAsset.criticality as Asset["criticality"]) || "medium",
       department: newAsset.department || null,
       manufacturer: newAsset.manufacturer || null,
       model: newAsset.model || null,
-      model_number: null,
-      specifications: null,
-      manufactured_date: null,
       purchase_date: newAsset.purchase_date || null,
-      installation_date: null,
+      installation_date: newAsset.installation_date || null,
       warranty_expiry: newAsset.warranty_expiry || null,
-      expected_life_years: null,
-      condition: "good",
-      condition_notes: null,
+      expected_life_years: newAsset.expected_life_years ? parseInt(newAsset.expected_life_years) : null,
+      condition: (newAsset.condition as Asset["condition"]) || "good",
       last_condition_assessment: null,
-      purchase_cost: null,
+      purchase_cost: newAsset.purchase_cost ? parseFloat(newAsset.purchase_cost) : null,
       current_value: null,
       depreciation_rate: null,
-      currency: "USD",
-      maintenance_frequency_days: null,
+      currency: (newAsset.currency as Asset["currency"]) || "USD",
+      maintenance_frequency_days: newAsset.maintenance_frequency_days ? parseInt(newAsset.maintenance_frequency_days) : null,
       last_maintenance_date: null,
       next_maintenance_date: null,
-      maintenance_notes: null,
-      requires_certification: false,
-      requires_calibration: false,
-      calibration_frequency_days: null,
-      last_calibration_date: null,
-      next_calibration_date: null,
-      safety_instructions: null,
+      requires_certification: newAsset.requires_certification,
+      safety_instructions: newAsset.safety_instructions || null,
       status: "active",
-      decommission_date: null,
-      disposal_method: null,
       created_at: now,
       updated_at: now,
     };
     addAsset(asset);
     toast("Asset added successfully");
     setShowAddModal(false);
+    setWizardStep(0);
     setNewAsset({
       name: "",
       serial_number: "",
       category: "machinery",
       manufacturer: "",
       model: "",
+      condition: "good",
       location_id: "",
       purchase_date: "",
       asset_type: "static",
       department: "",
       warranty_expiry: "",
+      criticality: "medium",
+      parent_asset_id: "",
+      purchase_cost: "",
+      currency: "USD",
+      expected_life_years: "",
+      installation_date: "",
+      requires_certification: false,
+      maintenance_frequency_days: "",
+      safety_instructions: "",
     });
     setCurrentPage(1);
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
+    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -478,7 +495,7 @@ export default function AssetsPage() {
       {activeTab === "assets" && (
         <>
         {/* Status summary - clickable for filtering */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KPICard
             title={t("assets.statuses.active")}
             value={statusCounts.active}
@@ -499,6 +516,13 @@ export default function AssetsPage() {
             icon={AlertTriangle}
             onClick={() => { setStatusFilter(statusFilter === "retired" ? "" : "retired"); setCurrentPage(1); }}
             active={statusFilter === "retired"}
+          />
+          <KPICard
+            title={t("assets.avgHealthScore")}
+            value={`${avgHealthScore}%`}
+            description={t("assets.avgHealthScoreDesc")}
+            icon={Activity}
+            className={avgHealthScore > 80 ? "border-green-200 dark:border-green-900" : avgHealthScore >= 50 ? "border-amber-200 dark:border-amber-900" : "border-red-200 dark:border-red-900"}
           />
         </div>
 
@@ -727,11 +751,27 @@ export default function AssetsPage() {
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                  <Button key={i + 1} variant={currentPage === i + 1 ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(i + 1)}>
-                    {i + 1}
-                  </Button>
-                ))}
+                {(() => {
+                  const pages: (number | "...")[] = totalPages <= 7
+                    ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                    : (() => {
+                        const p: (number | "...")[] = [1];
+                        if (currentPage > 3) p.push("...");
+                        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) p.push(i);
+                        if (currentPage < totalPages - 2) p.push("...");
+                        p.push(totalPages);
+                        return p;
+                      })();
+                  return pages.map((p, idx) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
+                    ) : (
+                      <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p as number)}>
+                        {p}
+                      </Button>
+                    )
+                  );
+                })()}
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -745,13 +785,37 @@ export default function AssetsPage() {
       )}
 
       {/* Work Orders Tab */}
-      {activeTab === "work-orders" && <WorkOrdersContent />}
+      {activeTab === "work-orders" && (
+        <div className="text-center py-12">
+          <Wrench className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground mb-4">View and manage work orders for this asset</p>
+          <Link href={`/${company}/dashboard/work-orders`}>
+            <Button>Go to Work Orders</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Parts Tab */}
-      {activeTab === "parts" && <PartsContent />}
+      {activeTab === "parts" && (
+        <div className="text-center py-12">
+          <Box className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground mb-4">View and manage parts inventory</p>
+          <Link href={`/${company}/dashboard/parts`}>
+            <Button>Go to Parts</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Corrective Actions Tab */}
-      {activeTab === "corrective-actions" && <CorrectiveActionsContent />}
+      {activeTab === "corrective-actions" && (
+        <div className="text-center py-12">
+          <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground mb-4">View and manage corrective actions</p>
+          <Link href={`/${company}/dashboard/corrective-actions`}>
+            <Button>Go to Corrective Actions</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Alerts Tab Content */}
       {activeTab === "alerts" && (
@@ -830,8 +894,9 @@ export default function AssetsPage() {
                           <td className="py-2 capitalize">{alert.severity}</td>
                           <td className="py-2">
                             <Link
-                              href={alert.asset_id ? `/${company}/dashboard/assets/${alert.asset_id}` : "#"}
-                              className="text-primary hover:underline flex items-center gap-1"
+                              href={`/${company}/dashboard/assets/${alert.asset_id}`}
+                              className={`text-primary hover:underline flex items-center gap-1 ${!alert.asset_id ? "pointer-events-none opacity-50" : ""}`}
+                              aria-disabled={!alert.asset_id}
                             >
                               <Eye className="h-4 w-4" />
                               View
@@ -849,167 +914,398 @@ export default function AssetsPage() {
         </>
       )}
 
-      {/* Add Asset Modal */}
+      {/* Add Asset Modal - Multi-step Wizard */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setShowAddModal(false)} />
-          <div className="relative z-50 w-full max-w-lg rounded-xl bg-background p-6 shadow-xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Add New Asset</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowAddModal(false)}>
+          <div className="fixed inset-0 bg-black/50" onClick={() => { setShowAddModal(false); setWizardStep(0); }} />
+          <div className="relative z-50 w-full max-w-2xl rounded-xl bg-background p-6 shadow-xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-semibold">{t("assets.buttons.newAsset")}</h2>
+              <Button variant="ghost" size="icon" onClick={() => { setShowAddModal(false); setWizardStep(0); }}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
+            <p className="text-sm text-muted-foreground mb-5">
+              {t("assets.wizard.step", { current: String(wizardStep + 1), total: String(wizardSteps.length) })}: {t(wizardSteps[wizardStep].descKey)}
+            </p>
 
-            <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+            {/* Progress indicator */}
+            <div className="flex items-center gap-2 mb-6">
+              {wizardSteps.map((step, i) => {
+                const StepIcon = step.icon;
+                return (
+                  <React.Fragment key={step.id}>
+                    <button
+                      type="button"
+                      onClick={() => { if (i < wizardStep) setWizardStep(i); }}
+                      className={cn(
+                        "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors",
+                        i < wizardStep
+                          ? "bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90"
+                          : i === wizardStep
+                          ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
+                          : "bg-muted text-muted-foreground cursor-default"
+                      )}
+                      aria-label={t(step.titleKey)}
+                      title={t(step.titleKey)}
+                    >
+                      {i < wizardStep ? <Check className="h-4 w-4" /> : <StepIcon className="h-4 w-4" />}
+                    </button>
+                    {i < wizardSteps.length - 1 && (
+                      <div className={cn("h-0.5 flex-1 rounded-full transition-colors", i < wizardStep ? "bg-primary" : "bg-muted")} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+
+            {/* Step 1: Basic Info */}
+            {wizardStep === 0 && (
+              <div className="space-y-4">
                 <div>
-              <Label htmlFor="name">{t("assets.labels.name")} *</Label>
+                  <Label htmlFor="name">{t("assets.labels.name")} *</Label>
                   <Input
                     id="name"
                     value={newAsset.name}
                     onChange={(e) => setNewAsset({ ...newAsset, name: e.target.value })}
-                    placeholder="e.g., Forklift #12"
+                    placeholder={t("assets.placeholders.assetName")}
+                    className="mt-1"
+                    autoFocus
+                    maxLength={200}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="category">{t("assets.labels.category")} *</Label>
+                  <select
+                    id="category"
+                    title="Select category"
+                    aria-label="Select category"
+                    value={newAsset.category}
+                    onChange={(e) => setNewAsset({ ...newAsset, category: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    {categoryOptions.map((cat) => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="asset_type">{t("assets.labels.assetType")}</Label>
+                    <select
+                      id="asset_type"
+                      title="Select asset type"
+                      aria-label="Select asset type"
+                      value={newAsset.asset_type}
+                      onChange={(e) => setNewAsset({ ...newAsset, asset_type: e.target.value })}
+                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="static">Static</option>
+                      <option value="movable">Movable</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="serial">{t("assets.labels.serialNumber")}</Label>
+                    <Input
+                      id="serial"
+                      value={newAsset.serial_number}
+                      onChange={(e) => setNewAsset({ ...newAsset, serial_number: e.target.value })}
+                      placeholder={t("assets.placeholders.serialNumber")}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="criticality">Criticality</Label>
+                  <select
+                    id="criticality"
+                    title="Select criticality"
+                    aria-label="Select criticality"
+                    value={newAsset.criticality}
+                    onChange={(e) => setNewAsset({ ...newAsset, criticality: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Technical Details */}
+            {wizardStep === 1 && (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="manufacturer">{t("assets.labels.manufacturer")}</Label>
+                    <Input
+                      id="manufacturer"
+                      value={newAsset.manufacturer}
+                      onChange={(e) => setNewAsset({ ...newAsset, manufacturer: e.target.value })}
+                      placeholder={t("assets.placeholders.manufacturer")}
+                      className="mt-1"
+                      autoFocus
+                      maxLength={100}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="model">{t("assets.labels.model")}</Label>
+                    <Input
+                      id="model"
+                      value={newAsset.model}
+                      onChange={(e) => setNewAsset({ ...newAsset, model: e.target.value })}
+                      placeholder={t("assets.placeholders.model")}
+                      className="mt-1"
+                      maxLength={100}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="condition">Condition</Label>
+                  <select
+                    id="condition"
+                    title="Select condition"
+                    aria-label="Select condition"
+                    value={newAsset.condition}
+                    onChange={(e) => setNewAsset({ ...newAsset, condition: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="new">New</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Location & Assignment */}
+            {wizardStep === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="location">{t("assets.labels.location")}</Label>
+                  <select
+                    id="location"
+                    title="Select location"
+                    aria-label="Select location"
+                    value={newAsset.location_id}
+                    onChange={(e) => setNewAsset({ ...newAsset, location_id: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">No location assigned</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>{loc.name} ({loc.type})</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Optionally assign this asset to a specific location
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="department">{t("assets.labels.department")}</Label>
+                  <Input
+                    id="department"
+                    list="asset-departments"
+                    value={newAsset.department}
+                    onChange={(e) => setNewAsset({ ...newAsset, department: e.target.value })}
+                    placeholder={t("assets.placeholders.department")}
+                    className="mt-1"
+                  />
+                  <datalist id="asset-departments">
+                    {departmentOptions.map((dept) => (
+                      <option key={dept} value={dept} />
+                    ))}
+                  </datalist>
+                </div>
+                <div>
+                  <Label htmlFor="parent_asset">Parent Asset</Label>
+                  <select
+                    id="parent_asset"
+                    title="Select parent asset"
+                    aria-label="Select parent asset"
+                    value={newAsset.parent_asset_id}
+                    onChange={(e) => setNewAsset({ ...newAsset, parent_asset_id: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">None (top-level asset)</option>
+                    {assets.filter(a => a.status !== "retired").map((a) => (
+                      <option key={a.id} value={a.id}>{a.name} ({a.asset_tag})</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Link this asset as a component of another asset
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Lifecycle & Financial */}
+            {wizardStep === 3 && (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="purchase_date">{t("assets.labels.purchaseDate")}</Label>
+                    <Input
+                      id="purchase_date"
+                      type="date"
+                      value={newAsset.purchase_date}
+                      onChange={(e) => setNewAsset({ ...newAsset, purchase_date: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="installation_date">Installation Date</Label>
+                    <Input
+                      id="installation_date"
+                      type="date"
+                      value={newAsset.installation_date}
+                      onChange={(e) => setNewAsset({ ...newAsset, installation_date: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="purchase_cost">Purchase Cost</Label>
+                    <Input
+                      id="purchase_cost"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newAsset.purchase_cost}
+                      onChange={(e) => setNewAsset({ ...newAsset, purchase_cost: e.target.value })}
+                      placeholder="0.00"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="currency">Currency</Label>
+                    <select
+                      id="currency"
+                      title="Select currency"
+                      aria-label="Select currency"
+                      value={newAsset.currency}
+                      onChange={(e) => setNewAsset({ ...newAsset, currency: e.target.value })}
+                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="SEK">SEK</option>
+                      <option value="GBP">GBP</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="warranty_expiry">{t("assets.labels.warrantyExpiry")}</Label>
+                    <Input
+                      id="warranty_expiry"
+                      type="date"
+                      value={newAsset.warranty_expiry}
+                      onChange={(e) => setNewAsset({ ...newAsset, warranty_expiry: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="expected_life_years">Expected Life (years)</Label>
+                    <Input
+                      id="expected_life_years"
+                      type="number"
+                      min="0"
+                      value={newAsset.expected_life_years}
+                      onChange={(e) => setNewAsset({ ...newAsset, expected_life_years: e.target.value })}
+                      placeholder="e.g., 10"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Compliance */}
+            {wizardStep === 4 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="text-sm font-medium">Requires Certification</p>
+                    <p className="text-xs text-muted-foreground">Asset needs active certification to operate</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={newAsset.requires_certification}
+                    onClick={() => setNewAsset({ ...newAsset, requires_certification: !newAsset.requires_certification })}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
+                      newAsset.requires_certification ? "bg-primary" : "bg-muted"
+                    )}
+                  >
+                    <span className={cn(
+                      "pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg transition-transform",
+                      newAsset.requires_certification ? "translate-x-5" : "translate-x-0"
+                    )} />
+                  </button>
+                </div>
+                <div>
+                  <Label htmlFor="maintenance_frequency">Maintenance Frequency (days)</Label>
+                  <Input
+                    id="maintenance_frequency"
+                    type="number"
+                    min="1"
+                    value={newAsset.maintenance_frequency_days}
+                    onChange={(e) => setNewAsset({ ...newAsset, maintenance_frequency_days: e.target.value })}
+                    placeholder="e.g., 90"
                     className="mt-1"
                   />
                 </div>
                 <div>
-              <Label htmlFor="serial">{t("assets.labels.serialNumber")}</Label>
-                  <Input
-                    id="serial"
-                    value={newAsset.serial_number}
-                    onChange={(e) => setNewAsset({ ...newAsset, serial_number: e.target.value })}
-                    placeholder="e.g., SN-12345"
-                    className="mt-1"
+                  <Label htmlFor="safety_instructions">{t("assets.safetyInstructions")}</Label>
+                  <textarea
+                    id="safety_instructions"
+                    value={newAsset.safety_instructions}
+                    onChange={(e) => setNewAsset({ ...newAsset, safety_instructions: e.target.value })}
+                    placeholder="Required PPE, hazard warnings, operating procedures..."
+                    rows={3}
+                    maxLength={2000}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
                   />
+                  <p className="text-xs text-muted-foreground text-right mt-1">{newAsset.safety_instructions.length}/2000</p>
                 </div>
               </div>
+            )}
 
-              <div>
-                <Label htmlFor="category">{t("assets.labels.category")} *</Label>
-                <select
-                  id="category"
-                  title="Select category"
-                  aria-label="Select category"
-                  value={newAsset.category}
-                  onChange={(e) => setNewAsset({ ...newAsset, category: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            {/* Navigation buttons */}
+            <div className="flex gap-3 mt-6 pt-4 border-t">
+              {wizardStep === 0 ? (
+                <Button variant="outline" className="flex-1" onClick={() => { setShowAddModal(false); setWizardStep(0); }}>
+                  {t("common.cancel")}
+                </Button>
+              ) : (
+                <Button variant="outline" className="flex-1" onClick={() => setWizardStep(wizardStep - 1)}>
+                  {t("assets.wizard.back")}
+                </Button>
+              )}
+              {wizardStep < wizardSteps.length - 1 ? (
+                <Button
+                  className="flex-1"
+                  onClick={() => setWizardStep(wizardStep + 1)}
+                  disabled={wizardStep === 0 && (!newAsset.name.trim() || !newAsset.category)}
                 >
-                  {categoryOptions.map((cat) => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <Label htmlFor="asset_type">{t("assets.labels.assetType")}</Label>
-                <select
-                  id="asset_type"
-                  title="Select asset type"
-                  aria-label="Select asset type"
-                  value={newAsset.asset_type}
-                  onChange={(e) => setNewAsset({ ...newAsset, asset_type: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="static">Static</option>
-                  <option value="movable">Movable</option>
-                </select>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="manufacturer">{t("assets.labels.manufacturer")}</Label>
-                  <Input
-                    id="manufacturer"
-                    value={newAsset.manufacturer}
-                    onChange={(e) => setNewAsset({ ...newAsset, manufacturer: e.target.value })}
-                    placeholder="e.g., Toyota"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="model">{t("assets.labels.model")}</Label>
-                  <Input
-                    id="model"
-                    value={newAsset.model}
-                    onChange={(e) => setNewAsset({ ...newAsset, model: e.target.value })}
-                    placeholder="e.g., 8FGU25"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="location">{t("assets.labels.location")}</Label>
-                <select
-                  id="location"
-                  title="Select location"
-                  aria-label="Select location"
-                  value={newAsset.location_id}
-                  onChange={(e) => setNewAsset({ ...newAsset, location_id: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">No location assigned</option>
-                  {locations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>{loc.name} ({loc.type})</option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Optionally assign this asset to a specific location
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="department">{t("assets.labels.department")}</Label>
-                <Input
-                  id="department"
-                  list="asset-departments"
-                  value={newAsset.department}
-                  onChange={(e) => setNewAsset({ ...newAsset, department: e.target.value })}
-                  placeholder="e.g., Operations"
-                  className="mt-1"
-                />
-                <datalist id="asset-departments">
-                  {departmentOptions.map((dept) => (
-                    <option key={dept} value={dept} />
-                  ))}
-                </datalist>
-              </div>
-
-              <div>
-                <Label htmlFor="purchase_date">{t("assets.labels.purchaseDate")}</Label>
-                <Input
-                  id="purchase_date"
-                  type="date"
-                  value={newAsset.purchase_date}
-                  onChange={(e) => setNewAsset({ ...newAsset, purchase_date: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="warranty_expiry">{t("assets.labels.warrantyExpiry")}</Label>
-                <Input
-                  id="warranty_expiry"
-                  type="date"
-                  value={newAsset.warranty_expiry}
-                  onChange={(e) => setNewAsset({ ...newAsset, warranty_expiry: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
-                {t("common.cancel")}
-              </Button>
-              <Button className="flex-1" onClick={handleAddAsset} disabled={!newAsset.name}>
-                {t("assets.buttons.newAsset")}
-              </Button>
+                  {t("assets.wizard.next")}
+                </Button>
+              ) : (
+                <Button className="flex-1" onClick={handleAddAsset} disabled={!newAsset.name.trim()}>
+                  {t("assets.wizard.create")}
+                </Button>
+              )}
             </div>
           </div>
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }
