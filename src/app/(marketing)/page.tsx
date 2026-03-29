@@ -88,10 +88,11 @@ const staggerDramatic = {
 };
 
 function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
+  const [reduced, setReduced] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)").matches : false
+  );
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
     const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
@@ -196,9 +197,9 @@ export default function Home() {
             <a href="#stats" className="text-sm text-zinc-400 hover:text-white transition-colors">Resources</a>
           </nav>
           <div className="flex items-center gap-3">
-            <a href="/login" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+            <Link href="/login" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
               Get Started
-            </a>
+            </Link>
           </div>
         </motion.div>
       </header>

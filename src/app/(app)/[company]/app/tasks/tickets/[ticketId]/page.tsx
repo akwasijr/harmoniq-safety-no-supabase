@@ -57,14 +57,14 @@ export default function TicketDetailPage() {
   const creator = ticket?.created_by ? users.find((u) => u.id === ticket.created_by) : null;
   const linkedIncidents = (ticket?.incident_ids || []).map((id) => incidents.find((i) => i.id === id)).filter(Boolean);
 
-  const isOverdue = React.useMemo(() => {
+  const isOverdue = (() => {
     if (!ticket?.due_date) return false;
     if (["resolved", "closed"].includes(ticket.status)) return false;
     return new Date(ticket.due_date) < new Date();
-  }, [ticket]);
+  })();
 
-  const commentCount = React.useMemo(() => loadComments("ticket", ticketId).length, [ticketId]);
-  const docCount = React.useMemo(() => getFilesForEntity("ticket", ticketId).length, [ticketId]);
+  const commentCount = loadComments("ticket", ticketId).length;
+  const docCount = getFilesForEntity("ticket", ticketId).length;
 
   const handleStatusChange = React.useCallback(
     (targetStatus: string) => {

@@ -114,8 +114,8 @@ export function createEntityStore<T extends IdEntity>(
       const cached = loadFromStorage<T[]>(storageKey, []);
       if (cached.length === 0) return initialData;
       // Merge any new mock items not in cache
-      const cachedIds = new Set(cached.map((item: any) => item.id));
-      const newItems = initialData.filter((item: any) => !cachedIds.has(item.id));
+      const cachedIds = new Set(cached.map((item) => item.id));
+      const newItems = initialData.filter((item) => !cachedIds.has(item.id));
       return newItems.length > 0 ? [...cached, ...newItems] : cached;
     });
     const [isLoading, setIsLoading] = React.useState(false);
