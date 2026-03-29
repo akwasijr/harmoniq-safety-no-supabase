@@ -30,41 +30,73 @@ ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.platform_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.email_verifications ENABLE ROW LEVEL SECURITY;
 
--- Helper: get current user's company_id from users table
+-- ============================================
+-- SECURITY DEFINER helper functions
+-- These bypass RLS when called inside policies, preventing infinite recursion
+-- ============================================
+
 CREATE OR REPLACE FUNCTION public.get_user_company_id()
 RETURNS uuid
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT company_id FROM public.users WHERE id = auth.uid()
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT COALESCE(
+    (SELECT role::text = 'super_admin' FROM public.users WHERE id = auth.uid()),
+    false
+  )
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT COALESCE(
+    (SELECT role::text IN ('super_admin', 'company_admin') FROM public.users WHERE id = auth.uid()),
+    false
+  )
+$$;
+
+-- Alias for backward compatibility
+CREATE OR REPLACE FUNCTION public.user_company_id()
+RETURNS uuid
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT company_id FROM public.users WHERE id = auth.uid()
 $$;
 
 -- ============================================
--- COMPANIES: authenticated users can read their own company
+-- COMPANIES
 -- ============================================
 DROP POLICY IF EXISTS "Users can read own company" ON public.companies;
 CREATE POLICY "Users can read own company" ON public.companies
   FOR SELECT USING (
     id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    OR public.is_super_admin()
   );
 
 DROP POLICY IF EXISTS "Super admins can manage companies" ON public.companies;
 CREATE POLICY "Super admins can manage companies" ON public.companies
-  FOR ALL USING (
-    auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
-  );
+  FOR ALL USING (public.is_super_admin());
 
 -- ============================================
--- USERS: can read users in their company
+-- USERS: use auth.uid() directly to avoid recursion
 -- ============================================
 DROP POLICY IF EXISTS "Users can read company users" ON public.users;
 CREATE POLICY "Users can read company users" ON public.users
   FOR SELECT USING (
-    company_id = public.get_user_company_id()
-    OR id = auth.uid()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    id = auth.uid()
+    OR company_id = public.get_user_company_id()
+    OR public.is_super_admin()
   );
 
 DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
@@ -73,167 +105,134 @@ CREATE POLICY "Users can update own profile" ON public.users
 
 DROP POLICY IF EXISTS "Admins can manage company users" ON public.users;
 CREATE POLICY "Admins can manage company users" ON public.users
-  FOR ALL USING (
-    auth.uid() IN (SELECT id FROM public.users WHERE role IN ('super_admin', 'company_admin') AND company_id = public.get_user_company_id())
-  );
+  FOR INSERT WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can delete company users" ON public.users;
+CREATE POLICY "Admins can delete company users" ON public.users
+  FOR DELETE USING (public.is_admin());
 
 -- ============================================
 -- Company-scoped tables: same company OR super_admin
+-- All use SECURITY DEFINER functions (no inline subqueries on users table)
 -- ============================================
 
--- CONTENT
 DROP POLICY IF EXISTS "Company content access" ON public.content;
 CREATE POLICY "Company content access" ON public.content
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- INCIDENTS
 DROP POLICY IF EXISTS "Company incidents access" ON public.incidents;
 CREATE POLICY "Company incidents access" ON public.incidents
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- ASSETS
 DROP POLICY IF EXISTS "Company assets access" ON public.assets;
 CREATE POLICY "Company assets access" ON public.assets
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- TICKETS
 DROP POLICY IF EXISTS "Company tickets access" ON public.tickets;
 CREATE POLICY "Company tickets access" ON public.tickets
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- TEAMS
 DROP POLICY IF EXISTS "Company teams access" ON public.teams;
 CREATE POLICY "Company teams access" ON public.teams
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- LOCATIONS
 DROP POLICY IF EXISTS "Company locations access" ON public.locations;
 CREATE POLICY "Company locations access" ON public.locations
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- CHECKLIST TEMPLATES
 DROP POLICY IF EXISTS "Company checklist templates access" ON public.checklist_templates;
 CREATE POLICY "Company checklist templates access" ON public.checklist_templates
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- CHECKLIST SUBMISSIONS
 DROP POLICY IF EXISTS "Company checklist submissions access" ON public.checklist_submissions;
 CREATE POLICY "Company checklist submissions access" ON public.checklist_submissions
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- RISK EVALUATIONS
 DROP POLICY IF EXISTS "Company risk evaluations access" ON public.risk_evaluations;
 CREATE POLICY "Company risk evaluations access" ON public.risk_evaluations
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- WORK ORDERS
 DROP POLICY IF EXISTS "Company work orders access" ON public.work_orders;
 CREATE POLICY "Company work orders access" ON public.work_orders
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- PARTS
 DROP POLICY IF EXISTS "Company parts access" ON public.parts;
 CREATE POLICY "Company parts access" ON public.parts
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- CORRECTIVE ACTIONS
 DROP POLICY IF EXISTS "Company corrective actions access" ON public.corrective_actions;
 CREATE POLICY "Company corrective actions access" ON public.corrective_actions
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- INSPECTION ROUTES
 DROP POLICY IF EXISTS "Company inspection routes access" ON public.inspection_routes;
 CREATE POLICY "Company inspection routes access" ON public.inspection_routes
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- INSPECTION ROUNDS
 DROP POLICY IF EXISTS "Company inspection rounds access" ON public.inspection_rounds;
 CREATE POLICY "Company inspection rounds access" ON public.inspection_rounds
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- INVITATIONS
 DROP POLICY IF EXISTS "Company invitations access" ON public.invitations;
 CREATE POLICY "Company invitations access" ON public.invitations
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
--- NOTIFICATIONS
 DROP POLICY IF EXISTS "Company notifications access" ON public.notifications;
 CREATE POLICY "Company notifications access" ON public.notifications
   FOR ALL USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
 -- ============================================
 -- Asset-scoped tables (no direct company_id, use asset FK)
 -- ============================================
 
--- ASSET INSPECTIONS
 DROP POLICY IF EXISTS "Company asset inspections access" ON public.asset_inspections;
 CREATE POLICY "Company asset inspections access" ON public.asset_inspections
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM public.assets a
       WHERE a.id = asset_inspections.asset_id
-      AND (a.company_id = public.get_user_company_id()
-           OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin'))
+      AND (a.company_id = public.get_user_company_id() OR public.is_super_admin())
     )
   );
 
--- METER READINGS
 DROP POLICY IF EXISTS "Company meter readings access" ON public.meter_readings;
 CREATE POLICY "Company meter readings access" ON public.meter_readings
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM public.assets a
       WHERE a.id = meter_readings.asset_id
-      AND (a.company_id = public.get_user_company_id()
-           OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin'))
+      AND (a.company_id = public.get_user_company_id() OR public.is_super_admin())
     )
   );
 
@@ -244,9 +243,7 @@ CREATE POLICY "Company meter readings access" ON public.meter_readings
 -- SITE ANALYTICS (super admin read; anonymous insert for tracking)
 DROP POLICY IF EXISTS "Super admin analytics access" ON public.site_analytics;
 CREATE POLICY "Super admin analytics access" ON public.site_analytics
-  FOR SELECT USING (
-    auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
-  );
+  FOR SELECT USING (public.is_super_admin());
 
 DROP POLICY IF EXISTS "Anonymous analytics insert" ON public.site_analytics;
 CREATE POLICY "Anonymous analytics insert" ON public.site_analytics
@@ -255,9 +252,7 @@ CREATE POLICY "Anonymous analytics insert" ON public.site_analytics
 -- INQUIRIES (super admin read; anonymous insert for contact form)
 DROP POLICY IF EXISTS "Super admin inquiries access" ON public.inquiries;
 CREATE POLICY "Super admin inquiries access" ON public.inquiries
-  FOR SELECT USING (
-    auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
-  );
+  FOR SELECT USING (public.is_super_admin());
 
 DROP POLICY IF EXISTS "Anonymous inquiries insert" ON public.inquiries;
 CREATE POLICY "Anonymous inquiries insert" ON public.inquiries
@@ -267,8 +262,7 @@ CREATE POLICY "Anonymous inquiries insert" ON public.inquiries
 DROP POLICY IF EXISTS "Company audit logs read" ON public.audit_logs;
 CREATE POLICY "Company audit logs read" ON public.audit_logs
   FOR SELECT USING (
-    company_id = public.get_user_company_id()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    company_id = public.get_user_company_id() OR public.is_super_admin()
   );
 
 DROP POLICY IF EXISTS "Authenticated audit log insert" ON public.audit_logs;
@@ -278,16 +272,13 @@ CREATE POLICY "Authenticated audit log insert" ON public.audit_logs
 -- PLATFORM SETTINGS (super admin only)
 DROP POLICY IF EXISTS "Super admin platform settings" ON public.platform_settings;
 CREATE POLICY "Super admin platform settings" ON public.platform_settings
-  FOR ALL USING (
-    auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
-  );
+  FOR ALL USING (public.is_super_admin());
 
 -- EMAIL VERIFICATIONS (own records only)
 DROP POLICY IF EXISTS "Own email verifications" ON public.email_verifications;
 CREATE POLICY "Own email verifications" ON public.email_verifications
   FOR SELECT USING (
-    user_id = auth.uid()
-    OR auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin')
+    user_id = auth.uid() OR public.is_super_admin()
   );
 
 -- ============================================

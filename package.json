@@ -10,6 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "db:migrate": "node scripts/run-migrations.mjs --rls",
+    "db:migrate:all": "node scripts/run-migrations.mjs --all",
+    "db:migrate:dry": "node scripts/run-migrations.mjs --all --dry-run",
     "smoke:test": "node scripts/smoke-test.mjs"
   },
   "engines": {

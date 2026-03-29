@@ -160,18 +160,18 @@ ALTER TABLE inspection_rounds ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_settings ENABLE ROW LEVEL SECURITY;
 
--- Helper functions (if not exist from 001)
-CREATE OR REPLACE FUNCTION auth.company_id()
+-- Helper functions in public schema (Supabase does not allow writing to auth schema)
+CREATE OR REPLACE FUNCTION public.user_company_id()
 RETURNS UUID AS $$
   SELECT company_id FROM public.users WHERE id = auth.uid()
 $$ LANGUAGE SQL SECURITY DEFINER STABLE;
 
-CREATE OR REPLACE FUNCTION auth.is_super_admin()
+CREATE OR REPLACE FUNCTION public.is_super_admin()
 RETURNS BOOLEAN AS $$
   SELECT COALESCE((SELECT role::text = 'super_admin' FROM public.users WHERE id = auth.uid()), false)
 $$ LANGUAGE SQL SECURITY DEFINER STABLE;
 
-CREATE OR REPLACE FUNCTION auth.is_admin()
+CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
   SELECT COALESCE((SELECT role::text IN ('super_admin', 'company_admin') FROM public.users WHERE id = auth.uid()), false)
 $$ LANGUAGE SQL SECURITY DEFINER STABLE;
@@ -184,41 +184,41 @@ BEGIN
   FOR tbl IN SELECT unnest(ARRAY[
     'invitations','corrective_actions','inspection_routes','inspection_rounds'
   ]) LOOP
-    EXECUTE format('CREATE POLICY %I ON %I FOR SELECT USING (auth.is_super_admin() OR company_id = auth.company_id())', tbl || '_sel', tbl);
-    EXECUTE format('CREATE POLICY %I ON %I FOR INSERT WITH CHECK (auth.is_super_admin() OR company_id = auth.company_id())', tbl || '_ins', tbl);
-    EXECUTE format('CREATE POLICY %I ON %I FOR UPDATE USING (auth.is_super_admin() OR company_id = auth.company_id())', tbl || '_upd', tbl);
-    EXECUTE format('CREATE POLICY %I ON %I FOR DELETE USING (auth.is_super_admin() OR (auth.is_admin() AND company_id = auth.company_id()))', tbl || '_del', tbl);
+    EXECUTE format('CREATE POLICY %I ON %I FOR SELECT USING (public.is_super_admin() OR company_id = public.user_company_id())', tbl || '_sel', tbl);
+    EXECUTE format('CREATE POLICY %I ON %I FOR INSERT WITH CHECK (public.is_super_admin() OR company_id = public.user_company_id())', tbl || '_ins', tbl);
+    EXECUTE format('CREATE POLICY %I ON %I FOR UPDATE USING (public.is_super_admin() OR company_id = public.user_company_id())', tbl || '_upd', tbl);
+    EXECUTE format('CREATE POLICY %I ON %I FOR DELETE USING (public.is_super_admin() OR (public.is_admin() AND company_id = public.user_company_id()))', tbl || '_del', tbl);
   END LOOP;
 END $$;
 
 -- Asset inspections (via asset's company)
 CREATE POLICY asset_inspections_sel ON asset_inspections FOR SELECT USING (
-  EXISTS (SELECT 1 FROM assets WHERE assets.id = asset_inspections.asset_id AND (auth.is_super_admin() OR assets.company_id = auth.company_id()))
+  EXISTS (SELECT 1 FROM assets WHERE assets.id = asset_inspections.asset_id AND (public.is_super_admin() OR assets.company_id = public.user_company_id()))
 );
 CREATE POLICY asset_inspections_ins ON asset_inspections FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM assets WHERE assets.id = asset_inspections.asset_id AND (auth.is_super_admin() OR assets.company_id = auth.company_id()))
+  EXISTS (SELECT 1 FROM assets WHERE assets.id = asset_inspections.asset_id AND (public.is_super_admin() OR assets.company_id = public.user_company_id()))
 );
 CREATE POLICY asset_inspections_upd ON asset_inspections FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM assets WHERE assets.id = asset_inspections.asset_id AND (auth.is_super_admin() OR assets.company_id = auth.company_id()))
+  EXISTS (SELECT 1 FROM assets WHERE assets.id = asset_inspections.asset_id AND (public.is_super_admin() OR assets.company_id = public.user_company_id()))
 );
 
 -- Meter readings (via asset's company)
 CREATE POLICY meter_readings_sel ON meter_readings FOR SELECT USING (
-  EXISTS (SELECT 1 FROM assets WHERE assets.id = meter_readings.asset_id AND (auth.is_super_admin() OR assets.company_id = auth.company_id()))
+  EXISTS (SELECT 1 FROM assets WHERE assets.id = meter_readings.asset_id AND (public.is_super_admin() OR assets.company_id = public.user_company_id()))
 );
 CREATE POLICY meter_readings_ins ON meter_readings FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM assets WHERE assets.id = meter_readings.asset_id AND (auth.is_super_admin() OR assets.company_id = auth.company_id()))
+  EXISTS (SELECT 1 FROM assets WHERE assets.id = meter_readings.asset_id AND (public.is_super_admin() OR assets.company_id = public.user_company_id()))
 );
 
 -- Audit logs
 CREATE POLICY audit_logs_ins ON audit_logs FOR INSERT WITH CHECK (true);
 CREATE POLICY audit_logs_sel ON audit_logs FOR SELECT USING (
-  auth.is_super_admin() OR company_id = auth.company_id()
+  public.is_super_admin() OR company_id = public.user_company_id()
 );
 
 -- Platform settings
-CREATE POLICY platform_settings_sel ON platform_settings FOR SELECT USING (auth.is_admin());
-CREATE POLICY platform_settings_all ON platform_settings FOR ALL USING (auth.is_admin());
+CREATE POLICY platform_settings_sel ON platform_settings FOR SELECT USING (public.is_admin());
+CREATE POLICY platform_settings_all ON platform_settings FOR ALL USING (public.is_admin());
 
 -- ============================================
 -- DONE! Run this after 001_initial_schema.sql
