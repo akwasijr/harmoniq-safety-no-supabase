@@ -4,9 +4,9 @@ import { createRateLimiter, getClientIp } from "@/lib/rate-limit";
 import { sanitizeRelativePath } from "@/lib/navigation";
 import { truncate } from "@/lib/validation";
 
-// 30 analytics events per IP per minute
+// 30 analytics events per IP per minute (POST), 20 reads per IP per minute (GET)
 const analyticsLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "analytics" });
-const analyticsGetLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "analytics-get" });
+const analyticsReadLimiter = createRateLimiter({ limit: 20, windowMs: 60_000, prefix: "analytics_read" });
 const ANALYTICS_RETENTION_DAYS = 90;
 const PAGEVIEW_MEMORY_LIMIT = 10000;
 const ANALYTICS_PAGE_SIZE = 1000;
@@ -304,6 +304,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limit reads
+  // Rate limit reads
+  const rl = analyticsReadLimiter.check(request);
+  if (!rl.allowed) return rl.response;
+
   // Auth check: only super_admin or company_admin can read analytics
   try {
     const supabase = await createClient();
@@ -323,9 +328,6 @@ export async function GET(request: NextRequest) {
     // Fail-closed: if auth check fails, deny access
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const rl = analyticsGetLimiter.check(request);
-  if (!rl.allowed) return rl.response;
 
   const requestedDays = Number.parseInt(request.nextUrl.searchParams.get("days") || "30", 10);
   const days = Number.isFinite(requestedDays) ? Math.min(Math.max(requestedDays, 1), ANALYTICS_RETENTION_DAYS) : 30;

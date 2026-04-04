@@ -2,9 +2,14 @@
 
 import { createEntityStore } from "@/stores/create-entity-store";
 import type { WorkOrder } from "@/types";
-import { mockWorkOrders } from "@/mocks/data";
 
-const store = createEntityStore<WorkOrder>("harmoniq_work_orders", mockWorkOrders);
+const store = createEntityStore<WorkOrder>("harmoniq_work_orders", [], {
+  columnMap: {
+    requested_by: "requester_id",
+    parts_cost: "estimated_cost",
+    labor_cost: "actual_cost",
+  },
+});
 
 export const WorkOrdersProvider = store.Provider;
 export const useWorkOrdersStore = store.useStore;

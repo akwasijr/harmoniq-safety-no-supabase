@@ -17,4 +17,16 @@ Sentry.init({
 
   // Tag with environment
   environment: process.env.NODE_ENV,
+
+  // Scrub sensitive data from server events
+  beforeSend(event) {
+    if (event.request?.cookies) {
+      event.request.cookies = {};
+    }
+    if (event.request?.headers) {
+      delete event.request.headers["authorization"];
+      delete event.request.headers["cookie"];
+    }
+    return event;
+  },
 });

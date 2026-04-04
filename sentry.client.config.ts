@@ -36,8 +36,18 @@ Sentry.init({
     "Network request failed",
     "AbortError",
     "NotAllowedError",
+    "Failed to fetch",
+    "Load failed",
   ],
 
   // Tag with environment
   environment: process.env.NODE_ENV,
+
+  // Scrub sensitive data
+  beforeSend(event) {
+    if (event.request?.cookies) {
+      event.request.cookies = {};
+    }
+    return event;
+  },
 });

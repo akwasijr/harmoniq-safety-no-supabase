@@ -15,7 +15,7 @@ import {
   Calendar,
   Info,
   FileText,
-  Image,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -394,7 +394,7 @@ export default function InspectionDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Image className="h-4 w-4" /> {t("inspections.labels.mediaAttachments")}
+                  <ImageIcon className="h-4 w-4" /> {t("inspections.labels.mediaAttachments")}
                 </CardTitle>
               </CardHeader>
               <CardContent>

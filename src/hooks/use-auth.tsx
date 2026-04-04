@@ -70,13 +70,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [clearLegacyAuthCache]);
 
   const hydrateProfile = React.useCallback(
-    async (userId: string) => {
-      const supabase = createClient();
-      const { data: profile, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
+    async (userId: string, accessToken?: string) => {
+      // Use the access token directly with Supabase REST API to avoid
+      // re-entrancy issues with the SSR browser client's internal getSession()
+      // call during auth state hydration.
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+      const token = accessToken || supabaseKey;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10_000);
+
+      let profile = null;
+      let error = null;
+
+      try {
+        const res = await fetch(
+          `${supabaseUrl}/rest/v1/users?select=*&id=eq.${userId}`,
+          {
+            headers: {
+              apikey: supabaseKey,
+              Authorization: `Bearer ${token}`,
+              Accept: "application/vnd.pgrst.object+json",
+            },
+            signal: controller.signal,
+          }
+        );
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+          const body = await res.text();
+          error = { message: `HTTP ${res.status}: ${body}` };
+        } else {
+          profile = await res.json();
+        }
+      } catch (fetchErr: unknown) {
+        clearTimeout(timeout);
+        const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+        console.warn("[Harmoniq] Profile fetch failed:", msg);
+        error = { message: msg };
+      }
 
       if (error) throw error;
 
@@ -139,9 +172,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (session?.user) {
-          await hydrateProfile(session.user.id);
+          await hydrateProfile(session.user.id, session.access_token);
         } else {
           setUser(null);
           setSelectedCompanyId(null);
@@ -169,7 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
           try {
-            await hydrateProfile(session.user.id);
+            await hydrateProfile(session.user.id, session.access_token);
           } catch (err) {
             console.error("[Harmoniq] Auth state change error:", err);
             setUser(null);

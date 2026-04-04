@@ -26,7 +26,7 @@ import {
   Archive,
   RotateCcw,
   Pencil,
-  Image,
+  Image as ImageIcon,
   X,
   Hash,
   Type,
@@ -118,6 +118,28 @@ export default function ChecklistDetailPage() {
       setRecurrence(template.recurrence || "daily");
     }
   }, [template?.id]);
+
+  // Item editor modal state — must be declared before any early returns
+  const [showItemModal, setShowItemModal] = React.useState(false);
+  const [editingItem, setEditingItem] = React.useState<ChecklistItem | null>(null);
+  const [itemForm, setItemForm] = React.useState<ChecklistItem>({
+    id: "",
+    question: "",
+    type: "yes_no_na",
+    required: true,
+    order: 0,
+    description: "",
+    response_types: undefined,
+    options: [],
+    image_url: "",
+    min_value: undefined,
+    max_value: undefined,
+    unit: "",
+  });
+  const [newOption, setNewOption] = React.useState("");
+  const [dragIndex, setDragIndex] = React.useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (!checklistId) return;
@@ -268,28 +290,6 @@ export default function ChecklistDetailPage() {
     toast("Template deleted");
     router.push(`/${company}/dashboard/checklists`);
   };
-
-  // Item editor modal state
-  const [showItemModal, setShowItemModal] = React.useState(false);
-  const [editingItem, setEditingItem] = React.useState<ChecklistItem | null>(null);
-  const [itemForm, setItemForm] = React.useState<ChecklistItem>({
-    id: "",
-    question: "",
-    type: "yes_no_na",
-    required: true,
-    order: 0,
-    description: "",
-    response_types: undefined,
-    options: [],
-    image_url: "",
-    min_value: undefined,
-    max_value: undefined,
-    unit: "",
-  });
-  const [newOption, setNewOption] = React.useState("");
-  const [dragIndex, setDragIndex] = React.useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const ITEM_TYPES = [
     { value: "yes_no_na", label: "Yes / No / N/A", icon: ToggleLeft, description: "Three-choice compliance check" },
@@ -919,7 +919,7 @@ export default function ChecklistDetailPage() {
                     )}
                     {item.image_url && (
                       <div className="flex items-center gap-1 mt-1">
-                        <Image className="h-3 w-3 text-muted-foreground" />
+                        <ImageIcon className="h-3 w-3 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">Reference file: {item.image_url}</span>
                       </div>
                     )}
@@ -1146,7 +1146,7 @@ export default function ChecklistDetailPage() {
                 />
                 {itemForm.image_url ? (
                   <div className="flex items-center gap-2 p-2.5 rounded-lg border bg-muted/30">
-                    <Image className="h-4 w-4 text-primary shrink-0" />
+                    <ImageIcon className="h-4 w-4 text-primary shrink-0" />
                     <span className="text-sm truncate flex-1">{itemForm.image_url}</span>
                     <Button
                       variant="ghost"

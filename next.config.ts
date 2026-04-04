@@ -101,4 +101,7 @@ export default withSentryConfig(nextConfig, {
 
   // Automatically instrument API routes and server components
   autoInstrumentServerFunctions: true,
+
+  // Disable telemetry
+  telemetry: false,
 });
