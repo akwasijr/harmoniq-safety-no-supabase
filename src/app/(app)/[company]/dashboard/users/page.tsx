@@ -57,6 +57,7 @@ export default function UsersPage() {
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [showAddTeamModal, setShowAddTeamModal] = React.useState(false);
   const [isInviting, setIsInviting] = React.useState(false);
+  const [inviteLinkUrl, setInviteLinkUrl] = React.useState<string | null>(null);
   const [invitations, setInvitations] = React.useState<Invitation[]>([]);
   const [isInvitesLoading, setIsInvitesLoading] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -252,10 +253,10 @@ export default function UsersPage() {
         const inviteUrl = data.invitation.invite_url;
         if (navigator.clipboard?.writeText) {
           await navigator.clipboard.writeText(inviteUrl);
-          toast("Invitation created. Link copied to clipboard.");
-        } else {
-          toast(`Invitation created. Share this link: ${inviteUrl}`);
         }
+        // Show the invite link dialog so it can be copied/shared
+        setInviteLinkUrl(inviteUrl);
+        toast("Invitation created. Link copied to clipboard.");
       } else {
         toast("Invitation created.");
       }
@@ -872,6 +873,46 @@ export default function UsersPage() {
         </>
       )}
     </div>
+
+      {/* Invite Link Dialog */}
+      {inviteLinkUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setInviteLinkUrl(null)}>
+          <div className="relative z-50 w-full max-w-lg mx-4 rounded-lg bg-background p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Invitation Link</h2>
+              <Button variant="ghost" size="icon" onClick={() => setInviteLinkUrl(null)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Share this link with the invited user to complete their registration:
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={inviteLinkUrl}
+                className="font-mono text-xs"
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(inviteLinkUrl);
+                    toast("Link copied to clipboard");
+                  }
+                }}
+              >
+                Copy
+              </Button>
+            </div>
+            <div className="flex justify-end mt-4">
+              <Button onClick={() => setInviteLinkUrl(null)}>Done</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </RoleGuard>
   );
 }

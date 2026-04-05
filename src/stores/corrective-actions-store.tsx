@@ -51,7 +51,9 @@ const mockCorrectiveActions: CorrectiveAction[] = [
   },
 ];
 
-const store = createEntityStore<CorrectiveAction>("harmoniq_corrective_actions", mockCorrectiveActions);
+const store = createEntityStore<CorrectiveAction>("harmoniq_corrective_actions", mockCorrectiveActions, {
+  stripFields: ["assigned_to_team_id"],
+});
 
 export const CorrectiveActionsProvider = store.Provider;
 export const useCorrectiveActionsStore = store.useStore;

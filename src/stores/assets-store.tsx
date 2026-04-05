@@ -5,7 +5,7 @@ import { mockAssets } from "@/mocks/data";
 import type { Asset } from "@/types";
 
 const store = createEntityStore<Asset>("harmoniq_assets", mockAssets, {
-  stripFields: ["location"],
+  stripFields: ["location", "inspections", "certifications"],
 });
 
 export const AssetsStoreProvider = store.Provider;

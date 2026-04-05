@@ -111,7 +111,6 @@ export async function POST(request: NextRequest) {
         email: email.toLowerCase(),
         first_name: "Admin",
         last_name: "User",
-        full_name: "Admin User",
         role: "super_admin",
         user_type: "internal",
         account_type: "admin",
