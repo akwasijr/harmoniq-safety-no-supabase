@@ -284,7 +284,7 @@ export default function RiskAssessmentIndexPage() {
                 <Link
                   key={form.id}
                   href={`/${company}/app/risk-assessment/${form.id}`}
-                  className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
+                  className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all hover:bg-primary/10 hover:border-primary/50 active:border-primary active:bg-primary/10"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                     <Icon className="h-5 w-5 text-primary" aria-hidden="true" />

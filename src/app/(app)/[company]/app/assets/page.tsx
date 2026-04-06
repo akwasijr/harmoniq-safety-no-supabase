@@ -356,7 +356,7 @@ export default function EmployeeAssetsPage() {
       {/* Scan FAB — always visible above bottom tabs */}
       <Link
         href={`/${company}/app/scan`}
-        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
+        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
         aria-label="Scan asset QR code"
       >
         <ScanLine className="h-6 w-6" />

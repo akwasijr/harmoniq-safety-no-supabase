@@ -231,7 +231,7 @@ function ChecklistsTabContent({
                     <Link
                       key={submission.id}
                       href={`/${company}/app/checklists/${submission.template_id}?draft=${submission.id}`}
-                      className="flex items-center gap-3 rounded-lg border p-3 active:bg-muted/50"
+                      className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
                         <Play className="h-4 w-4 text-blue-500" />
