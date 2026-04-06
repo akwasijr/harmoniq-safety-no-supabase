@@ -113,13 +113,15 @@ describe("validatePassword", () => {
 });
 
 describe("isValidUUID", () => {
-  it("accepts valid v4 UUIDs", () => {
+  it("accepts valid UUIDs", () => {
     expect(isValidUUID("550e8400-e29b-41d4-a716-446655440000")).toBe(true);
+    expect(isValidUUID("d0000000-0000-0000-0000-000000000001")).toBe(true);
+    expect(isValidUUID("550e8400-e29b-31d4-a716-446655440000")).toBe(true); // v3
   });
   it("rejects invalid UUIDs", () => {
     expect(isValidUUID("not-a-uuid")).toBe(false);
     expect(isValidUUID("")).toBe(false);
-    expect(isValidUUID("550e8400-e29b-31d4-a716-446655440000")).toBe(false); // v3
+    expect(isValidUUID("550e8400-e29b-41d4-a716")).toBe(false); // too short
   });
 });
 

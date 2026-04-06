@@ -159,10 +159,12 @@ export async function POST(request: NextRequest) {
           await supabase.from("invitations").delete().eq("id", invitation.id);
           return NextResponse.json({ error: "User with this email already exists" }, { status: 409 });
         }
-        console.error("[Invitations API] Failed to send invitation email:", inviteError);
-        await supabase.from("invitations").delete().eq("id", invitation.id);
-        return NextResponse.json({ error: "Invitation created, but the email could not be sent. Please try again." }, { status: 500 });
-      } else if (inviteData?.user?.id) {
+        // Email invite failed (invalid domain, SMTP not configured, etc.)
+        // Fall through gracefully — keep the invitation record and return the invite link
+        console.warn("[Invitations API] Email invite failed, falling through to link-based invite:", inviteError.message);
+      }
+
+      if (!inviteError && inviteData?.user?.id) {
         const now = new Date().toISOString();
         const { data: createdUser, error: profileError } = await adminClient
           .from("users")
@@ -173,7 +175,6 @@ export async function POST(request: NextRequest) {
             first_name,
             middle_name: null,
             last_name,
-            full_name: `${first_name} ${last_name}`.trim(),
             role,
             user_type: "internal",
             account_type: "standard",

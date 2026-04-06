@@ -84,7 +84,7 @@ export default function NewTicketPage() {
     const now = new Date().toISOString();
     const ticket: Ticket = {
       id: crypto.randomUUID(),
-      company_id: company || user?.company_id || "",
+      company_id: user?.company_id || "",
       title: formData.title,
       description: formData.description,
       priority: formData.priority as Ticket["priority"],

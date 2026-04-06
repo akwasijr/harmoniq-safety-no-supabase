@@ -8,6 +8,17 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NODE_ENV=production
+
+# NEXT_PUBLIC_* vars must be present at build time for Next.js to embed them
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_SITE_URL
+ARG NEXT_PUBLIC_SENTRY_DSN
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
+ARG NEXT_PUBLIC_PLATFORM_SLUGS=platform,admin,superadmin
+ARG NEXT_PUBLIC_SUPPORT_EMAIL
+ARG NEXT_PUBLIC_SUPPORT_URL
+
 RUN npm run build
 
 FROM node:22-alpine AS runner

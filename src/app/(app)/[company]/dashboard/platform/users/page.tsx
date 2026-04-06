@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
 import { useUsersStore } from "@/stores/users-store";
+import { useAuth } from "@/hooks/use-auth";
 import { LoadingPage } from "@/components/ui/loading";
 import type { User } from "@/types";
 import { useTranslation } from "@/i18n";
@@ -27,6 +28,7 @@ export default function PlatformUsersPage() {
   const params = useParams();
   const router = useRouter();
   const company = params.company as string;
+  const { user } = useAuth();
 
   const { items: allUsers, isLoading, add: addUser, update: updateUser, remove: removeUser } = useUsersStore();
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -69,7 +71,7 @@ export default function PlatformUsersPage() {
 
     const newUser: User = {
       id: `user_sa_${Date.now()}`,
-      company_id: company || "",
+      company_id: user?.company_id || "",
       email: formData.email,
       first_name: formData.first_name,
       middle_name: null,

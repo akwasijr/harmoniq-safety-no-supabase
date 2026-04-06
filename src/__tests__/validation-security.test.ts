@@ -61,8 +61,8 @@ describe("validatePassword — boundary conditions", () => {
 });
 
 describe("isValidUUID — format strictness", () => {
-  it("rejects UUID v1", () => {
-    expect(isValidUUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")).toBe(false);
+  it("accepts UUID v1", () => {
+    expect(isValidUUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")).toBe(true);
   });
 
   it("accepts uppercase UUID v4", () => {

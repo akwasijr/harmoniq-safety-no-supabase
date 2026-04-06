@@ -6,7 +6,9 @@ import { mockUsers } from "@/mocks/data";
 import type { User } from "@/types";
 import { normalizeUser, normalizeUserUpdates } from "@/lib/assignment-utils";
 
-const store = createEntityStore<User>("harmoniq_users", mockUsers);
+const store = createEntityStore<User>("harmoniq_users", mockUsers, {
+  stripFields: ["full_name"],
+});
 
 export const UsersStoreProvider = store.Provider;
 export function useUsersStore() {

@@ -101,7 +101,7 @@ export default function AssetsPage() {
     { id: "compliance", titleKey: "assets.wizard.compliance", descKey: "assets.wizard.complianceDesc", icon: Shield },
   ] as const;
 
-  const { assets, locations, users, stores } = useCompanyData();
+  const { companyId, assets, locations, users, stores } = useCompanyData();
   const { isLoading, add: addAsset } = stores.assets;
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
@@ -154,7 +154,7 @@ export default function AssetsPage() {
         existingAssetTags.add(assetTag);
         addAsset({
           id: `asset_import_${Date.now()}_${i}`,
-          company_id: company || "",
+          company_id: companyId || "",
           location_id: row.location_id || null,
           parent_asset_id: null,
           is_system: false,
@@ -381,7 +381,7 @@ export default function AssetsPage() {
     const now = new Date().toISOString();
     const asset: Asset = {
       id: `asset_${Date.now()}`,
-      company_id: company || "",
+      company_id: companyId || "",
       location_id: newAsset.location_id || null,
       parent_asset_id: newAsset.parent_asset_id || null,
       is_system: false,

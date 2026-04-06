@@ -272,7 +272,13 @@ export function createEntityStore<T extends IdEntity>(
         void (async () => {
           const supabase = createClient();
           const mapped = mapToSupabase(sanitizedItem as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
+          if (process.env.NODE_ENV === "development") {
+            console.log(`[Harmoniq Debug] Upserting to ${table}:`, Object.keys(mapped), mapped);
+          }
           const { error: persistError } = await supabase.from(table).upsert(mapped);
+          if (persistError && process.env.NODE_ENV === "development") {
+            console.error(`[Harmoniq Debug] Upsert error for ${table}:`, persistError.message, persistError.details, persistError.hint);
+          }
           if (persistError) {
             console.warn(`[Harmoniq] Error adding to ${table}:`, persistError.message, persistError.details);
             if (!isMountedRef.current) return;
