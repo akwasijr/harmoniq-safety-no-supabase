@@ -63,7 +63,18 @@ export default function NewsDetailPage() {
   }
 
   if (!settings.newsEnabled) {
-    return <LoadingPage />;
+    return (
+      <EmptyState
+        icon={FileText}
+        title="News is not enabled"
+        description="Your administrator has not enabled the news feature."
+        action={
+          <Button variant="outline" onClick={() => router.back()}>
+            Go Back
+          </Button>
+        }
+      />
+    );
   }
 
   const copyToClipboard = async () => {

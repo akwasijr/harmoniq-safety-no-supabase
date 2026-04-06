@@ -65,6 +65,7 @@ function RequestMaintenancePageContent() {
       updated_at: new Date().toISOString(),
     };
     addWorkOrder(order);
+    setForm({ asset_id: "", title: "", description: "", priority: "medium" });
     toast("Maintenance request submitted");
     router.back();
   };

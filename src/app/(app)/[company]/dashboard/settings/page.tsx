@@ -53,6 +53,7 @@ import {
 } from "@/lib/company-settings";
 import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
+import { LoadingPage } from "@/components/ui/loading";
 import type { Company, Country, Currency, Language, IndustryCode } from "@/types";
 import { INDUSTRY_METADATA, getTemplatesByIndustry } from "@/data/industry-templates";
 
@@ -363,9 +364,16 @@ export default function SettingsPage() {
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast?.(t("settings.logoTooLarge") || "Logo must be under 2MB");
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         updateSetting("logoUrl", reader.result as string);
+      };
+      reader.onerror = () => {
+        toast?.(t("settings.logoUploadFailed") || "Failed to read logo file");
       };
       reader.readAsDataURL(file);
     }
@@ -377,6 +385,10 @@ export default function SettingsPage() {
       fileInputRef.current.value = "";
     }
   };
+
+  if (isAuthLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <RoleGuard requiredPermission="settings.view">

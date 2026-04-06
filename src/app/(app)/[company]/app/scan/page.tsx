@@ -158,6 +158,7 @@ export default function ScanAssetPage() {
         if (!cancelled) {
           setCameraError(true);
           setMode("manual");
+          toast(t("scan.cameraAccessDenied") || "Camera access denied. Switched to manual entry.");
         }
       }
     }

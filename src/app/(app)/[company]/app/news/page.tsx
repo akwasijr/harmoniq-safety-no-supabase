@@ -35,7 +35,17 @@ export default function EmployeeNewsPage() {
   }
 
   if (!settings.newsEnabled) {
-    return <LoadingPage />;
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+          <Newspaper className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
+        </div>
+        <h3 className="mt-4 font-semibold">{t("newsApp.disabled") || "News is not enabled"}</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t("newsApp.disabledDesc") || "Your administrator has not enabled the news feature for this company."}
+        </p>
+      </div>
+    );
   }
   const content = contentItems.filter((c) => c.status === "published");
 

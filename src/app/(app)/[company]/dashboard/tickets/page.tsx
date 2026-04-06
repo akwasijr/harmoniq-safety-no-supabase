@@ -229,7 +229,16 @@ export default function TicketsPage() {
               <tbody>
                 {paginatedTickets.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">{t("tickets.empty.noTickets")}</td>
+                    <td colSpan={6} className="py-12 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <Ticket className="h-10 w-10 text-muted-foreground/50" />
+                        <p className="text-muted-foreground">{t("tickets.empty.noTickets")}</p>
+                        <Button size="sm" variant="outline" onClick={() => setShowAddModal(true)} className="gap-2">
+                          <Plus className="h-4 w-4" />
+                          {t("tickets.addTicket")}
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ) : (
                   paginatedTickets.map((ticket) => {

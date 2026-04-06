@@ -234,10 +234,10 @@ export default function EmployeeIncidentDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {photos.map((file) => (
                   <div key={file.id} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-                    {file.type.startsWith("image/") ? (
+                    {file.type?.startsWith("image/") ? (
                       <img src={file.dataUrl} alt={file.name} className="h-full w-full object-cover" loading="lazy" />
                     ) : (
                       <div className="flex h-full w-full flex-col items-center justify-center p-2">
