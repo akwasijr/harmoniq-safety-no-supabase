@@ -18,6 +18,17 @@ import {
   ArrowUp,
   ArrowDown,
   RefreshCw,
+  HardHat,
+  Flame,
+  HeartPulse,
+  Warehouse,
+  Mountain,
+  UtensilsCrossed,
+  Zap,
+  Truck,
+  GraduationCap,
+  PlaneTakeoff,
+  type LucideIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
@@ -44,6 +55,12 @@ import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import type { Company, Country, Currency, Language, IndustryCode } from "@/types";
 import { INDUSTRY_METADATA, getTemplatesByIndustry } from "@/data/industry-templates";
+
+const INDUSTRY_ICON_MAP: Record<string, LucideIcon> = {
+  HardHat, Factory, Flame, HeartPulse, Warehouse,
+  Mountain, UtensilsCrossed, Zap, Truck, GraduationCap, PlaneTakeoff,
+};
+
 import { SUPPORTED_LOCALES, useTranslation } from "@/i18n";
 import type { SupportedLocale } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
@@ -986,6 +1003,7 @@ export default function SettingsPage() {
                     const meta = INDUSTRY_METADATA[code];
                     const isSelected = settings.selectedIndustry === code;
                     const templateCount = getTemplatesByIndustry(code).length;
+                    const IconComponent = INDUSTRY_ICON_MAP[meta.icon] || Factory;
                     return (
                       <button
                         key={code}
@@ -1004,7 +1022,7 @@ export default function SettingsPage() {
                           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md"
                           style={{ backgroundColor: `${meta.color}15`, color: meta.color }}
                         >
-                          <Factory className="h-4 w-4" />
+                          <IconComponent className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium truncate">
