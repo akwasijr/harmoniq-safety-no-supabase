@@ -27,6 +27,7 @@ function RequestMaintenancePageContent() {
   const { items: assets, isLoading } = useAssetsStore();
   const { add: addWorkOrder } = useWorkOrdersStore();
   const { t } = useTranslation();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [form, setForm] = React.useState({
     asset_id: preselectedAssetId,
     title: "",
@@ -42,6 +43,7 @@ function RequestMaintenancePageContent() {
 
   const handleSubmit = () => {
     if (!form.title.trim() || !form.description.trim()) return;
+    setIsSubmitting(true);
     const order: WorkOrder = {
       id: crypto.randomUUID(),
       company_id: user?.company_id || "",
@@ -70,7 +72,7 @@ function RequestMaintenancePageContent() {
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="transition-colors active:bg-muted">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
@@ -124,16 +126,16 @@ function RequestMaintenancePageContent() {
           <Label>{t("maintenance.labels.priority")}</Label>
           <div className="flex gap-2">
             {(["low", "medium", "high", "critical"] as Priority[]).map(p => (
-              <Button key={p} size="sm" variant={form.priority === p ? "default" : "outline"} onClick={() => setForm(prev => ({ ...prev, priority: p }))} className="flex-1 capitalize">
+              <Button key={p} size="sm" variant={form.priority === p ? "default" : "outline"} onClick={() => setForm(prev => ({ ...prev, priority: p }))} className="flex-1 capitalize transition-all active:scale-95">
                 {p}
               </Button>
             ))}
           </div>
         </div>
 
-        <Button className="w-full gap-2 mt-4" size="lg" disabled={!form.title.trim() || !form.description.trim()} onClick={handleSubmit}>
+        <Button className="w-full gap-2 mt-4" size="lg" disabled={!form.title.trim() || !form.description.trim() || isSubmitting} onClick={handleSubmit}>
           <Send className="h-4 w-4" />
-          {t("maintenance.buttons.submitRequest")}
+          {isSubmitting ? t("common.submitting") || "Submitting..." : t("maintenance.buttons.submitRequest")}
         </Button>
       </div>
     </div>

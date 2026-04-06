@@ -239,7 +239,7 @@ export default function TicketsPage() {
                     return (
                       <tr 
                         key={ticket.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                         onClick={() => router.push(`/${company}/dashboard/tickets/${ticket.id}`)}
                       >
                         <td className="py-3">

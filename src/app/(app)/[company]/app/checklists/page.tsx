@@ -167,7 +167,7 @@ function ChecklistsTabContent({
               key={tab.id}
               onClick={() => setSubTab(tab.id)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-1 py-1.5 px-2 text-[11px] font-medium rounded-md transition-all",
+                "flex-1 flex items-center justify-center gap-1 py-1.5 px-2 text-[11px] font-medium rounded-md transition-all active:opacity-80",
                 isActive
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground"
@@ -537,7 +537,7 @@ function EmployeeChecklistsPageContent() {
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all whitespace-nowrap",
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80 whitespace-nowrap",
                   isActive 
                     ? "bg-background text-foreground shadow-sm" 
                     : "text-muted-foreground"

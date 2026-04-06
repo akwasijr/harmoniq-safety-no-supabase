@@ -183,7 +183,7 @@ export default function ContentPage() {
                     <tr 
                       key={item.id} 
                       onClick={() => router.push(`/${company}/dashboard/content/${item.id}`)}
-                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
+                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors"
                     >
                       <td className="py-3">
                         <div className="flex items-center gap-3">

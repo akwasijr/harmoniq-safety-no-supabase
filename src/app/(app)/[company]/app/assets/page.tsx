@@ -243,7 +243,7 @@ export default function EmployeeAssetsPage() {
                 const StatusIcon = config.icon;
                 return (
                   <Link key={asset.id} href={`/${company}/app/asset?id=${asset.id}`} className="block">
-                    <Card className="hover:bg-muted/50 transition-colors">
+                    <Card className="hover:bg-muted/50 active:bg-muted/70 transition-colors">
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
@@ -281,7 +281,7 @@ export default function EmployeeAssetsPage() {
           ) : (
             activeRoutes.map((route) => (
               <Link key={route.id} href={`/${company}/app/inspection-round?route=${route.id}`}>
-                <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+                <Card className="hover:bg-muted/50 active:bg-muted/70 transition-colors cursor-pointer">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
@@ -322,7 +322,7 @@ export default function EmployeeAssetsPage() {
                 const asset = assets.find(a => a.id === wo.asset_id);
                 return (
                   <Link key={wo.id} href={`/${company}/app/asset?id=${wo.asset_id}`} className="block">
-                    <Card className="hover:bg-muted/50 transition-colors">
+                    <Card className="hover:bg-muted/50 active:bg-muted/70 transition-colors">
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">

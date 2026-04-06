@@ -267,7 +267,7 @@ function ChecklistFormPageContent() {
                 "flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all",
                 answers[currentQuestion.id] === "yes"
                   ? "border-success bg-success text-white"
-                  : "border-border hover:border-success/50"
+                  : "border-border hover:border-success/50 active:bg-muted/50"
               )}
             >
               <Check className="h-8 w-8" />
@@ -280,7 +280,7 @@ function ChecklistFormPageContent() {
                 "flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all",
                 answers[currentQuestion.id] === "no"
                   ? "border-destructive bg-destructive text-white"
-                  : "border-border hover:border-destructive/50"
+                  : "border-border hover:border-destructive/50 active:bg-muted/50"
               )}
             >
               <X className="h-8 w-8" />
@@ -293,7 +293,7 @@ function ChecklistFormPageContent() {
                 "flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all",
                 answers[currentQuestion.id] === "na"
                   ? "border-muted-foreground bg-muted-foreground text-white"
-                  : "border-border hover:border-muted-foreground/50"
+                  : "border-border hover:border-muted-foreground/50 active:bg-muted/50"
               )}
             >
               <span className="text-2xl font-bold">{t("checklists.na")}</span>
@@ -310,7 +310,7 @@ function ChecklistFormPageContent() {
                 "flex flex-col items-center gap-2 rounded-xl border-2 p-6 transition-all",
                 answers[currentQuestion.id] === "pass"
                   ? "border-success bg-success text-white"
-                  : "border-border hover:border-success/50"
+                  : "border-border hover:border-success/50 active:bg-muted/50"
               )}
             >
               <Check className="h-10 w-10" />
@@ -323,7 +323,7 @@ function ChecklistFormPageContent() {
                 "flex flex-col items-center gap-2 rounded-xl border-2 p-6 transition-all",
                 answers[currentQuestion.id] === "fail"
                   ? "border-destructive bg-destructive text-white"
-                  : "border-border hover:border-destructive/50"
+                  : "border-border hover:border-destructive/50 active:bg-muted/50"
               )}
             >
               <X className="h-10 w-10" />
@@ -342,7 +342,7 @@ function ChecklistFormPageContent() {
                   "flex-1 rounded-xl border-2 py-4 text-xl font-bold transition-all",
                   answers[currentQuestion.id] === String(rating)
                     ? "border-primary bg-primary text-white"
-                    : "border-border hover:border-primary/50"
+                    : "border-border hover:border-primary/50 active:bg-muted/50"
                 )}
               >
                 {rating}

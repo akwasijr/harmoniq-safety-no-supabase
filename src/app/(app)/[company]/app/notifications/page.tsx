@@ -318,7 +318,7 @@ export default function NotificationsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted transition-colors active:bg-muted/70"
             aria-label={t("common.goBack")}
           >
             <ArrowLeft className="h-5 w-5" />

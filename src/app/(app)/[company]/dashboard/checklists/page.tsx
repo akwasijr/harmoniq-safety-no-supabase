@@ -641,7 +641,7 @@ function ChecklistsPageContent() {
                     paginatedChecklistTemplates.map((template) => (
                       <tr 
                         key={template.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                         onClick={() => router.push(`/${company}/dashboard/checklists/${template.id}`)}
                       >
                         <td className="py-3">
@@ -698,7 +698,7 @@ function ChecklistsPageContent() {
                     paginatedChecklistSubmissions.map((submission) => (
                       <tr 
                         key={submission.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                         onClick={() => router.push(`/${company}/dashboard/checklists/${submission.id}`)}
                       >
                         <td className="py-3">
@@ -758,7 +758,7 @@ function ChecklistsPageContent() {
                     paginatedRiskTemplates.map((template) => (
                       <tr 
                         key={template.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                         onClick={() => router.push(`/${company}/dashboard/risk-assessments/${template.id}`)}
                       >
                         <td className="py-3">
@@ -816,7 +816,7 @@ function ChecklistsPageContent() {
                     paginatedRiskSubmissions.map((assessment) => (
                       <tr 
                         key={assessment.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                         onClick={() => router.push(`/${company}/dashboard/risk-assessments/${assessment.id}`)}
                       >
                         <td className="py-3">
@@ -874,7 +874,7 @@ function ChecklistsPageContent() {
                     paginatedInspectionTemplates.map((template) => (
                       <tr 
                         key={template.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                         onClick={() => router.push(`/${company}/dashboard/inspections/${template.id}`)}
                       >
                         <td className="py-3">
@@ -927,7 +927,7 @@ function ChecklistsPageContent() {
                     paginatedInspectionSubmissions.map((inspection) => (
                       <tr 
                         key={inspection.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                         onClick={() => router.push(`/${company}/dashboard/inspections/${inspection.id}`)}
                       >
                         <td className="py-3">

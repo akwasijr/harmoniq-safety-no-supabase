@@ -113,7 +113,7 @@ export function DashboardLayout({
                     {isLast ? (
                       <span className="font-medium text-foreground">{crumb.label}</span>
                     ) : (
-                      <Link href={crumb.href} className="transition-colors hover:text-foreground">
+                      <Link href={crumb.href} className="transition-colors hover:text-foreground hover:underline">
                         {crumb.label}
                       </Link>
                     )}

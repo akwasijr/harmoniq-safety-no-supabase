@@ -711,6 +711,7 @@ function ReportIncidentPageContent() {
           <Button
             onClick={handleSubmit}
             loading={isSubmitting}
+            disabled={isSubmitting}
             className="h-14 w-full gap-2 text-base"
           >
             <CheckCircle className="h-5 w-5" aria-hidden="true" />

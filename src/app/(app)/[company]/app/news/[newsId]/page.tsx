@@ -201,7 +201,7 @@ export default function NewsDetailPage() {
             variant="ghost" 
             size="icon" 
             onClick={handleShare}
-            className="relative"
+            className="relative transition-colors active:bg-muted"
           >
             {showShareSuccess ? (
               <Check className="h-5 w-5 text-success" />
@@ -213,6 +213,7 @@ export default function NewsDetailPage() {
             variant="ghost" 
             size="icon" 
             onClick={handleBookmark}
+            className="transition-colors active:bg-muted"
           >
             {isBookmarked ? (
               <BookmarkCheck className="h-5 w-5 text-primary fill-primary" />

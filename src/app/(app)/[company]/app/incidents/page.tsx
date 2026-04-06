@@ -121,7 +121,7 @@ export default function EmployeeIncidentsPage() {
             <button
               key={filter.value}
               onClick={() => setStatusFilter(filter.value)}
-              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 ${
                 statusFilter === filter.value
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"

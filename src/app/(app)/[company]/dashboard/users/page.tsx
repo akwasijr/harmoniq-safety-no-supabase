@@ -471,7 +471,7 @@ export default function UsersPage() {
                       <tr 
                         key={user.id} 
                         onClick={() => router.push(`/${company}/dashboard/users/${user.id}`)}
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                       >
                         <td className="py-3">
                           <div className="flex items-center gap-3">
@@ -718,7 +718,7 @@ export default function UsersPage() {
                     return (
                       <tr
                         key={team.id}
-                        className="border-b cursor-pointer hover:bg-muted/50 transition-colors"
+                        className="border-b cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors"
                         onClick={() => router.push(`/${company}/dashboard/users/teams/${team.id}`)}
                       >
                         <td className="px-4 py-3">

@@ -98,7 +98,7 @@ export function BottomTabs({ company }: BottomTabsProps) {
                 href={href}
                 className={cn(
                   "flex min-h-[44px] flex-col items-center justify-center px-2 py-1.5",
-                  "transition-colors",
+                  "transition-colors active:opacity-70",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}

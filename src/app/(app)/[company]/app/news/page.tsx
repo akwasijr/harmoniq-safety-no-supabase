@@ -90,7 +90,7 @@ export default function EmployeeNewsPage() {
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all",
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80",
                   isActive
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground"
@@ -121,7 +121,7 @@ export default function EmployeeNewsPage() {
             <Link
               key={item.id}
               href={`/${company}/app/news/${item.id}`}
-              className="field-app-surface flex gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50 bg-card"
+              className="field-app-surface flex gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50 active:bg-muted/70 bg-card"
             >
               <div className={cn(
                 "flex h-12 w-12 items-center justify-center rounded-lg shrink-0",

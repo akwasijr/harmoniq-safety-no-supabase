@@ -460,7 +460,7 @@ export default function IncidentsPage() {
                     <tr
                       key={incident.id}
                       onClick={() => router.push(`/${company}/dashboard/incidents/${incident.id}`)}
-                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                     >
                       <td className="py-3">
                         <span className="font-medium font-mono text-xs">{incident.reference_number}</span>
@@ -628,7 +628,7 @@ export default function IncidentsPage() {
                         <tr
                           key={ticket.id}
                           onClick={() => router.push(`/${company}/dashboard/tickets/${ticket.id}`)}
-                          className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                          className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                         >
                           <td className="py-3">
                             <span className="font-medium font-mono text-xs">{ticket.id}</span>

@@ -580,7 +580,7 @@ export default function AssetsPage() {
                   <div key={system.id} className="border rounded-lg">
                     <div 
                       className={cn(
-                        "flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50 transition-colors",
+                        "flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors",
                         isExpanded && "border-b"
                       )}
                       onClick={() => toggleSystem(system.id)}
@@ -611,7 +611,7 @@ export default function AssetsPage() {
                             key={child.id} 
                             href={`/${company}/dashboard/assets/${child.id}`}
                             className={cn(
-                              "flex items-center gap-3 p-3 pl-14 hover:bg-muted/50 transition-colors group",
+                              "flex items-center gap-3 p-3 pl-14 hover:bg-muted/50 active:bg-muted transition-colors group",
                               idx < children.length - 1 && "border-b border-border/50"
                             )}
                           >
@@ -645,7 +645,7 @@ export default function AssetsPage() {
                       <Link 
                         key={asset.id} 
                         href={`/${company}/dashboard/assets/${asset.id}`}
-                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 active:bg-muted transition-colors group"
                       >
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted shrink-0">
                           <Package className="h-5 w-5 text-muted-foreground" />
@@ -696,7 +696,7 @@ export default function AssetsPage() {
                   paginatedAssets.map((asset) => (
                     <tr 
                       key={asset.id} 
-                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                       onClick={() => router.push(`/${company}/dashboard/assets/${asset.id}`)}
                     >
                       <td className="py-3">
