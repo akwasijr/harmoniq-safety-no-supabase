@@ -518,7 +518,7 @@ function LoginForm() {
               errorMessage={emailError}
               required
               disabled={isLoading}
-              className="h-11 rounded-lg bg-zinc-800/60 border-zinc-800/50 text-white placeholder-zinc-500 focus:border-zinc-500"
+              className="h-11 rounded-lg bg-zinc-800/50 border-transparent text-white placeholder-zinc-500 focus:bg-zinc-800/70 focus:border-transparent"
             />
           </div>
 
@@ -549,7 +549,7 @@ function LoginForm() {
                     disabled={isLoading}
                     error={Boolean(passwordError)}
                     errorMessage={passwordError}
-                    className="h-11 rounded-lg bg-zinc-800/60 border-zinc-800/50 text-white placeholder-zinc-500 focus:border-zinc-500 pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
+                    className="h-11 rounded-lg bg-zinc-800/50 border-transparent text-white placeholder-zinc-500 focus:bg-zinc-800/70 focus:border-transparent pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
                   />
                   <button
                     type="button"
@@ -574,9 +574,9 @@ function LoginForm() {
                       aria-checked={appChoice === "dashboard"}
                       onClick={() => setAppChoice("dashboard")}
                       disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-zinc-500 bg-zinc-800 text-white" : "border-zinc-800/50 text-zinc-400 hover:border-zinc-500"}`}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-transparent bg-zinc-800 text-white" : "border-transparent bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50"}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "dashboard" ? "border-zinc-400 bg-zinc-400" : "border-zinc-600"}`} />
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "dashboard" ? "border-zinc-500 bg-zinc-500" : "border-zinc-600"}`} />
                       <LayoutDashboard className="h-4 w-4" />
                       {t("auth.dashboard")}
                     </button>
@@ -586,9 +586,9 @@ function LoginForm() {
                       aria-checked={appChoice === "app"}
                       onClick={() => setAppChoice("app")}
                       disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-zinc-500 bg-zinc-800 text-white" : "border-zinc-800/50 text-zinc-400 hover:border-zinc-500"}`}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-transparent bg-zinc-800 text-white" : "border-transparent bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50"}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "app" ? "border-zinc-400 bg-zinc-400" : "border-zinc-600"}`} />
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "app" ? "border-zinc-500 bg-zinc-500" : "border-zinc-600"}`} />
                       <HardHat className="h-4 w-4" />
                       {t("auth.mobileApp")}
                     </button>
@@ -621,7 +621,7 @@ function LoginForm() {
           {/* Divider */}
           <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-zinc-800" />
+              <span className="w-full border-t border-zinc-800/40" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-zinc-900/80 px-2 text-zinc-500">OR</span>
@@ -633,7 +633,7 @@ function LoginForm() {
             type="button"
             onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 rounded-lg border border-zinc-800 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800/50 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 rounded-lg border border-transparent bg-zinc-800/40 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 transition-colors disabled:opacity-50"
           >
             <Mail className="h-4 w-4" />
             {loginMode === "password" ? t("auth.magicLink") : t("auth.passwordMode")}
@@ -641,7 +641,7 @@ function LoginForm() {
         </div>
 
         {/* Footer */}
-        <div className="mt-5 rounded-lg border border-zinc-800 bg-zinc-900/60 py-3 text-center text-sm text-zinc-400">
+        <div className="mt-5 rounded-lg bg-zinc-900/40 py-3 text-center text-sm text-zinc-400">
           {t("auth.noAccount") || "Don't have an account?"}{" "}
           <Link href="/signup" className="font-semibold text-white hover:text-zinc-300 transition-colors">
             {t("auth.createAccount") || "Create account"}
