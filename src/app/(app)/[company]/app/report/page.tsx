@@ -386,7 +386,7 @@ function ReportIncidentPageContent() {
       </header>
 
       {/* Step content */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 pb-40">
         {/* Step header */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold">{getStepTitle()}</h2>

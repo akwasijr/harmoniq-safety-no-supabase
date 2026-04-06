@@ -350,7 +350,7 @@ export default function RiskAssessmentFormPage() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-5 pb-40">
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">

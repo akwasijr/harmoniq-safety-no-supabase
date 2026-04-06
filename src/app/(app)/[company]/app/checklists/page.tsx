@@ -574,7 +574,7 @@ function EmployeeChecklistsPageContent() {
             {/* New Report */}
             <Link
               href={`/${company}/app/report`}
-              className="flex items-center gap-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-3 transition-colors active:border-primary active:bg-primary/10"
+              className="flex items-center gap-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-3 transition-colors hover:bg-primary/10 hover:border-primary/50 active:border-primary active:bg-primary/10"
             >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <FileCheck className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -664,7 +664,7 @@ function EmployeeChecklistsPageContent() {
                     <Link
                       key={form.id}
                       href={`/${company}/app/risk-assessment/${form.id}`}
-                      className="flex items-center gap-2 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-3 transition-colors active:border-primary active:bg-primary/10"
+                      className="flex items-center gap-2 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-3 transition-colors hover:bg-primary/10 hover:border-primary/50 active:border-primary active:bg-primary/10"
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                         <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -693,7 +693,7 @@ function EmployeeChecklistsPageContent() {
                     <Link
                       key={item.id}
                       href={`/${company}/app/risk-assessment/${item.formId}?draft=${item.id}`}
-                      className="flex items-center gap-3 rounded-lg border bg-card p-3 active:bg-muted/50 hover:bg-muted/30"
+                      className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
                         <Play className="h-4 w-4 text-blue-500" aria-hidden="true" />

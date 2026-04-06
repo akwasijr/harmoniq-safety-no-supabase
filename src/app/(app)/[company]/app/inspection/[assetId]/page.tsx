@@ -263,7 +263,7 @@ export default function AssetInspectionPage() {
       </div>
 
       {/* Current Check */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 pb-40">
         <div className="mb-6">
           <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary capitalize">
             {asset.category.replace("_", " ")}

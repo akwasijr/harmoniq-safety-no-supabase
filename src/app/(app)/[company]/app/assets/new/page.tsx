@@ -273,7 +273,7 @@ export default function NewAssetPage() {
       </header>
 
       {/* Step Content */}
-      <div className="flex-1 p-4 pb-28 max-w-lg mx-auto w-full">
+      <div className="flex-1 p-4 pb-40 max-w-lg mx-auto w-full">
         {/* Step 1: Basic Info */}
         {step === "info" && (
           <div className="space-y-6">

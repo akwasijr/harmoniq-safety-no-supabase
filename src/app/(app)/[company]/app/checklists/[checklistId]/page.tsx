@@ -248,7 +248,7 @@ function ChecklistFormPageContent() {
       </header>
 
       {/* Current Item */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 pb-40">
         <div className="mb-6 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
             <ClipboardCheck className="h-5 w-5 text-primary" />

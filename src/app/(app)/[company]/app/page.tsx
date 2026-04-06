@@ -345,7 +345,7 @@ export default function EmployeeAppHomePage() {
             <p className="text-2xl font-bold text-brand-solid-foreground">{safeDays}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.safeDays")}</p>
           </div>
-          <Link href={`/${company}/app/checklists`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm p-3 text-center">
+          <Link href={`/${company}/app/checklists`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm p-3 text-center hover:bg-white/20 transition-colors">
             <p className="text-2xl font-bold text-brand-solid-foreground">{pendingTaskCount}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
           </Link>
@@ -379,7 +379,7 @@ export default function EmployeeAppHomePage() {
         <div className="grid grid-cols-2 gap-3">
           {quickActions.map((action) => (
             <Link key={action.href + action.labelKey} href={action.href}
-              className="field-app-panel field-app-surface flex items-center gap-3 bg-card p-4 border border-border/50 active:scale-[0.98] transition-transform">
+              className="field-app-panel field-app-surface flex items-center gap-3 bg-card p-4 border border-border/50 active:scale-[0.98] hover:shadow-sm hover:border-border transition-all">
               <div className="field-app-control h-12 w-12 bg-primary/10 flex items-center justify-center shrink-0">
                 <action.icon className="h-6 w-6 text-primary" />
               </div>
