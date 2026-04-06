@@ -473,17 +473,7 @@ export default function Home() {
                   {/* Visual side */}
                   <div className={isReversed ? "lg:[direction:ltr]" : ""}>
                     <div className="relative rounded-2xl overflow-hidden bg-zinc-900/40 aspect-[4/3]">
-                      <div className="relative z-10 flex items-center justify-center h-full p-8">
-                        <div className="rounded-xl bg-zinc-900/80 p-6 w-full max-w-sm">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20">
-                              <feature.icon className="h-4 w-4 text-emerald-400" />
-                            </div>
-                            <span className="text-sm font-medium text-zinc-200">{feature.cardTitle}</span>
-                          </div>
-                          {feature.cardContent}
-                        </div>
-                      </div>
+                      <feature.Visual />
                     </div>
                   </div>
 
@@ -955,28 +945,299 @@ const features = [
   { icon: Users, title: "Team Management" },
 ];
 
-const featureDetails = [
+// ── Animated Feature Visuals (Polar.sh-inspired) ──
+
+const INCIDENTS_DATA = [
+  { severity: "CRITICAL", label: "Gas leak detected — Zone B", time: "2m ago", color: "bg-red-500/90" },
+  { severity: "HIGH", label: "Safety rail damaged — Floor 3", time: "8m ago", color: "bg-amber-500/90" },
+  { severity: "MEDIUM", label: "PPE violation — Loading dock", time: "15m ago", color: "bg-yellow-600/90" },
+  { severity: "LOW", label: "Signage missing — Entrance A", time: "23m ago", color: "bg-blue-500/90" },
+  { severity: "CRITICAL", label: "Chemical spill — Lab 2", time: "31m ago", color: "bg-red-500/90" },
+  { severity: "HIGH", label: "Fire exit blocked — Wing C", time: "45m ago", color: "bg-amber-500/90" },
+];
+
+function LiveIncidentsFeed() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: false, margin: "-50px" });
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  useEffect(() => {
+    if (!isInView) { setVisibleCount(0); return; }
+    let count = 0;
+    const interval = setInterval(() => {
+      count++;
+      setVisibleCount(count);
+      if (count >= INCIDENTS_DATA.length) clearInterval(interval);
+    }, 400);
+    return () => clearInterval(interval);
+  }, [isInView]);
+
+  return (
+    <div ref={ref} className="flex items-center justify-center h-full p-5 lg:p-6">
+      <div className="rounded-xl bg-zinc-950/80 p-4 w-full">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-medium text-zinc-200">Live Incidents</span>
+          </div>
+          <span className="text-[10px] text-zinc-500 font-mono">24 reported</span>
+        </div>
+        <div className="space-y-0.5">
+          {INCIDENTS_DATA.slice(0, visibleCount).map((incident, i) => (
+            <motion.div
+              key={`${incident.severity}-${i}`}
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, ease: EASE_OUT_CUBIC }}
+              className="flex items-center gap-2.5 py-2 border-b border-zinc-800/30 last:border-0"
+            >
+              <span className={`text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${incident.color} text-white shrink-0`}>
+                {incident.severity}
+              </span>
+              <span className="text-[10px] text-zinc-400 flex-1 truncate">{incident.label}</span>
+              <span className="text-[9px] text-zinc-600 shrink-0 font-mono">{incident.time}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const ASSETS_DATA = [
+  { name: "Crane #04", location: "Dock B", health: 92, status: "Operational", statusColor: "text-emerald-400" },
+  { name: "Fire Ext. B2", location: "Floor 2", health: 45, status: "Due Soon", statusColor: "text-amber-400" },
+  { name: "Forklift #12", location: "Warehouse", health: 78, status: "Operational", statusColor: "text-emerald-400" },
+];
+
+function AssetScanVisual() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: false, margin: "-50px" });
+  const [activeAsset, setActiveAsset] = useState(0);
+
+  useEffect(() => {
+    if (!isInView) { setActiveAsset(0); return; }
+    const interval = setInterval(() => {
+      setActiveAsset(prev => (prev + 1) % ASSETS_DATA.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, [isInView]);
+
+  const asset = ASSETS_DATA[activeAsset];
+
+  return (
+    <div ref={ref} className="flex items-center justify-center h-full p-5 lg:p-6">
+      <div className="w-full space-y-3">
+        {/* QR Scan indicator */}
+        <motion.div
+          key={activeAsset}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, ease: EASE_OUT_CUBIC }}
+          className="rounded-xl bg-zinc-950/80 p-4"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+              <div className="h-6 w-6 border-2 border-zinc-500 rounded-sm relative">
+                <div className="absolute inset-1 grid grid-cols-2 gap-0.5">
+                  <div className="bg-zinc-500 rounded-[1px]" />
+                  <div className="bg-zinc-500 rounded-[1px]" />
+                  <div className="bg-zinc-500 rounded-[1px]" />
+                  <div className="bg-transparent" />
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white">{asset.name}</p>
+              <p className="text-[10px] text-zinc-500">{asset.location}</p>
+            </div>
+            <span className={`ml-auto text-[10px] font-medium ${asset.statusColor}`}>{asset.status}</span>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between text-[10px]">
+              <span className="text-zinc-500">Health Score</span>
+              <span className="text-white font-mono">{asset.health}%</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+              <motion.div
+                className={`h-full rounded-full ${asset.health > 70 ? "bg-emerald-500" : "bg-amber-500"}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${asset.health}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+        </motion.div>
+        {/* Asset list */}
+        <div className="flex gap-1.5">
+          {ASSETS_DATA.map((a, i) => (
+            <button
+              key={a.name}
+              onClick={() => setActiveAsset(i)}
+              className={`flex-1 rounded-lg py-2 px-2 text-center transition-colors ${
+                i === activeAsset ? "bg-zinc-800 text-white" : "bg-zinc-900/60 text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              <span className="text-[9px] font-medium block truncate">{a.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const RISK_TABS = [
+  { label: "JHA", full: "Job Hazard Analysis", desc: "Identify hazards before each task begins" },
+  { label: "JSA", full: "Job Safety Analysis", desc: "Break down job steps and associated risks" },
+  { label: "RI&E", full: "Risk Inventory & Evaluation", desc: "Dutch regulatory compliance assessments" },
+  { label: "ARBOWET", full: "Working Conditions Act", desc: "Netherlands occupational safety framework" },
+];
+
+function RiskAssessmentTabs() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: false, margin: "-50px" });
+  const [activeTab, setActiveTab] = useState(0);
+
+  useEffect(() => {
+    if (!isInView) { setActiveTab(0); return; }
+    const interval = setInterval(() => {
+      setActiveTab(prev => (prev + 1) % RISK_TABS.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isInView]);
+
+  return (
+    <div ref={ref} className="flex items-center justify-center h-full p-5 lg:p-6">
+      <div className="w-full">
+        <div className="grid grid-cols-2 gap-2.5">
+          {RISK_TABS.map((tab, i) => (
+            <motion.button
+              key={tab.label}
+              onClick={() => setActiveTab(i)}
+              animate={{
+                borderColor: i === activeTab ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.05)",
+                backgroundColor: i === activeTab ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.3)",
+              }}
+              transition={{ duration: 0.3 }}
+              className="rounded-xl border p-3.5 text-left transition-colors"
+            >
+              <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 transition-colors ${
+                i === activeTab ? "text-white" : "text-zinc-500"
+              }`}>
+                {tab.label}
+              </span>
+              <span className={`text-[10px] leading-snug block transition-colors ${
+                i === activeTab ? "text-zinc-300" : "text-zinc-600"
+              }`}>
+                {tab.desc}
+              </span>
+            </motion.button>
+          ))}
+        </div>
+        {/* Active detail */}
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: EASE_OUT_CUBIC }}
+          className="mt-3 rounded-xl bg-zinc-950/80 p-3.5"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-white">{RISK_TABS[activeTab].full}</span>
+            <span className="text-[10px] text-emerald-400 font-mono">Active</span>
+          </div>
+          <div className="mt-2 flex gap-2">
+            {[1, 2, 3, 4].map(step => (
+              <div key={step} className="flex-1">
+                <div className={`h-1 rounded-full ${step <= activeTab + 1 ? "bg-white" : "bg-zinc-800"}`} />
+                <span className="text-[8px] text-zinc-600 mt-1 block">Step {step}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+const CHART_BARS = [32, 48, 28, 62, 45, 75, 58, 82, 68, 90, 78, 95];
+
+function AnalyticsDashboard() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: false, margin: "-50px" });
+  const [animated, setAnimated] = useState(false);
+
+  useEffect(() => {
+    if (isInView) {
+      const timer = setTimeout(() => setAnimated(true), 200);
+      return () => clearTimeout(timer);
+    }
+    setAnimated(false);
+  }, [isInView]);
+
+  return (
+    <div ref={ref} className="flex items-center justify-center h-full p-5 lg:p-6">
+      <div className="w-full space-y-3">
+        {/* KPI row */}
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { label: "Incidents", value: 12, suffix: "" },
+            { label: "Compliance", value: 98, suffix: "%" },
+            { label: "Avg. Response", value: 14, suffix: "m" },
+          ].map((kpi, i) => (
+            <motion.div
+              key={kpi.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={animated ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+              transition={{ duration: 0.4, delay: i * 0.1, ease: EASE_OUT_CUBIC }}
+              className="rounded-lg bg-zinc-950/80 p-3 text-center"
+            >
+              <span className="text-lg font-semibold text-white block">{animated ? kpi.value : 0}{kpi.suffix}</span>
+              <span className="text-[9px] text-zinc-500">{kpi.label}</span>
+            </motion.div>
+          ))}
+        </div>
+        {/* Chart */}
+        <div className="rounded-xl bg-zinc-950/80 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-medium text-zinc-300">Incident Trends</span>
+            <span className="text-[9px] text-zinc-600 font-mono">12 months</span>
+          </div>
+          <div className="flex items-end gap-1 h-24">
+            {CHART_BARS.map((h, j) => (
+              <motion.div
+                key={j}
+                className="flex-1 rounded-sm bg-white/80"
+                initial={{ height: 0 }}
+                animate={animated ? { height: `${h}%` } : { height: 0 }}
+                transition={{ duration: 0.6, delay: j * 0.05, ease: "easeOut" }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between mt-2">
+            {["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"].map(m => (
+              <span key={m} className="text-[8px] text-zinc-700 flex-1 text-center">{m}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const featureDetails: {
+  icon: typeof AlertTriangle;
+  title: string;
+  description: string;
+  Visual: () => React.JSX.Element;
+  checks: string[];
+}[] = [
   {
     icon: AlertTriangle,
     title: "Real-time incident management",
-    description: "Report, track, and resolve safety incidents from anywhere. GPS-tagged reports with photo evidence flow directly to your dashboard for immediate action.",
-    cardTitle: "Incident Report",
-    cardContent: (
-      <div className="space-y-3">
-        <div className="flex items-center justify-between py-2 border-b border-zinc-700/50">
-          <span className="text-xs text-zinc-400">Status</span>
-          <span className="text-xs font-medium text-emerald-400">Active</span>
-        </div>
-        <div className="flex items-center justify-between py-2 border-b border-zinc-700/50">
-          <span className="text-xs text-zinc-400">Severity</span>
-          <span className="text-xs font-medium text-amber-400">High</span>
-        </div>
-        <div className="flex items-center justify-between py-2">
-          <span className="text-xs text-zinc-400">Response</span>
-          <span className="text-xs font-medium text-zinc-200">12 min</span>
-        </div>
-      </div>
-    ),
+    description: "Report, track, and resolve safety incidents from anywhere. GPS-tagged reports with photo evidence flow directly to your dashboard.",
+    Visual: LiveIncidentsFeed,
     checks: [
       "GPS-tagged incident reports with photo evidence",
       "Automatic severity classification and routing",
@@ -987,24 +1248,8 @@ const featureDetails = [
   {
     icon: Package,
     title: "Complete asset lifecycle tracking",
-    description: "Track every asset from acquisition to retirement. QR code scanning, automated inspection schedules, and maintenance history in one place.",
-    cardTitle: "Asset Overview",
-    cardContent: (
-      <div className="space-y-3">
-        <div className="text-2xl font-semibold text-white">1,247</div>
-        <div className="text-xs text-zinc-400">Active assets tracked</div>
-        <div className="flex items-center justify-between pt-2 border-t border-zinc-700/50">
-          <div>
-            <span className="text-xs text-zinc-500">Compliant</span>
-            <p className="text-sm font-medium text-white">94%</p>
-          </div>
-          <div>
-            <span className="text-xs text-zinc-500">Due Soon</span>
-            <p className="text-sm font-medium text-amber-400">23</p>
-          </div>
-        </div>
-      </div>
-    ),
+    description: "Track every asset from acquisition to retirement. QR code scanning, automated inspection schedules, and maintenance history.",
+    Visual: AssetScanVisual,
     checks: [
       "QR code scanning for instant asset lookup",
       "Automated inspection scheduling",
@@ -1016,24 +1261,8 @@ const featureDetails = [
   {
     icon: Shield,
     title: "Compliance-ready risk assessments",
-    description: "Built-in forms for JHA, JSA, RI&E, Arbowet, and more. Country-specific compliance workflows that adapt to your regulatory requirements.",
-    cardTitle: "Risk Assessment",
-    cardContent: (
-      <div className="space-y-3">
-        <div className="rounded-lg bg-zinc-800/60 px-3 py-2 font-mono text-xs text-zinc-300">
-          RI&E-2024-0847
-        </div>
-        <div className="text-xs text-zinc-400">Completed on Jan 15, 2025</div>
-        <div className="flex items-center justify-between pt-2 border-t border-zinc-700/50">
-          <span className="text-xs text-zinc-500">Type</span>
-          <span className="text-xs font-medium text-white">RI&E Assessment</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-zinc-500">Status</span>
-          <span className="text-xs font-medium text-emerald-400">Approved</span>
-        </div>
-      </div>
-    ),
+    description: "Built-in forms for JHA, JSA, RI&E, Arbowet, and more. Country-specific compliance workflows that adapt to your requirements.",
+    Visual: RiskAssessmentTabs,
     checks: [
       "JHA, JSA, RI&E, Arbowet, SAM forms built-in",
       "Country-specific regulatory compliance",
@@ -1044,19 +1273,8 @@ const featureDetails = [
   {
     icon: BarChart3,
     title: "Actionable safety analytics",
-    description: "Monitor incident trends, compliance rates, and resolution times with dashboards that surface what matters most to your operations.",
-    cardTitle: "Analytics Dashboard",
-    cardContent: (
-      <div className="space-y-3">
-        <div className="text-2xl font-semibold text-white">98.2%</div>
-        <div className="text-xs text-zinc-400">Overall compliance rate</div>
-        <div className="flex gap-1 items-end h-12 pt-2 border-t border-zinc-700/50">
-          {[40, 55, 35, 70, 60, 80, 75, 90, 85, 92, 88, 98].map((h, j) => (
-            <div key={j} className="flex-1 rounded-sm bg-emerald-500/40" style={{ height: `${h}%` }} />
-          ))}
-        </div>
-      </div>
-    ),
+    description: "Monitor incident trends, compliance rates, and resolution times with dashboards that surface what matters most.",
+    Visual: AnalyticsDashboard,
     checks: [
       "Real-time compliance dashboards",
       "Incident trend analysis and forecasting",
