@@ -430,10 +430,34 @@ function LoginForm() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 bg-black">
-      {/* Subtle ambient glow */}
-      <div aria-hidden="true" className="fixed inset-0 overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[70%] rounded-full bg-zinc-800/30 blur-[100px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[50%] rounded-full bg-zinc-800/20 blur-[80px]" />
+      {/* Animated gradient background */}
+      <div aria-hidden="true" style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute', top: '-15%', right: '-8%', width: '45%', height: '80%',
+          background: 'linear-gradient(160deg, hsla(200,60%,40%,0.25), hsla(240,50%,35%,0.2), hsla(265,45%,30%,0.25), hsla(280,40%,25%,0.2), hsla(210,55%,38%,0.2))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(60px)',
+          borderRadius: '40% 60% 50% 50%',
+          animation: 'auth-flow 8s ease-in-out infinite, auth-morph 12s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', top: '5%', right: '-2%', width: '30%', height: '60%',
+          background: 'linear-gradient(170deg, hsla(195,55%,38%,0.2), hsla(230,50%,35%,0.18), hsla(260,40%,30%,0.22), hsla(195,50%,36%,0.15))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(50px)',
+          borderRadius: '50% 40% 55% 45%',
+          animation: 'auth-flow 6s ease-in-out infinite reverse, auth-morph 10s ease-in-out infinite reverse',
+          animationDelay: '-3s',
+        }} />
+        <div style={{
+          position: 'absolute', top: '-8%', right: '3%', width: '22%', height: '50%',
+          background: 'linear-gradient(150deg, hsla(210,60%,42%,0.18), hsla(255,45%,32%,0.15), hsla(275,35%,28%,0.12), hsla(210,55%,38%,0.15))',
+          backgroundSize: '300% 300%',
+          filter: 'blur(45px)',
+          borderRadius: '45% 55% 40% 60%',
+          animation: 'auth-flow 10s ease-in-out infinite, auth-morph 14s ease-in-out infinite',
+          animationDelay: '-6s',
+        }} />
       </div>
       <div className="relative z-10 w-full max-w-[420px]">
         <div className="mb-6 flex flex-col items-center gap-2">
@@ -441,7 +465,7 @@ function LoginForm() {
           <span className="text-lg font-semibold text-white">Harmoniq</span>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 backdrop-blur-sm p-8">
+        <div className="rounded-xl bg-zinc-900/70 backdrop-blur-xl p-8">
           {/* Header */}
           <h1 className="text-2xl font-bold tracking-tight mb-1 text-white">
             {t("auth.welcomeBack") || "Sign in to your account"}
@@ -494,7 +518,7 @@ function LoginForm() {
               errorMessage={emailError}
               required
               disabled={isLoading}
-              className="h-11 rounded-lg bg-zinc-800/60 border-zinc-700 text-white placeholder-zinc-500 focus:border-white"
+              className="h-11 rounded-lg bg-zinc-800/60 border-zinc-700 text-white placeholder-zinc-500 focus:border-zinc-500"
             />
           </div>
 
@@ -525,7 +549,7 @@ function LoginForm() {
                     disabled={isLoading}
                     error={Boolean(passwordError)}
                     errorMessage={passwordError}
-                    className="h-11 rounded-lg bg-zinc-800/60 border-zinc-700 text-white placeholder-zinc-500 focus:border-white pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
+                    className="h-11 rounded-lg bg-zinc-800/60 border-zinc-700 text-white placeholder-zinc-500 focus:border-zinc-500 pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
                   />
                   <button
                     type="button"
@@ -550,9 +574,9 @@ function LoginForm() {
                       aria-checked={appChoice === "dashboard"}
                       onClick={() => setAppChoice("dashboard")}
                       disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-white bg-white/10 text-white" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-zinc-500 bg-zinc-800 text-white" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "dashboard" ? "border-white bg-white" : "border-zinc-600"}`} />
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "dashboard" ? "border-zinc-400 bg-zinc-400" : "border-zinc-600"}`} />
                       <LayoutDashboard className="h-4 w-4" />
                       {t("auth.dashboard")}
                     </button>
@@ -562,9 +586,9 @@ function LoginForm() {
                       aria-checked={appChoice === "app"}
                       onClick={() => setAppChoice("app")}
                       disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-white bg-white/10 text-white" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-zinc-500 bg-zinc-800 text-white" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "app" ? "border-white bg-white" : "border-zinc-600"}`} />
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "app" ? "border-zinc-400 bg-zinc-400" : "border-zinc-600"}`} />
                       <HardHat className="h-4 w-4" />
                       {t("auth.mobileApp")}
                     </button>
@@ -609,7 +633,7 @@ function LoginForm() {
             type="button"
             onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800/50 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 rounded-lg border border-zinc-800 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800/50 transition-colors disabled:opacity-50"
           >
             <Mail className="h-4 w-4" />
             {loginMode === "password" ? t("auth.magicLink") : t("auth.passwordMode")}
