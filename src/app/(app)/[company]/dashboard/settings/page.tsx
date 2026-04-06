@@ -31,6 +31,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { applyBranding } from "@/lib/branding";
 import { applyDocumentLanguage } from "@/lib/localization";
 import { COUNTRY_OPTIONS, getCountryConfig } from "@/lib/country-config";
+import { CountryFlag } from "@/components/ui/country-flag";
 import {
   buildRegionalDefaults,
   CURRENCY_OPTIONS,
@@ -482,12 +483,9 @@ export default function SettingsPage() {
                           : "border-border hover:border-primary/50"
                       )}
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-2xl">
-                        <span aria-hidden="true">{country.flag}</span>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 overflow-hidden">
+                        <CountryFlag code={country.code} size="md" />
                       </div>
-                      <span className="text-sm font-bold text-muted-foreground">
-                        {country.flag} {country.code}
-                      </span>
                       <div>
                         <p className={cn(
                           "font-semibold",

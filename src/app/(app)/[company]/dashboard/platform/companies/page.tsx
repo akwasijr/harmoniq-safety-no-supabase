@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { LOCALE_CONFIGS, SUPPORTED_LOCALES } from "@/i18n";
 import type { SupportedLocale } from "@/i18n";
 import { COUNTRY_OPTIONS, getCountryConfig } from "@/lib/country-config";
+import { CountryFlag } from "@/components/ui/country-flag";
 import {
   buildRegionalDefaults,
   CURRENCY_OPTIONS,
@@ -165,7 +166,7 @@ export default function PlatformCompaniesPage() {
                       <div>
                         <CardTitle className="text-base">{comp.name}</CardTitle>
                         <p className="text-xs text-muted-foreground">
-                          {getCountryConfig(comp.country).flag} {comp.country}
+                          <CountryFlag code={comp.country} size="sm" className="inline-block" /> {comp.country}
                         </p>
                       </div>
                     </div>
@@ -301,7 +302,7 @@ export default function PlatformCompaniesPage() {
                   <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
                     <p className="text-xs font-medium">Auto-configured from country:</p>
                     <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                      <div>Country: <span className="font-medium text-foreground">{selectedCountryConfig.flag} {selectedCountryConfig.name}</span></div>
+                      <div>Country: <span className="font-medium text-foreground inline-flex items-center gap-1"><CountryFlag code={selectedCountryConfig.code} size="sm" /> {selectedCountryConfig.name}</span></div>
                       <div>Currency: <span className="font-medium text-foreground">{newCurrency}</span></div>
                       <div>Date format: <span className="font-medium text-foreground">{newDateFormat}</span></div>
                       <div>Timezone: <span className="font-medium text-foreground">{newTimezone}</span></div>
@@ -467,7 +468,7 @@ export default function PlatformCompaniesPage() {
                       <div>
                         <p className="font-semibold text-sm" style={{ color: newPrimaryColor }}>{newAppName || newCompanyName || "Company Name"}</p>
                         <p className="text-xs text-muted-foreground">
-                          {selectedCountryConfig.flag} {LOCALE_CONFIGS[newLanguage]?.name} · {newCurrency}
+                          <CountryFlag code={selectedCountryConfig.code} size="sm" className="inline-block" /> {LOCALE_CONFIGS[newLanguage]?.name} · {newCurrency}
                         </p>
                       </div>
                     </div>
