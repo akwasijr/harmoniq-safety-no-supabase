@@ -108,6 +108,61 @@ function useParallaxOffset(ref: React.RefObject<HTMLElement | null>, range: numb
   return useTransform(scrollYProgress, [0, 1], [range, -range]);
 }
 
+function FeaturesDropdown() {
+  const [open, setOpen] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpen(true);
+  };
+
+  const handleLeave = () => {
+    timeoutRef.current = setTimeout(() => setOpen(false), 150);
+  };
+
+  return (
+    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      <button
+        type="button"
+        className={`text-sm transition-colors ${open ? "text-white" : "text-zinc-400 hover:text-white"}`}
+      >
+        Features
+      </button>
+      {open && (
+        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3">
+          <div className="w-[480px] rounded-2xl border border-zinc-800 bg-zinc-900/95 backdrop-blur-xl p-5 shadow-2xl">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+              {[
+                { title: "Incident Management", desc: "Report & Resolve", href: "#services" },
+                { title: "Asset Tracking", desc: "Lifecycle Management", href: "#services" },
+                { title: "Risk Assessments", desc: "JHA, JSA, RI&E", href: "#features" },
+                { title: "Compliance", desc: "Regulations & Audits", href: "#features" },
+                { title: "Work Orders", desc: "Maintenance & Repairs", href: "#services" },
+                { title: "Mobile App", desc: "Offline-First Field App", href: "#mobile" },
+              ].map((item) => (
+                <a
+                  key={item.title}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className="group block"
+                >
+                  <p className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">
+                    {item.title}
+                  </p>
+                  <p className="text-sm text-zinc-500 group-hover:text-zinc-400 transition-colors">
+                    {item.desc}
+                  </p>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const prefersReducedMotion = useReducedMotion();
   const ipadRef = useRef<HTMLDivElement>(null);
@@ -169,13 +224,9 @@ export default function Home() {
       {/* Lightweight mobile background */}
       <div className="absolute inset-0 z-0 pointer-events-none bg-black md:hidden" />
 
-      {/* Purple gradient for below-the-fold (desktop only) */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden hidden md:block">
-        <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full blur-[160px] bg-[#8B5CF6] opacity-20" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[140px] bg-[#6d28d9] opacity-15" />
-      </div>
 
-      {/* ── Stadium-Shaped Header ── */}
+
+      {/* ── Header ── */}
       <header className="fixed top-5 left-1/2 -translate-x-1/2 z-50">
         <motion.div
           initial={{ y: -20, opacity: 0, width: "92vw" }}
@@ -191,13 +242,13 @@ export default function Home() {
             <Image src="/logo-white.svg" alt="Harmoniq" width={130} height={30} className="h-6 w-auto" />
           </Link>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors">Product</a>
+            <FeaturesDropdown />
             <a href="#industries" className="text-sm text-zinc-400 hover:text-white transition-colors">Industries</a>
             <a href="#services" className="text-sm text-zinc-400 hover:text-white transition-colors">Solutions</a>
-            <a href="#stats" className="text-sm text-zinc-400 hover:text-white transition-colors">Resources</a>
+            <a href="#faq" className="text-sm text-zinc-400 hover:text-white transition-colors">Resources</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="rounded-full bg-[#8B5CF6] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+            <Link href="/login" className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors">
               Get Started
             </Link>
           </div>
@@ -205,7 +256,7 @@ export default function Home() {
       </header>
 
       {/* ── Hero ── */}
-      <section ref={heroRef} className="relative pt-24 pb-0 lg:pt-32 lg:pb-0 z-10">
+      <section ref={heroRef} className="relative pt-32 pb-0 lg:pt-44 lg:pb-0 z-10">
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <motion.div
             initial="hidden"
@@ -213,21 +264,18 @@ export default function Home() {
             variants={stagger}
             className="max-w-4xl mx-auto text-center"
           >
-            <motion.p variants={fadeUp} className="text-sm font-medium text-[#8B5CF6]/80 tracking-widest mb-4">
-              Workplace Safety & Asset Management
-            </motion.p>
-            <motion.h1 variants={fadeUp} className="text-5xl sm:text-6xl lg:text-8xl font-normal tracking-tight leading-[1.02] text-white" style={{ fontFamily: "var(--font-playfair)" }}>
+            <motion.h1 variants={fadeUp} className="text-5xl sm:text-7xl lg:text-[5.5rem] font-medium tracking-tight leading-[1.05] text-white">
               Harmoniq
             </motion.h1>
-            <motion.p variants={fadeUp} className="mt-6 text-lg lg:text-xl text-white max-w-2xl mx-auto leading-relaxed">
-              Report incidents, manage assets, run inspections, and ensure compliance, all in one powerful platform built for modern operations teams.
+            <motion.p variants={fadeUp} className="mt-6 text-lg lg:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              The operations platform for safety, compliance, and asset management.
             </motion.p>
-            <motion.div variants={fadeUp} className="mt-4 flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
                 Join the Waitlist
                 <ArrowRight className="h-4 w-4" />
               </a>
-              <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
+              <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-700 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800/60 transition-colors">
                 Contact Sales
               </Link>
             </motion.div>
@@ -248,7 +296,7 @@ export default function Home() {
             className="relative mx-auto max-w-[90rem]"
           >
             {/* iPad frame */}
-            <div className="relative rounded-[24px] bg-zinc-900 p-3 shadow-2xl shadow-[#8B5CF6]/10">
+            <div className="relative rounded-[24px] bg-zinc-900 p-3 shadow-2xl shadow-black/20">
               <div className="rounded-[18px] bg-zinc-950 overflow-hidden aspect-[16/9]">
                 <Image
                   src="/screen-01.png"
@@ -343,7 +391,6 @@ export default function Home() {
               <motion.h2
                 variants={fadeUp}
                 className="text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white"
-                style={{ fontFamily: "var(--font-playfair)" }}
               >
                 More than a management tool
               </motion.h2>
@@ -351,7 +398,7 @@ export default function Home() {
                 Our platform offers a range of tools designed to help you stay organized, manage safety & assets, and achieve your compliance goals.
               </motion.p>
               <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3.5 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+                <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
                   Join the Waitlist
                 </a>
                 <a href="#services" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
@@ -529,8 +576,70 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Feature Details (Polar.sh style) ── */}
+      <section className="py-24 lg:py-32 relative z-10">
+        <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
+          <div className="space-y-24 lg:space-y-32">
+            {featureDetails.map((feature, index) => {
+              const isReversed = index % 2 !== 0;
+              return (
+                <motion.div
+                  key={feature.title}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-100px" }}
+                  variants={fadeUp}
+                  className={`grid lg:grid-cols-2 gap-10 lg:gap-16 items-center ${isReversed ? "lg:[direction:rtl]" : ""}`}
+                >
+                  {/* Visual side */}
+                  <div className={isReversed ? "lg:[direction:ltr]" : ""}>
+                    <div className="relative rounded-2xl overflow-hidden bg-zinc-900/60 border border-zinc-800/50 aspect-[4/3]">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-pink-500/10" />
+                      <div className="relative z-10 flex items-center justify-center h-full p-8">
+                        <div className="rounded-xl bg-zinc-900/90 border border-zinc-700/50 p-6 w-full max-w-sm shadow-2xl">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20">
+                              <feature.icon className="h-4 w-4 text-emerald-400" />
+                            </div>
+                            <span className="text-sm font-medium text-zinc-200">{feature.cardTitle}</span>
+                          </div>
+                          {feature.cardContent}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Text side */}
+                  <div className={isReversed ? "lg:[direction:ltr]" : ""}>
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-medium text-white leading-tight mb-4">
+                      {feature.title}
+                    </h3>
+                    <p className="text-base text-zinc-400 leading-relaxed mb-8">
+                      {feature.description}
+                    </p>
+                    <div className="space-y-0">
+                      {feature.checks.map((check, i) => (
+                        <div
+                          key={check}
+                          className={`flex items-center gap-3 py-3.5 ${
+                            i < feature.checks.length - 1 ? "border-b border-zinc-800/60" : ""
+                          }`}
+                        >
+                          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+                          <span className="text-sm text-white font-medium">{check}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* ── Mobile App Showcase ── */}
-      <section ref={mobileRef} className="py-24 lg:py-32 relative z-10 overflow-hidden">
+      <section id="mobile" ref={mobileRef} className="py-24 lg:py-32 relative z-10 overflow-hidden">
         <motion.div style={prefersReducedMotion ? undefined : { y: mobileY }} className="container mx-auto px-4 lg:px-8 relative">
           <motion.div
             initial="hidden"
@@ -742,7 +851,6 @@ export default function Home() {
             <motion.div variants={fadeUp} className="mb-16">
               <h2
                 className="text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-4"
-                style={{ fontFamily: "var(--font-playfair)" }}
               >
                 Your industry. Your safety.
               </h2>
@@ -928,7 +1036,7 @@ export default function Home() {
       </section>
 
       {/* ── FAQ ── */}
-      <section ref={faqRef} className="py-24 lg:py-32 relative z-10">
+      <section id="faq" ref={faqRef} className="py-24 lg:py-32 relative z-10">
         <motion.div style={prefersReducedMotion ? undefined : { y: faqY }} className="container mx-auto px-4 lg:px-8 max-w-3xl">
           <motion.h2
             initial="hidden"
@@ -1038,6 +1146,117 @@ const features = [
   { icon: Wrench, title: "Work Order Management" },
   { icon: FileText, title: "Compliance Documents" },
   { icon: Users, title: "Team Management" },
+];
+
+const featureDetails = [
+  {
+    icon: AlertTriangle,
+    title: "Real-time incident management",
+    description: "Report, track, and resolve safety incidents from anywhere. GPS-tagged reports with photo evidence flow directly to your dashboard for immediate action.",
+    cardTitle: "Incident Report",
+    cardContent: (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between py-2 border-b border-zinc-700/50">
+          <span className="text-xs text-zinc-400">Status</span>
+          <span className="text-xs font-medium text-emerald-400">Active</span>
+        </div>
+        <div className="flex items-center justify-between py-2 border-b border-zinc-700/50">
+          <span className="text-xs text-zinc-400">Severity</span>
+          <span className="text-xs font-medium text-amber-400">High</span>
+        </div>
+        <div className="flex items-center justify-between py-2">
+          <span className="text-xs text-zinc-400">Response</span>
+          <span className="text-xs font-medium text-zinc-200">12 min</span>
+        </div>
+      </div>
+    ),
+    checks: [
+      "GPS-tagged incident reports with photo evidence",
+      "Automatic severity classification and routing",
+      "Real-time notifications to safety managers",
+      "Complete audit trail from report to resolution",
+    ],
+  },
+  {
+    icon: Package,
+    title: "Complete asset lifecycle tracking",
+    description: "Track every asset from acquisition to retirement. QR code scanning, automated inspection schedules, and maintenance history in one place.",
+    cardTitle: "Asset Overview",
+    cardContent: (
+      <div className="space-y-3">
+        <div className="text-2xl font-semibold text-white">1,247</div>
+        <div className="text-xs text-zinc-400">Active assets tracked</div>
+        <div className="flex items-center justify-between pt-2 border-t border-zinc-700/50">
+          <div>
+            <span className="text-xs text-zinc-500">Compliant</span>
+            <p className="text-sm font-medium text-white">94%</p>
+          </div>
+          <div>
+            <span className="text-xs text-zinc-500">Due Soon</span>
+            <p className="text-sm font-medium text-amber-400">23</p>
+          </div>
+        </div>
+      </div>
+    ),
+    checks: [
+      "QR code scanning for instant asset lookup",
+      "Automated inspection scheduling",
+      "Maintenance history and work orders",
+      "Condition tracking with photo documentation",
+      "Custom fields per asset category",
+    ],
+  },
+  {
+    icon: Shield,
+    title: "Compliance-ready risk assessments",
+    description: "Built-in forms for JHA, JSA, RI&E, Arbowet, and more. Country-specific compliance workflows that adapt to your regulatory requirements.",
+    cardTitle: "Risk Assessment",
+    cardContent: (
+      <div className="space-y-3">
+        <div className="rounded-lg bg-zinc-800/60 px-3 py-2 font-mono text-xs text-zinc-300">
+          RI&E-2024-0847
+        </div>
+        <div className="text-xs text-zinc-400">Completed on Jan 15, 2025</div>
+        <div className="flex items-center justify-between pt-2 border-t border-zinc-700/50">
+          <span className="text-xs text-zinc-500">Type</span>
+          <span className="text-xs font-medium text-white">RI&E Assessment</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-zinc-500">Status</span>
+          <span className="text-xs font-medium text-emerald-400">Approved</span>
+        </div>
+      </div>
+    ),
+    checks: [
+      "JHA, JSA, RI&E, Arbowet, SAM forms built-in",
+      "Country-specific regulatory compliance",
+      "Step-by-step guided assessments",
+      "Automatic risk scoring and prioritization",
+    ],
+  },
+  {
+    icon: BarChart3,
+    title: "Actionable safety analytics",
+    description: "Monitor incident trends, compliance rates, and resolution times with dashboards that surface what matters most to your operations.",
+    cardTitle: "Analytics Dashboard",
+    cardContent: (
+      <div className="space-y-3">
+        <div className="text-2xl font-semibold text-white">98.2%</div>
+        <div className="text-xs text-zinc-400">Overall compliance rate</div>
+        <div className="flex gap-1 items-end h-12 pt-2 border-t border-zinc-700/50">
+          {[40, 55, 35, 70, 60, 80, 75, 90, 85, 92, 88, 98].map((h, j) => (
+            <div key={j} className="flex-1 rounded-sm bg-emerald-500/40" style={{ height: `${h}%` }} />
+          ))}
+        </div>
+      </div>
+    ),
+    checks: [
+      "Real-time compliance dashboards",
+      "Incident trend analysis and forecasting",
+      "Resolution time tracking",
+      "Exportable reports for audits",
+    ],
+  },
 ];
 
 const faqs = [
@@ -1156,7 +1375,7 @@ function WaitlistSection() {
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8B5CF6] px-8 py-3 text-base font-semibold text-white hover:bg-[#7c4fe0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3 text-base font-semibold text-black hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {status === "loading" ? "Joining\u2026" : "Join Waitlist"}
                 {status !== "loading" && <ArrowRight className="h-4 w-4" />}
