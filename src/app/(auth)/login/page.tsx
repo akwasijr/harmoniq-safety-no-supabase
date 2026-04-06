@@ -518,7 +518,7 @@ function LoginForm() {
               errorMessage={emailError}
               required
               disabled={isLoading}
-              className="h-11 rounded-lg bg-zinc-800/60 border-zinc-700 text-white placeholder-zinc-500 focus:border-zinc-500"
+              className="h-11 rounded-lg bg-zinc-800/60 border-zinc-800/50 text-white placeholder-zinc-500 focus:border-zinc-500"
             />
           </div>
 
@@ -549,7 +549,7 @@ function LoginForm() {
                     disabled={isLoading}
                     error={Boolean(passwordError)}
                     errorMessage={passwordError}
-                    className="h-11 rounded-lg bg-zinc-800/60 border-zinc-700 text-white placeholder-zinc-500 focus:border-zinc-500 pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
+                    className="h-11 rounded-lg bg-zinc-800/60 border-zinc-800/50 text-white placeholder-zinc-500 focus:border-zinc-500 pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
                   />
                   <button
                     type="button"
@@ -574,7 +574,7 @@ function LoginForm() {
                       aria-checked={appChoice === "dashboard"}
                       onClick={() => setAppChoice("dashboard")}
                       disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-zinc-500 bg-zinc-800 text-white" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-zinc-500 bg-zinc-800 text-white" : "border-zinc-800/50 text-zinc-400 hover:border-zinc-500"}`}
                     >
                       <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "dashboard" ? "border-zinc-400 bg-zinc-400" : "border-zinc-600"}`} />
                       <LayoutDashboard className="h-4 w-4" />
@@ -586,7 +586,7 @@ function LoginForm() {
                       aria-checked={appChoice === "app"}
                       onClick={() => setAppChoice("app")}
                       disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-zinc-500 bg-zinc-800 text-white" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-zinc-500 bg-zinc-800 text-white" : "border-zinc-800/50 text-zinc-400 hover:border-zinc-500"}`}
                     >
                       <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "app" ? "border-zinc-400 bg-zinc-400" : "border-zinc-600"}`} />
                       <HardHat className="h-4 w-4" />
