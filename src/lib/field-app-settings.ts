@@ -274,7 +274,7 @@ export function buildDefaultFieldAppSettings(industry?: IndustryCode | null): Fi
     tipOfTheDayEnabled: true,
     fontId: "geist",
     shape: "medium",
-    shadow: "subtle",
+    shadow: "none",
   };
 }
 
