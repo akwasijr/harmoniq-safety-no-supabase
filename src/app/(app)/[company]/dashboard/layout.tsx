@@ -37,7 +37,7 @@ export default function DashboardRootLayout({
 
   // Apply saved branding on mount, and re-apply when theme/company changes
   React.useEffect(() => {
-    if (!currentCompany) return;
+    if (!currentCompany || !resolvedTheme) return;
     applyBranding(
       {
         primaryColor: currentCompany.primary_color,
@@ -45,7 +45,7 @@ export default function DashboardRootLayout({
         fontFamily: currentCompany.font_family,
         uiStyle: currentCompany.ui_style,
       },
-      resolvedTheme || "light"
+      resolvedTheme
     );
     return () => resetBranding();
   }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany]);
