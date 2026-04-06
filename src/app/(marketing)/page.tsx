@@ -41,50 +41,53 @@ import { motion, useScroll, useTransform, useInView } from "framer-motion";
 const EASE_OUT_CUBIC: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, y: 40, filter: "blur(4px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: EASE_OUT_CUBIC } },
 };
 
 const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.8, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, filter: "blur(4px)" },
+  visible: { opacity: 1, filter: "blur(0px)", transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const slideLeft = {
-  hidden: { opacity: 0, x: -60 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, x: -60, filter: "blur(4px)" },
+  visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const slideRight = {
-  hidden: { opacity: 0, x: 60 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, x: 60, filter: "blur(4px)" },
+  visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const slideFromLeft = {
-  hidden: { opacity: 0, x: -120 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, x: -120, filter: "blur(6px)" },
+  visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.8, ease: EASE_OUT_CUBIC } },
 };
 
 const slideFromRight = {
-  hidden: { opacity: 0, x: 120 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: EASE_OUT_CUBIC, delay: 0.1 } },
+  hidden: { opacity: 0, x: 120, filter: "blur(6px)" },
+  visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.8, ease: EASE_OUT_CUBIC, delay: 0.1 } },
 };
 
 const scaleUp = {
-  hidden: { opacity: 0, scale: 0.9 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, scale: 0.92, filter: "blur(4px)" },
+  visible: { opacity: 1, scale: 1, filter: "blur(0px)", transition: { duration: 0.6, ease: EASE_OUT_CUBIC } },
 };
 
 const stagger = {
-  visible: { transition: { staggerChildren: 0.08 } },
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
 };
 
 const staggerSlow = {
+  hidden: {},
   visible: { transition: { staggerChildren: 0.18 } },
 };
 
 const staggerDramatic = {
-  visible: { transition: { staggerChildren: 0.14 } },
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.15 } },
 };
 
 function useReducedMotion() {
@@ -134,12 +137,12 @@ function FeaturesDropdown() {
           <div className="w-[480px] rounded-2xl border border-zinc-800 bg-zinc-900/95 backdrop-blur-xl p-5 shadow-2xl">
             <div className="grid grid-cols-2 gap-x-8 gap-y-5">
               {[
-                { title: "Incident Management", desc: "Report & Resolve", href: "#services" },
-                { title: "Asset Tracking", desc: "Lifecycle Management", href: "#services" },
-                { title: "Risk Assessments", desc: "JHA, JSA, RI&E", href: "#features" },
-                { title: "Compliance", desc: "Regulations & Audits", href: "#features" },
-                { title: "Work Orders", desc: "Maintenance & Repairs", href: "#services" },
+                { title: "Incident Management", desc: "Report & Resolve", href: "#feature-details" },
+                { title: "Asset Tracking", desc: "Lifecycle Management", href: "#feature-details" },
+                { title: "Risk Assessments", desc: "JHA, JSA, RI&E", href: "#feature-details" },
+                { title: "Analytics", desc: "Dashboards & Insights", href: "#feature-details" },
                 { title: "Mobile App", desc: "Offline-First Field App", href: "#mobile" },
+                { title: "Industries", desc: "Tailored for Your Sector", href: "#industries" },
               ].map((item) => (
                 <a
                   key={item.title}
@@ -181,20 +184,16 @@ export default function Home() {
   const featuresRef = useRef<HTMLElement>(null);
   const testimonialRef = useRef<HTMLElement>(null);
   const servicesRef = useRef<HTMLElement>(null);
-  const mobileRef = useRef<HTMLElement>(null);
   const statsRef = useRef<HTMLElement>(null);
   const industryRef = useRef<HTMLElement>(null);
-  const benefitsRef = useRef<HTMLElement>(null);
   const faqRef = useRef<HTMLElement>(null);
 
   const trustY = useParallaxOffset(trustRef, 30);
   const featuresY = useParallaxOffset(featuresRef, 35);
   const testimonialY = useParallaxOffset(testimonialRef, 25);
   const servicesY = useParallaxOffset(servicesRef, 30);
-  const mobileY = useParallaxOffset(mobileRef, 35);
   const statsY = useParallaxOffset(statsRef, 30);
   const industryY = useParallaxOffset(industryRef, 28);
-  const benefitsY = useParallaxOffset(benefitsRef, 25);
   const faqY = useParallaxOffset(faqRef, 20);
 
   const [scrolled, setScrolled] = useState(false);
@@ -244,8 +243,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-8">
             <FeaturesDropdown />
             <a href="#industries" className="text-sm text-zinc-400 hover:text-white transition-colors">Industries</a>
-            <a href="#services" className="text-sm text-zinc-400 hover:text-white transition-colors">Solutions</a>
-            <a href="#faq" className="text-sm text-zinc-400 hover:text-white transition-colors">Resources</a>
+            <a href="#faq" className="text-sm text-zinc-400 hover:text-white transition-colors">FAQ</a>
           </nav>
           <div className="flex items-center gap-3">
             <Link href="/login" className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors">
@@ -265,10 +263,10 @@ export default function Home() {
             className="max-w-4xl mx-auto text-center"
           >
             <motion.h1 variants={fadeUp} className="text-5xl sm:text-7xl lg:text-[5.5rem] font-medium tracking-tight leading-[1.05] text-white">
-              Safety operations{"\n"}for modern teams
+              Safety and asset{"\n"}management, reimagined
             </motion.h1>
             <motion.p variants={fadeUp} className="mt-6 text-lg lg:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Report incidents, track assets, run inspections, and stay compliant — all from one platform your entire team can use.
+              Report incidents, manage assets, run inspections, and stay compliant. AI-powered insights help your team work smarter across every site.
             </motion.p>
             <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
@@ -317,7 +315,7 @@ export default function Home() {
         ref={trustRef}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
+        viewport={{ once: false, margin: "-100px" }}
         variants={fadeUp}
         style={prefersReducedMotion ? undefined : { y: trustY }}
         className="py-24 lg:py-32 relative z-10"
@@ -368,12 +366,12 @@ export default function Home() {
                     x: 0,
                     y: 0,
                   }}
-                  viewport={{ once: true, margin: "-50px" }}
+                  viewport={{ once: false, margin: "-50px" }}
                   transition={{ duration: 0.9, delay: i * 0.12, ease: EASE_OUT_CUBIC }}
                   className={`absolute hidden lg:flex items-center gap-3 rounded-full bg-zinc-800/60 backdrop-blur-sm px-5 py-3 ${featurePositions[i]}`}
                 >
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${i % 2 === 0 ? "bg-[#8B5CF6]" : "bg-[#8B5CF6]/20"}`}>
-                    <feature.icon className={`h-4 w-4 ${i % 2 === 0 ? "text-white" : "text-[#8B5CF6]"}`} />
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${i % 2 === 0 ? "bg-zinc-700" : "bg-zinc-800"}`}>
+                    <feature.icon className="h-4 w-4 text-zinc-300" />
                   </div>
                   <span className="text-sm font-medium text-zinc-200 whitespace-nowrap">{feature.title}</span>
                 </motion.div>
@@ -384,7 +382,7 @@ export default function Home() {
             <motion.div
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: false, margin: "-100px" }}
               variants={stagger}
               className="relative z-10 text-center max-w-2xl mx-auto"
             >
@@ -395,16 +393,8 @@ export default function Home() {
                 More than a management tool
               </motion.h2>
               <motion.p variants={fadeUp} className="mt-6 text-base lg:text-lg text-zinc-400 max-w-lg mx-auto leading-relaxed">
-                Our platform offers a range of tools designed to help you stay organized, manage safety & assets, and achieve your compliance goals.
+                Tools to stay organized, manage safety & assets, and hit your compliance goals.
               </motion.p>
-              <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
-                  Join the Waitlist
-                </a>
-                <a href="#services" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-800/60 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800 transition-colors">
-                  Learn More
-                </a>
-              </motion.div>
             </motion.div>
 
             {/* Mobile: show pills in a grid below */}
@@ -412,7 +402,7 @@ export default function Home() {
               <div className="flex flex-wrap justify-center gap-2">
                 {features.slice(0, 6).map((feature) => (
                   <div key={feature.title} className="flex items-center gap-2 rounded-full bg-zinc-800/60 px-4 py-2">
-                    <feature.icon className="h-4 w-4 text-[#8B5CF6]" />
+                    <feature.icon className="h-4 w-4 text-zinc-400" />
                     <span className="text-xs text-zinc-300">{feature.title}</span>
                   </div>
                 ))}
@@ -428,7 +418,7 @@ export default function Home() {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: false, margin: "-100px" }}
             variants={stagger}
             className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-stretch"
           >
@@ -443,7 +433,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-[#8B5CF6]/40 flex items-center justify-center text-lg font-bold text-[#8B5CF6]">S</div>
+                <div className="h-12 w-12 rounded-full bg-zinc-700 flex items-center justify-center text-lg font-bold text-white">S</div>
                 <div>
                   <p className="font-semibold text-white">Sarah van der Berg</p>
                   <p className="text-sm text-zinc-500">Head of Safety, NordBuild Construction</p>
@@ -464,120 +454,9 @@ export default function Home() {
           </motion.div>
         </motion.div>
       </section>
-      <section id="services" ref={servicesRef} className="py-24 lg:py-32 relative z-10">
-        <motion.div style={prefersReducedMotion ? undefined : { y: servicesY }} className="container mx-auto px-4 lg:px-8">
-          <motion.h2
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="text-4xl sm:text-5xl font-bold text-center mb-16"
-          >
-            All in One Place
-          </motion.h2>
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={fadeUp}
-            className="max-w-5xl mx-auto rounded-3xl bg-zinc-900/40 p-8 lg:p-12"
-          >
-            <div className="grid lg:grid-cols-2 gap-8 items-center">
-              <div>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {["Conversion", "Compliance", "Analytics"].map(tag => (
-                    <span key={tag} className="rounded-full bg-zinc-800/60 px-3 py-1 text-xs text-zinc-400">{tag}</span>
-                  ))}
-                </div>
-                <h3 className="text-2xl lg:text-3xl font-bold mb-4">Real-Time Safety & Asset Analytics</h3>
-                <p className="text-zinc-400 leading-relaxed mb-6">
-                  Monitor incident trends, asset health, compliance rates, and resolution times with powerful dashboards that give you a complete view of your operations.
-                </p>
-                <Link href="/login" className="inline-flex items-center gap-2 text-[#8B5CF6] font-medium hover:underline">
-                  Read More <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-              {/* Chart mockup */}
-              <div className="rounded-2xl bg-zinc-950/60 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium text-zinc-300">Overall Performance</span>
-                  <span className="text-xs text-zinc-500">Last 12 months</span>
-                </div>
-                <div className="relative h-48">
-                  <svg viewBox="0 0 400 160" className="w-full h-full" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.3" />
-                        <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <path d="M0,120 C40,100 80,110 120,80 C160,50 200,60 240,40 C280,20 320,35 360,15 L400,10 L400,160 L0,160 Z" fill="url(#chartGrad)" />
-                    <path d="M0,120 C40,100 80,110 120,80 C160,50 200,60 240,40 C280,20 320,35 360,15 L400,10" fill="none" stroke="#8B5CF6" strokeWidth="2" />
-                  </svg>
-                </div>
-                <div className="flex justify-between mt-2">
-                  {["Jan", "Mar", "May", "Jul", "Sep", "Nov"].map(m => (
-                    <span key={m} className="text-xs text-zinc-600">{m}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      </section>
-      <section className="pb-24 lg:pb-32 relative z-10">
-        <div className="container mx-auto px-4 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={fadeUp}
-            className="max-w-5xl mx-auto rounded-3xl bg-zinc-900/40 p-8 lg:p-12"
-          >
-            <div className="grid lg:grid-cols-2 gap-8 items-center">
-              <div className="rounded-2xl bg-zinc-950/60 p-6 order-2 lg:order-1">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium text-zinc-300">Incident Overview</span>
-                  <span className="text-xs text-[#8B5CF6]">↑ 12%</span>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    { label: "Open Incidents", val: "12", color: "bg-red-500" },
-                    { label: "Under Review", val: "8", color: "bg-yellow-500" },
-                    { label: "Resolved", val: "47", color: "bg-green-500" },
-                    { label: "Compliance Rate", val: "94%", color: "bg-[#8B5CF6]" },
-                  ].map(row => (
-                    <div key={row.label} className="flex items-center justify-between py-2 border-b border-zinc-800/30 last:border-0">
-                      <div className="flex items-center gap-3">
-                        <div className={`h-2 w-2 rounded-full ${row.color}`} />
-                        <span className="text-sm text-zinc-400">{row.label}</span>
-                      </div>
-                      <span className="text-sm font-medium text-white">{row.val}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="order-1 lg:order-2">
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {["Tracking", "Reports", "Categorization", "Insights"].map(tag => (
-                    <span key={tag} className="rounded-full bg-zinc-800/60 px-3 py-1 text-xs text-zinc-400">{tag}</span>
-                  ))}
-                </div>
-                <h3 className="text-2xl lg:text-3xl font-bold mb-4">Incident & Asset Tracking</h3>
-                <p className="text-zinc-400 leading-relaxed mb-6">
-                  Track every incident from report to resolution. Manage asset lifecycles, inspections, maintenance schedules, and work orders, all connected in one system.
-                </p>
-                <Link href="/login" className="inline-flex items-center gap-2 text-[#8B5CF6] font-medium hover:underline">
-                  Read More <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* ── Feature Details (Polar.sh style) ── */}
-      <section className="py-24 lg:py-32 relative z-10">
+      <section id="feature-details" className="py-24 lg:py-32 relative z-10">
         <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
           <div className="space-y-24 lg:space-y-32">
             {featureDetails.map((feature, index) => {
@@ -587,15 +466,15 @@ export default function Home() {
                   key={feature.title}
                   initial="hidden"
                   whileInView="visible"
-                  viewport={{ once: true, margin: "-100px" }}
+                  viewport={{ once: false, margin: "-100px" }}
                   variants={fadeUp}
                   className={`grid lg:grid-cols-2 gap-10 lg:gap-16 items-center ${isReversed ? "lg:[direction:rtl]" : ""}`}
                 >
                   {/* Visual side */}
                   <div className={isReversed ? "lg:[direction:ltr]" : ""}>
-                    <div className="relative rounded-2xl overflow-hidden bg-zinc-900/40 border border-zinc-800/50 aspect-[4/3]">
+                    <div className="relative rounded-2xl overflow-hidden bg-zinc-900/40 aspect-[4/3]">
                       <div className="relative z-10 flex items-center justify-center h-full p-8">
-                        <div className="rounded-xl bg-zinc-900/80 border border-zinc-800/60 p-6 w-full max-w-sm">
+                        <div className="rounded-xl bg-zinc-900/80 p-6 w-full max-w-sm">
                           <div className="flex items-center gap-3 mb-4">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20">
                               <feature.icon className="h-4 w-4 text-emerald-400" />
@@ -616,16 +495,14 @@ export default function Home() {
                     <p className="text-base text-zinc-400 leading-relaxed mb-8">
                       {feature.description}
                     </p>
-                    <div className="space-y-0">
-                      {feature.checks.map((check, i) => (
+                    <div className="space-y-3">
+                      {feature.checks.map((check) => (
                         <div
                           key={check}
-                          className={`flex items-center gap-3 py-3.5 ${
-                            i < feature.checks.length - 1 ? "border-b border-zinc-800/60" : ""
-                          }`}
+                          className="flex items-center gap-3"
                         >
-                          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-                          <span className="text-sm text-white font-medium">{check}</span>
+                          <div className="h-1.5 w-1.5 rounded-full bg-zinc-500 shrink-0" />
+                          <span className="text-sm text-zinc-300">{check}</span>
                         </div>
                       ))}
                     </div>
@@ -638,12 +515,12 @@ export default function Home() {
       </section>
 
       {/* ── Mobile App Showcase ── */}
-      <section id="mobile" ref={mobileRef} className="py-24 lg:py-32 relative z-10 overflow-hidden">
-        <motion.div style={prefersReducedMotion ? undefined : { y: mobileY }} className="container mx-auto px-4 lg:px-8 relative">
+      <section id="mobile" ref={servicesRef} className="py-24 lg:py-32 relative z-10 overflow-hidden">
+        <motion.div style={prefersReducedMotion ? undefined : { y: servicesY }} className="container mx-auto px-4 lg:px-8 relative">
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={{ once: false, margin: "-50px" }}
             variants={stagger}
             className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto"
           >
@@ -662,8 +539,8 @@ export default function Home() {
                   { icon: Cloud, text: "Offline-capable, syncs automatically" },
                 ].map(item => (
                   <div key={item.text} className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#8B5CF6]/10">
-                      <item.icon className="h-4 w-4 text-[#8B5CF6]" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800">
+                      <item.icon className="h-4 w-4 text-zinc-300" />
                     </div>
                     <span className="text-zinc-300 text-sm">{item.text}</span>
                   </div>
@@ -674,7 +551,7 @@ export default function Home() {
             <motion.div
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
+              viewport={{ once: false, margin: "-50px" }}
               className="flex justify-center gap-4"
             >
               {[0, 1].map(i => (
@@ -696,40 +573,40 @@ export default function Home() {
                       {i === 0 ? (<>
                         {/* Phone 1: Incident list */}
                         <div className="flex items-center gap-2 mb-1">
-                          <AlertTriangle className="h-3 w-3 text-[#8B5CF6]" />
+                          <AlertTriangle className="h-3 w-3 text-zinc-400" />
                           <span className="text-[10px] font-semibold text-zinc-200">Incidents</span>
                         </div>
                         {[
                           { label: "Gas leak detected", status: "bg-red-500" },
                           { label: "Safety rail damaged", status: "bg-yellow-500" },
-                          { label: "PPE check overdue", status: "bg-[#8B5CF6]" },
+                          { label: "PPE check overdue", status: "bg-blue-500" },
                         ].map((item) => (
                           <div key={item.label} className="flex items-center gap-2 rounded-lg bg-zinc-800/60 px-2.5 py-2">
                             <div className={`h-1.5 w-1.5 rounded-full ${item.status}`} />
                             <span className="text-[9px] text-zinc-300">{item.label}</span>
                           </div>
                         ))}
-                        <div className="rounded-lg bg-[#8B5CF6]/10 p-2.5 mt-1">
+                        <div className="rounded-lg bg-zinc-800/60 p-2.5 mt-1">
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-[9px] text-zinc-400">This week</span>
-                            <span className="text-[10px] font-bold text-[#8B5CF6]">12</span>
+                            <span className="text-[10px] font-bold text-white">12</span>
                           </div>
                           <div className="flex gap-0.5 items-end h-8">
                             {[40, 65, 30, 80, 55, 45, 70].map((h, j) => (
-                              <div key={j} className="flex-1 rounded-sm bg-[#8B5CF6]/40" style={{ height: `${h}%` }} />
+                              <div key={j} className="flex-1 rounded-sm bg-zinc-600/60" style={{ height: `${h}%` }} />
                             ))}
                           </div>
                         </div>
                       </>) : (<>
                         {/* Phone 2: Asset inspection */}
                         <div className="flex items-center gap-2 mb-1">
-                          <Package className="h-3 w-3 text-[#8B5CF6]" />
+                          <Package className="h-3 w-3 text-zinc-400" />
                           <span className="text-[10px] font-semibold text-zinc-200">Assets</span>
                         </div>
                         <div className="rounded-lg bg-zinc-800/60 p-2.5">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="h-6 w-6 rounded bg-[#8B5CF6]/20 flex items-center justify-center">
-                              <Wrench className="h-3 w-3 text-[#8B5CF6]" />
+                            <div className="h-6 w-6 rounded bg-zinc-800 flex items-center justify-center">
+                              <Wrench className="h-3 w-3 text-zinc-400" />
                             </div>
                             <div>
                               <p className="text-[9px] font-medium text-zinc-200">Crane #04</p>
@@ -742,8 +619,8 @@ export default function Home() {
                         </div>
                         <div className="rounded-lg bg-zinc-800/60 p-2.5">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="h-6 w-6 rounded bg-[#8B5CF6]/20 flex items-center justify-center">
-                              <Shield className="h-3 w-3 text-[#8B5CF6]" />
+                            <div className="h-6 w-6 rounded bg-zinc-800 flex items-center justify-center">
+                              <Shield className="h-3 w-3 text-zinc-400" />
                             </div>
                             <div>
                               <p className="text-[9px] font-medium text-zinc-200">Fire Ext. B2</p>
@@ -754,9 +631,9 @@ export default function Home() {
                             <div className="h-1 rounded-full bg-yellow-500 w-[45%]" />
                           </div>
                         </div>
-                        <div className="rounded-lg bg-[#8B5CF6]/10 px-2.5 py-2 flex items-center justify-between">
+                        <div className="rounded-lg bg-zinc-800/60 px-2.5 py-2 flex items-center justify-between">
                           <span className="text-[9px] text-zinc-400">Compliance</span>
-                          <span className="text-[10px] font-bold text-[#8B5CF6]">94%</span>
+                          <span className="text-[10px] font-bold text-emerald-400">94%</span>
                         </div>
                       </>)}
                     </div>
@@ -774,7 +651,7 @@ export default function Home() {
           <motion.h2
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             variants={fadeUp}
             className="text-4xl sm:text-5xl font-bold text-center mb-16"
           >
@@ -783,29 +660,18 @@ export default function Home() {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={{ once: false, margin: "-50px" }}
             variants={staggerDramatic}
-            className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
+            className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
           >
             <motion.div variants={scaleUp} className="rounded-3xl bg-zinc-900/40 p-8">
               <h3 className="text-xl font-bold mb-3">AI-Powered Insights</h3>
               <p className="text-sm text-zinc-400 leading-relaxed mb-6">
-                Smart insights that predict risks and asset failures before they happen. Machine learning that improves with your data.
+                Smart insights that predict risks and asset failures before they happen.
               </p>
-              <Link href="/login" className="inline-flex items-center gap-2 rounded-full bg-[#8B5CF6] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#7c4fe0] transition-colors">
+              <Link href="/login" className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors">
                 Explore
               </Link>
-            </motion.div>
-            <motion.div variants={scaleUp} className="rounded-3xl bg-zinc-900/40 p-8 text-center">
-              <AnimatedCounter value={50} suffix="+" className="text-5xl font-bold text-white mb-3" />
-              <p className="text-sm text-zinc-400 mb-6">Industries Served</p>
-              <div className="grid grid-cols-4 gap-2">
-                {[Building2, Zap, Factory, Ship, Pickaxe, Cross, Fuel, Truck].map((Icon, i) => (
-                  <div key={i} className="h-10 w-10 mx-auto rounded-lg bg-zinc-800/40 flex items-center justify-center">
-                    <Icon className="h-5 w-5 text-[#8B5CF6]/70" />
-                  </div>
-                ))}
-              </div>
             </motion.div>
             <motion.div variants={scaleUp} className="rounded-3xl bg-zinc-900/40 p-8">
               <h3 className="text-xl font-bold mb-6">Key Statistics</h3>
@@ -822,10 +688,10 @@ export default function Home() {
                     </div>
                     <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
                       <motion.div
-                        className="h-2 rounded-full bg-[#8B5CF6]"
+                        className="h-2 rounded-full bg-white"
                         initial={{ width: 0 }}
                         whileInView={{ width: `${stat.pct}%` }}
-                        viewport={{ once: true }}
+                        viewport={{ once: false }}
                         transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" as const }}
                       />
                     </div>
@@ -843,7 +709,7 @@ export default function Home() {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={{ once: false, margin: "-50px" }}
             variants={stagger}
             className="max-w-5xl mx-auto"
           >
@@ -962,7 +828,7 @@ export default function Home() {
                     <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                       {current.features.map((feature) => (
                         <div key={feature} className="flex items-center gap-2 text-sm text-zinc-300">
-                          <div className="h-1 w-1 rounded-full bg-[#8B5CF6] shrink-0" />
+                          <div className="h-1 w-1 rounded-full bg-zinc-500 shrink-0" />
                           {feature}
                         </div>
                       ))}
@@ -975,64 +841,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ── Platform Benefits ── */}
-      <section ref={benefitsRef} className="py-24 lg:py-32 relative z-10">
-        <motion.div style={prefersReducedMotion ? undefined : { y: benefitsY }} className="container mx-auto px-4 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={fadeUp}
-            className="max-w-5xl mx-auto rounded-3xl bg-zinc-900/40 p-8 lg:p-12"
-          >
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-6 text-white">
-                  Built for teams that take safety & asset management seriously
-                </h2>
-                <p className="text-zinc-400 leading-relaxed mb-8">
-                  Whether you have 10 employees or 10,000, Harmoniq scales with your organization, managing safety incidents, asset lifecycles, and compliance in one place.
-                </p>
-                <div className="space-y-3">
-                  {[
-                    "Country-specific compliance (OSHA, Arbowet, AFS)",
-                    "Mobile-first employee app with offline support",
-                    "QR code asset tracking and instant inspections",
-                    "Automated alerts for certifications & maintenance",
-                  ].map(item => (
-                    <div key={item} className="flex items-center gap-3">
-                      <div className="h-5 w-5 rounded-full bg-[#8B5CF6]/20 flex items-center justify-center shrink-0">
-                        <div className="h-2 w-2 rounded-full bg-[#8B5CF6]" />
-                      </div>
-                      <span className="text-sm text-zinc-300">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-2xl bg-zinc-950/60 p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="h-3 w-3 rounded-full bg-red-500/60" />
-                  <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
-                  <div className="h-3 w-3 rounded-full bg-green-500/60" />
-                </div>
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  {[
-                    { label: "Incidents", val: "12" },
-                    { label: "Inspections", val: "48" },
-                    { label: "Compliance", val: "94%" },
-                  ].map(s => (
-                    <div key={s.label} className="rounded-lg bg-zinc-900/60 p-3 text-center">
-                      <p className="text-lg font-bold text-[#8B5CF6]">{s.val}</p>
-                      <p className="text-xs text-zinc-500">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="h-32 rounded-lg bg-zinc-800/40" />
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      </section>
 
       {/* ── FAQ ── */}
       <section id="faq" ref={faqRef} className="py-24 lg:py-32 relative z-10">
@@ -1040,7 +848,7 @@ export default function Home() {
           <motion.h2
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             variants={fadeUp}
             className="text-3xl sm:text-4xl font-bold text-center mb-12"
           >
@@ -1049,7 +857,7 @@ export default function Home() {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={{ once: false, margin: "-50px" }}
             variants={stagger}
             className="space-y-4"
           >
@@ -1333,7 +1141,7 @@ function WaitlistSection() {
       id="waitlist"
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true }}
+      viewport={{ once: false }}
       variants={fadeUp}
       className="py-24 lg:py-32 relative z-10"
     >
@@ -1355,7 +1163,7 @@ function WaitlistSection() {
           </motion.div>
         ) : (
           <div className="rounded-3xl bg-zinc-900/40 p-10">
-            <Mail className="h-10 w-10 text-[#8B5CF6] mx-auto mb-4" />
+            <Mail className="h-10 w-10 text-zinc-400 mx-auto mb-4" />
             <h2 className="text-4xl sm:text-5xl font-bold leading-tight mb-3">
               Join the Waitlist
             </h2>
@@ -1369,7 +1177,7 @@ function WaitlistSection() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@company.com"
-                className="flex-1 rounded-full bg-zinc-800/60 px-5 py-3 text-base text-white placeholder-zinc-500 border border-zinc-700/50 focus:border-[#8B5CF6] focus:outline-none transition-colors"
+                className="flex-1 rounded-full bg-zinc-800/60 px-5 py-3 text-base text-white placeholder-zinc-500 border border-zinc-700/50 focus:border-white focus:outline-none transition-colors"
               />
               <button
                 type="submit"
@@ -1426,7 +1234,7 @@ function ScrollingPills({
             key={pill}
             className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-zinc-900/60 px-5 py-2.5 text-sm text-zinc-400"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-[#8B5CF6]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />
             {pill}
           </span>
         ))}
@@ -1445,7 +1253,7 @@ function AnimatedCounter({
   className?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const isInView = useInView(ref, { once: false, margin: "-50px" });
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
