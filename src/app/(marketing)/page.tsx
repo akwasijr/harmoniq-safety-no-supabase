@@ -265,10 +265,10 @@ export default function Home() {
             className="max-w-4xl mx-auto text-center"
           >
             <motion.h1 variants={fadeUp} className="text-5xl sm:text-7xl lg:text-[5.5rem] font-medium tracking-tight leading-[1.05] text-white">
-              Harmoniq
+              Safety operations{"\n"}for modern teams
             </motion.h1>
             <motion.p variants={fadeUp} className="mt-6 text-lg lg:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              The operations platform for safety, compliance, and asset management.
+              Report incidents, track assets, run inspections, and stay compliant — all from one platform your entire team can use.
             </motion.p>
             <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
@@ -593,10 +593,9 @@ export default function Home() {
                 >
                   {/* Visual side */}
                   <div className={isReversed ? "lg:[direction:ltr]" : ""}>
-                    <div className="relative rounded-2xl overflow-hidden bg-zinc-900/60 border border-zinc-800/50 aspect-[4/3]">
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-pink-500/10" />
+                    <div className="relative rounded-2xl overflow-hidden bg-zinc-900/40 border border-zinc-800/50 aspect-[4/3]">
                       <div className="relative z-10 flex items-center justify-center h-full p-8">
-                        <div className="rounded-xl bg-zinc-900/90 border border-zinc-700/50 p-6 w-full max-w-sm shadow-2xl">
+                        <div className="rounded-xl bg-zinc-900/80 border border-zinc-800/60 p-6 w-full max-w-sm">
                           <div className="flex items-center gap-3 mb-4">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20">
                               <feature.icon className="h-4 w-4 text-emerald-400" />
@@ -1028,7 +1027,7 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <div className="h-32 rounded-lg bg-gradient-to-br from-[#8B5CF6]/10 to-[#8B5CF6]/2" />
+                <div className="h-32 rounded-lg bg-zinc-800/40" />
               </div>
             </div>
           </motion.div>
