@@ -518,7 +518,7 @@ function LoginForm() {
               errorMessage={emailError}
               required
               disabled={isLoading}
-              className="h-11 rounded-lg bg-zinc-800/50 border-transparent text-white placeholder-zinc-500 focus:bg-zinc-800/70 focus:border-transparent"
+              className="h-11 rounded-lg !bg-zinc-800/50 !border-transparent text-white placeholder-zinc-500 focus:!bg-zinc-800/70 focus-visible:!ring-0 focus-visible:!ring-transparent !shadow-none"
             />
           </div>
 
@@ -549,7 +549,7 @@ function LoginForm() {
                     disabled={isLoading}
                     error={Boolean(passwordError)}
                     errorMessage={passwordError}
-                    className="h-11 rounded-lg bg-zinc-800/50 border-transparent text-white placeholder-zinc-500 focus:bg-zinc-800/70 focus:border-transparent pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
+                    className="h-11 rounded-lg !bg-zinc-800/50 !border-transparent text-white placeholder-zinc-500 focus:!bg-zinc-800/70 focus-visible:!ring-0 focus-visible:!ring-transparent !shadow-none pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
                   />
                   <button
                     type="button"
@@ -600,7 +600,7 @@ function LoginForm() {
               <Button
                 type="submit"
                 disabled={isLoading || isLockedOut}
-                className="w-full h-11 rounded-lg text-sm font-semibold bg-white text-black hover:bg-zinc-200"
+                className="w-full h-11 rounded-lg text-sm font-semibold bg-white text-black hover:bg-zinc-200 focus-visible:!ring-0 focus-visible:!ring-transparent !shadow-none"
                 loading={isLoading}
               >
                 {t("auth.signIn")}
@@ -611,7 +611,7 @@ function LoginForm() {
               type="button"
               onClick={handleMagicLink}
               disabled={isLoading || !email}
-              className="w-full h-11 rounded-lg text-sm font-semibold bg-white text-black hover:bg-zinc-200"
+              className="w-full h-11 rounded-lg text-sm font-semibold bg-white text-black hover:bg-zinc-200 focus-visible:!ring-0 focus-visible:!ring-transparent !shadow-none"
             >
               {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               {t("auth.sendMagicLink")}
@@ -624,7 +624,7 @@ function LoginForm() {
               <span className="w-full border-t border-zinc-800/40" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-zinc-900/80 px-2 text-zinc-500">OR</span>
+              <span className="bg-zinc-900/70 px-2 text-zinc-500">OR</span>
             </div>
           </div>
 
