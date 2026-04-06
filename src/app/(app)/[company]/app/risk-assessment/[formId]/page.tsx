@@ -281,7 +281,16 @@ export default function RiskAssessmentFormPage() {
     setAnswers({ ...answers, [questionId]: value });
   };
 
+  const canProceed = (): boolean => {
+    const questions = currentSectionData.questions;
+    return questions.every(q => !!answers[q.id]?.trim());
+  };
+
   const handleNext = () => {
+    if (!canProceed()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     if (isLastSection) {
       handleSubmit();
     } else {
@@ -420,7 +429,7 @@ export default function RiskAssessmentFormPage() {
       <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4 pb-6 z-20 safe-area-inset-bottom">
         <Button
           onClick={handleNext}
-          disabled={isSubmitting}
+          disabled={!canProceed() || isSubmitting}
           className="h-14 w-full gap-2 text-base"
         >
           {isSubmitting ? (

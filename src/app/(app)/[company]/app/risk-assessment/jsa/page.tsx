@@ -165,7 +165,21 @@ export default function JSAFormPage() {
     (item) => item.status === "fail"
   ).length;
 
+  const canProceed = (): boolean => {
+    switch (currentSection) {
+      case 0: return !!formData.date.trim() && !!formData.jobDescription.trim() && !!formData.location.trim();
+      case 1: return true;
+      case 2: return true;
+      case 3: return formData.acknowledgment;
+      default: return false;
+    }
+  };
+
   const handleNext = () => {
+    if (!canProceed()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     if (isLastSection) {
       handleSubmit();
     } else {
@@ -601,7 +615,7 @@ export default function JSAFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={isSubmitting || (isLastSection && !formData.acknowledgment)}
+            disabled={!canProceed() || isSubmitting}
             className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (

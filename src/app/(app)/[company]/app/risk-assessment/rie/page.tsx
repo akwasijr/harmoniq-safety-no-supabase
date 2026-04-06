@@ -238,7 +238,22 @@ export default function RIEFormPage() {
   const mediumRisks = formData.risks.filter((r) => r.priority === "medium").length;
   const lowRisks = formData.risks.filter((r) => r.priority === "low").length;
 
+  const canProceed = (): boolean => {
+    switch (currentSection) {
+      case 0: return !!formData.companyName.trim() && !!formData.assessmentDate.trim() && !!formData.assessor.trim();
+      case 1: return true;
+      case 2: return true;
+      case 3: return true;
+      case 4: return true;
+      default: return false;
+    }
+  };
+
   const handleNext = () => {
+    if (!canProceed()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     if (isLastSection) {
       handleSubmit();
     } else {
@@ -935,7 +950,7 @@ export default function RIEFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={isSubmitting}
+            disabled={!canProceed() || isSubmitting}
             className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (

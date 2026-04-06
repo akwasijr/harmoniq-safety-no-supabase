@@ -188,7 +188,21 @@ export default function ArbowetFormPage() {
     ? Math.round(((compliantCount + partialCount * 0.5) / applicableItems) * 100)
     : 0;
 
+  const canProceed = (): boolean => {
+    switch (currentSection) {
+      case 0: return !!formData.companyName.trim() && !!formData.auditor.trim() && !!formData.auditDate.trim();
+      case 1: return true;
+      case 2: return true;
+      case 3: return true;
+      default: return false;
+    }
+  };
+
   const handleNext = () => {
+    if (!canProceed()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     if (isLastSection) {
       handleSubmit();
     } else {
@@ -692,7 +706,7 @@ export default function ArbowetFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={isSubmitting}
+            disabled={!canProceed() || isSubmitting}
             className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (

@@ -208,7 +208,18 @@ export default function OSAFormPage() {
   const concernCount = Object.values(formData.responses).filter((r) => r.concern).length;
   const lowRatingCount = Object.values(formData.responses).filter((r) => r.rating > 0 && r.rating <= 2).length;
 
+  const canProceed = (): boolean => {
+    switch (currentSection) {
+      case 0: return !!formData.organizationName.trim() && !!formData.assessmentDate.trim() && !!formData.respondent.trim();
+      default: return true;
+    }
+  };
+
   const handleNext = () => {
+    if (!canProceed()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     if (isLastSection) {
       handleSubmit();
     } else {
@@ -731,7 +742,7 @@ export default function OSAFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={isSubmitting}
+            disabled={!canProceed() || isSubmitting}
             className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (

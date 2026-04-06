@@ -211,7 +211,22 @@ export default function JHAFormPage() {
     setFormData({ ...formData, ppeRequired: newPPE });
   };
 
+  const canProceed = (): boolean => {
+    switch (currentSection) {
+      case 0: return !!formData.jobTitle.trim() && !!formData.location.trim() && !!formData.department.trim() && !!formData.date.trim();
+      case 1: return formData.jobSteps.length > 0 && formData.jobSteps.every(s => s.description.trim().length > 0);
+      case 2: return true;
+      case 3: return true;
+      case 4: return true;
+      default: return false;
+    }
+  };
+
   const handleNext = () => {
+    if (!canProceed()) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
     if (isLastSection) {
       handleSubmit();
     } else {
@@ -811,7 +826,7 @@ export default function JHAFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={isSubmitting}
+            disabled={!canProceed() || isSubmitting}
             className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (
