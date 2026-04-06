@@ -26,16 +26,26 @@ export function useGps(): UseGpsReturn {
     }
     setLoading(true);
     setError(null);
+
+    const onSuccess = (pos: GeolocationPosition) => {
+      setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      setLoading(false);
+    };
+
+    // Try high accuracy first, fall back to low accuracy on failure
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLoading(false);
+      onSuccess,
+      () => {
+        navigator.geolocation.getCurrentPosition(
+          onSuccess,
+          (err) => {
+            setError(err.message);
+            setLoading(false);
+          },
+          { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 }
+        );
       },
-      (err) => {
-        setError(err.message);
-        setLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 }
     );
   }, []);
 

@@ -2,10 +2,25 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Shield, Bell } from "lucide-react";
 import { BottomTabs } from "@/components/navigation/bottom-tabs";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { getFieldAppShellStyle } from "@/lib/field-app-settings";
+
+const FULL_PAGE_ROUTES = [
+  "/app/report",
+  "/app/maintenance",
+  "/app/scan",
+  "/app/assets/new",
+  "/app/checklists/", // matches /app/checklists/[checklistId]
+  "/app/inspection/", // matches /app/inspection/[assetId]
+  "/app/inspection-round",
+];
+
+// Risk assessment form routes — all sub-paths except the index and view pages
+const RISK_ASSESSMENT_FORM_PREFIX = "/app/risk-assessment/";
+const RISK_ASSESSMENT_EXCLUDED = ["/app/risk-assessment/view"];
 
 interface EmployeeAppLayoutProps {
   children: React.ReactNode;
@@ -27,6 +42,21 @@ export function EmployeeAppLayout({
   notificationCount = 0,
 }: EmployeeAppLayoutProps) {
   const { settings } = useFieldAppSettings();
+  const pathname = usePathname();
+  const isFullPage = (() => {
+    const p = pathname;
+    const base = `/${company}`;
+    // Check explicit full-page routes
+    if (FULL_PAGE_ROUTES.some((route) => p === `${base}${route}` || p.startsWith(`${base}${route}/`))) {
+      return true;
+    }
+    // Check risk-assessment form routes (exclude index and view pages)
+    const raPrefix = `${base}${RISK_ASSESSMENT_FORM_PREFIX}`;
+    if (p.startsWith(raPrefix) && !RISK_ASSESSMENT_EXCLUDED.some((ex) => p.startsWith(`${base}${ex}`))) {
+      return true;
+    }
+    return false;
+  })();
 
   return (
     <div
@@ -35,7 +65,7 @@ export function EmployeeAppLayout({
       style={getFieldAppShellStyle(settings)}
     >
       {/* Header */}
-      {showHeader && (
+      {showHeader && !isFullPage && (
         <header className="field-app-surface sticky top-0 z-30 flex h-14 items-center justify-between bg-brand-solid px-4">
           <Link href={`/${company}/app`} className="flex items-center gap-2">
             {companyLogo ? (
@@ -61,10 +91,10 @@ export function EmployeeAppLayout({
       )}
 
       {/* Main content */}
-      <main className="flex-1 pb-20">{children}</main>
+      <main className={`flex-1 ${isFullPage ? "pb-0" : "pb-20"}`}>{children}</main>
 
-      {/* Bottom navigation */}
-      <BottomTabs company={company} />
+      {/* Bottom navigation — hidden on full-page flows like report incident */}
+      {!isFullPage && <BottomTabs company={company} />}
     </div>
   );
 }

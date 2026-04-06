@@ -345,7 +345,7 @@ export default function EmployeeAppHomePage() {
             <p className="text-2xl font-bold text-brand-solid-foreground">{safeDays}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.safeDays")}</p>
           </div>
-          <Link href={`/${company}/app/tasks`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm p-3 text-center">
+          <Link href={`/${company}/app/checklists`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm p-3 text-center">
             <p className="text-2xl font-bold text-brand-solid-foreground">{pendingTaskCount}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
           </Link>

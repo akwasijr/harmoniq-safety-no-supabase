@@ -324,7 +324,7 @@ export default function RiskAssessmentFormPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-14 z-30 border-b bg-background">
+      <header className="sticky top-0 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button
             variant="ghost"
@@ -417,7 +417,7 @@ export default function RiskAssessmentFormPage() {
       </div>
 
       {/* Footer */}
-      <div className="fixed bottom-16 left-0 right-0 border-t bg-background p-4 z-20">
+      <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4 pb-6 z-20 safe-area-inset-bottom">
         <Button
           onClick={handleNext}
           disabled={isSubmitting}

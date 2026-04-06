@@ -196,23 +196,33 @@ function ReportIncidentPageContent() {
     }
     
     setIsGettingLocation(true);
+
+    const onSuccess = (position: GeolocationPosition) => {
+      const { latitude, longitude } = position.coords;
+      const locationText = `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+      setFormData((prev) => ({ 
+        ...prev, 
+        location: locationText,
+        gpsLat: latitude,
+        gpsLng: longitude,
+      }));
+      setIsGettingLocation(false);
+    };
+
+    // Try high accuracy first, fall back to low accuracy on failure
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        const locationText = `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-        setFormData({ 
-          ...formData, 
-          location: locationText,
-          gpsLat: latitude,
-          gpsLng: longitude,
-        });
-        setIsGettingLocation(false);
-      },
+      onSuccess,
       () => {
-        setIsGettingLocation(false);
-        toast("Unable to get your location. Please enter it manually.");
+        navigator.geolocation.getCurrentPosition(
+          onSuccess,
+          () => {
+            setIsGettingLocation(false);
+            toast("Unable to get your location. Please enter it manually.");
+          },
+          { enableHighAccuracy: false, timeout: TIMEOUTS.GPS_LOCATION, maximumAge: 300_000 }
+        );
       },
-      { enableHighAccuracy: true, timeout: TIMEOUTS.GPS_LOCATION }
+      { enableHighAccuracy: true, timeout: TIMEOUTS.GPS_LOCATION, maximumAge: 60_000 }
     );
   };
 
@@ -348,12 +358,10 @@ function ReportIncidentPageContent() {
     }
   };
 
-  const StepIcon = STEP_ICONS[currentStep] ?? AlertTriangle;
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-14 z-30 border-b bg-background">
+      <header className="sticky top-0 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button
             variant="ghost"
@@ -379,11 +387,8 @@ function ReportIncidentPageContent() {
 
       {/* Step content */}
       <div className="flex-1 p-4">
-        {/* Step header with icon */}
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <StepIcon className="h-6 w-6 text-primary" aria-hidden="true" />
-          </div>
+        {/* Step header */}
+        <div className="mb-6">
           <h2 className="text-xl font-semibold">{getStepTitle()}</h2>
         </div>
 
@@ -692,7 +697,7 @@ function ReportIncidentPageContent() {
       </div>
 
       {/* Footer navigation */}
-      <div className="fixed bottom-16 left-0 right-0 border-t bg-background p-4 z-20">
+      <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4 pb-6 z-20 safe-area-inset-bottom">
         {currentStep < TOTAL_STEPS ? (
           <Button
             onClick={handleNext}

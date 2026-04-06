@@ -216,7 +216,7 @@ export default function JSAFormPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-14 z-30 border-b bg-background">
+      <header className="sticky top-0 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
@@ -239,7 +239,7 @@ export default function JSAFormPage() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 p-4 pb-32">
+      <div className="flex-1 p-5 pb-40">
         {/* Section 1: Job Details */}
         {currentSection === 0 && (
           <div className="space-y-6">
@@ -588,7 +588,7 @@ export default function JSAFormPage() {
       </div>
 
       {/* Footer */}
-      <div className="fixed bottom-16 left-0 right-0 border-t bg-background p-4 z-20">
+      <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4 pb-6 z-20 safe-area-inset-bottom">
         <div className="flex gap-3">
           {currentSection > 0 && (
             <Button

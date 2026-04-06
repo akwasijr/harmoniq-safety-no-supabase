@@ -571,21 +571,22 @@ function EmployeeChecklistsPageContent() {
         {/* REPORTS TAB */}
         {activeTab === "reports" && (
           <>
-            {/* New Report Button, same style as New Assessment cards */}
-            <div className="grid grid-cols-2 gap-2">
-              <Link
-                href={`/${company}/app/report`}
-                className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                  <FileCheck className="h-5 w-5 text-primary" aria-hidden="true" />
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold text-sm text-primary">{t("app.reportIncident")}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{t("app.reportIncidentDesc") || "New incident report"}</p>
-                </div>
-              </Link>
-            </div>
+            {/* New Report */}
+            <Link
+              href={`/${company}/app/report`}
+              className="flex items-center gap-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-3 transition-colors active:border-primary active:bg-primary/10"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <FileCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm text-primary">{t("app.reportIncident")}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{t("app.reportIncidentDesc") || "New incident report"}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-primary/50 shrink-0" aria-hidden="true" />
+            </Link>
+
+            <div className="border-t" />
 
             {/* My Submitted Reports */}
             <Section
@@ -642,8 +643,8 @@ function EmployeeChecklistsPageContent() {
                     );
                   })
               ) : (
-                <div className="py-6 text-center">
-                  <AlertTriangle className="h-8 w-8 text-muted-foreground/20 mx-auto" aria-hidden="true" />
+                <div className="py-8 text-center">
+                  <AlertTriangle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
                   <p className="text-sm font-medium text-muted-foreground mt-2">{t("app.noReports") || "No reports yet"}</p>
                   <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noReportsDesc") || "Reports you submit will appear here"}</p>
                 </div>
@@ -663,12 +664,12 @@ function EmployeeChecklistsPageContent() {
                     <Link
                       key={form.id}
                       href={`/${company}/app/risk-assessment/${form.id}`}
-                      className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all active:border-primary active:bg-primary/10"
+                      className="flex items-center gap-2 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-3 transition-colors active:border-primary active:bg-primary/10"
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
                       </div>
-                      <div className="text-center">
+                      <div className="min-w-0">
                         <p className="font-semibold text-sm text-primary">{form.name}</p>
                         <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{form.fullName}</p>
                       </div>
@@ -760,7 +761,11 @@ function EmployeeChecklistsPageContent() {
               defaultOpen={false}
             >
               {reviewedAssessments.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-3">{t("checklists.noCompletedAssessments")}</p>
+                <div className="py-8 text-center">
+                  <CheckCircle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
+                  <p className="text-sm font-medium text-muted-foreground mt-2">{t("checklists.noCompletedAssessments")}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">Reviewed assessments will appear here</p>
+                </div>
               ) : (
                 reviewedAssessments.map((item) => {
                   const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };

@@ -295,7 +295,7 @@ function InspectionRoundContent() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-14 z-30 border-b bg-background">
+      <header className="sticky top-0 z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-4 px-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
@@ -320,7 +320,7 @@ function InspectionRoundContent() {
       </header>
 
       {/* Checkpoint content */}
-      <div className="flex-1 p-4 pb-32 max-w-lg mx-auto w-full">
+      <div className="flex-1 p-4 pb-40 max-w-lg mx-auto w-full">
         {/* Asset info */}
         <Card className="mb-4">
           <CardContent className="pt-4 pb-4">
@@ -505,7 +505,7 @@ function InspectionRoundContent() {
       </div>
 
       {/* Footer navigation */}
-      <div className="fixed bottom-16 left-0 right-0 border-t bg-background p-4 z-20">
+      <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4 pb-6 z-20 safe-area-inset-bottom">
         <div className="flex flex-col gap-2 max-w-lg mx-auto">
           <div className="flex gap-2">
             <Button

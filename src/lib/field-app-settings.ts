@@ -74,11 +74,11 @@ export const FIELD_APP_SHADOW_OPTIONS: Array<{ value: FieldAppShadow; label: str
 
 export const FIELD_APP_QUICK_ACTION_DEFINITIONS: FieldAppQuickActionDefinition[] = [
   { id: "report_incident", href: "/app/report", labelKey: "app.reportIncident", fallbackLabel: "Report Incident" },
-  { id: "my_tasks", href: "/app/tasks", labelKey: "app.myTasks", fallbackLabel: "My Tasks" },
+  { id: "my_tasks", href: "/app/checklists", labelKey: "app.myTasks", fallbackLabel: "My Tasks" },
   { id: "browse_assets", href: "/app/assets", labelKey: "app.browseAssets", fallbackLabel: "Browse Assets" },
   { id: "request_fix", href: "/app/maintenance", labelKey: "app.requestFix", fallbackLabel: "Request Fix" },
   { id: "scan_asset", href: "/app/scan", labelKey: "app.scanAsset", fallbackLabel: "Scan Asset" },
-  { id: "risk_check", href: "/app/risk-assessment", labelKey: "app.riskAssessment", fallbackLabel: "Risk Check" },
+  { id: "risk_check", href: "/app/checklists?tab=risk-assessment", labelKey: "app.riskAssessment", fallbackLabel: "Risk Check" },
   { id: "checklists", href: "/app/checklists", labelKey: "nav.safety", fallbackLabel: "Checklists" },
   { id: "news", href: "/app/news", labelKey: "nav.news", fallbackLabel: "News" },
 ];
