@@ -574,9 +574,9 @@ function LoginForm() {
                       aria-checked={appChoice === "dashboard"}
                       onClick={() => setAppChoice("dashboard")}
                       disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-transparent bg-zinc-800 text-white" : "border-transparent bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50"}`}
+                      className={`flex items-center justify-center gap-2 rounded-lg py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "bg-zinc-700 text-white" : "bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50"}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "dashboard" ? "border-zinc-500 bg-zinc-500" : "border-zinc-600"}`} />
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full flex-shrink-0 ${appChoice === "dashboard" ? "bg-zinc-400" : "bg-zinc-700"}`} />
                       <LayoutDashboard className="h-4 w-4" />
                       {t("auth.dashboard")}
                     </button>
@@ -586,9 +586,9 @@ function LoginForm() {
                       aria-checked={appChoice === "app"}
                       onClick={() => setAppChoice("app")}
                       disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-transparent bg-zinc-800 text-white" : "border-transparent bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50"}`}
+                      className={`flex items-center justify-center gap-2 rounded-lg py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "bg-zinc-700 text-white" : "bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50"}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "app" ? "border-zinc-500 bg-zinc-500" : "border-zinc-600"}`} />
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full flex-shrink-0 ${appChoice === "app" ? "bg-zinc-400" : "bg-zinc-700"}`} />
                       <HardHat className="h-4 w-4" />
                       {t("auth.mobileApp")}
                     </button>
@@ -633,7 +633,7 @@ function LoginForm() {
             type="button"
             onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 rounded-lg border border-transparent bg-zinc-800/40 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-zinc-800/40 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 transition-colors disabled:opacity-50"
           >
             <Mail className="h-4 w-4" />
             {loginMode === "password" ? t("auth.magicLink") : t("auth.passwordMode")}
