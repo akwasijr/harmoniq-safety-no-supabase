@@ -429,54 +429,30 @@ function LoginForm() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4" style={{ background: 'white' }}>
-      {/* Animated gradient background — top-right corner */}
-      <div aria-hidden="true" style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
-        <div style={{
-          position: 'absolute', top: '-15%', right: '-8%', width: '45%', height: '80%',
-          background: 'linear-gradient(160deg, hsla(200,90%,78%,0.5), hsla(240,75%,68%,0.45), hsla(265,70%,55%,0.5), hsla(280,65%,48%,0.45), hsla(210,85%,75%,0.4))',
-          backgroundSize: '300% 300%',
-          filter: 'blur(40px)',
-          borderRadius: '40% 60% 50% 50%',
-          animation: 'auth-flow 8s ease-in-out infinite, auth-morph 12s ease-in-out infinite',
-        }} />
-        <div style={{
-          position: 'absolute', top: '5%', right: '-2%', width: '30%', height: '60%',
-          background: 'linear-gradient(170deg, hsla(195,90%,80%,0.45), hsla(230,80%,72%,0.4), hsla(260,65%,58%,0.45), hsla(195,85%,78%,0.35))',
-          backgroundSize: '300% 300%',
-          filter: 'blur(35px)',
-          borderRadius: '50% 40% 55% 45%',
-          animation: 'auth-flow 6s ease-in-out infinite reverse, auth-morph 10s ease-in-out infinite reverse',
-          animationDelay: '-3s',
-        }} />
-        <div style={{
-          position: 'absolute', top: '-8%', right: '3%', width: '22%', height: '50%',
-          background: 'linear-gradient(150deg, hsla(210,95%,82%,0.4), hsla(255,70%,65%,0.35), hsla(275,60%,50%,0.3), hsla(210,90%,78%,0.35))',
-          backgroundSize: '300% 300%',
-          filter: 'blur(30px)',
-          borderRadius: '45% 55% 40% 60%',
-          animation: 'auth-flow 10s ease-in-out infinite, auth-morph 14s ease-in-out infinite',
-          animationDelay: '-6s',
-        }} />
+    <div className="relative flex min-h-screen items-center justify-center px-4 bg-black">
+      {/* Subtle ambient glow */}
+      <div aria-hidden="true" className="fixed inset-0 overflow-hidden z-0 pointer-events-none">
+        <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[70%] rounded-full bg-zinc-800/30 blur-[100px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[50%] rounded-full bg-zinc-800/20 blur-[80px]" />
       </div>
       <div className="relative z-10 w-full max-w-[420px]">
         <div className="mb-6 flex flex-col items-center gap-2">
           <Image src="/favicon.svg" alt="Harmoniq Logo" width={40} height={40} className="h-10 w-10" />
-          <span className="text-lg font-semibold">Harmoniq</span>
+          <span className="text-lg font-semibold text-white">Harmoniq</span>
         </div>
 
-        <div className="rounded-xl border bg-background p-8 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 backdrop-blur-sm p-8">
           {/* Header */}
-          <h1 className="text-2xl font-bold tracking-tight mb-1">
+          <h1 className="text-2xl font-bold tracking-tight mb-1 text-white">
             {t("auth.welcomeBack") || "Sign in to your account"}
           </h1>
-          <p className="text-sm text-muted-foreground mb-6">
+          <p className="text-sm text-zinc-400 mb-6">
             {t("auth.signInToAccount") || "Enter your credentials to continue"}
           </p>
 
           {/* Alerts */}
           {isLockedOut && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300 flex items-center gap-2 mb-4">
+            <div className="rounded-lg border border-red-800/50 bg-red-950/50 px-4 py-3 text-sm text-red-300 flex items-center gap-2 mb-4">
               <Lock className="h-4 w-4 flex-shrink-0" />
               <div>
                 <p className="font-medium">{t("auth.accountLocked") || "Account temporarily locked"}</p>
@@ -486,26 +462,26 @@ function LoginForm() {
           )}
 
           {!isLockedOut && failedAttempts >= 3 && attemptsRemaining > 0 && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300 mb-4">
+            <div className="rounded-lg border border-amber-800/50 bg-amber-950/50 px-4 py-3 text-sm text-amber-300 mb-4">
               {attemptsRemaining} {t("auth.attemptsRemaining") || "attempts remaining"}
             </div>
           )}
 
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300 mb-4">
+            <div className="rounded-lg border border-red-800/50 bg-red-950/50 px-4 py-3 text-sm text-red-300 mb-4">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300 mb-4">
+            <div className="rounded-lg border border-green-800/50 bg-green-950/50 px-4 py-3 text-sm text-green-300 mb-4">
               {success}
             </div>
           )}
 
           {/* Email */}
           <div className="mb-4">
-            <Label htmlFor="email" required error={Boolean(emailError)} className="text-sm font-medium mb-1.5">
+            <Label htmlFor="email" required error={Boolean(emailError)} className="text-sm font-medium mb-1.5 text-zinc-300">
               {t("auth.email")}
             </Label>
             <Input
@@ -518,7 +494,7 @@ function LoginForm() {
               errorMessage={emailError}
               required
               disabled={isLoading}
-              className="h-11 rounded-lg bg-muted/40"
+              className="h-11 rounded-lg bg-zinc-800/60 border-zinc-700 text-white placeholder-zinc-500 focus:border-white"
             />
           </div>
 
@@ -527,13 +503,13 @@ function LoginForm() {
               {/* Password */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <Label htmlFor="password" required error={Boolean(passwordError)} className="text-sm font-medium">
+                  <Label htmlFor="password" required error={Boolean(passwordError)} className="text-sm font-medium text-zinc-300">
                     {t("auth.password")}
                   </Label>
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                    className="text-xs font-medium text-zinc-400 hover:text-white transition-colors"
                   >
                     {t("auth.forgotPassword")}
                   </button>
@@ -549,12 +525,12 @@ function LoginForm() {
                     disabled={isLoading}
                     error={Boolean(passwordError)}
                     errorMessage={passwordError}
-                    className="h-11 rounded-lg bg-muted/40 pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
+                    className="h-11 rounded-lg bg-zinc-800/60 border-zinc-700 text-white placeholder-zinc-500 focus:border-white pr-10 [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-0 h-11 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-0 h-11 flex items-center text-zinc-500 hover:text-white transition-colors"
                     tabIndex={-1}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
@@ -566,7 +542,7 @@ function LoginForm() {
               {/* App chooser — hidden on mobile (auto-selects Field Worker) */}
               {hasMounted && !isMobile && (
                 <div role="radiogroup" aria-label={t("auth.chooseApp") || "Choose app"}>
-                  <Label className="text-sm font-medium mb-1.5">{t("auth.chooseApp") || "Choose app"}</Label>
+                  <Label className="text-sm font-medium mb-1.5 text-zinc-300">{t("auth.chooseApp") || "Choose app"}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -574,9 +550,9 @@ function LoginForm() {
                       aria-checked={appChoice === "dashboard"}
                       onClick={() => setAppChoice("dashboard")}
                       disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "border-white bg-white/10 text-white" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "dashboard" ? "border-primary bg-primary" : "border-muted-foreground/40"}`} />
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "dashboard" ? "border-white bg-white" : "border-zinc-600"}`} />
                       <LayoutDashboard className="h-4 w-4" />
                       {t("auth.dashboard")}
                     </button>
@@ -586,9 +562,9 @@ function LoginForm() {
                       aria-checked={appChoice === "app"}
                       onClick={() => setAppChoice("app")}
                       disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
+                      className={`flex items-center justify-center gap-2 rounded-lg border py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "border-white bg-white/10 text-white" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "app" ? "border-primary bg-primary" : "border-muted-foreground/40"}`} />
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full border-2 flex-shrink-0 ${appChoice === "app" ? "border-white bg-white" : "border-zinc-600"}`} />
                       <HardHat className="h-4 w-4" />
                       {t("auth.mobileApp")}
                     </button>
@@ -600,7 +576,7 @@ function LoginForm() {
               <Button
                 type="submit"
                 disabled={isLoading || isLockedOut}
-                className="w-full h-11 rounded-lg text-sm font-semibold"
+                className="w-full h-11 rounded-lg text-sm font-semibold bg-white text-black hover:bg-zinc-200"
                 loading={isLoading}
               >
                 {t("auth.signIn")}
@@ -611,7 +587,7 @@ function LoginForm() {
               type="button"
               onClick={handleMagicLink}
               disabled={isLoading || !email}
-              className="w-full h-11 rounded-lg text-sm font-semibold"
+              className="w-full h-11 rounded-lg text-sm font-semibold bg-white text-black hover:bg-zinc-200"
             >
               {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               {t("auth.sendMagicLink")}
@@ -621,10 +597,10 @@ function LoginForm() {
           {/* Divider */}
           <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-zinc-800" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">OR</span>
+              <span className="bg-zinc-900/80 px-2 text-zinc-500">OR</span>
             </div>
           </div>
 
@@ -633,7 +609,7 @@ function LoginForm() {
             type="button"
             onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800/50 transition-colors disabled:opacity-50"
           >
             <Mail className="h-4 w-4" />
             {loginMode === "password" ? t("auth.magicLink") : t("auth.passwordMode")}
@@ -641,15 +617,15 @@ function LoginForm() {
         </div>
 
         {/* Footer */}
-        <div className="mt-5 rounded-lg border border-border bg-card/60 dark:bg-white/5 py-3 text-center text-sm text-muted-foreground">
+        <div className="mt-5 rounded-lg border border-zinc-800 bg-zinc-900/60 py-3 text-center text-sm text-zinc-400">
           {t("auth.noAccount") || "Don't have an account?"}{" "}
-          <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+          <Link href="/signup" className="font-semibold text-white hover:text-zinc-300 transition-colors">
             {t("auth.createAccount") || "Create account"}
           </Link>
         </div>
 
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          <Link href="/" className="hover:text-foreground transition-colors">
+        <p className="mt-4 text-center text-xs text-zinc-500">
+          <Link href="/" className="hover:text-white transition-colors">
             {t("auth.backToHome")}
           </Link>
         </p>
