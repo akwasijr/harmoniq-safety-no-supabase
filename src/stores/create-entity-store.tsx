@@ -163,31 +163,30 @@ export function createEntityStore<T extends IdEntity>(
   const Context = React.createContext<EntityStore<T> | undefined>(undefined);
 
   function Provider({ children }: { children: React.ReactNode }) {
-    const [items, setItems] = React.useState<T[]>(() => {
-      const cached = loadFromStorage<T[]>(storageKey, []);
-      if (cached.length > 0) {
-        // Merge any new mock items not in cache
-        const cachedIds = new Set(cached.map((item) => item.id));
-        const newItems = initialData.filter((item) => !cachedIds.has(item.id));
-        return newItems.length > 0 ? [...cached, ...newItems] : cached;
-      }
-      return initialData;
-    });
-    const [isLoading, setIsLoading] = React.useState(() => {
-      // Only show loading spinner if we have zero cached data AND no recent fetch
-      if (!isSupabaseConfigured) return false;
-      if (isCacheFresh(storageKey)) return false;
-      const cached = loadFromStorage<T[]>(storageKey, []);
-      return cached.length === 0;
-    });
+    const [items, setItems] = React.useState<T[]>(initialData);
+    const [isLoading, setIsLoading] = React.useState(isSupabaseConfigured);
     const [error, setError] = React.useState<string | null>(null);
-    const hasLoadedRef = React.useRef(
-      !isSupabaseConfigured || isCacheFresh(storageKey)
-    );
+    const hasLoadedRef = React.useRef(false);
     const isFetchingRef = React.useRef(false);
     const isMountedRef = React.useRef(true);
     const realtimeRefreshTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const writeInFlightRef = React.useRef(0);
+
+    // Hydrate from localStorage on mount (client-only) to avoid SSR mismatch
+    React.useEffect(() => {
+      const cached = loadFromStorage<T[]>(storageKey, []);
+      if (cached.length > 0) {
+        const cachedIds = new Set(cached.map((item) => item.id));
+        const newItems = initialData.filter((item) => !cachedIds.has(item.id));
+        const merged = newItems.length > 0 ? [...cached, ...newItems] : cached;
+        setItems(merged);
+        itemsRef.current = merged;
+      }
+      if (!isSupabaseConfigured || isCacheFresh(storageKey)) {
+        setIsLoading(false);
+        hasLoadedRef.current = true;
+      }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     React.useEffect(() => {
       return () => {

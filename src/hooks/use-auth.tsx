@@ -215,7 +215,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasSelectedCompany = isSuperAdmin ? Boolean(selectedCompanyId) : currentCompany !== null;
 
   // Super admin: if no company is selected yet AND not in platform mode, auto-select the first non-platform company
-  const isPlatformEntry = typeof window !== "undefined" && window.localStorage.getItem("harmoniq_platform_entry") === "true";
+  const [isPlatformEntry, setIsPlatformEntry] = React.useState(false);
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsPlatformEntry(window.localStorage.getItem("harmoniq_platform_entry") === "true");
+    }
+  }, []);
 
   // In platform mode, clear any previously stored company selection so admin starts fresh
   React.useEffect(() => {
