@@ -42,7 +42,7 @@ import {
 } from "@/lib/country-config";
 import { TasksSkeleton } from "@/components/ui/loading";
 import { isVisibleToFieldApp } from "@/lib/template-activation";
-import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User } from "@/types";
+import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User, Incident } from "@/types";
 
 type TabType = "checklists" | "risk-assessment" | "reports";
 
@@ -70,16 +70,12 @@ function Section({
   title, 
   icon: Icon, 
   iconColor = "text-muted-foreground",
-  count, 
-  countVariant = "secondary",
   defaultOpen = true, 
   children 
 }: { 
   title: string; 
   icon: React.ComponentType<{ className?: string }>;
   iconColor?: string;
-  count?: number; 
-  countVariant?: "secondary" | "destructive" | "warning" | "success";
   defaultOpen?: boolean; 
   children: React.ReactNode;
 }) {
@@ -95,11 +91,6 @@ function Section({
       >
         <Icon className={cn("h-4 w-4 shrink-0", iconColor)} aria-hidden="true" />
         <span className="flex-1 text-left">{title}</span>
-        {count !== undefined && count > 0 && (
-          <Badge variant={countVariant} className="text-[10px] h-5 min-w-5 justify-center">
-            {count}
-          </Badge>
-        )}
         <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform shrink-0", isOpen && "rotate-180")} aria-hidden="true" />
       </button>
       {isOpen && <div id={sectionId} className="space-y-1.5 pb-3">{children}</div>}
@@ -210,7 +201,6 @@ function ChecklistsTabContent({
           title="Assigned to you"
           icon={ClipboardCheck}
           iconColor="text-primary"
-          count={pendingTemplates.length}
         >
           {pendingTemplates.map((template) => (
             <Link
@@ -239,7 +229,6 @@ function ChecklistsTabContent({
           title="In progress"
           icon={Clock}
           iconColor="text-blue-500"
-          count={draftSubmissions.length}
         >
           {draftSubmissions.map((submission) => {
             const tpl = templates.find(t => t.id === submission.template_id);
@@ -277,7 +266,6 @@ function ChecklistsTabContent({
           title="Completed today"
           icon={CheckCircle}
           iconColor="text-success"
-          count={completedToday.length}
           defaultOpen={false}
         >
           {completedToday.map((submission) => {
@@ -412,6 +400,221 @@ function ChecklistsTabContent({
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
                 {searchQuery ? "Try a different search term" : "Completed checklists with scores will appear here"}
+              </p>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
+// ---------- Reports Tab (redesigned) ----------
+
+type ReportsSubTab = "reports" | "history";
+
+function ReportsTabContent({
+  company,
+  incidents,
+  user,
+  t,
+  formatDate,
+}: {
+  company: string;
+  incidents: Incident[];
+  user: User | null;
+  t: (key: string) => string;
+  formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
+}) {
+  const [subTab, setSubTab] = React.useState<ReportsSubTab>("reports");
+  const [historyLimit, setHistoryLimit] = React.useState(10);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
+
+  const myIncidents = React.useMemo(
+    () => incidents.filter((i) => i.reporter_id === user?.id),
+    [incidents, user?.id]
+  );
+
+  const typeConfMap: Record<string, { icon: typeof AlertTriangle; color: string; bg: string }> = {
+    injury: { icon: AlertTriangle, color: "text-red-500", bg: "bg-red-500/10" },
+    near_miss: { icon: ShieldAlert, color: "text-orange-500", bg: "bg-orange-500/10" },
+    hazard: { icon: AlertTriangle, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+    property_damage: { icon: Package, color: "text-blue-500", bg: "bg-blue-500/10" },
+    environmental: { icon: AlertTriangle, color: "text-green-500", bg: "bg-green-500/10" },
+    fire: { icon: AlertTriangle, color: "text-red-600", bg: "bg-red-600/10" },
+    security: { icon: ShieldAlert, color: "text-purple-500", bg: "bg-purple-500/10" },
+    other: { icon: AlertTriangle, color: "text-muted-foreground", bg: "bg-muted" },
+  };
+
+  const filteredHistory = React.useMemo(() => {
+    let items = [...myIncidents];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter(
+        (i) =>
+          i.title.toLowerCase().includes(q) ||
+          i.type.replace(/_/g, " ").toLowerCase().includes(q) ||
+          (i.building || "").toLowerCase().includes(q)
+      );
+    }
+    items.sort((a, b) => {
+      const dateA = new Date(a.incident_date).getTime();
+      const dateB = new Date(b.incident_date).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+    return items;
+  }, [myIncidents, searchQuery, sortOrder]);
+
+  const visibleHistory = filteredHistory.slice(0, historyLimit);
+
+  const subTabs: { id: ReportsSubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "reports", label: "Reports", icon: AlertTriangle },
+    { id: "history", label: "History", icon: History },
+  ];
+
+  const renderIncidentCard = (incident: Incident) => {
+    const typeConf = typeConfMap[incident.type] || typeConfMap.other;
+    const TypeIcon = typeConf.icon;
+    return (
+      <Link
+        key={incident.id}
+        href={`/${company}/app/incidents/${incident.id}`}
+        className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+      >
+        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", typeConf.bg)}>
+          <TypeIcon className={cn("h-4 w-4", typeConf.color)} aria-hidden="true" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-sm leading-tight truncate">{incident.title}</p>
+            <Badge variant={
+              incident.status === "resolved" ? "success" :
+              incident.status === "in_progress" ? "warning" : "secondary"
+            } className="text-[10px] h-4 shrink-0">
+              {incident.status.replace(/_/g, " ")}
+            </Badge>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {incident.type.replace(/_/g, " ")} · {formatDate(new Date(incident.incident_date), { month: "short", day: "numeric" })}
+            {incident.building ? ` · ${incident.building}` : ""}
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+      </Link>
+    );
+  };
+
+  return (
+    <>
+      {/* Sub-tab pills */}
+      <div className="flex gap-1 bg-muted/50 rounded-lg p-1 mb-3">
+        {subTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = subTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setSubTab(tab.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80",
+                isActive
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* REPORTS sub-tab (action items) */}
+      {subTab === "reports" && (
+        <>
+          {/* New Report CTA */}
+          <Link
+            href={`/${company}/app/report`}
+            className="flex items-center gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/30 active:bg-muted/50"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <FileCheck className="h-5 w-5 text-primary" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">{t("app.reportIncident")}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{t("app.reportIncidentDesc") || "Spot something unsafe? Let the team know."}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+          </Link>
+
+          {/* Recent drafts / open reports */}
+          {myIncidents.filter(i => i.status !== "resolved").length > 0 ? (
+            <Section
+              title="Open reports"
+              icon={AlertTriangle}
+              iconColor="text-warning"
+            >
+              {myIncidents
+                .filter(i => i.status !== "resolved")
+                .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())
+                .slice(0, 5)
+                .map(renderIncidentCard)}
+            </Section>
+          ) : (
+            <div className="py-8 text-center">
+              <AlertTriangle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
+              <p className="text-sm font-medium text-muted-foreground mt-2">{t("app.noReports") || "No open reports"}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noReportsDesc") || "Reports you submit will appear here"}</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* HISTORY sub-tab */}
+      {subTab === "history" && (
+        <>
+          {/* Search + sort */}
+          <div className="flex gap-2 mb-3">
+            <input
+              type="search"
+              placeholder="Search reports..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setHistoryLimit(10); }}
+              className="flex-1 h-9 rounded-lg border bg-background px-3 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+              className="h-9 rounded-lg border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          {visibleHistory.length > 0 ? (
+            <div className="space-y-2">
+              {visibleHistory.map(renderIncidentCard)}
+
+              {/* Load more */}
+              {historyLimit < filteredHistory.length && (
+                <button
+                  onClick={() => setHistoryLimit((prev) => prev + 10)}
+                  className="w-full py-2.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Load more ({filteredHistory.length - historyLimit} remaining)
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <History className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+              <p className="text-sm font-medium text-muted-foreground mt-2">
+                {searchQuery ? "No matching reports" : "No report history"}
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                {searchQuery ? "Try a different search term" : "Submitted reports will appear here"}
               </p>
             </div>
           )}
@@ -828,85 +1031,13 @@ function EmployeeChecklistsPageContent() {
 
         {/* REPORTS TAB */}
         {activeTab === "reports" && (
-          <>
-            {/* New Report CTA */}
-            <Link
-              href={`/${company}/app/report`}
-              className="flex items-center gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/30 active:bg-muted/50"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                <FileCheck className="h-5 w-5 text-primary" aria-hidden="true" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{t("app.reportIncident")}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{t("app.reportIncidentDesc") || "Spot something unsafe? Let the team know."}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-            </Link>
-
-            {/* My Submitted Reports */}
-            <Section
-              title={t("app.myReports") || "My Reports"}
-              icon={AlertTriangle}
-              iconColor="text-warning"
-              count={incidents.filter(i => i.reporter_id === user?.id).length}
-            >
-              {incidents.filter(i => i.reporter_id === user?.id).length > 0 ? (
-                incidents
-                  .filter(i => i.reporter_id === user?.id)
-                  .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())
-                  .slice(0, 10)
-                  .map((incident) => {
-                    const typeConfMap: Record<string, { icon: typeof AlertTriangle; color: string; bg: string }> = {
-                      injury: { icon: AlertTriangle, color: "text-red-500", bg: "bg-red-500/10" },
-                      near_miss: { icon: ShieldAlert, color: "text-orange-500", bg: "bg-orange-500/10" },
-                      hazard: { icon: AlertTriangle, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-                      property_damage: { icon: Package, color: "text-blue-500", bg: "bg-blue-500/10" },
-                      environmental: { icon: AlertTriangle, color: "text-green-500", bg: "bg-green-500/10" },
-                      fire: { icon: AlertTriangle, color: "text-red-600", bg: "bg-red-600/10" },
-                      security: { icon: ShieldAlert, color: "text-purple-500", bg: "bg-purple-500/10" },
-                      other: { icon: AlertTriangle, color: "text-muted-foreground", bg: "bg-muted" },
-                    };
-                    const typeConf = typeConfMap[incident.type] || typeConfMap.other;
-                    const TypeIcon = typeConf.icon;
-
-                    return (
-                      <Link
-                        key={incident.id}
-                        href={`/${company}/app/incidents/${incident.id}`}
-                        className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
-                      >
-                        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", typeConf.bg)}>
-                          <TypeIcon className={cn("h-4 w-4", typeConf.color)} aria-hidden="true" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm leading-tight truncate">{incident.title}</p>
-                            <Badge variant={
-                              incident.status === "resolved" ? "success" :
-                              incident.status === "in_progress" ? "warning" : "secondary"
-                            } className="text-[10px] h-4 shrink-0">
-                              {incident.status.replace(/_/g, " ")}
-                            </Badge>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {incident.type.replace(/_/g, " ")} · {formatDate(new Date(incident.incident_date), { month: "short", day: "numeric" })}
-                            {incident.building ? ` · ${incident.building}` : ""}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                      </Link>
-                    );
-                  })
-              ) : (
-                <div className="py-8 text-center">
-                  <AlertTriangle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
-                  <p className="text-sm font-medium text-muted-foreground mt-2">{t("app.noReports") || "No reports yet"}</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noReportsDesc") || "Reports you submit will appear here"}</p>
-                </div>
-              )}
-            </Section>
-          </>
+          <ReportsTabContent
+            company={company}
+            incidents={incidents}
+            user={user}
+            t={t}
+            formatDate={formatDate}
+          />
         )}
 
         {/* RISK ASSESSMENT TAB */}
