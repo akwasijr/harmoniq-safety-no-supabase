@@ -131,12 +131,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (location_id) {
-      const { data: location } = await supabase
+      const { data: location, error: locErr } = await supabase
         .from("locations")
         .select("company_id")
         .eq("id", location_id)
         .single();
 
+      if (locErr && locErr.code !== "PGRST116") {
+        return NextResponse.json({ error: "Database error verifying location" }, { status: 500 });
+      }
       if (!location || location.company_id !== profile.company_id) {
         return NextResponse.json({ error: "Invalid location" }, { status: 400 });
       }

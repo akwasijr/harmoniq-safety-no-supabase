@@ -97,13 +97,19 @@ export async function POST(request: NextRequest) {
 
     // Validate cross-company references
     if (asset_id) {
-      const { data: asset } = await supabase.from("assets").select("id").eq("id", asset_id).eq("company_id", profile.company_id).single();
+      const { data: asset, error: assetErr } = await supabase.from("assets").select("id").eq("id", asset_id).eq("company_id", profile.company_id).single();
+      if (assetErr && assetErr.code !== "PGRST116") {
+        return NextResponse.json({ error: "Database error verifying asset" }, { status: 500 });
+      }
       if (!asset) {
         return NextResponse.json({ error: "Asset not found or belongs to a different company" }, { status: 403 });
       }
     }
     if (assigned_to) {
-      const { data: assignee } = await supabase.from("users").select("id").eq("id", assigned_to).eq("company_id", profile.company_id).single();
+      const { data: assignee, error: assigneeErr } = await supabase.from("users").select("id").eq("id", assigned_to).eq("company_id", profile.company_id).single();
+      if (assigneeErr && assigneeErr.code !== "PGRST116") {
+        return NextResponse.json({ error: "Database error verifying assignee" }, { status: 500 });
+      }
       if (!assignee) {
         return NextResponse.json({ error: "Assignee not found or belongs to a different company" }, { status: 403 });
       }

@@ -13,7 +13,8 @@ import crypto from "crypto";
 const consentLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "consent" });
 
 function hashIp(ip: string): string {
-  return crypto.createHash("sha256").update(ip + "harmoniq-salt").digest("hex").slice(0, 16);
+  const salt = process.env.IP_HASH_SALT || crypto.randomBytes(16).toString("hex");
+  return crypto.createHash("sha256").update(ip + salt).digest("hex").slice(0, 16);
 }
 
 export async function POST(request: NextRequest) {
@@ -70,13 +71,13 @@ export async function GET(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["super_admin", "company_admin"].includes(profile.role)) {
+    if (!profile || profile.role !== "super_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const url = new URL(request.url);
-    const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 200);
-    const offset = parseInt(url.searchParams.get("offset") || "0");
+    const limit = Math.min(parseInt(url.searchParams.get("limit") || "50", 10), 200);
+    const offset = parseInt(url.searchParams.get("offset") || "0", 10);
 
     const { data, error, count } = await supabase
       .from("consent_logs")

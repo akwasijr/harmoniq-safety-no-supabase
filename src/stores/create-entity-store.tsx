@@ -149,6 +149,7 @@ export function createEntityStore<T extends IdEntity>(
     const isFetchingRef = React.useRef(false);
     const isMountedRef = React.useRef(true);
     const realtimeRefreshTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const writeInFlightRef = React.useRef(0);
 
     React.useEffect(() => {
       return () => {
@@ -162,6 +163,8 @@ export function createEntityStore<T extends IdEntity>(
     const ensureLoaded = React.useCallback(() => {
       if (!isSupabaseConfigured) return;
       if (isFetchingRef.current) return;
+      // Defer fetch if writes are in flight to avoid overwriting optimistic data
+      if (writeInFlightRef.current > 0) return;
       // Skip fetch entirely if cache is fresh
       if (hasLoadedRef.current && isCacheFresh(storageKey)) return;
       // If we have data but cache is stale, do a silent background refresh
@@ -346,25 +349,46 @@ export function createEntityStore<T extends IdEntity>(
       }
 
       if (isSupabaseConfigured) {
+        writeInFlightRef.current++;
         void (async () => {
           const mapped = mapToSupabase(sanitizedItem as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
           if (process.env.NODE_ENV === "development") {
             console.log(`[Harmoniq Debug] Upserting to ${table}:`, Object.keys(mapped), mapped);
           }
-          // Route through server API to bypass RLS restrictions
+          let attempts = 0;
+          const maxAttempts = 3;
           try {
-            const res = await fetch("/api/entity-upsert", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ table, data: mapped }),
-            });
-            if (!res.ok) {
-              const body = await res.json().catch(() => ({ error: "Unknown error" }));
-              const errMsg = body.error || `HTTP ${res.status}`;
-              console.warn(`[Harmoniq] Cloud sync failed for ${table}: ${errMsg}`);
+            while (attempts < maxAttempts) {
+              try {
+                const res = await fetch("/api/entity-upsert", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ table, data: mapped }),
+                });
+                if (res.ok) break;
+                const body = await res.json().catch(() => ({ error: "Unknown error" }));
+                const errMsg = body.error || `HTTP ${res.status}`;
+                if (res.status === 403 || res.status === 401) {
+                  console.warn(`[Harmoniq] Cloud sync denied for ${table}: ${errMsg}`);
+                  break;
+                }
+                attempts++;
+                if (attempts < maxAttempts) {
+                  await new Promise((r) => setTimeout(r, 1000 * attempts));
+                } else {
+                  console.warn(`[Harmoniq] Cloud sync failed for ${table} after ${maxAttempts} attempts: ${errMsg}`);
+                }
+              } catch (syncErr) {
+                attempts++;
+                if (attempts < maxAttempts) {
+                  await new Promise((r) => setTimeout(r, 1000 * attempts));
+                } else {
+                  console.warn(`[Harmoniq] Cloud sync failed for ${table}:`, syncErr);
+                }
+              }
             }
-          } catch (syncErr) {
-            console.warn(`[Harmoniq] Cloud sync failed for ${table}:`, syncErr);
+          } finally {
+            writeInFlightRef.current--;
           }
         })();
       }
