@@ -223,16 +223,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // For super admins, honor the stored company selection even before the company list finishes loading.
   const hasSelectedCompany = isSuperAdmin ? Boolean(selectedCompanyId) : currentCompany !== null;
 
-  // Super admin: if no company is selected yet, auto-select the first non-platform company to avoid landing on platform screens
+  // Super admin: if no company is selected yet AND not in platform mode, auto-select the first non-platform company
+  const isPlatformEntry = typeof window !== "undefined" && window.localStorage.getItem("harmoniq_platform_entry") === "true";
   React.useEffect(() => {
-    if (!isSuperAdmin || selectedCompanyId) return;
+    if (!isSuperAdmin || selectedCompanyId || isPlatformEntry) return;
     const nonPlatform = allCompanies.find((c) => !PLATFORM_SLUGS.includes(c.slug?.toLowerCase?.() || ""));
       const fallback = nonPlatform ?? allCompanies[0];
       if (fallback?.id) {
         setSelectedCompanyId(fallback.id);
         saveToStorage(SELECTED_COMPANY_STORAGE_KEY, fallback.id);
     }
-  }, [isSuperAdmin, selectedCompanyId, allCompanies]);
+  }, [isSuperAdmin, selectedCompanyId, allCompanies, isPlatformEntry]);
 
   // If the stored selection points to a platform slug, move to a real tenant
   React.useEffect(() => {

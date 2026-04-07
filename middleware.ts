@@ -36,6 +36,7 @@ export const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]
 export const SAME_SITE_FETCH_CONTEXTS = new Set(["same-origin", "same-site", "none"]);
 const PLATFORM_ROUTE_SEGMENT = "/dashboard/platform";
 const PLATFORM_ANALYTICS_SEGMENT = "/dashboard/platform/analytics";
+const PLATFORM_OVERVIEW_SEGMENT = "/dashboard/platform/overview";
 const PLATFORM_ADMIN_ROLES: readonly UserRole[] = ["super_admin"];
 const PLATFORM_ANALYTICS_ROLES: readonly UserRole[] = ["super_admin", "company_admin"];
 
@@ -65,9 +66,10 @@ export function getCompanySlugFromPath(pathname: string) {
 }
 
 export function getAllowedPlatformRoles(pathname: string): readonly UserRole[] {
-  return pathname.includes(PLATFORM_ANALYTICS_SEGMENT)
-    ? PLATFORM_ANALYTICS_ROLES
-    : PLATFORM_ADMIN_ROLES;
+  if (pathname.includes(PLATFORM_ANALYTICS_SEGMENT) || pathname.includes(PLATFORM_OVERVIEW_SEGMENT)) {
+    return PLATFORM_ANALYTICS_ROLES;
+  }
+  return PLATFORM_ADMIN_ROLES;
 }
 
 export function isStaticAsset(pathname: string): boolean {
@@ -199,7 +201,7 @@ export async function middleware(request: NextRequest) {
       const companySlug = getCompanySlugFromPath(pathname);
       const fallbackPath =
         profile?.role === "company_admin" && companySlug
-          ? `/${companySlug}/dashboard/platform/analytics`
+          ? `/${companySlug}/dashboard/platform/overview`
           : companySlug
             ? `/${companySlug}/dashboard`
             : "/login";

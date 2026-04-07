@@ -89,24 +89,25 @@ export default function DashboardPage() {
   const { incidents, locations, users, assets: allAssets } = useCompanyData();
 
   // Ensure super admin respects the URL company slug (avoid platform overview when a tenant slug is present).
+  // Skip this when in platform mode — let them browse without auto-selecting
+  const isPlatformEntry = typeof window !== "undefined" && window.localStorage.getItem("harmoniq_platform_entry") === "true";
   React.useEffect(() => {
-    if (!isSuperAdmin || !company || isPlatformSlug(company)) return;
+    if (!isSuperAdmin || !company || isPlatformSlug(company) || isPlatformEntry) return;
     const match = allCompanies.find((c) => c.slug === company);
     if (match) {
       switchCompany(match.id);
     }
-  }, [isSuperAdmin, company, allCompanies, switchCompany]);
+  }, [isSuperAdmin, company, allCompanies, switchCompany, isPlatformEntry]);
 
-  // For super admins hitting the generic dashboard route, never fall back to platform overview.
-  // Instead, auto-select the first non-platform company (or any company) and show a lightweight loading state.
+  // For super admins in regular mode (not platform), auto-select the first company
   React.useEffect(() => {
-    if (!isSuperAdmin || hasSelectedCompany) return;
+    if (!isSuperAdmin || hasSelectedCompany || isPlatformEntry) return;
     if (!allCompanies.length) return;
     const fallback = allCompanies.find((c) => !isPlatformSlug(c.slug)) ?? allCompanies[0];
     if (fallback?.id) {
       switchCompany(fallback.id);
     }
-  }, [isSuperAdmin, hasSelectedCompany, allCompanies, switchCompany]);
+  }, [isSuperAdmin, hasSelectedCompany, allCompanies, switchCompany, isPlatformEntry]);
 
   // Apply filters to incidents
   const dateRangeFilter = getDateRangeFilter(dateRange);

@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { setClientCookie } from "@/lib/client-cookies";
-import { type AppChoice, buildCompanyDestination, buildPlatformAnalyticsDestination } from "@/lib/navigation";
+import { type AppChoice, buildCompanyDestination, buildPlatformOverviewDestination } from "@/lib/navigation";
 import { getPlatformSlugFilterList, isPlatformSlug } from "@/lib/platform-config";
 import { useTranslation } from "@/i18n";
 import { mockLogin, IS_MOCK_MODE } from "@/hooks/use-auth";
@@ -183,7 +183,7 @@ function LoginForm() {
         const dest = allowedApps.includes(appChoice) ? appChoice : allowedApps[0];
         if (dest === "platform") {
           window.localStorage.setItem(PLATFORM_ENTRY_KEY, "true");
-          window.location.href = buildPlatformAnalyticsDestination(DEFAULT_COMPANY_SLUG);
+          window.location.href = buildPlatformOverviewDestination(DEFAULT_COMPANY_SLUG);
           return;
         }
         window.localStorage.removeItem(PLATFORM_ENTRY_KEY);
@@ -322,7 +322,7 @@ function LoginForm() {
             .single();
           platformSlug = firstCompany?.slug || undefined;
         }
-        window.location.href = buildPlatformAnalyticsDestination(platformSlug);
+        window.location.href = buildPlatformOverviewDestination(platformSlug);
         return;
       }
 

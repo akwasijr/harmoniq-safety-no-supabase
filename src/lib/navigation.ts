@@ -18,6 +18,11 @@ export function buildPlatformAnalyticsDestination(slug: string | null | undefine
   return `/${safeSlug}/dashboard/platform/analytics`;
 }
 
+export function buildPlatformOverviewDestination(slug: string | null | undefined) {
+  const safeSlug = normalizeCompanySlug(slug);
+  return `/${safeSlug}/dashboard/platform/overview`;
+}
+
 export function sanitizeRelativePath(path: string | null | undefined, fallback = "/") {
   if (!path || !path.startsWith("/")) return fallback;
   if (path.startsWith("//") || path.includes("://") || path.includes("\\") || path.includes("\0")) {
