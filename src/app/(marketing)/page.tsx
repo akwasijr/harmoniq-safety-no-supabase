@@ -773,7 +773,23 @@ export default function Home() {
               const current = industries[selectedIndustry];
               return (
                 <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-12">
-                  <div className="flex lg:flex-col overflow-x-auto lg:overflow-visible gap-1 pb-2 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0">
+                  {/* Mobile: dropdown select */}
+                  <div className="lg:hidden">
+                    <select
+                      value={selectedIndustry}
+                      onChange={(e) => setSelectedIndustry(Number(e.target.value))}
+                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-900/80 px-4 py-3 text-sm text-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-zinc-600"
+                      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 5.646a.5.5 0 0 1 .708 0L8 8.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
+                    >
+                      {industries.map((industry, i) => (
+                        <option key={industry.name} value={i}>
+                          {industry.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {/* Desktop: vertical tab list */}
+                  <div className="hidden lg:flex lg:flex-col gap-1">
                     {industries.map((industry, i) => {
                       const Icon = industry.icon;
                       const isActive = selectedIndustry === i;
@@ -781,14 +797,14 @@ export default function Home() {
                         <button
                           key={industry.name}
                           onClick={() => setSelectedIndustry(i)}
-                          className={`flex items-center gap-2 lg:gap-3 py-2 lg:py-3 px-3 lg:px-2 text-left transition-colors duration-150 shrink-0 rounded-full lg:rounded-none ${
+                          className={`flex items-center gap-3 py-3 px-2 text-left transition-colors duration-150 ${
                             isActive
-                              ? "text-white bg-zinc-800/60 lg:bg-transparent"
+                              ? "text-white"
                               : "text-zinc-500 hover:text-zinc-300"
                           }`}
                         >
                           <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                          <span className={`text-xs lg:text-sm whitespace-nowrap ${isActive ? "font-semibold" : "font-medium"}`}>
+                          <span className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}>
                             {industry.name}
                           </span>
                         </button>

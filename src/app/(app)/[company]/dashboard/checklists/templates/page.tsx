@@ -239,7 +239,7 @@ export default function TemplateLibraryPage() {
       <div className="space-y-6">
         {/* Page Title */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.templates")}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Checklist Templates</h1>
         </div>
 
         {/* Top-level Tabs: My Templates / Template Library */}

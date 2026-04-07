@@ -63,9 +63,23 @@ export default function RiskAssessmentIndexPage() {
   const { items: users } = useUsersStore();
   const { t, locale, formatDate } = useTranslation();
 
+  // Prefer locally-saved country setting (survives when DB write fails)
+  const effectiveCountry = React.useMemo(() => {
+    if (currentCompany?.id) {
+      try {
+        const raw = localStorage.getItem(`harmoniq_settings_${currentCompany.id}`);
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (saved.selectedCountry) return saved.selectedCountry;
+        }
+      } catch { /* ignore */ }
+    }
+    return currentCompany?.country;
+  }, [currentCompany?.id, currentCompany?.country]);
+
   const localeCountry = LOCALE_DEFAULT_COUNTRY[locale];
   const companyCountry = resolveRiskAssessmentCatalogCountry(
-    currentCompany?.country,
+    effectiveCountry,
     localeCountry,
   );
 

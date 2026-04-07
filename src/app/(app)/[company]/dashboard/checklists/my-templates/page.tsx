@@ -179,7 +179,7 @@ function MyTemplatesContent() {
     <div className="space-y-6">
       {/* Page Title + Actions */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.templates")}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">My Templates</h1>
         <Link href={`/${company}/dashboard/checklists/new`}>
           <Button className="gap-2">
             <Plus className="h-4 w-4" />

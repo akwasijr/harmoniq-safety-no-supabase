@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
       method: "POST",
       headers: {
-        "apikey": publishableKey,
+        "apikey": serviceRoleKey || publishableKey,
         "Authorization": `Bearer ${authToken}`,
         "Content-Type": "application/json",
         "Prefer": "resolution=merge-duplicates",
