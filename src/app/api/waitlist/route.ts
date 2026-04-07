@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { createRateLimiter } from "@/lib/rate-limit";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// 5 waitlist signups per IP per 10 minutes
+const waitlistLimiter = createRateLimiter({ limit: 5, windowMs: 600_000, prefix: "waitlist" });
+
 export async function POST(request: Request) {
   try {
+    const rl = waitlistLimiter.check(request as NextRequest);
+    if (!rl.allowed) return rl.response;
+
     const body = await request.json();
     const { email } = body as { email?: string };
 

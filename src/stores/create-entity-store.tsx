@@ -11,7 +11,7 @@ import { sanitizeText } from "@/lib/validation";
 // Persists across Provider re-mounts so tab navigation never re-fetches
 // fresh data from Supabase unless stale.
 const globalLoadedCache = new Map<string, number>();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
 function isCacheFresh(key: string): boolean {
   const ts = globalLoadedCache.get(key);
@@ -22,8 +22,11 @@ function isCacheFresh(key: string): boolean {
 function sanitizeEntity<T extends Record<string, unknown>>(entity: T): T {
   const sanitized = { ...entity };
   for (const key of Object.keys(sanitized)) {
-    if (typeof sanitized[key] === "string") {
-      (sanitized as Record<string, unknown>)[key] = sanitizeText(sanitized[key] as string);
+    const val = sanitized[key];
+    if (typeof val === "string") {
+      (sanitized as Record<string, unknown>)[key] = sanitizeText(val);
+    } else if (val && typeof val === "object" && !Array.isArray(val) && !(val instanceof Date)) {
+      (sanitized as Record<string, unknown>)[key] = sanitizeEntity(val as Record<string, unknown>);
     }
   }
   return sanitized;

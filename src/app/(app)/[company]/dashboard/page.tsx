@@ -88,9 +88,14 @@ export default function DashboardPage() {
   const { items: allCompanies } = useCompanyStore();
   const { incidents, locations, users, assets: allAssets } = useCompanyData();
 
+  // Track platform entry state to avoid hydration mismatch
+  const [isPlatformEntry, setIsPlatformEntry] = React.useState(false);
+  React.useEffect(() => {
+    setIsPlatformEntry(window.localStorage.getItem("harmoniq_platform_entry") === "true");
+  }, []);
+
   // Ensure super admin respects the URL company slug (avoid platform overview when a tenant slug is present).
   // Skip this when in platform mode — let them browse without auto-selecting
-  const isPlatformEntry = typeof window !== "undefined" && window.localStorage.getItem("harmoniq_platform_entry") === "true";
   React.useEffect(() => {
     if (!isSuperAdmin || !company || isPlatformSlug(company) || isPlatformEntry) return;
     const match = allCompanies.find((c) => c.slug === company);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createRateLimiter } from "@/lib/rate-limit";
 import crypto from "crypto";
 
 /**
@@ -8,12 +9,18 @@ import crypto from "crypto";
  * GET  /api/consent — List consent records (super_admin only).
  */
 
+// 30 consent submissions per IP per minute
+const consentLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "consent" });
+
 function hashIp(ip: string): string {
   return crypto.createHash("sha256").update(ip + "harmoniq-salt").digest("hex").slice(0, 16);
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = consentLimiter.check(request);
+    if (!rl.allowed) return rl.response;
+
     const body = await request.json();
     const { necessary, analytics, marketing } = body;
 

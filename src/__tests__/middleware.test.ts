@@ -78,9 +78,9 @@ describe("getCompanySlugFromPath", () => {
 });
 
 describe("getAllowedPlatformRoles", () => {
-  it("returns super_admin only for platform admin routes", () => {
+  it("returns super_admin and company_admin for platform admin routes", () => {
     const roles = getAllowedPlatformRoles("/acme/dashboard/platform/users");
-    expect(roles).toEqual(["super_admin"]);
+    expect(roles).toEqual(["super_admin", "company_admin"]);
   });
 
   it("returns super_admin and company_admin for analytics routes", () => {
@@ -88,9 +88,9 @@ describe("getAllowedPlatformRoles", () => {
     expect(roles).toEqual(["super_admin", "company_admin"]);
   });
 
-  it("returns super_admin for platform root", () => {
+  it("returns super_admin and company_admin for platform root", () => {
     const roles = getAllowedPlatformRoles("/acme/dashboard/platform");
-    expect(roles).toEqual(["super_admin"]);
+    expect(roles).toEqual(["super_admin", "company_admin"]);
   });
 });
 

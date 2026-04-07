@@ -191,14 +191,18 @@ export function Sidebar({
   const router = useRouter();
   const [collapsed, setCollapsed] = React.useState(false);
   const [hovered, setHovered] = React.useState(false);
+  const [enteredViaPlatform, setEnteredViaPlatform] = React.useState(false);
   const { theme, setTheme } = useTheme();
   const { isSuperAdmin, isCompanyAdmin, hasSelectedCompany, currentCompany, availableCompanies, switchCompany, logout } = useAuth();
   const { t } = useTranslation();
   const isCollapsed = collapsed && !hovered;
 
   // Platform nav only shows when user entered via /admin login flow
-  const enteredViaPlatform = typeof window !== "undefined"
-    && window.localStorage.getItem(PLATFORM_ENTRY_KEY) === "true";
+  // Track platform entry state to avoid hydration mismatch
+  React.useEffect(() => {
+    setEnteredViaPlatform(window.localStorage.getItem(PLATFORM_ENTRY_KEY) === "true");
+  }, []);
+
   const isAdmin = isSuperAdmin || isCompanyAdmin;
   const showPlatformNav = isAdmin && enteredViaPlatform;
   const platformNavItems = isSuperAdmin ? superAdminPlatformNav : companyAdminPlatformNav;
