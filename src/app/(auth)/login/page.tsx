@@ -597,8 +597,7 @@ function LoginForm() {
               <Button
                 type="submit"
                 disabled={isLoading || isLockedOut}
-                className="w-full h-11 rounded-lg text-sm font-semibold bg-white text-black hover:bg-zinc-200 focus-visible:!ring-0 focus-visible:!ring-transparent !shadow-none"
-                loading={isLoading}
+                className="w-full h-11 rounded-lg text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-500 focus-visible:!ring-0 focus-visible:!ring-transparent !shadow-none"
               >
                 {t("auth.signIn")}
               </Button>
@@ -608,7 +607,7 @@ function LoginForm() {
               type="button"
               onClick={handleMagicLink}
               disabled={isLoading || !email}
-              className="w-full h-11 rounded-lg text-sm font-semibold bg-white text-black hover:bg-zinc-200 focus-visible:!ring-0 focus-visible:!ring-transparent !shadow-none"
+              className="w-full h-11 rounded-lg text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-500 focus-visible:!ring-0 focus-visible:!ring-transparent !shadow-none"
             >
               {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               {t("auth.sendMagicLink")}
