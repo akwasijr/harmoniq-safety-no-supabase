@@ -127,13 +127,14 @@ export function createEntityStore<T extends IdEntity>(
 
   function Provider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = React.useState<T[]>(() => {
-      if (isSupabaseConfigured) return loadFromStorage(storageKey, []);
       const cached = loadFromStorage<T[]>(storageKey, []);
-      if (cached.length === 0) return initialData;
-      // Merge any new mock items not in cache
-      const cachedIds = new Set(cached.map((item) => item.id));
-      const newItems = initialData.filter((item) => !cachedIds.has(item.id));
-      return newItems.length > 0 ? [...cached, ...newItems] : cached;
+      if (cached.length > 0) {
+        // Merge any new mock items not in cache
+        const cachedIds = new Set(cached.map((item) => item.id));
+        const newItems = initialData.filter((item) => !cachedIds.has(item.id));
+        return newItems.length > 0 ? [...cached, ...newItems] : cached;
+      }
+      return initialData;
     });
     const [isLoading, setIsLoading] = React.useState(() => {
       // Only show loading spinner if we have zero cached data AND no recent fetch
