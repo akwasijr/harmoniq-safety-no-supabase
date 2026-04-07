@@ -327,8 +327,10 @@ export default function JHAFormPage() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-base">Job/Task Title *</Label>
+                <Label htmlFor="jha-job-title" className="text-base">Job/Task Title *</Label>
                 <Input
+                  autoFocus
+                  id="jha-job-title"
                   value={formData.jobTitle}
                   onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
                   placeholder="e.g., Forklift Loading Operations"
@@ -340,8 +342,9 @@ export default function JHAFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Work Location *</Label>
+                <Label htmlFor="jha-location" className="text-base">Work Location *</Label>
                 <Input
+                  id="jha-location"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder="e.g., Warehouse A, Loading Bay 3"
@@ -353,8 +356,9 @@ export default function JHAFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Department *</Label>
+                <Label htmlFor="jha-department" className="text-base">Department *</Label>
                 <Input
+                  id="jha-department"
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                   placeholder="e.g., Logistics, Manufacturing"
@@ -366,8 +370,9 @@ export default function JHAFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Job Description</Label>
+                <Label htmlFor="jha-job-desc" className="text-base">Job Description</Label>
                 <Textarea
+                  id="jha-job-desc"
                   value={formData.jobDescription}
                   onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
                   placeholder="Brief description of the task, tools/equipment used, and work environment"
@@ -377,8 +382,9 @@ export default function JHAFormPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-base">Analysis Date *</Label>
+                  <Label htmlFor="jha-date" className="text-base">Analysis Date *</Label>
                   <Input
+                    id="jha-date"
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -389,8 +395,9 @@ export default function JHAFormPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-base">Supervisor *</Label>
+                  <Label htmlFor="jha-supervisor" className="text-base">Supervisor *</Label>
                   <Input
+                    id="jha-supervisor"
                     value={formData.supervisor}
                     onChange={(e) => setFormData({ ...formData, supervisor: e.target.value })}
                     placeholder="Supervisor name"

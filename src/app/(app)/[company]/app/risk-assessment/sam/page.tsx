@@ -326,6 +326,7 @@ export default function SAMFormPage() {
               <div className="space-y-2">
                 <Label className="text-base">Organisation *</Label>
                 <Input
+                  autoFocus
                   value={formData.organizationName}
                   onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
                   placeholder="Organization name"

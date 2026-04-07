@@ -360,6 +360,7 @@ export default function RIEFormPage() {
               <div className="space-y-2">
                 <Label className="text-base">Bedrijfsnaam (Company Name) *</Label>
                 <Input
+                  autoFocus
                   value={formData.companyName}
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                   placeholder="Enter company name"

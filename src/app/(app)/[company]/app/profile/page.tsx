@@ -145,7 +145,7 @@ export default function EmployeeProfilePage() {
           {currentUser.avatar_url ? (
             <img
               src={currentUser.avatar_url}
-              alt={`${user.firstName} ${user.lastName}`}
+              alt={`${user.firstName} ${user.lastName} profile photo`}
               className="h-[88px] w-[88px] rounded-full border-[3px] border-white/30 object-cover mx-auto"
             />
           ) : (

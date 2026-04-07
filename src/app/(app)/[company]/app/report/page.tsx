@@ -465,6 +465,7 @@ function ReportIncidentPageContent() {
         {currentStep === 3 && (
           <div className="space-y-4">
             <Input
+              autoFocus
               placeholder={t("report.titlePlaceholder")}
               value={formData.title}
               onChange={(e) => {
@@ -548,11 +549,11 @@ function ReportIncidentPageContent() {
         {currentStep === 5 && (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="location" className="text-base">{t("report.locationDescription")}</Label>
+              <Label htmlFor="report-building" className="text-base">{t("report.locationDescription")}</Label>
               <div className="relative mt-2">
                 <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  id="location"
+                  id="report-building"
                   placeholder={t("report.locationPlaceholder")}
                   className="h-12 pl-11 text-base"
                   value={formData.location}
@@ -597,9 +598,9 @@ function ReportIncidentPageContent() {
         {currentStep === 6 && (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="date" className="text-base">{t("report.dateOfIncident")}</Label>
+              <Label htmlFor="report-date" className="text-base">{t("report.dateOfIncident")} <span className="text-destructive">*</span></Label>
               <Input
-                id="date"
+                id="report-date"
                 type="date"
                 className={`mt-2 h-12 text-base ${stepErrors.date ? "border-red-500" : ""}`}
                 value={formData.date}
@@ -612,9 +613,9 @@ function ReportIncidentPageContent() {
               {stepErrors.date && <p className="text-sm text-red-500 mt-1">{stepErrors.date}</p>}
             </div>
             <div>
-              <Label htmlFor="time" className="text-base">{t("report.approximateTime")}</Label>
+              <Label htmlFor="report-time" className="text-base">{t("report.approximateTime")} <span className="text-destructive">*</span></Label>
               <Input
-                id="time"
+                id="report-time"
                 type="time"
                 className="mt-2 h-12 text-base"
                 value={formData.time}
@@ -646,7 +647,7 @@ function ReportIncidentPageContent() {
               <div className="grid grid-cols-2 gap-3">
                 {formData.photos.map((photo, index) => (
                   <div key={index} className="relative aspect-square rounded-xl overflow-hidden border">
-                    <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                    <img src={photo} alt={`Incident evidence photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                     <button
                       type="button"
                       aria-label={`Remove photo ${index + 1}`}

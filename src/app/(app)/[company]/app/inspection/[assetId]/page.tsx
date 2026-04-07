@@ -408,7 +408,7 @@ export default function AssetInspectionPage() {
           <div className="flex gap-2 mb-2">
             {photos[currentQuestion.id].map((photo, index) => (
               <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden border">
-                <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                <img src={photo} alt={`Inspection finding photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                 <button
                   type="button"
                   aria-label={`Remove photo ${index + 1}`}

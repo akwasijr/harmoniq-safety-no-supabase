@@ -282,11 +282,13 @@ export default function JSAFormPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-base flex items-center gap-2">
+                  <Label htmlFor="jsa-date" className="text-base flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     Date *
                   </Label>
                   <Input
+                    autoFocus
+                    id="jsa-date"
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -297,8 +299,9 @@ export default function JSAFormPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-base">Time *</Label>
+                  <Label htmlFor="jsa-time" className="text-base">Time *</Label>
                   <Input
+                    id="jsa-time"
                     type="time"
                     value={formData.time}
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
@@ -311,8 +314,9 @@ export default function JSAFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Job/Task Description *</Label>
+                <Label htmlFor="jsa-job-desc" className="text-base">Job/Task Description *</Label>
                 <Textarea
+                  id="jsa-job-desc"
                   value={formData.jobDescription}
                   onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
                   placeholder="Describe today's work activities"
@@ -324,11 +328,12 @@ export default function JSAFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base flex items-center gap-2">
+                <Label htmlFor="jsa-location" className="text-base flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Work Location *
                 </Label>
                 <Input
+                  id="jsa-location"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder="e.g., Building A, Floor 2"
@@ -340,11 +345,12 @@ export default function JSAFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base flex items-center gap-2">
+                <Label htmlFor="jsa-crew-leader" className="text-base flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Crew Leader *
                 </Label>
                 <Input
+                  id="jsa-crew-leader"
                   value={formData.crewLeader}
                   onChange={(e) => setFormData({ ...formData, crewLeader: e.target.value })}
                   placeholder="Name of crew leader"
@@ -356,8 +362,9 @@ export default function JSAFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Crew Members</Label>
+                <Label htmlFor="jsa-crew-members" className="text-base">Crew Members</Label>
                 <Textarea
+                  id="jsa-crew-members"
                   value={formData.crewMembers}
                   onChange={(e) => setFormData({ ...formData, crewMembers: e.target.value })}
                   placeholder="List all crew members present (one per line)"

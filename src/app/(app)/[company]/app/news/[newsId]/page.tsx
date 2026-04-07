@@ -242,7 +242,7 @@ export default function NewsDetailPage() {
           <div className="h-48 overflow-hidden">
             <img 
               src={article.featured_image} 
-              alt={article.title}
+              alt={article.title || "News article featured image"}
               className="w-full h-full object-cover"
               loading="lazy"
             />
