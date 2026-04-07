@@ -468,10 +468,10 @@ function LoginForm() {
         <div className="rounded-xl bg-zinc-900/70 backdrop-blur-xl p-8">
           {/* Header */}
           <h1 className="text-2xl font-bold tracking-tight mb-1 text-white">
-            {t("auth.welcomeBack") || "Sign in to your account"}
+            Welcome
           </h1>
           <p className="text-sm text-zinc-400 mb-6">
-            {t("auth.signInToAccount") || "Enter your credentials to continue"}
+            Enter your credentials to continue
           </p>
 
           {/* Alerts */}
@@ -618,33 +618,13 @@ function LoginForm() {
             </Button>
           )}
 
-          {/* Divider */}
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-zinc-800/40" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-zinc-900/70 px-2 text-zinc-500">OR</span>
-            </div>
-          </div>
-
-          {/* Toggle login mode */}
-          <button
-            type="button"
-            onClick={() => { setLoginMode(loginMode === "password" ? "magic" : "password"); setError(""); setSuccess(""); }}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 rounded-lg bg-zinc-800/40 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 transition-colors disabled:opacity-50"
-          >
-            <Mail className="h-4 w-4" />
-            {loginMode === "password" ? t("auth.magicLink") : t("auth.passwordMode")}
-          </button>
         </div>
 
         {/* Footer */}
         <div className="mt-5 rounded-lg bg-zinc-900/40 py-3 text-center text-sm text-zinc-400">
-          {t("auth.noAccount") || "Don't have an account?"}{" "}
+          {"Don't have an account?"}{" "}
           <Link href="/signup" className="font-semibold text-white hover:text-zinc-300 transition-colors">
-            {t("auth.createAccount") || "Create account"}
+            Sign up for wait list
           </Link>
         </div>
 
