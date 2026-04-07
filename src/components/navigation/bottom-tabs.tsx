@@ -78,7 +78,7 @@ export function BottomTabs({ company }: BottomTabsProps) {
   );
 
   return (
-    <nav aria-label="App navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background safe-area-inset-bottom">
+    <nav aria-label="App navigation" className="field-app-surface fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background safe-area-inset-bottom">
       <ul className="flex h-[68px] items-center justify-around">
         {visibleTabs.map((item) => {
           const href = `/${company}${item.href}`;

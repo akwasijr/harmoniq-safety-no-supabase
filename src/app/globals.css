@@ -373,16 +373,26 @@ body {
   border-radius: var(--radius) !important;
 }
 
-.field-app-shell[data-field-shadow="none"] .field-app-surface {
+/* Shadow: apply to cards, panels, and any element with border + bg-card inside the shell */
+.field-app-shell[data-field-shadow="none"] .field-app-surface,
+.field-app-shell[data-field-shadow="none"] .bg-card {
   box-shadow: none;
 }
 
-.field-app-shell[data-field-shadow="subtle"] .field-app-surface {
-  box-shadow: 0 6px 18px -12px hsl(var(--foreground) / 0.22);
+.field-app-shell[data-field-shadow="subtle"] .field-app-surface,
+.field-app-shell[data-field-shadow="subtle"] .bg-card {
+  box-shadow: 0 1px 3px 0 hsl(var(--foreground) / 0.08), 0 1px 2px -1px hsl(var(--foreground) / 0.08);
 }
 
-.field-app-shell[data-field-shadow="strong"] .field-app-surface {
-  box-shadow: 0 14px 32px -18px hsl(var(--foreground) / 0.3);
+.field-app-shell[data-field-shadow="strong"] .field-app-surface,
+.field-app-shell[data-field-shadow="strong"] .bg-card {
+  box-shadow: 0 4px 12px -2px hsl(var(--foreground) / 0.12), 0 2px 4px -2px hsl(var(--foreground) / 0.08);
+}
+
+/* Button shape follows the field app radius */
+.field-app-shell button,
+.field-app-shell a[class*="rounded"] {
+  font-family: inherit;
 }
 
 /* ============================================
