@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createRateLimiter } from "@/lib/rate-limit";
+import { isValidUUID } from "@/lib/validation";
+
+const passwordResetLimiter = createRateLimiter({ limit: 5, windowMs: 600_000, prefix: "password-reset" });
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> },
 ) {
   try {
+    const rl = passwordResetLimiter.check(request);
+    if (!rl.allowed) return rl.response;
+
     const { userId } = await params;
+
+    if (!isValidUUID(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
+
     const supabase = await createClient();
     const {
       data: { user },

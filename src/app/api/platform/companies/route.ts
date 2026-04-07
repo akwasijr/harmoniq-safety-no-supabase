@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizeText } from "@/lib/validation";
 import { createClient } from "@/lib/supabase/server";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const companiesLimiter = createRateLimiter({ limit: 10, windowMs: 60_000, prefix: "platform-companies" });
 
 function slugify(value: string) {
   return value
@@ -14,6 +17,9 @@ function slugify(value: string) {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = companiesLimiter.check(request);
+    if (!rl.allowed) return rl.response;
+
     const supabase = await createClient();
     const {
       data: { user },

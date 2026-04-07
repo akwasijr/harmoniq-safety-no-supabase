@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizeText } from "@/lib/validation";
 import { createClient } from "@/lib/supabase/server";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const auditLogsLimiter = createRateLimiter({ limit: 20, windowMs: 60_000, prefix: "audit-logs" });
 
 function withNoStore(response: NextResponse) {
   response.headers.set("Cache-Control", "no-store");
@@ -27,6 +30,9 @@ async function getAdminProfile() {
 }
 
 export async function GET(request: NextRequest) {
+  const rl = auditLogsLimiter.check(request);
+  if (!rl.allowed) return rl.response;
+
   const { supabase, user, profile } = await getAdminProfile();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -67,6 +73,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const rl = auditLogsLimiter.check(request);
+  if (!rl.allowed) return rl.response;
+
   const { supabase, user, profile } = await getAdminProfile();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
