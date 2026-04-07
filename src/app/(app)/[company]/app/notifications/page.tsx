@@ -324,11 +324,6 @@ export default function NotificationsPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold flex-1">{t("notifications.title") || "Notifications"}</h1>
-          {unreadCount > 0 && (
-            <Badge variant="destructive" className="text-xs">
-              {unreadCount}
-            </Badge>
-          )}
         </div>
       </div>
 
@@ -348,8 +343,8 @@ export default function NotificationsPage() {
                     !notification.read && "bg-primary/5"
                   )}
                 >
-                  <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl mt-0.5", notification.iconColor)}>
-                    <notification.icon className="h-5 w-5" aria-hidden="true" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 mt-0.5">
+                    <notification.icon className="h-5 w-5 text-primary" aria-hidden="true" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
