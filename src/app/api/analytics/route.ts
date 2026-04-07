@@ -27,54 +27,6 @@ interface PageviewEvent {
 const pageviews: PageviewEvent[] = [];
 let flushInProgress = false;
 
-// Seed data for development — provides demo map pins and analytics
-function getSeedEvents(): PageviewEvent[] {
-  const now = Date.now();
-  const day = 24 * 60 * 60 * 1000;
-  const cities: Array<{ city: string; country: string; lat: number; lng: number }> = [
-    { city: "Amsterdam", country: "NL", lat: 52.37, lng: 4.90 },
-    { city: "Rotterdam", country: "NL", lat: 51.92, lng: 4.48 },
-    { city: "Stockholm", country: "SE", lat: 59.33, lng: 18.07 },
-    { city: "London", country: "GB", lat: 51.51, lng: -0.13 },
-    { city: "New York", country: "US", lat: 40.71, lng: -74.01 },
-    { city: "San Francisco", country: "US", lat: 37.77, lng: -122.42 },
-    { city: "Berlin", country: "DE", lat: 52.52, lng: 13.41 },
-    { city: "Paris", country: "FR", lat: 48.86, lng: 2.35 },
-    { city: "Madrid", country: "ES", lat: 40.42, lng: -3.70 },
-    { city: "Tokyo", country: "JP", lat: 35.68, lng: 139.69 },
-    { city: "Sydney", country: "AU", lat: -33.87, lng: 151.21 },
-    { city: "Toronto", country: "CA", lat: 43.65, lng: -79.38 },
-    { city: "Mumbai", country: "IN", lat: 19.08, lng: 72.88 },
-    { city: "São Paulo", country: "BR", lat: -23.55, lng: -46.63 },
-    { city: "Dubai", country: "AE", lat: 25.20, lng: 55.27 },
-  ];
-  const pages = ["/", "/pricing", "/features", "/about", "/contact", "/blog", "/demo"];
-  const browsers = ["Chrome", "Safari", "Firefox", "Edge"];
-  const devices = ["Desktop", "Mobile", "Tablet"];
-  const referrers = ["google.com", "linkedin.com", "twitter.com", "(direct)", "github.com"];
-  const events: PageviewEvent[] = [];
-  let id = 0;
-  for (let d = 0; d < 30; d++) {
-    const eventsPerDay = 8 + Math.floor(Math.random() * 12);
-    for (let e = 0; e < eventsPerDay; e++) {
-      const c = cities[Math.floor(Math.random() * cities.length)];
-      events.push({
-        path: pages[Math.floor(Math.random() * pages.length)],
-        referrer: referrers[Math.floor(Math.random() * referrers.length)],
-        country: c.country,
-        city: c.city,
-        lat: c.lat + (Math.random() - 0.5) * 0.1,
-        lng: c.lng + (Math.random() - 0.5) * 0.1,
-        browser: browsers[Math.floor(Math.random() * browsers.length)],
-        device: devices[Math.floor(Math.random() * devices.length)],
-        ip_hash: `seed-${++id}`,
-        timestamp: new Date(now - d * day - Math.floor(Math.random() * day)).toISOString(),
-      });
-    }
-  }
-  return events;
-}
-
 function purgeOldEvents() {
   const cutoff = Date.now() - ANALYTICS_RETENTION_DAYS * 24 * 60 * 60 * 1000;
   while (pageviews.length > 0 && new Date(pageviews[0].timestamp).getTime() < cutoff) {
@@ -391,12 +343,7 @@ export async function GET(request: NextRequest) {
   }
 
   const fallbackEvents = pageviews.filter((e) => new Date(e.timestamp).getTime() >= cutoff);
-  let filtered = [...persisted, ...fallbackEvents];
-
-  // Use seed data when no real events exist (dev/demo mode)
-  if (filtered.length === 0) {
-    filtered = getSeedEvents().filter((e) => new Date(e.timestamp).getTime() >= cutoff);
-  }
+  const filtered = [...persisted, ...fallbackEvents];
 
   const byPage: Record<string, number> = {};
   const byCountry: Record<string, number> = {};
