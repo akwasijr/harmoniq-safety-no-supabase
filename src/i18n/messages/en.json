@@ -1528,7 +1528,9 @@
     "controlMeasuresSummary": "Control Measures Summary",
     "requiredPPE": "Required PPE",
     "riskLabel": "Risk",
-    "standard": "Standard"
+    "standard": "Standard",
+    "workerHubHint": "Resume drafts, track assessments awaiting review, and keep reviewed proof close at hand.",
+    "completedHint": "Reviewed assessments will appear here with the reviewer and date for proof."
   },
   "auth": {
     "welcomeBack": "Welcome back",

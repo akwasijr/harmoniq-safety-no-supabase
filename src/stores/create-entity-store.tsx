@@ -199,9 +199,19 @@ export function createEntityStore<T extends IdEntity>(
             const fetched = opts.columnMap
               ? raw.map((row) => mapFromSupabase<T>(row, opts.columnMap))
               : (raw as T[]);
-            setItems(fetched);
+            // Merge optimistic items: keep any locally-added items that
+            // aren't yet in the Supabase response (write may be in-flight)
+            const fetchedIds = new Set(fetched.map((item) => item.id));
+            const optimistic = itemsRef.current.filter(
+              (item) => !fetchedIds.has(item.id)
+            );
+            const merged = optimistic.length > 0
+              ? [...fetched, ...optimistic]
+              : fetched;
+            setItems(merged);
+            itemsRef.current = merged;
             // Cache to localStorage for offline resilience
-            saveToStorage(storageKey, fetched);
+            saveToStorage(storageKey, merged);
           }
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);

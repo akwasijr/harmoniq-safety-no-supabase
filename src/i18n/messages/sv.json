@@ -1528,7 +1528,9 @@
     "controlMeasuresSummary": "Sammanfattning av kontrollåtgärder",
     "requiredPPE": "Krävd skyddsutrustning",
     "riskLabel": "Risk",
-    "standard": "Standard"
+    "standard": "Standard",
+    "workerHubHint": "Återuppta utkast, följ bedömningar som väntar på granskning och ha granskade bevis nära till hands.",
+    "completedHint": "Granskade bedömningar visas här med granskare och datum som bevis."
   },
   "auth": {
     "welcomeBack": "Välkommen tillbaka",

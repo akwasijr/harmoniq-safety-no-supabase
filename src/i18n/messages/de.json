@@ -1528,7 +1528,9 @@
     "controlMeasuresSummary": "Zusammenfassung der Schutzmaßnahmen",
     "requiredPPE": "Erforderliche PSA",
     "riskLabel": "Risiko",
-    "standard": "Standard"
+    "standard": "Standard",
+    "workerHubHint": "Entwürfe fortsetzen, ausstehende Bewertungen verfolgen und geprüfte Nachweise aufbewahren.",
+    "completedHint": "Geprüfte Bewertungen erscheinen hier mit Prüfer und Datum als Nachweis."
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
