@@ -22,8 +22,6 @@ import {
   Building2,
   UserCog,
   LibraryBig,
-  ChevronDown,
-  Check,
   Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -193,12 +191,10 @@ export function Sidebar({
   const router = useRouter();
   const [collapsed, setCollapsed] = React.useState(false);
   const [hovered, setHovered] = React.useState(false);
-  const [companyDropdownOpen, setCompanyDropdownOpen] = React.useState(false);
   const { theme, setTheme } = useTheme();
   const { isSuperAdmin, isCompanyAdmin, hasSelectedCompany, currentCompany, availableCompanies, switchCompany, logout } = useAuth();
   const { t } = useTranslation();
   const isCollapsed = collapsed && !hovered;
-  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Platform nav only shows when user entered via /admin login flow
   const enteredViaPlatform = typeof window !== "undefined"
@@ -206,18 +202,6 @@ export function Sidebar({
   const isAdmin = isSuperAdmin || isCompanyAdmin;
   const showPlatformNav = isAdmin && enteredViaPlatform;
   const platformNavItems = isSuperAdmin ? superAdminPlatformNav : companyAdminPlatformNav;
-
-  // Close company dropdown on click outside
-  React.useEffect(() => {
-    if (!companyDropdownOpen) return;
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setCompanyDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [companyDropdownOpen]);
 
   const getTitle = (item: NavItem) => item.titleKey ? t(item.titleKey) : item.title;
 
@@ -257,7 +241,6 @@ export function Sidebar({
 
   const handleCompanySelect = (companyId: string | null, slug?: string) => {
     switchCompany(companyId);
-    setCompanyDropdownOpen(false);
     if (slug && slug !== company) {
       router.push(`/${slug}/dashboard`);
     }
@@ -365,66 +348,28 @@ export function Sidebar({
 
         {/* Company Selector — shown in platform mode for all admin roles */}
         {showPlatformNav && !isCollapsed && (
-          <div ref={dropdownRef} className="relative my-3 px-1">
-            <button
-              onClick={() => setCompanyDropdownOpen(!companyDropdownOpen)}
-              className={cn(
-                "flex w-full items-center gap-2.5 rounded-md border border-sidebar-border px-3 py-2 text-left text-[13px] transition-colors",
-                "hover:bg-sidebar-accent/40",
-                companyDropdownOpen && "bg-sidebar-accent/40"
-              )}
+          <div className="my-3 px-2">
+            <label className="block text-[11px] font-medium text-sidebar-foreground/40 mb-1.5 px-1">
+              Company
+            </label>
+            <select
+              value={currentCompany?.id || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!val) {
+                  handleCompanySelect(null);
+                } else {
+                  const target = availableCompanies.find((c) => c.id === val);
+                  if (target) handleCompanySelect(target.id, target.slug);
+                }
+              }}
+              className="w-full rounded-md border border-sidebar-border bg-sidebar-background px-2.5 py-1.5 text-[13px] font-medium text-sidebar-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             >
-              <Building2 className="h-4 w-4 shrink-0 text-sidebar-foreground/50" />
-              <span className="flex-1 truncate font-medium">
-                {currentCompany?.name || "Select company"}
-              </span>
-              <ChevronDown className={cn(
-                "h-3.5 w-3.5 text-sidebar-foreground/40 transition-transform",
-                companyDropdownOpen && "rotate-180"
-              )} />
-            </button>
-
-            {companyDropdownOpen && (
-              <div className="absolute left-1 right-1 top-full z-[100] mt-1 max-h-56 overflow-auto rounded-md border border-sidebar-border shadow-lg" style={{ backgroundColor: 'hsl(var(--sidebar-background))' }}>
-                <div className="py-1">
-                {/* Deselect company option */}
-                <button
-                  onClick={() => handleCompanySelect(null)}
-                  className={cn(
-                    "flex w-full items-center gap-2 px-3 py-2 text-[13px] transition-colors hover:bg-sidebar-accent/50",
-                    !currentCompany && "text-primary font-medium"
-                  )}
-                >
-                  <Globe className="h-3.5 w-3.5 text-sidebar-foreground/40" />
-                  <span className="flex-1">Platform Only</span>
-                  {!currentCompany && <Check className="h-3.5 w-3.5 text-primary" />}
-                </button>
-                <div className="mx-2 border-t border-sidebar-border" />
-                {availableCompanies.map((c) => {
-                  const isSelected = c.id === currentCompany?.id;
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => handleCompanySelect(c.id, c.slug)}
-                      className={cn(
-                        "flex w-full items-center gap-2 px-3 py-2 text-[13px] transition-colors hover:bg-sidebar-accent/50",
-                        isSelected && "text-primary font-medium"
-                      )}
-                    >
-                      <div className={cn(
-                        "flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold",
-                        isSelected ? "bg-primary text-primary-foreground" : "bg-sidebar-accent text-sidebar-foreground/60"
-                      )}>
-                        {c.name.charAt(0)}
-                      </div>
-                      <span className="flex-1 truncate">{c.name}</span>
-                      {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
-                    </button>
-                  );
-                })}
-                </div>
-              </div>
-            )}
+              <option value="">Platform only</option>
+              {availableCompanies.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
         )}
 
