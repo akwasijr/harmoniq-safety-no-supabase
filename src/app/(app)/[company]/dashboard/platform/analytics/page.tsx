@@ -318,10 +318,6 @@ export default function PlatformAnalyticsPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold">Marketing Site</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Public website traffic, audience behavior, and consent controls. Platform operations stay in
-              the Overview, Companies, Users, and Settings pages.
-            </p>
           </div>
           <div className="flex items-center gap-2">
             {activeTab === "compliance" && (
