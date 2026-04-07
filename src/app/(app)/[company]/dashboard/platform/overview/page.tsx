@@ -211,22 +211,6 @@ export default function PlatformOverviewPage() {
           </Card>
         </div>
 
-        {/* Quick Links row — simple text links */}
-        <div className="flex flex-wrap gap-4">
-          {[
-            { title: "Analytics & Privacy", href: `/${company}/dashboard/platform/analytics` },
-            { title: "Platform Users", href: `/${company}/dashboard/platform/users` },
-            { title: "Platform Settings", href: `/${company}/dashboard/platform/settings` },
-          ].map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              {link.title} →
-            </Link>
-          ))}
-        </div>
       </div>
     </RoleGuard>
   );

@@ -225,6 +225,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Super admin: if no company is selected yet AND not in platform mode, auto-select the first non-platform company
   const isPlatformEntry = typeof window !== "undefined" && window.localStorage.getItem("harmoniq_platform_entry") === "true";
+
+  // In platform mode, clear any previously stored company selection so admin starts fresh
+  React.useEffect(() => {
+    if (!isSuperAdmin || !isPlatformEntry) return;
+    if (selectedCompanyId) {
+      setSelectedCompanyId(null);
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(SELECTED_COMPANY_STORAGE_KEY);
+      }
+    }
+  }, [isSuperAdmin, isPlatformEntry]); // eslint-disable-line react-hooks/exhaustive-deps
+
   React.useEffect(() => {
     if (!isSuperAdmin || selectedCompanyId || isPlatformEntry) return;
     const nonPlatform = allCompanies.find((c) => !PLATFORM_SLUGS.includes(c.slug?.toLowerCase?.() || ""));

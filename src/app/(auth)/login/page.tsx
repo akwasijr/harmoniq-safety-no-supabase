@@ -300,6 +300,8 @@ function LoginForm() {
       // Route to platform admin (super_admin or company_admin)
       if (effectiveChoice === "platform") {
         window.localStorage.setItem(PLATFORM_ENTRY_KEY, "true");
+        // Clear stored company selection so admin starts fresh on platform overview
+        window.localStorage.removeItem(SELECTED_COMPANY_STORAGE_KEY);
         // Find a real tenant slug for the platform URL
         let platformSlug: string | undefined;
         if (profile.company_id) {
