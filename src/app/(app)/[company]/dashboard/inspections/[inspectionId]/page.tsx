@@ -74,7 +74,7 @@ export default function InspectionDetailPage() {
         relatedCorrectiveActions.some((action) => action.id === workOrder.corrective_action_id),
       );
 
-  if (isLoading) {
+  if (isLoading && inspections.length === 0) {
     return <LoadingPage />;
   }
 

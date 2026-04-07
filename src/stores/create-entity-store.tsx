@@ -7,6 +7,17 @@ import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { sanitizeText } from "@/lib/validation";
 
+// ── Module-level cache ──────────────────────────────────────────────
+// Persists across Provider re-mounts so tab navigation never re-fetches
+// fresh data from Supabase unless stale.
+const globalLoadedCache = new Map<string, number>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+function isCacheFresh(key: string): boolean {
+  const ts = globalLoadedCache.get(key);
+  return ts != null && Date.now() - ts < CACHE_TTL_MS;
+}
+
 /** Recursively sanitize all string values in an entity before writing. */
 function sanitizeEntity<T extends Record<string, unknown>>(entity: T): T {
   const sanitized = { ...entity };
@@ -118,9 +129,17 @@ export function createEntityStore<T extends IdEntity>(
       const newItems = initialData.filter((item) => !cachedIds.has(item.id));
       return newItems.length > 0 ? [...cached, ...newItems] : cached;
     });
-    const [isLoading, setIsLoading] = React.useState(false);
+    const [isLoading, setIsLoading] = React.useState(() => {
+      // Only show loading spinner if we have zero cached data AND no recent fetch
+      if (!isSupabaseConfigured) return false;
+      if (isCacheFresh(storageKey)) return false;
+      const cached = loadFromStorage<T[]>(storageKey, []);
+      return cached.length === 0;
+    });
     const [error, setError] = React.useState<string | null>(null);
-    const hasLoadedRef = React.useRef(!isSupabaseConfigured);
+    const hasLoadedRef = React.useRef(
+      !isSupabaseConfigured || isCacheFresh(storageKey)
+    );
     const isFetchingRef = React.useRef(false);
     const isMountedRef = React.useRef(true);
 
@@ -132,9 +151,15 @@ export function createEntityStore<T extends IdEntity>(
 
     const ensureLoaded = React.useCallback(() => {
       if (!isSupabaseConfigured) return;
-      if (hasLoadedRef.current || isFetchingRef.current) return;
+      if (isFetchingRef.current) return;
+      // Skip fetch entirely if cache is fresh
+      if (hasLoadedRef.current && isCacheFresh(storageKey)) return;
+      // If we have data but cache is stale, do a silent background refresh
+      const hasExistingData = itemsRef.current.length > 0;
       isFetchingRef.current = true;
-      setIsLoading(true);
+      if (!hasExistingData) {
+        setIsLoading(true);
+      }
       setError(null);
 
       const supabase = createClient();
@@ -179,6 +204,7 @@ export function createEntityStore<T extends IdEntity>(
           if (isMountedRef.current) setIsLoading(false);
           isFetchingRef.current = false;
           hasLoadedRef.current = true;
+          globalLoadedCache.set(storageKey, Date.now());
         }
       };
 

@@ -98,7 +98,7 @@ export default function ContentPage() {
     return <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />;
   };
 
-  if (isLoading) {
+  if (isLoading && content.length === 0) {
     return <LoadingPage />;
   }
 

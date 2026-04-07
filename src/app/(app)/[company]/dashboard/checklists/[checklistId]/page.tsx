@@ -389,7 +389,7 @@ export default function ChecklistDetailPage() {
 
   // If it's a submission, render submission view
   if (isSubmission) {
-    if (isLoading) {
+    if (isLoading && templates.length === 0) {
       return <LoadingPage />;
     }
     if (!submission) {
@@ -626,7 +626,7 @@ export default function ChecklistDetailPage() {
   }
 
   // Template view (existing code)
-  if (isLoading) {
+  if (isLoading && templates.length === 0) {
     return <LoadingPage />;
   }
 

@@ -159,7 +159,7 @@ export default function QRCodesPage() {
       .catch(() => toast("Unable to copy link"));
   };
 
-  if (isLoading) {
+  if (isLoading && allAssets.length === 0) {
     return <LoadingPage />;
   }
 

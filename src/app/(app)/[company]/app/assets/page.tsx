@@ -118,7 +118,7 @@ export default function EmployeeAssetsPage() {
       ),
   );
 
-  if (isLoading) {
+  if (isLoading && assets.length === 0) {
     return <LoadingPage />;
   }
 

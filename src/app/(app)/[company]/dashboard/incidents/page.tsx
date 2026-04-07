@@ -287,7 +287,7 @@ export default function IncidentsPage() {
     setSearchQuery("");
   }, [activeSubTab]);
 
-  if (isLoading) {
+  if (isLoading && incidents.length === 0) {
     return <LoadingPage />;
   }
 

@@ -137,7 +137,7 @@ export default function CorrectiveActionsPage() {
   const getUserName = (id: string | null) => getUserFirstLastName(id, users, "Unassigned");
   const getTeamName = (id: string | null | undefined) => teams.find((team) => team.id === id)?.name ?? null;
 
-  if (isLoading) {
+  if (isLoading && actions.length === 0) {
     return <LoadingPage />;
   }
 

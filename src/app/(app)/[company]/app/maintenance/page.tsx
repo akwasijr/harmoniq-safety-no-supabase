@@ -37,7 +37,7 @@ function RequestMaintenancePageContent() {
 
   const selectedAsset = form.asset_id ? assets.find(a => a.id === form.asset_id) : null;
 
-  if (isLoading) {
+  if (isLoading && assets.length === 0) {
     return <LoadingPage />;
   }
 

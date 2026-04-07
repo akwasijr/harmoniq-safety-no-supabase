@@ -63,7 +63,7 @@ export default function LocationLandingPage() {
   const matchedLocation = locations.find((l) => l.id === locationId);
   const location = matchedLocation && user?.company_id && matchedLocation.company_id !== user.company_id ? undefined : matchedLocation;
 
-  if (isLoading) {
+  if (isLoading && locations.length === 0) {
     return <LoadingPage />;
   }
 

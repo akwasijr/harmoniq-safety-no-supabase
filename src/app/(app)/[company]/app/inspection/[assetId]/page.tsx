@@ -200,7 +200,7 @@ export default function AssetInspectionPage() {
     router.push(`/${company}/app/report/success?ref=${refNumber}&type=inspection`);
   };
 
-  if (isLoading) {
+  if (isLoading && assets.length === 0) {
     return <LoadingPage />;
   }
 

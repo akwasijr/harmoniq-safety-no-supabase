@@ -444,7 +444,7 @@ export default function AssetsPage() {
     setCurrentPage(1);
   };
 
-  if (isLoading) {
+  if (isLoading && assets.length === 0) {
     return <LoadingPage />;
   }
 

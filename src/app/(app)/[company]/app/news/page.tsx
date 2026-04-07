@@ -74,7 +74,7 @@ export default function EmployeeNewsPage() {
 
   const activeContent = getActiveContent();
 
-  if (isLoading) {
+  if (isLoading && contentItems.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />

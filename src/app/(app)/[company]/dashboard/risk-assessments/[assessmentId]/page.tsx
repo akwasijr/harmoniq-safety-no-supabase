@@ -182,7 +182,7 @@ export default function RiskAssessmentDetailPage() {
     ? riskEvaluations.filter(re => re.form_type.toLowerCase() === assessmentId)
     : [];
 
-  if (isLoading) {
+  if (isLoading && riskEvaluations.length === 0) {
     return <LoadingPage />;
   }
 

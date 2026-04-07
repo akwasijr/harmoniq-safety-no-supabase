@@ -69,7 +69,7 @@ export default function PartsPage() {
     setForm({ name: "", part_number: "", unit_cost: "", quantity_in_stock: "", minimum_stock: "", supplier: "" });
   };
 
-  if (isLoading) {
+  if (isLoading && parts.length === 0) {
     return <LoadingPage />;
   }
 

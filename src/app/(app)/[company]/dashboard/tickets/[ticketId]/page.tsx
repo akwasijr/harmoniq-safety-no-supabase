@@ -119,7 +119,7 @@ export default function TicketDetailPage() {
     }
   }, [tasks, TASKS_KEY]);
 
-  if (isLoading) {
+  if (isLoading && tickets.length === 0) {
     return <LoadingPage />;
   }
 

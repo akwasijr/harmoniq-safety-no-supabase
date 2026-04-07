@@ -125,8 +125,11 @@ export default function DashboardPage() {
       // Severity filter
       if (severityFilter && inc.severity !== severityFilter) return false;
       
-      // Department filter
-      if (departmentFilter && (inc as unknown as Record<string, unknown>).department !== departmentFilter) return false;
+      // Department filter (field may not exist on all incidents)
+      if (departmentFilter) {
+        const dept = (inc as unknown as Record<string, unknown>).department;
+        if (dept !== departmentFilter) return false;
+      }
       
       return true;
     });

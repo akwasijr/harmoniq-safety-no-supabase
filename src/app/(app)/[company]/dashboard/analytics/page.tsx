@@ -225,7 +225,7 @@ export default function AnalyticsPage() {
     },
   ];
 
-  if (isLoading) {
+  if (isLoading && incidents.length === 0) {
     return <LoadingPage />;
   }
 

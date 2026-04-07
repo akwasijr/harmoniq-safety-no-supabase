@@ -80,7 +80,7 @@ export default function WorkOrderDetailPage() {
     [orderId, updateOrder, toast],
   );
 
-  if (isLoading) return <LoadingPage />;
+  if (isLoading && orders.length === 0) return <LoadingPage />;
 
   if (!order) {
     return (

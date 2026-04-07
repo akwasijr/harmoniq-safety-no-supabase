@@ -47,7 +47,7 @@ export default function PlatformUserDetailPage() {
     }
   }, [user?.id]);
 
-  if (isLoading) {
+  if (isLoading && users.length === 0) {
     return <LoadingPage />;
   }
 

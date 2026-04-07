@@ -41,7 +41,7 @@ function AssetQuickViewPageContent() {
   const lastInspection = [...assetInspections].sort((a, b) => new Date(b.inspected_at).getTime() - new Date(a.inspected_at).getTime())[0];
   const location = asset?.location_id ? locations.find((l) => l.id === asset.location_id) : null;
 
-  if (isLoading) {
+  if (isLoading && assets.length === 0) {
     return <LoadingPage />;
   }
 

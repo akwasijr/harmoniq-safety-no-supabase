@@ -62,7 +62,7 @@ export default function WorkOrdersPage() {
   const [currentPage, setCurrentPage] = React.useState(1);
   const ITEMS_PER_PAGE = PAGINATION.WORK_ORDERS_PAGE_SIZE;
 
-  // Auto-create work orders for overdue maintenance (runs once)
+  // Auto-create work orders for overdue maintenance (runs once per session)
   const overdueCheckRan = React.useRef(false);
   React.useEffect(() => {
     if (overdueCheckRan.current || isLoading) return;
@@ -71,9 +71,12 @@ export default function WorkOrdersPage() {
       assets,
       existingWorkOrders: orders,
     });
-    if (newOrders.length > 0) {
-      newOrders.forEach((wo) => add(wo));
-      toast(`Created ${newOrders.length} work order${newOrders.length > 1 ? "s" : ""} for overdue maintenance`);
+    // Deduplicate: only create if not already in the current orders list
+    const existingIds = new Set(orders.map((o) => o.asset_id));
+    const dedupedOrders = newOrders.filter((wo) => !existingIds.has(wo.asset_id));
+    if (dedupedOrders.length > 0) {
+      dedupedOrders.forEach((wo) => add(wo));
+      toast(`Created ${dedupedOrders.length} work order${dedupedOrders.length > 1 ? "s" : ""} for overdue maintenance`);
     }
   }, [isLoading, assets, orders, add, toast]);
   const [form, setForm] = React.useState({
@@ -190,7 +193,7 @@ export default function WorkOrdersPage() {
 
   const statusColors = WORK_ORDER_STATUS_COLORS;
 
-  if (isLoading) {
+  if (isLoading && orders.length === 0) {
     return <LoadingPage />;
   }
 

@@ -482,7 +482,7 @@ function ChecklistsPageContent() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && checklistTemplates.length === 0) {
     return <LoadingPage />;
   }
 

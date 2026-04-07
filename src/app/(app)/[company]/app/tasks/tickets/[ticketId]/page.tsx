@@ -74,7 +74,7 @@ export default function TicketDetailPage() {
     [ticketId, updateTicket, toast],
   );
 
-  if (isLoading) return <LoadingPage />;
+  if (isLoading && tickets.length === 0) return <LoadingPage />;
 
   if (!ticket) {
     return (

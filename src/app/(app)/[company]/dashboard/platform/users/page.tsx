@@ -106,7 +106,7 @@ export default function PlatformUsersPage() {
     handleCloseModal();
   };
 
-  if (isLoading) {
+  if (isLoading && allUsers.length === 0) {
     return <LoadingPage />;
   }
 

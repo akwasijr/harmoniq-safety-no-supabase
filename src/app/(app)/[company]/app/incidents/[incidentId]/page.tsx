@@ -82,7 +82,7 @@ export default function EmployeeIncidentDetailPage() {
     }
   }, [incident]);
 
-  if (isLoading) {
+  if (isLoading && incidents.length === 0) {
     return <LoadingPage />;
   }
 

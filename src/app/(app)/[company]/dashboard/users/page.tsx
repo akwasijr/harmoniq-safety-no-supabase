@@ -322,7 +322,7 @@ export default function UsersPage() {
     return teamIds.map(id => teams.find(t => t.id === id)?.name).filter(Boolean);
   };
 
-  if (isLoading) {
+  if (isLoading && users.length === 0) {
     return <LoadingPage />;
   }
 

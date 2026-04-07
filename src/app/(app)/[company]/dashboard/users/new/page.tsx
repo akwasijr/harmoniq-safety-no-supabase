@@ -62,7 +62,7 @@ export default function NewUserPage() {
   const currentCompany = companies.find((c) => c.slug === company) || companies[0];
   const { locations, teams, stores } = useCompanyData();
   const { update: updateTeam } = stores.teams;
-  const { add: addUser } = useUsersStore();
+  const { add: addUser, items: existingUsers } = useUsersStore();
   const { t } = useTranslation();
 
   // Form state matching User interface
@@ -89,6 +89,14 @@ export default function NewUserPage() {
   }, [currentCompany?.id]);
 
   const handleSubmit = async () => {
+    // Check for duplicate email
+    const emailExists = existingUsers.some(
+      (u) => u.email.toLowerCase() === formData.email.toLowerCase().trim()
+    );
+    if (emailExists) {
+      toast("A user with this email already exists", "error");
+      return;
+    }
     setIsSubmitting(true);
 
     try {

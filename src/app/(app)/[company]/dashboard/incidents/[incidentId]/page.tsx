@@ -259,7 +259,7 @@ export default function IncidentDetailPage() {
   const completedActions = actions.filter((a) => a.status === "completed").length;
   const totalActions = actions.length;
 
-  if (isLoading) {
+  if (isLoading && incidents.length === 0) {
     return <LoadingPage />;
   }
 

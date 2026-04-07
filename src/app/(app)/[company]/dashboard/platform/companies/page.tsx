@@ -115,7 +115,7 @@ export default function PlatformCompaniesPage() {
     return { userCount: companyUsers.length, incidentCount: openIncidents.length };
   };
 
-  if (isLoading) {
+  if (isLoading && companies.length === 0) {
     return <LoadingPage />;
   }
 

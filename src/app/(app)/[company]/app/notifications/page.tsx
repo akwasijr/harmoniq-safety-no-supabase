@@ -307,7 +307,7 @@ export default function NotificationsPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && dbNotifications.length === 0) {
     return <LoadingPage />;
   }
 

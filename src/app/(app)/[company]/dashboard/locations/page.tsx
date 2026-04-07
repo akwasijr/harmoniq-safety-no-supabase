@@ -455,7 +455,7 @@ function LocationsPageContent() {
     const isSelected = selectedLocationId === location.id;
     const canAddChildren = (LOCATION_HIERARCHY[location.type] || []).length > 0;
 
-  if (isLoading) {
+  if (isLoading && locations.length === 0) {
     return <LoadingPage />;
   }
 

@@ -84,7 +84,7 @@ export default function CorrectiveActionDetailPage() {
     [actionId, updateAction, toast],
   );
 
-  if (isLoading) return <LoadingPage />;
+  if (isLoading && actions.length === 0) return <LoadingPage />;
 
   if (!action) {
     return (

@@ -153,7 +153,7 @@ export default function TicketsPage() {
       });
   };
 
-  if (isLoading) {
+  if (isLoading && tickets.length === 0) {
     return <LoadingPage />;
   }
 

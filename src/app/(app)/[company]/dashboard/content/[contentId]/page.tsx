@@ -97,7 +97,7 @@ export default function ContentDetailPage() {
     e.target.value = "";
   };
 
-  if (isLoading) {
+  if (isLoading && contentItems.length === 0) {
     return <LoadingPage />;
   }
 

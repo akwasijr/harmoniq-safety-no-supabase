@@ -129,7 +129,7 @@ export default function InspectionRoutesPage() {
     toast(next === "active" ? t("inspectionRoutes.toast.routeActivated") : t("inspectionRoutes.toast.routeDeactivated"));
   };
 
-  if (isLoading) {
+  if (isLoading && routes.length === 0) {
     return <LoadingPage />;
   }
 

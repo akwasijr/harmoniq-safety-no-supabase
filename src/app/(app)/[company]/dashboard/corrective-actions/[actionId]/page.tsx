@@ -116,7 +116,7 @@ export default function CorrectiveActionDetailPage() {
     toast(t("common.save"));
   };
 
-  if (isLoading) {
+  if (isLoading && actions.length === 0) {
     return <LoadingPage />;
   }
 

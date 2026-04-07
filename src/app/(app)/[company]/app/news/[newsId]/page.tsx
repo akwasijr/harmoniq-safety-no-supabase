@@ -58,7 +58,7 @@ export default function NewsDetailPage() {
 
   const article = contentItems.find((c) => c.id === newsId);
 
-  if (isLoading) {
+  if (isLoading && contentItems.length === 0) {
     return <LoadingPage />;
   }
 

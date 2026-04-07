@@ -72,7 +72,7 @@ export default function TeamDetailPage() {
     });
   }, [baseTeam]);
 
-  if (isLoading) {
+  if (isLoading && teams.length === 0) {
     return <LoadingPage />;
   }
 

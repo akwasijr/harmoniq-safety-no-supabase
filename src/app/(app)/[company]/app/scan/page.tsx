@@ -192,8 +192,8 @@ export default function ScanAssetPage() {
     if (!track) return;
     
     // Check if torch is supported
-    const capabilities = track.getCapabilities?.() as MediaTrackCapabilities & { torch?: boolean };
-    if (!capabilities?.torch) return;
+    const capabilities = track.getCapabilities?.() as (MediaTrackCapabilities & { torch?: boolean }) | undefined;
+    if (!capabilities || !capabilities.torch) return;
     
     // Apply torch constraint
     track.applyConstraints({

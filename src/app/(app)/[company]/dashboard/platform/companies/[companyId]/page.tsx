@@ -45,7 +45,7 @@ export default function PlatformCompanyDetailPage() {
     }
   }, [targetCompany]);
 
-  if (isLoading) {
+  if (isLoading && companies.length === 0) {
     return <LoadingPage />;
   }
 

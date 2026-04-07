@@ -90,9 +90,10 @@ export default function EmployeeProfilePage() {
       const dataUrl = reader.result as string;
       updateUser(authUser.id, { avatar_url: dataUrl });
       toast("Profile photo updated");
+      // Clear input after read so same file can be re-selected
+      if (e.target) e.target.value = "";
     };
     reader.readAsDataURL(file);
-    e.target.value = "";
   };
 
   // Never fall back to users[0]. That would expose another user's data.
