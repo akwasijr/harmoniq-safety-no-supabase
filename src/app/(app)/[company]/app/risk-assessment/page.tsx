@@ -278,21 +278,21 @@ export default function RiskAssessmentIndexPage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             {riskAssessmentForms[companyCountry].map((form) => {
               const Icon = form.icon;
               return (
                 <Link
                   key={form.id}
                   href={`/${company}/app/risk-assessment/${form.id}`}
-                  className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-all hover:bg-primary/10 hover:border-primary/50 active:border-primary active:bg-primary/10"
+                  className="flex flex-col items-center gap-2.5 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/30 active:bg-muted/50"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                     <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
                   </div>
                   <div className="text-center">
-                    <p className="font-semibold text-sm text-primary">{form.name}</p>
-                    <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground">{form.fullName}</p>
+                    <p className="font-semibold text-sm">{form.name}</p>
+                    <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{form.fullName}</p>
                   </div>
                 </Link>
               );

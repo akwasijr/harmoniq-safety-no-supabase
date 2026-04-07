@@ -574,16 +574,16 @@ function EmployeeChecklistsPageContent() {
             {/* New Report */}
             <Link
               href={`/${company}/app/report`}
-              className="flex items-center gap-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-3 transition-colors hover:bg-primary/10 hover:border-primary/50 active:border-primary active:bg-primary/10"
+              className="flex items-center gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/30 active:bg-muted/50"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <FileCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                <FileCheck className="h-5 w-5 text-primary" aria-hidden="true" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-primary">{t("app.reportIncident")}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{t("app.reportIncidentDesc") || "New incident report"}</p>
+                <p className="font-semibold text-sm">{t("app.reportIncident")}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{t("app.reportIncidentDesc") || "Spot something unsafe? Let the team know."}</p>
               </div>
-              <ChevronRight className="h-4 w-4 text-primary/50 shrink-0" aria-hidden="true" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
             </Link>
 
             <div className="border-t" />
@@ -657,21 +657,21 @@ function EmployeeChecklistsPageContent() {
         {activeTab === "risk-assessment" && (
           <>
             <Section title={t("checklists.newAssessment")} icon={FileCheck} iconColor="text-primary">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 {riskAssessmentForms[companyCountry].map((form) => {
                   const Icon = form.icon;
                   return (
                     <Link
                       key={form.id}
                       href={`/${company}/app/risk-assessment/${form.id}`}
-                      className="flex items-center gap-2 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-3 transition-colors hover:bg-primary/10 hover:border-primary/50 active:border-primary active:bg-primary/10"
+                      className="flex items-center gap-2.5 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/30 active:bg-muted/50"
                     >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                        <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                        <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm text-primary">{form.name}</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{form.fullName}</p>
+                        <p className="font-semibold text-sm">{form.name}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{form.fullName}</p>
                       </div>
                     </Link>
                   );
