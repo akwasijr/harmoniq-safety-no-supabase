@@ -291,7 +291,7 @@ export default function ArbowetFormPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Bedrijfsnaam (Company Name) *</Label>
                 <Input
                   autoFocus
@@ -305,7 +305,7 @@ export default function ArbowetFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Auditor Name *</Label>
                 <Input
                   value={formData.auditor}
@@ -318,7 +318,7 @@ export default function ArbowetFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Audit Date *</Label>
                 <Input
                   type="date"
@@ -333,9 +333,9 @@ export default function ArbowetFormPage() {
             </div>
 
             {/* Articles Overview */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-base">{t("riskAssessment.articlesCovered")}</Label>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {ARBOWET_ARTICLES.map((article) => (
                   <div key={article.id} className="p-3 rounded-lg bg-muted/50">
                     <p className="font-medium text-sm">{article.title}</p>
@@ -536,7 +536,7 @@ export default function ArbowetFormPage() {
                     {t("riskAssessment.nonCompliantItems", { count: String(nonCompliantCount) })}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-3">
                   {ARBOWET_ARTICLES.flatMap((article) =>
                     article.items
                       .filter((item) => formData.items[item.id].status === "non_compliant")
@@ -556,7 +556,7 @@ export default function ArbowetFormPage() {
             )}
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">{t("riskAssessment.overallAssessmentLabel")}</Label>
                 <Textarea
                   value={formData.overallAssessment}
@@ -566,7 +566,7 @@ export default function ArbowetFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">{t("riskAssessment.priorityActions")}</Label>
                 <Textarea
                   value={formData.priorityActions}
@@ -576,7 +576,7 @@ export default function ArbowetFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">{t("riskAssessment.nextAuditDate")}</Label>
                 <Input
                   type="date"

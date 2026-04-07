@@ -347,7 +347,7 @@ export default function RIEFormPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Bedrijfsnaam (Company Name) *</Label>
                 <Input
                   autoFocus
@@ -363,7 +363,7 @@ export default function RIEFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">KvK-nummer (Chamber of Commerce Number)</Label>
                 <Input
                   value={formData.kvkNumber}
@@ -376,7 +376,7 @@ export default function RIEFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Adres (Address) *</Label>
                 <Input
                   value={formData.address}
@@ -392,7 +392,7 @@ export default function RIEFormPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Sector</Label>
                   <Input
                     value={formData.sector}
@@ -402,7 +402,7 @@ export default function RIEFormPage() {
                     maxLength={200}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Aantal medewerkers *</Label>
                   <Input
                     value={formData.employeeCount}
@@ -418,7 +418,7 @@ export default function RIEFormPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Datum RI&E *</Label>
                   <Input
                     type="date"
@@ -430,7 +430,7 @@ export default function RIEFormPage() {
                     <p className="text-xs text-red-500 mt-1">This field is required</p>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Uitgevoerd door *</Label>
                   <Input
                     value={formData.assessor}
@@ -487,7 +487,7 @@ export default function RIEFormPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Beschrijving werkplek (Workplace Description) *</Label>
                 <Textarea
                   value={formData.workplaceDescription}
@@ -501,7 +501,7 @@ export default function RIEFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Werkzaamheden (Activities) *</Label>
                 <Textarea
                   value={formData.activities}
@@ -515,7 +515,7 @@ export default function RIEFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Werktijden (Working Hours)</Label>
                 <Input
                   value={formData.workingHours}
@@ -526,7 +526,7 @@ export default function RIEFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Bijzondere groepen (Special Groups)</Label>
                 <Textarea
                   value={formData.specialGroups}
@@ -836,7 +836,7 @@ export default function RIEFormPage() {
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-base">Algemene maatregelen (General Measures)</Label>
               <Textarea
                 value={formData.generalMeasures}
@@ -847,7 +847,7 @@ export default function RIEFormPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-base">Aanvullende opmerkingen</Label>
               <Textarea
                 value={formData.additionalNotes}

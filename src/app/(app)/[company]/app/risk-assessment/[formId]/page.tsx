@@ -374,7 +374,7 @@ export default function RiskAssessmentFormPage() {
 
         <div className="space-y-6">
           {currentSectionData.questions.map((q) => (
-            <div key={q.id} className="space-y-2">
+            <div key={q.id} className="space-y-3">
               <Label className="text-base">{q.question}</Label>
               
               {q.type === "text" && (

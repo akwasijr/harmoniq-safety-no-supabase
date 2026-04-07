@@ -313,7 +313,7 @@ export default function SAMFormPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Organisation *</Label>
                 <Input
                   autoFocus
@@ -328,7 +328,7 @@ export default function SAMFormPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Avdelning (Department)</Label>
                   <Input
                     value={formData.department}
@@ -337,7 +337,7 @@ export default function SAMFormPage() {
                     className="h-12"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Arbetsplats *</Label>
                   <Input
                     value={formData.workplace}
@@ -352,7 +352,7 @@ export default function SAMFormPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Datum *</Label>
                   <Input
                     type="date"
@@ -364,7 +364,7 @@ export default function SAMFormPage() {
                     <p className="text-xs text-red-500 mt-1">This field is required</p>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Utförd av *</Label>
                   <Input
                     value={formData.assessor}
@@ -378,7 +378,7 @@ export default function SAMFormPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Deltagare (Participants)</Label>
                 <Textarea
                   value={formData.participants}
@@ -663,7 +663,7 @@ export default function SAMFormPage() {
             )}
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Generella åtgärder (General Measures)</Label>
                 <Textarea
                   value={formData.generalMeasures}
@@ -673,7 +673,7 @@ export default function SAMFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Uppföljningsdatum (Follow-up Date)</Label>
                 <Input
                   type="date"
@@ -750,7 +750,7 @@ export default function SAMFormPage() {
               </CardContent>
             </Card>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-base">Signerad av *</Label>
               <Input
                 value={formData.signedBy}

@@ -271,7 +271,7 @@ export default function JSAFormPage() {
 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label htmlFor="jsa-date" className="text-base flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     Date *
@@ -288,7 +288,7 @@ export default function JSAFormPage() {
                     <p className="text-xs text-red-500 mt-1">This field is required</p>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label htmlFor="jsa-time" className="text-base">Time *</Label>
                   <Input
                     id="jsa-time"
@@ -303,7 +303,7 @@ export default function JSAFormPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="jsa-job-desc" className="text-base">Job/Task Description *</Label>
                 <Textarea
                   id="jsa-job-desc"
@@ -317,7 +317,7 @@ export default function JSAFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="jsa-location" className="text-base flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Work Location *
@@ -334,7 +334,7 @@ export default function JSAFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="jsa-crew-leader" className="text-base flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Crew Leader *
@@ -351,7 +351,7 @@ export default function JSAFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="jsa-crew-members" className="text-base">Crew Members</Label>
                 <Textarea
                   id="jsa-crew-members"
@@ -395,7 +395,7 @@ export default function JSAFormPage() {
                     {category.items.map((item) => {
                       const checklistItem = formData.checklistItems[item.id];
                       return (
-                        <div key={item.id} className="space-y-2">
+                        <div key={item.id} className="space-y-3">
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
                               <p className="text-sm font-medium">{item.label}</p>
@@ -454,7 +454,7 @@ export default function JSAFormPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Identified Hazards *</Label>
                 <p className="text-xs text-muted-foreground">
                   List any hazards specific to today&apos;s task not covered in the checklist
@@ -470,7 +470,7 @@ export default function JSAFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Control Measures *</Label>
                 <p className="text-xs text-muted-foreground">
                   How will you control or mitigate the identified hazards?
@@ -486,7 +486,7 @@ export default function JSAFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base text-red-600">Stop Work Conditions</Label>
                 <p className="text-xs text-muted-foreground">
                   Under what conditions should work be stopped immediately?
