@@ -154,7 +154,8 @@ export async function middleware(request: NextRequest) {
   // This allows super admins to switch between platform and company views without
   // losing their admin session. The cookie still expires naturally after 60 min.
   const isAuthResetPath = pathname === "/login" || pathname === "/signup";
-  if (isAuthResetPath && request.cookies.get(ADMIN_ENTRY_COOKIE)) {
+  const isPlatformLogin = pathname === "/login" && request.nextUrl.searchParams.get("mode") === "platform";
+  if (isAuthResetPath && !isPlatformLogin && request.cookies.get(ADMIN_ENTRY_COOKIE)) {
     const response = NextResponse.next();
     response.cookies.set(ADMIN_ENTRY_COOKIE, "", {
       path: "/",

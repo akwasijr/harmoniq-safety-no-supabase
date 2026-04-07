@@ -173,7 +173,7 @@ export function Sidebar({
     if (typeof window !== "undefined") {
       setAllowPlatform(hasClientCookie("harmoniq_admin_entry", "true"));
     }
-  }, [showPlatformAdmin]);
+  }, [showPlatformAdmin, pathname]);
 
   // Platform admin nav is ONLY visible when the user entered via /admin-login
   const showPlatformNav = isSuperAdmin && allowPlatform;
