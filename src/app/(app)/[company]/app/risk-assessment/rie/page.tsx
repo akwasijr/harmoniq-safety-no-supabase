@@ -241,8 +241,8 @@ export default function RIEFormPage() {
 
   const canProceed = (): boolean => {
     switch (currentSection) {
-      case 0: return !!formData.companyName.trim() && !!formData.assessmentDate.trim() && !!formData.assessor.trim();
-      case 1: return true;
+      case 0: return !!formData.companyName.trim() && !!formData.address.trim() && !!formData.employeeCount.trim() && !!formData.assessmentDate.trim() && !!formData.assessor.trim();
+      case 1: return !!formData.workplaceDescription.trim() && !!formData.activities.trim();
       case 2: return true;
       case 3: return true;
       case 4: return true;
@@ -395,6 +395,9 @@ export default function RIEFormPage() {
                   maxLength={500}
                   required
                 />
+                {showErrors && !formData.address.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -417,6 +420,9 @@ export default function RIEFormPage() {
                     className="h-12"
                     maxLength={10}
                   />
+                  {showErrors && !formData.employeeCount.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
               </div>
 
@@ -500,6 +506,9 @@ export default function RIEFormPage() {
                   className="min-h-[100px]"
                   maxLength={5000}
                 />
+                {showErrors && !formData.workplaceDescription.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -511,6 +520,9 @@ export default function RIEFormPage() {
                   className="min-h-[100px]"
                   maxLength={5000}
                 />
+                {showErrors && !formData.activities.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">

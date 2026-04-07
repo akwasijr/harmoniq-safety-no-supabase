@@ -168,9 +168,9 @@ export default function JSAFormPage() {
 
   const canProceed = (): boolean => {
     switch (currentSection) {
-      case 0: return !!formData.date.trim() && !!formData.jobDescription.trim() && !!formData.location.trim();
+      case 0: return !!formData.date.trim() && !!formData.time.trim() && !!formData.jobDescription.trim() && !!formData.location.trim() && !!formData.crewLeader.trim();
       case 1: return true;
-      case 2: return true;
+      case 2: return !!formData.identifiedHazards.trim() && !!formData.controlMeasures.trim();
       case 3: return formData.acknowledgment;
       default: return false;
     }
@@ -468,6 +468,9 @@ export default function JSAFormPage() {
                   placeholder="e.g., Working near active forklift traffic, overhead crane operations in area..."
                   className="min-h-[100px]"
                 />
+                {showErrors && !formData.identifiedHazards.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -481,6 +484,9 @@ export default function JSAFormPage() {
                   placeholder="e.g., Spotter assigned for forklift traffic, stay outside crane swing radius..."
                   className="min-h-[100px]"
                 />
+                {showErrors && !formData.controlMeasures.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">

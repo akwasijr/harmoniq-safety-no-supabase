@@ -211,7 +211,7 @@ export default function OSAFormPage() {
 
   const canProceed = (): boolean => {
     switch (currentSection) {
-      case 0: return !!formData.organizationName.trim() && !!formData.assessmentDate.trim() && !!formData.respondent.trim();
+      case 0: return !!formData.organizationName.trim() && !!formData.department.trim() && !!formData.assessmentDate.trim() && !!formData.respondent.trim();
       default: return true;
     }
   };
@@ -361,6 +361,9 @@ export default function OSAFormPage() {
                   placeholder="Your department"
                   className="h-12"
                 />
+                {showErrors && !formData.department.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -378,7 +381,7 @@ export default function OSAFormPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-base">Ditt namn</Label>
+                  <Label className="text-base">Ditt namn *</Label>
                   <Input
                     value={formData.respondent}
                     onChange={(e) => setFormData({ ...formData, respondent: e.target.value })}

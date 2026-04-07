@@ -208,7 +208,7 @@ export default function SAMFormPage() {
 
   const canProceed = (): boolean => {
     switch (currentSection) {
-      case 0: return !!formData.organizationName.trim() && !!formData.workplace.trim() && !!formData.assessmentDate.trim();
+      case 0: return !!formData.organizationName.trim() && !!formData.workplace.trim() && !!formData.assessmentDate.trim() && !!formData.assessor.trim();
       case 1: return true;
       case 2: return true;
       case 3: return !!formData.signedBy.trim();
@@ -381,6 +381,9 @@ export default function SAMFormPage() {
                     placeholder="Assessor name"
                     className="h-12"
                   />
+                  {showErrors && !formData.assessor.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
               </div>
 

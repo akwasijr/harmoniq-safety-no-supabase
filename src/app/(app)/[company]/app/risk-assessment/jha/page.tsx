@@ -214,7 +214,7 @@ export default function JHAFormPage() {
 
   const canProceed = (): boolean => {
     switch (currentSection) {
-      case 0: return !!formData.jobTitle.trim() && !!formData.location.trim() && !!formData.department.trim() && !!formData.date.trim();
+      case 0: return !!formData.jobTitle.trim() && !!formData.location.trim() && !!formData.department.trim() && !!formData.date.trim() && !!formData.supervisor.trim();
       case 1: return formData.jobSteps.length > 0 && formData.jobSteps.every(s => s.description.trim().length > 0);
       case 2: return true;
       case 3: return true;
@@ -396,6 +396,9 @@ export default function JHAFormPage() {
                     placeholder="Supervisor name"
                     className="h-12"
                   />
+                  {showErrors && !formData.supervisor.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
               </div>
             </div>
