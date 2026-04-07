@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useTranslation } from "@/i18n";
+import { createClient } from "@/lib/supabase/client";
 
 const RATE_LIMIT_KEY = "harmoniq_forgot_pw_attempts";
 const RATE_LIMIT_MAX = 3;
@@ -75,8 +76,22 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     recordAttempt();
 
-    // Simulate API call, no-supabase version
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const supabase = createClient();
+      const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${siteUrl}/reset-password`,
+      });
+
+      if (resetError) {
+        console.error("[ForgotPassword] Reset error:", resetError.message);
+        // Don't reveal whether email exists — always show success
+      }
+    } catch (err) {
+      console.error("[ForgotPassword] Unexpected error:", err);
+      // Still show success to prevent email enumeration
+    }
+
     setIsLoading(false);
     setSubmitted(true);
   };

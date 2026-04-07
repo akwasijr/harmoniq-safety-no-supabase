@@ -34,7 +34,7 @@ export async function POST(
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile || profile.role !== "super_admin") {
+    if (!profile || !["super_admin", "company_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -46,6 +46,11 @@ export async function POST(
 
     if (targetUserError || !targetUser) {
       return NextResponse.json({ error: "User not found or inaccessible" }, { status: 404 });
+    }
+
+    // company_admin can only reset passwords for users in their own company
+    if (profile.role === "company_admin" && targetUser.company_id !== profile.company_id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
