@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
-import { hasClientCookie } from "@/lib/client-cookies";
+
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 
@@ -159,24 +159,14 @@ export function Sidebar({
   const pathname = usePathname();
   const [collapsed, setCollapsed] = React.useState(false);
   const [hovered, setHovered] = React.useState(false);
-  const [allowPlatform, setAllowPlatform] = React.useState(showPlatformAdmin);
   const { theme, setTheme } = useTheme();
   const { isSuperAdmin, hasSelectedCompany, logout } = useAuth();
   const { t } = useTranslation();
   const isCollapsed = collapsed && !hovered;
 
-  React.useEffect(() => {
-    if (showPlatformAdmin) {
-      setAllowPlatform(true);
-      return;
-    }
-    if (typeof window !== "undefined") {
-      setAllowPlatform(hasClientCookie("harmoniq_admin_entry", "true"));
-    }
-  }, [showPlatformAdmin, pathname]);
-
-  // Platform admin nav is ONLY visible when the user entered via /admin-login
-  const showPlatformNav = isSuperAdmin && allowPlatform;
+  // Platform admin nav is visible for any super_admin user.
+  // Route-level protection is handled by middleware (requires admin_entry cookie).
+  const showPlatformNav = isSuperAdmin;
 
   // Helper to resolve nav item title via i18n
   const getTitle = (item: NavItem) => item.titleKey ? t(item.titleKey) : item.title;
