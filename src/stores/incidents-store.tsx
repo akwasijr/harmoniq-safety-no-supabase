@@ -6,6 +6,7 @@ import type { Incident } from "@/types";
 
 const store = createEntityStore<Incident>("harmoniq_incidents", mockIncidents, {
   stripFields: ["reporter", "location", "asset", "assigned_to", "documents"],
+  realtimeSubscribe: true,
 });
 
 export const IncidentsStoreProvider = store.Provider;

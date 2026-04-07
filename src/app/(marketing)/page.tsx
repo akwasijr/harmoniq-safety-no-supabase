@@ -902,7 +902,7 @@ export default function Home() {
               <h4 className="font-semibold text-white text-sm mb-4">Legal</h4>
               <ul className="space-y-3">
                 <li><Link href="/privacy" className="text-sm text-zinc-500 hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="text-sm text-zinc-500 hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/terms" className="text-sm text-zinc-500 hover:text-white transition-colors">Site Disclaimer</Link></li>
                 <li><Link href="/cookies" className="text-sm text-zinc-500 hover:text-white transition-colors">Cookie Policy</Link></li>
                 <li><Link href="/gdpr" className="text-sm text-zinc-500 hover:text-white transition-colors">GDPR</Link></li>
               </ul>
@@ -912,7 +912,7 @@ export default function Home() {
             <p className="text-sm text-zinc-600">© {new Date().getFullYear()} Harmoniq. All rights reserved.</p>
             <div className="flex gap-6">
               <Link href="/privacy" className="text-sm text-zinc-600 hover:text-white transition-colors">Privacy</Link>
-              <Link href="/terms" className="text-sm text-zinc-600 hover:text-white transition-colors">Terms</Link>
+              <Link href="/terms" className="text-sm text-zinc-600 hover:text-white transition-colors">Disclaimer</Link>
               <Link href="/cookies" className="text-sm text-zinc-600 hover:text-white transition-colors">Cookies</Link>
             </div>
           </div>

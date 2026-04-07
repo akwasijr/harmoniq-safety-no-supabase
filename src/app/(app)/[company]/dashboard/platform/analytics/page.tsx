@@ -2,10 +2,6 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { useCompanyStore } from "@/stores/company-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useIncidentsStore } from "@/stores/incidents-store";
-import { useAssetsStore } from "@/stores/assets-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +18,7 @@ import { buildSiteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 import {
-  BarChart3, Users, Building2, Globe, Shield, AlertTriangle, Package,
+  BarChart3, Users, Globe, Shield,
   CheckCircle, MapPin, Activity, Monitor, Smartphone, RefreshCw, TrendingUp, Save,
 } from "lucide-react";
 
@@ -152,10 +148,6 @@ function ConsentAuditLog() {
 export default function PlatformAnalyticsPage() {
   const { formatNumber } = useTranslation();
   const { toast } = useToast();
-  const { items: companies } = useCompanyStore();
-  const { items: users } = useUsersStore();
-  const { items: incidents } = useIncidentsStore();
-  const { items: assets } = useAssetsStore();
   const [activeTab, setActiveTab] = React.useState<SubTab>("dashboard");
   const [trafficPeriod, setTrafficPeriod] = React.useState<"7d" | "30d" | "90d">("30d");
   const [analyticsData, setAnalyticsData] = React.useState<AnalyticsData | null>(null);
@@ -226,19 +218,22 @@ export default function PlatformAnalyticsPage() {
     Object.entries(analyticsData?.by_day || {}).sort((a, b) => a[0].localeCompare(b[0])).slice(-14).map(([date, views]) => ({ date, views })),
   [analyticsData]);
 
-  const activeCompanies = companies.filter((c) => c.status === "active").length;
-  const activeUsers = users.filter((u) => u.status === "active").length;
-  const openIncidents = incidents.filter((i) => i.status === "new" || i.status === "in_progress").length;
   const total = analyticsData?.total || 0;
   const unique = analyticsData?.uniqueVisitors || 0;
   const maxDaily = Math.max(...dailyData.map((d) => d.views), 1);
+  const activePrivacyControls = [
+    gdpr.cookieConsent,
+    gdpr.rightToErasure,
+    gdpr.dataExport,
+    gdpr.anonymizeIp,
+  ].filter(Boolean).length;
 
   const tabs: { id: SubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-    { id: "realtime", label: "Real-time", icon: Activity },
+    { id: "dashboard", label: "Traffic Overview", icon: BarChart3 },
+    { id: "realtime", label: "Live Traffic", icon: Activity },
     { id: "audience", label: "Audience", icon: Users },
     { id: "geo", label: "Geography", icon: Globe },
-    { id: "compliance", label: "Compliance", icon: Shield },
+    { id: "compliance", label: "Privacy & Consent", icon: Shield },
   ];
 
   const savePrivacySettings = async () => {
@@ -269,7 +264,11 @@ export default function PlatformAnalyticsPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Observability</h1>
+            <h1 className="text-2xl font-semibold">Marketing Site</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Public website traffic, audience behavior, and consent controls. Platform operations stay in
+              the Overview, Companies, Users, and Settings pages.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {activeTab === "compliance" && (
@@ -281,7 +280,7 @@ export default function PlatformAnalyticsPage() {
                 disabled={isSavingPrivacy}
               >
                 <Save className="h-4 w-4" />
-                {isSavingPrivacy ? "Saving..." : "Save privacy settings"}
+                {isSavingPrivacy ? "Saving..." : "Save marketing privacy settings"}
               </Button>
             )}
             <div className="flex gap-1">
@@ -291,7 +290,7 @@ export default function PlatformAnalyticsPage() {
                 </Button>
               ))}
             </div>
-            <Button variant="ghost" size="icon" onClick={fetchData} disabled={isLoading} className="h-8 w-8" aria-label="Refresh data">
+            <Button variant="ghost" size="icon" onClick={fetchData} disabled={isLoading} className="h-8 w-8" aria-label="Refresh marketing site data">
               <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
           </div>
@@ -321,16 +320,45 @@ export default function PlatformAnalyticsPage() {
         {/* ===== DASHBOARD ===== */}
         {activeTab === "dashboard" && (
           <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <KPICard title="Companies" value={activeCompanies} icon={Building2} />
-              <KPICard title="Active Users" value={activeUsers} icon={Users} />
-              <KPICard title="Open Incidents" value={openIncidents} icon={AlertTriangle} />
-              <KPICard title="Total Assets" value={assets.length} icon={Package} />
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Website data scope</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-muted-foreground">
+                  <p>
+                    This workspace is limited to the public marketing site: visitor traffic, referrers,
+                    geography, and consent-driven analytics.
+                  </p>
+                  <p>
+                    Company operations, incidents, tenant management, and platform administration now live
+                    only in the other platform pages.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Consent pipeline</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <span className="text-sm font-medium">Cookie banner</span>
+                    <Badge variant={gdpr.cookieConsent ? "success" : "secondary"}>
+                      {gdpr.cookieConsent ? "Enabled" : "Disabled"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <span className="text-sm font-medium">Privacy controls</span>
+                    <span className="text-sm text-muted-foreground">{activePrivacyControls}/4 active</span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{formatNumber(total)}</p><p className="text-xs text-muted-foreground mt-1">Page Views</p></CardContent></Card>
-              <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{formatNumber(unique)}</p><p className="text-xs text-muted-foreground mt-1">Unique Visitors</p></CardContent></Card>
-              <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{topCountries.length}</p><p className="text-xs text-muted-foreground mt-1">Countries</p></CardContent></Card>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <KPICard title="Page Views" value={formatNumber(total)} icon={BarChart3} />
+              <KPICard title="Unique Visitors" value={formatNumber(unique)} icon={Users} />
+              <KPICard title="Countries" value={topCountries.length} icon={Globe} />
+              <KPICard title="Tracked Pages" value={topPages.length} icon={Activity} />
             </div>
 
             {/* Sparkline-style daily chart */}

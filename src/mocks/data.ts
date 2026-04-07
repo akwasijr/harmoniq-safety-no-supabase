@@ -2647,7 +2647,7 @@ export const mockRiskEvaluations: RiskEvaluation[] = [
       ],
       ppe_required: ["Safety glasses", "Steel-toe boots", "Hard hat"],
     },
-    status: "submitted",
+    status: "reviewed",
     reviewed_by: "user_1",
     reviewed_at: "2024-07-15T10:00:00Z",
     submitted_at: "2024-07-14T14:00:00Z",

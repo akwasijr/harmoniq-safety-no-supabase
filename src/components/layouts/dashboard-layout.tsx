@@ -290,7 +290,7 @@ function buildDashboardBreadcrumbs(pathname: string | null, company: string): Br
       if (segments[1] === "overview") {
         push("Overview", `${base}/platform/overview`);
       } else if (segments[1] === "analytics") {
-        push("Analytics & Privacy", `${base}/platform/analytics`);
+        push("Marketing Site", `${base}/platform/analytics`);
       } else if (segments[1] === "companies") {
         push("Companies", `${base}/platform/companies`);
         if (segments[2]) {

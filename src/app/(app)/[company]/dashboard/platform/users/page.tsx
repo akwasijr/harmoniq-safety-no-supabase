@@ -18,10 +18,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
+import { useCompanyStore } from "@/stores/company-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingPage } from "@/components/ui/loading";
 import type { User } from "@/types";
+import { logPlatformAuditEvent } from "@/lib/platform-audit-client";
 import { useTranslation } from "@/i18n";
 
 export default function PlatformUsersPage() {
@@ -30,7 +32,15 @@ export default function PlatformUsersPage() {
   const company = params.company as string;
   const { user } = useAuth();
 
-  const { items: allUsers, isLoading, add: addUser, update: updateUser, remove: removeUser } = useUsersStore();
+  const {
+    items: allUsers,
+    isLoading,
+    add: addUser,
+    update: updateUser,
+    remove: removeUser,
+    ensureLoaded,
+  } = useUsersStore();
+  const { items: companies } = useCompanyStore();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -45,7 +55,21 @@ export default function PlatformUsersPage() {
     last_name: "",
     email: "",
     job_title: "",
+    company_id: user?.company_id || "",
   });
+
+  React.useEffect(() => {
+    if (formData.company_id || companies.length === 0) {
+      return;
+    }
+
+    const fallbackCompanyId = user?.company_id || companies[0]?.id || "";
+    if (!fallbackCompanyId) {
+      return;
+    }
+
+    setFormData((current) => ({ ...current, company_id: fallbackCompanyId }));
+  }, [companies, formData.company_id, user?.company_id]);
 
   const filteredUsers = React.useMemo(() => {
     if (!searchQuery.trim()) return platformUsers;
@@ -59,52 +83,81 @@ export default function PlatformUsersPage() {
 
   const handleCloseModal = () => {
     setShowAddModal(false);
-    setFormData({ first_name: "", last_name: "", email: "", job_title: "" });
+    setFormData({
+      first_name: "",
+      last_name: "",
+      email: "",
+      job_title: "",
+      company_id: user?.company_id || companies[0]?.id || "",
+    });
   };
 
   const handleSubmit = async () => {
-    if (!formData.first_name || !formData.last_name || !formData.email) return;
+    if (!formData.first_name || !formData.last_name || !formData.email || !formData.company_id) return;
     setIsSubmitting(true);
 
-    // Simulate API delay
-    await new Promise((r) => setTimeout(r, 800));
-
-    const newUser: User = {
-      id: `user_sa_${Date.now()}`,
-      company_id: user?.company_id || "",
-      email: formData.email,
-      first_name: formData.first_name,
-      middle_name: null,
-      last_name: formData.last_name,
-      full_name: `${formData.first_name} ${formData.last_name}`,
-      role: "company_admin",
-      user_type: "internal",
-      account_type: "admin",
-      gender: null,
-      department: "Platform",
-      job_title: formData.job_title || "Platform Administrator",
-      employee_id: null,
-      status: "active",
-      language: "en",
-      theme: "system",
-      two_factor_enabled: false,
-      last_login_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      team_ids: [],
-      location_id: null,
-    };
-
     try {
-      addUser(newUser);
-      toast(`Admin "${newUser.full_name}" created successfully`);
+      const response = await fetch("/api/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          department: "Platform",
+          role: "company_admin",
+          company_id: formData.company_id,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        error?: string;
+        email_sent?: boolean;
+        invitation?: { invite_url?: string };
+        user?: User;
+      };
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to invite admin");
+      }
+
+      if (data.user) {
+        addUser(data.user);
+      } else {
+        ensureLoaded();
+      }
+
+      if (!data.email_sent && data.invitation?.invite_url) {
+        try {
+          await navigator.clipboard.writeText(data.invitation.invite_url);
+          toast(`Invitation created for "${formData.email}". Link copied to clipboard.`, "success");
+        } catch {
+          toast(`Invitation created for "${formData.email}"`, "success");
+        }
+      } else {
+        toast(`Invitation sent to "${formData.email}"`, "success");
+      }
+
+      await logPlatformAuditEvent({
+        action: "platform_admin_invited",
+        resource: "platform_users",
+        companyId: formData.company_id,
+        details: {
+          invited_email: formData.email,
+          invited_role: "company_admin",
+        },
+      });
     } catch (err) {
-      console.warn("Failed to create user:", err);
-      toast("Failed to create user. Please try again.", "error");
+      console.warn("Failed to invite user:", err);
+      toast(err instanceof Error ? err.message : "Failed to invite admin. Please try again.", "error");
+    } finally {
+      setIsSubmitting(false);
+      handleCloseModal();
     }
-    setIsSubmitting(false);
-    handleCloseModal();
   };
+
+  const getRoleLabel = (role: User["role"]) =>
+    role === "super_admin" ? "Super Admin" : role === "company_admin" ? "Company Admin" : role;
 
   if (isLoading && allUsers.length === 0) {
     return <LoadingPage />;
@@ -120,7 +173,7 @@ export default function PlatformUsersPage() {
           </div>
           <Button className="gap-2" onClick={() => setShowAddModal(true)}>
             <Plus className="h-4 w-4" />
-            {t("users.buttons.addUser")}
+            Invite Admin
           </Button>
         </div>
 
@@ -234,7 +287,7 @@ export default function PlatformUsersPage() {
                       <td className="px-4 py-3">
                         <Badge variant="secondary" className="gap-1">
                           <Shield className="h-3 w-3" />
-                          Super Admin
+                          {getRoleLabel(user.role)}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
@@ -292,6 +345,12 @@ export default function PlatformUsersPage() {
                                   e.stopPropagation();
                                   setOpenMenuId(null);
                                   updateUser(user.id, { status: user.status === "active" ? "inactive" : "active" });
+                                  void logPlatformAuditEvent({
+                                    action: user.status === "active" ? "platform_admin_deactivated" : "platform_admin_activated",
+                                    resource: "platform_users",
+                                    companyId: user.company_id,
+                                    details: { target_user_id: user.id, target_user_email: user.email },
+                                  });
                                   toast(
                                     user.status === "active"
                                       ? `${user.full_name} deactivated`
@@ -304,13 +363,25 @@ export default function PlatformUsersPage() {
                               </button>
                               <button
                                 className="w-full px-3 py-2 text-left text-sm text-destructive hover:bg-muted transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenMenuId(null);
-                                  removeUser(user.id);
-                                  toast(`${user.full_name} has been removed`, "info");
-                                }}
-                              >
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenMenuId(null);
+                                    const confirmed = window.confirm(
+                                      `Delete "${user.full_name}" from platform administration? This cannot be undone.`,
+                                    );
+                                    if (!confirmed) {
+                                      return;
+                                    }
+                                    removeUser(user.id);
+                                    void logPlatformAuditEvent({
+                                      action: "platform_admin_deleted",
+                                      resource: "platform_users",
+                                      companyId: user.company_id,
+                                      details: { target_user_id: user.id, target_user_email: user.email },
+                                    });
+                                    toast(`${user.full_name} has been removed`, "info");
+                                  }}
+                                >
                                 {t("common.delete")}
                               </button>
                             </div>
@@ -341,7 +412,7 @@ export default function PlatformUsersPage() {
             <div className="flex items-center justify-between border-b p-4">
               <div className="flex items-center gap-2">
                 <UserCog className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">{t("users.addUser")}</h2>
+                <h2 className="text-lg font-semibold">Invite Admin</h2>
               </div>
               <Button
                 variant="ghost"
@@ -395,6 +466,24 @@ export default function PlatformUsersPage() {
                 </p>
               </div>
               <div>
+                <Label htmlFor="company_id">Company</Label>
+                <select
+                  id="company_id"
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.company_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, company_id: e.target.value })
+                  }
+                  disabled={companies.length === 0}
+                >
+                  {companies.map((companyOption) => (
+                    <option key={companyOption.id} value={companyOption.id}>
+                      {companyOption.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <Label htmlFor="job_title">Job Title</Label>
                 <Input
                   id="job_title"
@@ -409,11 +498,10 @@ export default function PlatformUsersPage() {
               <div className="rounded-lg border border-dashed bg-muted/30 p-3">
                 <div className="flex items-center gap-2 text-sm">
                   <Shield className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Super Admin Role</span>
+                  <span className="font-medium">Company Admin Role</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  This user will have full platform access including company
-                  management, user management, and platform settings.
+                  This invitation creates a company administrator account for the selected company.
                 </p>
               </div>
             </div>
@@ -427,13 +515,14 @@ export default function PlatformUsersPage() {
                   isSubmitting ||
                   !formData.first_name ||
                   !formData.last_name ||
-                  !formData.email
+                  !formData.email ||
+                  !formData.company_id
                 }
               >
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Create Admin
+                Send Invite
               </Button>
             </div>
           </div>

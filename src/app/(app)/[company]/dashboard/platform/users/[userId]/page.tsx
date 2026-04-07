@@ -25,8 +25,18 @@ import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
 import { useUsersStore } from "@/stores/users-store";
 import type { User } from "@/types";
+import { logPlatformAuditEvent } from "@/lib/platform-audit-client";
 import { useTranslation } from "@/i18n";
-import { mockActivity } from "@/mocks/data";
+
+interface PlatformAuditLogEntry {
+  id: string;
+  user_id: string;
+  action: string;
+  resource: string | null;
+  details: Record<string, unknown> | null;
+  ip_address: string | null;
+  created_at: string;
+}
 
 export default function PlatformUserDetailPage() {
   const params = useParams();
@@ -40,12 +50,36 @@ export default function PlatformUserDetailPage() {
   const user = users.find((u) => u.id === userId);
   const [editedUser, setEditedUser] = React.useState<User | null>(user || null);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [activityLogs, setActivityLogs] = React.useState<PlatformAuditLogEntry[]>([]);
+  const [activityLoading, setActivityLoading] = React.useState(true);
 
   React.useEffect(() => {
     if (user) {
       setEditedUser(user);
     }
-  }, [user?.id]);
+  }, [user]);
+
+  const loadActivity = React.useCallback(async () => {
+    setActivityLoading(true);
+    try {
+      const response = await fetch(`/api/platform/audit-logs?userId=${userId}&limit=20`, {
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to load activity");
+      }
+      const data = (await response.json()) as { logs?: PlatformAuditLogEntry[] };
+      setActivityLogs(data.logs ?? []);
+    } catch {
+      setActivityLogs([]);
+    } finally {
+      setActivityLoading(false);
+    }
+  }, [userId]);
+
+  React.useEffect(() => {
+    void loadActivity();
+  }, [loadActivity]);
 
   if (isLoading && users.length === 0) {
     return <LoadingPage />;
@@ -71,13 +105,28 @@ export default function PlatformUserDetailPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    if (editedUser) {
-      updateUser(editedUser.id, editedUser);
+    try {
+      if (editedUser) {
+        updateUser(editedUser.id, editedUser);
+        await logPlatformAuditEvent({
+          action: "platform_admin_updated",
+          resource: "platform_users",
+          companyId: editedUser.company_id,
+          details: {
+            target_user_id: editedUser.id,
+            target_user_email: editedUser.email,
+          },
+        });
+        toast("User details saved successfully", "success");
+        await loadActivity();
+      }
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
-    toast("User details saved successfully");
   };
+
+  const roleLabel = user.role === "super_admin" ? "Super Admin" : "Company Admin";
+  const latestSecurityEvent = activityLogs[0] ?? null;
 
   const tabs: TabItem[] = [
     { id: "overview", label: t("users.information") },
@@ -119,7 +168,7 @@ export default function PlatformUserDetailPage() {
               <span className="text-sm text-muted-foreground">{user.status}</span>
               <span className="text-sm text-muted-foreground flex items-center gap-1">
                 <Shield className="h-3 w-3" />
-                Super Admin
+                {roleLabel}
               </span>
             </div>
           </div>
@@ -220,7 +269,7 @@ export default function PlatformUserDetailPage() {
                           <div>
                             <p className="text-sm font-medium">{t("users.labels.role")}</p>
                             <p className="text-xs text-muted-foreground">
-                              Super Admin
+                              {roleLabel}
                             </p>
                           </div>
                         </div>
@@ -284,24 +333,32 @@ export default function PlatformUserDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {mockActivity.map((activity) => (
+                      {activityLoading ? (
+                        <p className="text-sm text-muted-foreground">Loading activity...</p>
+                      ) : activityLogs.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No recorded activity for this administrator yet.
+                        </p>
+                      ) : (
+                        activityLogs.map((activity) => (
                         <div
                           key={activity.id}
                           className="flex items-start justify-between border-b pb-3 last:border-0"
                         >
                           <div>
                             <p className="text-sm font-medium">
-                              {activity.action}
+                              {activity.action.replace(/_/g, " ")}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              IP: {activity.ip}
+                              {activity.ip_address ? `IP: ${activity.ip_address}` : "No IP captured"}
                             </p>
                           </div>
                           <p className="text-xs text-muted-foreground whitespace-nowrap">
-                            {formatDate(activity.timestamp)}
+                            {formatDate(activity.created_at)}
                           </p>
                         </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -328,12 +385,21 @@ export default function PlatformUserDetailPage() {
                           </p>
                         </div>
                         <Switch
-                          checked={user.two_factor_enabled}
+                          checked={editedUser.two_factor_enabled}
                           onCheckedChange={(value) => {
                             if (!editedUser) return;
                             const nextUser = { ...editedUser, two_factor_enabled: value };
                             setEditedUser(nextUser);
                             updateUser(nextUser.id, { two_factor_enabled: value });
+                            void logPlatformAuditEvent({
+                              action: value ? "platform_admin_2fa_enabled" : "platform_admin_2fa_disabled",
+                              resource: "platform_users",
+                              companyId: nextUser.company_id,
+                              details: {
+                                target_user_id: nextUser.id,
+                                target_user_email: nextUser.email,
+                              },
+                            }).then(() => loadActivity());
                             toast(value ? "2FA enabled" : "2FA disabled");
                           }}
                         />
@@ -353,7 +419,24 @@ export default function PlatformUserDetailPage() {
                     <CardContent className="space-y-4">
                       <Button
                         variant="outline"
-                        onClick={() => toast("Password reset email sent")}
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`/api/platform/users/${user.id}/password-reset`, {
+                              method: "POST",
+                            });
+                            const data = (await response.json()) as { error?: string };
+                            if (!response.ok) {
+                              throw new Error(data.error || "Failed to send password reset");
+                            }
+                            toast("Password reset email sent", "success");
+                            await loadActivity();
+                          } catch (error) {
+                            toast(
+                              error instanceof Error ? error.message : "Failed to send password reset",
+                              "error",
+                            );
+                          }
+                        }}
                       >
                         {t("users.resetPassword")}
                       </Button>
@@ -372,12 +455,27 @@ export default function PlatformUserDetailPage() {
                     <CardContent>
                       <div className="flex items-center justify-between rounded-lg border p-3">
                         <div>
-                          <p className="text-sm font-medium">Current Session</p>
+                          <p className="text-sm font-medium">Last sign in</p>
                           <p className="text-xs text-muted-foreground">
-                            Last active: just now · 192.168.1.100
+                            {user.last_login_at ? formatDate(user.last_login_at) : "No login recorded"}
                           </p>
                         </div>
-                        <span className="text-sm text-muted-foreground">Active</span>
+                        <span className="text-sm text-muted-foreground">
+                          {user.last_login_at ? "Recorded" : "Pending"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border p-3">
+                        <div>
+                          <p className="text-sm font-medium">Latest security event</p>
+                          <p className="text-xs text-muted-foreground">
+                            {latestSecurityEvent
+                              ? `${latestSecurityEvent.action.replace(/_/g, " ")}${latestSecurityEvent.ip_address ? ` · ${latestSecurityEvent.ip_address}` : ""}`
+                              : "No security events recorded yet"}
+                          </p>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {latestSecurityEvent ? formatDate(latestSecurityEvent.created_at) : "--"}
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -407,6 +505,12 @@ export default function PlatformUserDetailPage() {
                             const newStatus = checked ? "active" : "inactive";
                             setEditedUser({ ...editedUser, status: newStatus });
                             updateUser(user.id, { status: newStatus, updated_at: new Date().toISOString() });
+                            void logPlatformAuditEvent({
+                              action: checked ? "platform_admin_activated" : "platform_admin_deactivated",
+                              resource: "platform_users",
+                              companyId: editedUser.company_id,
+                              details: { target_user_id: user.id, target_user_email: user.email },
+                            }).then(() => loadActivity());
                             toast(checked ? "User activated" : "User deactivated", "info");
                           }}
                         />
@@ -435,6 +539,12 @@ export default function PlatformUserDetailPage() {
                           );
                           if (!confirmed) return;
                           removeUser(user.id);
+                          void logPlatformAuditEvent({
+                            action: "platform_admin_deleted",
+                            resource: "platform_users",
+                            companyId: user.company_id,
+                            details: { target_user_id: user.id, target_user_email: user.email },
+                          });
                           toast("User account deleted", "info");
                           router.push(`/${company}/dashboard/platform/users`);
                         }}>

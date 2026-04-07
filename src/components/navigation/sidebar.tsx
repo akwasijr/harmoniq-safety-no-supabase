@@ -128,7 +128,7 @@ const superAdminPlatformNav: NavItem[] = [
     exactMatch: false,
   },
   {
-    title: "Analytics & Privacy",
+    title: "Marketing Site",
     href: "/dashboard/platform/analytics",
     icon: BarChart3,
   },
@@ -156,7 +156,7 @@ const companyAdminPlatformNav: NavItem[] = [
     icon: Layers,
   },
   {
-    title: "Analytics & Privacy",
+    title: "Marketing Site",
     href: "/dashboard/platform/analytics",
     icon: BarChart3,
   },

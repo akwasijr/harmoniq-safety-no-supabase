@@ -131,7 +131,7 @@ export default function EmployeeAssetsPage() {
   return (
     <div className="flex flex-col min-h-full pb-20">
       {/* Header */}
-      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
+      <div className="sticky top-[60px] z-10 bg-background border-b px-4 pt-4 pb-3">
         <h1 className="text-lg font-bold mb-3">{t("nav.assets")}</h1>
 
         <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist">

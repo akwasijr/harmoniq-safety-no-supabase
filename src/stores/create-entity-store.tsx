@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
+import { subscribeToRealtimeInvalidation } from "@/lib/supabase/realtime-invalidation";
 import { sanitizeText } from "@/lib/validation";
 
 // ── Module-level cache ──────────────────────────────────────────────
@@ -101,6 +102,8 @@ interface StoreOptions {
   columnMap?: ColumnMap;
   /** Fields to strip before sending to Supabase (e.g., joined relations) */
   stripFields?: string[];
+  /** Subscribe to Supabase realtime invalidation for near-live updates */
+  realtimeSubscribe?: boolean;
 }
 
 /**
@@ -145,10 +148,14 @@ export function createEntityStore<T extends IdEntity>(
     );
     const isFetchingRef = React.useRef(false);
     const isMountedRef = React.useRef(true);
+    const realtimeRefreshTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
     React.useEffect(() => {
       return () => {
         isMountedRef.current = false;
+        if (realtimeRefreshTimerRef.current) {
+          clearTimeout(realtimeRefreshTimerRef.current);
+        }
       };
     }, []);
 
@@ -219,6 +226,22 @@ export function createEntityStore<T extends IdEntity>(
     const itemsRef = React.useRef(items);
     itemsRef.current = items;
 
+    const invalidateAndRefresh = React.useCallback(() => {
+      globalLoadedCache.delete(storageKey);
+      hasLoadedRef.current = false;
+
+      if (realtimeRefreshTimerRef.current) {
+        return;
+      }
+
+      realtimeRefreshTimerRef.current = setTimeout(() => {
+        realtimeRefreshTimerRef.current = null;
+        if (isMountedRef.current) {
+          ensureLoaded();
+        }
+      }, 250);
+    }, [ensureLoaded]);
+
     React.useEffect(() => {
       if (isSupabaseConfigured) return;
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -245,6 +268,19 @@ export function createEntityStore<T extends IdEntity>(
         flushPendingSave();
       };
     }, []);
+
+    React.useEffect(() => {
+      if (!isSupabaseConfigured || !opts.realtimeSubscribe) return;
+
+      const supabase = createClient();
+
+      return subscribeToRealtimeInvalidation({
+        client: supabase,
+        table,
+        scope: storageKey,
+        onInvalidate: invalidateAndRefresh,
+      });
+    }, [invalidateAndRefresh]);
 
     // Cross-tab sync: listen for storage changes from other tabs/windows
     React.useEffect(() => {
@@ -433,7 +469,7 @@ export function createEntityStore<T extends IdEntity>(
       if (!options?.skipLoad) {
         ctx.ensureLoaded();
       }
-    }, [ctx.ensureLoaded, options?.skipLoad]);
+    }, [ctx, options?.skipLoad]);
     return ctx;
   }
 

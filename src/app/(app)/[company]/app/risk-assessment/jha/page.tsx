@@ -409,7 +409,7 @@ export default function JHAFormPage() {
                 const isExpanded = expandedStep === step.id;
 
                 return (
-                  <Card key={step.id} className="overflow-hidden">
+                  <Card key={step.id} className="overflow-hidden border-0 bg-transparent shadow-none">
                     <CardHeader 
                       className="cursor-pointer py-3"
                       onClick={() => setExpandedStep(isExpanded ? null : step.id)}

@@ -79,7 +79,7 @@ export function BottomTabs({ company }: BottomTabsProps) {
 
   return (
     <nav aria-label="App navigation" className="field-app-surface fixed bottom-0 left-0 right-0 z-50 border-t bg-card safe-area-inset-bottom">
-      <ul className="flex h-16 items-center justify-around">
+      <ul className="flex h-[68px] items-center justify-around">
         {visibleTabs.map((item) => {
           const href = `/${company}${item.href}`;
           // For exact match items (like Home), only match the exact path
@@ -104,7 +104,7 @@ export function BottomTabs({ company }: BottomTabsProps) {
                 )}
               >
                 {isActive && (
-                  <div className="h-0.5 w-5 rounded-full bg-primary mx-auto mb-1" />
+                  <div className="h-[3px] w-6 rounded-full bg-primary mx-auto mb-1" />
                 )}
                 <item.icon
                   className={cn("h-5 w-5", isActive && "fill-primary/20")}
@@ -112,7 +112,7 @@ export function BottomTabs({ company }: BottomTabsProps) {
                 />
                 <span
                   className={cn(
-                    "text-xs max-w-[4.5rem] truncate text-center mt-0.5",
+                    "text-xs max-w-[4.5rem] truncate text-center mt-1",
                     isActive ? "font-semibold text-primary" : "font-normal"
                   )}
                 >

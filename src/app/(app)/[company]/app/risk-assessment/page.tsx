@@ -73,8 +73,9 @@ export default function RiskAssessmentIndexPage() {
     if (!user) return [];
     return riskEvaluations.filter(
       (evaluation) =>
-        evaluation.company_id === user.company_id &&
-        evaluation.submitter_id === user.id,
+        evaluation.submitter_id === user.id &&
+        // Accept matching company_id or empty/null company_id (backwards compat)
+        (!evaluation.company_id || !user.company_id || evaluation.company_id === user.company_id),
     );
   }, [riskEvaluations, user]);
 
@@ -152,7 +153,7 @@ export default function RiskAssessmentIndexPage() {
 
   return (
     <div className="flex min-h-full flex-col pb-20">
-      <div className="sticky top-14 z-10 border-b bg-background px-4 pt-4 pb-3">
+      <div className="sticky top-[60px] z-10 border-b bg-background px-4 pt-4 pb-3">
         <h1 className="text-lg font-bold">{t("checklists.tabs.assessments") || "Risk Assessments"}</h1>
         <p className="mt-1 text-xs text-muted-foreground">
           {t("riskAssessment.workerHubHint") || "Resume drafts, track assessments awaiting review, and keep reviewed proof close at hand."}

@@ -512,7 +512,7 @@ function EmployeeChecklistsPageContent() {
   return (
     <div className="flex flex-col min-h-full">
       {/* Header + Tabs */}
-      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
+      <div className="sticky top-[60px] z-10 bg-background border-b px-4 pt-4 pb-3">
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-lg font-bold truncate">{t("checklists.safetyTasks")}</h1>
           {selectedLocation && (

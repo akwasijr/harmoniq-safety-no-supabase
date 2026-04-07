@@ -10,6 +10,7 @@ const store = createEntityStore<Ticket>("harmoniq_tickets", mockTickets, {
     incident_ids: "incident_id",
   },
   stripFields: ["assignee", "creator", "assigned_groups", "incidents"],
+  realtimeSubscribe: true,
 });
 
 export const TicketsStoreProvider = store.Provider;

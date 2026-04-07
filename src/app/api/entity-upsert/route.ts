@@ -1,27 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createRateLimiter } from "@/lib/rate-limit";
-
-const ALLOWED_TABLES = new Set([
-  "incidents",
-  "assets",
-  "tickets",
-  "work_orders",
-  "locations",
-  "teams",
-  "content",
-  "checklist_templates",
-  "checklist_submissions",
-  "risk_evaluations",
-  "parts",
-  "corrective_actions",
-  "asset_inspections",
-  "meter_readings",
-  "inspection_routes",
-  "inspection_rounds",
-  "notifications",
-  "companies",
-]);
+import {
+  getAssetScopedRowIds,
+  validateEntityUpsertRequest,
+} from "@/lib/entity-upsert";
+import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/public-env";
 
 // 30 upsert requests per IP per minute
 const upsertLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "entity-upsert" });
@@ -51,50 +35,50 @@ export async function POST(request: NextRequest) {
 
     const { table, data } = await request.json();
 
-    if (!table || !data) {
-      return NextResponse.json({ error: "table and data are required" }, { status: 400 });
+    const validated = validateEntityUpsertRequest(table, data, profile);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: validated.status });
     }
 
-    if (!ALLOWED_TABLES.has(table)) {
-      return NextResponse.json({ error: "Table not allowed" }, { status: 403 });
-    }
+    const assetIds = getAssetScopedRowIds(table, validated.rows);
+    if (assetIds.length > 0) {
+      const { data: assets, error: assetsError } = await supabase
+        .from("assets")
+        .select("id, company_id")
+        .in("id", assetIds);
 
-    // Enforce company isolation: every row must match user's company
-    const payload = Array.isArray(data) ? data : [data];
-    for (const item of payload) {
-      if (table === "companies") {
-        // Only super_admin can upsert companies
-        if (profile.role !== "super_admin") {
-          return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
-        }
-      } else if (item.company_id) {
-        // Non-super-admins can only write to their own company
-        if (profile.role !== "super_admin" && item.company_id !== profile.company_id) {
-          return NextResponse.json({ error: "Cannot access data from another company" }, { status: 403 });
-        }
-      } else {
-        // Force the user's company_id if not provided
-        item.company_id = profile.company_id;
+      if (assetsError) {
+        console.error("[Entity Upsert API] Failed to validate asset ownership:", assetsError);
+        return NextResponse.json({ error: "Failed to validate asset ownership" }, { status: 500 });
+      }
+
+      if (!assets || assets.length !== assetIds.length) {
+        return NextResponse.json({ error: "Referenced asset not found" }, { status: 400 });
+      }
+
+      if (profile.role !== "super_admin" && assets.some((asset) => asset.company_id !== profile.company_id)) {
+        return NextResponse.json({ error: "Cannot access data from another company" }, { status: 403 });
       }
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl = getSupabaseUrl();
+    const publishableKey = getSupabasePublishableKey();
+    const { data: { session } } = await supabase.auth.getSession();
 
-    if (!supabaseUrl || !serviceRoleKey) {
+    if (!supabaseUrl || !publishableKey || !session?.access_token) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    // Use direct PostgREST call with service role key — bypasses RLS and has full access
+    // Keep the generic upsert endpoint, but execute it with the caller's session so RLS still applies.
     const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
       method: "POST",
       headers: {
-        "apikey": serviceRoleKey,
-        "Authorization": `Bearer ${serviceRoleKey}`,
+        "apikey": publishableKey,
+        "Authorization": `Bearer ${session.access_token}`,
         "Content-Type": "application/json",
         "Prefer": "resolution=merge-duplicates",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(validated.rows),
     });
 
     if (!res.ok) {
