@@ -299,7 +299,6 @@ export default function JHAFormPage() {
               {currentSectionData.title} • {t("riskAssessment.section", { current: String(currentSection + 1), total: String(sections.length) })}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">OSHA</span>
         </div>
         {/* Progress bar */}
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
@@ -326,7 +325,7 @@ export default function JHAFormPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="jha-job-title" className="text-base">Job/Task Title *</Label>
                 <Input
                   autoFocus
@@ -341,7 +340,7 @@ export default function JHAFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="jha-location" className="text-base">Work Location *</Label>
                 <Input
                   id="jha-location"
@@ -355,7 +354,7 @@ export default function JHAFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="jha-department" className="text-base">Department *</Label>
                 <Input
                   id="jha-department"
@@ -369,7 +368,7 @@ export default function JHAFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="jha-job-desc" className="text-base">Job Description</Label>
                 <Textarea
                   id="jha-job-desc"
@@ -381,7 +380,7 @@ export default function JHAFormPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label htmlFor="jha-date" className="text-base">Analysis Date *</Label>
                   <Input
                     id="jha-date"
@@ -394,7 +393,7 @@ export default function JHAFormPage() {
                     <p className="text-xs text-red-500 mt-1">This field is required</p>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label htmlFor="jha-supervisor" className="text-base">Supervisor *</Label>
                   <Input
                     id="jha-supervisor"
@@ -480,7 +479,7 @@ export default function JHAFormPage() {
 
                     {isExpanded && (
                       <CardContent className="space-y-4 pt-0">
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <Label>Step Description *</Label>
                           <Textarea
                             value={step.description}
@@ -493,7 +492,7 @@ export default function JHAFormPage() {
                           )}
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <Label>Potential Hazards *</Label>
                           <p className="text-xs text-muted-foreground">Select all hazards that apply to this step</p>
                           <div className="grid grid-cols-2 gap-2">
@@ -517,7 +516,7 @@ export default function JHAFormPage() {
 
                         {step.hazards.length > 0 && (
                           <>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               <Label>Hazard Details</Label>
                               <Textarea
                                 value={step.hazardDescription}
@@ -528,7 +527,7 @@ export default function JHAFormPage() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
+                              <div className="space-y-3">
                                 <Label>Severity (1-5) *</Label>
                                 <div className="flex gap-1">
                                   {[1, 2, 3, 4, 5].map((s) => (
@@ -550,7 +549,7 @@ export default function JHAFormPage() {
                                 </div>
                                 <p className="text-xs text-muted-foreground">1=Minor, 5=Catastrophic</p>
                               </div>
-                              <div className="space-y-2">
+                              <div className="space-y-3">
                                 <Label>Probability (1-5) *</Label>
                                 <div className="flex gap-1">
                                   {[1, 2, 3, 4, 5].map((p) => (
@@ -587,7 +586,7 @@ export default function JHAFormPage() {
                               </div>
                             )}
 
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               <Label>Existing Controls</Label>
                               <Textarea
                                 value={step.existingControls}
@@ -597,7 +596,7 @@ export default function JHAFormPage() {
                               />
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               <Label>Recommended Controls *</Label>
                               <Textarea
                                 value={step.recommendedControls}
@@ -660,7 +659,7 @@ export default function JHAFormPage() {
               ))}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label>Other PPE (if not listed above)</Label>
               <Input
                 value={formData.otherPPE}
@@ -702,7 +701,7 @@ export default function JHAFormPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Required Training</Label>
                 <Textarea
                   value={formData.trainingRequired}
@@ -712,7 +711,7 @@ export default function JHAFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Special Precautions</Label>
                 <Textarea
                   value={formData.specialPrecautions}
@@ -722,7 +721,7 @@ export default function JHAFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Additional Notes</Label>
                 <Textarea
                   value={formData.additionalNotes}

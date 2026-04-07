@@ -42,6 +42,7 @@ import {
 } from "@/lib/country-config";
 import { TasksSkeleton } from "@/components/ui/loading";
 import { isVisibleToFieldApp } from "@/lib/template-activation";
+import { getChecklistDueInfo, getFrequencyLabel, getDueChecklists } from "@/lib/checklist-due";
 import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User, Incident } from "@/types";
 
 type TabType = "checklists" | "risk-assessment" | "reports";
@@ -202,7 +203,10 @@ function ChecklistsTabContent({
           icon={ClipboardCheck}
           iconColor="text-primary"
         >
-          {pendingTemplates.map((template) => (
+          {pendingTemplates.map((template) => {
+            const dueInfo = getChecklistDueInfo(template, userSubmissions);
+            const isOverdue = dueInfo.status === "overdue";
+            return (
             <Link
               key={template.id}
               href={`/${company}/app/checklists/${template.id}`}
@@ -214,12 +218,17 @@ function ChecklistsTabContent({
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm leading-tight">{template.name}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {template.items?.length || 0} items · {template.recurrence || "once"}
+                  {getFrequencyLabel(template.recurrence)} · {template.items?.length || 0} items
+                  {isOverdue && <span className="text-red-500 font-medium"> · Overdue</span>}
+                  {!isOverdue && dueInfo.status === "due" && template.recurrence === "daily" && (
+                    <span className="text-amber-500 font-medium"> · Due today</span>
+                  )}
                 </p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
             </Link>
-          ))}
+            );
+          })}
         </Section>
       )}
 
@@ -337,7 +346,11 @@ function ChecklistsTabContent({
                   const hasPhotos = submission.responses?.some((r: ChecklistResponse) => (r.photo_urls?.length ?? 0) > 0);
 
                   return (
-                    <div key={submission.id} className="rounded-lg border p-3 space-y-2">
+                    <Link
+                      key={submission.id}
+                      href={`/${company}/app/checklists/${submission.template_id}?submission=${submission.id}`}
+                      className="block rounded-lg border p-3 space-y-2 transition-colors hover:bg-muted/30 active:bg-muted/50"
+                    >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
@@ -348,9 +361,9 @@ function ChecklistsTabContent({
                         {score !== null && (
                           <div className={cn(
                             "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
-                            score >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
-                            score >= 50 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
-                            "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                            score >= 80 ? "bg-green-200 text-green-900 dark:bg-green-900/40 dark:text-green-100" :
+                            score >= 50 ? "bg-amber-200 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100" :
+                            "bg-red-200 text-red-900 dark:bg-red-900/40 dark:text-red-100"
                           )}>
                             {score}%
                           </div>
@@ -358,10 +371,10 @@ function ChecklistsTabContent({
                       </div>
                       
                       <div className="flex items-center gap-3 text-[10px]">
-                        <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                        <span className="flex items-center gap-1 text-green-700 dark:text-green-300">
                           <CheckCircle className="h-3 w-3" /> {passCount} pass
                         </span>
-                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                        <span className="flex items-center gap-1 text-red-700 dark:text-red-300">
                           <X className="h-3 w-3" /> {failCount} fail
                         </span>
                         {naCount > 0 && (
@@ -378,7 +391,7 @@ function ChecklistsTabContent({
                           </span>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
 
@@ -549,27 +562,6 @@ function ReportsTabContent({
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
           </Link>
-
-          {/* Open / unresolved reports */}
-          {myIncidents.filter(i => i.status !== "resolved").length > 0 ? (
-            <Section
-              title="Open reports"
-              icon={AlertTriangle}
-              iconColor="text-warning"
-            >
-              {myIncidents
-                .filter(i => i.status !== "resolved")
-                .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())
-                .slice(0, 5)
-                .map(renderIncidentCard)}
-            </Section>
-          ) : (
-            <div className="py-8 text-center">
-              <AlertTriangle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
-              <p className="text-sm font-medium text-muted-foreground mt-2">{t("app.noReports") || "No open reports"}</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noReportsDesc") || "Reports you submit will appear here"}</p>
-            </div>
-          )}
         </>
       )}
 
@@ -632,6 +624,7 @@ type RiskAssessmentSubTab = "assigned" | "history";
 
 function RiskAssessmentTabContent({
   company,
+  availableForms,
   inProgressAssessments,
   awaitingReviewAssessments,
   reviewedAssessments,
@@ -640,6 +633,7 @@ function RiskAssessmentTabContent({
   formatDate,
 }: {
   company: string;
+  availableForms: Array<{ id: string; name: string; fullName: string; icon: typeof FileCheck }>;
   inProgressAssessments: Array<{ id: string; formId: string; name: string; location: string; progress: number }>;
   awaitingReviewAssessments: Array<{ id: string; formType: string; name: string; location: string; date: string }>;
   reviewedAssessments: Array<{ id: string; formType: string; name: string; location: string; date: string; reviewerName: string }>;
@@ -707,6 +701,34 @@ function RiskAssessmentTabContent({
       {/* ASSIGNED sub-tab */}
       {subTab === "assigned" && (
         <>
+          {/* Available assessment forms */}
+          {availableForms.length > 0 && (
+            <section className="space-y-2 mb-3">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Available assessments</h2>
+              {availableForms.map((form) => {
+                const conf = assessmentTypeConf[form.name] || { icon: ShieldCheck, color: "text-primary", bg: "bg-primary/10" };
+                const FormIcon = conf.icon;
+                return (
+                  <Link
+                    key={form.id}
+                    href={`/${company}/app/risk-assessment/${form.id}`}
+                    className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+                  >
+                    <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
+                      <FormIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm leading-tight">{form.fullName}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{form.name} · Tap to start</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                  </Link>
+                );
+              })}
+            </section>
+          )}
+
+          {/* In-progress assessments */}
           {inProgressAssessments.length > 0 && (
             <section className="space-y-2">
               <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">In progress</h2>
@@ -734,7 +756,7 @@ function RiskAssessmentTabContent({
             </section>
           )}
 
-          {inProgressAssessments.length === 0 && (
+          {availableForms.length === 0 && inProgressAssessments.length === 0 && (
             <div className="py-6 text-center">
               <ShieldCheck className="h-8 w-8 text-muted-foreground/20 mx-auto" aria-hidden="true" />
               <p className="text-sm text-muted-foreground mt-2">No assessments assigned</p>
@@ -876,6 +898,14 @@ function EmployeeChecklistsPageContent() {
     effectiveCountry,
     localeCountry,
   );
+
+  // Available assessment forms for this country, filtered by admin hidden types
+  const availableAssessmentForms = React.useMemo(() => {
+    const forms = riskAssessmentForms[companyCountry] || riskAssessmentForms.US;
+    const hiddenTypes = currentCompany?.hidden_assessment_types || [];
+    if (hiddenTypes.length === 0) return forms;
+    return forms.filter((form) => !hiddenTypes.includes(form.id));
+  }, [companyCountry, currentCompany?.hidden_assessment_types]);
 
   const templates = checklistTemplates.filter(
     (template) =>
@@ -1046,6 +1076,7 @@ function EmployeeChecklistsPageContent() {
         {activeTab === "risk-assessment" && (
           <RiskAssessmentTabContent
             company={company}
+            availableForms={availableAssessmentForms}
             inProgressAssessments={inProgressAssessments}
             awaitingReviewAssessments={awaitingReviewAssessments}
             reviewedAssessments={reviewedAssessments}

@@ -13,9 +13,10 @@ const FULL_PAGE_ROUTES = [
   "/app/maintenance",
   "/app/scan",
   "/app/assets/new",
-  "/app/checklists/", // matches /app/checklists/[checklistId]
-  "/app/inspection/", // matches /app/inspection/[assetId]
+  "/app/checklists/",
+  "/app/inspection/",
   "/app/inspection-round",
+  "/app/incidents/",
 ];
 
 // Risk assessment form routes — all sub-paths except the index and view pages
@@ -47,7 +48,10 @@ export function EmployeeAppLayout({
     const p = pathname;
     const base = `/${company}`;
     // Check explicit full-page routes
-    if (FULL_PAGE_ROUTES.some((route) => p === `${base}${route}` || p.startsWith(`${base}${route}/`))) {
+    if (FULL_PAGE_ROUTES.some((route) => {
+      const fullRoute = `${base}${route}`;
+      return p === fullRoute || p.startsWith(fullRoute.endsWith("/") ? fullRoute : `${fullRoute}/`);
+    })) {
       return true;
     }
     // Check risk-assessment form routes (exclude index and view pages)

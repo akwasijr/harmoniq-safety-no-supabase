@@ -34,7 +34,7 @@ export async function POST(
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile || profile.role !== "super_admin") {
+    if (!profile || !["super_admin", "company_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -48,6 +48,11 @@ export async function POST(
       return NextResponse.json({ error: "User not found or inaccessible" }, { status: 404 });
     }
 
+    // company_admin can only reset passwords for users in their own company
+    if (profile.role === "company_admin" && targetUser.company_id !== profile.company_id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
     const { error } = await supabase.auth.resetPasswordForEmail(targetUser.email, {
       redirectTo: `${siteUrl}/reset-password`,
@@ -55,10 +60,19 @@ export async function POST(
 
     if (error) {
       console.error("[PlatformUsers] Failed to send password reset:", error.message);
-      return NextResponse.json(
-        { error: "Failed to send password reset" },
-        { status: 500 },
-      );
+      const msg = error.message.toLowerCase();
+      let clientError = "Failed to send password reset email.";
+      let status = 500;
+
+      if (msg.includes("invalid")) {
+        clientError = "This user does not have a Supabase Auth account. They need to sign up first.";
+        status = 422;
+      } else if (msg.includes("rate limit")) {
+        clientError = "Too many reset attempts. Please wait a few minutes and try again.";
+        status = 429;
+      }
+
+      return NextResponse.json({ error: clientError }, { status });
     }
 
     const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;

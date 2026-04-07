@@ -9,7 +9,6 @@ import {
   CheckCircle,
   FileCheck,
   Building2,
-  BookOpen,
   Scale,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -267,7 +266,6 @@ export default function ArbowetFormPage() {
               {currentSectionData.title} • {t("riskAssessment.section", { current: String(currentSection + 1), total: String(sections.length) })}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">NL</span>
         </div>
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
@@ -292,23 +290,8 @@ export default function ArbowetFormPage() {
               </div>
             </div>
 
-            <Card className="bg-orange-50 border-orange-200">
-              <CardContent className="py-4">
-                <div className="flex items-start gap-3">
-                  <BookOpen className="h-5 w-5 text-orange-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-orange-800">Arbowet Compliance Check</p>
-                    <p className="text-xs text-orange-700 mt-1">
-                      This audit checks compliance with key articles of the Arbeidsomstandighedenwet (Arbowet): 
-                      Articles 3, 5, 8, 13, and 14.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Bedrijfsnaam (Company Name) *</Label>
                 <Input
                   autoFocus
@@ -322,7 +305,7 @@ export default function ArbowetFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Auditor Name *</Label>
                 <Input
                   value={formData.auditor}
@@ -335,7 +318,7 @@ export default function ArbowetFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Audit Date *</Label>
                 <Input
                   type="date"
@@ -350,9 +333,9 @@ export default function ArbowetFormPage() {
             </div>
 
             {/* Articles Overview */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-base">{t("riskAssessment.articlesCovered")}</Label>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {ARBOWET_ARTICLES.map((article) => (
                   <div key={article.id} className="p-3 rounded-lg bg-muted/50">
                     <p className="font-medium text-sm">{article.title}</p>
@@ -553,7 +536,7 @@ export default function ArbowetFormPage() {
                     {t("riskAssessment.nonCompliantItems", { count: String(nonCompliantCount) })}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-3">
                   {ARBOWET_ARTICLES.flatMap((article) =>
                     article.items
                       .filter((item) => formData.items[item.id].status === "non_compliant")
@@ -573,7 +556,7 @@ export default function ArbowetFormPage() {
             )}
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">{t("riskAssessment.overallAssessmentLabel")}</Label>
                 <Textarea
                   value={formData.overallAssessment}
@@ -583,7 +566,7 @@ export default function ArbowetFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">{t("riskAssessment.priorityActions")}</Label>
                 <Textarea
                   value={formData.priorityActions}
@@ -593,7 +576,7 @@ export default function ArbowetFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">{t("riskAssessment.nextAuditDate")}</Label>
                 <Input
                   type="date"

@@ -19,6 +19,43 @@ function isCacheFresh(key: string): boolean {
   return ts != null && Date.now() - ts < CACHE_TTL_MS;
 }
 
+/** Retry an entity-upsert POST with exponential backoff. Skips retry on 401/403. */
+async function syncWithRetry(
+  url: string,
+  body: object,
+  table: string,
+  maxAttempts = 3,
+): Promise<boolean> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) return true;
+      const resBody = await res.json().catch(() => ({ error: "Unknown error" }));
+      const errMsg = resBody.error || `HTTP ${res.status}`;
+      if (res.status === 401 || res.status === 403) {
+        console.warn(`[Harmoniq] Cloud sync denied for ${table}: ${errMsg}`);
+        return false;
+      }
+      if (attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, 1000 * attempt));
+      } else {
+        console.warn(`[Harmoniq] Cloud sync failed for ${table} after ${maxAttempts} attempts: ${errMsg}`);
+      }
+    } catch (syncErr) {
+      if (attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, 1000 * attempt));
+      } else {
+        console.warn(`[Harmoniq] Cloud sync failed for ${table}:`, syncErr);
+      }
+    }
+  }
+  return false;
+}
+
 /** Recursively sanitize all string values in an entity before writing. */
 function sanitizeEntity<T extends Record<string, unknown>>(entity: T): T {
   const sanitized = { ...entity };
@@ -126,29 +163,30 @@ export function createEntityStore<T extends IdEntity>(
   const Context = React.createContext<EntityStore<T> | undefined>(undefined);
 
   function Provider({ children }: { children: React.ReactNode }) {
-    const [items, setItems] = React.useState<T[]>(() => {
-      if (isSupabaseConfigured) return loadFromStorage(storageKey, []);
-      const cached = loadFromStorage<T[]>(storageKey, []);
-      if (cached.length === 0) return initialData;
-      // Merge any new mock items not in cache
-      const cachedIds = new Set(cached.map((item) => item.id));
-      const newItems = initialData.filter((item) => !cachedIds.has(item.id));
-      return newItems.length > 0 ? [...cached, ...newItems] : cached;
-    });
-    const [isLoading, setIsLoading] = React.useState(() => {
-      // Only show loading spinner if we have zero cached data AND no recent fetch
-      if (!isSupabaseConfigured) return false;
-      if (isCacheFresh(storageKey)) return false;
-      const cached = loadFromStorage<T[]>(storageKey, []);
-      return cached.length === 0;
-    });
+    const [items, setItems] = React.useState<T[]>(initialData);
+    const [isLoading, setIsLoading] = React.useState(isSupabaseConfigured);
     const [error, setError] = React.useState<string | null>(null);
-    const hasLoadedRef = React.useRef(
-      !isSupabaseConfigured || isCacheFresh(storageKey)
-    );
+    const hasLoadedRef = React.useRef(false);
     const isFetchingRef = React.useRef(false);
     const isMountedRef = React.useRef(true);
     const realtimeRefreshTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const writeInFlightRef = React.useRef(0);
+
+    // Hydrate from localStorage on mount (client-only) to avoid SSR mismatch
+    React.useEffect(() => {
+      const cached = loadFromStorage<T[]>(storageKey, []);
+      if (cached.length > 0) {
+        const cachedIds = new Set(cached.map((item) => item.id));
+        const newItems = initialData.filter((item) => !cachedIds.has(item.id));
+        const merged = newItems.length > 0 ? [...cached, ...newItems] : cached;
+        setItems(merged);
+        itemsRef.current = merged;
+      }
+      if (!isSupabaseConfigured || isCacheFresh(storageKey)) {
+        setIsLoading(false);
+        hasLoadedRef.current = true;
+      }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     React.useEffect(() => {
       return () => {
@@ -162,6 +200,8 @@ export function createEntityStore<T extends IdEntity>(
     const ensureLoaded = React.useCallback(() => {
       if (!isSupabaseConfigured) return;
       if (isFetchingRef.current) return;
+      // Defer fetch if writes are in flight to avoid overwriting optimistic data
+      if (writeInFlightRef.current > 0) return;
       // Skip fetch entirely if cache is fresh
       if (hasLoadedRef.current && isCacheFresh(storageKey)) return;
       // If we have data but cache is stale, do a silent background refresh
@@ -346,25 +386,16 @@ export function createEntityStore<T extends IdEntity>(
       }
 
       if (isSupabaseConfigured) {
+        writeInFlightRef.current++;
         void (async () => {
           const mapped = mapToSupabase(sanitizedItem as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
           if (process.env.NODE_ENV === "development") {
             console.log(`[Harmoniq Debug] Upserting to ${table}:`, Object.keys(mapped), mapped);
           }
-          // Route through server API to bypass RLS restrictions
           try {
-            const res = await fetch("/api/entity-upsert", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ table, data: mapped }),
-            });
-            if (!res.ok) {
-              const body = await res.json().catch(() => ({ error: "Unknown error" }));
-              const errMsg = body.error || `HTTP ${res.status}`;
-              console.warn(`[Harmoniq] Cloud sync failed for ${table}: ${errMsg}`);
-            }
-          } catch (syncErr) {
-            console.warn(`[Harmoniq] Cloud sync failed for ${table}:`, syncErr);
+            await syncWithRetry("/api/entity-upsert", { table, data: mapped }, table);
+          } finally {
+            writeInFlightRef.current--;
           }
         })();
       }
@@ -397,21 +428,17 @@ export function createEntityStore<T extends IdEntity>(
       }
 
       if (isSupabaseConfigured) {
+        writeInFlightRef.current++;
         void (async () => {
           try {
             const mapped = mapToSupabase(sanitizedUpdates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
-            const res = await fetch("/api/entity-upsert", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ table, data: { ...mapped, id } }),
-            });
-            if (!res.ok) {
-              const body = await res.json().catch(() => ({ error: "Unknown error" }));
-              const errMsg = body.error || `HTTP ${res.status}`;
-              console.warn(`[Harmoniq] Cloud sync failed for ${table} update: ${errMsg}`);
-            }
-          } catch (syncErr) {
-            console.warn(`[Harmoniq] Cloud sync failed for ${table} update:`, syncErr);
+            await syncWithRetry(
+              "/api/entity-upsert",
+              { table, data: { ...mapped, id } },
+              table,
+            );
+          } finally {
+            writeInFlightRef.current--;
           }
         })();
       }
@@ -444,12 +471,16 @@ export function createEntityStore<T extends IdEntity>(
       }
 
       if (isSupabaseConfigured) {
+        writeInFlightRef.current++;
         void (async () => {
-          const supabase = createClient();
-          const { error: persistError } = await supabase.from(table).delete().eq("id", id);
-          if (persistError) {
-            // Keep optimistic delete — don't roll back
-            console.warn(`[Harmoniq] Cloud sync failed for ${table} delete: ${persistError.message} — removed locally`);
+          try {
+            const supabase = createClient();
+            const { error: persistError } = await supabase.from(table).delete().eq("id", id);
+            if (persistError) {
+              console.warn(`[Harmoniq] Cloud sync failed for ${table} delete: ${persistError.message} — removed locally`);
+            }
+          } finally {
+            writeInFlightRef.current--;
           }
         })();
       }

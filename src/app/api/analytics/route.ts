@@ -64,13 +64,11 @@ async function flushFallbackEvents() {
   }
 }
 
-// Simple hash to anonymize IP
+import crypto from "crypto";
+
 function hashIp(ip: string): string {
-  let hash = 0;
-  for (let i = 0; i < ip.length; i++) {
-    hash = ((hash << 5) - hash + ip.charCodeAt(i)) | 0;
-  }
-  return `v${Math.abs(hash).toString(36)}`;
+  const salt = process.env.IP_HASH_SALT || "analytics-default";
+  return crypto.createHash("sha256").update(ip + salt).digest("hex").slice(0, 16);
 }
 
 function isAnalyticsOriginAllowed(request: NextRequest): boolean {
@@ -132,8 +130,8 @@ function normalizeEvent(request: NextRequest, body: unknown): PageviewEvent | nu
 
   const ua = request.headers.get("user-agent") || "";
   const clientIp = getClientIp(request);
-  const latHeader = getFirstHeader(request, ["x-vercel-ip-latitude", "x-geo-latitude", "x-client-latitude"]);
-  const lngHeader = getFirstHeader(request, ["x-vercel-ip-longitude", "x-geo-longitude", "x-client-longitude"]);
+  const latHeader = getFirstHeader(request, ["x-servballa-latitude", "x-vercel-ip-latitude", "x-geo-latitude", "x-client-latitude"]);
+  const lngHeader = getFirstHeader(request, ["x-servballa-longitude", "x-vercel-ip-longitude", "x-geo-longitude", "x-client-longitude"]);
   const lat = latHeader ? Number.parseFloat(latHeader) : null;
   const lng = lngHeader ? Number.parseFloat(lngHeader) : null;
 
@@ -143,10 +141,10 @@ function normalizeEvent(request: NextRequest, body: unknown): PageviewEvent | nu
       ? truncate(payload.referrer, 512)
       : "direct",
     country: truncate(
-      getFirstHeader(request, ["x-vercel-ip-country", "cf-ipcountry", "x-country-code"]) || "unknown",
+      getFirstHeader(request, ["x-servballa-country", "x-vercel-ip-country", "cf-ipcountry", "x-country-code"]) || "unknown",
       128
     ),
-    city: safeDecode(getFirstHeader(request, ["x-vercel-ip-city", "x-geo-city", "x-client-city"])),
+    city: safeDecode(getFirstHeader(request, ["x-servballa-city", "x-vercel-ip-city", "x-geo-city", "x-client-city"])),
     lat: Number.isFinite(lat) ? lat : null,
     lng: Number.isFinite(lng) ? lng : null,
     browser: getBrowserName(ua),

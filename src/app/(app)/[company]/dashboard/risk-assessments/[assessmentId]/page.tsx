@@ -35,8 +35,14 @@ const PdfExportButton = dynamic(
   { ssr: false, loading: () => <Button variant="outline" disabled><Download className="h-4 w-4 mr-2" />Loading...</Button> }
 );
 
-import { mockRiskTemplateDetails } from "@/mocks/data";
-const mockRiskTemplates = mockRiskTemplateDetails;
+const mockRiskTemplates: Record<string, {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  locked: boolean;
+  sections: { name: string; description: string; fields: { label: string; type: string; required: boolean }[] }[];
+}> = {};
 
 // Risk score calculation helper
 function calculateRiskScore(likelihood: number, severity: number): { score: number; level: string; color: string } {

@@ -2,11 +2,10 @@
 
 import * as React from "react";
 import { createEntityStore } from "@/stores/create-entity-store";
-import { mockTeams } from "@/mocks/data";
 import type { Team } from "@/types";
 import { normalizeTeam, normalizeTeamUpdates } from "@/lib/assignment-utils";
 
-const store = createEntityStore<Team>("harmoniq_teams", mockTeams, {
+const store = createEntityStore<Team>("harmoniq_teams", [], {
   columnMap: {
     leader_id: "lead_id",
   },

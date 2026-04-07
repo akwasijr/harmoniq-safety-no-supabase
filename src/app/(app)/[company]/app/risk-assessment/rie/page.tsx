@@ -322,7 +322,6 @@ export default function RIEFormPage() {
               {currentSectionData.title} • Stap {currentSection + 1} van {sections.length}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">Arbowet</span>
         </div>
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
@@ -343,21 +342,12 @@ export default function RIEFormPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold">Bedrijfsgegevens</h2>
-                <p className="text-sm text-muted-foreground">Company information per Arbowet Article 5</p>
+                <p className="text-sm text-muted-foreground">Vul de bedrijfsgegevens in</p>
               </div>
             </div>
 
-            <Card className="bg-orange-50 border-orange-200">
-              <CardContent className="py-4">
-                <p className="text-sm text-orange-800">
-                  <strong>Arbowet Artikel 5 (NL):</strong> Every employer is required to conduct a 
-                  risk inventory and evaluation (RI&E) and develop an action plan.
-                </p>
-              </CardContent>
-            </Card>
-
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Bedrijfsnaam (Company Name) *</Label>
                 <Input
                   autoFocus
@@ -373,7 +363,7 @@ export default function RIEFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">KvK-nummer (Chamber of Commerce Number)</Label>
                 <Input
                   value={formData.kvkNumber}
@@ -386,7 +376,7 @@ export default function RIEFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Adres (Address) *</Label>
                 <Input
                   value={formData.address}
@@ -402,7 +392,7 @@ export default function RIEFormPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Sector</Label>
                   <Input
                     value={formData.sector}
@@ -412,7 +402,7 @@ export default function RIEFormPage() {
                     maxLength={200}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Aantal medewerkers *</Label>
                   <Input
                     value={formData.employeeCount}
@@ -428,7 +418,7 @@ export default function RIEFormPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Datum RI&E *</Label>
                   <Input
                     type="date"
@@ -440,7 +430,7 @@ export default function RIEFormPage() {
                     <p className="text-xs text-red-500 mt-1">This field is required</p>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Uitgevoerd door *</Label>
                   <Input
                     value={formData.assessor}
@@ -456,30 +446,29 @@ export default function RIEFormPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  const count = parseInt(formData.employeeCount) || 0;
-                  setFormData({ ...formData, externalReviewRequired: count > 25 });
-                }}
+              <div
                 className={cn(
-                  "w-full p-4 rounded-xl border-2 text-left transition-all",
+                  "flex items-center justify-between p-4 rounded-xl transition-all",
                   formData.externalReviewRequired
-                    ? "border-warning bg-warning/10"
-                    : "border-border"
+                    ? "bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700"
+                    : "bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Toetsing verplicht?</p>
-                    <p className="text-xs text-muted-foreground">
-                      Companies with &gt;25 employees must have RI&E reviewed by certified expert
-                    </p>
-                  </div>
-                  <span className="text-xs font-medium">
-                    {formData.externalReviewRequired ? "Yes" : "No"}
-                  </span>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">Toetsing verplicht?</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Bedrijven met &gt;25 werknemers moeten de RI&E laten toetsen
+                  </p>
                 </div>
-              </button>
+                <div className={cn(
+                  "flex items-center justify-center h-8 px-4 rounded-full text-xs font-bold",
+                  formData.externalReviewRequired
+                    ? "bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200"
+                    : "bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200"
+                )}>
+                  {formData.externalReviewRequired ? "Ja" : "Nee"}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -498,7 +487,7 @@ export default function RIEFormPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Beschrijving werkplek (Workplace Description) *</Label>
                 <Textarea
                   value={formData.workplaceDescription}
@@ -512,7 +501,7 @@ export default function RIEFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Werkzaamheden (Activities) *</Label>
                 <Textarea
                   value={formData.activities}
@@ -526,7 +515,7 @@ export default function RIEFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Werktijden (Working Hours)</Label>
                 <Input
                   value={formData.workingHours}
@@ -537,7 +526,7 @@ export default function RIEFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Bijzondere groepen (Special Groups)</Label>
                 <Textarea
                   value={formData.specialGroups}
@@ -654,22 +643,23 @@ export default function RIEFormPage() {
                               </button>
 
                               {isSelected && risk && (
-                                <div className="ml-8 space-y-3 p-3 bg-muted/50 rounded-lg">
-                                  <div className="grid grid-cols-3 gap-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">Ernst (S)</Label>
-                                      <div className="flex gap-1">
+                                <div className="ml-2 space-y-4 p-4 bg-muted/50 rounded-xl border border-border/50">
+                                  {/* Rating selectors — stacked vertically on mobile */}
+                                  <div className="space-y-3">
+                                    <div className="space-y-1.5">
+                                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ernst (Severity)</Label>
+                                      <div className="flex gap-2">
                                         {[1, 2, 3].map((s) => (
                                           <button
                                             key={s}
                                             onClick={() => updateRisk(risk.id, "severity", s)}
                                             className={cn(
-                                              "flex-1 py-1.5 rounded text-xs font-medium",
+                                              "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all",
                                               risk.severity === s
-                                                ? s === 1 ? "bg-green-500 text-white"
-                                                : s === 2 ? "bg-yellow-500 text-white"
-                                                : "bg-red-500 text-white"
-                                                : "bg-background border"
+                                                ? s === 1 ? "bg-green-500 text-white shadow-sm"
+                                                : s === 2 ? "bg-yellow-500 text-white shadow-sm"
+                                                : "bg-red-500 text-white shadow-sm"
+                                                : "bg-background border-2 border-border hover:border-muted-foreground/40"
                                             )}
                                           >
                                             {s}
@@ -677,20 +667,20 @@ export default function RIEFormPage() {
                                         ))}
                                       </div>
                                     </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">Kans (P)</Label>
-                                      <div className="flex gap-1">
+                                    <div className="space-y-1.5">
+                                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Kans (Probability)</Label>
+                                      <div className="flex gap-2">
                                         {[1, 2, 3].map((p) => (
                                           <button
                                             key={p}
                                             onClick={() => updateRisk(risk.id, "probability", p)}
                                             className={cn(
-                                              "flex-1 py-1.5 rounded text-xs font-medium",
+                                              "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all",
                                               risk.probability === p
-                                                ? p === 1 ? "bg-green-500 text-white"
-                                                : p === 2 ? "bg-yellow-500 text-white"
-                                                : "bg-red-500 text-white"
-                                                : "bg-background border"
+                                                ? p === 1 ? "bg-green-500 text-white shadow-sm"
+                                                : p === 2 ? "bg-yellow-500 text-white shadow-sm"
+                                                : "bg-red-500 text-white shadow-sm"
+                                                : "bg-background border-2 border-border hover:border-muted-foreground/40"
                                             )}
                                           >
                                             {p}
@@ -698,20 +688,20 @@ export default function RIEFormPage() {
                                         ))}
                                       </div>
                                     </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">Blootstelling (E)</Label>
-                                      <div className="flex gap-1">
+                                    <div className="space-y-1.5">
+                                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Blootstelling (Exposure)</Label>
+                                      <div className="flex gap-2">
                                         {[1, 2, 3].map((e) => (
                                           <button
                                             key={e}
                                             onClick={() => updateRisk(risk.id, "exposure", e)}
                                             className={cn(
-                                              "flex-1 py-1.5 rounded text-xs font-medium",
+                                              "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all",
                                               risk.exposure === e
-                                                ? e === 1 ? "bg-green-500 text-white"
-                                                : e === 2 ? "bg-yellow-500 text-white"
-                                                : "bg-red-500 text-white"
-                                                : "bg-background border"
+                                                ? e === 1 ? "bg-green-500 text-white shadow-sm"
+                                                : e === 2 ? "bg-yellow-500 text-white shadow-sm"
+                                                : "bg-red-500 text-white shadow-sm"
+                                                : "bg-background border-2 border-border hover:border-muted-foreground/40"
                                             )}
                                           >
                                             {e}
@@ -723,26 +713,26 @@ export default function RIEFormPage() {
 
                                   {risk.priority && (
                                     <div className={cn(
-                                      "p-2 rounded text-center",
+                                      "p-3 rounded-lg text-center",
                                       getRiskPriority(risk.severity * risk.probability * risk.exposure).bgColor
                                     )}>
                                       <p className={cn(
                                         "text-sm font-semibold",
                                         getRiskPriority(risk.severity * risk.probability * risk.exposure).color
                                       )}>
-                                        Score: {risk.severity * risk.probability * risk.exposure} - 
+                                        Score: {risk.severity * risk.probability * risk.exposure} — 
                                         Prioriteit: {risk.priority === "high" ? "Hoog" : risk.priority === "medium" ? "Midden" : "Laag"}
                                       </p>
                                     </div>
                                   )}
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">Huidige maatregelen</Label>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Huidige maatregelen</Label>
                                     <Input
                                       value={risk.currentControls}
                                       onChange={(e) => updateRisk(risk.id, "currentControls", e.target.value)}
-                                      placeholder="Current control measures in place..."
-                                      className="h-9 text-sm"
+                                      placeholder="Beschrijf de huidige beheersmaatregelen..."
+                                      className="h-11 text-sm rounded-lg"
                                     />
                                   </div>
                                 </div>
@@ -846,7 +836,7 @@ export default function RIEFormPage() {
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-base">Algemene maatregelen (General Measures)</Label>
               <Textarea
                 value={formData.generalMeasures}
@@ -857,7 +847,7 @@ export default function RIEFormPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-base">Aanvullende opmerkingen</Label>
               <Textarea
                 value={formData.additionalNotes}

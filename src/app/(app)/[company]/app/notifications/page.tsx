@@ -88,13 +88,13 @@ export default function NotificationsPage() {
       .filter((n) => n.user_id === null || n.user_id === user.id)
       .forEach((n) => {
         const iconMap: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
-          content: { icon: Newspaper, color: "text-blue-500 bg-blue-50" },
-          incident: { icon: AlertTriangle, color: "text-orange-500 bg-orange-50" },
-          checklist: { icon: ClipboardCheck, color: "text-primary bg-primary/10" },
-          task: { icon: Wrench, color: "text-purple-500 bg-purple-50" },
-          ticket: { icon: Wrench, color: "text-purple-500 bg-purple-50" },
-          work_order: { icon: Wrench, color: "text-amber-600 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300" },
-          corrective_action: { icon: ShieldAlert, color: "text-red-600 bg-red-50 dark:bg-red-950/40 dark:text-red-300" },
+          content: { icon: Newspaper, color: "text-blue-700 bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300" },
+          incident: { icon: AlertTriangle, color: "text-orange-700 bg-orange-100 dark:bg-orange-900/40 dark:text-orange-300" },
+          checklist: { icon: ClipboardCheck, color: "text-primary bg-primary/15" },
+          task: { icon: Wrench, color: "text-purple-600 bg-purple-100 dark:bg-purple-900/40 dark:text-purple-300" },
+          ticket: { icon: Wrench, color: "text-purple-600 bg-purple-100 dark:bg-purple-900/40 dark:text-purple-300" },
+          work_order: { icon: Wrench, color: "text-amber-700 bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300" },
+          corrective_action: { icon: ShieldAlert, color: "text-red-700 bg-red-100 dark:bg-red-900/40 dark:text-red-300" },
         };
         const { icon, color } = iconMap[n.source || "content"] || iconMap.content;
         const href = n.source_id
@@ -173,8 +173,8 @@ export default function NotificationsPage() {
           read: false,
           href: `/${company}/app/checklists/${template.id}`,
           icon: ClipboardCheck,
-          iconColor: "text-primary bg-primary/10",
-          audienceLabel: "Available to use",
+          iconColor: "text-primary bg-primary/15",
+          audienceLabel: "Checklist",
           urgencyWeight: 0,
         });
       });
@@ -199,7 +199,7 @@ export default function NotificationsPage() {
           read: false,
           href: `/${company}/app/tasks/tickets/${ticket.id}`,
           icon: Wrench,
-          iconColor: "text-purple-500 bg-purple-50",
+          iconColor: "text-purple-600 bg-purple-100 dark:bg-purple-900/40 dark:text-purple-300",
           audienceLabel: "Assigned to you",
           urgencyWeight: getUrgencyWeight(ticket.priority, ticket.due_date),
         });
@@ -225,7 +225,7 @@ export default function NotificationsPage() {
           read: false,
           href: `/${company}/app/tasks/work-orders/${workOrder.id}`,
           icon: Wrench,
-          iconColor: "text-amber-600 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300",
+          iconColor: "text-amber-700 bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300",
           audienceLabel: "Assigned to you",
           urgencyWeight: getUrgencyWeight(workOrder.priority, workOrder.due_date),
         });
@@ -250,7 +250,7 @@ export default function NotificationsPage() {
           read: false,
           href: `/${company}/app/tasks/actions/${action.id}`,
           icon: ShieldAlert,
-          iconColor: "text-red-600 bg-red-50 dark:bg-red-950/40 dark:text-red-300",
+          iconColor: "text-red-700 bg-red-100 dark:bg-red-900/40 dark:text-red-300",
           audienceLabel: "Assigned to you",
           urgencyWeight: getUrgencyWeight(action.severity, action.due_date),
         });
@@ -278,8 +278,8 @@ export default function NotificationsPage() {
             ? `/${company}/app/risk-assessment/${evaluation.form_type.toLowerCase()}?draft=${evaluation.id}`
             : `/${company}/app/risk-assessment/view/${evaluation.id}`,
           icon: ClipboardCheck,
-          iconColor: "text-blue-600 bg-blue-50 dark:bg-blue-950/40 dark:text-blue-300",
-          audienceLabel: "Your assessment",
+          iconColor: "text-blue-700 bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300",
+          audienceLabel: "Assessment",
           urgencyWeight: isDraft ? 1 : 2,
         });
       });
@@ -324,11 +324,6 @@ export default function NotificationsPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold flex-1">{t("notifications.title") || "Notifications"}</h1>
-          {unreadCount > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {unreadCount} new
-            </Badge>
-          )}
         </div>
       </div>
 
@@ -344,34 +339,34 @@ export default function NotificationsPage() {
                   href={notification.href}
                   onClick={() => handleNotificationClick(notification)}
                   className={cn(
-                    "flex items-start gap-3 px-4 py-3.5 transition-colors active:bg-muted/50 hover:bg-muted/30",
-                    !notification.read && "bg-primary/[0.03]"
+                    "flex items-start gap-3.5 px-4 py-4 transition-colors active:bg-muted/50 hover:bg-muted/30",
+                    !notification.read && "bg-primary/5"
                   )}
                 >
-                  <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full mt-0.5", notification.iconColor)}>
-                    <notification.icon className="h-4 w-4" aria-hidden="true" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 mt-0.5">
+                    <notification.icon className="h-5 w-5 text-primary" aria-hidden="true" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <p className={cn("text-sm leading-tight line-clamp-2", !notification.read && "font-semibold")}>
+                      <p className={cn("text-sm leading-tight", !notification.read ? "font-semibold" : "font-medium")}>
                         {notification.title}
                       </p>
                       {!notification.read && (
-                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label={t("common.unread")} />
+                        <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" aria-label={t("common.unread")} />
                       )}
                     </div>
-                     <p className="text-xs text-muted-foreground mt-0.5">{notification.description}</p>
-                     <div className="mt-1 flex items-center gap-2">
-                       {notification.audienceLabel ? (
-                         <Badge variant="outline" className="h-5 text-[10px]">
-                           {notification.audienceLabel}
-                         </Badge>
-                       ) : null}
-                     </div>
-                     <div className="flex items-center gap-1 mt-1">
-                       <Clock className="h-3 w-3 text-muted-foreground/60" aria-hidden="true" />
-                       <span className="text-[11px] text-muted-foreground/60">
-                         {formatDate(notification.timestamp)}
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notification.description}</p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      {notification.audienceLabel && (
+                        <span className="text-[10px] font-medium text-muted-foreground">
+                          {notification.audienceLabel}
+                        </span>
+                      )}
+                      {notification.audienceLabel && (
+                        <span className="text-muted-foreground/40">·</span>
+                      )}
+                      <span className="text-[10px] text-muted-foreground/60">
+                        {formatDate(notification.timestamp)}
                       </span>
                     </div>
                   </div>

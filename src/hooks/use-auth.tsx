@@ -9,7 +9,6 @@ import { clearAllHarmoniqStorage, loadOptionalStringFromStorage, saveToStorage }
 import { resetBranding } from "@/lib/branding";
 import { clearClientCookie } from "@/lib/client-cookies";
 import { getPlatformSlugs } from "@/lib/platform-config";
-import { mockUsers } from "@/mocks/data";
 import type { User, Company, Permission, UserRole, CompanyRole } from "@/types";
 
 const MOCK_AUTH_KEY = "harmoniq_mock_user_email";
@@ -141,16 +140,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (IS_MOCK_MODE) {
       // Mock auth: check localStorage for a previously logged-in mock user
-      const storedEmail = typeof window !== "undefined" ? window.localStorage.getItem(MOCK_AUTH_KEY) : null;
-      if (storedEmail) {
-        const mockUser = mockUsers.find((u) => u.email === storedEmail) as User | undefined;
-        if (mockUser) {
-          setUser(mockUser);
-          const cid = mockUser.company_id;
-          setSelectedCompanyId(cid);
-          if (cid) saveToStorage(SELECTED_COMPANY_STORAGE_KEY, cid);
-        }
-      }
+      // With mock data removed, mock mode requires Supabase or a manual fallback.
+      // Keep the flow intact but there are no mock users to match against.
       setIsLoading(false);
       return;
     }
@@ -224,7 +215,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasSelectedCompany = isSuperAdmin ? Boolean(selectedCompanyId) : currentCompany !== null;
 
   // Super admin: if no company is selected yet AND not in platform mode, auto-select the first non-platform company
-  const isPlatformEntry = typeof window !== "undefined" && window.localStorage.getItem("harmoniq_platform_entry") === "true";
+  const [isPlatformEntry, setIsPlatformEntry] = React.useState(false);
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsPlatformEntry(window.localStorage.getItem("harmoniq_platform_entry") === "true");
+    }
+  }, []);
 
   // In platform mode, clear any previously stored company selection so admin starts fresh
   React.useEffect(() => {
@@ -390,13 +386,25 @@ export function useRole() {
   return { isSuperAdmin, isCompanyAdmin, isManager, isEmployee, role };
 }
 
-/** Mock login: stores email in localStorage and reloads. Password: "demo123" for all users. */
+/** Mock login: stores email in localStorage and reloads. No-op without mock user data. */
 export function mockLogin(email: string): User | null {
   if (!IS_MOCK_MODE) return null;
-  const found = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase()) as User | undefined;
-  if (!found) return null;
-  window.localStorage.setItem(MOCK_AUTH_KEY, found.email);
-  return found;
+  // Minimal fallback: create a shell user from the provided email so the
+  // login flow can still redirect. Real user data comes from Supabase.
+  const fallbackUser: User = {
+    id: crypto.randomUUID(),
+    email,
+    first_name: email.split("@")[0],
+    last_name: "",
+    full_name: email.split("@")[0],
+    role: "company_admin" as const,
+    company_id: "",
+    status: "active",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } as User;
+  window.localStorage.setItem(MOCK_AUTH_KEY, fallbackUser.email);
+  return fallbackUser;
 }
 
 export { IS_MOCK_MODE };

@@ -425,7 +425,23 @@ export default function UserDetailPage() {
                 <CardTitle className="text-base">{t("users.quickActions")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full gap-2" onClick={() => toast("Password reset email sent")}>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`/api/platform/users/${user.id}/password-reset`, { method: "POST" });
+                      if (res.ok) {
+                        toast("Password reset email sent to " + user.email);
+                      } else {
+                        const body = await res.json().catch(() => ({ error: "Failed" }));
+                        toast(body.error || "Failed to send reset email", "error");
+                      }
+                    } catch {
+                      toast("Failed to send reset email", "error");
+                    }
+                  }}
+                >
                   <Key className="h-4 w-4" /> {t("users.resetPassword")}
                 </Button>
                 <Button variant="outline" className="w-full gap-2" onClick={() => toast("Message feature coming soon")}>

@@ -23,12 +23,15 @@ import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
+import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import type { Content } from "@/types";
 import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
+import { getDueChecklists } from "@/lib/checklist-due";
+import { isVisibleToFieldApp } from "@/lib/template-activation";
 import {
   type FieldAppQuickActionId,
   getFieldAppQuickActionDefinition,
@@ -272,6 +275,8 @@ export default function EmployeeAppHomePage() {
   const { items: tickets } = useTicketsStore();
   const { items: workOrders } = useWorkOrdersStore();
   const { items: correctiveActions } = useCorrectiveActionsStore();
+  const { items: checklistTemplates } = useChecklistTemplatesStore();
+  const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { t, formatDate } = useTranslation();
 
   // Use state for time-dependent values to prevent hydration mismatch
@@ -301,9 +306,18 @@ export default function EmployeeAppHomePage() {
   );
   const userWorkOrders = workOrders.filter((wo) => isAssignedToUserOrTeam(wo, user));
   const userActions = correctiveActions.filter((ca) => isAssignedToUserOrTeam(ca, user));
+
+  // Due checklists for this user
+  const myTemplates = checklistTemplates.filter(
+    (tpl) => tpl.company_id === user?.company_id && isVisibleToFieldApp(tpl)
+  );
+  const mySubmissions = checklistSubmissions.filter((s) => s.submitter_id === user?.id);
+  const dueChecklists = getDueChecklists(myTemplates, mySubmissions);
+
   const pendingTaskCount = userTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length
     + userWorkOrders.filter((wo) => wo.status !== "completed" && wo.status !== "cancelled").length
-    + userActions.filter((ca) => ca.status !== "completed").length;
+    + userActions.filter((ca) => ca.status !== "completed").length
+    + dueChecklists.length;
   const oneWeekAgo = new Date(stableNow - 7 * 24 * 60 * 60 * 1000);
   const completedThisWeek = userTickets.filter(
     (ticket) => ticket.updated_at && new Date(ticket.updated_at) > oneWeekAgo
@@ -345,7 +359,7 @@ export default function EmployeeAppHomePage() {
             <p className="text-2xl font-bold text-brand-solid-foreground">{safeDays}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.safeDays")}</p>
           </div>
-          <Link href={`/${company}/app/checklists`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center hover:bg-white/20 transition-colors">
+          <Link href={`/${company}/app/checklists?tab=checklists`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center hover:bg-white/20 transition-colors">
             <p className="text-2xl font-bold text-brand-solid-foreground">{pendingTaskCount}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
           </Link>

@@ -128,14 +128,14 @@ describe("Badge", () => {
   it("applies variant classes", () => {
     const { container } = render(<Badge variant="success">Done</Badge>);
     const span = container.querySelector("span");
-    // success variant maps to green color classes
-    expect(span?.className).toContain("green");
+    // success variant maps to green hex color
+    expect(span?.className).toContain("#059669");
   });
 
   it("supports status variants", () => {
     const { container } = render(<Badge variant="critical">Critical</Badge>);
-    // critical variant maps to red color classes
-    expect(container.querySelector("span")?.className).toContain("red");
+    // critical variant maps to red hex color
+    expect(container.querySelector("span")?.className).toContain("#dc2626");
   });
 });
 

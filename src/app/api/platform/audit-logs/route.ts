@@ -60,8 +60,9 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await query;
   if (error) {
+    console.error("[Platform API]", error);
     return withNoStore(
-      NextResponse.json({ error: "Failed to load audit logs", details: error.message }, { status: 500 }),
+      NextResponse.json({ error: "Failed to load audit logs" }, { status: 500 }),
     );
   }
 
@@ -106,8 +107,9 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) {
+    console.error("[Platform API]", error);
     return NextResponse.json(
-      { error: "Failed to write audit log", details: error.message },
+      { error: "Failed to write audit log" },
       { status: 500 },
     );
   }

@@ -12,7 +12,6 @@ export type BadgeVariant =
   | "warning"
   | "info"
   | "outline"
-  | "new"
   | "in-progress"
   | "in_progress"
   | "in-review"

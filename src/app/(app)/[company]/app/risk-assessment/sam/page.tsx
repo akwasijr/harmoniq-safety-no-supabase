@@ -288,7 +288,6 @@ export default function SAMFormPage() {
               {currentSectionData.title} • Steg {currentSection + 1} av {sections.length}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">SE</span>
         </div>
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
@@ -313,17 +312,8 @@ export default function SAMFormPage() {
               </div>
             </div>
 
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="py-4">
-                <p className="text-sm text-blue-800">
-                  <strong>AFS 2023:1 (SE):</strong> Systematic Work Environment Management (SAM) is 
-                  required for all Swedish employers under the Work Environment Act (Arbetsmiljölagen).
-                </p>
-              </CardContent>
-            </Card>
-
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Organisation *</Label>
                 <Input
                   autoFocus
@@ -338,7 +328,7 @@ export default function SAMFormPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Avdelning (Department)</Label>
                   <Input
                     value={formData.department}
@@ -347,7 +337,7 @@ export default function SAMFormPage() {
                     className="h-12"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Arbetsplats *</Label>
                   <Input
                     value={formData.workplace}
@@ -362,7 +352,7 @@ export default function SAMFormPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Datum *</Label>
                   <Input
                     type="date"
@@ -374,7 +364,7 @@ export default function SAMFormPage() {
                     <p className="text-xs text-red-500 mt-1">This field is required</p>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Utförd av *</Label>
                   <Input
                     value={formData.assessor}
@@ -388,7 +378,7 @@ export default function SAMFormPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Deltagare (Participants)</Label>
                 <Textarea
                   value={formData.participants}
@@ -504,23 +494,23 @@ export default function SAMFormPage() {
                               </button>
 
                               {isSelected && risk && (
-                                <div className="ml-8 space-y-3 p-3 bg-muted/50 rounded-lg">
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">Allvarlighet (1-4)</Label>
-                                      <div className="flex gap-1">
+                                <div className="ml-2 space-y-4 p-4 bg-muted/50 rounded-xl border border-border/50">
+                                  <div className="space-y-3">
+                                    <div className="space-y-1.5">
+                                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Allvarlighet (Severity)</Label>
+                                      <div className="flex gap-2">
                                         {[1, 2, 3, 4].map((s) => (
                                           <button
                                             key={s}
                                             onClick={() => updateRisk(risk.id, "severity", s)}
                                             className={cn(
-                                              "flex-1 py-1.5 rounded text-xs font-medium",
+                                              "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all",
                                               risk.severity === s
-                                                ? s <= 1 ? "bg-green-500 text-white"
-                                                : s <= 2 ? "bg-yellow-500 text-white"
-                                                : s <= 3 ? "bg-orange-500 text-white"
-                                                : "bg-red-500 text-white"
-                                                : "bg-background border"
+                                                ? s <= 1 ? "bg-green-500 text-white shadow-sm"
+                                                : s <= 2 ? "bg-yellow-500 text-white shadow-sm"
+                                                : s <= 3 ? "bg-orange-500 text-white shadow-sm"
+                                                : "bg-red-500 text-white shadow-sm"
+                                                : "bg-background border-2 border-border hover:border-muted-foreground/40"
                                             )}
                                           >
                                             {s}
@@ -528,21 +518,21 @@ export default function SAMFormPage() {
                                         ))}
                                       </div>
                                     </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">Sannolikhet (1-4)</Label>
-                                      <div className="flex gap-1">
+                                    <div className="space-y-1.5">
+                                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sannolikhet (Probability)</Label>
+                                      <div className="flex gap-2">
                                         {[1, 2, 3, 4].map((p) => (
                                           <button
                                             key={p}
                                             onClick={() => updateRisk(risk.id, "probability", p)}
                                             className={cn(
-                                              "flex-1 py-1.5 rounded text-xs font-medium",
+                                              "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all",
                                               risk.probability === p
-                                                ? p <= 1 ? "bg-green-500 text-white"
-                                                : p <= 2 ? "bg-yellow-500 text-white"
-                                                : p <= 3 ? "bg-orange-500 text-white"
-                                                : "bg-red-500 text-white"
-                                                : "bg-background border"
+                                                ? p <= 1 ? "bg-green-500 text-white shadow-sm"
+                                                : p <= 2 ? "bg-yellow-500 text-white shadow-sm"
+                                                : p <= 3 ? "bg-orange-500 text-white shadow-sm"
+                                                : "bg-red-500 text-white shadow-sm"
+                                                : "bg-background border-2 border-border hover:border-muted-foreground/40"
                                             )}
                                           >
                                             {p}
@@ -554,7 +544,7 @@ export default function SAMFormPage() {
 
                                   {risk.severity > 0 && risk.probability > 0 && (
                                     <div className={cn(
-                                      "p-2 rounded text-center",
+                                      "p-3 rounded-lg text-center",
                                       getRiskLevel(risk.severity * risk.probability).bgColor
                                     )}>
                                       <p className={cn(
@@ -566,13 +556,13 @@ export default function SAMFormPage() {
                                     </div>
                                   )}
 
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">Nuvarande åtgärder</Label>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nuvarande åtgärder</Label>
                                     <Input
                                       value={risk.currentMeasures}
                                       onChange={(e) => updateRisk(risk.id, "currentMeasures", e.target.value)}
-                                      placeholder="Current control measures..."
-                                      className="h-9 text-sm"
+                                      placeholder="Beskriv nuvarande kontrollåtgärder..."
+                                      className="h-11 text-sm rounded-lg"
                                     />
                                   </div>
                                 </div>
@@ -673,7 +663,7 @@ export default function SAMFormPage() {
             )}
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Generella åtgärder (General Measures)</Label>
                 <Textarea
                   value={formData.generalMeasures}
@@ -683,7 +673,7 @@ export default function SAMFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Uppföljningsdatum (Follow-up Date)</Label>
                 <Input
                   type="date"
@@ -760,7 +750,7 @@ export default function SAMFormPage() {
               </CardContent>
             </Card>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-base">Signerad av *</Label>
               <Input
                 value={formData.signedBy}

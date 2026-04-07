@@ -299,7 +299,6 @@ export default function OSAFormPage() {
               {currentSectionData.title} • Steg {currentSectionIndex + 1} av {sections.length}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">SE</span>
         </div>
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSectionIndex + 1) / sections.length) * 100)}>
           <div
@@ -340,7 +339,7 @@ export default function OSAFormPage() {
             </Card>
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Organisation *</Label>
                 <Input
                   autoFocus
@@ -354,7 +353,7 @@ export default function OSAFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Avdelning (Department) *</Label>
                 <Input
                   value={formData.department}
@@ -367,7 +366,7 @@ export default function OSAFormPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Datum *</Label>
                 <Input
                   type="date"
@@ -381,7 +380,7 @@ export default function OSAFormPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Ditt namn *</Label>
                   <Input
                     value={formData.respondent}
@@ -393,7 +392,7 @@ export default function OSAFormPage() {
                     <p className="text-xs text-red-500 mt-1">This field is required</p>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-base">Roll</Label>
                   <Input
                     value={formData.role}
@@ -406,9 +405,9 @@ export default function OSAFormPage() {
             </div>
 
             {/* Assessment Areas Overview */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-base">Bedömningsområden</Label>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {OSA_SECTIONS.map((section) => (
                   <div key={section.id} className="p-3 rounded-lg bg-muted/50 flex items-start gap-3">
                     <section.icon className="h-5 w-5 text-primary shrink-0 mt-0.5" />
@@ -421,14 +420,6 @@ export default function OSAFormPage() {
               </div>
             </div>
 
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="py-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Instruktion:</strong> Svara på en skala 1-5 hur väl varje påstående 
-                  stämmer med din upplevelse. Markera om du ser något som en särskild risk.
-                </p>
-              </CardContent>
-            </Card>
           </div>
         )}
 
@@ -461,7 +452,7 @@ export default function OSAFormPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {/* Rating Scale */}
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div className="flex justify-between text-xs text-muted-foreground">
                           <span>Stämmer inte alls</span>
                           <span>Stämmer helt</span>
@@ -616,7 +607,7 @@ export default function OSAFormPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Övergripande bekymmer</Label>
                 <Textarea
                   value={formData.overallConcerns}
@@ -626,7 +617,7 @@ export default function OSAFormPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-base">Förbättringsförslag</Label>
                 <Textarea
                   value={formData.suggestions}

@@ -16,7 +16,8 @@ import { type AppChoice, buildCompanyDestination, buildPlatformOverviewDestinati
 import { getPlatformSlugFilterList, isPlatformSlug } from "@/lib/platform-config";
 import { useTranslation } from "@/i18n";
 import { mockLogin, IS_MOCK_MODE } from "@/hooks/use-auth";
-import { DEFAULT_COMPANY_SLUG } from "@/mocks/data";
+
+const DEFAULT_COMPANY_SLUG = "harmoniq";
 
 const APP_CHOICE_STORAGE_KEY = "harmoniq_app_choice";
 const APP_CHOICE_COOKIE = "harmoniq_app_choice";

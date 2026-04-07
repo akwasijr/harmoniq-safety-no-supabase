@@ -83,8 +83,9 @@ export async function POST(request: NextRequest) {
     );
 
     if (error) {
+      console.error("[Platform API]", error);
       return NextResponse.json(
-        { error: "Failed to save platform settings", details: error.message },
+        { error: "Failed to save platform settings" },
         { status: 500 },
       );
     }

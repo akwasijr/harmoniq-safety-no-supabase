@@ -64,8 +64,9 @@ export async function POST(request: NextRequest) {
     );
 
     if (error) {
+      console.error("[Platform API]", error);
       return NextResponse.json(
-        { error: "Failed to save privacy settings", details: error.message },
+        { error: "Failed to save privacy settings" },
         { status: 500 }
       );
     }
