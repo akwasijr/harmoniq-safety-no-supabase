@@ -133,6 +133,28 @@ function ChecklistsTabContent({
   const [subTab, setSubTab] = React.useState<ChecklistSubTab>("assigned");
   const completedSubmissions = userSubmissions.filter(s => s.status === "submitted");
   const draftSubmissions = userSubmissions.filter(s => s.status === "draft");
+  const [historyLimit, setHistoryLimit] = React.useState(10);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
+
+  const filteredHistory = React.useMemo(() => {
+    let items = completedSubmissions;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter((s) => {
+        const tplName = templates.find((t) => t.id === s.template_id)?.name || "";
+        return tplName.toLowerCase().includes(q);
+      });
+    }
+    items.sort((a, b) => {
+      const dateA = new Date(a.submitted_at || a.created_at).getTime();
+      const dateB = new Date(b.submitted_at || b.created_at).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+    return items;
+  }, [completedSubmissions, templates, searchQuery, sortOrder]);
+
+  const visibleHistory = filteredHistory.slice(0, historyLimit);
 
   const subTabs: { id: ChecklistSubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: "assigned", label: "Assigned", icon: ListChecks },
@@ -296,11 +318,28 @@ function ChecklistsTabContent({
       {/* HISTORY sub-tab */}
       {subTab === "history" && (
         <>
-          {completedSubmissions.length > 0 ? (
+          {/* Search + sort */}
+          <div className="flex gap-2 mb-3">
+            <input
+              type="search"
+              placeholder="Search completed..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setHistoryLimit(10); }}
+              className="flex-1 h-9 rounded-lg border bg-background px-3 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+              className="h-9 rounded-lg border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          {visibleHistory.length > 0 ? (
             <div className="space-y-2">
-              {completedSubmissions
-                .sort((a, b) => new Date(b.submitted_at || b.created_at).getTime() - new Date(a.submitted_at || a.created_at).getTime())
-                .map((submission) => {
+              {visibleHistory.map((submission) => {
                   const tpl = templates.find(t => t.id === submission.template_id);
                   const score = getScore(submission);
                   const passCount = submission.responses?.filter((r: ChecklistResponse) => r.value === true || r.value === "pass" || r.value === "yes").length || 0;
@@ -354,12 +393,26 @@ function ChecklistsTabContent({
                     </div>
                   );
                 })}
+
+              {/* Load more */}
+              {historyLimit < filteredHistory.length && (
+                <button
+                  onClick={() => setHistoryLimit((prev) => prev + 10)}
+                  className="w-full py-2.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Load more ({filteredHistory.length - historyLimit} remaining)
+                </button>
+              )}
             </div>
           ) : (
             <div className="py-8 text-center">
               <History className="h-10 w-10 text-muted-foreground/20 mx-auto" />
-              <p className="text-sm font-medium text-muted-foreground mt-2">No completed checklists</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Completed checklists with scores will appear here</p>
+              <p className="text-sm font-medium text-muted-foreground mt-2">
+                {searchQuery ? "No matching checklists" : "No completed checklists"}
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                {searchQuery ? "Try a different search term" : "Completed checklists with scores will appear here"}
+              </p>
             </div>
           )}
         </>
