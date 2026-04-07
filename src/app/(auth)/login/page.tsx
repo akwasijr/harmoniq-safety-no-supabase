@@ -162,6 +162,12 @@ function LoginForm() {
       setEmailError("");
       setPasswordError("");
 
+      // DEBUG: trace login flow
+      console.log("[LOGIN DEBUG] isPlatformMode:", isPlatformMode);
+      console.log("[LOGIN DEBUG] appChoice:", appChoice);
+      console.log("[LOGIN DEBUG] IS_MOCK_MODE:", IS_MOCK_MODE);
+      console.log("[LOGIN DEBUG] searchParams mode:", searchParams.get("mode"));
+
       // Mock mode: authenticate against local mock users (password: demo123)
       if (IS_MOCK_MODE) {
         if (password !== "demo123") {
@@ -290,9 +296,14 @@ function LoginForm() {
       const allowedApps = getAllowedApps(profile.role);
       let effectiveChoice = appChoice;
       if (!allowedApps.includes(appChoice)) {
-        // Platform mode accessed by non-super_admin — fall back to dashboard
         effectiveChoice = allowedApps[0];
       }
+
+      // DEBUG: trace routing
+      console.log("[LOGIN DEBUG] profile.role:", profile.role);
+      console.log("[LOGIN DEBUG] allowedApps:", allowedApps);
+      console.log("[LOGIN DEBUG] appChoice at submit:", appChoice);
+      console.log("[LOGIN DEBUG] effectiveChoice:", effectiveChoice);
 
       // Super admins: route based on app choice
       if (profile.role === "super_admin") {
@@ -304,6 +315,7 @@ function LoginForm() {
             .order("created_at", { ascending: true })
             .limit(1)
             .single();
+          console.log("[LOGIN DEBUG] → Platform route, slug:", adminCompany?.slug);
           window.location.href = buildPlatformAnalyticsDestination(adminCompany?.slug);
           return;
         }
@@ -318,6 +330,7 @@ function LoginForm() {
           .single();
 
         const slug = nonPlatform?.slug || "harmoniq";
+        console.log("[LOGIN DEBUG] → Super admin non-platform route, slug:", slug, "choice:", effectiveChoice);
         if (nonPlatform?.id) {
           saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nonPlatform.id);
         }
@@ -326,6 +339,7 @@ function LoginForm() {
       }
 
       // Pick company for redirect (non-super admins)
+      console.log("[LOGIN DEBUG] → Non-super-admin route, role:", profile.role);
       let slug = "harmoniq"; // safe default
       const storedCompanyId = loadFromStorage<string | null>(SELECTED_COMPANY_STORAGE_KEY, null);
       const companyId = profile.company_id || storedCompanyId;
