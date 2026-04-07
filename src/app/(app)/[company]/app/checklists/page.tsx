@@ -880,7 +880,7 @@ function EmployeeChecklistsPageContent() {
 
   // Derive country from locally-saved settings first (survives when DB write fails),
   // then company record, then locale, then US
-  const effectiveCountry = React.useMemo(() => {
+  const effectiveCountry = (() => {
     if (currentCompany?.id) {
       try {
         const raw = localStorage.getItem(`harmoniq_settings_${currentCompany.id}`);
@@ -891,7 +891,7 @@ function EmployeeChecklistsPageContent() {
       } catch { /* ignore */ }
     }
     return currentCompany?.country;
-  }, [currentCompany?.id, currentCompany?.country]);
+  })();
 
   const localeCountry = LOCALE_DEFAULT_COUNTRY[locale];
   const companyCountry = resolveRiskAssessmentCatalogCountry(
