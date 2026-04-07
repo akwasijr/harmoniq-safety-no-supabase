@@ -17,6 +17,7 @@ import {
   Package,
   X,
   Play,
+  ListChecks,
   History,
   Camera,
   MessageSquare,
@@ -108,6 +109,8 @@ function Section({
 
 // ---------- Checklist Tab ----------
 
+type ChecklistSubTab = "assigned" | "history";
+
 function ChecklistsTabContent({
   company,
   templates,
@@ -127,8 +130,14 @@ function ChecklistsTabContent({
   t: (key: string) => string;
   formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
 }) {
+  const [subTab, setSubTab] = React.useState<ChecklistSubTab>("assigned");
   const completedSubmissions = userSubmissions.filter(s => s.status === "submitted");
   const draftSubmissions = userSubmissions.filter(s => s.status === "draft");
+
+  const subTabs: { id: ChecklistSubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "assigned", label: "Assigned", icon: ListChecks },
+    { id: "history", label: "History", icon: History },
+  ];
 
   // Calculate score for a submission
   const getScore = (submission: ChecklistSubmission) => {
@@ -147,8 +156,34 @@ function ChecklistsTabContent({
 
   return (
     <>
-      {/* Assigned / pending checklists */}
-      {pendingTemplates.length > 0 && (
+      {/* Sub-tab pills */}
+      <div className="flex gap-1 bg-muted/50 rounded-lg p-1 mb-3">
+        {subTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = subTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setSubTab(tab.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80",
+                isActive
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ASSIGNED sub-tab */}
+      {subTab === "assigned" && (
+        <>
+          {/* Assigned / pending checklists */}
+          {pendingTemplates.length > 0 && (
         <Section
           title="Assigned to you"
           icon={ClipboardCheck}
@@ -248,89 +283,86 @@ function ChecklistsTabContent({
         </Section>
       )}
 
-      {/* Completed history */}
-      <Section
-        title="History"
-        icon={History}
-        iconColor="text-muted-foreground"
-        count={completedSubmissions.length}
-        defaultOpen={false}
-      >
-        {completedSubmissions.length > 0 ? (
-          <div className="space-y-2">
-            {completedSubmissions
-              .sort((a, b) => new Date(b.submitted_at || b.created_at).getTime() - new Date(a.submitted_at || a.created_at).getTime())
-              .map((submission) => {
-                const tpl = templates.find(t => t.id === submission.template_id);
-                const score = getScore(submission);
-                const passCount = submission.responses?.filter((r: ChecklistResponse) => r.value === true || r.value === "pass" || r.value === "yes").length || 0;
-                const failCount = submission.responses?.filter((r: ChecklistResponse) => r.value === false || r.value === "fail" || r.value === "no").length || 0;
-                const naCount = submission.responses?.filter((r: ChecklistResponse) => r.value === "na" || r.value === "n/a").length || 0;
-                const hasNotes = submission.responses?.some((r: ChecklistResponse) => r.comment);
-                const hasPhotos = submission.responses?.some((r: ChecklistResponse) => (r.photo_urls?.length ?? 0) > 0);
+      {pendingTemplates.length === 0 && draftSubmissions.length === 0 && completedToday.length === 0 && (
+            <div className="py-8 text-center">
+              <ClipboardCheck className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+              <p className="text-sm font-medium text-muted-foreground mt-2">No checklists assigned</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Checklists will appear here when assigned by your admin</p>
+            </div>
+          )}
+        </>
+      )}
 
-                return (
-                  <div key={submission.id} className="rounded-lg border p-3 space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {formatDate(new Date(submission.submitted_at || submission.created_at))}
-                        </p>
-                      </div>
-                      {score !== null && (
-                        <div className={cn(
-                          "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
-                          score >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
-                          score >= 50 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" :
-                          "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        )}>
-                          {score}%
+      {/* HISTORY sub-tab */}
+      {subTab === "history" && (
+        <>
+          {completedSubmissions.length > 0 ? (
+            <div className="space-y-2">
+              {completedSubmissions
+                .sort((a, b) => new Date(b.submitted_at || b.created_at).getTime() - new Date(a.submitted_at || a.created_at).getTime())
+                .map((submission) => {
+                  const tpl = templates.find(t => t.id === submission.template_id);
+                  const score = getScore(submission);
+                  const passCount = submission.responses?.filter((r: ChecklistResponse) => r.value === true || r.value === "pass" || r.value === "yes").length || 0;
+                  const failCount = submission.responses?.filter((r: ChecklistResponse) => r.value === false || r.value === "fail" || r.value === "no").length || 0;
+                  const naCount = submission.responses?.filter((r: ChecklistResponse) => r.value === "na" || r.value === "n/a").length || 0;
+                  const hasNotes = submission.responses?.some((r: ChecklistResponse) => r.comment);
+                  const hasPhotos = submission.responses?.some((r: ChecklistResponse) => (r.photo_urls?.length ?? 0) > 0);
+
+                  return (
+                    <div key={submission.id} className="rounded-lg border p-3 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {formatDate(new Date(submission.submitted_at || submission.created_at))}
+                          </p>
                         </div>
-                      )}
-                    </div>
-                    
-                    {/* Pass/Fail/N/A summary bar */}
-                    <div className="flex items-center gap-3 text-[10px]">
-                      <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                        <CheckCircle className="h-3 w-3" /> {passCount} pass
-                      </span>
-                      <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                        <X className="h-3 w-3" /> {failCount} fail
-                      </span>
-                      {naCount > 0 && (
-                        <span className="text-muted-foreground">{naCount} N/A</span>
-                      )}
-                      {hasNotes && (
-                        <span className="flex items-center gap-0.5 text-muted-foreground">
-                          <MessageSquare className="h-3 w-3" /> Notes
+                        {score !== null && (
+                          <div className={cn(
+                            "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
+                            score >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                            score >= 50 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                            "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          )}>
+                            {score}%
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-3 text-[10px]">
+                        <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                          <CheckCircle className="h-3 w-3" /> {passCount} pass
                         </span>
-                      )}
-                      {hasPhotos && (
-                        <span className="flex items-center gap-0.5 text-muted-foreground">
-                          <Camera className="h-3 w-3" /> Photos
+                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                          <X className="h-3 w-3" /> {failCount} fail
                         </span>
-                      )}
+                        {naCount > 0 && (
+                          <span className="text-muted-foreground">{naCount} N/A</span>
+                        )}
+                        {hasNotes && (
+                          <span className="flex items-center gap-0.5 text-muted-foreground">
+                            <MessageSquare className="h-3 w-3" /> Notes
+                          </span>
+                        )}
+                        {hasPhotos && (
+                          <span className="flex items-center gap-0.5 text-muted-foreground">
+                            <Camera className="h-3 w-3" /> Photos
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-          </div>
-        ) : (
-          <div className="py-8 text-center">
-            <History className="h-10 w-10 text-muted-foreground/20 mx-auto" />
-            <p className="text-sm font-medium text-muted-foreground mt-2">No completed checklists</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Completed checklists with scores will appear here</p>
-          </div>
-        )}
-      </Section>
-
-      {pendingTemplates.length === 0 && draftSubmissions.length === 0 && completedToday.length === 0 && completedSubmissions.length === 0 && (
-        <div className="py-8 text-center">
-          <ClipboardCheck className="h-10 w-10 text-muted-foreground/20 mx-auto" />
-          <p className="text-sm font-medium text-muted-foreground mt-2">No checklists assigned</p>
-          <p className="text-xs text-muted-foreground/70 mt-1">Checklists will appear here when assigned by your admin</p>
-        </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <History className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+              <p className="text-sm font-medium text-muted-foreground mt-2">No completed checklists</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Completed checklists with scores will appear here</p>
+            </div>
+          )}
+        </>
       )}
     </>
   );

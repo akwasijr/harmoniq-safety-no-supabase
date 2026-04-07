@@ -78,12 +78,10 @@ export function BottomTabs({ company }: BottomTabsProps) {
   );
 
   return (
-    <nav aria-label="App navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/95 backdrop-blur-lg safe-area-inset-bottom">
+    <nav aria-label="App navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background safe-area-inset-bottom">
       <ul className="flex h-[68px] items-center justify-around">
         {visibleTabs.map((item) => {
           const href = `/${company}${item.href}`;
-          // For exact match items (like Home), only match the exact path
-          // For other items, match the path or any sub-paths
           const isActive = item.exactMatch 
             ? pathname === href
             : pathname === href || pathname.startsWith(`${href}/`)
@@ -100,7 +98,7 @@ export function BottomTabs({ company }: BottomTabsProps) {
                   "flex min-h-[44px] flex-col items-center justify-center px-2 py-1.5",
                   "transition-colors active:opacity-70",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  isActive ? "text-primary" : "text-muted-foreground/60"
+                  isActive ? "text-foreground" : "text-muted-foreground/50"
                 )}
               >
                 {isActive && (
