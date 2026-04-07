@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { X } from "lucide-react";
 
 export interface CookieConsent {
   necessary: boolean;
@@ -40,13 +41,32 @@ function getConsentFromCookie(): CookieConsent | null {
 
 function setConsentCookie(consent: CookieConsent) {
   const value = encodeURIComponent(JSON.stringify(consent));
-  // 1 year expiry
   document.cookie = `${CONSENT_COOKIE}=${value}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+}
+
+function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${
+        checked ? "bg-emerald-500" : "bg-zinc-700"
+      }`}
+    >
+      <span
+        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform duration-200 mt-0.5 ${
+          checked ? "translate-x-[22px]" : "translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
 }
 
 export function CookieConsentBanner({ translations: t }: CookieConsentBannerProps) {
   const [visible, setVisible] = React.useState(false);
-  const [showDetails, setShowDetails] = React.useState(false);
+  const [showPreferences, setShowPreferences] = React.useState(false);
   const [preferences, setPreferences] = React.useState<CookieConsent>({
     necessary: true,
     analytics: false,
@@ -60,101 +80,118 @@ export function CookieConsentBanner({ translations: t }: CookieConsentBannerProp
     }
   }, []);
 
-  const handleAcceptAll = () => {
-    const consent: CookieConsent = { necessary: true, analytics: true, marketing: true };
+  const save = (consent: CookieConsent) => {
     setConsentCookie(consent);
     setVisible(false);
+    setShowPreferences(false);
     window.dispatchEvent(new CustomEvent("harmoniq:consent", { detail: consent }));
   };
 
-  const handleRejectAll = () => {
-    const consent: CookieConsent = { necessary: true, analytics: false, marketing: false };
-    setConsentCookie(consent);
-    setVisible(false);
-    window.dispatchEvent(new CustomEvent("harmoniq:consent", { detail: consent }));
-  };
-
-  const handleSavePreferences = () => {
-    const consent = { ...preferences, necessary: true };
-    setConsentCookie(consent);
-    setVisible(false);
-    window.dispatchEvent(new CustomEvent("harmoniq:consent", { detail: consent }));
-  };
+  const handleAcceptAll = () => save({ necessary: true, analytics: true, marketing: true });
+  const handleRejectAll = () => save({ necessary: true, analytics: false, marketing: false });
+  const handleSavePreferences = () => save({ ...preferences, necessary: true });
 
   if (!visible) return null;
 
-  return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 sm:p-6">
-      <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-zinc-900/95 p-6 shadow-2xl backdrop-blur-xl">
-        <h3 className="text-lg font-semibold text-white">{t.title}</h3>
-        <p className="mt-2 text-sm text-zinc-400">{t.description}</p>
+  // Preferences panel (full-screen overlay)
+  if (showPreferences) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-zinc-950/95 backdrop-blur-sm">
+        <div className="mx-auto max-w-lg px-6 py-10">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-semibold text-white">Cookie Preferences</h2>
+            <button
+              onClick={() => setShowPreferences(false)}
+              className="text-zinc-500 hover:text-white transition-colors"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-        {showDetails && (
-          <div className="mt-4 space-y-3">
-            {/* Necessary, always on */}
-            <label className="flex items-center justify-between rounded-lg bg-white/5 px-4 py-3">
+          <p className="text-sm text-zinc-400 mb-8">
+            Manage your cookie preferences below. You can update these at any time.
+          </p>
+
+          <div className="space-y-3">
+            {/* Necessary */}
+            <div className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-5 py-4">
               <div>
                 <span className="text-sm font-medium text-white">{t.necessary}</span>
-                <p className="text-xs text-zinc-500">{t.necessary_desc}</p>
+                <p className="text-xs text-zinc-500 mt-0.5">{t.necessary_desc}</p>
               </div>
-              <input type="checkbox" checked disabled className="h-4 w-4 accent-violet-500" />
-            </label>
+              <span className="text-xs text-zinc-500">Always on</span>
+            </div>
+
             {/* Analytics */}
-            <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 px-4 py-3">
+            <div className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-5 py-4">
               <div>
                 <span className="text-sm font-medium text-white">{t.analytics}</span>
-                <p className="text-xs text-zinc-500">{t.analytics_desc}</p>
+                <p className="text-xs text-zinc-500 mt-0.5">{t.analytics_desc}</p>
               </div>
-              <input
-                type="checkbox"
+              <Toggle
                 checked={preferences.analytics}
-                onChange={(e) => setPreferences((p) => ({ ...p, analytics: e.target.checked }))}
-                className="h-4 w-4 accent-violet-500"
+                onChange={(v) => setPreferences((p) => ({ ...p, analytics: v }))}
               />
-            </label>
+            </div>
+
             {/* Marketing */}
-            <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 px-4 py-3">
+            <div className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-5 py-4">
               <div>
                 <span className="text-sm font-medium text-white">{t.marketing}</span>
-                <p className="text-xs text-zinc-500">{t.marketing_desc}</p>
+                <p className="text-xs text-zinc-500 mt-0.5">{t.marketing_desc}</p>
               </div>
-              <input
-                type="checkbox"
+              <Toggle
                 checked={preferences.marketing}
-                onChange={(e) => setPreferences((p) => ({ ...p, marketing: e.target.checked }))}
-                className="h-4 w-4 accent-violet-500"
+                onChange={(v) => setPreferences((p) => ({ ...p, marketing: v }))}
               />
-            </label>
+            </div>
           </div>
-        )}
 
-        <div className="mt-4 flex flex-wrap gap-3">
-          {showDetails ? (
+          <div className="flex items-center gap-4 mt-8">
             <button
               onClick={handleSavePreferences}
-              className="rounded-full bg-violet-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-500"
+              className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors"
             >
-              {t.save_preferences}
+              Save
             </button>
-          ) : (
             <button
-              onClick={() => setShowDetails(true)}
-              className="rounded-full border border-white/20 px-5 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+              onClick={() => setShowPreferences(false)}
+              className="text-sm font-semibold text-white hover:text-zinc-300 transition-colors"
             >
-              {t.customize}
+              Cancel
             </button>
-          )}
-          <button
-            onClick={handleRejectAll}
-            className="rounded-full border border-white/20 px-5 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-          >
-            {t.reject_all}
-          </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Minimal banner
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-xl">
+      <div className="rounded-2xl border border-white/10 bg-zinc-900/90 backdrop-blur-xl px-6 py-5">
+        <p className="text-sm text-zinc-400 leading-relaxed">
+          We use tracking cookies to understand how you use the product and help us improve it.
+        </p>
+        <div className="flex items-center gap-5 mt-4">
           <button
             onClick={handleAcceptAll}
-            className="rounded-full bg-violet-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-500"
+            className="text-sm font-semibold text-white hover:text-zinc-300 transition-colors"
           >
-            {t.accept_all}
+            Accept
+          </button>
+          <button
+            onClick={handleRejectAll}
+            className="text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
+          >
+            Decline
+          </button>
+          <button
+            onClick={() => setShowPreferences(true)}
+            className="text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
+          >
+            Manage preferences
           </button>
         </div>
       </div>
