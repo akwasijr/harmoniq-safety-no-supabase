@@ -369,22 +369,14 @@ export default function PlatformAnalyticsPage() {
         {/* ===== DASHBOARD ===== */}
         {activeTab === "dashboard" && (
           <div className="space-y-6">
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Website data scope</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-muted-foreground">
-                  <p>
-                    This workspace is limited to the public marketing site: visitor traffic, referrers,
-                    geography, and consent-driven analytics.
-                  </p>
-                  <p>
-                    Company operations, incidents, tenant management, and platform administration now live
-                    only in the other platform pages.
-                  </p>
-                </CardContent>
-              </Card>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <KPICard title="Page Views" value={formatNumber(total)} icon={BarChart3} />
+              <KPICard title="Unique Visitors" value={formatNumber(unique)} icon={Users} />
+              <KPICard title="Countries" value={topCountries.length} icon={Globe} />
+              <KPICard title="Tracked Pages" value={topPages.length} icon={Activity} />
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">Consent pipeline</CardTitle>
@@ -402,12 +394,6 @@ export default function PlatformAnalyticsPage() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <KPICard title="Page Views" value={formatNumber(total)} icon={BarChart3} />
-              <KPICard title="Unique Visitors" value={formatNumber(unique)} icon={Users} />
-              <KPICard title="Countries" value={topCountries.length} icon={Globe} />
-              <KPICard title="Tracked Pages" value={topPages.length} icon={Activity} />
             </div>
 
             {/* Sparkline-style daily chart */}
