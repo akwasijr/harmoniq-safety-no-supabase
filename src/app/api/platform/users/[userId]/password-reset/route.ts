@@ -60,14 +60,19 @@ export async function POST(
 
     if (error) {
       console.error("[PlatformUsers] Failed to send password reset:", error.message);
-      const isInvalidEmail = error.message.toLowerCase().includes("invalid");
-      return NextResponse.json(
-        { error: isInvalidEmail
-          ? "This user does not have a Supabase Auth account. They need to sign up first."
-          : "Failed to send password reset email. Please try again."
-        },
-        { status: isInvalidEmail ? 422 : 500 },
-      );
+      const msg = error.message.toLowerCase();
+      let clientError = "Failed to send password reset email.";
+      let status = 500;
+
+      if (msg.includes("invalid")) {
+        clientError = "This user does not have a Supabase Auth account. They need to sign up first.";
+        status = 422;
+      } else if (msg.includes("rate limit")) {
+        clientError = "Too many reset attempts. Please wait a few minutes and try again.";
+        status = 429;
+      }
+
+      return NextResponse.json({ error: clientError }, { status });
     }
 
     const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
