@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createRateLimiter } from "@/lib/rate-limit";
 import {
   getAssetScopedRowIds,
@@ -61,30 +62,45 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const supabaseUrl = getSupabaseUrl();
-    const publishableKey = getSupabasePublishableKey();
-    const { data: { session } } = await supabase.auth.getSession();
+    // Use admin client (bypasses RLS) since we already validate permissions above.
+    // Falls back to session-based PostgREST when no service role key is configured.
+    const adminClient = createAdminClient();
 
-    if (!supabaseUrl || !publishableKey || !session?.access_token) {
-      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
-    }
+    if (adminClient) {
+      const { error: upsertError } = await adminClient
+        .from(table)
+        .upsert(validated.rows, { onConflict: "id" });
 
-    // Keep the generic upsert endpoint, but execute it with the caller's session so RLS still applies.
-    const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
-      method: "POST",
-      headers: {
-        "apikey": publishableKey,
-        "Authorization": `Bearer ${session.access_token}`,
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates",
-      },
-      body: JSON.stringify(validated.rows),
-    });
+      if (upsertError) {
+        console.error(`[Entity Upsert API] Admin upsert error for ${table}:`, upsertError.message);
+        return NextResponse.json({ error: upsertError.message }, { status: 500 });
+      }
+    } else {
+      // Fallback: use caller's session (RLS applies)
+      const supabaseUrl = getSupabaseUrl();
+      const publishableKey = getSupabasePublishableKey();
+      const { data: { session } } = await supabase.auth.getSession();
 
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-      console.error(`[Entity Upsert API] Error for ${table}:`, body.message || body);
-      return NextResponse.json({ error: body.message || "Upsert failed" }, { status: 500 });
+      if (!supabaseUrl || !publishableKey || !session?.access_token) {
+        return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+      }
+
+      const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
+        method: "POST",
+        headers: {
+          "apikey": publishableKey,
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates",
+        },
+        body: JSON.stringify(validated.rows),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
+        console.error(`[Entity Upsert API] Error for ${table}:`, body.message || body);
+        return NextResponse.json({ error: body.message || "Upsert failed" }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ ok: true });

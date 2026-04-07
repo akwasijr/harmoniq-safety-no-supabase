@@ -774,7 +774,7 @@ export default function RiskAssessmentViewPage() {
 
   if (!evaluation) return <LoadingPage />;
 
-  if (evaluation.company_id !== user?.company_id) {
+  if (evaluation.company_id && user?.company_id && evaluation.company_id !== user.company_id) {
     return (
       <EmptyState
         icon={ShieldCheck}
