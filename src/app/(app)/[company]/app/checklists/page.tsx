@@ -17,7 +17,6 @@ import {
   Package,
   X,
   Play,
-  ListChecks,
   History,
   Camera,
   MessageSquare,
@@ -107,9 +106,7 @@ function Section({
   );
 }
 
-// ---------- Checklist Tab with Sub-tabs ----------
-
-type ChecklistSubTab = "my" | "completed";
+// ---------- Checklist Tab ----------
 
 function ChecklistsTabContent({
   company,
@@ -130,15 +127,8 @@ function ChecklistsTabContent({
   t: (key: string) => string;
   formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
 }) {
-  const [subTab, setSubTab] = React.useState<ChecklistSubTab>("my");
-
   const completedSubmissions = userSubmissions.filter(s => s.status === "submitted");
   const draftSubmissions = userSubmissions.filter(s => s.status === "draft");
-
-  const subTabs = [
-    { id: "my" as ChecklistSubTab, label: "My checklists", icon: ListChecks },
-    { id: "completed" as ChecklistSubTab, label: "Completed", icon: History },
-  ];
 
   // Calculate score for a submission
   const getScore = (submission: ChecklistSubmission) => {
@@ -157,220 +147,190 @@ function ChecklistsTabContent({
 
   return (
     <>
-      {/* Sub-tab pills */}
-      <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5 mb-3">
-        {subTabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = subTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setSubTab(tab.id)}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1 py-1.5 px-2 text-[11px] font-medium rounded-md transition-all active:opacity-80",
-                isActive
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground"
-              )}
+      {/* Assigned / pending checklists */}
+      {pendingTemplates.length > 0 && (
+        <Section
+          title="Assigned to you"
+          icon={ClipboardCheck}
+          iconColor="text-primary"
+          count={pendingTemplates.length}
+        >
+          {pendingTemplates.map((template) => (
+            <Link
+              key={template.id}
+              href={`/${company}/app/checklists/${template.id}`}
+              className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
             >
-              <Icon className="h-3 w-3 shrink-0" />
-              <span className="truncate">{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <ClipboardCheck className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm leading-tight">{template.name}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {template.items?.length || 0} items · {template.recurrence || "once"}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </Link>
+          ))}
+        </Section>
+      )}
 
-      {/* MY CHECKLISTS sub-tab */}
-      {subTab === "my" && (
-        <>
-          {/* Assigned / pending checklists */}
-          {pendingTemplates.length > 0 && (
-            <Section
-              title="Assigned to you"
-              icon={ClipboardCheck}
-              iconColor="text-primary"
-              count={pendingTemplates.length}
-            >
-              {pendingTemplates.map((template) => (
-                <Link
-                  key={template.id}
-                  href={`/${company}/app/checklists/${template.id}`}
-                  className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <ClipboardCheck className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm leading-tight">{template.name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {template.items?.length || 0} items · {template.recurrence || "once"}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                </Link>
-              ))}
-            </Section>
-          )}
-
-          {/* Drafts / in-progress */}
-          {draftSubmissions.length > 0 && (
-            <>
-              <div className="border-t" />
-              <Section
-                title="In progress"
-                icon={Clock}
-                iconColor="text-blue-500"
-                count={draftSubmissions.length}
+      {/* Drafts / in-progress */}
+      {draftSubmissions.length > 0 && (
+        <Section
+          title="In progress"
+          icon={Clock}
+          iconColor="text-blue-500"
+          count={draftSubmissions.length}
+        >
+          {draftSubmissions.map((submission) => {
+            const tpl = templates.find(t => t.id === submission.template_id);
+            const progress = submission.responses?.length
+              ? Math.round((submission.responses.length / (tpl?.items?.length || 1)) * 100)
+              : 0;
+            return (
+              <Link
+                key={submission.id}
+                href={`/${company}/app/checklists/${submission.template_id}?draft=${submission.id}`}
+                className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
               >
-                {draftSubmissions.map((submission) => {
-                  const tpl = templates.find(t => t.id === submission.template_id);
-                  const progress = submission.responses?.length
-                    ? Math.round((submission.responses.length / (tpl?.items?.length || 1)) * 100)
-                    : 0;
-                  return (
-                    <Link
-                      key={submission.id}
-                      href={`/${company}/app/checklists/${submission.template_id}?draft=${submission.id}`}
-                      className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
-                        <Play className="h-4 w-4 text-blue-500" />
-                      </div>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                  <Play className="h-4 w-4 text-blue-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${progress}%` }} />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">{progress}%</span>
+                  </div>
+                </div>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Resume</span>
+              </Link>
+            );
+          })}
+        </Section>
+      )}
+
+      {/* Completed today */}
+      {completedToday.length > 0 && (
+        <Section
+          title="Completed today"
+          icon={CheckCircle}
+          iconColor="text-success"
+          count={completedToday.length}
+          defaultOpen={false}
+        >
+          {completedToday.map((submission) => {
+            const score = getScore(submission);
+            return (
+              <div key={submission.id} className="flex items-center gap-3 rounded-lg p-2.5 bg-success/5">
+                <CheckCircle className="h-4 w-4 text-success shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">
+                    {templates.find(t => t.id === submission.template_id)?.name || "Checklist"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {formatDate(new Date(submission.submitted_at || submission.created_at), { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                {score !== null && (
+                  <div className="flex items-center gap-1">
+                    <Percent className="h-3 w-3 text-success" />
+                    <span className="text-xs font-semibold text-success">{score}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </Section>
+      )}
+
+      {/* Completed history */}
+      <Section
+        title="History"
+        icon={History}
+        iconColor="text-muted-foreground"
+        count={completedSubmissions.length}
+        defaultOpen={false}
+      >
+        {completedSubmissions.length > 0 ? (
+          <div className="space-y-2">
+            {completedSubmissions
+              .sort((a, b) => new Date(b.submitted_at || b.created_at).getTime() - new Date(a.submitted_at || a.created_at).getTime())
+              .map((submission) => {
+                const tpl = templates.find(t => t.id === submission.template_id);
+                const score = getScore(submission);
+                const passCount = submission.responses?.filter((r: ChecklistResponse) => r.value === true || r.value === "pass" || r.value === "yes").length || 0;
+                const failCount = submission.responses?.filter((r: ChecklistResponse) => r.value === false || r.value === "fail" || r.value === "no").length || 0;
+                const naCount = submission.responses?.filter((r: ChecklistResponse) => r.value === "na" || r.value === "n/a").length || 0;
+                const hasNotes = submission.responses?.some((r: ChecklistResponse) => r.comment);
+                const hasPhotos = submission.responses?.some((r: ChecklistResponse) => (r.photo_urls?.length ?? 0) > 0);
+
+                return (
+                  <div key={submission.id} className="rounded-lg border p-3 space-y-2">
+                    <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden">
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${progress}%` }} />
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">{progress}%</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Resume</span>
-                    </Link>
-                  );
-                })}
-              </Section>
-            </>
-          )}
-
-          {/* Completed today */}
-          {completedToday.length > 0 && (
-            <>
-              <div className="border-t" />
-              <Section
-                title="Completed today"
-                icon={CheckCircle}
-                iconColor="text-success"
-                count={completedToday.length}
-                defaultOpen={false}
-              >
-                {completedToday.map((submission) => {
-                  const score = getScore(submission);
-                  return (
-                    <div key={submission.id} className="flex items-center gap-3 rounded-lg p-2.5 bg-success/5">
-                      <CheckCircle className="h-4 w-4 text-success shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">
-                          {templates.find(t => t.id === submission.template_id)?.name || "Checklist"}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {formatDate(new Date(submission.submitted_at || submission.created_at), { hour: "2-digit", minute: "2-digit" })}
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {formatDate(new Date(submission.submitted_at || submission.created_at))}
                         </p>
                       </div>
                       {score !== null && (
-                        <div className="flex items-center gap-1">
-                          <Percent className="h-3 w-3 text-success" />
-                          <span className="text-xs font-semibold text-success">{score}</span>
+                        <div className={cn(
+                          "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
+                          score >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                          score >= 50 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" :
+                          "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        )}>
+                          {score}%
                         </div>
                       )}
                     </div>
-                  );
-                })}
-              </Section>
-            </>
-          )}
-
-          {pendingTemplates.length === 0 && draftSubmissions.length === 0 && completedToday.length === 0 && (
-            <div className="py-8 text-center">
-              <ClipboardCheck className="h-10 w-10 text-muted-foreground/20 mx-auto" />
-              <p className="text-sm font-medium text-muted-foreground mt-2">No checklists assigned</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Checklists will appear here when assigned by your admin</p>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* COMPLETED sub-tab */}
-      {subTab === "completed" && (
-        <>
-          {completedSubmissions.length > 0 ? (
-            <div className="space-y-2">
-              {completedSubmissions
-                .sort((a, b) => new Date(b.submitted_at || b.created_at).getTime() - new Date(a.submitted_at || a.created_at).getTime())
-                .map((submission) => {
-                  const tpl = templates.find(t => t.id === submission.template_id);
-                  const score = getScore(submission);
-                  const passCount = submission.responses?.filter((r: ChecklistResponse) => r.value === true || r.value === "pass" || r.value === "yes").length || 0;
-                  const failCount = submission.responses?.filter((r: ChecklistResponse) => r.value === false || r.value === "fail" || r.value === "no").length || 0;
-                  const naCount = submission.responses?.filter((r: ChecklistResponse) => r.value === "na" || r.value === "n/a").length || 0;
-                  const hasNotes = submission.responses?.some((r: ChecklistResponse) => r.comment);
-                  const hasPhotos = submission.responses?.some((r: ChecklistResponse) => (r.photo_urls?.length ?? 0) > 0);
-
-                  return (
-                    <div key={submission.id} className="rounded-lg border p-3 space-y-2">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {formatDate(new Date(submission.submitted_at || submission.created_at))}
-                          </p>
-                        </div>
-                        {score !== null && (
-                          <div className={cn(
-                            "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
-                            score >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
-                            score >= 50 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" :
-                            "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                          )}>
-                            {score}%
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Pass/Fail/N/A summary bar */}
-                      <div className="flex items-center gap-3 text-[10px]">
-                        <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                          <CheckCircle className="h-3 w-3" /> {passCount} pass
+                    
+                    {/* Pass/Fail/N/A summary bar */}
+                    <div className="flex items-center gap-3 text-[10px]">
+                      <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                        <CheckCircle className="h-3 w-3" /> {passCount} pass
+                      </span>
+                      <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                        <X className="h-3 w-3" /> {failCount} fail
+                      </span>
+                      {naCount > 0 && (
+                        <span className="text-muted-foreground">{naCount} N/A</span>
+                      )}
+                      {hasNotes && (
+                        <span className="flex items-center gap-0.5 text-muted-foreground">
+                          <MessageSquare className="h-3 w-3" /> Notes
                         </span>
-                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                          <X className="h-3 w-3" /> {failCount} fail
+                      )}
+                      {hasPhotos && (
+                        <span className="flex items-center gap-0.5 text-muted-foreground">
+                          <Camera className="h-3 w-3" /> Photos
                         </span>
-                        {naCount > 0 && (
-                          <span className="text-muted-foreground">{naCount} N/A</span>
-                        )}
-                        {hasNotes && (
-                          <span className="flex items-center gap-0.5 text-muted-foreground">
-                            <MessageSquare className="h-3 w-3" /> Notes
-                          </span>
-                        )}
-                        {hasPhotos && (
-                          <span className="flex items-center gap-0.5 text-muted-foreground">
-                            <Camera className="h-3 w-3" /> Photos
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  );
-                })}
-            </div>
-          ) : (
-            <div className="py-8 text-center">
-              <History className="h-10 w-10 text-muted-foreground/20 mx-auto" />
-              <p className="text-sm font-medium text-muted-foreground mt-2">No completed checklists</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Completed checklists with scores will appear here</p>
-            </div>
-          )}
-        </>
+                  </div>
+                );
+              })}
+          </div>
+        ) : (
+          <div className="py-8 text-center">
+            <History className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+            <p className="text-sm font-medium text-muted-foreground mt-2">No completed checklists</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Completed checklists with scores will appear here</p>
+          </div>
+        )}
+      </Section>
+
+      {pendingTemplates.length === 0 && draftSubmissions.length === 0 && completedToday.length === 0 && completedSubmissions.length === 0 && (
+        <div className="py-8 text-center">
+          <ClipboardCheck className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+          <p className="text-sm font-medium text-muted-foreground mt-2">No checklists assigned</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Checklists will appear here when assigned by your admin</p>
+        </div>
       )}
     </>
   );
@@ -571,7 +531,7 @@ function EmployeeChecklistsPageContent() {
         {/* REPORTS TAB */}
         {activeTab === "reports" && (
           <>
-            {/* New Report */}
+            {/* New Report CTA */}
             <Link
               href={`/${company}/app/report`}
               className="flex items-center gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/30 active:bg-muted/50"
@@ -585,8 +545,6 @@ function EmployeeChecklistsPageContent() {
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
             </Link>
-
-            <div className="border-t" />
 
             {/* My Submitted Reports */}
             <Section
@@ -656,100 +614,91 @@ function EmployeeChecklistsPageContent() {
         {/* RISK ASSESSMENT TAB */}
         {activeTab === "risk-assessment" && (
           <>
-            <Section title={t("checklists.newAssessment")} icon={FileCheck} iconColor="text-primary">
-              <div className="grid grid-cols-2 gap-2.5">
-                {riskAssessmentForms[companyCountry].map((form) => {
-                  const Icon = form.icon;
-                  return (
-                    <Link
-                      key={form.id}
-                      href={`/${company}/app/risk-assessment/${form.id}`}
-                      className="flex items-center gap-2.5 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/30 active:bg-muted/50"
-                    >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                        <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm">{form.name}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{form.fullName}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </Section>
-
-            <div className="border-t" />
+            {/* New Assessment CTAs */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {riskAssessmentForms[companyCountry].map((form) => {
+                const Icon = form.icon;
+                return (
+                  <Link
+                    key={form.id}
+                    href={`/${company}/app/risk-assessment/${form.id}`}
+                    className="flex items-center gap-2.5 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/30 active:bg-muted/50"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                      <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm">{form.name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{form.fullName}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
 
             {inProgressAssessments.length > 0 && (
-              <>
-                <Section 
-                  title={t("checklists.labels.inProgress")} 
-                  icon={Clock} 
-                  iconColor="text-blue-500"
-                  count={inProgressAssessments.length}
-                >
-                  {inProgressAssessments.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/${company}/app/risk-assessment/${item.formId}?draft=${item.id}`}
-                      className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
-                        <Play className="h-4 w-4 text-blue-500" aria-hidden="true" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm leading-tight">{item.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden" role="progressbar" aria-valuenow={item.progress} aria-valuemin={0} aria-valuemax={100}>
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${item.progress}%` }} />
-                          </div>
-                          <span className="text-[10px] text-muted-foreground font-medium">{item.progress}%</span>
+              <Section 
+                title={t("checklists.labels.inProgress")} 
+                icon={Clock} 
+                iconColor="text-blue-500"
+                count={inProgressAssessments.length}
+              >
+                {inProgressAssessments.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/${company}/app/risk-assessment/${item.formId}?draft=${item.id}`}
+                    className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                      <Play className="h-4 w-4 text-blue-500" aria-hidden="true" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm leading-tight">{item.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden" role="progressbar" aria-valuenow={item.progress} aria-valuemin={0} aria-valuemax={100}>
+                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${item.progress}%` }} />
                         </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">{item.progress}%</span>
                       </div>
-                      <span className="text-[10px] text-primary font-medium">{t("checklists.buttons.resume")}</span>
-                    </Link>
-                  ))}
-                </Section>
-                <div className="border-t" />
-              </>
+                    </div>
+                    <span className="text-[10px] text-primary font-medium">{t("checklists.buttons.resume")}</span>
+                  </Link>
+                ))}
+              </Section>
             )}
 
             {awaitingReviewAssessments.length > 0 && (
-              <>
-                <Section
-                  title="Awaiting review"
-                  icon={ShieldAlert}
-                  iconColor="text-amber-500"
-                  count={awaitingReviewAssessments.length}
-                  countVariant="warning"
-                >
-                  {awaitingReviewAssessments.map((item) => {
-                    const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
-                    const TypeIcon = conf.icon;
-                    return (
-                      <Link key={item.id} href={`/${company}/app/risk-assessment/view/${item.id}`} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30">
-                        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
-                          <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
+              <Section
+                title="Awaiting review"
+                icon={ShieldAlert}
+                iconColor="text-amber-500"
+                count={awaitingReviewAssessments.length}
+                countVariant="warning"
+              >
+                {awaitingReviewAssessments.map((item) => {
+                  const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
+                  const TypeIcon = conf.icon;
+                  return (
+                    <Link key={item.id} href={`/${company}/app/risk-assessment/view/${item.id}`} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30">
+                      <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
+                        <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
+                          <Badge variant="warning" className="text-[10px] h-4 shrink-0">
+                            Submitted
+                          </Badge>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
-                            <Badge variant="warning" className="text-[10px] h-4 shrink-0">
-                              Submitted
-                            </Badge>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {item.location} · Submitted {formatDate(new Date(item.date))}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                      </Link>
-                    );
-                  })}
-                </Section>
-                <div className="border-t" />
-              </>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {item.location} · Submitted {formatDate(new Date(item.date))}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    </Link>
+                  );
+                })}
+              </Section>
             )}
 
             <Section 
