@@ -11,6 +11,7 @@ import {
   Wrench,
   FileCheck,
   Eye,
+  EyeOff,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -24,6 +25,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useCompanyData } from "@/hooks/use-company-data";
+import { useAuth } from "@/hooks/use-auth";
+import { useCompanyStore } from "@/stores/company-store";
 import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
@@ -104,6 +107,23 @@ function ChecklistsPageContent() {
   } = useCompanyData();
   const { isLoading } = stores.checklistTemplates;
   const { t, formatDate, formatNumber } = useTranslation();
+  const { currentCompany } = useAuth();
+  const { update: updateCompany } = useCompanyStore();
+
+  // Toggle assessment type visibility for field app
+  const toggleAssessmentVisibility = React.useCallback((templateId: string) => {
+    if (!currentCompany) return;
+    const hidden = currentCompany.hidden_assessment_types || [];
+    const isHidden = hidden.includes(templateId);
+    const updated = isHidden
+      ? hidden.filter((id) => id !== templateId)
+      : [...hidden, templateId];
+    updateCompany(currentCompany.id, { hidden_assessment_types: updated });
+  }, [currentCompany, updateCompany]);
+
+  const isAssessmentHidden = React.useCallback((templateId: string) => {
+    return (currentCompany?.hidden_assessment_types || []).includes(templateId);
+  }, [currentCompany?.hidden_assessment_types]);
 
   // Map store risk evaluations to the display format
   const storeRiskAssessments = React.useMemo(() => {
@@ -746,7 +766,7 @@ function ChecklistsPageContent() {
                     <th className="hidden pb-3 font-medium md:table-cell">Type</th>
                     <th className="hidden pb-3 font-medium lg:table-cell">Submissions</th>
                     <th className="pb-3 font-medium">Standard</th>
-                    <th className="pb-3 font-medium w-10"></th>
+                    <th className="pb-3 font-medium w-20 text-right">Visibility</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -755,19 +775,29 @@ function ChecklistsPageContent() {
                       <td colSpan={5} className="py-8 text-center text-muted-foreground">{t("checklists.empty.noChecklists")}</td>
                     </tr>
                   ) : (
-                    paginatedRiskTemplates.map((template) => (
+                    paginatedRiskTemplates.map((template) => {
+                      const hidden = isAssessmentHidden(template.id);
+                      return (
                       <tr 
                         key={template.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
-                        onClick={() => router.push(`/${company}/dashboard/risk-assessments/${template.id}`)}
+                        className={cn(
+                          "border-b last:border-0 hover:bg-muted/50 active:bg-muted transition-colors group",
+                          hidden && "opacity-60"
+                        )}
                       >
-                        <td className="py-3">
+                        <td 
+                          className="py-3 cursor-pointer"
+                          onClick={() => router.push(`/${company}/dashboard/risk-assessments/${template.id}`)}
+                        >
                           <div className="flex items-center gap-3">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                               <FileCheck className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div>
-                              <p className="font-medium">{template.name}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium">{template.name}</p>
+                                {hidden && <Badge variant="outline" className="text-[10px] text-muted-foreground">Hidden</Badge>}
+                              </div>
                               <p className="text-xs text-muted-foreground line-clamp-1 max-w-[300px]">{template.description}</p>
                             </div>
                           </div>
@@ -784,11 +814,25 @@ function ChecklistsPageContent() {
                             </Badge>
                           )}
                         </td>
-                        <td className="py-3">
-                          <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        <td className="py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); toggleAssessmentVisibility(template.id); }}
+                            className={cn(
+                              "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors",
+                              hidden
+                                ? "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                : "text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
+                            )}
+                            title={hidden ? "Show on field app" : "Hide from field app"}
+                          >
+                            {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            <span className="hidden sm:inline">{hidden ? "Show" : "Visible"}</span>
+                          </button>
                         </td>
                       </tr>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>

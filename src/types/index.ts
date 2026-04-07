@@ -221,6 +221,9 @@ export interface Company {
   font_family: string;
   ui_style: UIStyle;
 
+  // Assessment visibility (admin can hide specific form types)
+  hidden_assessment_types?: string[]; // e.g. ["osa", "arbowet"]
+
   // Subscription
   tier: SubscriptionTier;
   seat_limit: number;
