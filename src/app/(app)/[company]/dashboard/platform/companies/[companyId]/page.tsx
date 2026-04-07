@@ -51,7 +51,7 @@ export default function PlatformCompanyDetailPage() {
 
   if (!targetCompany || !editedCompany) {
     return (
-      <RoleGuard requireSuperAdmin>
+      <RoleGuard allowedRoles={["super_admin", "company_admin"]}>
         <EmptyState
           title="Company not found"
           description="The requested company could not be found."
@@ -79,7 +79,7 @@ export default function PlatformCompanyDetailPage() {
   ];
 
   return (
-    <RoleGuard requireSuperAdmin>
+    <RoleGuard allowedRoles={["super_admin", "company_admin"]}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">

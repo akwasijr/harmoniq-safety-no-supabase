@@ -162,6 +162,21 @@ const companyAdminPlatformNav: NavItem[] = [
     href: "/dashboard/platform/analytics",
     icon: BarChart3,
   },
+  {
+    title: "Companies",
+    href: "/dashboard/platform/companies",
+    icon: Building2,
+  },
+  {
+    title: "Platform Users",
+    href: "/dashboard/platform/users",
+    icon: UserCog,
+  },
+  {
+    title: "Platform Settings",
+    href: "/dashboard/platform/settings",
+    icon: Settings,
+  },
 ];
 
 const PLATFORM_ENTRY_KEY = "harmoniq_platform_entry";

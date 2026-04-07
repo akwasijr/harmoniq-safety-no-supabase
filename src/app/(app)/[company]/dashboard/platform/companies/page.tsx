@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
 import { useCompanyStore } from "@/stores/company-store";
@@ -144,72 +143,104 @@ export default function PlatformCompaniesPage() {
           />
         </div>
 
-        {/* Companies Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCompanies.map((comp) => {
-            const stats = getCompanyStats(comp.id);
-            return (
-              <Card
-                key={comp.id}
-                className="cursor-pointer hover:border-primary/50 transition-colors"
-                onClick={() => router.push(`/${company}/dashboard/platform/companies/${comp.id}`)}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="flex h-10 w-10 items-center justify-center rounded-lg text-white font-medium"
-                        style={{ backgroundColor: comp.primary_color }}
-                      >
-                        {comp.name.charAt(0)}
-                      </div>
-                      <div>
-                        <CardTitle className="text-base">{comp.name}</CardTitle>
-                        <p className="text-xs text-muted-foreground">
-                          <CountryFlag code={comp.country} size="sm" className="inline-block" /> {comp.country}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge
-                      variant={
-                        comp.status === "active"
-                          ? "success"
-                          : comp.status === "trial"
-                          ? "secondary"
-                          : "destructive"
-                      }
+        {/* Companies Table */}
+        <div className="rounded-lg border bg-card">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/40">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Company</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Country</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Plan</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Users</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Open incidents</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCompanies.map((comp) => {
+                  const stats = getCompanyStats(comp.id);
+                  return (
+                    <tr
+                      key={comp.id}
+                      className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
+                      onClick={() => router.push(`/${company}/dashboard/platform/companies/${comp.id}`)}
                     >
-                      {comp.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      {stats.userCount} {t("companies.users")}
-                    </div>
-                    {stats.incidentCount > 0 && (
-                      <div className="flex items-center gap-1 text-orange-600">
-                        <AlertTriangle className="h-4 w-4" />
-                        {stats.incidentCount} {t("companies.open")}
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {comp.tier} · {comp.seat_limit} {t("companies.seats")}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {filteredCompanies.length === 0 && (
-          <div className="py-12 text-center text-muted-foreground">
-            {t("companies.noCompaniesFound", { query: searchQuery })}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white text-xs font-medium"
+                            style={{ backgroundColor: comp.primary_color }}
+                          >
+                            {comp.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-medium">{comp.name}</p>
+                            <p className="text-xs text-muted-foreground">{comp.slug}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1.5">
+                          <CountryFlag code={comp.country} size="sm" /> {comp.country}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="capitalize">{comp.tier}</span>
+                        <span className="text-xs text-muted-foreground ml-1">· {comp.seat_limit} seats</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                          {stats.userCount}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {stats.incidentCount > 0 ? (
+                          <span className="inline-flex items-center gap-1 text-orange-600">
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                            {stats.incidentCount}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          variant={
+                            comp.status === "active"
+                              ? "success"
+                              : comp.status === "trial"
+                              ? "secondary"
+                              : "destructive"
+                          }
+                        >
+                          {comp.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {new Date(comp.created_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {filteredCompanies.length === 0 && (
+            <div className="py-12 text-center text-muted-foreground">
+              {t("companies.noCompaniesFound", { query: searchQuery })}
+            </div>
+          )}
+
+          {filteredCompanies.length > 0 && (
+            <div className="border-t px-4 py-3 text-xs text-muted-foreground">
+              {filteredCompanies.length} {filteredCompanies.length === 1 ? "company" : "companies"}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Add Company Modal, multi-step */}
