@@ -148,7 +148,8 @@ function LoginForm() {
   const getAllowedApps = (role: string): AppChoice[] => {
     if (role === "employee") return ["app"];
     if (role === "super_admin") return ["dashboard", "app", "platform"];
-    if (role === "company_admin" || role === "manager") return ["dashboard", "app"];
+    if (role === "company_admin") return ["dashboard", "app", "platform"];
+    if (role === "manager") return ["dashboard", "app"];
     return ["dashboard"];
   };
 
@@ -161,12 +162,6 @@ function LoginForm() {
       setSuccess("");
       setEmailError("");
       setPasswordError("");
-
-      // DEBUG: trace login flow
-      console.log("[LOGIN DEBUG] isPlatformMode:", isPlatformMode);
-      console.log("[LOGIN DEBUG] appChoice:", appChoice);
-      console.log("[LOGIN DEBUG] IS_MOCK_MODE:", IS_MOCK_MODE);
-      console.log("[LOGIN DEBUG] searchParams mode:", searchParams.get("mode"));
 
       // Mock mode: authenticate against local mock users (password: demo123)
       if (IS_MOCK_MODE) {
@@ -299,28 +294,37 @@ function LoginForm() {
         effectiveChoice = allowedApps[0];
       }
 
-      // DEBUG: trace routing
-      console.log("[LOGIN DEBUG] profile.role:", profile.role);
-      console.log("[LOGIN DEBUG] allowedApps:", allowedApps);
-      console.log("[LOGIN DEBUG] appChoice at submit:", appChoice);
-      console.log("[LOGIN DEBUG] effectiveChoice:", effectiveChoice);
-
-      // Super admins: route based on app choice
-      if (profile.role === "super_admin") {
-        if (effectiveChoice === "platform") {
-          const { data: adminCompany } = await supabase
+      // Route to platform admin (super_admin or company_admin)
+      if (effectiveChoice === "platform") {
+        // Find a real tenant slug for the platform URL
+        let platformSlug: string | undefined;
+        if (profile.company_id) {
+          const { data: userCompany } = await supabase
+            .from("companies")
+            .select("slug")
+            .eq("id", profile.company_id)
+            .single();
+          if (userCompany?.slug && !isPlatformSlug(userCompany.slug)) {
+            platformSlug = userCompany.slug;
+          }
+        }
+        if (!platformSlug) {
+          const { data: firstCompany } = await supabase
             .from("companies")
             .select("slug")
             .not("slug", "in", PLATFORM_SLUGS_LIST)
             .order("created_at", { ascending: true })
             .limit(1)
             .single();
-          console.log("[LOGIN DEBUG] → Platform route, slug:", adminCompany?.slug);
-          window.location.href = buildPlatformAnalyticsDestination(adminCompany?.slug);
-          return;
+          platformSlug = firstCompany?.slug || undefined;
         }
+        window.location.href = buildPlatformAnalyticsDestination(platformSlug);
+        return;
+      }
 
-        // Dashboard or Field App — route to a real tenant
+      // Dashboard or Field App — find the user's company
+      let slug = "harmoniq";
+      if (profile.role === "super_admin") {
         const { data: nonPlatform } = await supabase
           .from("companies")
           .select("id, slug")
@@ -328,50 +332,41 @@ function LoginForm() {
           .order("created_at", { ascending: true })
           .limit(1)
           .single();
-
-        const slug = nonPlatform?.slug || "harmoniq";
-        console.log("[LOGIN DEBUG] → Super admin non-platform route, slug:", slug, "choice:", effectiveChoice);
+        slug = nonPlatform?.slug || "harmoniq";
         if (nonPlatform?.id) {
           saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nonPlatform.id);
         }
-        window.location.href = buildCompanyDestination(slug, effectiveChoice);
-        return;
-      }
-
-      // Pick company for redirect (non-super admins)
-      console.log("[LOGIN DEBUG] → Non-super-admin route, role:", profile.role);
-      let slug = "harmoniq"; // safe default
-      const storedCompanyId = loadFromStorage<string | null>(SELECTED_COMPANY_STORAGE_KEY, null);
-      const companyId = profile.company_id || storedCompanyId;
-
-      if (companyId) {
-        const { data: company } = await supabase
-          .from("companies")
-          .select("slug")
-          .eq("id", companyId)
-          .single();
-        if (company?.slug && !isPlatformSlug(company.slug)) {
-          slug = company.slug;
-        }
-        saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
       } else {
-        // No company_id on profile, try to find one
-        const { data: firstCompany } = await supabase
-          .from("companies")
-          .select("id, slug")
-          .not("slug", "in", PLATFORM_SLUGS_LIST)
-          .order("created_at", { ascending: true })
-          .limit(1)
-          .single();
-        if (firstCompany?.slug) {
-          slug = firstCompany.slug;
-          saveToStorage(SELECTED_COMPANY_STORAGE_KEY, firstCompany.id);
+        // Non-super-admin: route to their own company
+        const storedCompanyId = loadFromStorage<string | null>(SELECTED_COMPANY_STORAGE_KEY, null);
+        const companyId = profile.company_id || storedCompanyId;
+
+        if (companyId) {
+          const { data: company } = await supabase
+            .from("companies")
+            .select("slug")
+            .eq("id", companyId)
+            .single();
+          if (company?.slug && !isPlatformSlug(company.slug)) {
+            slug = company.slug;
+          }
+          saveToStorage(SELECTED_COMPANY_STORAGE_KEY, companyId);
+        } else {
+          const { data: firstCompany } = await supabase
+            .from("companies")
+            .select("id, slug")
+            .not("slug", "in", PLATFORM_SLUGS_LIST)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .single();
+          if (firstCompany?.slug) {
+            slug = firstCompany.slug;
+            saveToStorage(SELECTED_COMPANY_STORAGE_KEY, firstCompany.id);
+          }
         }
       }
 
-      const dest = buildCompanyDestination(slug, effectiveChoice);
-      // Use full page navigation so middleware can read the new Supabase session cookies
-      window.location.href = dest;
+      window.location.href = buildCompanyDestination(slug, effectiveChoice);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes("abort")) return;

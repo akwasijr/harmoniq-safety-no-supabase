@@ -119,7 +119,8 @@ const navItems: NavItem[] = [
   },
 ];
 
-const platformNavItems: NavItem[] = [
+// Platform nav: full set for super_admin, limited for company_admin
+const superAdminPlatformNav: NavItem[] = [
   {
     title: "Overview",
     href: "/dashboard",
@@ -148,6 +149,20 @@ const platformNavItems: NavItem[] = [
   },
 ];
 
+const companyAdminPlatformNav: NavItem[] = [
+  {
+    title: "Overview",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    exactMatch: true,
+  },
+  {
+    title: "Analytics & Privacy",
+    href: "/dashboard/platform/analytics",
+    icon: BarChart3,
+  },
+];
+
 export function Sidebar({ 
   company, 
   companyName = "Harmoniq",
@@ -160,13 +175,13 @@ export function Sidebar({
   const [collapsed, setCollapsed] = React.useState(false);
   const [hovered, setHovered] = React.useState(false);
   const { theme, setTheme } = useTheme();
-  const { isSuperAdmin, hasSelectedCompany, logout } = useAuth();
+  const { isSuperAdmin, isCompanyAdmin, hasSelectedCompany, logout } = useAuth();
   const { t } = useTranslation();
   const isCollapsed = collapsed && !hovered;
 
-  // Platform admin nav is visible for any super_admin user.
-  // Route-level protection is handled by middleware (Supabase JWT role check).
-  const showPlatformNav = isSuperAdmin;
+  // Platform admin nav: super_admin sees all, company_admin sees analytics only
+  const showPlatformNav = isSuperAdmin || isCompanyAdmin;
+  const platformNavItems = isSuperAdmin ? superAdminPlatformNav : companyAdminPlatformNav;
 
   // Helper to resolve nav item title via i18n
   const getTitle = (item: NavItem) => item.titleKey ? t(item.titleKey) : item.title;
