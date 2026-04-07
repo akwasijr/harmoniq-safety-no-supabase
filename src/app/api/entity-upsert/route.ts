@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createRateLimiter } from "@/lib/rate-limit";
 import {
   getAssetScopedRowIds,
   validateEntityUpsertRequest,
 } from "@/lib/entity-upsert";
-import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/public-env";
 
 // 30 upsert requests per IP per minute
 const upsertLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "entity-upsert" });
@@ -61,42 +61,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const supabaseUrl = getSupabaseUrl();
-    const publishableKey = getSupabasePublishableKey();
+    // Use admin client (service_role) to bypass RLS since we already
+    // validated auth + company ownership above. Falls back to user client.
+    const adminClient = createAdminClient();
+    const writeClient = adminClient ?? supabase;
 
-    if (!supabaseUrl || !publishableKey) {
-      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
-    }
+    const { error: upsertError } = await writeClient
+      .from(table)
+      .upsert(validated.rows, { onConflict: "id" });
 
-    // Use service role key if available to bypass RLS (we already validated
-    // company ownership above). Fall back to user's session token.
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
-    let authToken: string;
-
-    if (serviceRoleKey) {
-      authToken = serviceRoleKey;
-    } else {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        return NextResponse.json({ error: "Server not configured" }, { status: 500 });
-      }
-      authToken = session.access_token;
-    }
-
-    const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
-      method: "POST",
-      headers: {
-        "apikey": serviceRoleKey || publishableKey,
-        "Authorization": `Bearer ${authToken}`,
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates",
-      },
-      body: JSON.stringify(validated.rows),
-    });
-
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-      const msg = body.message || body.error || "Upsert failed";
+    if (upsertError) {
+      const msg = upsertError.message || "Upsert failed";
       if (msg.includes("permission denied") || msg.includes("row-level security")) {
         console.warn(`[Entity Upsert API] Permission issue for ${table}:`, msg);
         return NextResponse.json({ error: "You do not have permission to save this data." }, { status: 403 });

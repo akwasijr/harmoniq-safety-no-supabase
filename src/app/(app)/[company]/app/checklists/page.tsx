@@ -421,6 +421,205 @@ function ChecklistsTabContent({
   );
 }
 
+// ---------- Risk Assessment Tab (redesigned) ----------
+
+type RiskAssessmentSubTab = "assigned" | "history";
+
+function RiskAssessmentTabContent({
+  company,
+  inProgressAssessments,
+  awaitingReviewAssessments,
+  reviewedAssessments,
+  assessmentTypeConf,
+  t,
+  formatDate,
+}: {
+  company: string;
+  inProgressAssessments: Array<{ id: string; formId: string; name: string; location: string; progress: number }>;
+  awaitingReviewAssessments: Array<{ id: string; formType: string; name: string; location: string; date: string }>;
+  reviewedAssessments: Array<{ id: string; formType: string; name: string; location: string; date: string; reviewerName: string }>;
+  assessmentTypeConf: Record<string, { icon: typeof ShieldCheck; color: string; bg: string }>;
+  t: (key: string) => string;
+  formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
+}) {
+  const [subTab, setSubTab] = React.useState<RiskAssessmentSubTab>("assigned");
+  const [historyLimit, setHistoryLimit] = React.useState(10);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
+
+  const historyItems = React.useMemo(() => {
+    const all = [
+      ...awaitingReviewAssessments.map((item) => ({ ...item, historyStatus: "submitted" as const })),
+      ...reviewedAssessments.map((item) => ({ ...item, historyStatus: "reviewed" as const })),
+    ];
+    const filtered = searchQuery.trim()
+      ? all.filter(
+          (item) =>
+            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.location.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+      : all;
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+    return filtered;
+  }, [awaitingReviewAssessments, reviewedAssessments, searchQuery, sortOrder]);
+
+  const visibleHistory = historyItems.slice(0, historyLimit);
+
+  const subTabs: { id: RiskAssessmentSubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "assigned", label: "Assessments", icon: ShieldCheck },
+    { id: "history", label: "History", icon: History },
+  ];
+
+  return (
+    <>
+      {/* Sub-tab pills */}
+      <div className="flex gap-1 bg-muted/50 rounded-lg p-1 mb-3">
+        {subTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = subTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setSubTab(tab.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80",
+                isActive
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ASSIGNED sub-tab */}
+      {subTab === "assigned" && (
+        <>
+          {inProgressAssessments.length > 0 && (
+            <section className="space-y-2">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">In progress</h2>
+              {inProgressAssessments.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/${company}/app/risk-assessment/${item.formId}?draft=${item.id}`}
+                  className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                    <Play className="h-4 w-4 text-blue-500" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm leading-tight">{item.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden" role="progressbar" aria-valuenow={item.progress} aria-valuemin={0} aria-valuemax={100}>
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${item.progress}%` }} />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium">{item.progress}%</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-primary font-medium">{t("checklists.buttons.resume") || "Resume"}</span>
+                </Link>
+              ))}
+            </section>
+          )}
+
+          {inProgressAssessments.length === 0 && (
+            <div className="py-6 text-center">
+              <ShieldCheck className="h-8 w-8 text-muted-foreground/20 mx-auto" aria-hidden="true" />
+              <p className="text-sm text-muted-foreground mt-2">No assessments assigned</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Assessments will appear here when assigned by your admin</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* HISTORY sub-tab */}
+      {subTab === "history" && (
+        <>
+          <div className="flex gap-2 mb-3">
+            <input
+              type="search"
+              placeholder="Search submissions..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setHistoryLimit(10); }}
+              className="flex-1 h-9 rounded-lg border bg-background px-3 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+              className="h-9 rounded-lg border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          {visibleHistory.length > 0 ? (
+            <div className="space-y-2">
+              {visibleHistory.map((item) => {
+                const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
+                const TypeIcon = conf.icon;
+                const isReviewed = item.historyStatus === "reviewed";
+
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/${company}/app/risk-assessment/view/${item.id}`}
+                    className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+                  >
+                    <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
+                      <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium leading-tight">{item.name}</p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        {item.location} · {formatDate(new Date(item.date))}
+                      </p>
+                      {"reviewerName" in item && isReviewed && (
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          Reviewer: {(item as typeof reviewedAssessments[number]).reviewerName}
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant={isReviewed ? "success" : "warning"} className="text-[10px] shrink-0">
+                      {isReviewed ? "Reviewed" : "Awaiting"}
+                    </Badge>
+                  </Link>
+                );
+              })}
+
+              {historyLimit < historyItems.length && (
+                <button
+                  onClick={() => setHistoryLimit((prev) => prev + 10)}
+                  className="w-full py-2.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Load more ({historyItems.length - historyLimit} remaining)
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <History className="h-8 w-8 text-muted-foreground/20 mx-auto" aria-hidden="true" />
+              <p className="text-sm text-muted-foreground mt-2">
+                {searchQuery ? "No matching submissions" : "No submissions yet"}
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                {searchQuery ? "Try a different search term" : "Submitted assessments will appear here"}
+              </p>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
 function EmployeeChecklistsPageContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -712,134 +911,15 @@ function EmployeeChecklistsPageContent() {
 
         {/* RISK ASSESSMENT TAB */}
         {activeTab === "risk-assessment" && (
-          <>
-            {/* New Assessment CTAs */}
-            <div className="grid grid-cols-2 gap-2.5">
-              {riskAssessmentForms[companyCountry].map((form) => {
-                const Icon = form.icon;
-                return (
-                  <Link
-                    key={form.id}
-                    href={`/${company}/app/risk-assessment/${form.id}`}
-                    className="flex items-center gap-2.5 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/30 active:bg-muted/50"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                      <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-sm">{form.name}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{form.fullName}</p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-
-            {inProgressAssessments.length > 0 && (
-              <Section 
-                title={t("checklists.labels.inProgress")} 
-                icon={Clock} 
-                iconColor="text-blue-500"
-                count={inProgressAssessments.length}
-              >
-                {inProgressAssessments.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/${company}/app/risk-assessment/${item.formId}?draft=${item.id}`}
-                    className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
-                      <Play className="h-4 w-4 text-blue-500" aria-hidden="true" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm leading-tight">{item.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden" role="progressbar" aria-valuenow={item.progress} aria-valuemin={0} aria-valuemax={100}>
-                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${item.progress}%` }} />
-                        </div>
-                        <span className="text-[10px] text-muted-foreground font-medium">{item.progress}%</span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] text-primary font-medium">{t("checklists.buttons.resume")}</span>
-                  </Link>
-                ))}
-              </Section>
-            )}
-
-            {awaitingReviewAssessments.length > 0 && (
-              <Section
-                title="Awaiting review"
-                icon={ShieldAlert}
-                iconColor="text-amber-500"
-                count={awaitingReviewAssessments.length}
-                countVariant="warning"
-              >
-                {awaitingReviewAssessments.map((item) => {
-                  const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
-                  const TypeIcon = conf.icon;
-                  return (
-                    <Link key={item.id} href={`/${company}/app/risk-assessment/view/${item.id}`} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30">
-                      <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
-                        <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
-                          <Badge variant="warning" className="text-[10px] h-4 shrink-0">
-                            Submitted
-                          </Badge>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {item.location} · Submitted {formatDate(new Date(item.date))}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                    </Link>
-                  );
-                })}
-              </Section>
-            )}
-
-            <Section 
-              title={t("checklists.labels.completed") || "Reviewed"} 
-              icon={CheckCircle} 
-              iconColor="text-success"
-              count={reviewedAssessments.length} 
-              countVariant="success"
-              defaultOpen={false}
-            >
-              {reviewedAssessments.length === 0 ? (
-                <div className="py-8 text-center">
-                  <CheckCircle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
-                  <p className="text-sm font-medium text-muted-foreground mt-2">{t("checklists.noCompletedAssessments")}</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">Reviewed assessments will appear here</p>
-                </div>
-              ) : (
-                reviewedAssessments.map((item) => {
-                  const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
-                  const TypeIcon = conf.icon;
-                  return (
-                    <Link key={item.id} href={`/${company}/app/risk-assessment/view/${item.id}`} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30">
-                      <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
-                        <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
-                          <Badge variant="success" className="text-[10px] h-4 shrink-0">
-                            Reviewed
-                          </Badge>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{item.location} · Reviewed {formatDate(new Date(item.date))}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">Reviewer: {item.reviewerName}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                    </Link>
-                  );
-                })
-              )}
-            </Section>
-          </>
+          <RiskAssessmentTabContent
+            company={company}
+            inProgressAssessments={inProgressAssessments}
+            awaitingReviewAssessments={awaitingReviewAssessments}
+            reviewedAssessments={reviewedAssessments}
+            assessmentTypeConf={assessmentTypeConf}
+            t={t}
+            formatDate={formatDate}
+          />
         )}
 
       </div>

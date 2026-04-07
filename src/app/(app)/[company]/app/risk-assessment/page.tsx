@@ -3,9 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  CheckCircle,
-  ChevronRight,
-  ClipboardCheck,
   Clock,
   FileCheck,
   HardHat,
@@ -13,6 +10,7 @@ import {
   Scale,
   ShieldAlert,
   ShieldCheck,
+  ClipboardCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,31 +18,9 @@ import { useCompanyParam } from "@/hooks/use-company-param";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
 import { useUsersStore } from "@/stores/users-store";
-import { useTranslation, LOCALE_DEFAULT_COUNTRY } from "@/i18n";
-import {
-  resolveRiskAssessmentCatalogCountry,
-  type RiskAssessmentCatalogCountry,
-} from "@/lib/country-config";
+import { useTranslation } from "@/i18n";
 import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
-
-const riskAssessmentForms = {
-  US: [
-    { id: "jha", name: "JHA", fullName: "Job Hazard Analysis", icon: FileCheck },
-    { id: "jsa", name: "JSA", fullName: "Job Safety Analysis", icon: ShieldAlert },
-  ],
-  NL: [
-    { id: "rie", name: "RI&E", fullName: "RI&E Assessment", icon: FileCheck },
-    { id: "arbowet", name: "Arbowet", fullName: "Arbowet Compliance Check", icon: ShieldAlert },
-  ],
-  SE: [
-    { id: "sam", name: "SAM", fullName: "SAM Assessment", icon: FileCheck },
-    { id: "osa", name: "OSA", fullName: "Psykosocial Riskbedomning", icon: ShieldAlert },
-  ],
-} satisfies Record<
-  RiskAssessmentCatalogCountry,
-  Array<{ id: string; name: string; fullName: string; icon: typeof FileCheck }>
->;
 
 const assessmentLabelMap: Record<string, string> = {
   JHA: "Job Hazard Analysis",
@@ -57,31 +33,11 @@ const assessmentLabelMap: Record<string, string> = {
 
 export default function RiskAssessmentIndexPage() {
   const company = useCompanyParam();
-  const { user, currentCompany } = useAuth();
+  const { user } = useAuth();
   const { items: riskEvaluations, isLoading } = useRiskEvaluationsStore();
   const { items: locations } = useLocationsStore();
   const { items: users } = useUsersStore();
-  const { t, locale, formatDate } = useTranslation();
-
-  // Prefer locally-saved country setting (survives when DB write fails)
-  const effectiveCountry = React.useMemo(() => {
-    if (currentCompany?.id) {
-      try {
-        const raw = localStorage.getItem(`harmoniq_settings_${currentCompany.id}`);
-        if (raw) {
-          const saved = JSON.parse(raw);
-          if (saved.selectedCountry) return saved.selectedCountry;
-        }
-      } catch { /* ignore */ }
-    }
-    return currentCompany?.country;
-  }, [currentCompany?.id, currentCompany?.country]);
-
-  const localeCountry = LOCALE_DEFAULT_COUNTRY[locale];
-  const companyCountry = resolveRiskAssessmentCatalogCountry(
-    effectiveCountry,
-    localeCountry,
-  );
+  const { t, formatDate } = useTranslation();
 
   const myAssessments = React.useMemo(() => {
     if (!user) return [];
@@ -290,38 +246,11 @@ export default function RiskAssessmentIndexPage() {
               </section>
             )}
 
-            {/* Start new assessment */}
-            <section aria-labelledby="new-assessment-heading" className="space-y-2">
-              <h2 id="new-assessment-heading" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                {t("checklists.newAssessment") || "Start a new assessment"}
-              </h2>
-              <div className="grid grid-cols-2 gap-2.5">
-                {riskAssessmentForms[companyCountry].map((form) => {
-                  const Icon = form.icon;
-                  return (
-                    <Link
-                      key={form.id}
-                      href={`/${company}/app/risk-assessment/${form.id}`}
-                      className="flex flex-col items-center gap-2.5 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/30 active:bg-muted/50"
-                    >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
-                      </div>
-                      <div className="text-center">
-                        <p className="font-semibold text-sm">{form.name}</p>
-                        <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{form.fullName}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-
             {inProgressAssessments.length === 0 && (
               <div className="py-6 text-center">
                 <FileCheck className="h-8 w-8 text-muted-foreground/20 mx-auto" aria-hidden="true" />
-                <p className="text-sm text-muted-foreground mt-2">No drafts in progress</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">Start a new assessment above</p>
+                <p className="text-sm text-muted-foreground mt-2">No assessments assigned</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">Assessments will appear here when assigned by your admin</p>
               </div>
             )}
           </div>
