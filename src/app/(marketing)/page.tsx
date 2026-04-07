@@ -36,43 +36,43 @@ import {
   GraduationCap,
   Plane,
 } from "lucide-react";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, animate } from "framer-motion";
 
 const EASE_OUT_CUBIC: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 40, filter: "blur(4px)" },
-  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE_OUT_CUBIC } },
 };
 
 const fadeIn = {
-  hidden: { opacity: 0, filter: "blur(4px)" },
-  visible: { opacity: 1, filter: "blur(0px)", transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const slideLeft = {
-  hidden: { opacity: 0, x: -60, filter: "blur(4px)" },
-  visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, x: -60 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const slideRight = {
-  hidden: { opacity: 0, x: 60, filter: "blur(4px)" },
-  visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, x: 60 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const slideFromLeft = {
-  hidden: { opacity: 0, x: -120, filter: "blur(6px)" },
-  visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.8, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, x: -120 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: EASE_OUT_CUBIC } },
 };
 
 const slideFromRight = {
-  hidden: { opacity: 0, x: 120, filter: "blur(6px)" },
-  visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.8, ease: EASE_OUT_CUBIC, delay: 0.1 } },
+  hidden: { opacity: 0, x: 120 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: EASE_OUT_CUBIC, delay: 0.1 } },
 };
 
 const scaleUp = {
-  hidden: { opacity: 0, scale: 0.92, filter: "blur(4px)" },
-  visible: { opacity: 1, scale: 1, filter: "blur(0px)", transition: { duration: 0.6, ease: EASE_OUT_CUBIC } },
+  hidden: { opacity: 0, scale: 0.92 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: EASE_OUT_CUBIC } },
 };
 
 const stagger = {
@@ -228,12 +228,13 @@ export default function Home() {
       {/* ── Header ── */}
       <header className="fixed top-5 left-1/2 -translate-x-1/2 z-50">
         <motion.div
-          initial={{ y: -20, opacity: 0, width: "92vw" }}
+          initial={{ y: -20, opacity: 0 }}
           animate={{
             y: 0,
             opacity: 1,
-            width: scrolled ? "min(82vw, 56rem)" : "min(92vw, 64rem)",
+            maxWidth: scrolled ? "56rem" : "64rem",
           }}
+          style={{ width: scrolled ? "82vw" : "92vw", willChange: "transform, opacity" }}
           transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           className="flex h-14 items-center justify-between rounded-full bg-zinc-900/70 backdrop-blur-2xl px-6 mx-auto"
         >
@@ -678,11 +679,12 @@ export default function Home() {
                     </div>
                     <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
                       <motion.div
-                        className="h-2 rounded-full bg-white"
-                        initial={{ width: 0 }}
-                        whileInView={{ width: `${stat.pct}%` }}
+                        className="h-2 rounded-full bg-white origin-left"
+                        initial={{ scaleX: 0 }}
+                        whileInView={{ scaleX: stat.pct / 100 }}
                         viewport={{ once: false }}
                         transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" as const }}
+                        style={{ willChange: "transform" }}
                       />
                     </div>
                   </div>
@@ -1208,9 +1210,10 @@ function AnalyticsDashboard() {
             {CHART_BARS.map((h, j) => (
               <motion.div
                 key={j}
-                className="flex-1 rounded-sm bg-white/80"
-                initial={{ height: 0 }}
-                animate={animated ? { height: `${h}%` } : { height: 0 }}
+                className="flex-1 rounded-sm bg-white/80 origin-bottom"
+                style={{ height: `${h}%`, willChange: "transform" }}
+                initial={{ scaleY: 0 }}
+                animate={animated ? { scaleY: 1 } : { scaleY: 0 }}
                 transition={{ duration: 0.6, delay: j * 0.05, ease: "easeOut" }}
               />
             ))}
@@ -1475,16 +1478,13 @@ function AnimatedCounter({
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
-    if (!isInView) return;
-    let start = 0;
-    const duration = 1500;
-    const step = (timestamp: number) => {
-      if (!start) start = timestamp;
-      const progress = Math.min((timestamp - start) / duration, 1);
-      setDisplay(Math.floor(progress * value));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
+    if (!isInView) { setDisplay(0); return; }
+    const controls = animate(0, value, {
+      duration: 1.5,
+      ease: "easeOut",
+      onUpdate: (v) => setDisplay(Math.floor(v)),
+    });
+    return () => controls.stop();
   }, [isInView, value]);
 
   return (
