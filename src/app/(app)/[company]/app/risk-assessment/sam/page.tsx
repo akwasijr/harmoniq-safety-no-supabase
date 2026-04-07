@@ -288,7 +288,6 @@ export default function SAMFormPage() {
               {currentSectionData.title} • Steg {currentSection + 1} av {sections.length}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">SE</span>
         </div>
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
@@ -312,15 +311,6 @@ export default function SAMFormPage() {
                 <p className="text-sm text-muted-foreground">Organization and workplace information</p>
               </div>
             </div>
-
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="py-4">
-                <p className="text-sm text-blue-800">
-                  <strong>AFS 2023:1 (SE):</strong> Systematic Work Environment Management (SAM) is 
-                  required for all Swedish employers under the Work Environment Act (Arbetsmiljölagen).
-                </p>
-              </CardContent>
-            </Card>
 
             <div className="space-y-4">
               <div className="space-y-2">

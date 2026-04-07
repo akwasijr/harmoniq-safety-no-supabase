@@ -9,7 +9,6 @@ import {
   CheckCircle,
   FileCheck,
   Building2,
-  BookOpen,
   Scale,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -267,7 +266,6 @@ export default function ArbowetFormPage() {
               {currentSectionData.title} • {t("riskAssessment.section", { current: String(currentSection + 1), total: String(sections.length) })}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">NL</span>
         </div>
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
@@ -291,21 +289,6 @@ export default function ArbowetFormPage() {
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.basicAuditInfo")}</p>
               </div>
             </div>
-
-            <Card className="bg-orange-50 border-orange-200">
-              <CardContent className="py-4">
-                <div className="flex items-start gap-3">
-                  <BookOpen className="h-5 w-5 text-orange-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-orange-800">Arbowet Compliance Check</p>
-                    <p className="text-xs text-orange-700 mt-1">
-                      This audit checks compliance with key articles of the Arbeidsomstandighedenwet (Arbowet): 
-                      Articles 3, 5, 8, 13, and 14.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             <div className="space-y-4">
               <div className="space-y-2">

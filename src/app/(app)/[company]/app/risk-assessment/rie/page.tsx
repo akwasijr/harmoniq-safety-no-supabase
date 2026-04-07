@@ -322,7 +322,6 @@ export default function RIEFormPage() {
               {currentSectionData.title} • Stap {currentSection + 1} van {sections.length}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">Arbowet</span>
         </div>
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
           <div
@@ -343,18 +342,9 @@ export default function RIEFormPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold">Bedrijfsgegevens</h2>
-                <p className="text-sm text-muted-foreground">Company information per Arbowet Article 5</p>
+                <p className="text-sm text-muted-foreground">Vul de bedrijfsgegevens in</p>
               </div>
             </div>
-
-            <Card className="bg-orange-50 border-orange-200">
-              <CardContent className="py-4">
-                <p className="text-sm text-orange-800">
-                  <strong>Arbowet Artikel 5 (NL):</strong> Every employer is required to conduct a 
-                  risk inventory and evaluation (RI&E) and develop an action plan.
-                </p>
-              </CardContent>
-            </Card>
 
             <div className="space-y-4">
               <div className="space-y-2">
@@ -456,30 +446,29 @@ export default function RIEFormPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  const count = parseInt(formData.employeeCount) || 0;
-                  setFormData({ ...formData, externalReviewRequired: count > 25 });
-                }}
+              <div
                 className={cn(
-                  "w-full p-4 rounded-xl border-2 text-left transition-all",
+                  "flex items-center justify-between p-4 rounded-xl transition-all",
                   formData.externalReviewRequired
-                    ? "border-warning bg-warning/10"
-                    : "border-border"
+                    ? "bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700"
+                    : "bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Toetsing verplicht?</p>
-                    <p className="text-xs text-muted-foreground">
-                      Companies with &gt;25 employees must have RI&E reviewed by certified expert
-                    </p>
-                  </div>
-                  <span className="text-xs font-medium">
-                    {formData.externalReviewRequired ? "Yes" : "No"}
-                  </span>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">Toetsing verplicht?</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Bedrijven met &gt;25 werknemers moeten de RI&E laten toetsen
+                  </p>
                 </div>
-              </button>
+                <div className={cn(
+                  "flex items-center justify-center h-8 px-4 rounded-full text-xs font-bold",
+                  formData.externalReviewRequired
+                    ? "bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200"
+                    : "bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200"
+                )}>
+                  {formData.externalReviewRequired ? "Ja" : "Nee"}
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -244,7 +244,6 @@ export default function JSAFormPage() {
               {currentSectionData.title} • {t("riskAssessment.section", { current: String(currentSection + 1), total: String(sections.length) })}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">Daily</span>
         </div>
         {/* Progress bar */}
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
@@ -269,15 +268,6 @@ export default function JSAFormPage() {
                 <p className="text-sm text-muted-foreground">{t("riskAssessment.dailyPreWork")}</p>
               </div>
             </div>
-
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="py-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> JSA is a simplified daily safety analysis. 
-                  Complete this at the start of each shift before beginning work.
-                </p>
-              </CardContent>
-            </Card>
 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">

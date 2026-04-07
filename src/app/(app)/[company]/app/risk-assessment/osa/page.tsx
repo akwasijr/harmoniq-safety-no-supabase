@@ -299,7 +299,6 @@ export default function OSAFormPage() {
               {currentSectionData.title} • Steg {currentSectionIndex + 1} av {sections.length}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">SE</span>
         </div>
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSectionIndex + 1) / sections.length) * 100)}>
           <div
@@ -421,14 +420,6 @@ export default function OSAFormPage() {
               </div>
             </div>
 
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="py-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Instruktion:</strong> Svara på en skala 1-5 hur väl varje påstående 
-                  stämmer med din upplevelse. Markera om du ser något som en särskild risk.
-                </p>
-              </CardContent>
-            </Card>
           </div>
         )}
 

@@ -299,7 +299,6 @@ export default function JHAFormPage() {
               {currentSectionData.title} • {t("riskAssessment.section", { current: String(currentSection + 1), total: String(sections.length) })}
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">OSHA</span>
         </div>
         {/* Progress bar */}
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / sections.length) * 100)}>
