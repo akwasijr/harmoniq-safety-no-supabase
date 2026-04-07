@@ -1016,11 +1016,13 @@ function AssetScanVisual() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: false, margin: "-50px" });
   const [activeAsset, setActiveAsset] = useState(0);
+  const activeAssetRef = useRef(0);
 
   useEffect(() => {
-    if (!isInView) { setActiveAsset(0); return; }
+    if (!isInView) { activeAssetRef.current = 0; return; }
     const interval = setInterval(() => {
-      setActiveAsset(prev => (prev + 1) % ASSETS_DATA.length);
+      activeAssetRef.current = (activeAssetRef.current + 1) % ASSETS_DATA.length;
+      setActiveAsset(activeAssetRef.current);
     }, 2800);
     return () => clearInterval(interval);
   }, [isInView]);
@@ -1100,11 +1102,13 @@ function RiskAssessmentTabs() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: false, margin: "-50px" });
   const [activeTab, setActiveTab] = useState(0);
+  const activeTabRef = useRef(0);
 
   useEffect(() => {
-    if (!isInView) { setActiveTab(0); return; }
+    if (!isInView) { activeTabRef.current = 0; return; }
     const interval = setInterval(() => {
-      setActiveTab(prev => (prev + 1) % RISK_TABS.length);
+      activeTabRef.current = (activeTabRef.current + 1) % RISK_TABS.length;
+      setActiveTab(activeTabRef.current);
     }, 3000);
     return () => clearInterval(interval);
   }, [isInView]);
@@ -1175,7 +1179,7 @@ function AnalyticsDashboard() {
       const timer = setTimeout(() => setAnimated(true), 200);
       return () => clearTimeout(timer);
     }
-    setAnimated(false);
+    return () => setAnimated(false);
   }, [isInView]);
 
   return (
@@ -1478,7 +1482,7 @@ function AnimatedCounter({
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
-    if (!isInView) { setDisplay(0); return; }
+    if (!isInView) return () => setDisplay(0);
     const controls = animate(0, value, {
       duration: 1.5,
       ease: "easeOut",

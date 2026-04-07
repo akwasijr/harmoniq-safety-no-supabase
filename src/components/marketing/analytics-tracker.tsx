@@ -25,11 +25,10 @@ function getAnalyticsConsent(): boolean {
  */
 export function AnalyticsTracker({ settings }: { settings: PlatformPrivacySettings }) {
   const pathname = usePathname();
-  const [consented, setConsented] = useState(false);
+  const [consented, setConsented] = useState(() => getAnalyticsConsent());
 
   // Listen for consent changes
   useEffect(() => {
-    setConsented(getAnalyticsConsent());
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       setConsented(detail?.analytics === true);
