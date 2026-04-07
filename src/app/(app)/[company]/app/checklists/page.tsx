@@ -549,27 +549,6 @@ function ReportsTabContent({
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
           </Link>
-
-          {/* Open / unresolved reports */}
-          {myIncidents.filter(i => i.status !== "resolved").length > 0 ? (
-            <Section
-              title="Open reports"
-              icon={AlertTriangle}
-              iconColor="text-warning"
-            >
-              {myIncidents
-                .filter(i => i.status !== "resolved")
-                .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())
-                .slice(0, 5)
-                .map(renderIncidentCard)}
-            </Section>
-          ) : (
-            <div className="py-8 text-center">
-              <AlertTriangle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
-              <p className="text-sm font-medium text-muted-foreground mt-2">{t("app.noReports") || "No open reports"}</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noReportsDesc") || "Reports you submit will appear here"}</p>
-            </div>
-          )}
         </>
       )}
 
