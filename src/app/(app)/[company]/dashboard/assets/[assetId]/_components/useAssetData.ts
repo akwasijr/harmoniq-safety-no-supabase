@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { mockMaintenanceSchedules, mockDowntimeLogs } from "@/mocks/data";
 import { useCompanyData } from "@/hooks/use-company-data";
-import type { MaintenanceSchedule } from "@/types";
+import type { MaintenanceSchedule, DowntimeLog } from "@/types";
 
 export function useAssetData(assetId: string) {
   const [mounted, setMounted] = React.useState(false);
@@ -37,15 +36,11 @@ export function useAssetData(assetId: string) {
     return Math.floor(diff / (1000 * 60 * 60 * 24));
   })();
 
-  // Maintenance schedules
-  const [schedules, setSchedules] = React.useState<MaintenanceSchedule[]>(() =>
-    mockMaintenanceSchedules.filter(s => s.asset_id === assetId)
-  );
-  React.useEffect(() => {
-    setSchedules(mockMaintenanceSchedules.filter(s => s.asset_id === assetId));
-  }, [assetId]);
+  // Maintenance schedules (mock data removed — start empty)
+  const [schedules, setSchedules] = React.useState<MaintenanceSchedule[]>([]);
 
-  // Completed work orders as maintenance history
+  // Downtime (mock data removed — start empty)
+  const downtimeLogs: DowntimeLog[] = [];
   const maintenanceLogs = React.useMemo(() => {
     return workOrders
       .filter(wo => wo.asset_id === assetId && wo.status === "completed")
@@ -64,8 +59,7 @@ export function useAssetData(assetId: string) {
       .sort((a, b) => new Date(b.completed_date).getTime() - new Date(a.completed_date).getTime());
   }, [workOrders, assetId, users]);
 
-  // Downtime
-  const downtimeLogs = mockDowntimeLogs.filter(l => l.asset_id === assetId);
+  // Downtime stats (empty — mock data removed)
   const totalDowntimeHours = downtimeLogs
     .filter(l => l.duration_hours !== null)
     .reduce((sum, l) => sum + (l.duration_hours || 0), 0);

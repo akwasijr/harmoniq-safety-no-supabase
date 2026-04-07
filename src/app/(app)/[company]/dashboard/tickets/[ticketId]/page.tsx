@@ -3,8 +3,12 @@
 import * as React from "react";
 import { useRouter, useParams, notFound } from "next/navigation";
 import { LoadingPage } from "@/components/ui/loading";
-import { defaultTasks as defaultTasksData, defaultComments as defaultCommentsData } from "@/mocks/data";
-import type { TicketTask, TicketComment } from "@/mocks/data";
+
+type TicketTask = { id: string; title: string; completed: boolean };
+type TicketComment = { id: string; author: string; text: string; date: string; avatar: string };
+const defaultTasksData: TicketTask[] = [];
+const defaultCommentsData: TicketComment[] = [];
+
 import {
   ArrowLeft,
   Save,

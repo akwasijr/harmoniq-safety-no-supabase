@@ -35,12 +35,11 @@ import type { ChecklistTemplate } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
-import {
-  mockRiskTemplates,
-  mockRiskAssessments,
-  mockInspections,
-  mockInspectionTemplates,
-} from "@/mocks/data";
+
+const mockRiskTemplates: { id: string; name: string; description: string; type: string; status: string; sections: number; submissions: number; lastUpdated?: string; locked: boolean }[] = [];
+const mockRiskAssessments: { id: string; template: string; templateId: string; type: string; location: string; date: string; status: string; by: string; riskLevel: string; riskScore: number }[] = [];
+const mockInspections: InspectionSubmissionRow[] = [];
+const mockInspectionTemplates: { id: string; name: string; category: string; checkpoints: number; used: number; status: string; description: string }[] = [];
 
 type MainTabType = "checklists" | "risk-assessment" | "inspection";
 type SubTabType = "submissions" | "active";

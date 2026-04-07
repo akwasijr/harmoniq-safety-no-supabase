@@ -2,11 +2,10 @@
 
 import * as React from "react";
 import { createEntityStore } from "@/stores/create-entity-store";
-import { mockUsers } from "@/mocks/data";
 import type { User } from "@/types";
 import { normalizeUser, normalizeUserUpdates } from "@/lib/assignment-utils";
 
-const store = createEntityStore<User>("harmoniq_users", mockUsers, {
+const store = createEntityStore<User>("harmoniq_users", [], {
   stripFields: ["full_name"],
 });
 

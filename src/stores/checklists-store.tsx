@@ -1,17 +1,16 @@
 "use client";
 
 import { createEntityStore } from "@/stores/create-entity-store";
-import { mockChecklistTemplates, mockChecklistSubmissions } from "@/mocks/data";
 import type { ChecklistTemplate, ChecklistSubmission } from "@/types";
 
 const templatesStore = createEntityStore<ChecklistTemplate>(
   "harmoniq_checklist_templates",
-  mockChecklistTemplates,
+  [],
   { stripFields: ["creator", "assignment", "recurrence", "source_template_id", "regulation", "tags", "publish_status", "is_active"] }
 );
 const submissionsStore = createEntityStore<ChecklistSubmission>(
   "harmoniq_checklist_submissions",
-  mockChecklistSubmissions,
+  [],
   { stripFields: ["template", "submitter", "location", "general_comments"] }
 );
 
