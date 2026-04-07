@@ -61,65 +61,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Use service role key via PostgREST to bypass RLS.
-    // We already validate auth + company isolation above.
     const supabaseUrl = getSupabaseUrl();
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+    const publishableKey = getSupabasePublishableKey();
+    const { data: { session } } = await supabase.auth.getSession();
 
-    if (supabaseUrl && serviceRoleKey) {
-      const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
-        method: "POST",
-        headers: {
-          "apikey": serviceRoleKey,
-          "Authorization": `Bearer ${serviceRoleKey}`,
-          "Content-Type": "application/json",
-          "Prefer": "resolution=merge-duplicates",
-        },
-        body: JSON.stringify(validated.rows),
-      });
+    if (!supabaseUrl || !publishableKey || !session?.access_token) {
+      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-        const msg = body.message || body.error || "Upsert failed";
-        // Permission errors are expected in demo/restricted environments —
-        // data is saved locally via optimistic update, so return 200 with warning
-        if (msg.includes("permission denied") || msg.includes("row-level security")) {
-          console.warn(`[Entity Upsert API] Permission issue for ${table} (data saved locally):`, msg);
-          return NextResponse.json({ ok: true, warning: msg });
-        }
-        console.error(`[Entity Upsert API] Service role upsert error for ${table}:`, msg);
-        return NextResponse.json({ error: msg }, { status: 500 });
+    const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
+      method: "POST",
+      headers: {
+        "apikey": publishableKey,
+        "Authorization": `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates",
+      },
+      body: JSON.stringify(validated.rows),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
+      const msg = body.message || body.error || "Upsert failed";
+      if (msg.includes("permission denied") || msg.includes("row-level security")) {
+        console.warn(`[Entity Upsert API] Permission issue for ${table}:`, msg);
+        return NextResponse.json({ error: "You do not have permission to save this data." }, { status: 403 });
       }
-    } else {
-      // Fallback: use caller's session (RLS applies)
-      const publishableKey = getSupabasePublishableKey();
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!supabaseUrl || !publishableKey || !session?.access_token) {
-        return NextResponse.json({ error: "Server not configured" }, { status: 500 });
-      }
-
-      const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
-        method: "POST",
-        headers: {
-          "apikey": publishableKey,
-          "Authorization": `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-          "Prefer": "resolution=merge-duplicates",
-        },
-        body: JSON.stringify(validated.rows),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-        const msg = body.message || body.error || "Upsert failed";
-        if (msg.includes("permission denied") || msg.includes("row-level security")) {
-          console.warn(`[Entity Upsert API] Permission issue for ${table} (data saved locally):`, msg);
-          return NextResponse.json({ ok: true, warning: msg });
-        }
-        console.error(`[Entity Upsert API] Error for ${table}:`, msg);
-        return NextResponse.json({ error: msg }, { status: 500 });
-      }
+      console.error(`[Entity Upsert API] Error for ${table}:`, msg);
+      return NextResponse.json({ error: "Unable to save data. Please try again." }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });

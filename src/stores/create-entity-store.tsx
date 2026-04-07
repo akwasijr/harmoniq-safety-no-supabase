@@ -363,9 +363,9 @@ export function createEntityStore<T extends IdEntity>(
             if (process.env.NODE_ENV === "development") {
               console.error(`[Harmoniq Debug] Upsert error for ${table}:`, errMsg);
             }
-            // Keep optimistic update in localStorage — don't roll back
-            // Data persists locally; DB sync will succeed once permissions are fixed
-            console.warn(`[Harmoniq] Cloud sync failed for ${table}: ${errMsg} — data saved locally`);
+            setError(errMsg);
+            console.warn(`[Harmoniq] Cloud sync failed for ${table}: ${errMsg}`);
+            toast.error("Could not sync your changes to the server.");
           }
         })();
       }
@@ -408,8 +408,9 @@ export function createEntityStore<T extends IdEntity>(
           if (!res.ok) {
             const body = await res.json().catch(() => ({ error: "Unknown error" }));
             const errMsg = body.error || `HTTP ${res.status}`;
-            // Keep optimistic update — don't roll back
-            console.warn(`[Harmoniq] Cloud sync failed for ${table} update: ${errMsg} — data saved locally`);
+            setError(errMsg);
+            console.warn(`[Harmoniq] Cloud sync failed for ${table} update: ${errMsg}`);
+            toast.error("Could not sync your changes to the server.");
           }
         })();
       }

@@ -34,7 +34,7 @@ export async function POST(
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile || !["super_admin", "company_admin"].includes(profile.role)) {
+    if (!profile || profile.role !== "super_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -45,11 +45,7 @@ export async function POST(
       .maybeSingle();
 
     if (targetUserError || !targetUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    if (profile.role !== "super_admin" && targetUser.company_id !== profile.company_id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "User not found or inaccessible" }, { status: 404 });
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
@@ -58,8 +54,9 @@ export async function POST(
     });
 
     if (error) {
+      console.error("[PlatformUsers] Failed to send password reset:", error.message);
       return NextResponse.json(
-        { error: "Failed to send password reset", details: error.message },
+        { error: "Failed to send password reset" },
         { status: 500 },
       );
     }
@@ -85,7 +82,7 @@ export async function POST(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to send password reset";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[PlatformUsers] Password reset request failed:", error);
+    return NextResponse.json({ error: "Failed to send password reset" }, { status: 500 });
   }
 }

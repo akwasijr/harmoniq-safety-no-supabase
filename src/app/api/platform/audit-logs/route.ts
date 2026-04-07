@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!profile || !["super_admin", "company_admin"].includes(profile.role)) {
+  if (!profile || profile.role !== "super_admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -53,10 +53,6 @@ export async function GET(request: NextRequest) {
     .select("id, user_id, action, resource, details, ip_address, created_at")
     .order("created_at", { ascending: false })
     .limit(limit);
-
-  if (profile.role !== "super_admin") {
-    query = query.eq("company_id", profile.company_id);
-  }
 
   if (userId) {
     query = query.eq("user_id", sanitizeText(userId, 36));
@@ -81,7 +77,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!profile || !["super_admin", "company_admin"].includes(profile.role)) {
+  if (!profile || profile.role !== "super_admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -97,8 +93,7 @@ export async function POST(request: NextRequest) {
     typeof body.companyId === "string" ? sanitizeText(body.companyId, 36) : null;
   const details =
     body.details && typeof body.details === "object" && !Array.isArray(body.details) ? body.details : {};
-  const companyId =
-    profile.role === "super_admin" ? requestedCompanyId ?? profile.company_id : profile.company_id;
+  const companyId = requestedCompanyId ?? profile.company_id;
   const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
 
   const { error } = await supabase.from("audit_logs").insert({

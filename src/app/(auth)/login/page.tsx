@@ -67,6 +67,10 @@ function LoginForm() {
   const [hasMounted, setHasMounted] = React.useState(false);
   const isPlatformMode = searchParams.get("mode") === "platform";
   const [appChoice, setAppChoice] = React.useState<AppChoice>(isPlatformMode ? "platform" : "dashboard");
+  const loginHeading = isPlatformMode ? "Platform admin sign in" : "Welcome";
+  const loginDescription = isPlatformMode
+    ? "Use your super admin account to access platform controls."
+    : "Sign in to continue to Harmoniq.";
 
   React.useEffect(() => {
     const mobile = window.innerWidth < 768;
@@ -86,7 +90,7 @@ function LoginForm() {
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, []);
+  }, [isPlatformMode]);
 
   React.useEffect(() => {
     const errorParam = searchParams.get("error");
@@ -94,6 +98,49 @@ function LoginForm() {
       setError(errorParam);
     }
   }, [searchParams]);
+
+  // If the user is already authenticated and arrived via /admin (platform mode),
+  // redirect them straight to the platform overview instead of showing the login form.
+  React.useEffect(() => {
+    if (!isPlatformMode || IS_MOCK_MODE) return;
+
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) return;
+
+      // User has an active session — route to platform overview
+      window.localStorage.setItem(PLATFORM_ENTRY_KEY, "true");
+      window.localStorage.removeItem(SELECTED_COMPANY_STORAGE_KEY);
+
+      supabase
+        .from("users")
+        .select("role, company_id")
+        .eq("id", session.user.id)
+        .single()
+        .then(({ data: profile }) => {
+          if (!profile) return;
+          const allowedApps = getAllowedApps(profile.role);
+          if (!allowedApps.includes("platform")) {
+            // Not a platform admin — show the form
+            return;
+          }
+          // Find a slug for the URL
+          if (profile.company_id) {
+            supabase
+              .from("companies")
+              .select("slug")
+              .eq("id", profile.company_id)
+              .single()
+              .then(({ data: company }) => {
+                const slug = company?.slug || "harmoniq";
+                window.location.href = buildPlatformOverviewDestination(slug);
+              });
+          } else {
+            window.location.href = buildPlatformOverviewDestination("harmoniq");
+          }
+        });
+    });
+  }, [isPlatformMode]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -487,9 +534,8 @@ function LoginForm() {
 
         <div className="rounded-xl bg-zinc-900/70 backdrop-blur-xl p-8">
           {/* Header */}
-          <h1 className="text-2xl font-bold tracking-tight mb-6 text-white">
-            Welcome
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white">{loginHeading}</h1>
+          <p className="mt-2 mb-6 text-sm text-zinc-400">{loginDescription}</p>
 
           {/* Alerts */}
           {isLockedOut && (
@@ -622,6 +668,7 @@ function LoginForm() {
               <Button
                 type="submit"
                 disabled={isLoading || isLockedOut}
+                loading={isLoading}
                 className="w-full h-11 rounded-lg text-sm font-semibold bg-violet-600 text-white hover:bg-violet-500 focus-visible:!ring-0 focus-visible:!ring-transparent !shadow-none"
               >
                 {t("auth.signIn")}

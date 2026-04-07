@@ -3,6 +3,7 @@
 import * as React from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { hasValidCoordinates } from "@/lib/map-utils";
 
 interface Location {
   lat: number;
@@ -34,6 +35,7 @@ export default function LeafletMap({ locations }: { locations: Location[] }) {
     }).addTo(map);
 
     mapInstanceRef.current = map;
+    requestAnimationFrame(() => map.invalidateSize());
 
     return () => {
       map.remove();
@@ -51,7 +53,7 @@ export default function LeafletMap({ locations }: { locations: Location[] }) {
     });
 
     // Add markers for each location
-    locations.forEach((loc) => {
+    locations.filter((loc) => hasValidCoordinates(loc.lat, loc.lng)).forEach((loc) => {
       const radius = Math.min(6 + loc.count * 2, 20);
       L.circleMarker([loc.lat, loc.lng], {
         radius,
@@ -69,9 +71,13 @@ export default function LeafletMap({ locations }: { locations: Location[] }) {
 
     // Fit bounds if locations exist
     if (locations.length > 0) {
-      const bounds = L.latLngBounds(locations.map((l) => [l.lat, l.lng]));
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 6 });
+      const boundedLocations = locations.filter((loc) => hasValidCoordinates(loc.lat, loc.lng));
+      if (boundedLocations.length > 0) {
+        const bounds = L.latLngBounds(boundedLocations.map((l) => [l.lat, l.lng]));
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 6 });
+      }
     }
+    requestAnimationFrame(() => map.invalidateSize());
   }, [locations]);
 
   return <div ref={mapRef} className="w-full h-full" style={{ minHeight: 400 }} />;

@@ -43,20 +43,28 @@ interface HealthSnapshot {
 
 async function getHealthSnapshot(): Promise<HealthSnapshot> {
   const env = getEnvStatus();
+  const strictReadiness = process.env.NODE_ENV === "production";
   const isMockMode = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true" && (!env.hasSupabaseUrl || !env.hasSupabasePublishableKey);
   const issues: string[] = [];
   const warnings: string[] = [];
   const database = {
-    ok: isMockMode,
+    ok: isMockMode || !strictReadiness || !env.hasSupabaseAdminKey,
     latency_ms: null as number | null,
     error: null as string | null,
+  };
+  const pushConfigStatus = (key: string) => {
+    if (strictReadiness) {
+      issues.push(key);
+    } else {
+      warnings.push(key);
+    }
   };
 
   if (!env.hasSupabaseUrl) {
     if (isMockMode) {
       warnings.push("supabase_url_missing");
     } else {
-      issues.push("supabase_url_missing");
+      pushConfigStatus("supabase_url_missing");
     }
   }
 
@@ -64,21 +72,17 @@ async function getHealthSnapshot(): Promise<HealthSnapshot> {
     if (isMockMode) {
       warnings.push("supabase_publishable_key_missing");
     } else {
-      issues.push("supabase_publishable_key_missing");
+      pushConfigStatus("supabase_publishable_key_missing");
     }
   }
 
   if (!env.hasSupabaseAdminKey) {
-    if (isMockMode) {
-      warnings.push("supabase_admin_key_missing");
-    } else {
-      issues.push("supabase_admin_key_missing");
-      database.error = "Supabase admin key missing";
-    }
+    warnings.push("supabase_admin_key_missing");
+    database.error = "Supabase admin key missing";
   }
 
   if (!env.hasConfiguredSiteUrl) {
-    issues.push("site_url_missing");
+    pushConfigStatus("site_url_missing");
   }
 
   if (env.hasTurnstileSiteKey !== env.hasTurnstileSecretKey) {
@@ -95,7 +99,11 @@ async function getHealthSnapshot(): Promise<HealthSnapshot> {
     const adminClient = createAdminClient();
 
     if (!adminClient) {
-      issues.push("database_client_unavailable");
+      if (strictReadiness) {
+        issues.push("database_client_unavailable");
+      } else {
+        warnings.push("database_client_unavailable");
+      }
       database.error = "Supabase admin client unavailable";
     } else {
       const dbStart = Date.now();
@@ -106,7 +114,11 @@ async function getHealthSnapshot(): Promise<HealthSnapshot> {
       database.latency_ms = Date.now() - dbStart;
 
       if (error) {
-        issues.push("database_unreachable");
+        if (strictReadiness) {
+          issues.push("database_unreachable");
+        } else {
+          warnings.push("database_unreachable");
+        }
         console.error("[Health API] Database check failed:", error.message);
         database.error = "Database connection failed";
       } else {
@@ -119,7 +131,7 @@ async function getHealthSnapshot(): Promise<HealthSnapshot> {
   const mem = process.memoryUsage();
 
   return {
-    ok: issues.length === 0 && (database.ok || isMockMode),
+    ok: issues.length === 0 && (database.ok || isMockMode || !strictReadiness),
     timestamp: new Date().toISOString(),
     version: process.env.npm_package_version || "0.1.0",
     uptime_seconds: Math.floor((Date.now() - startTime) / 1000),

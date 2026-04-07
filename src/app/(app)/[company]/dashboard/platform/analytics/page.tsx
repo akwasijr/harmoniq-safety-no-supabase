@@ -8,12 +8,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
 import {
   DEFAULT_PLATFORM_PRIVACY_SETTINGS,
   type PlatformPrivacySettings,
 } from "@/lib/platform-privacy-settings";
+import {
+  filterVisitorLocations,
+  getVisibleVisitorCount,
+  getVisitorCountries,
+  type VisitorLocation,
+} from "@/lib/analytics-geo";
 import { buildSiteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
@@ -22,7 +35,14 @@ import {
   CheckCircle, MapPin, Activity, Monitor, Smartphone, RefreshCw, TrendingUp, Save,
 } from "lucide-react";
 
-const LeafletMap = dynamic(() => import("@/components/shared/leaflet-map"), { ssr: false });
+const LeafletMap = dynamic(() => import("@/components/shared/leaflet-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex min-h-[400px] items-center justify-center rounded-lg border bg-muted/20 text-sm text-muted-foreground">
+      Loading map…
+    </div>
+  ),
+});
 
 type SubTab = "dashboard" | "realtime" | "audience" | "geo" | "compliance";
 
@@ -35,7 +55,7 @@ interface AnalyticsData {
   by_device: Record<string, number>;
   by_referrer: Record<string, number>;
   by_day: Record<string, number>;
-  locations: { lat: number; lng: number; city: string | null; country: string; count: number }[];
+  locations: VisitorLocation[];
 }
 
 interface ConsentRecord {
@@ -154,6 +174,10 @@ export default function PlatformAnalyticsPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [gdpr, setGdpr] = React.useState<PlatformPrivacySettings>(DEFAULT_PLATFORM_PRIVACY_SETTINGS);
   const [isSavingPrivacy, setIsSavingPrivacy] = React.useState(false);
+  const [geoQuery, setGeoQuery] = React.useState("");
+  const [geoCountryFilter, setGeoCountryFilter] = React.useState("All countries");
+  const [geoMinVisitors, setGeoMinVisitors] = React.useState(1);
+  const [geoSort, setGeoSort] = React.useState<"Most visitors" | "City (A-Z)" | "Country (A-Z)">("Most visitors");
 
   const fetchData = React.useCallback(() => {
     setIsLoading(true);
@@ -217,6 +241,28 @@ export default function PlatformAnalyticsPage() {
   const dailyData = React.useMemo(() =>
     Object.entries(analyticsData?.by_day || {}).sort((a, b) => a[0].localeCompare(b[0])).slice(-14).map(([date, views]) => ({ date, views })),
   [analyticsData]);
+  const visitorCountries = React.useMemo(
+    () => getVisitorCountries(analyticsData?.locations || []),
+    [analyticsData],
+  );
+  const filteredLocations = React.useMemo(
+    () =>
+      filterVisitorLocations(analyticsData?.locations || [], {
+        country: geoCountryFilter,
+        query: geoQuery,
+        minVisitors: geoMinVisitors,
+        sort: geoSort,
+      }),
+    [analyticsData, geoCountryFilter, geoMinVisitors, geoQuery, geoSort],
+  );
+  const visibleVisitorCount = React.useMemo(
+    () => getVisibleVisitorCount(filteredLocations),
+    [filteredLocations],
+  );
+  const visibleCountryCount = React.useMemo(
+    () => new Set(filteredLocations.map((location) => location.country)).size,
+    [filteredLocations],
+  );
 
   const total = analyticsData?.total || 0;
   const unique = analyticsData?.uniqueVisitors || 0;
@@ -257,6 +303,13 @@ export default function PlatformAnalyticsPage() {
     } finally {
       setIsSavingPrivacy(false);
     }
+  };
+
+  const resetGeoFilters = () => {
+    setGeoQuery("");
+    setGeoCountryFilter("All countries");
+    setGeoMinVisitors(1);
+    setGeoSort("Most visitors");
   };
 
   return (
@@ -483,20 +536,112 @@ export default function PlatformAnalyticsPage() {
         {activeTab === "geo" && (
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><MapPin className="h-4 w-4" />Visitor Locations</CardTitle></CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {(analyticsData?.locations?.length || 0) === 0 ? (
                 <div className="text-center py-12 text-muted-foreground"><MapPin className="h-10 w-10 mx-auto mb-3 opacity-50" /><p className="font-medium">No location data yet</p><p className="text-sm mt-1">Visit the site to generate visitor data.</p></div>
               ) : (
                 <>
-                  <div className="rounded-lg overflow-hidden border" style={{ height: 500 }}>
-                    <LeafletMap locations={analyticsData?.locations || []} />
+                  <div className="grid gap-3 rounded-lg border bg-muted/20 p-4 lg:grid-cols-[minmax(0,1.4fr)_220px]">
+                    <div className="space-y-2">
+                      <Label htmlFor="geo-search" className="text-xs text-muted-foreground">Find a city or country</Label>
+                      <Input
+                        id="geo-search"
+                        value={geoQuery}
+                        onChange={(event) => setGeoQuery(event.target.value)}
+                        placeholder="Search Amsterdam, London, US..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Country</Label>
+                      <Select value={geoCountryFilter} onValueChange={setGeoCountryFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All countries" />
+                        </SelectTrigger>
+                        <SelectContent aria-label="Country filter">
+                          <SelectItem value="All countries">All countries</SelectItem>
+                          {visitorCountries.map((country) => (
+                            <SelectItem key={country} value={country}>
+                              {country}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Minimum visitors per plotted point</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[1, 2, 5, 10].map((threshold) => (
+                          <Button
+                            key={threshold}
+                            type="button"
+                            size="sm"
+                            variant={geoMinVisitors === threshold ? "default" : "outline"}
+                            onClick={() => setGeoMinVisitors(threshold)}
+                          >
+                            {threshold === 1 ? "All" : `${threshold}+`}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Sort locations</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(["Most visitors", "City (A-Z)", "Country (A-Z)"] as const).map((option) => (
+                          <Button
+                            key={option}
+                            type="button"
+                            size="sm"
+                            variant={geoSort === option ? "default" : "outline"}
+                            onClick={() => setGeoSort(option)}
+                          >
+                            {option}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-end lg:justify-end">
+                      <Button type="button" variant="ghost" size="sm" onClick={resetGeoFilters}>
+                        Reset filters
+                      </Button>
+                    </div>
                   </div>
-                  <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {analyticsData?.locations?.map((loc, i) => (
-                      <div key={i} className="flex items-center gap-2 rounded-lg border p-2.5 text-sm">
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="rounded-lg border p-4">
+                      <p className="text-2xl font-semibold">{filteredLocations.length}</p>
+                      <p className="text-xs text-muted-foreground">Mapped locations</p>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <p className="text-2xl font-semibold">{formatNumber(visibleVisitorCount)}</p>
+                      <p className="text-xs text-muted-foreground">Visitors in view</p>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <p className="text-2xl font-semibold">{visibleCountryCount}</p>
+                      <p className="text-xs text-muted-foreground">Countries in view</p>
+                    </div>
+                  </div>
+                  {filteredLocations.length === 0 ? (
+                    <div className="rounded-lg border border-dashed py-12 text-center text-muted-foreground">
+                      <p className="font-medium">No locations match the current filters</p>
+                      <p className="mt-1 text-sm">Try widening the country search or lowering the minimum visitor threshold.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="rounded-lg overflow-hidden border" style={{ height: 500 }}>
+                        <LeafletMap locations={filteredLocations} />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Locations are plotted from privacy-safe edge geolocation headers captured for marketing-site visits.
+                      </p>
+                    </>
+                  )}
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredLocations.map((loc, i) => (
+                      <div key={`${loc.country}-${loc.city || "unknown"}-${i}`} className="flex items-center gap-2 rounded-lg border p-2.5 text-sm">
                         <div className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
-                        <span className="truncate font-medium">{loc.city || "Unknown"}</span>
-                        <span className="text-muted-foreground text-xs">{loc.country}</span>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{loc.city || "Unknown city"}</p>
+                          <p className="truncate text-xs text-muted-foreground">{loc.country}</p>
+                        </div>
                         <span className="ml-auto text-xs font-medium">{loc.count}</span>
                       </div>
                     ))}

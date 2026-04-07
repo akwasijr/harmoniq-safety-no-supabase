@@ -35,13 +35,32 @@ export default function DashboardRootLayout({
 
   const { resolvedTheme } = useTheme();
 
-  // Apply saved branding on mount, and re-apply when theme/company changes
+  // Apply saved branding on mount, and re-apply when theme/company changes.
+  // Prefer user's locally-saved settings (which survive even when the DB
+  // can't be updated) over the company record from Supabase.
   React.useEffect(() => {
     if (!currentCompany || !resolvedTheme) return;
+
+    let primaryColor = currentCompany.primary_color;
+    let secondaryColor = currentCompany.secondary_color;
+
+    // Check if the user has saved branding overrides in localStorage
+    try {
+      const settingsKey = currentCompany.id
+        ? `harmoniq_settings_${currentCompany.id}`
+        : null;
+      const raw = settingsKey ? localStorage.getItem(settingsKey) : null;
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.primaryColor) primaryColor = saved.primaryColor;
+        if (saved.secondaryColor) secondaryColor = saved.secondaryColor;
+      }
+    } catch { /* ignore parse errors */ }
+
     applyBranding(
       {
-        primaryColor: currentCompany.primary_color,
-        secondaryColor: currentCompany.secondary_color,
+        primaryColor,
+        secondaryColor,
         fontFamily: currentCompany.font_family,
         uiStyle: currentCompany.ui_style,
       },
@@ -60,6 +79,17 @@ export default function DashboardRootLayout({
       router.replace(`/${company}/app`);
     }
   }, [isLoading, user, isEmployee, company, router]);
+
+  // Sync platform entry cookie → localStorage when arriving via /admin
+  React.useEffect(() => {
+    if (typeof document === "undefined") return;
+    const match = document.cookie.match(/harmoniq_platform_entry=true/);
+    if (match) {
+      window.localStorage.setItem("harmoniq_platform_entry", "true");
+      // Clear the cookie so it doesn't persist beyond this navigation
+      document.cookie = "harmoniq_platform_entry=; path=/; max-age=0";
+    }
+  }, []);
 
   // Redirect unauthenticated users to login
   React.useEffect(() => {

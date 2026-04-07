@@ -24,10 +24,13 @@ import { useTranslation } from "@/i18n";
 import type { SupportedLocale } from "@/i18n";
 import { applyBranding } from "@/lib/branding";
 import {
+  DEFAULT_BRAND_PRIMARY_COLOR,
+  DEFAULT_BRAND_SECONDARY_COLOR,
+} from "@/lib/brand-defaults";
+import {
   buildRegionalDefaults,
   getCompanySettingsKey,
 } from "@/lib/company-settings";
-import { COUNTRY_OPTIONS } from "@/lib/country-config";
 import {
   buildDefaultFieldAppSettings,
   FIELD_APP_MIN_QUICK_ACTIONS,
@@ -38,6 +41,7 @@ import {
   type FieldAppSettings,
 } from "@/lib/field-app-settings";
 import { applyDocumentLanguage } from "@/lib/localization";
+import { saveToStorage } from "@/lib/local-storage";
 import { useCompanyStore } from "@/stores/company-store";
 import type { Company, Country, IndustryCode, Language } from "@/types";
 
@@ -50,6 +54,7 @@ import {
   NotificationsSettingsSection,
   SecuritySettingsSection,
 } from "./_components/settings-detail-sections";
+import { mergeStoredSettings } from "./_components/settings-persistence";
 import { SettingsTabs } from "./_components/settings-tabs";
 import type {
   SettingsState,
@@ -67,8 +72,8 @@ const defaultCompany: Company = {
   status: "active",
   logo_url: null,
   hero_image_url: null,
-  primary_color: "#024E6E",
-  secondary_color: "#029EDB",
+  primary_color: DEFAULT_BRAND_PRIMARY_COLOR,
+  secondary_color: DEFAULT_BRAND_SECONDARY_COLOR,
   font_family: "Geist Sans",
   ui_style: "rounded",
   tier: "professional",
@@ -95,8 +100,9 @@ const buildSettingsFromCompany = (
     dateFormat: regionalDefaults.dateFormat,
     timezone: regionalDefaults.timezone,
     measurementSystem: regionalDefaults.measurementSystem,
-    primaryColor: currentCompany.primary_color || "#024E6E",
-    secondaryColor: currentCompany.secondary_color || "#029EDB",
+    primaryColor: currentCompany.primary_color || DEFAULT_BRAND_PRIMARY_COLOR,
+    secondaryColor:
+      currentCompany.secondary_color || DEFAULT_BRAND_SECONDARY_COLOR,
     logoUrl: currentCompany.logo_url,
     notifCriticalAlerts: true,
     notifDailyDigest: true,
@@ -119,16 +125,17 @@ export default function SettingsPage() {
     hasPermission: currentUserCan,
   } = useAuth();
   const canEditSettings = currentUserCan("settings.edit");
-  const { items: companies, update: updateCompany } = useCompanyStore();
+  const { items: companies, setItems: setCompanies } = useCompanyStore();
   const { resolvedTheme } = useTheme();
   const fallbackCompany = React.useMemo(
     () => companies.find((item) => item.slug === company) ?? null,
     [companies, company],
   );
   const activeCompany = currentCompany ?? fallbackCompany ?? defaultCompany;
+  const activeCompanyId = currentCompany?.id ?? fallbackCompany?.id;
   const settingsStorageKey = React.useMemo(
-    () => getCompanySettingsKey(activeCompany?.id),
-    [activeCompany?.id],
+    () => getCompanySettingsKey(activeCompanyId),
+    [activeCompanyId],
   );
   const [activeTab, setActiveTab] = React.useState<SettingsTabType>("general");
   const [settings, setSettings] = React.useState<SettingsState>(() =>
@@ -165,7 +172,8 @@ export default function SettingsPage() {
     const storageKey = getCompanySettingsKey(activeCompany.id);
     const legacySettings = localStorage.getItem("harmoniq_settings");
     const savedSettings = localStorage.getItem(storageKey) ?? legacySettings;
-    let nextSettings = buildSettingsFromCompany(activeCompany);
+    const baseSettings = buildSettingsFromCompany(activeCompany);
+    let nextSettings = baseSettings;
 
     if (savedSettings) {
       try {
@@ -200,50 +208,71 @@ export default function SettingsPage() {
     applyDocumentLanguage(nextSettings.language);
   }, [activeCompany, resolvedTheme, toast]);
 
-  const handleSave = () => {
-    if (!activeCompany) {
-      toast("Unable to save settings", "error");
-      return;
+  const handleSave = async () => {
+    setSaving(true);
+
+    // Always apply locally first so branding is immediately visible
+    if (typeof window !== "undefined") {
+      localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
+      applyBranding(
+        {
+          primaryColor: settings.primaryColor,
+          secondaryColor: settings.secondaryColor,
+        },
+        resolvedTheme || "light",
+      );
+      applyDocumentLanguage(settings.language);
     }
 
-    setSaving(true);
-    setTimeout(() => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
-        applyBranding(
-          {
-            primaryColor: settings.primaryColor,
-            secondaryColor: settings.secondaryColor,
-          },
-          resolvedTheme || "light",
-        );
-        applyDocumentLanguage(settings.language);
-      }
-
-      const nextCountry =
-        COUNTRY_OPTIONS.find(
-          (option) => option.code === settings.selectedCountry,
-        )?.code || activeCompany.country;
-
-      updateCompany(activeCompany.id, {
+    // Update in-memory company store so other pages reflect the change
+    if (activeCompanyId) {
+      const companyUpdates: Partial<Company> = {
         name: settings.companyName,
         app_name: settings.appName || settings.companyName,
         primary_color: settings.primaryColor,
         secondary_color: settings.secondaryColor,
         logo_url: settings.logoUrl,
         language: settings.language as Language,
-        country: nextCountry as Country,
+        country: settings.selectedCountry as Country,
         currency: settings.currency,
-        industry: (settings.selectedIndustry || undefined) as
-          | IndustryCode
-          | undefined,
-      });
-      setLocale(settings.language as SupportedLocale);
-      setSaving(false);
-      setSaved(true);
-      toast("Settings saved successfully");
-      setTimeout(() => setSaved(false), 2000);
-    }, 500);
+      };
+      const nextCompanies = companies.map((item) =>
+        item.id === activeCompanyId ? { ...item, ...companyUpdates } : item,
+      );
+      setCompanies(nextCompanies);
+      saveToStorage("harmoniq_companies", nextCompanies);
+    }
+
+    setLocale(settings.language as SupportedLocale);
+
+    // Try persisting to the server (non-blocking)
+    if (activeCompanyId) {
+      try {
+        await fetch("/api/company-settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companyId: activeCompanyId,
+            companyName: settings.companyName,
+            appName: settings.appName || settings.companyName,
+            selectedCountry: settings.selectedCountry,
+            selectedIndustry: settings.selectedIndustry,
+            language: settings.language,
+            currency: settings.currency,
+            primaryColor: settings.primaryColor,
+            secondaryColor: settings.secondaryColor,
+            logoUrl: settings.logoUrl,
+          }),
+        });
+      } catch {
+        // Server save failed — local save is already applied above
+      }
+    }
+
+    setSaving(false);
+    setSaved(true);
+    toast("Settings saved successfully");
+    setTimeout(() => setSaved(false), 2000);
   };
 
   const updateSetting = React.useCallback(
@@ -418,6 +447,7 @@ export default function SettingsPage() {
           <Button
             onClick={handleSave}
             disabled={saving || !canEditSettings}
+            loading={saving}
             className="gap-2"
           >
             {saved ? (
@@ -425,11 +455,7 @@ export default function SettingsPage() {
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {saving
-              ? t("settings.saving")
-              : saved
-                ? t("settings.saved")
-                : t("settings.saveChanges")}
+            {saved ? t("settings.saved") : t("settings.saveChanges")}
           </Button>
         </div>
 

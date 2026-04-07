@@ -17,13 +17,8 @@ import {
   Users,
   Wrench,
   FileText,
-  Building2,
-  Zap,
   Factory,
-  Ship,
   Pickaxe,
-  Cross,
-  Fuel,
   Truck,
   CheckCircle2,
   Mail,
@@ -36,18 +31,13 @@ import {
   GraduationCap,
   Plane,
 } from "lucide-react";
-import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, animate } from "framer-motion";
+import { motion, useScroll, useTransform, useInView, animate } from "framer-motion";
 
 const EASE_OUT_CUBIC: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE_OUT_CUBIC } },
-};
-
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.7, ease: EASE_OUT_CUBIC } },
 };
 
 const slideLeft = {
@@ -78,11 +68,6 @@ const scaleUp = {
 const stagger = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.1 } },
-};
-
-const staggerSlow = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.18 } },
 };
 
 const staggerDramatic = {
@@ -134,7 +119,7 @@ function FeaturesDropdown() {
       </button>
       {open && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3">
-          <div className="w-[480px] rounded-2xl border border-zinc-800 bg-zinc-900/95 backdrop-blur-xl p-5 shadow-2xl">
+          <div className="w-[480px] rounded-2xl border border-zinc-700/40 bg-zinc-900/95 backdrop-blur-xl p-5 shadow-2xl">
             <div className="grid grid-cols-2 gap-x-8 gap-y-5">
               {[
                 { title: "Incident Management", desc: "Report & Resolve", href: "#feature-details" },
@@ -274,7 +259,7 @@ export default function Home() {
                 Join the Waitlist
                 <ArrowRight className="h-4 w-4" />
               </a>
-              <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-700 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-800/60 transition-colors">
+              <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-700 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-600 transition-colors">
                 Contact Sales
               </Link>
             </motion.div>
@@ -1018,14 +1003,15 @@ function AssetScanVisual() {
   const [activeAsset, setActiveAsset] = useState(0);
 
   useEffect(() => {
-    if (!isInView) { setActiveAsset(0); return; }
+    if (!isInView) return;
     const interval = setInterval(() => {
       setActiveAsset(prev => (prev + 1) % ASSETS_DATA.length);
     }, 2800);
     return () => clearInterval(interval);
   }, [isInView]);
 
-  const asset = ASSETS_DATA[activeAsset];
+  const displayedAssetIndex = isInView ? activeAsset : 0;
+  const asset = ASSETS_DATA[displayedAssetIndex];
 
   return (
     <div ref={ref} className="flex items-center justify-center h-full p-5 lg:p-6">
@@ -1072,14 +1058,14 @@ function AssetScanVisual() {
         </motion.div>
         {/* Asset list */}
         <div className="flex gap-1.5">
-          {ASSETS_DATA.map((a, i) => (
-            <button
-              key={a.name}
-              onClick={() => setActiveAsset(i)}
-              className={`flex-1 rounded-lg py-2 px-2 text-center transition-colors ${
-                i === activeAsset ? "bg-zinc-800 text-white" : "bg-zinc-900/60 text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
+           {ASSETS_DATA.map((a, i) => (
+             <button
+               key={a.name}
+               onClick={() => setActiveAsset(i)}
+               className={`flex-1 rounded-lg py-2 px-2 text-center transition-colors ${
+                 i === displayedAssetIndex ? "bg-zinc-800 text-white" : "bg-zinc-900/60 text-zinc-500 hover:text-zinc-300"
+               }`}
+             >
               <span className="text-[9px] font-medium block truncate">{a.name}</span>
             </button>
           ))}
@@ -1102,60 +1088,61 @@ function RiskAssessmentTabs() {
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    if (!isInView) { setActiveTab(0); return; }
+    if (!isInView) return;
     const interval = setInterval(() => {
       setActiveTab(prev => (prev + 1) % RISK_TABS.length);
     }, 3000);
     return () => clearInterval(interval);
   }, [isInView]);
+  const displayedTabIndex = isInView ? activeTab : 0;
 
   return (
     <div ref={ref} className="flex items-center justify-center h-full p-5 lg:p-6">
       <div className="w-full">
         <div className="grid grid-cols-2 gap-2.5">
-          {RISK_TABS.map((tab, i) => (
-            <motion.button
-              key={tab.label}
-              onClick={() => setActiveTab(i)}
-              animate={{
-                borderColor: i === activeTab ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.05)",
-                backgroundColor: i === activeTab ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.3)",
-              }}
-              transition={{ duration: 0.3 }}
-              className="rounded-xl border p-3.5 text-left transition-colors"
-            >
-              <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 transition-colors ${
-                i === activeTab ? "text-white" : "text-zinc-500"
-              }`}>
-                {tab.label}
-              </span>
-              <span className={`text-[10px] leading-snug block transition-colors ${
-                i === activeTab ? "text-zinc-300" : "text-zinc-600"
-              }`}>
-                {tab.desc}
-              </span>
+           {RISK_TABS.map((tab, i) => (
+             <motion.button
+               key={tab.label}
+               onClick={() => setActiveTab(i)}
+               animate={{
+                 borderColor: i === displayedTabIndex ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.05)",
+                 backgroundColor: i === displayedTabIndex ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.3)",
+               }}
+               transition={{ duration: 0.3 }}
+               className="rounded-xl border p-3.5 text-left transition-colors"
+             >
+               <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 transition-colors ${
+                 i === displayedTabIndex ? "text-white" : "text-zinc-500"
+               }`}>
+                 {tab.label}
+               </span>
+               <span className={`text-[10px] leading-snug block transition-colors ${
+                 i === displayedTabIndex ? "text-zinc-300" : "text-zinc-600"
+               }`}>
+                 {tab.desc}
+               </span>
             </motion.button>
           ))}
         </div>
         {/* Active detail */}
         <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: EASE_OUT_CUBIC }}
-          className="mt-3 rounded-xl bg-zinc-950/80 p-3.5"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-white">{RISK_TABS[activeTab].full}</span>
-            <span className="text-[10px] text-emerald-400 font-mono">Active</span>
-          </div>
-          <div className="mt-2 flex gap-2">
-            {[1, 2, 3, 4].map(step => (
-              <div key={step} className="flex-1">
-                <div className={`h-1 rounded-full ${step <= activeTab + 1 ? "bg-white" : "bg-zinc-800"}`} />
-                <span className="text-[8px] text-zinc-600 mt-1 block">Step {step}</span>
-              </div>
-            ))}
+           key={displayedTabIndex}
+           initial={{ opacity: 0, y: 8 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.3, ease: EASE_OUT_CUBIC }}
+           className="mt-3 rounded-xl bg-zinc-950/80 p-3.5"
+         >
+           <div className="flex items-center justify-between">
+             <span className="text-xs font-medium text-white">{RISK_TABS[displayedTabIndex].full}</span>
+             <span className="text-[10px] text-emerald-400 font-mono">Active</span>
+           </div>
+           <div className="mt-2 flex gap-2">
+              {[1, 2, 3, 4].map(step => (
+                <div key={step} className="flex-1">
+                 <div className={`h-1 rounded-full ${step <= displayedTabIndex + 1 ? "bg-white" : "bg-zinc-800"}`} />
+                 <span className="text-[8px] text-zinc-600 mt-1 block">Step {step}</span>
+                </div>
+              ))}
           </div>
         </motion.div>
       </div>
@@ -1168,15 +1155,7 @@ const CHART_BARS = [32, 48, 28, 62, 45, 75, 58, 82, 68, 90, 78, 95];
 function AnalyticsDashboard() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: false, margin: "-50px" });
-  const [animated, setAnimated] = useState(false);
-
-  useEffect(() => {
-    if (isInView) {
-      const timer = setTimeout(() => setAnimated(true), 200);
-      return () => clearTimeout(timer);
-    }
-    setAnimated(false);
-  }, [isInView]);
+  const animated = isInView;
 
   return (
     <div ref={ref} className="flex items-center justify-center h-full p-5 lg:p-6">
@@ -1398,7 +1377,7 @@ function WaitlistSection() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@company.com"
-                className="flex-1 rounded-full bg-zinc-800/60 px-5 py-3 text-base text-white placeholder-zinc-500 border border-zinc-700/50 focus:border-white focus:outline-none transition-colors"
+                className="flex-1 rounded-full bg-zinc-800 px-5 py-3 text-base text-white placeholder-zinc-500 border border-transparent focus:border-transparent focus:outline-none transition-colors"
               />
               <button
                 type="submit"
@@ -1478,7 +1457,7 @@ function AnimatedCounter({
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
-    if (!isInView) { setDisplay(0); return; }
+    if (!isInView) return;
     const controls = animate(0, value, {
       duration: 1.5,
       ease: "easeOut",
@@ -1489,7 +1468,7 @@ function AnimatedCounter({
 
   return (
     <span ref={ref} className={className}>
-      {display}{suffix}
+      {isInView ? display : 0}{suffix}
     </span>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import type { PlatformPrivacySettings } from "@/lib/platform-privacy-settings";
 
@@ -25,18 +25,15 @@ function getAnalyticsConsent(): boolean {
  */
 export function AnalyticsTracker({ settings }: { settings: PlatformPrivacySettings }) {
   const pathname = usePathname();
-  const [consented, setConsented] = useState(false);
-
-  // Listen for consent changes
-  useEffect(() => {
-    setConsented(getAnalyticsConsent());
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      setConsented(detail?.analytics === true);
-    };
-    window.addEventListener("harmoniq:consent", handler);
-    return () => window.removeEventListener("harmoniq:consent", handler);
-  }, []);
+  const consented = useSyncExternalStore(
+    (onStoreChange) => {
+      const handler = () => onStoreChange();
+      window.addEventListener("harmoniq:consent", handler);
+      return () => window.removeEventListener("harmoniq:consent", handler);
+    },
+    getAnalyticsConsent,
+    () => false,
+  );
 
   useEffect(() => {
     // Respect Do Not Track

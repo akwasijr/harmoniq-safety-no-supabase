@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { sanitizeText } from "@/lib/validation";
 import { createClient } from "@/lib/supabase/server";
 import { createRateLimiter } from "@/lib/rate-limit";
+import {
+  DEFAULT_BRAND_PRIMARY_COLOR,
+  DEFAULT_BRAND_SECONDARY_COLOR,
+} from "@/lib/brand-defaults";
 
 const companiesLimiter = createRateLimiter({ limit: 10, windowMs: 60_000, prefix: "platform-companies" });
 
@@ -35,7 +39,7 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile || !["super_admin", "company_admin"].includes(profile.role)) {
+    if (!profile || profile.role !== "super_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -69,8 +73,10 @@ export async function POST(request: NextRequest) {
       tier: sanitizeText(body.tier, 32),
       seat_limit: typeof body.seat_limit === "number" ? body.seat_limit : Number.parseInt(String(body.seat_limit ?? 0), 10) || 0,
       status: sanitizeText(body.status, 32) || "trial",
-      primary_color: sanitizeText(body.primary_color, 32),
-      secondary_color: sanitizeText(body.secondary_color, 32),
+      primary_color:
+        sanitizeText(body.primary_color, 32) || DEFAULT_BRAND_PRIMARY_COLOR,
+      secondary_color:
+        sanitizeText(body.secondary_color, 32) || DEFAULT_BRAND_SECONDARY_COLOR,
       font_family: sanitizeText(body.font_family ?? "Inter", 80) || "Inter",
       ui_style: sanitizeText(body.ui_style ?? "rounded", 32) || "rounded",
       logo_url: null,

@@ -33,6 +33,10 @@ import {
   TIMEZONE_OPTIONS,
   type MeasurementSystem,
 } from "@/lib/company-settings";
+import {
+  DEFAULT_BRAND_PRIMARY_COLOR,
+  DEFAULT_BRAND_SECONDARY_COLOR,
+} from "@/lib/brand-defaults";
 import { saveToStorage } from "@/lib/local-storage";
 import type { Company, Country, Language, SubscriptionTier, Currency, UIStyle, User } from "@/types";
 import { logPlatformAuditEvent } from "@/lib/platform-audit-client";
@@ -76,8 +80,12 @@ export default function PlatformCompaniesPage() {
   const [newTimezone, setNewTimezone] = React.useState("America/New_York");
   const [newMeasurementSystem, setNewMeasurementSystem] =
     React.useState<MeasurementSystem>("imperial");
-  const [newPrimaryColor, setNewPrimaryColor] = React.useState("#2563eb");
-  const [newSecondaryColor, setNewSecondaryColor] = React.useState("#1e40af");
+  const [newPrimaryColor, setNewPrimaryColor] = React.useState(
+    DEFAULT_BRAND_PRIMARY_COLOR,
+  );
+  const [newSecondaryColor, setNewSecondaryColor] = React.useState(
+    DEFAULT_BRAND_SECONDARY_COLOR,
+  );
   const [newUiStyle, setNewUiStyle] = React.useState<UIStyle>("rounded");
   const [formStep, setFormStep] = React.useState<"general" | "localization" | "branding">("general");
 
@@ -437,7 +445,7 @@ export default function PlatformCompaniesPage() {
                         value={newPrimaryColor}
                         onChange={(e) => setNewPrimaryColor(e.target.value)}
                         className="font-mono text-sm flex-1"
-                        placeholder="#2563eb"
+                        placeholder={DEFAULT_BRAND_PRIMARY_COLOR}
                       />
                     </div>
                   </div>
@@ -455,7 +463,7 @@ export default function PlatformCompaniesPage() {
                         value={newSecondaryColor}
                         onChange={(e) => setNewSecondaryColor(e.target.value)}
                         className="font-mono text-sm flex-1"
-                        placeholder="#1e40af"
+                        placeholder={DEFAULT_BRAND_SECONDARY_COLOR}
                       />
                     </div>
                   </div>
@@ -628,8 +636,8 @@ export default function PlatformCompaniesPage() {
                         setNewDateFormat("MM/DD/YYYY");
                         setNewTimezone("America/New_York");
                         setNewMeasurementSystem("imperial");
-                        setNewPrimaryColor("#2563eb");
-                        setNewSecondaryColor("#1e40af");
+                        setNewPrimaryColor(DEFAULT_BRAND_PRIMARY_COLOR);
+                        setNewSecondaryColor(DEFAULT_BRAND_SECONDARY_COLOR);
                         setNewUiStyle("rounded");
                         toast(t("companies.companyCreated", { name: createdCompany.name }), "success");
                       } catch (error) {
