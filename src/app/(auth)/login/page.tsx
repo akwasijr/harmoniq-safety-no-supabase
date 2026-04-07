@@ -20,6 +20,7 @@ import { DEFAULT_COMPANY_SLUG } from "@/mocks/data";
 
 const APP_CHOICE_STORAGE_KEY = "harmoniq_app_choice";
 const APP_CHOICE_COOKIE = "harmoniq_app_choice";
+const PLATFORM_ENTRY_KEY = "harmoniq_platform_entry";
 const SELECTED_COMPANY_STORAGE_KEY = "harmoniq_selected_company";
 const LOGIN_ATTEMPTS_KEY = "harmoniq_login_attempts";
 const MAX_ATTEMPTS = 5;
@@ -181,9 +182,11 @@ function LoginForm() {
         const allowedApps = getAllowedApps(mockUser.role);
         const dest = allowedApps.includes(appChoice) ? appChoice : allowedApps[0];
         if (dest === "platform") {
+          window.localStorage.setItem(PLATFORM_ENTRY_KEY, "true");
           window.location.href = buildPlatformAnalyticsDestination(DEFAULT_COMPANY_SLUG);
           return;
         }
+        window.localStorage.removeItem(PLATFORM_ENTRY_KEY);
         setClientCookie(APP_CHOICE_COOKIE, dest, 30);
         saveToStorage(APP_CHOICE_STORAGE_KEY, dest);
         const slug = DEFAULT_COMPANY_SLUG;
@@ -296,6 +299,7 @@ function LoginForm() {
 
       // Route to platform admin (super_admin or company_admin)
       if (effectiveChoice === "platform") {
+        window.localStorage.setItem(PLATFORM_ENTRY_KEY, "true");
         // Find a real tenant slug for the platform URL
         let platformSlug: string | undefined;
         if (profile.company_id) {
@@ -321,6 +325,9 @@ function LoginForm() {
         window.location.href = buildPlatformAnalyticsDestination(platformSlug);
         return;
       }
+
+      // Regular login — clear platform entry flag
+      window.localStorage.removeItem(PLATFORM_ENTRY_KEY);
 
       // Dashboard or Field App — find the user's company
       let slug = "harmoniq";

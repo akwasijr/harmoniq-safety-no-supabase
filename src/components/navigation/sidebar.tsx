@@ -163,6 +163,8 @@ const companyAdminPlatformNav: NavItem[] = [
   },
 ];
 
+const PLATFORM_ENTRY_KEY = "harmoniq_platform_entry";
+
 export function Sidebar({ 
   company, 
   companyName = "Harmoniq",
@@ -179,8 +181,11 @@ export function Sidebar({
   const { t } = useTranslation();
   const isCollapsed = collapsed && !hovered;
 
-  // Platform admin nav: super_admin sees all, company_admin sees analytics only
-  const showPlatformNav = isSuperAdmin || isCompanyAdmin;
+  // Platform nav only shows when user entered via /admin login flow
+  const enteredViaPlatform = typeof window !== "undefined"
+    && window.localStorage.getItem(PLATFORM_ENTRY_KEY) === "true";
+  const isAdmin = isSuperAdmin || isCompanyAdmin;
+  const showPlatformNav = isAdmin && enteredViaPlatform;
   const platformNavItems = isSuperAdmin ? superAdminPlatformNav : companyAdminPlatformNav;
 
   // Helper to resolve nav item title via i18n
