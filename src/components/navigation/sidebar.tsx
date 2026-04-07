@@ -385,7 +385,8 @@ export function Sidebar({
             </button>
 
             {companyDropdownOpen && (
-              <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-auto rounded-md border border-sidebar-border bg-sidebar-background shadow-lg">
+              <div className="absolute left-1 right-1 top-full z-[100] mt-1 max-h-56 overflow-auto rounded-md border border-sidebar-border shadow-lg" style={{ backgroundColor: 'hsl(var(--sidebar-background))' }}>
+                <div className="py-1">
                 {/* Deselect company option */}
                 <button
                   onClick={() => handleCompanySelect(null)}
@@ -421,6 +422,7 @@ export function Sidebar({
                     </button>
                   );
                 })}
+                </div>
               </div>
             )}
           </div>
