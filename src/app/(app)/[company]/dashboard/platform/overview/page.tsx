@@ -203,7 +203,7 @@ export default function PlatformOverviewPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KPICard
             title="Total Companies"
             value={companies.length}
@@ -232,141 +232,96 @@ export default function PlatformOverviewPage() {
               label: "active",
             }}
           />
-          <KPICard
-            title="Unique Visitors (30d)"
-            value={analytics?.uniqueVisitors ?? 0}
-            icon={Globe}
-            trend={{
-              value: analytics?.total ?? 0,
-              direction: "up",
-              label: "page views",
-            }}
-          />
-          <KPICard
-            title="Platform Health"
-            value={healthLabel}
-            icon={Server}
-            trend={{
-              value: (health?.issues.length || 0) + (health?.warnings.length || 0),
-              direction: health?.ok ? "up" : "down",
-              label: health?.ok ? "checks clear" : "items to review",
-            }}
-          />
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="grid gap-4 xl:grid-cols-3">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base font-medium">Platform Health</CardTitle>
-              <Badge variant={health?.ok ? "success" : "secondary"}>{healthLabel}</Badge>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base font-medium">
+                <Server className="h-4 w-4 text-primary" />
+                Platform Health
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Server className="h-4 w-4 text-primary" />
-                    API status
-                  </div>
-                  <p className="mt-3 text-2xl font-semibold">{health?.ok ? "Online" : "Check now"}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {health?.issues.length ? `${health.issues.length} blocking issue(s)` : "No blocking issues"}
-                  </p>
-                </div>
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Database className="h-4 w-4 text-primary" />
-                    Database
-                  </div>
-                  <p className="mt-3 text-2xl font-semibold">
-                    {health?.checks.database.ok ? `${health.checks.database.latency_ms ?? 0} ms` : "Offline"}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {health?.checks.database.ok ? "Current connectivity latency" : "Database connection needs review"}
-                  </p>
-                </div>
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Activity className="h-4 w-4 text-primary" />
-                    Uptime
-                  </div>
-                  <p className="mt-3 text-2xl font-semibold">{health ? `${uptimeHours}h` : "--"}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {health?.warnings.length ? `${health.warnings.length} warning(s)` : "No active warnings"}
-                  </p>
-                </div>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">Status</span>
+                <Badge variant={health?.ok ? "success" : "secondary"}>{healthLabel}</Badge>
               </div>
-
-              <div className="rounded-lg border p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">Marketing observability</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Analytics events now come from the public marketing site only, after consent.
-                    </p>
-                  </div>
-                  <Link href={`/${company}/dashboard/platform/analytics`}>
-                    <Button variant="ghost" size="sm" className="gap-1 text-xs">
-                      Open analytics <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </Link>
-                </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">Database latency</span>
+                <span className="text-sm text-muted-foreground">
+                  {health?.checks.database.ok ? `${health.checks.database.latency_ms ?? 0} ms` : "Offline"}
+                </span>
               </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">Uptime</span>
+                <span className="text-sm text-muted-foreground">{health ? `${uptimeHours}h` : "--"}</span>
+              </div>
+              <Link href={`/${company}/dashboard/platform/settings`}>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                  Review platform settings <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base font-medium">Privacy & Consent</CardTitle>
-              <Shield className="h-4 w-4 text-primary" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base font-medium">
+                <Globe className="h-4 w-4 text-primary" />
+                Public Website Analytics
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg border p-4">
-                  <p className="text-xs font-medium text-muted-foreground">Analytics opt-in rate</p>
-                  <p className="mt-2 text-2xl font-semibold">{analyticsOptInRate}%</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Based on the latest {consentRecords.length} consent decisions
-                  </p>
-                </div>
-                <div className="rounded-lg border p-4">
-                  <p className="text-xs font-medium text-muted-foreground">Cookie banner</p>
-                  <p className="mt-2 text-2xl font-semibold">
-                    {privacySettings.cookieConsent ? "Enabled" : "Disabled"}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {privacySettings.cookieConsent
-                      ? "Visitors must consent before optional tracking runs"
-                      : "Optional visitor tracking stays off"}
-                  </p>
-                </div>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">Unique visitors (30d)</span>
+                <span className="text-sm text-muted-foreground">{analytics?.uniqueVisitors ?? 0}</span>
               </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">Page views</span>
+                <span className="text-sm text-muted-foreground">{analytics?.total ?? 0}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">Top country</span>
+                <span className="text-sm text-muted-foreground">
+                  {topCountry ? `${topCountry.country} (${topCountry.visits})` : "No data"}
+                </span>
+              </div>
+              <Link href={`/${company}/dashboard/platform/analytics`}>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                  Open website analytics <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
 
-              <div className="rounded-lg border p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">Public privacy pipeline</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Policy links, cookie consent, and marketing analytics now read the same platform settings.
-                    </p>
-                  </div>
-                  <Link href={`/${company}/dashboard/platform/analytics`}>
-                    <Button variant="ghost" size="sm" className="gap-1 text-xs">
-                      Manage privacy <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </Link>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                  <Badge variant={privacySettings.rightToErasure ? "success" : "secondary"}>Erasure</Badge>
-                  <Badge variant={privacySettings.dataExport ? "success" : "secondary"}>Portability</Badge>
-                  <Badge variant="success">IP anonymization</Badge>
-                </div>
-                <div className="mt-4 space-y-2 text-xs text-muted-foreground">
-                  <p>DPO contact: {privacySettings.dpoEmail}</p>
-                  <p>Privacy policy: {privacySettings.privacyUrl}</p>
-                  <p>Cookie policy: {privacySettings.cookieUrl}</p>
-                  {topCountry && <p>Top visitor country: {topCountry.country} ({topCountry.visits})</p>}
-                </div>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base font-medium">
+                <Shield className="h-4 w-4 text-primary" />
+                Website Privacy & Consent
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">Cookie banner</span>
+                <Badge variant={privacySettings.cookieConsent ? "success" : "secondary"}>
+                  {privacySettings.cookieConsent ? "Enabled" : "Disabled"}
+                </Badge>
               </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">Analytics opt-in rate</span>
+                <span className="text-sm text-muted-foreground">{analyticsOptInRate}%</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">DPO contact</span>
+                <span className="truncate text-sm text-muted-foreground">{privacySettings.dpoEmail}</span>
+              </div>
+              <Link href={`/${company}/dashboard/platform/analytics`}>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                  Manage privacy <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

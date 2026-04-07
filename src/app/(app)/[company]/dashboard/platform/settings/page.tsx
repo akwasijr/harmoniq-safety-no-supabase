@@ -345,14 +345,17 @@ export default function PlatformSettingsPage() {
               {activeTab === "security" && (
                 <div className="space-y-6">
                   {/* Demo Banner */}
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30 p-4">
+                  <div
+                    role="alert"
+                    className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100"
+                  >
                     <div className="flex items-center gap-2">
-                      <span className="text-amber-600 dark:text-amber-400 text-sm font-medium inline-flex items-center gap-1">
+                      <span className="inline-flex items-center gap-1 text-sm font-medium text-amber-900 dark:text-amber-300">
                         <AlertTriangle className="h-4 w-4" aria-hidden="true" />
                         Demo Mode
                       </span>
                     </div>
-                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                    <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">
                       Platform security settings are for demonstration only. In production, these would enforce actual security policies.
                     </p>
                   </div>

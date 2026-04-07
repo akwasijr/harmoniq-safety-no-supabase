@@ -150,7 +150,10 @@ function buildDashboardBreadcrumbs(pathname: string | null, company: string): Br
   }
 
   const segments = suffix.split("/").filter(Boolean);
-  const crumbs: BreadcrumbItem[] = [{ label: "Dashboard", href: base }];
+  const isPlatformRoute = segments[0] === "platform";
+  const crumbs: BreadcrumbItem[] = isPlatformRoute
+    ? [{ label: "Platform", href: `${base}/platform/overview` }]
+    : [{ label: "Dashboard", href: base }];
   const push = (label: string, href: string) => {
     if (!crumbs.some((crumb) => crumb.href === href && crumb.label === label)) {
       crumbs.push({ label, href });
@@ -285,28 +288,21 @@ function buildDashboardBreadcrumbs(pathname: string | null, company: string): Br
       break;
     case "platform":
       if (segments[1] === "overview") {
-        push("Platform", `${base}/platform/overview`);
         push("Overview", `${base}/platform/overview`);
       } else if (segments[1] === "analytics") {
-        push("Platform", `${base}/platform/overview`);
         push("Analytics & Privacy", `${base}/platform/analytics`);
       } else if (segments[1] === "companies") {
-        push("Platform", `${base}/platform/overview`);
         push("Companies", `${base}/platform/companies`);
         if (segments[2]) {
           push("Company Details", normalizedPath);
         }
       } else if (segments[1] === "users") {
-        push("Platform", `${base}/platform/overview`);
         push("Platform Users", `${base}/platform/users`);
         if (segments[2]) {
           push("User Details", normalizedPath);
         }
       } else if (segments[1] === "settings") {
-        push("Platform", `${base}/platform/overview`);
         push("Platform Settings", `${base}/platform/settings`);
-      } else {
-        push("Platform", `${base}/platform/overview`);
       }
       break;
     default:
