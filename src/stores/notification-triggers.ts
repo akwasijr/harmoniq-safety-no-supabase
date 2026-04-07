@@ -180,3 +180,37 @@ export function notifyCriticalIncident(
     }),
   );
 }
+
+// ── Overdue checklists notification ──────────────────────────────────────
+
+interface ChecklistOverdueParams {
+  userId: string;
+  companyId: string;
+  dueChecklists: Array<{
+    template: { id: string; name: string; recurrence?: string };
+    status: "due" | "overdue";
+    label: string;
+  }>;
+  addNotification: (n: Notification) => void;
+}
+
+export function checkOverdueChecklists(params: ChecklistOverdueParams) {
+  const { userId, companyId, dueChecklists, addNotification: add } = params;
+
+  const overdueItems = dueChecklists.filter((item) => item.status === "overdue");
+
+  overdueItems.forEach((item) => {
+    const freq = item.template.recurrence || "once";
+    add(
+      createNotification({
+        title: "Overdue checklist",
+        message: `"${item.template.name}" (${freq}) is overdue`,
+        type: "warning",
+        user_id: userId,
+        company_id: companyId,
+        source: "checklist_template",
+        source_id: item.template.id,
+      }),
+    );
+  });
+}

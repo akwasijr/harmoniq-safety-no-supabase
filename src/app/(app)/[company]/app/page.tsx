@@ -15,6 +15,7 @@ import {
   ScanLine,
   ShieldCheck,
   Lightbulb,
+  Clock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
@@ -23,12 +24,15 @@ import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
+import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import type { Content } from "@/types";
 import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
+import { getDueChecklists, getFrequencyLabel, getFrequencyColor } from "@/lib/checklist-due";
+import { isVisibleToFieldApp } from "@/lib/template-activation";
 import {
   type FieldAppQuickActionId,
   getFieldAppQuickActionDefinition,
@@ -272,6 +276,8 @@ export default function EmployeeAppHomePage() {
   const { items: tickets } = useTicketsStore();
   const { items: workOrders } = useWorkOrdersStore();
   const { items: correctiveActions } = useCorrectiveActionsStore();
+  const { items: checklistTemplates } = useChecklistTemplatesStore();
+  const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { t, formatDate } = useTranslation();
 
   // Use state for time-dependent values to prevent hydration mismatch
@@ -301,9 +307,18 @@ export default function EmployeeAppHomePage() {
   );
   const userWorkOrders = workOrders.filter((wo) => isAssignedToUserOrTeam(wo, user));
   const userActions = correctiveActions.filter((ca) => isAssignedToUserOrTeam(ca, user));
+
+  // Due checklists for this user
+  const myTemplates = checklistTemplates.filter(
+    (tpl) => tpl.company_id === user?.company_id && isVisibleToFieldApp(tpl)
+  );
+  const mySubmissions = checklistSubmissions.filter((s) => s.submitter_id === user?.id);
+  const dueChecklists = getDueChecklists(myTemplates, mySubmissions);
+
   const pendingTaskCount = userTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length
     + userWorkOrders.filter((wo) => wo.status !== "completed" && wo.status !== "cancelled").length
-    + userActions.filter((ca) => ca.status !== "completed").length;
+    + userActions.filter((ca) => ca.status !== "completed").length
+    + dueChecklists.length;
   const oneWeekAgo = new Date(stableNow - 7 * 24 * 60 * 60 * 1000);
   const completedThisWeek = userTickets.filter(
     (ticket) => ticket.updated_at && new Date(ticket.updated_at) > oneWeekAgo
@@ -388,6 +403,61 @@ export default function EmployeeAppHomePage() {
           ))}
         </div>
       </div>
+
+      {/* ── Due Checklists ── */}
+      {dueChecklists.length > 0 && (
+        <div className="px-4 mt-6">
+          <Section
+            title="Due Tasks"
+            icon={Clock}
+            iconColor="text-amber-500"
+            count={dueChecklists.length}
+          >
+            {dueChecklists.slice(0, 5).map((item) => {
+              const freqColor = getFrequencyColor(item.template.recurrence);
+              const isOverdue = item.status === "overdue";
+              return (
+                <Link
+                  key={item.template.id}
+                  href={`/${company}/app/checklists/${item.template.id}`}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30",
+                    isOverdue && "border-red-200 dark:border-red-800/50"
+                  )}
+                >
+                  <div className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                    isOverdue ? "bg-red-500/10" : "bg-amber-500/10"
+                  )}>
+                    <ClipboardCheck className={cn("h-4 w-4", isOverdue ? "text-red-500" : "text-amber-500")} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm leading-tight">{item.template.name}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium", freqColor.bg, freqColor.text)}>
+                        {getFrequencyLabel(item.template.recurrence)}
+                      </span>
+                      <span className={cn("text-[10px] font-medium", isOverdue ? "text-red-500" : "text-amber-500")}>
+                        {item.label}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </Link>
+              );
+            })}
+            {dueChecklists.length > 5 && (
+              <Link
+                href={`/${company}/app/checklists`}
+                className="flex items-center justify-center gap-1 py-2 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                View all {dueChecklists.length} due tasks
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
+          </Section>
+        </div>
+      )}
 
       {/* ── Content Feed ── */}
       <div className="px-4 pt-6 pb-24 space-y-1">

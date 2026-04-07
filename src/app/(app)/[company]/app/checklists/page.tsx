@@ -42,6 +42,7 @@ import {
 } from "@/lib/country-config";
 import { TasksSkeleton } from "@/components/ui/loading";
 import { isVisibleToFieldApp } from "@/lib/template-activation";
+import { getChecklistDueInfo, getFrequencyLabel, getFrequencyColor, getDueChecklists } from "@/lib/checklist-due";
 import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User, Incident } from "@/types";
 
 type TabType = "checklists" | "risk-assessment" | "reports";
@@ -202,24 +203,46 @@ function ChecklistsTabContent({
           icon={ClipboardCheck}
           iconColor="text-primary"
         >
-          {pendingTemplates.map((template) => (
+          {pendingTemplates.map((template) => {
+            const dueInfo = getChecklistDueInfo(template, userSubmissions);
+            const freqColor = getFrequencyColor(template.recurrence);
+            const isOverdue = dueInfo.status === "overdue";
+            return (
             <Link
               key={template.id}
               href={`/${company}/app/checklists/${template.id}`}
-              className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+              className={cn(
+                "flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30",
+                isOverdue && "border-red-200 dark:border-red-800/50"
+              )}
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <ClipboardCheck className="h-4 w-4 text-primary" />
+              <div className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                isOverdue ? "bg-red-500/10" : "bg-primary/10"
+              )}>
+                <ClipboardCheck className={cn("h-4 w-4", isOverdue ? "text-red-500" : "text-primary")} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm leading-tight">{template.name}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {template.items?.length || 0} items · {template.recurrence || "once"}
-                </p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium", freqColor.bg, freqColor.text)}>
+                    {getFrequencyLabel(template.recurrence)}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {template.items?.length || 0} items
+                  </span>
+                  {isOverdue && (
+                    <span className="text-[10px] font-medium text-red-500">· Overdue</span>
+                  )}
+                  {dueInfo.status === "due" && template.recurrence === "daily" && (
+                    <span className="text-[10px] font-medium text-amber-500">· Due today</span>
+                  )}
+                </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
             </Link>
-          ))}
+            );
+          })}
         </Section>
       )}
 
