@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createRateLimiter } from "@/lib/rate-limit";
 import {
   getAssetScopedRowIds,
@@ -62,22 +61,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Use admin client (bypasses RLS) since we already validate permissions above.
-    // Falls back to session-based PostgREST when no service role key is configured.
-    const adminClient = createAdminClient();
+    // Use service role key via PostgREST to bypass RLS.
+    // We already validate auth + company isolation above.
+    const supabaseUrl = getSupabaseUrl();
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 
-    if (adminClient) {
-      const { error: upsertError } = await adminClient
-        .from(table)
-        .upsert(validated.rows, { onConflict: "id" });
+    if (supabaseUrl && serviceRoleKey) {
+      const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
+        method: "POST",
+        headers: {
+          "apikey": serviceRoleKey,
+          "Authorization": `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates",
+        },
+        body: JSON.stringify(validated.rows),
+      });
 
-      if (upsertError) {
-        console.error(`[Entity Upsert API] Admin upsert error for ${table}:`, upsertError.message);
-        return NextResponse.json({ error: upsertError.message }, { status: 500 });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
+        console.error(`[Entity Upsert API] Service role upsert error for ${table}:`, body.message || body);
+        return NextResponse.json({ error: body.message || "Upsert failed" }, { status: 500 });
       }
     } else {
       // Fallback: use caller's session (RLS applies)
-      const supabaseUrl = getSupabaseUrl();
       const publishableKey = getSupabasePublishableKey();
       const { data: { session } } = await supabase.auth.getSession();
 
