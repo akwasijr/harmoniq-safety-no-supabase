@@ -411,6 +411,8 @@ function ChecklistsTabContent({
 
 // ---------- Reports Tab (redesigned) ----------
 
+type ReportsSubTab = "reports" | "history";
+
 function ReportsTabContent({
   company,
   incidents,
@@ -424,6 +426,7 @@ function ReportsTabContent({
   t: (key: string) => string;
   formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
 }) {
+  const [subTab, setSubTab] = React.useState<ReportsSubTab>("reports");
   const [historyLimit, setHistoryLimit] = React.useState(10);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
@@ -444,7 +447,7 @@ function ReportsTabContent({
     other: { icon: AlertTriangle, color: "text-muted-foreground", bg: "bg-muted" },
   };
 
-  const filteredReports = React.useMemo(() => {
+  const filteredHistory = React.useMemo(() => {
     let items = [...myIncidents];
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -463,83 +466,161 @@ function ReportsTabContent({
     return items;
   }, [myIncidents, searchQuery, sortOrder]);
 
-  const visibleReports = filteredReports.slice(0, historyLimit);
+  const visibleHistory = filteredHistory.slice(0, historyLimit);
+
+  const subTabs: { id: ReportsSubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "reports", label: "Reports", icon: AlertTriangle },
+    { id: "history", label: "History", icon: History },
+  ];
+
+  const renderIncidentCard = (incident: Incident) => {
+    const typeConf = typeConfMap[incident.type] || typeConfMap.other;
+    const TypeIcon = typeConf.icon;
+    return (
+      <Link
+        key={incident.id}
+        href={`/${company}/app/incidents/${incident.id}`}
+        className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+      >
+        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", typeConf.bg)}>
+          <TypeIcon className={cn("h-4 w-4", typeConf.color)} aria-hidden="true" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-sm leading-tight truncate">{incident.title}</p>
+            {incident.status !== "new" && (
+              <Badge variant={
+                incident.status === "resolved" ? "success" :
+                incident.status === "in_progress" ? "warning" : "secondary"
+              } className="text-[10px] h-4 shrink-0">
+                {incident.status.replace(/_/g, " ")}
+              </Badge>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {incident.type.replace(/_/g, " ")} · {formatDate(new Date(incident.incident_date), { month: "short", day: "numeric" })}
+            {incident.building ? ` · ${incident.building}` : ""}
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+      </Link>
+    );
+  };
 
   return (
     <>
-      {/* Search + sort */}
-      <div className="flex gap-2 mb-3">
-        <input
-          type="search"
-          placeholder="Search reports..."
-          value={searchQuery}
-          onChange={(e) => { setSearchQuery(e.target.value); setHistoryLimit(10); }}
-          className="flex-1 h-9 rounded-lg border bg-background px-3 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <select
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
-          className="h-9 rounded-lg border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-        </select>
+      {/* Sub-tab pills */}
+      <div className="flex gap-1 bg-muted/50 rounded-lg p-1 mb-3">
+        {subTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = subTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setSubTab(tab.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80",
+                isActive
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {visibleReports.length > 0 ? (
-        <div className="space-y-2">
-          {visibleReports.map((incident) => {
-            const typeConf = typeConfMap[incident.type] || typeConfMap.other;
-            const TypeIcon = typeConf.icon;
-            return (
-              <Link
-                key={incident.id}
-                href={`/${company}/app/incidents/${incident.id}`}
-                className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
-              >
-                <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", typeConf.bg)}>
-                  <TypeIcon className={cn("h-4 w-4", typeConf.color)} aria-hidden="true" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm leading-tight truncate">{incident.title}</p>
-                    <Badge variant={
-                      incident.status === "resolved" ? "success" :
-                      incident.status === "in_progress" ? "warning" : "secondary"
-                    } className="text-[10px] h-4 shrink-0">
-                      {incident.status.replace(/_/g, " ")}
-                    </Badge>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {incident.type.replace(/_/g, " ")} · {formatDate(new Date(incident.incident_date), { month: "short", day: "numeric" })}
-                    {incident.building ? ` · ${incident.building}` : ""}
-                  </p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-              </Link>
-            );
-          })}
+      {/* REPORTS sub-tab (action items) */}
+      {subTab === "reports" && (
+        <>
+          {/* Report Incident CTA */}
+          <Link
+            href={`/${company}/app/report`}
+            className="flex items-center gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/30 active:bg-muted/50"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <FileCheck className="h-5 w-5 text-primary" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">{t("app.reportIncident")}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{t("app.reportIncidentDesc") || "Spot something unsafe? Let the team know."}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+          </Link>
 
-          {/* Load more */}
-          {historyLimit < filteredReports.length && (
-            <button
-              onClick={() => setHistoryLimit((prev) => prev + 10)}
-              className="w-full py-2.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+          {/* Open / unresolved reports */}
+          {myIncidents.filter(i => i.status !== "resolved").length > 0 ? (
+            <Section
+              title="Open reports"
+              icon={AlertTriangle}
+              iconColor="text-warning"
             >
-              Load more ({filteredReports.length - historyLimit} remaining)
-            </button>
+              {myIncidents
+                .filter(i => i.status !== "resolved")
+                .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())
+                .slice(0, 5)
+                .map(renderIncidentCard)}
+            </Section>
+          ) : (
+            <div className="py-8 text-center">
+              <AlertTriangle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
+              <p className="text-sm font-medium text-muted-foreground mt-2">{t("app.noReports") || "No open reports"}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noReportsDesc") || "Reports you submit will appear here"}</p>
+            </div>
           )}
-        </div>
-      ) : (
-        <div className="py-8 text-center">
-          <AlertTriangle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
-          <p className="text-sm font-medium text-muted-foreground mt-2">
-            {searchQuery ? "No matching reports" : (t("app.noReports") || "No reports yet")}
-          </p>
-          <p className="text-xs text-muted-foreground/70 mt-1">
-            {searchQuery ? "Try a different search term" : (t("app.noReportsDesc") || "Reports you submit will appear here")}
-          </p>
-        </div>
+        </>
+      )}
+
+      {/* HISTORY sub-tab */}
+      {subTab === "history" && (
+        <>
+          {/* Search + sort */}
+          <div className="flex gap-2 mb-3">
+            <input
+              type="search"
+              placeholder="Search reports..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setHistoryLimit(10); }}
+              className="flex-1 h-9 rounded-lg border bg-background px-3 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+              className="h-9 rounded-lg border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          {visibleHistory.length > 0 ? (
+            <div className="space-y-2">
+              {visibleHistory.map(renderIncidentCard)}
+
+              {/* Load more */}
+              {historyLimit < filteredHistory.length && (
+                <button
+                  onClick={() => setHistoryLimit((prev) => prev + 10)}
+                  className="w-full py-2.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Load more ({filteredHistory.length - historyLimit} remaining)
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <History className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+              <p className="text-sm font-medium text-muted-foreground mt-2">
+                {searchQuery ? "No matching reports" : "No report history"}
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                {searchQuery ? "Try a different search term" : "Submitted reports will appear here"}
+              </p>
+            </div>
+          )}
+        </>
       )}
     </>
   );
