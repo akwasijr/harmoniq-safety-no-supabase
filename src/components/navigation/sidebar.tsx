@@ -278,11 +278,9 @@ export function Sidebar({
               className="h-7 w-7 shrink-0 rounded object-contain"
             />
           ) : (
-            <img
-              src="/favicon.svg"
-              alt="Harmoniq"
-              className="h-6 w-6 shrink-0"
-            />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground">
+              {companyName.charAt(0).toUpperCase()}
+            </div>
           )}
           {!isCollapsed && (
             <span className="text-sm font-semibold truncate">
@@ -334,13 +332,13 @@ export function Sidebar({
                         "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                         isActive
-                          ? "bg-primary/10 text-primary font-semibold"
+                          ? "bg-primary text-primary-foreground font-semibold"
                           : "text-sidebar-foreground/60",
                         isCollapsed && "justify-center px-2"
                       )}
                       title={isCollapsed ? getTitle(item) : undefined}
                     >
-                      <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-primary")} aria-hidden="true" />
+                      <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                       {!isCollapsed && <span>{getTitle(item)}</span>}
                     </Link>
                   </li>
@@ -441,13 +439,13 @@ export function Sidebar({
                       "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                       isActive
-                        ? "bg-primary/10 text-primary font-semibold"
+                        ? "bg-primary text-primary-foreground font-semibold"
                         : "text-sidebar-foreground/60",
                       isCollapsed && "justify-center px-2"
                     )}
                     title={isCollapsed ? getTitle(item) : undefined}
                   >
-                    <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-primary")} aria-hidden="true" />
+                    <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                     {!isCollapsed && <span>{getTitle(item)}</span>}
                     {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
                       <span className="ml-auto rounded-full bg-sidebar-primary px-1.5 py-0.5 text-[10px] text-sidebar-primary-foreground">
