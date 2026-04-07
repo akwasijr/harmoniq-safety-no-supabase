@@ -265,11 +265,25 @@ export function Sidebar({
           href={showPlatformNav ? `/${company}/dashboard/platform/overview` : `/${company}/dashboard`}
           className="flex items-center gap-2 min-w-0"
         >
-          <img
-            src="/favicon.svg"
-            alt="Harmoniq"
-            className="h-6 w-6 shrink-0"
-          />
+          {showPlatformNav ? (
+            <img
+              src="/favicon.svg"
+              alt="Harmoniq"
+              className="h-6 w-6 shrink-0"
+            />
+          ) : companyLogo ? (
+            <img
+              src={companyLogo}
+              alt={`${companyName} logo`}
+              className="h-7 w-7 shrink-0 rounded object-contain"
+            />
+          ) : (
+            <img
+              src="/favicon.svg"
+              alt="Harmoniq"
+              className="h-6 w-6 shrink-0"
+            />
+          )}
           {!isCollapsed && (
             <span className="text-sm font-semibold truncate">
               {showPlatformNav ? "Harmoniq" : companyName}
