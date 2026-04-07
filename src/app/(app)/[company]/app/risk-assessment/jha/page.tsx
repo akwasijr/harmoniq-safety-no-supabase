@@ -844,8 +844,8 @@ export default function JHAFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed() || isSubmitting}
-            className="flex-1 h-14 gap-2 text-base disabled:opacity-40"
+            disabled={isSubmitting}
+            className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (
               t("riskAssessment.submitting")

@@ -447,7 +447,7 @@ export default function RiskAssessmentFormPage() {
       <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4 pb-6 z-20 safe-area-inset-bottom">
         <Button
           onClick={handleNext}
-          disabled={!canProceed() || isSubmitting}
+          disabled={isSubmitting}
           className="h-14 w-full gap-2 text-base"
         >
           {isSubmitting ? (
