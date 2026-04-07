@@ -3,10 +3,54 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle, Plus, Home, Eye, ShieldCheck } from "lucide-react";
+import { Plus, Home, Eye, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useTranslation } from "@/i18n";
+
+function AnimatedCheckmark() {
+  return (
+    <div className="relative mx-auto h-24 w-24">
+      <style>{`
+        @keyframes drawCircle {
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes drawCheck {
+          to { stroke-dashoffset: 0; }
+        }
+      `}</style>
+      {/* Pulse ring */}
+      <div className="absolute inset-0 animate-ping rounded-full bg-green-400/20" style={{ animationDuration: '1.5s', animationIterationCount: '1' }} />
+      {/* Circle */}
+      <svg className="h-24 w-24" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle
+          cx="48" cy="48" r="44"
+          className="stroke-green-500 dark:stroke-green-400"
+          strokeWidth="3"
+          strokeDasharray="276.5"
+          strokeDashoffset="276.5"
+          strokeLinecap="round"
+          style={{
+            animation: 'drawCircle 0.6s ease-out 0.1s forwards',
+          }}
+        />
+        <path
+          d="M28 50 L42 64 L68 34"
+          className="stroke-green-500 dark:stroke-green-400"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+          strokeDasharray="60"
+          strokeDashoffset="60"
+          style={{
+            animation: 'drawCheck 0.4s ease-out 0.6s forwards',
+          }}
+        />
+      </svg>
+    </div>
+  );
+}
 
 function ReportSuccessPageContent() {
   const company = useCompanyParam();
@@ -46,8 +90,8 @@ function ReportSuccessPageContent() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
       <div className="w-full max-w-sm text-center">
         {/* Success icon */}
-        <div className="mx-auto mb-6">
-          <CheckCircle className="h-20 w-20 text-green-600 dark:text-green-400" aria-hidden="true" />
+        <div className="mb-8" aria-hidden="true">
+          <AnimatedCheckmark />
         </div>
 
         {/* Success message */}
@@ -64,14 +108,14 @@ function ReportSuccessPageContent() {
                 ? `/${company}/app/risk-assessment/view/${assessmentId}`
                 : `/${company}/app/incidents/${incidentId}`
             }
-            className="block mb-8 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10 active:bg-primary/15"
+            className="block mb-8 rounded-xl border bg-card shadow-sm p-4 transition-colors hover:bg-primary/10 active:bg-primary/15"
           >
             <p className="text-sm text-muted-foreground">{t("report.success.referenceNumber")}</p>
             <p className="text-2xl font-bold text-primary">{referenceNumber}</p>
             <p className="mt-2 text-xs text-primary/70">Tap to view details →</p>
           </Link>
         ) : (
-          <div className="mb-8 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4">
+          <div className="mb-8 rounded-xl border bg-card shadow-sm p-4">
             <p className="text-sm text-muted-foreground">{t("report.success.referenceNumber")}</p>
             <p className="text-2xl font-bold text-primary">{referenceNumber}</p>
             <p className="mt-2 text-xs text-muted-foreground">

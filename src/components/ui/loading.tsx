@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, RefreshCw, WifiOff } from "lucide-react";
 
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
@@ -28,7 +28,11 @@ interface LoadingPageProps {
 export function LoadingPage({ message = "Loading..." }: LoadingPageProps) {
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
-      <LoadingSpinner size="lg" />
+      <div className="flex items-center gap-1.5">
+        <div className="h-2.5 w-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+        <div className="h-2.5 w-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+        <div className="h-2.5 w-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+      </div>
       <p className="text-sm text-muted-foreground">{message}</p>
     </div>
   );
@@ -188,6 +192,76 @@ export function ProfileSkeleton() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// Error state component
+interface ErrorStateProps {
+  title?: string;
+  message?: string;
+  onRetry?: () => void;
+  variant?: "generic" | "network" | "not-found" | "permission";
+}
+
+export function ErrorState({ 
+  title, 
+  message, 
+  onRetry, 
+  variant = "generic" 
+}: ErrorStateProps) {
+  const configs = {
+    generic: {
+      icon: AlertCircle,
+      defaultTitle: "Something went wrong",
+      defaultMessage: "An unexpected error occurred. Please try again.",
+      iconColor: "text-red-500",
+      iconBg: "bg-red-50 dark:bg-red-950/30",
+    },
+    network: {
+      icon: WifiOff,
+      defaultTitle: "Connection issue",
+      defaultMessage: "Please check your internet connection and try again.",
+      iconColor: "text-amber-500",
+      iconBg: "bg-amber-50 dark:bg-amber-950/30",
+    },
+    "not-found": {
+      icon: AlertCircle,
+      defaultTitle: "Not found",
+      defaultMessage: "The item you're looking for doesn't exist or has been removed.",
+      iconColor: "text-muted-foreground",
+      iconBg: "bg-muted",
+    },
+    permission: {
+      icon: AlertCircle,
+      defaultTitle: "Access denied",
+      defaultMessage: "You don't have permission to view this content.",
+      iconColor: "text-amber-500",
+      iconBg: "bg-amber-50 dark:bg-amber-950/30",
+    },
+  };
+
+  const config = configs[variant];
+  const Icon = config.icon;
+
+  return (
+    <div className="flex min-h-[300px] flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className={cn("flex h-14 w-14 items-center justify-center rounded-full", config.iconBg)}>
+        <Icon className={cn("h-7 w-7", config.iconColor)} aria-hidden="true" />
+      </div>
+      <div className="space-y-1.5">
+        <h3 className="text-base font-semibold">{title || config.defaultTitle}</h3>
+        <p className="text-sm text-muted-foreground max-w-xs">{message || config.defaultMessage}</p>
+      </div>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="mt-2 inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/50 active:bg-muted"
+        >
+          <RefreshCw className="h-4 w-4" aria-hidden="true" />
+          Try again
+        </button>
+      )}
     </div>
   );
 }
