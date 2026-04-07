@@ -28,7 +28,7 @@ import { useInspectionRoundsStore } from "@/stores/inspection-rounds-store";
  */
 export function useCompanyData() {
   const { user, currentCompany, isSuperAdmin } = useAuth();
-  const companyId = isSuperAdmin ? currentCompany?.id : user?.company_id;
+  const companyId = isSuperAdmin ? (currentCompany?.id || user?.company_id) : user?.company_id;
 
   const incidentsStore = useIncidentsStore();
   const assetsStore = useAssetsStore();
