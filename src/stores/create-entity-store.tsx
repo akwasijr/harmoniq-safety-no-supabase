@@ -251,6 +251,8 @@ export function createEntityStore<T extends IdEntity>(
           try {
             const parsed = JSON.parse(e.newValue) as T[];
             setItems(parsed);
+            // Invalidate TTL cache so next ensureLoaded() re-fetches
+            globalLoadedCache.delete(storageKey);
           } catch {
             // ignore parse errors
           }

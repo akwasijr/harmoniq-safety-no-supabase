@@ -31,6 +31,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Fetch user profile to enforce company isolation
+    const { data: profile } = await supabase
+      .from("users")
+      .select("company_id, role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile) {
+      return NextResponse.json({ error: "User profile not found" }, { status: 403 });
+    }
+
     const { table, data } = await request.json();
 
     if (!table || !data) {
@@ -41,6 +52,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Table not allowed" }, { status: 403 });
     }
 
+    // Enforce company isolation: every row must match user's company
+    const payload = Array.isArray(data) ? data : [data];
+    for (const item of payload) {
+      if (table === "companies") {
+        // Only super_admin can upsert companies
+        if (profile.role !== "super_admin") {
+          return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+        }
+      } else if (item.company_id) {
+        // Non-super-admins can only write to their own company
+        if (profile.role !== "super_admin" && item.company_id !== profile.company_id) {
+          return NextResponse.json({ error: "Cannot access data from another company" }, { status: 403 });
+        }
+      } else {
+        // Force the user's company_id if not provided
+        item.company_id = profile.company_id;
+      }
+    }
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -49,7 +79,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Use direct PostgREST call with service role key — bypasses RLS and has full access
-    const payload = Array.isArray(data) ? data : [data];
     const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
       method: "POST",
       headers: {

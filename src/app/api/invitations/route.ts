@@ -307,7 +307,7 @@ export async function GET(request: NextRequest) {
     // Get invitations for the user's company (or all for super admin)
     let query = supabase
       .from("invitations")
-      .select("id,email,role,expires_at,accepted_at,token,company_id,companies(name)")
+      .select("id,email,role,expires_at,accepted_at,company_id,companies(name)")
       .order("created_at", { ascending: false })
       .limit(250);
 
@@ -324,7 +324,6 @@ export async function GET(request: NextRequest) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
     const invitationsWithLinks = (invitations || []).map((invitation) => ({
       ...invitation,
-      invite_url: invitation.token ? `${siteUrl}/invite?token=${invitation.token}` : null,
       company_name: (invitation as unknown as { companies?: { name: string } }).companies?.name || null,
     }));
 

@@ -144,6 +144,12 @@ export default function UserDetailPage() {
   
   const handleDelete = () => {
     if (!baseUser) return;
+    // Cascade: clear assigned_to references pointing to this user
+    const { incidents, tickets, workOrders, correctiveActions } = stores;
+    incidents.items.filter(i => i.assigned_to === baseUser.id).forEach(i => incidents.update(i.id, { assigned_to: null }));
+    tickets.items.filter(t => t.assigned_to === baseUser.id).forEach(t => tickets.update(t.id, { assigned_to: null }));
+    workOrders.items.filter(w => w.assigned_to === baseUser.id).forEach(w => workOrders.update(w.id, { assigned_to: null }));
+    correctiveActions.items.filter(c => c.assigned_to === baseUser.id).forEach(c => correctiveActions.update(c.id, { assigned_to: null }));
     removeUser(baseUser.id);
     toast("User deleted", "info");
     setShowDeleteConfirm(false);

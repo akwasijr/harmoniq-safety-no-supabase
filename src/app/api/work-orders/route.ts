@@ -95,6 +95,20 @@ export async function POST(request: NextRequest) {
     const asset_id = body.asset_id && isValidUUID(body.asset_id) ? body.asset_id : null;
     const assigned_to = body.assigned_to && isValidUUID(body.assigned_to) ? body.assigned_to : null;
 
+    // Validate cross-company references
+    if (asset_id) {
+      const { data: asset } = await supabase.from("assets").select("id").eq("id", asset_id).eq("company_id", profile.company_id).single();
+      if (!asset) {
+        return NextResponse.json({ error: "Asset not found or belongs to a different company" }, { status: 403 });
+      }
+    }
+    if (assigned_to) {
+      const { data: assignee } = await supabase.from("users").select("id").eq("id", assigned_to).eq("company_id", profile.company_id).single();
+      if (!assignee) {
+        return NextResponse.json({ error: "Assignee not found or belongs to a different company" }, { status: 403 });
+      }
+    }
+
     const now = new Date().toISOString();
 
     const { data: workOrder, error } = await supabase

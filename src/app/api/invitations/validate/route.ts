@@ -63,6 +63,15 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
+    // Verify the caller is authenticated and user_id matches their session
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+    if (authUser.id !== user_id) {
+      return NextResponse.json({ error: "User ID mismatch" }, { status: 403 });
+    }
+
     // Find the invitation
     const { data: invitation, error: findError } = await supabase
       .from("invitations")

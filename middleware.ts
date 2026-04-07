@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { sanitizeRelativePath } from "@/lib/navigation";
 import type { UserRole } from "@/types";
 
-const MOCK_MODE = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true" && !process.env.NEXT_PUBLIC_SUPABASE_URL;
+const MOCK_MODE = process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true" && !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 /**
  * Middleware for:

@@ -104,12 +104,18 @@ export default function TeamDetailPage() {
   };
 
   const handleDelete = () => {
+    // Remove this team from all members' team_ids
     teamMembers.forEach((member) => {
       updateUser(member.id, {
         team_ids: removeTeamFromUser(member, teamId),
         updated_at: new Date().toISOString(),
       });
     });
+    // Cascade: clear assigned_to_team_id references
+    const { incidents, tickets, workOrders } = stores;
+    incidents.items.filter(i => i.assigned_to_team_id === baseTeam.id).forEach(i => incidents.update(i.id, { assigned_to_team_id: null }));
+    tickets.items.filter(t => t.assigned_to_team_id === baseTeam.id).forEach(t => tickets.update(t.id, { assigned_to_team_id: null }));
+    workOrders.items.filter(w => w.assigned_to_team_id === baseTeam.id).forEach(w => workOrders.update(w.id, { assigned_to_team_id: null }));
     removeTeam(baseTeam.id);
     toast("Team deleted", "info");
     setShowDeleteConfirm(false);
