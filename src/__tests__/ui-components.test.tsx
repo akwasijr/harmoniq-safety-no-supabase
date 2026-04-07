@@ -128,8 +128,8 @@ describe("Badge", () => {
   it("applies variant classes", () => {
     const { container } = render(<Badge variant="success">Done</Badge>);
     const span = container.querySelector("span");
-    // success variant maps to green color classes
-    expect(span?.className).toContain("green");
+    // success variant maps to emerald color classes
+    expect(span?.className).toContain("emerald");
   });
 
   it("supports status variants", () => {
