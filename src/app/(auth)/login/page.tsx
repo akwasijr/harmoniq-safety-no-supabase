@@ -65,13 +65,18 @@ function LoginForm() {
   const [failedAttempts, setFailedAttempts] = React.useState(0);
   const [isMobile, setIsMobile] = React.useState(false);
   const [hasMounted, setHasMounted] = React.useState(false);
-  const [appChoice, setAppChoice] = React.useState<AppChoice>("dashboard");
+  const isPlatformMode = searchParams.get("mode") === "platform";
+  const [appChoice, setAppChoice] = React.useState<AppChoice>(isPlatformMode ? "platform" : "dashboard");
 
   React.useEffect(() => {
     const mobile = window.innerWidth < 768;
     setIsMobile(mobile);
-    const stored = window.localStorage.getItem(APP_CHOICE_STORAGE_KEY);
-    setAppChoice(mobile ? "app" : (stored === "app" || stored === "dashboard" || stored === "platform" ? stored as AppChoice : "dashboard"));
+    if (isPlatformMode) {
+      setAppChoice("platform");
+    } else {
+      const stored = window.localStorage.getItem(APP_CHOICE_STORAGE_KEY);
+      setAppChoice(mobile ? "app" : (stored === "app" || stored === "dashboard" ? stored as AppChoice : "dashboard"));
+    }
     setHasMounted(true);
 
     const onResize = () => {
@@ -557,11 +562,11 @@ function LoginForm() {
                 </div>
               </div>
 
-              {/* App chooser — hidden on mobile (auto-selects Field Worker) */}
-              {hasMounted && !isMobile && (
+              {/* App chooser — hidden on mobile (auto-selects Field Worker), Platform only via /admin */}
+              {hasMounted && !isMobile && !isPlatformMode && (
                 <div role="radiogroup" aria-label={t("auth.chooseApp") || "Choose app"}>
                   <Label className="text-sm font-medium mb-1.5 text-zinc-300">{t("auth.chooseApp") || "Choose app"}</Label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       role="radio"
@@ -584,18 +589,14 @@ function LoginForm() {
                       <HardHat className="h-4 w-4" />
                       {t("auth.mobileApp")}
                     </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={appChoice === "platform"}
-                      onClick={() => setAppChoice("platform")}
-                      disabled={isLoading}
-                      className={`flex items-center justify-center gap-2 rounded-lg py-2 px-3 text-sm font-medium transition-colors ${appChoice === "platform" ? "bg-emerald-800/60 text-emerald-300" : "bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50"}`}
-                    >
-                      <Shield className="h-4 w-4" />
-                      Platform
-                    </button>
                   </div>
+                </div>
+              )}
+              {/* Platform mode indicator (accessed via /admin) */}
+              {hasMounted && isPlatformMode && (
+                <div className="flex items-center gap-2 rounded-lg bg-emerald-900/30 border border-emerald-800/30 px-4 py-2.5">
+                  <Shield className="h-4 w-4 text-emerald-400" />
+                  <span className="text-sm font-medium text-emerald-300">Platform Admin</span>
                 </div>
               )}
 
