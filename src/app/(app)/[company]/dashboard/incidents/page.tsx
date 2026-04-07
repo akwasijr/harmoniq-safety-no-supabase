@@ -477,7 +477,7 @@ export default function IncidentsPage() {
                         {formatDate(new Date(incident.incident_date))}
                       </td>
                       <td className="py-3">
-                        <Badge variant={incident.status as "new" | "in_progress" | "in_review" | "resolved"} className="text-xs">
+                        <Badge variant={incident.status === "new" ? "secondary" : incident.status as "in_progress" | "in_review" | "resolved"} className="text-xs">
                           {t(`incidents.statuses.${incident.status === "in_progress" ? "inProgress" : incident.status === "in_review" ? "inReview" : incident.status}`)}
                         </Badge>
                       </td>

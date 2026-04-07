@@ -9,45 +9,44 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
+          "bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-100",
         secondary:
-          "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
+          "bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-100",
         destructive:
-          "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+          "bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-100",
         success:
-          "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
+          "bg-green-200 text-green-900 dark:bg-green-900/50 dark:text-green-100",
         warning:
-          "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+          "bg-amber-200 text-amber-900 dark:bg-amber-900/50 dark:text-amber-100",
         info:
-          "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
+          "bg-blue-200 text-blue-900 dark:bg-blue-900/50 dark:text-blue-100",
         outline: "text-foreground bg-muted/50 border-border",
-        // Status variants for incidents (both dash and underscore versions)
-        new: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-        "in-progress": "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
-        in_progress: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
-        "in-review": "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
-        in_review: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
-        resolved: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
-        archived: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-        pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200",
+        // Status variants
+        "in-progress": "bg-amber-200 text-amber-900 dark:bg-amber-900/50 dark:text-amber-100",
+        in_progress: "bg-amber-200 text-amber-900 dark:bg-amber-900/50 dark:text-amber-100",
+        "in-review": "bg-purple-200 text-purple-900 dark:bg-purple-900/50 dark:text-purple-100",
+        in_review: "bg-purple-200 text-purple-900 dark:bg-purple-900/50 dark:text-purple-100",
+        resolved: "bg-green-200 text-green-900 dark:bg-green-900/50 dark:text-green-100",
+        archived: "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-100",
+        pending: "bg-yellow-200 text-yellow-900 dark:bg-yellow-900/50 dark:text-yellow-100",
         // Severity variants
-        low: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
-        medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200",
-        high: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
-        critical: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+        low: "bg-green-200 text-green-900 dark:bg-green-900/50 dark:text-green-100",
+        medium: "bg-yellow-200 text-yellow-900 dark:bg-yellow-900/50 dark:text-yellow-100",
+        high: "bg-orange-200 text-orange-900 dark:bg-orange-900/50 dark:text-orange-100",
+        critical: "bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-100",
         // Semantic status variants
         expired:
-          "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+          "bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-100",
         overdue:
-          "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
+          "bg-orange-200 text-orange-900 dark:bg-orange-900/50 dark:text-orange-100",
         inactive:
-          "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200",
+          "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-100",
         active:
-          "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
+          "bg-green-200 text-green-900 dark:bg-green-900/50 dark:text-green-100",
         completed:
-          "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
+          "bg-green-200 text-green-900 dark:bg-green-900/50 dark:text-green-100",
         cancelled:
-          "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200",
+          "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-100",
       },
     },
     defaultVariants: {

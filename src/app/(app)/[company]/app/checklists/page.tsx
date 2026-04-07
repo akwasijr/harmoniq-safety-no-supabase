@@ -346,7 +346,11 @@ function ChecklistsTabContent({
                   const hasPhotos = submission.responses?.some((r: ChecklistResponse) => (r.photo_urls?.length ?? 0) > 0);
 
                   return (
-                    <div key={submission.id} className="rounded-lg border p-3 space-y-2">
+                    <Link
+                      key={submission.id}
+                      href={`/${company}/app/checklists/${submission.template_id}?submission=${submission.id}`}
+                      className="block rounded-lg border p-3 space-y-2 transition-colors hover:bg-muted/30 active:bg-muted/50"
+                    >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
@@ -357,9 +361,9 @@ function ChecklistsTabContent({
                         {score !== null && (
                           <div className={cn(
                             "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
-                            score >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
-                            score >= 50 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
-                            "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                            score >= 80 ? "bg-green-200 text-green-900 dark:bg-green-900/40 dark:text-green-100" :
+                            score >= 50 ? "bg-amber-200 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100" :
+                            "bg-red-200 text-red-900 dark:bg-red-900/40 dark:text-red-100"
                           )}>
                             {score}%
                           </div>
@@ -367,10 +371,10 @@ function ChecklistsTabContent({
                       </div>
                       
                       <div className="flex items-center gap-3 text-[10px]">
-                        <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                        <span className="flex items-center gap-1 text-green-700 dark:text-green-300">
                           <CheckCircle className="h-3 w-3" /> {passCount} pass
                         </span>
-                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                        <span className="flex items-center gap-1 text-red-700 dark:text-red-300">
                           <X className="h-3 w-3" /> {failCount} fail
                         </span>
                         {naCount > 0 && (
@@ -387,7 +391,7 @@ function ChecklistsTabContent({
                           </span>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
 
