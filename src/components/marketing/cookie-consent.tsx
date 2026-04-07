@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { X } from "lucide-react";
+import type { PlatformPrivacySettings } from "@/lib/platform-privacy-settings";
 
 export interface CookieConsent {
   necessary: boolean;
@@ -10,6 +11,7 @@ export interface CookieConsent {
 }
 
 interface CookieConsentBannerProps {
+  settings: PlatformPrivacySettings;
   translations: {
     title: string;
     description: string;
@@ -64,7 +66,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
-export function CookieConsentBanner({ translations: t }: CookieConsentBannerProps) {
+export function CookieConsentBanner({ settings, translations: t }: CookieConsentBannerProps) {
   const [visible, setVisible] = React.useState(false);
   const [showPreferences, setShowPreferences] = React.useState(false);
   const [preferences, setPreferences] = React.useState<CookieConsent>({
@@ -75,10 +77,15 @@ export function CookieConsentBanner({ translations: t }: CookieConsentBannerProp
 
   React.useEffect(() => {
     const existing = getConsentFromCookie();
-    if (!existing) {
+    if (existing) {
+      setPreferences(existing);
+      return;
+    }
+
+    if (settings.cookieConsent) {
       setVisible(true);
     }
-  }, []);
+  }, [settings.cookieConsent]);
 
   const save = (consent: CookieConsent) => {
     setConsentCookie(consent);
@@ -97,7 +104,7 @@ export function CookieConsentBanner({ translations: t }: CookieConsentBannerProp
   const handleRejectAll = () => save({ necessary: true, analytics: false, marketing: false });
   const handleSavePreferences = () => save({ ...preferences, necessary: true });
 
-  if (!visible) return null;
+  if (!settings.cookieConsent || !visible) return null;
 
   // Preferences panel (full-screen overlay)
   if (showPreferences) {
@@ -105,7 +112,7 @@ export function CookieConsentBanner({ translations: t }: CookieConsentBannerProp
       <div className="fixed inset-0 z-[100] bg-zinc-950/95 backdrop-blur-sm">
         <div className="mx-auto max-w-lg px-6 py-10">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-semibold text-white">Cookie Preferences</h2>
+            <h2 className="text-xl font-semibold text-white">{t.title}</h2>
             <button
               onClick={() => setShowPreferences(false)}
               className="text-zinc-500 hover:text-white transition-colors"
@@ -116,7 +123,7 @@ export function CookieConsentBanner({ translations: t }: CookieConsentBannerProp
           </div>
 
           <p className="text-sm text-zinc-400 mb-8">
-            Manage your cookie preferences below. You can update these at any time.
+            {t.description}
           </p>
 
           <div className="space-y-3">
@@ -154,53 +161,69 @@ export function CookieConsentBanner({ translations: t }: CookieConsentBannerProp
             </div>
           </div>
 
-          <div className="flex items-center gap-4 mt-8">
-            <button
-              onClick={handleSavePreferences}
-              className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors"
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setShowPreferences(false)}
-              className="text-sm font-semibold text-white hover:text-zinc-300 transition-colors"
-            >
-              Cancel
-            </button>
+            <div className="flex items-center gap-4 mt-8">
+              <button
+                onClick={handleSavePreferences}
+                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors"
+              >
+                {t.save_preferences}
+              </button>
+              <button
+                onClick={() => setShowPreferences(false)}
+                className="text-sm font-semibold text-white hover:text-zinc-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-4 text-xs text-zinc-400">
+              <a href={settings.privacyUrl} className="hover:text-white transition-colors">
+                Privacy policy
+              </a>
+              <a href={settings.cookieUrl} className="hover:text-white transition-colors">
+                Cookie policy
+              </a>
+            </div>
           </div>
         </div>
-      </div>
-    );
+      );
   }
 
   // Minimal banner
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-xl">
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/90 backdrop-blur-xl px-6 py-5">
-        <p className="text-sm text-zinc-400 leading-relaxed">
-          We use tracking cookies to understand how you use the product and help us improve it.
-        </p>
-        <div className="flex items-center gap-5 mt-4">
-          <button
-            onClick={handleAcceptAll}
-            className="text-sm font-semibold text-white hover:text-zinc-300 transition-colors"
-          >
-            Accept
-          </button>
-          <button
-            onClick={handleRejectAll}
-            className="text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
-          >
-            Decline
-          </button>
-          <button
-            onClick={() => setShowPreferences(true)}
-            className="text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
-          >
-            Manage preferences
-          </button>
+        <div className="rounded-2xl border border-white/10 bg-zinc-900/90 backdrop-blur-xl px-6 py-5">
+          <p className="text-sm text-zinc-400 leading-relaxed">
+            {t.description}
+          </p>
+          <div className="flex items-center gap-5 mt-4">
+            <button
+              onClick={handleAcceptAll}
+              className="text-sm font-semibold text-white hover:text-zinc-300 transition-colors"
+            >
+              {t.accept_all}
+            </button>
+            <button
+              onClick={handleRejectAll}
+              className="text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              {t.reject_all}
+            </button>
+            <button
+              onClick={() => setShowPreferences(true)}
+              className="text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              {t.customize}
+            </button>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-4 text-xs text-zinc-500">
+            <a href={settings.privacyUrl} className="hover:text-zinc-300 transition-colors">
+              Privacy policy
+            </a>
+            <a href={settings.cookieUrl} className="hover:text-zinc-300 transition-colors">
+              Cookie policy
+            </a>
+          </div>
         </div>
       </div>
-    </div>
   );
 }

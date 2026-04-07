@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import type { PlatformPrivacySettings } from "@/lib/platform-privacy-settings";
 
 const CONSENT_COOKIE = "harmoniq_consent";
 
@@ -22,7 +23,7 @@ function getAnalyticsConsent(): boolean {
  * Collects anonymous page views (no PII stored, IPs are hashed server-side).
  * Respects Do Not Track browser setting AND cookie consent preferences.
  */
-export function AnalyticsTracker() {
+export function AnalyticsTracker({ settings }: { settings: PlatformPrivacySettings }) {
   const pathname = usePathname();
   const [consented, setConsented] = useState(false);
 
@@ -40,6 +41,7 @@ export function AnalyticsTracker() {
   useEffect(() => {
     // Respect Do Not Track
     if (typeof navigator !== "undefined" && navigator.doNotTrack === "1") return;
+    if (!settings.cookieConsent) return;
     // Respect cookie consent
     if (!consented) return;
 
@@ -56,7 +58,7 @@ export function AnalyticsTracker() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [pathname, consented]);
+  }, [pathname, consented, settings.cookieConsent]);
 
   return null;
 }

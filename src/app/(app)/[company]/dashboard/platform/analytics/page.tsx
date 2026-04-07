@@ -13,12 +13,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { useToast } from "@/components/ui/toast";
+import {
+  DEFAULT_PLATFORM_PRIVACY_SETTINGS,
+  type PlatformPrivacySettings,
+} from "@/lib/platform-privacy-settings";
 import { buildSiteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 import {
   BarChart3, Users, Building2, Globe, Shield, AlertTriangle, Package,
-  CheckCircle, MapPin, Activity, Monitor, Smartphone, RefreshCw, TrendingUp,
+  CheckCircle, MapPin, Activity, Monitor, Smartphone, RefreshCw, TrendingUp, Save,
 } from "lucide-react";
 
 const LeafletMap = dynamic(() => import("@/components/shared/leaflet-map"), { ssr: false });
@@ -146,6 +151,7 @@ function ConsentAuditLog() {
 
 export default function PlatformAnalyticsPage() {
   const { formatNumber } = useTranslation();
+  const { toast } = useToast();
   const { items: companies } = useCompanyStore();
   const { items: users } = useUsersStore();
   const { items: incidents } = useIncidentsStore();
@@ -154,18 +160,52 @@ export default function PlatformAnalyticsPage() {
   const [trafficPeriod, setTrafficPeriod] = React.useState<"7d" | "30d" | "90d">("30d");
   const [analyticsData, setAnalyticsData] = React.useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [gdpr, setGdpr] = React.useState<PlatformPrivacySettings>(DEFAULT_PLATFORM_PRIVACY_SETTINGS);
+  const [isSavingPrivacy, setIsSavingPrivacy] = React.useState(false);
 
   const fetchData = React.useCallback(() => {
     setIsLoading(true);
     const days = trafficPeriod === "7d" ? 7 : trafficPeriod === "90d" ? 90 : 30;
     fetch(`/api/analytics?days=${days}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) {
+          throw new Error("Failed to load analytics");
+        }
+        return r.json();
+      })
       .then(setAnalyticsData)
       .catch(() => setAnalyticsData(null))
       .finally(() => setIsLoading(false));
   }, [trafficPeriod]);
 
   React.useEffect(() => { fetchData(); }, [fetchData]);
+
+  React.useEffect(() => {
+    let active = true;
+
+    const loadPrivacySettings = async () => {
+      try {
+        const response = await fetch("/api/platform/privacy-settings", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Failed to load privacy settings");
+        }
+        const data = (await response.json()) as PlatformPrivacySettings;
+        if (active) {
+          setGdpr(data);
+        }
+      } catch {
+        if (active) {
+          setGdpr(DEFAULT_PLATFORM_PRIVACY_SETTINGS);
+        }
+      }
+    };
+
+    void loadPrivacySettings();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const topPages = React.useMemo(() =>
     Object.entries(analyticsData?.by_page || {}).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([path, views]) => ({ path, views })),
@@ -193,13 +233,6 @@ export default function PlatformAnalyticsPage() {
   const unique = analyticsData?.uniqueVisitors || 0;
   const maxDaily = Math.max(...dailyData.map((d) => d.views), 1);
 
-  const [gdpr, setGdpr] = React.useState(() => ({
-    cookieConsent: true, rightToErasure: true, dataExport: true, anonymizeIp: true,
-    retentionDays: 365, dpoEmail: "privacy@harmoniq.safety",
-    privacyUrl: buildSiteUrl("/privacy"),
-    cookieUrl: buildSiteUrl("/cookies"),
-  }));
-
   const tabs: { id: SubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
     { id: "realtime", label: "Real-time", icon: Activity },
@@ -208,15 +241,49 @@ export default function PlatformAnalyticsPage() {
     { id: "compliance", label: "Compliance", icon: Shield },
   ];
 
+  const savePrivacySettings = async () => {
+    setIsSavingPrivacy(true);
+    try {
+      const response = await fetch("/api/platform/privacy-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(gdpr),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save privacy settings");
+      }
+
+      const data = (await response.json()) as PlatformPrivacySettings;
+      setGdpr(data);
+      toast("Privacy controls updated", "success");
+    } catch {
+      toast("Could not save privacy controls", "error");
+    } finally {
+      setIsSavingPrivacy(false);
+    }
+  };
+
   return (
     <RoleGuard allowedRoles={["super_admin", "company_admin"]}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold">Observability</h1>
-            <p className="text-sm text-muted-foreground mt-1">Platform analytics, visitor intelligence, and compliance</p>
           </div>
           <div className="flex items-center gap-2">
+            {activeTab === "compliance" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={savePrivacySettings}
+                disabled={isSavingPrivacy}
+              >
+                <Save className="h-4 w-4" />
+                {isSavingPrivacy ? "Saving..." : "Save privacy settings"}
+              </Button>
+            )}
             <div className="flex gap-1">
               {(["7d", "30d", "90d"] as const).map((p) => (
                 <Button key={p} variant={trafficPeriod === p ? "default" : "outline"} size="sm" onClick={() => setTrafficPeriod(p)}>
@@ -418,17 +485,35 @@ export default function PlatformAnalyticsPage() {
             <Card>
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><Shield className="h-4 w-4" />GDPR & Privacy Controls</CardTitle></CardHeader>
               <CardContent className="space-y-6">
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <p className="text-sm font-medium">Public-site privacy pipeline</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    These settings now control the marketing cookie banner, consent logging, policy links,
+                    and whether optional visitor analytics can run after consent.
+                  </p>
+                </div>
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div className="space-y-4">
                     {([
                       { key: "cookieConsent" as const, label: "Cookie Consent Banner", desc: "Show cookie consent to visitors" },
                       { key: "rightToErasure" as const, label: "Right to Erasure (Art. 17)", desc: "Allow data deletion requests" },
                       { key: "dataExport" as const, label: "Data Portability (Art. 20)", desc: "Allow users to export their data" },
-                      { key: "anonymizeIp" as const, label: "IP Anonymization", desc: "Hash IPs before storage (enabled)" },
+                      { key: "anonymizeIp" as const, label: "IP Anonymization", desc: "Always enforced for visitor analytics" },
                     ]).map((item) => (
                       <div key={item.key} className="flex items-center justify-between">
                         <div><p className="text-sm font-medium">{item.label}</p><p className="text-xs text-muted-foreground">{item.desc}</p></div>
-                        <button type="button" role="switch" aria-checked={gdpr[item.key]} onClick={() => setGdpr((s) => ({ ...s, [item.key]: !s[item.key] }))} className={`w-11 h-6 rounded-full transition-colors ${gdpr[item.key] ? "bg-primary" : "bg-muted"}`}>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={gdpr[item.key]}
+                          aria-disabled={item.key === "anonymizeIp"}
+                          disabled={item.key === "anonymizeIp"}
+                          onClick={() => {
+                            if (item.key === "anonymizeIp") return;
+                            setGdpr((s) => ({ ...s, [item.key]: !s[item.key] }));
+                          }}
+                          className={`w-11 h-6 rounded-full transition-colors ${gdpr[item.key] ? "bg-primary" : "bg-muted"} ${item.key === "anonymizeIp" ? "cursor-not-allowed opacity-70" : ""}`}
+                        >
                           <span className={`block w-5 h-5 rounded-full bg-white shadow transform transition-transform ${gdpr[item.key] ? "translate-x-5" : "translate-x-0.5"}`} />
                         </button>
                       </div>
@@ -437,8 +522,8 @@ export default function PlatformAnalyticsPage() {
                   <div className="space-y-3">
                     <div><Label className="text-xs">Data Retention Period (days)</Label><Input type="number" value={gdpr.retentionDays} onChange={(e) => setGdpr((s) => ({ ...s, retentionDays: parseInt(e.target.value) || 365 }))} className="mt-1" /></div>
                     <div><Label className="text-xs">Data Protection Officer Email</Label><Input value={gdpr.dpoEmail} onChange={(e) => setGdpr((s) => ({ ...s, dpoEmail: e.target.value }))} className="mt-1" /></div>
-                    <div><Label className="text-xs">Privacy Policy URL</Label><Input value={gdpr.privacyUrl} onChange={(e) => setGdpr((s) => ({ ...s, privacyUrl: e.target.value }))} className="mt-1" /></div>
-                    <div><Label className="text-xs">Cookie Policy URL</Label><Input value={gdpr.cookieUrl} onChange={(e) => setGdpr((s) => ({ ...s, cookieUrl: e.target.value }))} className="mt-1" /></div>
+                    <div><Label className="text-xs">Privacy Policy URL</Label><Input value={gdpr.privacyUrl || buildSiteUrl("/privacy")} onChange={(e) => setGdpr((s) => ({ ...s, privacyUrl: e.target.value }))} className="mt-1" /></div>
+                    <div><Label className="text-xs">Cookie Policy URL</Label><Input value={gdpr.cookieUrl || buildSiteUrl("/cookies")} onChange={(e) => setGdpr((s) => ({ ...s, cookieUrl: e.target.value }))} className="mt-1" /></div>
                   </div>
                 </div>
               </CardContent>

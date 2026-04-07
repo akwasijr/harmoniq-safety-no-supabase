@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || profile.role !== "super_admin") {
+    if (!profile || !["super_admin", "company_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

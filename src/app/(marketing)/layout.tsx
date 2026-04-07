@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { getMarketingTranslations, type MarketingLocale } from "@/i18n/marketing";
 import { CookieConsentBanner } from "@/components/marketing/cookie-consent";
 import { AnalyticsTracker } from "@/components/marketing/analytics-tracker";
+import { getPublicPlatformPrivacySettings } from "@/lib/platform-privacy-settings-server";
 
 export default async function MarketingLayout({
   children,
@@ -11,6 +12,7 @@ export default async function MarketingLayout({
   const cookieStore = await cookies();
   const locale = (cookieStore.get("harmoniq_locale")?.value || "en") as MarketingLocale;
   const t = getMarketingTranslations(locale);
+  const privacySettings = await getPublicPlatformPrivacySettings();
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -30,8 +32,9 @@ export default async function MarketingLayout({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {children}
-      <AnalyticsTracker />
+      <AnalyticsTracker settings={privacySettings} />
       <CookieConsentBanner
+        settings={privacySettings}
         translations={{
           title: t("cookie.title"),
           description: t("cookie.description"),
