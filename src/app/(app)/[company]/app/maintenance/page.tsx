@@ -64,10 +64,16 @@ function RequestMaintenancePageContent() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    addWorkOrder(order);
-    setForm({ asset_id: "", title: "", description: "", priority: "medium" });
-    toast("Maintenance request submitted");
-    router.back();
+    try {
+      addWorkOrder(order);
+      setForm({ asset_id: "", title: "", description: "", priority: "medium" });
+      toast("Maintenance request submitted");
+      router.back();
+    } catch (err) {
+      console.error("[Maintenance] Submission failed:", err);
+      toast("Failed to submit request. Please try again.", "error");
+      setIsSubmitting(false);
+    }
   };
 
   return (

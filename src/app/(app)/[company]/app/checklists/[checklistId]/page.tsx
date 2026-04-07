@@ -205,14 +205,20 @@ function ChecklistFormPageContent() {
     const now = new Date();
     const refNumber = `CHK-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const submission = getSubmissionData();
-    await addSubmission({
-      id: crypto.randomUUID(),
-      company_id: user.company_id || "",
-      created_at: now.toISOString(),
-      ...submission,
-    });
-    toast("Checklist submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=checklist`);
+    try {
+      await addSubmission({
+        id: crypto.randomUUID(),
+        company_id: user.company_id || "",
+        created_at: now.toISOString(),
+        ...submission,
+      });
+      toast("Checklist submitted");
+      router.push(`/${company}/app/report/success?ref=${refNumber}&type=checklist`);
+    } catch (err) {
+      console.error("[Checklist] Submission failed:", err);
+      toast("Failed to submit checklist. Please try again.", "error");
+      setIsSubmitting(false);
+    }
   };
 
   // Calculate progress

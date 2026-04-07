@@ -160,44 +160,50 @@ export default function AssetInspectionPage() {
     const mediaUrls = Object.values(photos).flat();
     const result = failCount > 0 ? "needs_attention" : "pass";
     const inspectionId = crypto.randomUUID();
-    addInspection({
-      id: inspectionId,
-      asset_id: asset.id,
-      inspector_id: user.id,
-      checklist_id: null,
-      result,
-      notes: combinedNotes || null,
-      media_urls: mediaUrls,
-      incident_id: null,
-      gps_lat: gps.coords?.lat ?? null,
-      gps_lng: gps.coords?.lng ?? null,
-      inspected_at: now.toISOString(),
-      created_at: now.toISOString(),
-    });
-
-    // Auto-generate work order for failed inspections
-    if (result === "needs_attention") {
-      const correctiveAction = createCorrectiveActionFromInspection({
-        inspection: { id: inspectionId, asset_id: asset.id, result, notes: combinedNotes || "Auto-generated from failed inspection" },
-        asset: { id: asset.id, name: asset.name, company_id: asset.company_id, criticality: asset.criticality },
+    try {
+      addInspection({
+        id: inspectionId,
+        asset_id: asset.id,
+        inspector_id: user.id,
+        checklist_id: null,
+        result,
+        notes: combinedNotes || null,
+        media_urls: mediaUrls,
+        incident_id: null,
+        gps_lat: gps.coords?.lat ?? null,
+        gps_lng: gps.coords?.lng ?? null,
+        inspected_at: now.toISOString(),
+        created_at: now.toISOString(),
       });
-      addCorrectiveAction(correctiveAction);
 
-      const wo = createWorkOrderFromInspection({
-        inspection: { id: inspectionId, asset_id: asset.id, result, notes: combinedNotes || "Auto-generated from failed inspection" },
-        asset: { id: asset.id, name: asset.name, company_id: asset.company_id, criticality: asset.criticality },
-        inspectorId: user.id,
-        correctiveActionId: correctiveAction.id,
-      });
-      addWorkOrder(wo);
-    }
+      // Auto-generate work order for failed inspections
+      if (result === "needs_attention") {
+        const correctiveAction = createCorrectiveActionFromInspection({
+          inspection: { id: inspectionId, asset_id: asset.id, result, notes: combinedNotes || "Auto-generated from failed inspection" },
+          asset: { id: asset.id, name: asset.name, company_id: asset.company_id, criticality: asset.criticality },
+        });
+        addCorrectiveAction(correctiveAction);
 
-    if (result === "needs_attention") {
-      toast("Inspection submitted — corrective action and work order created for follow-up");
-    } else {
-      toast("Inspection submitted");
+        const wo = createWorkOrderFromInspection({
+          inspection: { id: inspectionId, asset_id: asset.id, result, notes: combinedNotes || "Auto-generated from failed inspection" },
+          asset: { id: asset.id, name: asset.name, company_id: asset.company_id, criticality: asset.criticality },
+          inspectorId: user.id,
+          correctiveActionId: correctiveAction.id,
+        });
+        addWorkOrder(wo);
+      }
+
+      if (result === "needs_attention") {
+        toast("Inspection submitted — corrective action and work order created for follow-up");
+      } else {
+        toast("Inspection submitted");
+      }
+      router.push(`/${company}/app/report/success?ref=${refNumber}&type=inspection`);
+    } catch (err) {
+      console.error("[Inspection] Submission failed:", err);
+      toast("Failed to submit inspection. Please try again.", "error");
+      setIsSubmitting(false);
     }
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=inspection`);
   };
 
   if (isLoading && assets.length === 0) {

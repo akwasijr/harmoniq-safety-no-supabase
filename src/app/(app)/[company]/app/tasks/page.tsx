@@ -5,10 +5,27 @@ import { ClipboardCheck, ClipboardList, ShieldCheck } from "lucide-react";
 import { TasksTabContent } from "@/components/tasks/tasks-tab-content";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useTranslation } from "@/i18n";
+import { useTicketsStore } from "@/stores/tickets-store";
+import { useWorkOrdersStore } from "@/stores/work-orders-store";
+import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
+import { LoadingPage } from "@/components/ui/loading";
 
 export default function TasksPage() {
   const company = useCompanyParam();
   const { t } = useTranslation();
+
+  const { items: tickets, isLoading: ticketsLoading } = useTicketsStore();
+  const { items: workOrders, isLoading: workOrdersLoading } = useWorkOrdersStore();
+  const { items: actions, isLoading: actionsLoading } = useCorrectiveActionsStore();
+
+  const isLoading =
+    (ticketsLoading && tickets.length === 0) ||
+    (workOrdersLoading && workOrders.length === 0) ||
+    (actionsLoading && actions.length === 0);
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <div className="flex min-h-full flex-col pb-20">

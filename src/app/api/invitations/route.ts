@@ -50,6 +50,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "First name, last name, email, and role are required" }, { status: 400 });
     }
 
+    const ALLOWED_ROLES = ["company_admin", "manager", "employee"];
+    if (!ALLOWED_ROLES.includes(role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+
     if (!isValidEmail(email)) {
       return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
     }

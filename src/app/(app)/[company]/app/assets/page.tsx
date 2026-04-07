@@ -181,7 +181,7 @@ export default function EmployeeAssetsPage() {
               </div>
               <Link
                 href={`/${company}/app/scan`}
-                className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label="Scan QR code"
               >
                 <ScanLine className="h-4.5 w-4.5" />

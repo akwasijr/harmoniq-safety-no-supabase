@@ -340,9 +340,15 @@ function ReportIncidentPageContent() {
       created_at: now.toISOString(),
       updated_at: now.toISOString(),
     };
-    addIncident(incident);
-    toast("Incident submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&id=${incident.id}`);
+    try {
+      addIncident(incident);
+      toast("Incident submitted");
+      router.push(`/${company}/app/report/success?ref=${refNumber}&id=${incident.id}`);
+    } catch (err) {
+      console.error("[Report] Submission failed:", err);
+      toast("Failed to submit report. Please try again.", "error");
+      setIsSubmitting(false);
+    }
   };
 
   const getStepTitle = () => {

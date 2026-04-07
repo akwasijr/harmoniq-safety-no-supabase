@@ -28,6 +28,7 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useTeamsStore } from "@/stores/teams-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useAuth } from "@/hooks/use-auth";
+import { LoadingPage } from "@/components/ui/loading";
 import { useTranslation, SUPPORTED_LOCALES } from "@/i18n";
 import { getUserTeamIds } from "@/lib/assignment-utils";
 
@@ -99,11 +100,7 @@ export default function EmployeeProfilePage() {
   // Never fall back to users[0]. That would expose another user's data.
   // If authUser is null the user is not authenticated.
   if (!authUser) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        {t("profile.loading") || "Loading profile..."}
-      </div>
-    );
+    return <LoadingPage message={t("profile.loading") || "Loading profile..."} />;
   }
 
   const currentUser = authUser;
