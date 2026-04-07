@@ -12,7 +12,6 @@ import {
   FileText,
   ClipboardCheck,
   Settings,
-  Shield,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -264,19 +263,13 @@ export function Sidebar({
       <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-3">
         <Link
           href={showPlatformNav ? `/${company}/dashboard/platform/overview` : `/${company}/dashboard`}
-          className="flex items-center gap-2.5 min-w-0"
+          className="flex items-center gap-2 min-w-0"
         >
-          {companyLogo ? (
-            <img
-              src={companyLogo}
-              alt={`${companyName} logo`}
-              className="h-7 w-7 shrink-0 rounded object-contain"
-            />
-          ) : (
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
-            </div>
-          )}
+          <img
+            src="/favicon.svg"
+            alt="Harmoniq"
+            className="h-6 w-6 shrink-0"
+          />
           {!isCollapsed && (
             <span className="text-sm font-semibold truncate">
               {showPlatformNav ? "Harmoniq" : companyName}
@@ -305,7 +298,7 @@ export function Sidebar({
         {showPlatformNav && (
           <div className="mb-1">
             {!isCollapsed && (
-              <p className="px-3 mb-1.5 text-[11px] font-medium uppercase tracking-widest text-sidebar-foreground/40">
+              <p className="px-3 mb-1.5 text-[11px] font-medium text-sidebar-foreground/40">
                 Platform
               </p>
             )}
@@ -327,13 +320,13 @@ export function Sidebar({
                         "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                         isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          ? "bg-primary/10 text-primary font-semibold"
                           : "text-sidebar-foreground/60",
                         isCollapsed && "justify-center px-2"
                       )}
                       title={isCollapsed ? getTitle(item) : undefined}
                     >
-                      <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-primary")} aria-hidden="true" />
                       {!isCollapsed && <span>{getTitle(item)}</span>}
                     </Link>
                   </li>
@@ -413,7 +406,7 @@ export function Sidebar({
 
         {/* Company Section Label */}
         {showPlatformNav && hasSelectedCompany && !isCollapsed && (
-          <p className="px-3 mb-1.5 text-[11px] font-medium uppercase tracking-widest text-sidebar-foreground/40">
+          <p className="px-3 mb-1.5 text-[11px] font-medium text-sidebar-foreground/40">
             {currentCompany?.name || "Company"}
           </p>
         )}
@@ -434,13 +427,13 @@ export function Sidebar({
                       "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                       isActive
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        ? "bg-primary/10 text-primary font-semibold"
                         : "text-sidebar-foreground/60",
                       isCollapsed && "justify-center px-2"
                     )}
                     title={isCollapsed ? getTitle(item) : undefined}
                   >
-                    <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-primary")} aria-hidden="true" />
                     {!isCollapsed && <span>{getTitle(item)}</span>}
                     {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
                       <span className="ml-auto rounded-full bg-sidebar-primary px-1.5 py-0.5 text-[10px] text-sidebar-primary-foreground">

@@ -8,10 +8,7 @@ import {
   Users,
   AlertTriangle,
   Package,
-  TrendingUp,
   ArrowRight,
-  Shield,
-  Globe,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
@@ -146,30 +143,23 @@ export default function PlatformOverviewPage() {
                   No companies yet. Create one to get started.
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="divide-y">
                   {recentCompanies.map((c) => (
                     <Link
                       key={c.id}
                       href={`/${company}/dashboard/platform/companies/${c.id}`}
-                      className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+                      className="flex items-center justify-between py-2.5 px-1 hover:bg-muted/50 -mx-1 px-2 rounded transition-colors"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
-                          {c.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{c.name}</p>
-                          <p className="text-xs text-muted-foreground">{c.country}</p>
-                        </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{c.name}</p>
+                        <p className="text-xs text-muted-foreground">{c.country}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={cn(
-                          "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border",
-                          statusColor(c.status)
-                        )}>
-                          {c.status}
-                        </span>
-                      </div>
+                      <span className={cn(
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
+                        statusColor(c.status)
+                      )}>
+                        {c.status}
+                      </span>
                     </Link>
                   ))}
                 </div>
@@ -221,26 +211,19 @@ export default function PlatformOverviewPage() {
           </Card>
         </div>
 
-        {/* Quick Links */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Quick Links row — simple text links */}
+        <div className="flex flex-wrap gap-4">
           {[
-            { title: "Analytics & Privacy", href: `/${company}/dashboard/platform/analytics`, icon: TrendingUp, desc: "Visitor analytics & GDPR" },
-            { title: "Companies", href: `/${company}/dashboard/platform/companies`, icon: Building2, desc: "Manage companies" },
-            { title: "Platform Users", href: `/${company}/dashboard/platform/users`, icon: Shield, desc: "Admin accounts" },
-            { title: "Platform Settings", href: `/${company}/dashboard/platform/settings`, icon: Globe, desc: "Global configuration" },
+            { title: "Analytics & Privacy", href: `/${company}/dashboard/platform/analytics` },
+            { title: "Platform Users", href: `/${company}/dashboard/platform/users` },
+            { title: "Platform Settings", href: `/${company}/dashboard/platform/settings` },
           ].map((link) => (
-            <Link key={link.href} href={link.href}>
-              <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-                <CardContent className="flex items-center gap-3 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <link.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{link.title}</p>
-                    <p className="text-xs text-muted-foreground">{link.desc}</p>
-                  </div>
-                </CardContent>
-              </Card>
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              {link.title} →
             </Link>
           ))}
         </div>
