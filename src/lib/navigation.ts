@@ -1,4 +1,4 @@
-export type AppChoice = "dashboard" | "app";
+export type AppChoice = "dashboard" | "app" | "platform";
 
 const DEFAULT_COMPANY_SLUG = "harmoniq";
 const COMPANY_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

@@ -85,6 +85,12 @@ export function CookieConsentBanner({ translations: t }: CookieConsentBannerProp
     setVisible(false);
     setShowPreferences(false);
     window.dispatchEvent(new CustomEvent("harmoniq:consent", { detail: consent }));
+    // Log consent for GDPR audit trail
+    fetch("/api/consent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(consent),
+    }).catch(() => {});
   };
 
   const handleAcceptAll = () => save({ necessary: true, analytics: true, marketing: true });

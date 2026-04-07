@@ -37,6 +37,113 @@ interface AnalyticsData {
   locations: { lat: number; lng: number; city: string | null; country: string; count: number }[];
 }
 
+interface ConsentRecord {
+  id: string;
+  ip_hash: string;
+  user_agent: string;
+  necessary: boolean;
+  analytics: boolean;
+  marketing: boolean;
+  created_at: string;
+}
+
+function ConsentAuditLog() {
+  const [records, setRecords] = React.useState<ConsentRecord[]>([]);
+  const [total, setTotal] = React.useState(0);
+  const [loading, setLoading] = React.useState(true);
+
+  const fetchRecords = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/consent?limit=20");
+      if (res.ok) {
+        const data = await res.json();
+        setRecords(data.records || []);
+        setTotal(data.total || 0);
+      }
+    } catch {
+      // API may not be ready yet
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => { fetchRecords(); }, [fetchRecords]);
+
+  const consentRate = records.length > 0
+    ? Math.round(records.filter(r => r.analytics).length / records.length * 100)
+    : 0;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Activity className="h-4 w-4" />
+          Consent Audit Log
+        </CardTitle>
+        <div className="flex items-center gap-3">
+          <Badge variant="secondary">{total} total records</Badge>
+          <Button variant="ghost" size="sm" onClick={fetchRecords}>
+            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {records.length > 0 && (
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="rounded-lg border p-3 text-center">
+              <p className="text-2xl font-bold">{total}</p>
+              <p className="text-xs text-muted-foreground">Total Consents</p>
+            </div>
+            <div className="rounded-lg border p-3 text-center">
+              <p className="text-2xl font-bold text-success">{consentRate}%</p>
+              <p className="text-xs text-muted-foreground">Analytics Opt-in</p>
+            </div>
+            <div className="rounded-lg border p-3 text-center">
+              <p className="text-2xl font-bold">{records.filter(r => r.marketing).length}</p>
+              <p className="text-xs text-muted-foreground">Marketing Opt-in</p>
+            </div>
+          </div>
+        )}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-2 font-medium text-muted-foreground">Time</th>
+                <th className="text-left py-2 font-medium text-muted-foreground">IP Hash</th>
+                <th className="text-center py-2 font-medium text-muted-foreground">Analytics</th>
+                <th className="text-center py-2 font-medium text-muted-foreground">Marketing</th>
+                <th className="text-left py-2 font-medium text-muted-foreground">Device</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">Loading...</td></tr>
+              ) : records.length === 0 ? (
+                <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">No consent records yet. Records appear after visitors interact with the cookie banner.</td></tr>
+              ) : records.map((r) => (
+                <tr key={r.id} className="border-b last:border-0">
+                  <td className="py-2 text-xs">{new Date(r.created_at).toLocaleString()}</td>
+                  <td className="py-2 font-mono text-xs text-muted-foreground">{r.ip_hash.slice(0, 8)}…</td>
+                  <td className="py-2 text-center">
+                    <Badge variant={r.analytics ? "success" : "secondary"} className="text-xs">{r.analytics ? "Yes" : "No"}</Badge>
+                  </td>
+                  <td className="py-2 text-center">
+                    <Badge variant={r.marketing ? "success" : "secondary"} className="text-xs">{r.marketing ? "Yes" : "No"}</Badge>
+                  </td>
+                  <td className="py-2 text-xs text-muted-foreground truncate max-w-[200px]">
+                    {r.user_agent.includes("Mobile") ? "Mobile" : r.user_agent.includes("Mac") ? "Desktop (Mac)" : r.user_agent.includes("Windows") ? "Desktop (Win)" : "Other"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function PlatformAnalyticsPage() {
   const { formatNumber } = useTranslation();
   const { items: companies } = useCompanyStore();
@@ -362,6 +469,8 @@ export default function PlatformAnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
+
+            <ConsentAuditLog />
           </div>
         )}
       </div>

@@ -5,13 +5,13 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { Mail, Loader, Eye, EyeOff, Lock, LayoutDashboard, HardHat } from "lucide-react";
+import { Mail, Loader, Eye, EyeOff, Lock, LayoutDashboard, HardHat, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
-import { clearClientCookie, setClientCookie } from "@/lib/client-cookies";
+import { setClientCookie } from "@/lib/client-cookies";
 import { type AppChoice, buildCompanyDestination, buildPlatformAnalyticsDestination } from "@/lib/navigation";
 import { getPlatformSlugFilterList, isPlatformSlug } from "@/lib/platform-config";
 import { useTranslation } from "@/i18n";
@@ -65,13 +65,13 @@ function LoginForm() {
   const [failedAttempts, setFailedAttempts] = React.useState(0);
   const [isMobile, setIsMobile] = React.useState(false);
   const [hasMounted, setHasMounted] = React.useState(false);
-  const [appChoice, setAppChoice] = React.useState<"dashboard" | "app">("dashboard");
+  const [appChoice, setAppChoice] = React.useState<AppChoice>("dashboard");
 
   React.useEffect(() => {
     const mobile = window.innerWidth < 768;
     setIsMobile(mobile);
     const stored = window.localStorage.getItem(APP_CHOICE_STORAGE_KEY);
-    setAppChoice(mobile ? "app" : (stored === "app" || stored === "dashboard" ? stored : "dashboard"));
+    setAppChoice(mobile ? "app" : (stored === "app" || stored === "dashboard" || stored === "platform" ? stored as AppChoice : "dashboard"));
     setHasMounted(true);
 
     const onResize = () => {
@@ -92,8 +92,7 @@ function LoginForm() {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    // Regular login should never keep the platform admin entry flag
-    clearClientCookie(ADMIN_ENTRY_COOKIE);
+    // Persist app choice
     window.localStorage.setItem(APP_CHOICE_STORAGE_KEY, appChoice);
     setClientCookie(APP_CHOICE_COOKIE, appChoice, 60 * 60 * 24 * 30);
   }, [appChoice]);
@@ -144,8 +143,8 @@ function LoginForm() {
 
   const getAllowedApps = (role: string): AppChoice[] => {
     if (role === "employee") return ["app"];
-    // super_admin, company_admin, manager can access both
-    if (role === "super_admin" || role === "company_admin" || role === "manager") return ["dashboard", "app"];
+    if (role === "super_admin") return ["dashboard", "app", "platform"];
+    if (role === "company_admin" || role === "manager") return ["dashboard", "app"];
     return ["dashboard"];
   };
 
@@ -288,38 +287,36 @@ function LoginForm() {
         return;
       }
 
-      // Super admins: from the normal login page, route to a real tenant dashboard (not the platform portal).
-      // The platform portal is only accessible via the direct /admin-login link.
+      // Super admins: route based on app choice
       if (profile.role === "super_admin") {
-        const isAdminEntry = searchParams.get("source") === "admin-link";
-
-        if (!isAdminEntry) {
-          // Try to find a real (non-platform) company in Supabase
-          const { data: nonPlatform } = await supabase
+        if (appChoice === "platform") {
+          // Set admin entry cookie for platform access
+          setClientCookie(ADMIN_ENTRY_COOKIE, "true", 60 * 60);
+          const { data: adminCompany } = await supabase
             .from("companies")
-            .select("id, slug")
+            .select("slug")
             .not("slug", "in", PLATFORM_SLUGS_LIST)
             .order("created_at", { ascending: true })
             .limit(1)
             .single();
-
-          const slug = nonPlatform?.slug || "harmoniq";
-          if (nonPlatform?.id) {
-            saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nonPlatform.id);
-          }
-          window.location.href = buildCompanyDestination(slug, appChoice);
+          window.location.href = buildPlatformAnalyticsDestination(adminCompany?.slug);
           return;
         }
 
-        // Admin entry: route to platform portal
-        const { data: adminCompany } = await supabase
+        // Dashboard or Field App — route to a real tenant
+        const { data: nonPlatform } = await supabase
           .from("companies")
-          .select("slug")
+          .select("id, slug")
           .not("slug", "in", PLATFORM_SLUGS_LIST)
           .order("created_at", { ascending: true })
           .limit(1)
           .single();
-        window.location.href = buildPlatformAnalyticsDestination(adminCompany?.slug);
+
+        const slug = nonPlatform?.slug || "harmoniq";
+        if (nonPlatform?.id) {
+          saveToStorage(SELECTED_COMPANY_STORAGE_KEY, nonPlatform.id);
+        }
+        window.location.href = buildCompanyDestination(slug, appChoice);
         return;
       }
 
@@ -564,7 +561,7 @@ function LoginForm() {
               {hasMounted && !isMobile && (
                 <div role="radiogroup" aria-label={t("auth.chooseApp") || "Choose app"}>
                   <Label className="text-sm font-medium mb-1.5 text-zinc-300">{t("auth.chooseApp") || "Choose app"}</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       role="radio"
@@ -573,7 +570,6 @@ function LoginForm() {
                       disabled={isLoading}
                       className={`flex items-center justify-center gap-2 rounded-lg py-2 px-3 text-sm font-medium transition-colors ${appChoice === "dashboard" ? "bg-zinc-700 text-white" : "bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50"}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full flex-shrink-0 ${appChoice === "dashboard" ? "bg-zinc-400" : "bg-zinc-700"}`} />
                       <LayoutDashboard className="h-4 w-4" />
                       {t("auth.dashboard")}
                     </button>
@@ -585,9 +581,19 @@ function LoginForm() {
                       disabled={isLoading}
                       className={`flex items-center justify-center gap-2 rounded-lg py-2 px-3 text-sm font-medium transition-colors ${appChoice === "app" ? "bg-zinc-700 text-white" : "bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50"}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full flex-shrink-0 ${appChoice === "app" ? "bg-zinc-400" : "bg-zinc-700"}`} />
                       <HardHat className="h-4 w-4" />
                       {t("auth.mobileApp")}
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={appChoice === "platform"}
+                      onClick={() => setAppChoice("platform")}
+                      disabled={isLoading}
+                      className={`flex items-center justify-center gap-2 rounded-lg py-2 px-3 text-sm font-medium transition-colors ${appChoice === "platform" ? "bg-emerald-800/60 text-emerald-300" : "bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50"}`}
+                    >
+                      <Shield className="h-4 w-4" />
+                      Platform
                     </button>
                   </div>
                 </div>
