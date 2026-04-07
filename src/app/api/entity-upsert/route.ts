@@ -63,17 +63,31 @@ export async function POST(request: NextRequest) {
 
     const supabaseUrl = getSupabaseUrl();
     const publishableKey = getSupabasePublishableKey();
-    const { data: { session } } = await supabase.auth.getSession();
 
-    if (!supabaseUrl || !publishableKey || !session?.access_token) {
+    if (!supabaseUrl || !publishableKey) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    // Use service role key if available to bypass RLS (we already validated
+    // company ownership above). Fall back to user's session token.
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+    let authToken: string;
+
+    if (serviceRoleKey) {
+      authToken = serviceRoleKey;
+    } else {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+      }
+      authToken = session.access_token;
     }
 
     const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
       method: "POST",
       headers: {
         "apikey": publishableKey,
-        "Authorization": `Bearer ${session.access_token}`,
+        "Authorization": `Bearer ${authToken}`,
         "Content-Type": "application/json",
         "Prefer": "resolution=merge-duplicates",
       },

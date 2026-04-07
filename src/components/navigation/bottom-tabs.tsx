@@ -98,11 +98,11 @@ export function BottomTabs({ company }: BottomTabsProps) {
                   "flex min-h-[44px] flex-col items-center justify-center px-2 py-1.5",
                   "transition-colors active:opacity-70",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  isActive ? "text-foreground" : "text-muted-foreground/50"
+                  isActive ? "text-primary" : "text-muted-foreground/60"
                 )}
               >
                 {isActive && (
-                  <div className="h-[3px] w-6 rounded-full bg-primary mx-auto mb-1" />
+                  <div className="h-[3px] w-6 rounded-full bg-primary mx-auto mb-1" aria-hidden="true" />
                 )}
                 <item.icon
                   className="h-5 w-5"

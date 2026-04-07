@@ -248,7 +248,7 @@ export default function Home() {
             variants={stagger}
             className="max-w-4xl mx-auto text-center"
           >
-            <motion.h1 variants={fadeUp} className="text-5xl sm:text-7xl lg:text-[5.5rem] font-medium tracking-tight leading-[1.05] text-white">
+            <motion.h1 variants={fadeUp} className="text-3xl sm:text-5xl lg:text-[5.5rem] font-medium tracking-tight leading-[1.05] text-white">
               Safety and asset{"\n"}management, reimagined
             </motion.h1>
             <motion.p variants={fadeUp} className="mt-6 text-lg lg:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
@@ -308,7 +308,7 @@ export default function Home() {
       >
         <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <p className="text-3xl sm:text-4xl lg:text-5xl font-light leading-snug text-zinc-300">
+            <p className="text-2xl sm:text-3xl lg:text-5xl font-light leading-snug text-zinc-300">
               Trusted by <span className="text-white font-semibold">operations teams</span> across industries worldwide.
               A growing community committed to <span className="text-white font-bold">protecting their people and assets</span> while
               staying compliant.
@@ -333,7 +333,7 @@ export default function Home() {
       {/* ── Features: Floating Pills Layout ── */}
       <section id="features" ref={featuresRef} className="py-24 lg:py-40 relative z-10 overflow-hidden">
         <motion.div style={prefersReducedMotion ? undefined : { y: featuresY }} className="container mx-auto px-4 lg:px-8">
-          <div className="relative max-w-6xl mx-auto min-h-[600px] lg:min-h-[700px] flex items-center justify-center">
+          <div className="relative max-w-6xl mx-auto min-h-0 lg:min-h-[700px] flex items-center justify-center">
 
             {/* Floating feature pills, parallax fly-in from off-screen */}
             {features.map((feature, i) => {
@@ -374,7 +374,7 @@ export default function Home() {
             >
               <motion.h2
                 variants={fadeUp}
-                className="text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white"
+                className="text-3xl sm:text-4xl lg:text-6xl font-normal leading-tight text-white"
               >
                 More than a management tool
               </motion.h2>
@@ -384,7 +384,7 @@ export default function Home() {
             </motion.div>
 
             {/* Mobile: show pills in a grid below */}
-            <div className="absolute bottom-0 left-0 right-0 lg:hidden">
+            <div className="mt-8 lg:hidden">
               <div className="flex flex-wrap justify-center gap-2">
                 {features.slice(0, 6).map((feature) => (
                   <div key={feature.title} className="flex items-center gap-2 rounded-full bg-zinc-800/60 px-4 py-2">
@@ -410,10 +410,10 @@ export default function Home() {
           >
             {/* Left: Grey image + testimonial */}
             <motion.div variants={slideLeft} className="flex flex-col gap-6">
-              <div className="flex-1 rounded-3xl rounded-tl-none bg-zinc-800/50 overflow-hidden relative min-h-[300px]">
+              <div className="flex-1 rounded-3xl rounded-tl-none bg-zinc-800/50 overflow-hidden relative min-h-[200px] sm:min-h-[300px]">
                 <div className="absolute inset-0 bg-gradient-to-br from-zinc-700/30 to-zinc-900/50" />
                 <div className="relative z-10 flex items-end h-full p-8 lg:p-10">
-                  <blockquote className="text-2xl lg:text-3xl font-medium text-white leading-snug">
+                  <blockquote className="text-lg sm:text-2xl lg:text-3xl font-medium text-white leading-snug">
                     &ldquo;Harmoniq transformed our workplace safety. Incident reporting went from days to minutes.&rdquo;
                   </blockquote>
                 </div>
@@ -428,7 +428,7 @@ export default function Home() {
             </motion.div>
 
             {/* Right: App screenshot */}
-            <motion.div variants={slideRight} className="rounded-3xl overflow-hidden bg-zinc-900/40 min-h-[400px]">
+            <motion.div variants={slideRight} className="rounded-3xl overflow-hidden bg-zinc-900/40 min-h-[250px] sm:min-h-[400px]">
               <Image
                 src="/screen-02.png"
                 alt="Harmoniq App Screenshot"
@@ -501,7 +501,7 @@ export default function Home() {
             className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto"
           >
             <motion.div variants={slideLeft}>
-              <h2 className="text-4xl sm:text-5xl font-bold leading-tight mb-6">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-6">
                 Safety & assets in your pocket
               </h2>
               <p className="text-zinc-400 text-lg leading-relaxed mb-8">
@@ -534,7 +534,7 @@ export default function Home() {
                 <motion.div
                   key={i}
                   variants={i === 0 ? slideFromLeft : slideFromRight}
-                  className={`w-[180px] h-[360px] rounded-[28px] bg-zinc-900 p-2 shadow-xl ${i === 1 ? "mt-12" : ""}`}
+                  className={`w-[140px] sm:w-[180px] h-[280px] sm:h-[360px] rounded-[28px] bg-zinc-900 p-2 shadow-xl ${i === 1 ? "mt-8 sm:mt-12" : ""}`}
                 >
                   <div className="w-full h-full rounded-[22px] bg-zinc-950 overflow-hidden flex flex-col">
                     {/* Status bar */}
@@ -692,7 +692,7 @@ export default function Home() {
           >
             <motion.div variants={fadeUp} className="mb-16">
               <h2
-                className="text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-4"
+                className="text-3xl sm:text-4xl lg:text-6xl font-normal leading-tight text-white mb-4"
               >
                 Your industry. Your safety.
               </h2>
@@ -772,8 +772,8 @@ export default function Home() {
               ];
               const current = industries[selectedIndustry];
               return (
-                <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-0 lg:gap-12">
-                  <div className="flex flex-col">
+                <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-12">
+                  <div className="flex lg:flex-col overflow-x-auto lg:overflow-visible gap-1 pb-2 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0">
                     {industries.map((industry, i) => {
                       const Icon = industry.icon;
                       const isActive = selectedIndustry === i;
@@ -781,14 +781,14 @@ export default function Home() {
                         <button
                           key={industry.name}
                           onClick={() => setSelectedIndustry(i)}
-                          className={`flex items-center gap-3 py-3 px-2 text-left transition-colors duration-150 ${
+                          className={`flex items-center gap-2 lg:gap-3 py-2 lg:py-3 px-3 lg:px-2 text-left transition-colors duration-150 shrink-0 rounded-full lg:rounded-none ${
                             isActive
-                              ? "text-white"
+                              ? "text-white bg-zinc-800/60 lg:bg-transparent"
                               : "text-zinc-500 hover:text-zinc-300"
                           }`}
                         >
                           <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                          <span className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}>
+                          <span className={`text-xs lg:text-sm whitespace-nowrap ${isActive ? "font-semibold" : "font-medium"}`}>
                             {industry.name}
                           </span>
                         </button>
@@ -802,7 +802,7 @@ export default function Home() {
                     <p className="text-zinc-400 leading-relaxed mb-6">
                       {current.description}
                     </p>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                       {current.features.map((feature) => (
                         <div key={feature} className="flex items-center gap-2 text-sm text-zinc-300">
                           <div className="h-1 w-1 rounded-full bg-zinc-500 shrink-0" />

@@ -195,7 +195,7 @@ export function CookieConsentBanner({ settings, translations: t }: CookieConsent
           <p className="text-sm text-zinc-400 leading-relaxed">
             {t.description}
           </p>
-          <div className="flex items-center gap-5 mt-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-5 mt-4">
             <button
               onClick={handleAcceptAll}
               className="text-sm font-semibold text-white hover:text-zinc-300 transition-colors"

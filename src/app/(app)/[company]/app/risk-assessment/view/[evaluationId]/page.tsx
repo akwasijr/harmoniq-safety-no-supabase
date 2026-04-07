@@ -829,6 +829,28 @@ export default function RiskAssessmentViewPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
+              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Status:</span>
+              <Badge
+                variant={
+                  evaluation.status === "submitted"
+                    ? "warning"
+                    : evaluation.status === "reviewed"
+                      ? "success"
+                      : "secondary"
+                }
+                className="text-[10px]"
+              >
+                {evaluation.status === "submitted"
+                  ? "Submitted — Awaiting Review"
+                  : evaluation.status === "reviewed"
+                    ? "Reviewed"
+                    : evaluation.status === "draft"
+                      ? "Draft"
+                      : evaluation.status}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
               <FileText className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Type:</span>
               <span className="font-medium">

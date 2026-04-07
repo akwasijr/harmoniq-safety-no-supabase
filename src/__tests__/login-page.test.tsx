@@ -20,7 +20,11 @@ vi.mock("@/i18n", () => ({
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
-  createClient: vi.fn(),
+  createClient: vi.fn(() => ({
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+    },
+  })),
 }));
 
 vi.mock("@/lib/client-cookies", () => ({
