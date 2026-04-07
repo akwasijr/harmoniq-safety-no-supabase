@@ -127,7 +127,7 @@ const initialFormData: SAMFormData = {
 
 function getRiskLevel(score: number): { level: string; color: string; bgColor: string; priority: number } {
   if (score <= 4) return { level: "Låg (Low)", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950", priority: 3 };
-  if (score <= 8) return { level: "Medel (Medium)", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950", priority: 2 };
+  if (score <= 8) return { level: "Medel (Medium)", color: "text-amber-700 dark:text-amber-300", bgColor: "bg-amber-100 dark:bg-amber-900/50", priority: 2 };
   if (score <= 12) return { level: "Hög (High)", color: "text-orange-700 dark:text-orange-300", bgColor: "bg-orange-100 dark:bg-orange-950", priority: 1 };
   return { level: "Mycket hög (Very High)", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950", priority: 0 };
 }
@@ -414,7 +414,7 @@ export default function SAMFormPage() {
                 <Card className="bg-yellow-50 border-yellow-200">
                   <CardContent className="py-3 text-center">
                     <p className="text-2xl font-bold text-yellow-600">{mediumRisks}</p>
-                    <p className="text-xs text-yellow-700">Medel</p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300">Medel</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-green-50 border-green-200">

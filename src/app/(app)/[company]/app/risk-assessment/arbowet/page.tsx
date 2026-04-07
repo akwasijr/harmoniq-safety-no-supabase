@@ -379,7 +379,7 @@ export default function ArbowetFormPage() {
               <Card className="bg-yellow-50 border-yellow-200">
                 <CardContent className="py-2 text-center">
                   <p className="text-lg font-bold text-yellow-600">{partialCount}</p>
-                  <p className="text-xs text-yellow-700">~</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">~</p>
                 </CardContent>
               </Card>
               <Card className="bg-red-50 border-red-200">

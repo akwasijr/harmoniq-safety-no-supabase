@@ -131,7 +131,7 @@ const initialFormData: JHAFormData = {
 function getRiskLevel(score: number): { level: string; color: string; bgColor: string } {
   if (score === 0) return { level: "Not assessed", color: "text-muted-foreground", bgColor: "bg-muted" };
   if (score <= 5) return { level: "Low", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950" };
-  if (score <= 11) return { level: "Medium", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950" };
+  if (score <= 11) return { level: "Medium", color: "text-amber-700 dark:text-amber-300", bgColor: "bg-amber-100 dark:bg-amber-900/50" };
   return { level: "High", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950" };
 }
 
@@ -551,7 +551,7 @@ export default function JHAFormPage() {
                                 <p className={cn("font-semibold", risk.color)}>
                                   Risk Score: {riskScore} ({risk.level})
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <p className={cn("text-xs mt-1", risk.color, "opacity-80")}>
                                   {riskScore <= 5 ? "Monitor and address when practical" :
                                    riskScore <= 11 ? "Plan corrective action" :
                                    "Immediate action required"}
@@ -746,13 +746,13 @@ export default function JHAFormPage() {
             </Card>
 
             <Card className={cn("border-2", 
-              maxRiskScore <= 5 ? "border-green-300" : 
-              maxRiskScore <= 11 ? "border-yellow-300" : "border-red-300"
+              maxRiskScore <= 5 ? "border-green-300 dark:border-green-800" : 
+              maxRiskScore <= 11 ? "border-amber-300 dark:border-amber-800" : "border-red-300 dark:border-red-800"
             )}>
               <CardHeader className="py-3">
                 <CardTitle className="text-base flex items-center justify-between">
                   <span>Risk Summary</span>
-                  <span className={cn("text-xs font-medium", overallRisk.color)}>
+                  <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", overallRisk.bgColor, overallRisk.color)}>
                     {overallRisk.level} ({maxRiskScore})
                   </span>
                 </CardTitle>
@@ -827,7 +827,7 @@ export default function JHAFormPage() {
           <Button
             onClick={handleNext}
             disabled={!canProceed() || isSubmitting}
-            className="flex-1 h-14 gap-2 text-base"
+            className="flex-1 h-14 gap-2 text-base disabled:opacity-40"
           >
             {isSubmitting ? (
               t("riskAssessment.submitting")

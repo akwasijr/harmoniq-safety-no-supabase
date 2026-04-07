@@ -158,7 +158,7 @@ function calculateRiskScore(severity: number, probability: number, exposure: num
 
 function getRiskPriority(score: number): { priority: "low" | "medium" | "high"; color: string; bgColor: string } {
   if (score <= 3) return { priority: "low", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950" };
-  if (score <= 9) return { priority: "medium", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950" };
+  if (score <= 9) return { priority: "medium", color: "text-amber-700 dark:text-amber-300", bgColor: "bg-amber-100 dark:bg-amber-900/50" };
   return { priority: "high", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950" };
 }
 
@@ -555,7 +555,7 @@ export default function RIEFormPage() {
                 <Card className="bg-yellow-50 border-yellow-200">
                   <CardContent className="py-3 text-center">
                     <p className="text-2xl font-bold text-yellow-600">{mediumRisks}</p>
-                    <p className="text-xs text-yellow-700">Midden</p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300">Midden</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-green-50 border-green-200">
