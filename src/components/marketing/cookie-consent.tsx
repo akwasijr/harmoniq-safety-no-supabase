@@ -128,7 +128,7 @@ export function CookieConsentBanner({ settings, translations: t }: CookieConsent
 
           <div className="space-y-3">
             {/* Necessary */}
-            <div className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-5 py-4">
+            <div className="flex items-center justify-between rounded-xl bg-white/5 border border-zinc-700/40 px-5 py-4">
               <div>
                 <span className="text-sm font-medium text-white">{t.necessary}</span>
                 <p className="text-xs text-zinc-500 mt-0.5">{t.necessary_desc}</p>
@@ -137,7 +137,7 @@ export function CookieConsentBanner({ settings, translations: t }: CookieConsent
             </div>
 
             {/* Analytics */}
-            <div className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-5 py-4">
+            <div className="flex items-center justify-between rounded-xl bg-white/5 border border-zinc-700/40 px-5 py-4">
               <div>
                 <span className="text-sm font-medium text-white">{t.analytics}</span>
                 <p className="text-xs text-zinc-500 mt-0.5">{t.analytics_desc}</p>
@@ -149,7 +149,7 @@ export function CookieConsentBanner({ settings, translations: t }: CookieConsent
             </div>
 
             {/* Marketing */}
-            <div className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-5 py-4">
+            <div className="flex items-center justify-between rounded-xl bg-white/5 border border-zinc-700/40 px-5 py-4">
               <div>
                 <span className="text-sm font-medium text-white">{t.marketing}</span>
                 <p className="text-xs text-zinc-500 mt-0.5">{t.marketing_desc}</p>
@@ -191,11 +191,11 @@ export function CookieConsentBanner({ settings, translations: t }: CookieConsent
   // Minimal banner
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-xl">
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/90 backdrop-blur-xl px-6 py-5">
+        <div className="rounded-2xl border border-zinc-700/40 bg-zinc-900/90 backdrop-blur-xl px-6 py-5">
           <p className="text-sm text-zinc-400 leading-relaxed">
             {t.description}
           </p>
-          <div className="flex items-center gap-5 mt-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-5 mt-4">
             <button
               onClick={handleAcceptAll}
               className="text-sm font-semibold text-white hover:text-zinc-300 transition-colors"

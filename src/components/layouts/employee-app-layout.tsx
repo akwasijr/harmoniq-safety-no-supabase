@@ -66,7 +66,7 @@ export function EmployeeAppLayout({
     >
       {/* Header */}
       {showHeader && !isFullPage && (
-        <header className="field-app-surface sticky top-0 z-30 flex h-14 items-center justify-between bg-brand-solid px-4">
+        <header className="field-app-surface sticky top-0 z-30 flex h-[60px] items-center justify-between bg-brand-solid px-4">
           <Link href={`/${company}/app`} className="flex items-center gap-2">
             {companyLogo ? (
               <img
@@ -91,7 +91,7 @@ export function EmployeeAppLayout({
       )}
 
       {/* Main content */}
-      <main className={`flex-1 ${isFullPage ? "pb-0" : "pb-20"}`}>{children}</main>
+      <main className={`flex-1 ${isFullPage ? "pb-0" : "pb-[72px]"}`}>{children}</main>
 
       {/* Bottom navigation — hidden on full-page flows like report incident */}
       {!isFullPage && <BottomTabs company={company} />}

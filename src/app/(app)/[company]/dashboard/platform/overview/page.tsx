@@ -4,16 +4,12 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-  Activity,
   AlertTriangle,
   ArrowRight,
   Building2,
-  Database,
-  Globe,
   Package,
   RefreshCw,
   Server,
-  Shield,
   Users,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,10 +21,6 @@ import { useCompanyStore } from "@/stores/company-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useAssetsStore } from "@/stores/assets-store";
-import {
-  DEFAULT_PLATFORM_PRIVACY_SETTINGS,
-  type PlatformPrivacySettings,
-} from "@/lib/platform-privacy-settings";
 import { cn } from "@/lib/utils";
 
 interface PlatformHealthSnapshot {
@@ -44,18 +36,6 @@ interface PlatformHealthSnapshot {
   };
 }
 
-interface AnalyticsSnapshot {
-  total: number;
-  uniqueVisitors: number;
-  by_country: Record<string, number>;
-}
-
-interface ConsentRecord {
-  id: string;
-  analytics: boolean;
-  marketing: boolean;
-}
-
 export default function PlatformOverviewPage() {
   const params = useParams();
   const company = params.company as string;
@@ -66,17 +46,14 @@ export default function PlatformOverviewPage() {
   const { items: assets } = useAssetsStore();
 
   const [health, setHealth] = React.useState<PlatformHealthSnapshot | null>(null);
-  const [analytics, setAnalytics] = React.useState<AnalyticsSnapshot | null>(null);
-  const [privacySettings, setPrivacySettings] = React.useState<PlatformPrivacySettings>(
-    DEFAULT_PLATFORM_PRIVACY_SETTINGS
-  );
-  const [consentRecords, setConsentRecords] = React.useState<ConsentRecord[]>([]);
-  const [loadingObservability, setLoadingObservability] = React.useState(true);
+  const [loadingHealth, setLoadingHealth] = React.useState(true);
 
   const activeCompanies = companies.filter((c) => c.status === "active");
   const trialCompanies = companies.filter((c) => c.status === "trial");
+  const suspendedCompanies = companies.filter((c) => c.status === "suspended");
   const totalUsers = users.length;
-  const adminUsers = users.filter((u) => u.role === "super_admin" || u.role === "company_admin");
+  const companyAdmins = users.filter((u) => u.role === "company_admin");
+  const superAdmins = users.filter((u) => u.role === "super_admin");
   const openIncidents = incidents.filter((i) => i.status === "new" || i.status === "in_progress");
 
   const recentCompanies = [...companies]
@@ -87,47 +64,25 @@ export default function PlatformOverviewPage() {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
-  const fetchObservability = React.useCallback(async () => {
-    setLoadingObservability(true);
+  const fetchHealth = React.useCallback(async () => {
+    setLoadingHealth(true);
 
     try {
-      const [healthResponse, analyticsResponse, consentResponse, privacyResponse] = await Promise.all([
-        fetch("/api/health", { cache: "no-store" }),
-        fetch("/api/analytics?days=30", { cache: "no-store" }),
-        fetch("/api/consent?limit=100", { cache: "no-store" }),
-        fetch("/api/platform/privacy-settings", { cache: "no-store" }),
-      ]);
+      const healthResponse = await fetch("/api/health", { cache: "no-store" });
 
       if (healthResponse.ok) {
         setHealth((await healthResponse.json()) as PlatformHealthSnapshot);
-      }
-
-      if (analyticsResponse.ok) {
-        setAnalytics((await analyticsResponse.json()) as AnalyticsSnapshot);
       } else {
-        setAnalytics(null);
-      }
-
-      if (consentResponse.ok) {
-        const consentData = (await consentResponse.json()) as { records?: ConsentRecord[] };
-        setConsentRecords(consentData.records || []);
-      } else {
-        setConsentRecords([]);
-      }
-
-      if (privacyResponse.ok) {
-        setPrivacySettings((await privacyResponse.json()) as PlatformPrivacySettings);
-      } else {
-        setPrivacySettings(DEFAULT_PLATFORM_PRIVACY_SETTINGS);
+        setHealth(null);
       }
     } finally {
-      setLoadingObservability(false);
+      setLoadingHealth(false);
     }
   }, []);
 
   React.useEffect(() => {
-    void fetchObservability();
-  }, [fetchObservability]);
+    void fetchHealth();
+  }, [fetchHealth]);
 
   const statusColor = (status: string) => {
     switch (status) {
@@ -157,24 +112,9 @@ export default function PlatformOverviewPage() {
     }
   };
 
-  const topCountry = React.useMemo(() => {
-    if (!analytics) {
-      return null;
-    }
-
-    const [country, visits] =
-      Object.entries(analytics.by_country || {}).sort((a, b) => b[1] - a[1])[0] || [];
-
-    return country ? { country, visits } : null;
-  }, [analytics]);
-
-  const analyticsOptInRate =
-    consentRecords.length > 0
-      ? Math.round((consentRecords.filter((record) => record.analytics).length / consentRecords.length) * 100)
-      : 0;
-
   const healthLabel = health?.ok ? "Healthy" : health ? "Attention" : "Loading";
   const uptimeHours = health ? Math.floor(health.uptime_seconds / 3600) : 0;
+  const platformSignals = [...(health?.issues ?? []), ...(health?.warnings ?? [])].slice(0, 4);
 
   return (
     <RoleGuard allowedRoles={["super_admin", "company_admin"]}>
@@ -182,16 +122,19 @@ export default function PlatformOverviewPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold">Platform Overview</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Tenant operations, platform health, and administrator coverage across the live platform.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => void fetchObservability()}
-              disabled={loadingObservability}
+              onClick={() => void fetchHealth()}
+              disabled={loadingHealth}
             >
-              <RefreshCw className={cn("h-4 w-4", loadingObservability && "animate-spin")} />
+              <RefreshCw className={cn("h-4 w-4", loadingHealth && "animate-spin")} />
               Refresh
             </Button>
             <Link href={`/${company}/dashboard/platform/companies`}>
@@ -205,16 +148,16 @@ export default function PlatformOverviewPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KPICard
-            title="Total Companies"
-            value={companies.length}
+            title="Active Companies"
+            value={activeCompanies.length}
             icon={Building2}
             trend={{ value: trialCompanies.length, direction: "up", label: "on trial" }}
           />
           <KPICard
-            title="Total Users"
+            title="Platform Users"
             value={totalUsers}
             icon={Users}
-            trend={{ value: adminUsers.length, direction: "up", label: "admins" }}
+            trend={{ value: companyAdmins.length + superAdmins.length, direction: "up", label: "admins" }}
           />
           <KPICard
             title="Open Incidents"
@@ -257,6 +200,24 @@ export default function PlatformOverviewPage() {
                 <span className="text-sm font-medium">Uptime</span>
                 <span className="text-sm text-muted-foreground">{health ? `${uptimeHours}h` : "--"}</span>
               </div>
+              <div className="rounded-lg border p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Signals to review</span>
+                  <span className="text-sm text-muted-foreground">{platformSignals.length}</span>
+                </div>
+                <div className="mt-2 space-y-2">
+                  {platformSignals.length > 0 ? (
+                    platformSignals.map((signal) => (
+                      <div key={signal} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                        <span>{signal}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No active platform warnings.</p>
+                  )}
+                </div>
+              </div>
               <Link href={`/${company}/dashboard/platform/settings`}>
                 <Button variant="ghost" size="sm" className="gap-1 text-xs">
                   Review platform settings <ArrowRight className="h-3.5 w-3.5" />
@@ -268,28 +229,30 @@ export default function PlatformOverviewPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-medium">
-                <Globe className="h-4 w-4 text-primary" />
-                Public Website Analytics
+                <Building2 className="h-4 w-4 text-primary" />
+                Company Lifecycle
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between rounded-lg border p-3">
-                <span className="text-sm font-medium">Unique visitors (30d)</span>
-                <span className="text-sm text-muted-foreground">{analytics?.uniqueVisitors ?? 0}</span>
+                <span className="text-sm font-medium">Total companies</span>
+                <span className="text-sm text-muted-foreground">{companies.length}</span>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
-                <span className="text-sm font-medium">Page views</span>
-                <span className="text-sm text-muted-foreground">{analytics?.total ?? 0}</span>
+                <span className="text-sm font-medium">Active tenants</span>
+                <span className="text-sm text-muted-foreground">{activeCompanies.length}</span>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
-                <span className="text-sm font-medium">Top country</span>
-                <span className="text-sm text-muted-foreground">
-                  {topCountry ? `${topCountry.country} (${topCountry.visits})` : "No data"}
-                </span>
+                <span className="text-sm font-medium">Trial tenants</span>
+                <span className="text-sm text-muted-foreground">{trialCompanies.length}</span>
               </div>
-              <Link href={`/${company}/dashboard/platform/analytics`}>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">Suspended tenants</span>
+                <span className="text-sm text-muted-foreground">{suspendedCompanies.length}</span>
+              </div>
+              <Link href={`/${company}/dashboard/platform/companies`}>
                 <Button variant="ghost" size="sm" className="gap-1 text-xs">
-                  Open website analytics <ArrowRight className="h-3.5 w-3.5" />
+                  Manage company portfolio <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </Link>
             </CardContent>
@@ -298,28 +261,30 @@ export default function PlatformOverviewPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-medium">
-                <Shield className="h-4 w-4 text-primary" />
-                Website Privacy & Consent
+                <Users className="h-4 w-4 text-primary" />
+                Administrator Coverage
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between rounded-lg border p-3">
-                <span className="text-sm font-medium">Cookie banner</span>
-                <Badge variant={privacySettings.cookieConsent ? "success" : "secondary"}>
-                  {privacySettings.cookieConsent ? "Enabled" : "Disabled"}
-                </Badge>
+                <span className="text-sm font-medium">Super admins</span>
+                <span className="text-sm text-muted-foreground">{superAdmins.length}</span>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
-                <span className="text-sm font-medium">Analytics opt-in rate</span>
-                <span className="text-sm text-muted-foreground">{analyticsOptInRate}%</span>
+                <span className="text-sm font-medium">Company admins</span>
+                <span className="text-sm text-muted-foreground">{companyAdmins.length}</span>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
-                <span className="text-sm font-medium">DPO contact</span>
-                <span className="truncate text-sm text-muted-foreground">{privacySettings.dpoEmail}</span>
+                <span className="text-sm font-medium">All users</span>
+                <span className="truncate text-sm text-muted-foreground">{users.length}</span>
               </div>
-              <Link href={`/${company}/dashboard/platform/analytics`}>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">Open incidents</span>
+                <span className="text-sm text-muted-foreground">{openIncidents.length}</span>
+              </div>
+              <Link href={`/${company}/dashboard/platform/users`}>
                 <Button variant="ghost" size="sm" className="gap-1 text-xs">
-                  Manage privacy <ArrowRight className="h-3.5 w-3.5" />
+                  Review platform admins <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </Link>
             </CardContent>

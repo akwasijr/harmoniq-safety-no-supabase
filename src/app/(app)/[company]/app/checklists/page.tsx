@@ -42,7 +42,7 @@ import {
 } from "@/lib/country-config";
 import { TasksSkeleton } from "@/components/ui/loading";
 import { isVisibleToFieldApp } from "@/lib/template-activation";
-import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User } from "@/types";
+import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User, Incident } from "@/types";
 
 type TabType = "checklists" | "risk-assessment" | "reports";
 
@@ -70,16 +70,12 @@ function Section({
   title, 
   icon: Icon, 
   iconColor = "text-muted-foreground",
-  count, 
-  countVariant = "secondary",
   defaultOpen = true, 
   children 
 }: { 
   title: string; 
   icon: React.ComponentType<{ className?: string }>;
   iconColor?: string;
-  count?: number; 
-  countVariant?: "secondary" | "destructive" | "warning" | "success";
   defaultOpen?: boolean; 
   children: React.ReactNode;
 }) {
@@ -95,11 +91,6 @@ function Section({
       >
         <Icon className={cn("h-4 w-4 shrink-0", iconColor)} aria-hidden="true" />
         <span className="flex-1 text-left">{title}</span>
-        {count !== undefined && count > 0 && (
-          <Badge variant={countVariant} className="text-[10px] h-5 min-w-5 justify-center">
-            {count}
-          </Badge>
-        )}
         <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform shrink-0", isOpen && "rotate-180")} aria-hidden="true" />
       </button>
       {isOpen && <div id={sectionId} className="space-y-1.5 pb-3">{children}</div>}
@@ -107,9 +98,9 @@ function Section({
   );
 }
 
-// ---------- Checklist Tab with Sub-tabs ----------
+// ---------- Checklist Tab ----------
 
-type ChecklistSubTab = "my" | "completed";
+type ChecklistSubTab = "assigned" | "history";
 
 function ChecklistsTabContent({
   company,
@@ -130,14 +121,35 @@ function ChecklistsTabContent({
   t: (key: string) => string;
   formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
 }) {
-  const [subTab, setSubTab] = React.useState<ChecklistSubTab>("my");
-
+  const [subTab, setSubTab] = React.useState<ChecklistSubTab>("assigned");
   const completedSubmissions = userSubmissions.filter(s => s.status === "submitted");
   const draftSubmissions = userSubmissions.filter(s => s.status === "draft");
+  const [historyLimit, setHistoryLimit] = React.useState(10);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
 
-  const subTabs = [
-    { id: "my" as ChecklistSubTab, label: "My checklists", icon: ListChecks },
-    { id: "completed" as ChecklistSubTab, label: "Completed", icon: History },
+  const filteredHistory = React.useMemo(() => {
+    let items = completedSubmissions;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter((s) => {
+        const tplName = templates.find((t) => t.id === s.template_id)?.name || "";
+        return tplName.toLowerCase().includes(q);
+      });
+    }
+    items.sort((a, b) => {
+      const dateA = new Date(a.submitted_at || a.created_at).getTime();
+      const dateB = new Date(b.submitted_at || b.created_at).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+    return items;
+  }, [completedSubmissions, templates, searchQuery, sortOrder]);
+
+  const visibleHistory = filteredHistory.slice(0, historyLimit);
+
+  const subTabs: { id: ChecklistSubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "assigned", label: "Assigned", icon: ListChecks },
+    { id: "history", label: "History", icon: History },
   ];
 
   // Calculate score for a submission
@@ -158,7 +170,7 @@ function ChecklistsTabContent({
   return (
     <>
       {/* Sub-tab pills */}
-      <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5 mb-3">
+      <div className="flex gap-1 bg-muted/50 rounded-lg p-1 mb-3">
         {subTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = subTab === tab.id;
@@ -167,130 +179,121 @@ function ChecklistsTabContent({
               key={tab.id}
               onClick={() => setSubTab(tab.id)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-1 py-1.5 px-2 text-[11px] font-medium rounded-md transition-all active:opacity-80",
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80",
                 isActive
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground"
               )}
             >
-              <Icon className="h-3 w-3 shrink-0" />
+              <Icon className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">{tab.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* MY CHECKLISTS sub-tab */}
-      {subTab === "my" && (
+      {/* ASSIGNED sub-tab */}
+      {subTab === "assigned" && (
         <>
           {/* Assigned / pending checklists */}
           {pendingTemplates.length > 0 && (
-            <Section
-              title="Assigned to you"
-              icon={ClipboardCheck}
-              iconColor="text-primary"
-              count={pendingTemplates.length}
+        <Section
+          title="Assigned to you"
+          icon={ClipboardCheck}
+          iconColor="text-primary"
+        >
+          {pendingTemplates.map((template) => (
+            <Link
+              key={template.id}
+              href={`/${company}/app/checklists/${template.id}`}
+              className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
             >
-              {pendingTemplates.map((template) => (
-                <Link
-                  key={template.id}
-                  href={`/${company}/app/checklists/${template.id}`}
-                  className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <ClipboardCheck className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm leading-tight">{template.name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {template.items?.length || 0} items · {template.recurrence || "once"}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                </Link>
-              ))}
-            </Section>
-          )}
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <ClipboardCheck className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm leading-tight">{template.name}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {template.items?.length || 0} items · {template.recurrence || "once"}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </Link>
+          ))}
+        </Section>
+      )}
 
-          {/* Drafts / in-progress */}
-          {draftSubmissions.length > 0 && (
-            <>
-              <div className="border-t" />
-              <Section
-                title="In progress"
-                icon={Clock}
-                iconColor="text-blue-500"
-                count={draftSubmissions.length}
+      {/* Drafts / in-progress */}
+      {draftSubmissions.length > 0 && (
+        <Section
+          title="In progress"
+          icon={Clock}
+          iconColor="text-blue-500"
+        >
+          {draftSubmissions.map((submission) => {
+            const tpl = templates.find(t => t.id === submission.template_id);
+            const progress = submission.responses?.length
+              ? Math.round((submission.responses.length / (tpl?.items?.length || 1)) * 100)
+              : 0;
+            return (
+              <Link
+                key={submission.id}
+                href={`/${company}/app/checklists/${submission.template_id}?draft=${submission.id}`}
+                className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
               >
-                {draftSubmissions.map((submission) => {
-                  const tpl = templates.find(t => t.id === submission.template_id);
-                  const progress = submission.responses?.length
-                    ? Math.round((submission.responses.length / (tpl?.items?.length || 1)) * 100)
-                    : 0;
-                  return (
-                    <Link
-                      key={submission.id}
-                      href={`/${company}/app/checklists/${submission.template_id}?draft=${submission.id}`}
-                      className="flex items-center gap-3 rounded-lg border p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
-                        <Play className="h-4 w-4 text-blue-500" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden">
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${progress}%` }} />
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">{progress}%</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Resume</span>
-                    </Link>
-                  );
-                })}
-              </Section>
-            </>
-          )}
-
-          {/* Completed today */}
-          {completedToday.length > 0 && (
-            <>
-              <div className="border-t" />
-              <Section
-                title="Completed today"
-                icon={CheckCircle}
-                iconColor="text-success"
-                count={completedToday.length}
-                defaultOpen={false}
-              >
-                {completedToday.map((submission) => {
-                  const score = getScore(submission);
-                  return (
-                    <div key={submission.id} className="flex items-center gap-3 rounded-lg p-2.5 bg-success/5">
-                      <CheckCircle className="h-4 w-4 text-success shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">
-                          {templates.find(t => t.id === submission.template_id)?.name || "Checklist"}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {formatDate(new Date(submission.submitted_at || submission.created_at), { hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                      </div>
-                      {score !== null && (
-                        <div className="flex items-center gap-1">
-                          <Percent className="h-3 w-3 text-success" />
-                          <span className="text-xs font-semibold text-success">{score}</span>
-                        </div>
-                      )}
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                  <Play className="h-4 w-4 text-blue-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">{tpl?.name || "Checklist"}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${progress}%` }} />
                     </div>
-                  );
-                })}
-              </Section>
-            </>
-          )}
+                    <span className="text-[10px] text-muted-foreground">{progress}%</span>
+                  </div>
+                </div>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Resume</span>
+              </Link>
+            );
+          })}
+        </Section>
+      )}
 
-          {pendingTemplates.length === 0 && draftSubmissions.length === 0 && completedToday.length === 0 && (
+      {/* Completed today */}
+      {completedToday.length > 0 && (
+        <Section
+          title="Completed today"
+          icon={CheckCircle}
+          iconColor="text-success"
+          defaultOpen={false}
+        >
+          {completedToday.map((submission) => {
+            const score = getScore(submission);
+            return (
+              <div key={submission.id} className="flex items-center gap-3 rounded-lg p-2.5 bg-success/5">
+                <CheckCircle className="h-4 w-4 text-success shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">
+                    {templates.find(t => t.id === submission.template_id)?.name || "Checklist"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {formatDate(new Date(submission.submitted_at || submission.created_at), { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                {score !== null && (
+                  <div className="flex items-center gap-1">
+                    <Percent className="h-3 w-3 text-success" />
+                    <span className="text-xs font-semibold text-success">{score}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </Section>
+      )}
+
+      {pendingTemplates.length === 0 && draftSubmissions.length === 0 && completedToday.length === 0 && (
             <div className="py-8 text-center">
               <ClipboardCheck className="h-10 w-10 text-muted-foreground/20 mx-auto" />
               <p className="text-sm font-medium text-muted-foreground mt-2">No checklists assigned</p>
@@ -300,14 +303,31 @@ function ChecklistsTabContent({
         </>
       )}
 
-      {/* COMPLETED sub-tab */}
-      {subTab === "completed" && (
+      {/* HISTORY sub-tab */}
+      {subTab === "history" && (
         <>
-          {completedSubmissions.length > 0 ? (
+          {/* Search + sort */}
+          <div className="flex gap-2 mb-3">
+            <input
+              type="search"
+              placeholder="Search completed..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setHistoryLimit(10); }}
+              className="flex-1 h-9 rounded-lg border bg-background px-3 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+              className="h-9 rounded-lg border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          {visibleHistory.length > 0 ? (
             <div className="space-y-2">
-              {completedSubmissions
-                .sort((a, b) => new Date(b.submitted_at || b.created_at).getTime() - new Date(a.submitted_at || a.created_at).getTime())
-                .map((submission) => {
+              {visibleHistory.map((submission) => {
                   const tpl = templates.find(t => t.id === submission.template_id);
                   const score = getScore(submission);
                   const passCount = submission.responses?.filter((r: ChecklistResponse) => r.value === true || r.value === "pass" || r.value === "yes").length || 0;
@@ -329,7 +349,7 @@ function ChecklistsTabContent({
                           <div className={cn(
                             "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
                             score >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
-                            score >= 50 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" :
+                            score >= 50 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
                             "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                           )}>
                             {score}%
@@ -337,7 +357,6 @@ function ChecklistsTabContent({
                         )}
                       </div>
                       
-                      {/* Pass/Fail/N/A summary bar */}
                       <div className="flex items-center gap-3 text-[10px]">
                         <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
                           <CheckCircle className="h-3 w-3" /> {passCount} pass
@@ -362,12 +381,442 @@ function ChecklistsTabContent({
                     </div>
                   );
                 })}
+
+              {/* Load more */}
+              {historyLimit < filteredHistory.length && (
+                <button
+                  onClick={() => setHistoryLimit((prev) => prev + 10)}
+                  className="w-full py-2.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Load more ({filteredHistory.length - historyLimit} remaining)
+                </button>
+              )}
             </div>
           ) : (
             <div className="py-8 text-center">
               <History className="h-10 w-10 text-muted-foreground/20 mx-auto" />
-              <p className="text-sm font-medium text-muted-foreground mt-2">No completed checklists</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Completed checklists with scores will appear here</p>
+              <p className="text-sm font-medium text-muted-foreground mt-2">
+                {searchQuery ? "No matching checklists" : "No completed checklists"}
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                {searchQuery ? "Try a different search term" : "Completed checklists with scores will appear here"}
+              </p>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
+// ---------- Reports Tab (redesigned) ----------
+
+type ReportsSubTab = "reports" | "history";
+
+function ReportsTabContent({
+  company,
+  incidents,
+  user,
+  t,
+  formatDate,
+}: {
+  company: string;
+  incidents: Incident[];
+  user: User | null;
+  t: (key: string) => string;
+  formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
+}) {
+  const [subTab, setSubTab] = React.useState<ReportsSubTab>("reports");
+  const [historyLimit, setHistoryLimit] = React.useState(10);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
+
+  const myIncidents = React.useMemo(
+    () => incidents.filter((i) => i.reporter_id === user?.id),
+    [incidents, user?.id]
+  );
+
+  const typeConfMap: Record<string, { icon: typeof AlertTriangle; color: string; bg: string }> = {
+    injury: { icon: AlertTriangle, color: "text-red-500", bg: "bg-red-500/10" },
+    near_miss: { icon: ShieldAlert, color: "text-orange-500", bg: "bg-orange-500/10" },
+    hazard: { icon: AlertTriangle, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+    property_damage: { icon: Package, color: "text-blue-500", bg: "bg-blue-500/10" },
+    environmental: { icon: AlertTriangle, color: "text-green-500", bg: "bg-green-500/10" },
+    fire: { icon: AlertTriangle, color: "text-red-600", bg: "bg-red-600/10" },
+    security: { icon: ShieldAlert, color: "text-purple-500", bg: "bg-purple-500/10" },
+    other: { icon: AlertTriangle, color: "text-muted-foreground", bg: "bg-muted" },
+  };
+
+  const filteredHistory = React.useMemo(() => {
+    let items = [...myIncidents];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter(
+        (i) =>
+          i.title.toLowerCase().includes(q) ||
+          i.type.replace(/_/g, " ").toLowerCase().includes(q) ||
+          (i.building || "").toLowerCase().includes(q)
+      );
+    }
+    items.sort((a, b) => {
+      const dateA = new Date(a.incident_date).getTime();
+      const dateB = new Date(b.incident_date).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+    return items;
+  }, [myIncidents, searchQuery, sortOrder]);
+
+  const visibleHistory = filteredHistory.slice(0, historyLimit);
+
+  const subTabs: { id: ReportsSubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "reports", label: "Reports", icon: AlertTriangle },
+    { id: "history", label: "History", icon: History },
+  ];
+
+  const renderIncidentCard = (incident: Incident) => {
+    const typeConf = typeConfMap[incident.type] || typeConfMap.other;
+    const TypeIcon = typeConf.icon;
+    return (
+      <Link
+        key={incident.id}
+        href={`/${company}/app/incidents/${incident.id}`}
+        className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+      >
+        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", typeConf.bg)}>
+          <TypeIcon className={cn("h-4 w-4", typeConf.color)} aria-hidden="true" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-sm leading-tight truncate">{incident.title}</p>
+            {incident.status !== "new" && (
+              <Badge variant={
+                incident.status === "resolved" ? "success" :
+                incident.status === "in_progress" ? "warning" : "secondary"
+              } className="text-[10px] h-4 shrink-0">
+                {incident.status.replace(/_/g, " ")}
+              </Badge>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {incident.type.replace(/_/g, " ")} · {formatDate(new Date(incident.incident_date), { month: "short", day: "numeric" })}
+            {incident.building ? ` · ${incident.building}` : ""}
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+      </Link>
+    );
+  };
+
+  return (
+    <>
+      {/* Sub-tab pills */}
+      <div className="flex gap-1 bg-muted/50 rounded-lg p-1 mb-3">
+        {subTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = subTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setSubTab(tab.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80",
+                isActive
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* REPORTS sub-tab (action items) */}
+      {subTab === "reports" && (
+        <>
+          {/* Report Incident CTA */}
+          <Link
+            href={`/${company}/app/report`}
+            className="flex items-center gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/30 active:bg-muted/50"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <FileCheck className="h-5 w-5 text-primary" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">{t("app.reportIncident")}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{t("app.reportIncidentDesc") || "Spot something unsafe? Let the team know."}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+          </Link>
+
+          {/* Open / unresolved reports */}
+          {myIncidents.filter(i => i.status !== "resolved").length > 0 ? (
+            <Section
+              title="Open reports"
+              icon={AlertTriangle}
+              iconColor="text-warning"
+            >
+              {myIncidents
+                .filter(i => i.status !== "resolved")
+                .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())
+                .slice(0, 5)
+                .map(renderIncidentCard)}
+            </Section>
+          ) : (
+            <div className="py-8 text-center">
+              <AlertTriangle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
+              <p className="text-sm font-medium text-muted-foreground mt-2">{t("app.noReports") || "No open reports"}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noReportsDesc") || "Reports you submit will appear here"}</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* HISTORY sub-tab */}
+      {subTab === "history" && (
+        <>
+          {/* Search + sort */}
+          <div className="flex gap-2 mb-3">
+            <input
+              type="search"
+              placeholder="Search reports..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setHistoryLimit(10); }}
+              className="flex-1 h-9 rounded-lg border bg-background px-3 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+              className="h-9 rounded-lg border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          {visibleHistory.length > 0 ? (
+            <div className="space-y-2">
+              {visibleHistory.map(renderIncidentCard)}
+
+              {/* Load more */}
+              {historyLimit < filteredHistory.length && (
+                <button
+                  onClick={() => setHistoryLimit((prev) => prev + 10)}
+                  className="w-full py-2.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Load more ({filteredHistory.length - historyLimit} remaining)
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <History className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+              <p className="text-sm font-medium text-muted-foreground mt-2">
+                {searchQuery ? "No matching reports" : "No report history"}
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                {searchQuery ? "Try a different search term" : "Submitted reports will appear here"}
+              </p>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
+// ---------- Risk Assessment Tab (redesigned) ----------
+
+type RiskAssessmentSubTab = "assigned" | "history";
+
+function RiskAssessmentTabContent({
+  company,
+  inProgressAssessments,
+  awaitingReviewAssessments,
+  reviewedAssessments,
+  assessmentTypeConf,
+  t,
+  formatDate,
+}: {
+  company: string;
+  inProgressAssessments: Array<{ id: string; formId: string; name: string; location: string; progress: number }>;
+  awaitingReviewAssessments: Array<{ id: string; formType: string; name: string; location: string; date: string }>;
+  reviewedAssessments: Array<{ id: string; formType: string; name: string; location: string; date: string; reviewerName: string }>;
+  assessmentTypeConf: Record<string, { icon: typeof ShieldCheck; color: string; bg: string }>;
+  t: (key: string) => string;
+  formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
+}) {
+  const [subTab, setSubTab] = React.useState<RiskAssessmentSubTab>("assigned");
+  const [historyLimit, setHistoryLimit] = React.useState(10);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
+
+  const historyItems = React.useMemo(() => {
+    const all = [
+      ...awaitingReviewAssessments.map((item) => ({ ...item, historyStatus: "submitted" as const })),
+      ...reviewedAssessments.map((item) => ({ ...item, historyStatus: "reviewed" as const })),
+    ];
+    const filtered = searchQuery.trim()
+      ? all.filter(
+          (item) =>
+            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.location.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+      : all;
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+    return filtered;
+  }, [awaitingReviewAssessments, reviewedAssessments, searchQuery, sortOrder]);
+
+  const visibleHistory = historyItems.slice(0, historyLimit);
+
+  const subTabs: { id: RiskAssessmentSubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "assigned", label: "Assessments", icon: ShieldCheck },
+    { id: "history", label: "History", icon: History },
+  ];
+
+  return (
+    <>
+      {/* Sub-tab pills */}
+      <div className="flex gap-1 bg-muted/50 rounded-lg p-1 mb-3">
+        {subTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = subTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setSubTab(tab.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80",
+                isActive
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ASSIGNED sub-tab */}
+      {subTab === "assigned" && (
+        <>
+          {inProgressAssessments.length > 0 && (
+            <section className="space-y-2">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">In progress</h2>
+              {inProgressAssessments.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/${company}/app/risk-assessment/${item.formId}?draft=${item.id}`}
+                  className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                    <Play className="h-4 w-4 text-blue-500" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm leading-tight">{item.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden" role="progressbar" aria-valuenow={item.progress} aria-valuemin={0} aria-valuemax={100}>
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${item.progress}%` }} />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium">{item.progress}%</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-primary font-medium">{t("checklists.buttons.resume") || "Resume"}</span>
+                </Link>
+              ))}
+            </section>
+          )}
+
+          {inProgressAssessments.length === 0 && (
+            <div className="py-6 text-center">
+              <ShieldCheck className="h-8 w-8 text-muted-foreground/20 mx-auto" aria-hidden="true" />
+              <p className="text-sm text-muted-foreground mt-2">No assessments assigned</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Assessments will appear here when assigned by your admin</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* HISTORY sub-tab */}
+      {subTab === "history" && (
+        <>
+          <div className="flex gap-2 mb-3">
+            <input
+              type="search"
+              placeholder="Search submissions..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setHistoryLimit(10); }}
+              className="flex-1 h-9 rounded-lg border bg-background px-3 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+              className="h-9 rounded-lg border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          {visibleHistory.length > 0 ? (
+            <div className="space-y-2">
+              {visibleHistory.map((item) => {
+                const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
+                const TypeIcon = conf.icon;
+                const isReviewed = item.historyStatus === "reviewed";
+
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/${company}/app/risk-assessment/view/${item.id}`}
+                    className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+                  >
+                    <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
+                      <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium leading-tight">{item.name}</p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        {item.location} · {formatDate(new Date(item.date))}
+                      </p>
+                      {"reviewerName" in item && isReviewed && (
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          Reviewer: {(item as typeof reviewedAssessments[number]).reviewerName}
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant={isReviewed ? "success" : "warning"} className="text-[10px] shrink-0">
+                      {isReviewed ? "Reviewed" : "Awaiting"}
+                    </Badge>
+                  </Link>
+                );
+              })}
+
+              {historyLimit < historyItems.length && (
+                <button
+                  onClick={() => setHistoryLimit((prev) => prev + 10)}
+                  className="w-full py-2.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Load more ({historyItems.length - historyLimit} remaining)
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <History className="h-8 w-8 text-muted-foreground/20 mx-auto" aria-hidden="true" />
+              <p className="text-sm text-muted-foreground mt-2">
+                {searchQuery ? "No matching submissions" : "No submissions yet"}
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                {searchQuery ? "Try a different search term" : "Submitted assessments will appear here"}
+              </p>
             </div>
           )}
         </>
@@ -407,10 +856,24 @@ function EmployeeChecklistsPageContent() {
     ? locations.find(l => l.id === locationParam) 
     : null;
 
-  // Derive country from user's locale first, fall back to company country, then US
+  // Derive country from locally-saved settings first (survives when DB write fails),
+  // then company record, then locale, then US
+  const effectiveCountry = React.useMemo(() => {
+    if (currentCompany?.id) {
+      try {
+        const raw = localStorage.getItem(`harmoniq_settings_${currentCompany.id}`);
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (saved.selectedCountry) return saved.selectedCountry;
+        }
+      } catch { /* ignore */ }
+    }
+    return currentCompany?.country;
+  }, [currentCompany?.id, currentCompany?.country]);
+
   const localeCountry = LOCALE_DEFAULT_COUNTRY[locale];
   const companyCountry = resolveRiskAssessmentCatalogCountry(
-    currentCompany?.country,
+    effectiveCountry,
     localeCountry,
   );
 
@@ -512,7 +975,7 @@ function EmployeeChecklistsPageContent() {
   return (
     <div className="flex flex-col min-h-full">
       {/* Header + Tabs */}
-      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
+      <div className="sticky top-[60px] z-10 bg-background border-b px-4 pt-4 pb-3">
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-lg font-bold truncate">{t("checklists.safetyTasks")}</h1>
           {selectedLocation && (
@@ -570,228 +1033,26 @@ function EmployeeChecklistsPageContent() {
 
         {/* REPORTS TAB */}
         {activeTab === "reports" && (
-          <>
-            {/* New Report */}
-            <Link
-              href={`/${company}/app/report`}
-              className="flex items-center gap-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-3 transition-colors hover:bg-primary/10 hover:border-primary/50 active:border-primary active:bg-primary/10"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <FileCheck className="h-4 w-4 text-primary" aria-hidden="true" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-primary">{t("app.reportIncident")}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{t("app.reportIncidentDesc") || "New incident report"}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-primary/50 shrink-0" aria-hidden="true" />
-            </Link>
-
-            <div className="border-t" />
-
-            {/* My Submitted Reports */}
-            <Section
-              title={t("app.myReports") || "My Reports"}
-              icon={AlertTriangle}
-              iconColor="text-warning"
-              count={incidents.filter(i => i.reporter_id === user?.id).length}
-            >
-              {incidents.filter(i => i.reporter_id === user?.id).length > 0 ? (
-                incidents
-                  .filter(i => i.reporter_id === user?.id)
-                  .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())
-                  .slice(0, 10)
-                  .map((incident) => {
-                    const typeConfMap: Record<string, { icon: typeof AlertTriangle; color: string; bg: string }> = {
-                      injury: { icon: AlertTriangle, color: "text-red-500", bg: "bg-red-500/10" },
-                      near_miss: { icon: ShieldAlert, color: "text-orange-500", bg: "bg-orange-500/10" },
-                      hazard: { icon: AlertTriangle, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-                      property_damage: { icon: Package, color: "text-blue-500", bg: "bg-blue-500/10" },
-                      environmental: { icon: AlertTriangle, color: "text-green-500", bg: "bg-green-500/10" },
-                      fire: { icon: AlertTriangle, color: "text-red-600", bg: "bg-red-600/10" },
-                      security: { icon: ShieldAlert, color: "text-purple-500", bg: "bg-purple-500/10" },
-                      other: { icon: AlertTriangle, color: "text-muted-foreground", bg: "bg-muted" },
-                    };
-                    const typeConf = typeConfMap[incident.type] || typeConfMap.other;
-                    const TypeIcon = typeConf.icon;
-
-                    return (
-                      <Link
-                        key={incident.id}
-                        href={`/${company}/app/incidents/${incident.id}`}
-                        className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
-                      >
-                        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", typeConf.bg)}>
-                          <TypeIcon className={cn("h-4 w-4", typeConf.color)} aria-hidden="true" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm leading-tight truncate">{incident.title}</p>
-                            <Badge variant={
-                              incident.status === "resolved" ? "success" :
-                              incident.status === "in_progress" ? "warning" : "secondary"
-                            } className="text-[10px] h-4 shrink-0">
-                              {incident.status.replace(/_/g, " ")}
-                            </Badge>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {incident.type.replace(/_/g, " ")} · {formatDate(new Date(incident.incident_date), { month: "short", day: "numeric" })}
-                            {incident.building ? ` · ${incident.building}` : ""}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                      </Link>
-                    );
-                  })
-              ) : (
-                <div className="py-8 text-center">
-                  <AlertTriangle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
-                  <p className="text-sm font-medium text-muted-foreground mt-2">{t("app.noReports") || "No reports yet"}</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">{t("app.noReportsDesc") || "Reports you submit will appear here"}</p>
-                </div>
-              )}
-            </Section>
-          </>
+          <ReportsTabContent
+            company={company}
+            incidents={incidents}
+            user={user}
+            t={t}
+            formatDate={formatDate}
+          />
         )}
 
         {/* RISK ASSESSMENT TAB */}
         {activeTab === "risk-assessment" && (
-          <>
-            <Section title={t("checklists.newAssessment")} icon={FileCheck} iconColor="text-primary">
-              <div className="grid grid-cols-2 gap-2">
-                {riskAssessmentForms[companyCountry].map((form) => {
-                  const Icon = form.icon;
-                  return (
-                    <Link
-                      key={form.id}
-                      href={`/${company}/app/risk-assessment/${form.id}`}
-                      className="flex items-center gap-2 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-3 transition-colors hover:bg-primary/10 hover:border-primary/50 active:border-primary active:bg-primary/10"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                        <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm text-primary">{form.name}</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{form.fullName}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </Section>
-
-            <div className="border-t" />
-
-            {inProgressAssessments.length > 0 && (
-              <>
-                <Section 
-                  title={t("checklists.labels.inProgress")} 
-                  icon={Clock} 
-                  iconColor="text-blue-500"
-                  count={inProgressAssessments.length}
-                >
-                  {inProgressAssessments.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/${company}/app/risk-assessment/${item.formId}?draft=${item.id}`}
-                      className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
-                        <Play className="h-4 w-4 text-blue-500" aria-hidden="true" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm leading-tight">{item.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex-1 h-1.5 rounded-full bg-blue-500/20 overflow-hidden" role="progressbar" aria-valuenow={item.progress} aria-valuemin={0} aria-valuemax={100}>
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${item.progress}%` }} />
-                          </div>
-                          <span className="text-[10px] text-muted-foreground font-medium">{item.progress}%</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-primary font-medium">{t("checklists.buttons.resume")}</span>
-                    </Link>
-                  ))}
-                </Section>
-                <div className="border-t" />
-              </>
-            )}
-
-            {awaitingReviewAssessments.length > 0 && (
-              <>
-                <Section
-                  title="Awaiting review"
-                  icon={ShieldAlert}
-                  iconColor="text-amber-500"
-                  count={awaitingReviewAssessments.length}
-                  countVariant="warning"
-                >
-                  {awaitingReviewAssessments.map((item) => {
-                    const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
-                    const TypeIcon = conf.icon;
-                    return (
-                      <Link key={item.id} href={`/${company}/app/risk-assessment/view/${item.id}`} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30">
-                        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
-                          <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
-                            <Badge variant="warning" className="text-[10px] h-4 shrink-0">
-                              Submitted
-                            </Badge>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {item.location} · Submitted {formatDate(new Date(item.date))}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                      </Link>
-                    );
-                  })}
-                </Section>
-                <div className="border-t" />
-              </>
-            )}
-
-            <Section 
-              title={t("checklists.labels.completed") || "Reviewed"} 
-              icon={CheckCircle} 
-              iconColor="text-success"
-              count={reviewedAssessments.length} 
-              countVariant="success"
-              defaultOpen={false}
-            >
-              {reviewedAssessments.length === 0 ? (
-                <div className="py-8 text-center">
-                  <CheckCircle className="h-10 w-10 text-muted-foreground/20 mx-auto" aria-hidden="true" />
-                  <p className="text-sm font-medium text-muted-foreground mt-2">{t("checklists.noCompletedAssessments")}</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">Reviewed assessments will appear here</p>
-                </div>
-              ) : (
-                reviewedAssessments.map((item) => {
-                  const conf = assessmentTypeConf[item.formType] || { icon: ShieldCheck, color: "text-muted-foreground", bg: "bg-muted" };
-                  const TypeIcon = conf.icon;
-                  return (
-                    <Link key={item.id} href={`/${company}/app/risk-assessment/view/${item.id}`} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30">
-                      <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", conf.bg)}>
-                        <TypeIcon className={cn("h-4 w-4", conf.color)} aria-hidden="true" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm leading-tight truncate">{item.name}</p>
-                          <Badge variant="success" className="text-[10px] h-4 shrink-0">
-                            Reviewed
-                          </Badge>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{item.location} · Reviewed {formatDate(new Date(item.date))}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">Reviewer: {item.reviewerName}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                    </Link>
-                  );
-                })
-              )}
-            </Section>
-          </>
+          <RiskAssessmentTabContent
+            company={company}
+            inProgressAssessments={inProgressAssessments}
+            awaitingReviewAssessments={awaitingReviewAssessments}
+            reviewedAssessments={reviewedAssessments}
+            assessmentTypeConf={assessmentTypeConf}
+            t={t}
+            formatDate={formatDate}
+          />
         )}
 
       </div>

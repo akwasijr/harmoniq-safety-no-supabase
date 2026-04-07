@@ -1528,7 +1528,9 @@
     "controlMeasuresSummary": "Samenvatting beheersmaatregelen",
     "requiredPPE": "Vereiste PBM",
     "riskLabel": "Risico",
-    "standard": "Standaard"
+    "standard": "Standaard",
+    "workerHubHint": "Hervat concepten, volg beoordelingen die wachten op review en bewaar beoordeeld bewijs.",
+    "completedHint": "Beoordeelde risicobeoordelingen verschijnen hier met de reviewer en datum als bewijs."
   },
   "auth": {
     "welcomeBack": "Welkom terug",

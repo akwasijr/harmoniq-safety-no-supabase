@@ -85,7 +85,7 @@ export default function EmployeeNewsPage() {
   return (
     <div className="flex flex-col min-h-full">
       {/* Header + Tabs */}
-      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
+      <div className="sticky top-[60px] z-10 bg-background border-b px-4 pt-4 pb-3">
         <h1 className="text-lg font-bold mb-3">{t("newsApp.title")}</h1>
 
         {/* Sub-tabs, pill style matching Safety Tasks & Assets */}

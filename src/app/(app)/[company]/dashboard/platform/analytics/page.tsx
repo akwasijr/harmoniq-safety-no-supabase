@@ -2,31 +2,47 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { useCompanyStore } from "@/stores/company-store";
-import { useUsersStore } from "@/stores/users-store";
-import { useIncidentsStore } from "@/stores/incidents-store";
-import { useAssetsStore } from "@/stores/assets-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
 import {
   DEFAULT_PLATFORM_PRIVACY_SETTINGS,
   type PlatformPrivacySettings,
 } from "@/lib/platform-privacy-settings";
+import {
+  filterVisitorLocations,
+  getVisibleVisitorCount,
+  getVisitorCountries,
+  type VisitorLocation,
+} from "@/lib/analytics-geo";
 import { buildSiteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 import {
-  BarChart3, Users, Building2, Globe, Shield, AlertTriangle, Package,
+  BarChart3, Users, Globe, Shield,
   CheckCircle, MapPin, Activity, Monitor, Smartphone, RefreshCw, TrendingUp, Save,
 } from "lucide-react";
 
-const LeafletMap = dynamic(() => import("@/components/shared/leaflet-map"), { ssr: false });
+const LeafletMap = dynamic(() => import("@/components/shared/leaflet-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex min-h-[400px] items-center justify-center rounded-lg border bg-muted/20 text-sm text-muted-foreground">
+      Loading map…
+    </div>
+  ),
+});
 
 type SubTab = "dashboard" | "realtime" | "audience" | "geo" | "compliance";
 
@@ -39,7 +55,7 @@ interface AnalyticsData {
   by_device: Record<string, number>;
   by_referrer: Record<string, number>;
   by_day: Record<string, number>;
-  locations: { lat: number; lng: number; city: string | null; country: string; count: number }[];
+  locations: VisitorLocation[];
 }
 
 interface ConsentRecord {
@@ -152,16 +168,16 @@ function ConsentAuditLog() {
 export default function PlatformAnalyticsPage() {
   const { formatNumber } = useTranslation();
   const { toast } = useToast();
-  const { items: companies } = useCompanyStore();
-  const { items: users } = useUsersStore();
-  const { items: incidents } = useIncidentsStore();
-  const { items: assets } = useAssetsStore();
   const [activeTab, setActiveTab] = React.useState<SubTab>("dashboard");
   const [trafficPeriod, setTrafficPeriod] = React.useState<"7d" | "30d" | "90d">("30d");
   const [analyticsData, setAnalyticsData] = React.useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [gdpr, setGdpr] = React.useState<PlatformPrivacySettings>(DEFAULT_PLATFORM_PRIVACY_SETTINGS);
   const [isSavingPrivacy, setIsSavingPrivacy] = React.useState(false);
+  const [geoQuery, setGeoQuery] = React.useState("");
+  const [geoCountryFilter, setGeoCountryFilter] = React.useState("All countries");
+  const [geoMinVisitors, setGeoMinVisitors] = React.useState(1);
+  const [geoSort, setGeoSort] = React.useState<"Most visitors" | "City (A-Z)" | "Country (A-Z)">("Most visitors");
 
   const fetchData = React.useCallback(() => {
     setIsLoading(true);
@@ -225,20 +241,45 @@ export default function PlatformAnalyticsPage() {
   const dailyData = React.useMemo(() =>
     Object.entries(analyticsData?.by_day || {}).sort((a, b) => a[0].localeCompare(b[0])).slice(-14).map(([date, views]) => ({ date, views })),
   [analyticsData]);
+  const visitorCountries = React.useMemo(
+    () => getVisitorCountries(analyticsData?.locations || []),
+    [analyticsData],
+  );
+  const filteredLocations = React.useMemo(
+    () =>
+      filterVisitorLocations(analyticsData?.locations || [], {
+        country: geoCountryFilter,
+        query: geoQuery,
+        minVisitors: geoMinVisitors,
+        sort: geoSort,
+      }),
+    [analyticsData, geoCountryFilter, geoMinVisitors, geoQuery, geoSort],
+  );
+  const visibleVisitorCount = React.useMemo(
+    () => getVisibleVisitorCount(filteredLocations),
+    [filteredLocations],
+  );
+  const visibleCountryCount = React.useMemo(
+    () => new Set(filteredLocations.map((location) => location.country)).size,
+    [filteredLocations],
+  );
 
-  const activeCompanies = companies.filter((c) => c.status === "active").length;
-  const activeUsers = users.filter((u) => u.status === "active").length;
-  const openIncidents = incidents.filter((i) => i.status === "new" || i.status === "in_progress").length;
   const total = analyticsData?.total || 0;
   const unique = analyticsData?.uniqueVisitors || 0;
   const maxDaily = Math.max(...dailyData.map((d) => d.views), 1);
+  const activePrivacyControls = [
+    gdpr.cookieConsent,
+    gdpr.rightToErasure,
+    gdpr.dataExport,
+    gdpr.anonymizeIp,
+  ].filter(Boolean).length;
 
   const tabs: { id: SubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-    { id: "realtime", label: "Real-time", icon: Activity },
+    { id: "dashboard", label: "Traffic Overview", icon: BarChart3 },
+    { id: "realtime", label: "Live Traffic", icon: Activity },
     { id: "audience", label: "Audience", icon: Users },
     { id: "geo", label: "Geography", icon: Globe },
-    { id: "compliance", label: "Compliance", icon: Shield },
+    { id: "compliance", label: "Privacy & Consent", icon: Shield },
   ];
 
   const savePrivacySettings = async () => {
@@ -264,12 +305,23 @@ export default function PlatformAnalyticsPage() {
     }
   };
 
+  const resetGeoFilters = () => {
+    setGeoQuery("");
+    setGeoCountryFilter("All countries");
+    setGeoMinVisitors(1);
+    setGeoSort("Most visitors");
+  };
+
   return (
     <RoleGuard allowedRoles={["super_admin", "company_admin"]}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Observability</h1>
+            <h1 className="text-2xl font-semibold">Marketing Site</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Public website traffic, audience behavior, and consent controls. Platform operations stay in
+              the Overview, Companies, Users, and Settings pages.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {activeTab === "compliance" && (
@@ -281,7 +333,7 @@ export default function PlatformAnalyticsPage() {
                 disabled={isSavingPrivacy}
               >
                 <Save className="h-4 w-4" />
-                {isSavingPrivacy ? "Saving..." : "Save privacy settings"}
+                {isSavingPrivacy ? "Saving..." : "Save marketing privacy settings"}
               </Button>
             )}
             <div className="flex gap-1">
@@ -291,7 +343,7 @@ export default function PlatformAnalyticsPage() {
                 </Button>
               ))}
             </div>
-            <Button variant="ghost" size="icon" onClick={fetchData} disabled={isLoading} className="h-8 w-8" aria-label="Refresh data">
+            <Button variant="ghost" size="icon" onClick={fetchData} disabled={isLoading} className="h-8 w-8" aria-label="Refresh marketing site data">
               <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
           </div>
@@ -321,16 +373,45 @@ export default function PlatformAnalyticsPage() {
         {/* ===== DASHBOARD ===== */}
         {activeTab === "dashboard" && (
           <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <KPICard title="Companies" value={activeCompanies} icon={Building2} />
-              <KPICard title="Active Users" value={activeUsers} icon={Users} />
-              <KPICard title="Open Incidents" value={openIncidents} icon={AlertTriangle} />
-              <KPICard title="Total Assets" value={assets.length} icon={Package} />
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Website data scope</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-muted-foreground">
+                  <p>
+                    This workspace is limited to the public marketing site: visitor traffic, referrers,
+                    geography, and consent-driven analytics.
+                  </p>
+                  <p>
+                    Company operations, incidents, tenant management, and platform administration now live
+                    only in the other platform pages.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Consent pipeline</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <span className="text-sm font-medium">Cookie banner</span>
+                    <Badge variant={gdpr.cookieConsent ? "success" : "secondary"}>
+                      {gdpr.cookieConsent ? "Enabled" : "Disabled"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <span className="text-sm font-medium">Privacy controls</span>
+                    <span className="text-sm text-muted-foreground">{activePrivacyControls}/4 active</span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{formatNumber(total)}</p><p className="text-xs text-muted-foreground mt-1">Page Views</p></CardContent></Card>
-              <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{formatNumber(unique)}</p><p className="text-xs text-muted-foreground mt-1">Unique Visitors</p></CardContent></Card>
-              <Card><CardContent className="pt-6 text-center"><p className="text-3xl font-bold">{topCountries.length}</p><p className="text-xs text-muted-foreground mt-1">Countries</p></CardContent></Card>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <KPICard title="Page Views" value={formatNumber(total)} icon={BarChart3} />
+              <KPICard title="Unique Visitors" value={formatNumber(unique)} icon={Users} />
+              <KPICard title="Countries" value={topCountries.length} icon={Globe} />
+              <KPICard title="Tracked Pages" value={topPages.length} icon={Activity} />
             </div>
 
             {/* Sparkline-style daily chart */}
@@ -455,20 +536,112 @@ export default function PlatformAnalyticsPage() {
         {activeTab === "geo" && (
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><MapPin className="h-4 w-4" />Visitor Locations</CardTitle></CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {(analyticsData?.locations?.length || 0) === 0 ? (
                 <div className="text-center py-12 text-muted-foreground"><MapPin className="h-10 w-10 mx-auto mb-3 opacity-50" /><p className="font-medium">No location data yet</p><p className="text-sm mt-1">Visit the site to generate visitor data.</p></div>
               ) : (
                 <>
-                  <div className="rounded-lg overflow-hidden border" style={{ height: 500 }}>
-                    <LeafletMap locations={analyticsData?.locations || []} />
+                  <div className="grid gap-3 rounded-lg border bg-muted/20 p-4 lg:grid-cols-[minmax(0,1.4fr)_220px]">
+                    <div className="space-y-2">
+                      <Label htmlFor="geo-search" className="text-xs text-muted-foreground">Find a city or country</Label>
+                      <Input
+                        id="geo-search"
+                        value={geoQuery}
+                        onChange={(event) => setGeoQuery(event.target.value)}
+                        placeholder="Search Amsterdam, London, US..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Country</Label>
+                      <Select value={geoCountryFilter} onValueChange={setGeoCountryFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All countries" />
+                        </SelectTrigger>
+                        <SelectContent aria-label="Country filter">
+                          <SelectItem value="All countries">All countries</SelectItem>
+                          {visitorCountries.map((country) => (
+                            <SelectItem key={country} value={country}>
+                              {country}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Minimum visitors per plotted point</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[1, 2, 5, 10].map((threshold) => (
+                          <Button
+                            key={threshold}
+                            type="button"
+                            size="sm"
+                            variant={geoMinVisitors === threshold ? "default" : "outline"}
+                            onClick={() => setGeoMinVisitors(threshold)}
+                          >
+                            {threshold === 1 ? "All" : `${threshold}+`}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Sort locations</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(["Most visitors", "City (A-Z)", "Country (A-Z)"] as const).map((option) => (
+                          <Button
+                            key={option}
+                            type="button"
+                            size="sm"
+                            variant={geoSort === option ? "default" : "outline"}
+                            onClick={() => setGeoSort(option)}
+                          >
+                            {option}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-end lg:justify-end">
+                      <Button type="button" variant="ghost" size="sm" onClick={resetGeoFilters}>
+                        Reset filters
+                      </Button>
+                    </div>
                   </div>
-                  <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {analyticsData?.locations?.map((loc, i) => (
-                      <div key={i} className="flex items-center gap-2 rounded-lg border p-2.5 text-sm">
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="rounded-lg border p-4">
+                      <p className="text-2xl font-semibold">{filteredLocations.length}</p>
+                      <p className="text-xs text-muted-foreground">Mapped locations</p>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <p className="text-2xl font-semibold">{formatNumber(visibleVisitorCount)}</p>
+                      <p className="text-xs text-muted-foreground">Visitors in view</p>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <p className="text-2xl font-semibold">{visibleCountryCount}</p>
+                      <p className="text-xs text-muted-foreground">Countries in view</p>
+                    </div>
+                  </div>
+                  {filteredLocations.length === 0 ? (
+                    <div className="rounded-lg border border-dashed py-12 text-center text-muted-foreground">
+                      <p className="font-medium">No locations match the current filters</p>
+                      <p className="mt-1 text-sm">Try widening the country search or lowering the minimum visitor threshold.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="rounded-lg overflow-hidden border" style={{ height: 500 }}>
+                        <LeafletMap locations={filteredLocations} />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Locations are plotted from privacy-safe edge geolocation headers captured for marketing-site visits.
+                      </p>
+                    </>
+                  )}
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredLocations.map((loc, i) => (
+                      <div key={`${loc.country}-${loc.city || "unknown"}-${i}`} className="flex items-center gap-2 rounded-lg border p-2.5 text-sm">
                         <div className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
-                        <span className="truncate font-medium">{loc.city || "Unknown"}</span>
-                        <span className="text-muted-foreground text-xs">{loc.country}</span>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{loc.city || "Unknown city"}</p>
+                          <p className="truncate text-xs text-muted-foreground">{loc.country}</p>
+                        </div>
                         <span className="ml-auto text-xs font-medium">{loc.count}</span>
                       </div>
                     ))}

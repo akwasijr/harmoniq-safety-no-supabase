@@ -9,6 +9,7 @@ const store = createEntityStore<WorkOrder>("harmoniq_work_orders", [], {
     parts_cost: "estimated_cost",
     labor_cost: "actual_cost",
   },
+  realtimeSubscribe: true,
 });
 
 export const WorkOrdersProvider = store.Provider;

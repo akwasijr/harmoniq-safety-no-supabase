@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { hasValidCoordinates } from "@/lib/map-utils";
 
 export interface MapMarker {
   id: string;
@@ -46,6 +47,7 @@ export function AssetLocationMap({
     }).addTo(map);
 
     mapInstance.current = map;
+    requestAnimationFrame(() => map.invalidateSize());
 
     if (onMapClick) {
       map.on("click", (e: L.LeafletMouseEvent) => {
@@ -71,7 +73,7 @@ export function AssetLocationMap({
       }
     });
 
-    const validMarkers = markers.filter((m) => m.lat && m.lng);
+    const validMarkers = markers.filter((m) => hasValidCoordinates(m.lat, m.lng));
     validMarkers.forEach((marker) => {
       const color = marker.type === "location" ? "#3b82f6" : "#10b981";
       const isSelected = marker.id === selectedMarkerId;
@@ -105,6 +107,7 @@ export function AssetLocationMap({
       );
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
     }
+    requestAnimationFrame(() => map.invalidateSize());
   }, [markers, selectedMarkerId]);
 
   return (

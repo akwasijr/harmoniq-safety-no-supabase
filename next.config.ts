@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 function getSupabaseConnectSources() {
   const sources = ["'self'"];
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -29,6 +31,36 @@ function getSentryConnectSource() {
 }
 
 const connectSrc = [getSupabaseConnectSources(), getSentryConnectSource()].filter(Boolean).join(" ");
+
+function buildContentSecurityPolicy() {
+  const scriptSrc = ["'self'", "'unsafe-inline'"];
+
+  if (!isProduction) {
+    scriptSrc.push("'unsafe-eval'");
+  }
+
+  const directives = [
+    "default-src 'self'",
+    `script-src ${scriptSrc.join(" ")}`,
+    "script-src-attr 'none'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https:",
+    "media-src 'self' blob:",
+    "worker-src 'self' blob:",
+    `connect-src ${connectSrc}`,
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+  ];
+
+  if (isProduction) {
+    directives.push("upgrade-insecure-requests");
+  }
+
+  return directives.join("; ");
+}
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -64,19 +96,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https:",
-              "media-src 'self' blob:",
-              `connect-src ${connectSrc}`,
-              "frame-ancestors 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "object-src 'none'",
-            ].join("; "),
+            value: buildContentSecurityPolicy(),
           },
         ],
       },

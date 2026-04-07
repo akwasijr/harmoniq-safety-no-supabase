@@ -158,7 +158,7 @@ function calculateRiskScore(severity: number, probability: number, exposure: num
 
 function getRiskPriority(score: number): { priority: "low" | "medium" | "high"; color: string; bgColor: string } {
   if (score <= 3) return { priority: "low", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950" };
-  if (score <= 9) return { priority: "medium", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950" };
+  if (score <= 9) return { priority: "medium", color: "text-amber-700 dark:text-amber-300", bgColor: "bg-amber-100 dark:bg-amber-900/50" };
   return { priority: "high", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950" };
 }
 
@@ -168,6 +168,7 @@ export default function RIEFormPage() {
   const [currentSection, setCurrentSection] = React.useState(0);
   const [formData, setFormData] = React.useState<RIEFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showErrors, setShowErrors] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -240,8 +241,8 @@ export default function RIEFormPage() {
 
   const canProceed = (): boolean => {
     switch (currentSection) {
-      case 0: return !!formData.companyName.trim() && !!formData.assessmentDate.trim() && !!formData.assessor.trim();
-      case 1: return true;
+      case 0: return !!formData.companyName.trim() && !!formData.address.trim() && !!formData.employeeCount.trim() && !!formData.assessmentDate.trim() && !!formData.assessor.trim();
+      case 1: return !!formData.workplaceDescription.trim() && !!formData.activities.trim();
       case 2: return true;
       case 3: return true;
       case 4: return true;
@@ -251,12 +252,14 @@ export default function RIEFormPage() {
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
     if (isLastSection) {
       handleSubmit();
     } else {
+      setShowErrors(false);
       setCurrentSection(currentSection + 1);
     }
   };
@@ -357,6 +360,7 @@ export default function RIEFormPage() {
               <div className="space-y-2">
                 <Label className="text-base">Bedrijfsnaam (Company Name) *</Label>
                 <Input
+                  autoFocus
                   value={formData.companyName}
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                   placeholder="Enter company name"
@@ -364,6 +368,9 @@ export default function RIEFormPage() {
                   maxLength={200}
                   required
                 />
+                {showErrors && !formData.companyName.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -389,6 +396,9 @@ export default function RIEFormPage() {
                   maxLength={500}
                   required
                 />
+                {showErrors && !formData.address.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -411,6 +421,9 @@ export default function RIEFormPage() {
                     className="h-12"
                     maxLength={10}
                   />
+                  {showErrors && !formData.employeeCount.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
               </div>
 
@@ -423,6 +436,9 @@ export default function RIEFormPage() {
                     onChange={(e) => setFormData({ ...formData, assessmentDate: e.target.value })}
                     className="h-12"
                   />
+                  {showErrors && !formData.assessmentDate.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-base">Uitgevoerd door *</Label>
@@ -434,6 +450,9 @@ export default function RIEFormPage() {
                     maxLength={200}
                     required
                   />
+                  {showErrors && !formData.assessor.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
               </div>
 
@@ -488,6 +507,9 @@ export default function RIEFormPage() {
                   className="min-h-[100px]"
                   maxLength={5000}
                 />
+                {showErrors && !formData.workplaceDescription.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -499,6 +521,9 @@ export default function RIEFormPage() {
                   className="min-h-[100px]"
                   maxLength={5000}
                 />
+                {showErrors && !formData.activities.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -555,7 +580,7 @@ export default function RIEFormPage() {
                 <Card className="bg-yellow-50 border-yellow-200">
                   <CardContent className="py-3 text-center">
                     <p className="text-2xl font-bold text-yellow-600">{mediumRisks}</p>
-                    <p className="text-xs text-yellow-700">Midden</p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300">Midden</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-green-50 border-green-200">
@@ -950,7 +975,7 @@ export default function RIEFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed() || isSubmitting}
+            disabled={isSubmitting}
             className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (

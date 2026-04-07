@@ -1528,7 +1528,9 @@
     "controlMeasuresSummary": "Résumé des mesures de contrôle",
     "requiredPPE": "EPI requis",
     "riskLabel": "Risque",
-    "standard": "Standard"
+    "standard": "Standard",
+    "workerHubHint": "Reprendre les brouillons, suivre les évaluations en attente de révision et conserver les preuves examinées.",
+    "completedHint": "Les évaluations examinées apparaîtront ici avec le réviseur et la date comme preuve."
   },
   "auth": {
     "welcomeBack": "Bon retour",

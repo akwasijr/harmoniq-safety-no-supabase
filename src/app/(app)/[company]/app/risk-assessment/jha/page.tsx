@@ -131,7 +131,7 @@ const initialFormData: JHAFormData = {
 function getRiskLevel(score: number): { level: string; color: string; bgColor: string } {
   if (score === 0) return { level: "Not assessed", color: "text-muted-foreground", bgColor: "bg-muted" };
   if (score <= 5) return { level: "Low", color: "text-green-700 dark:text-green-300", bgColor: "bg-green-100 dark:bg-green-950" };
-  if (score <= 11) return { level: "Medium", color: "text-yellow-700 dark:text-yellow-300", bgColor: "bg-yellow-100 dark:bg-yellow-950" };
+  if (score <= 11) return { level: "Medium", color: "text-amber-700 dark:text-amber-300", bgColor: "bg-amber-100 dark:bg-amber-900/50" };
   return { level: "High", color: "text-red-700 dark:text-red-300", bgColor: "bg-red-100 dark:bg-red-950" };
 }
 
@@ -145,6 +145,7 @@ export default function JHAFormPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [expandedStep, setExpandedStep] = React.useState<string | null>("step_1");
+  const [showErrors, setShowErrors] = React.useState(false);
 
   const { t } = useTranslation();
 
@@ -213,7 +214,7 @@ export default function JHAFormPage() {
 
   const canProceed = (): boolean => {
     switch (currentSection) {
-      case 0: return !!formData.jobTitle.trim() && !!formData.location.trim() && !!formData.department.trim() && !!formData.date.trim();
+      case 0: return !!formData.jobTitle.trim() && !!formData.location.trim() && !!formData.department.trim() && !!formData.date.trim() && !!formData.supervisor.trim();
       case 1: return formData.jobSteps.length > 0 && formData.jobSteps.every(s => s.description.trim().length > 0);
       case 2: return true;
       case 3: return true;
@@ -224,6 +225,7 @@ export default function JHAFormPage() {
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
@@ -231,6 +233,7 @@ export default function JHAFormPage() {
       handleSubmit();
     } else {
       setCurrentSection(currentSection + 1);
+      setShowErrors(false);
     }
   };
 
@@ -324,38 +327,52 @@ export default function JHAFormPage() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-base">Job/Task Title *</Label>
+                <Label htmlFor="jha-job-title" className="text-base">Job/Task Title *</Label>
                 <Input
+                  autoFocus
+                  id="jha-job-title"
                   value={formData.jobTitle}
                   onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
                   placeholder="e.g., Forklift Loading Operations"
                   className="h-12"
                 />
+                {showErrors && !formData.jobTitle.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Work Location *</Label>
+                <Label htmlFor="jha-location" className="text-base">Work Location *</Label>
                 <Input
+                  id="jha-location"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder="e.g., Warehouse A, Loading Bay 3"
                   className="h-12"
                 />
+                {showErrors && !formData.location.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Department *</Label>
+                <Label htmlFor="jha-department" className="text-base">Department *</Label>
                 <Input
+                  id="jha-department"
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                   placeholder="e.g., Logistics, Manufacturing"
                   className="h-12"
                 />
+                {showErrors && !formData.department.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Job Description</Label>
+                <Label htmlFor="jha-job-desc" className="text-base">Job Description</Label>
                 <Textarea
+                  id="jha-job-desc"
                   value={formData.jobDescription}
                   onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
                   placeholder="Brief description of the task, tools/equipment used, and work environment"
@@ -365,22 +382,30 @@ export default function JHAFormPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-base">Analysis Date *</Label>
+                  <Label htmlFor="jha-date" className="text-base">Analysis Date *</Label>
                   <Input
+                    id="jha-date"
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                     className="h-12"
                   />
+                  {showErrors && !formData.date.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-base">Supervisor *</Label>
+                  <Label htmlFor="jha-supervisor" className="text-base">Supervisor *</Label>
                   <Input
+                    id="jha-supervisor"
                     value={formData.supervisor}
                     onChange={(e) => setFormData({ ...formData, supervisor: e.target.value })}
                     placeholder="Supervisor name"
                     className="h-12"
                   />
+                  {showErrors && !formData.supervisor.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -409,7 +434,7 @@ export default function JHAFormPage() {
                 const isExpanded = expandedStep === step.id;
 
                 return (
-                  <Card key={step.id} className="overflow-hidden">
+                  <Card key={step.id} className="overflow-hidden border-0 bg-transparent shadow-none">
                     <CardHeader 
                       className="cursor-pointer py-3"
                       onClick={() => setExpandedStep(isExpanded ? null : step.id)}
@@ -463,6 +488,9 @@ export default function JHAFormPage() {
                             placeholder="Describe the action (start with a verb, e.g., 'Load pallets onto forklift')"
                             className="min-h-[80px]"
                           />
+                          {showErrors && !step.description.trim() && (
+                            <p className="text-xs text-red-500 mt-1">This field is required</p>
+                          )}
                         </div>
 
                         <div className="space-y-2">
@@ -551,7 +579,7 @@ export default function JHAFormPage() {
                                 <p className={cn("font-semibold", risk.color)}>
                                   Risk Score: {riskScore} ({risk.level})
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <p className={cn("text-xs mt-1", risk.color, "opacity-80")}>
                                   {riskScore <= 5 ? "Monitor and address when practical" :
                                    riskScore <= 11 ? "Plan corrective action" :
                                    "Immediate action required"}
@@ -746,13 +774,13 @@ export default function JHAFormPage() {
             </Card>
 
             <Card className={cn("border-2", 
-              maxRiskScore <= 5 ? "border-green-300" : 
-              maxRiskScore <= 11 ? "border-yellow-300" : "border-red-300"
+              maxRiskScore <= 5 ? "border-green-300 dark:border-green-800" : 
+              maxRiskScore <= 11 ? "border-amber-300 dark:border-amber-800" : "border-red-300 dark:border-red-800"
             )}>
               <CardHeader className="py-3">
                 <CardTitle className="text-base flex items-center justify-between">
                   <span>Risk Summary</span>
-                  <span className={cn("text-xs font-medium", overallRisk.color)}>
+                  <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", overallRisk.bgColor, overallRisk.color)}>
                     {overallRisk.level} ({maxRiskScore})
                   </span>
                 </CardTitle>
@@ -826,7 +854,7 @@ export default function JHAFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed() || isSubmitting}
+            disabled={isSubmitting}
             className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (

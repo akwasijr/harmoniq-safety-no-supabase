@@ -165,6 +165,7 @@ export default function OSAFormPage() {
   const [currentSection, setCurrentSection] = React.useState(0);
   const [formData, setFormData] = React.useState<OSAFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showErrors, setShowErrors] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -210,16 +211,18 @@ export default function OSAFormPage() {
 
   const canProceed = (): boolean => {
     switch (currentSection) {
-      case 0: return !!formData.organizationName.trim() && !!formData.assessmentDate.trim() && !!formData.respondent.trim();
+      case 0: return !!formData.organizationName.trim() && !!formData.department.trim() && !!formData.assessmentDate.trim() && !!formData.respondent.trim();
       default: return true;
     }
   };
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
+    setShowErrors(false);
     if (isLastSection) {
       handleSubmit();
     } else {
@@ -340,11 +343,15 @@ export default function OSAFormPage() {
               <div className="space-y-2">
                 <Label className="text-base">Organisation *</Label>
                 <Input
+                  autoFocus
                   value={formData.organizationName}
                   onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
                   placeholder="Organization name"
                   className="h-12"
                 />
+                {showErrors && !formData.organizationName.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -355,6 +362,9 @@ export default function OSAFormPage() {
                   placeholder="Your department"
                   className="h-12"
                 />
+                {showErrors && !formData.department.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -365,17 +375,23 @@ export default function OSAFormPage() {
                   onChange={(e) => setFormData({ ...formData, assessmentDate: e.target.value })}
                   className="h-12"
                 />
+                {showErrors && !formData.assessmentDate.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-base">Ditt namn</Label>
+                  <Label className="text-base">Ditt namn *</Label>
                   <Input
                     value={formData.respondent}
                     onChange={(e) => setFormData({ ...formData, respondent: e.target.value })}
                     placeholder="Your name"
                     className="h-12"
                   />
+                  {showErrors && !formData.respondent.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-base">Roll</Label>
@@ -742,7 +758,7 @@ export default function OSAFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed() || isSubmitting}
+            disabled={isSubmitting}
             className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (

@@ -85,8 +85,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 });
     }
 
-    // Create user profile
+    if (!authUser.email || authUser.email.toLowerCase() !== invitation.email.toLowerCase()) {
+      return NextResponse.json({ error: "This invitation does not match your signed-in account" }, { status: 403 });
+    }
+
     const now = new Date().toISOString();
+    const { data: acceptedInvitation, error: acceptError } = await supabase
+      .from("invitations")
+      .update({ accepted_at: now })
+      .eq("id", invitation.id)
+      .is("accepted_at", null)
+      .select("id")
+      .maybeSingle();
+
+    if (acceptError) {
+      console.error("[Invitations] Failed to accept invitation:", acceptError);
+      return NextResponse.json({ error: "Failed to accept invitation" }, { status: 500 });
+    }
+
+    if (!acceptedInvitation) {
+      return NextResponse.json({ error: "Invitation already accepted" }, { status: 409 });
+    }
+
+    // Create user profile
     const { error: profileError } = await supabase
       .from("users")
       .upsert({
@@ -110,14 +131,13 @@ export async function POST(request: NextRequest) {
 
     if (profileError) {
       console.error("[Invitations] Failed to create user profile:", profileError);
+      await supabase
+        .from("invitations")
+        .update({ accepted_at: null })
+        .eq("id", invitation.id)
+        .eq("accepted_at", now);
       return NextResponse.json({ error: "Failed to create user profile" }, { status: 500 });
     }
-
-    // Mark invitation as accepted
-    await supabase
-      .from("invitations")
-      .update({ accepted_at: now })
-      .eq("id", invitation.id);
 
     return NextResponse.json({ success: true });
   } catch (err) {

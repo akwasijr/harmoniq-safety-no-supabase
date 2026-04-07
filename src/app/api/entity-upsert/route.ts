@@ -1,27 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createRateLimiter } from "@/lib/rate-limit";
-
-const ALLOWED_TABLES = new Set([
-  "incidents",
-  "assets",
-  "tickets",
-  "work_orders",
-  "locations",
-  "teams",
-  "content",
-  "checklist_templates",
-  "checklist_submissions",
-  "risk_evaluations",
-  "parts",
-  "corrective_actions",
-  "asset_inspections",
-  "meter_readings",
-  "inspection_routes",
-  "inspection_rounds",
-  "notifications",
-  "companies",
-]);
+import {
+  getAssetScopedRowIds,
+  validateEntityUpsertRequest,
+} from "@/lib/entity-upsert";
 
 // 30 upsert requests per IP per minute
 const upsertLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "entity-upsert" });
@@ -51,56 +35,53 @@ export async function POST(request: NextRequest) {
 
     const { table, data } = await request.json();
 
-    if (!table || !data) {
-      return NextResponse.json({ error: "table and data are required" }, { status: 400 });
+    const validated = validateEntityUpsertRequest(table, data, profile);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: validated.status });
     }
 
-    if (!ALLOWED_TABLES.has(table)) {
-      return NextResponse.json({ error: "Table not allowed" }, { status: 403 });
-    }
+    const assetIds = getAssetScopedRowIds(table, validated.rows);
+    if (assetIds.length > 0) {
+      const { data: assets, error: assetsError } = await supabase
+        .from("assets")
+        .select("id, company_id")
+        .in("id", assetIds);
 
-    // Enforce company isolation: every row must match user's company
-    const payload = Array.isArray(data) ? data : [data];
-    for (const item of payload) {
-      if (table === "companies") {
-        // Only super_admin can upsert companies
-        if (profile.role !== "super_admin") {
-          return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
-        }
-      } else if (item.company_id) {
-        // Non-super-admins can only write to their own company
-        if (profile.role !== "super_admin" && item.company_id !== profile.company_id) {
-          return NextResponse.json({ error: "Cannot access data from another company" }, { status: 403 });
-        }
-      } else {
-        // Force the user's company_id if not provided
-        item.company_id = profile.company_id;
+      if (assetsError) {
+        console.error("[Entity Upsert API] Failed to validate asset ownership:", assetsError);
+        return NextResponse.json({ error: "Failed to validate asset ownership" }, { status: 500 });
+      }
+
+      if (!assets || assets.length !== assetIds.length) {
+        return NextResponse.json({ error: "Referenced asset not found" }, { status: 400 });
+      }
+
+      if (profile.role !== "super_admin" && assets.some((asset) => asset.company_id !== profile.company_id)) {
+        return NextResponse.json({ error: "Cannot access data from another company" }, { status: 403 });
       }
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Use admin client (service_role) to bypass RLS since we already
+    // validated auth + company ownership above. Falls back to user client.
+    const adminClient = createAdminClient();
+    const writeClient = adminClient ?? supabase;
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    if (!adminClient) {
+      console.warn("[Entity Upsert API] Admin client unavailable — falling back to user session (may hit RLS)");
     }
 
-    // Use direct PostgREST call with service role key — bypasses RLS and has full access
-    const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
-      method: "POST",
-      headers: {
-        "apikey": serviceRoleKey,
-        "Authorization": `Bearer ${serviceRoleKey}`,
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates",
-      },
-      body: JSON.stringify(payload),
-    });
+    const { error: upsertError } = await writeClient
+      .from(table)
+      .upsert(validated.rows, { onConflict: "id" });
 
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-      console.error(`[Entity Upsert API] Error for ${table}:`, body.message || body);
-      return NextResponse.json({ error: body.message || "Upsert failed" }, { status: 500 });
+    if (upsertError) {
+      const msg = upsertError.message || "Upsert failed";
+      if (msg.includes("permission denied") || msg.includes("row-level security")) {
+        console.warn(`[Entity Upsert API] Permission issue for ${table}:`, msg);
+        return NextResponse.json({ error: "You do not have permission to save this data." }, { status: 403 });
+      }
+      console.error(`[Entity Upsert API] Error for ${table}:`, msg);
+      return NextResponse.json({ error: "Unable to save data. Please try again." }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });

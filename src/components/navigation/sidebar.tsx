@@ -128,35 +128,7 @@ const superAdminPlatformNav: NavItem[] = [
     exactMatch: false,
   },
   {
-    title: "Analytics & Privacy",
-    href: "/dashboard/platform/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Companies",
-    href: "/dashboard/platform/companies",
-    icon: Building2,
-  },
-  {
-    title: "Platform Users",
-    href: "/dashboard/platform/users",
-    icon: UserCog,
-  },
-  {
-    title: "Platform Settings",
-    href: "/dashboard/platform/settings",
-    icon: Settings,
-  },
-];
-
-const companyAdminPlatformNav: NavItem[] = [
-  {
-    title: "Overview",
-    href: "/dashboard/platform/overview",
-    icon: Layers,
-  },
-  {
-    title: "Analytics & Privacy",
+    title: "Marketing Site",
     href: "/dashboard/platform/analytics",
     icon: BarChart3,
   },
@@ -205,7 +177,7 @@ export function Sidebar({
 
   const isAdmin = isSuperAdmin || isCompanyAdmin;
   const showPlatformNav = isAdmin && enteredViaPlatform;
-  const platformNavItems = isSuperAdmin ? superAdminPlatformNav : companyAdminPlatformNav;
+  const platformNavItems = superAdminPlatformNav;
 
   const getTitle = (item: NavItem) => item.titleKey ? t(item.titleKey) : item.title;
 

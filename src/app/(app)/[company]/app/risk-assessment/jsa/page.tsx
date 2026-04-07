@@ -127,6 +127,7 @@ export default function JSAFormPage() {
   const [currentSection, setCurrentSection] = React.useState(0);
   const [formData, setFormData] = React.useState<JSAFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showErrors, setShowErrors] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -167,9 +168,9 @@ export default function JSAFormPage() {
 
   const canProceed = (): boolean => {
     switch (currentSection) {
-      case 0: return !!formData.date.trim() && !!formData.jobDescription.trim() && !!formData.location.trim();
+      case 0: return !!formData.date.trim() && !!formData.time.trim() && !!formData.jobDescription.trim() && !!formData.location.trim() && !!formData.crewLeader.trim();
       case 1: return true;
-      case 2: return true;
+      case 2: return !!formData.identifiedHazards.trim() && !!formData.controlMeasures.trim();
       case 3: return formData.acknowledgment;
       default: return false;
     }
@@ -177,12 +178,14 @@ export default function JSAFormPage() {
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
     if (isLastSection) {
       handleSubmit();
     } else {
+      setShowErrors(false);
       setCurrentSection(currentSection + 1);
     }
   };
@@ -279,67 +282,89 @@ export default function JSAFormPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-base flex items-center gap-2">
+                  <Label htmlFor="jsa-date" className="text-base flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     Date *
                   </Label>
                   <Input
+                    autoFocus
+                    id="jsa-date"
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                     className="h-12"
                   />
+                  {showErrors && !formData.date.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-base">Time *</Label>
+                  <Label htmlFor="jsa-time" className="text-base">Time *</Label>
                   <Input
+                    id="jsa-time"
                     type="time"
                     value={formData.time}
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                     className="h-12"
                   />
+                  {showErrors && !formData.time.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Job/Task Description *</Label>
+                <Label htmlFor="jsa-job-desc" className="text-base">Job/Task Description *</Label>
                 <Textarea
+                  id="jsa-job-desc"
                   value={formData.jobDescription}
                   onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
                   placeholder="Describe today's work activities"
                   className="min-h-[80px]"
                 />
+                {showErrors && !formData.jobDescription.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base flex items-center gap-2">
+                <Label htmlFor="jsa-location" className="text-base flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Work Location *
                 </Label>
                 <Input
+                  id="jsa-location"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder="e.g., Building A, Floor 2"
                   className="h-12"
                 />
+                {showErrors && !formData.location.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base flex items-center gap-2">
+                <Label htmlFor="jsa-crew-leader" className="text-base flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Crew Leader *
                 </Label>
                 <Input
+                  id="jsa-crew-leader"
                   value={formData.crewLeader}
                   onChange={(e) => setFormData({ ...formData, crewLeader: e.target.value })}
                   placeholder="Name of crew leader"
                   className="h-12"
                 />
+                {showErrors && !formData.crewLeader.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Crew Members</Label>
+                <Label htmlFor="jsa-crew-members" className="text-base">Crew Members</Label>
                 <Textarea
+                  id="jsa-crew-members"
                   value={formData.crewMembers}
                   onChange={(e) => setFormData({ ...formData, crewMembers: e.target.value })}
                   placeholder="List all crew members present (one per line)"
@@ -450,6 +475,9 @@ export default function JSAFormPage() {
                   placeholder="e.g., Working near active forklift traffic, overhead crane operations in area..."
                   className="min-h-[100px]"
                 />
+                {showErrors && !formData.identifiedHazards.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -463,6 +491,9 @@ export default function JSAFormPage() {
                   placeholder="e.g., Spotter assigned for forklift traffic, stay outside crane swing radius..."
                   className="min-h-[100px]"
                 />
+                {showErrors && !formData.controlMeasures.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -589,6 +620,9 @@ export default function JSAFormPage() {
                 </p>
               </div>
             </button>
+            {showErrors && !formData.acknowledgment && (
+              <p className="text-xs text-red-500 mt-1">Acknowledgment is required to submit</p>
+            )}
 
             <Card className="bg-muted/50">
               <CardContent className="py-4">
@@ -615,7 +649,7 @@ export default function JSAFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed() || isSubmitting}
+            disabled={isSubmitting}
             className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (

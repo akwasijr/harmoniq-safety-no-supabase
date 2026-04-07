@@ -33,8 +33,13 @@ import {
   TIMEZONE_OPTIONS,
   type MeasurementSystem,
 } from "@/lib/company-settings";
+import {
+  DEFAULT_BRAND_PRIMARY_COLOR,
+  DEFAULT_BRAND_SECONDARY_COLOR,
+} from "@/lib/brand-defaults";
 import { saveToStorage } from "@/lib/local-storage";
-import type { Company, Country, Language, SubscriptionTier, Currency, UIStyle } from "@/types";
+import type { Company, Country, Language, SubscriptionTier, Currency, UIStyle, User } from "@/types";
+import { logPlatformAuditEvent } from "@/lib/platform-audit-client";
 import { useTranslation } from "@/i18n";
 
 const SUPPORTED_COUNTRIES = COUNTRY_OPTIONS;
@@ -55,6 +60,7 @@ export default function PlatformCompaniesPage() {
   
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { items: companies, isLoading, add: addCompany } = useCompanyStore();
   const { items: users, add: addUser } = useUsersStore();
   const { items: incidents } = useIncidentsStore();
@@ -74,8 +80,12 @@ export default function PlatformCompaniesPage() {
   const [newTimezone, setNewTimezone] = React.useState("America/New_York");
   const [newMeasurementSystem, setNewMeasurementSystem] =
     React.useState<MeasurementSystem>("imperial");
-  const [newPrimaryColor, setNewPrimaryColor] = React.useState("#2563eb");
-  const [newSecondaryColor, setNewSecondaryColor] = React.useState("#1e40af");
+  const [newPrimaryColor, setNewPrimaryColor] = React.useState(
+    DEFAULT_BRAND_PRIMARY_COLOR,
+  );
+  const [newSecondaryColor, setNewSecondaryColor] = React.useState(
+    DEFAULT_BRAND_SECONDARY_COLOR,
+  );
   const [newUiStyle, setNewUiStyle] = React.useState<UIStyle>("rounded");
   const [formStep, setFormStep] = React.useState<"general" | "localization" | "branding">("general");
 
@@ -435,7 +445,7 @@ export default function PlatformCompaniesPage() {
                         value={newPrimaryColor}
                         onChange={(e) => setNewPrimaryColor(e.target.value)}
                         className="font-mono text-sm flex-1"
-                        placeholder="#2563eb"
+                        placeholder={DEFAULT_BRAND_PRIMARY_COLOR}
                       />
                     </div>
                   </div>
@@ -453,7 +463,7 @@ export default function PlatformCompaniesPage() {
                         value={newSecondaryColor}
                         onChange={(e) => setNewSecondaryColor(e.target.value)}
                         className="font-mono text-sm flex-1"
-                        placeholder="#1e40af"
+                        placeholder={DEFAULT_BRAND_SECONDARY_COLOR}
                       />
                     </div>
                   </div>
@@ -479,10 +489,12 @@ export default function PlatformCompaniesPage() {
                   </div>
                   <div>
                     <Label>Logo</Label>
-                    <div className="mt-1 flex items-center justify-center h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 cursor-pointer hover:border-muted-foreground/50 transition-colors">
+                    <div className="mt-1 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4">
                       <div className="text-center">
                         <Upload className="h-6 w-6 text-muted-foreground mx-auto" />
-                        <p className="text-xs text-muted-foreground mt-1">Upload logo (coming soon)</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Add the company logo after onboarding from the company details page.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -523,90 +535,121 @@ export default function PlatformCompaniesPage() {
                     Next
                   </Button>
                 ) : (
-                  <Button onClick={() => {
-                    if (!newCompanyName.trim()) {
-                      toast(t("companies.enterCompanyName"), "error");
-                      setFormStep("general");
-                      return;
-                    }
-                    const selectedCountry = SUPPORTED_COUNTRIES.find((c) => c.code === newCompanyCountry)!;
-                    const selectedTier = PRICING_TIERS.find((tier) => tier.value === newCompanyTier)!;
-                    const newCompany: Company = {
-                      id: `company-${Date.now()}`,
-                      name: newCompanyName.trim(),
-                      slug: newCompanyName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-                      app_name: newAppName.trim() || null,
-                      country: selectedCountry.code as Country,
-                      language: newLanguage as Language,
-                      currency: newCurrency,
-                      tier: selectedTier.value as SubscriptionTier,
-                      seat_limit: selectedTier.seats,
-                      status: "trial",
-                      primary_color: newPrimaryColor,
-                      secondary_color: newSecondaryColor,
-                      font_family: "Inter",
-                      ui_style: newUiStyle,
-                      logo_url: null,
-                      hero_image_url: null,
-                      trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-                      created_at: new Date().toISOString(),
-                      updated_at: new Date().toISOString(),
-                    };
-                    addCompany(newCompany);
-                    saveToStorage(getCompanySettingsKey(newCompany.id), {
-                      selectedCountry: newCompany.country,
-                      language: newLanguage,
-                      currency: newCurrency,
-                      dateFormat: newDateFormat,
-                      timezone: newTimezone,
-                      measurementSystem: newMeasurementSystem,
-                    });
-                    // Create admin user for the new company if email provided
-                    if (newCompanyEmail.trim()) {
-                      addUser({
-                        id: `user_${Date.now()}`,
-                        company_id: newCompany.id,
-                        email: newCompanyEmail.trim(),
-                        first_name: "Admin",
-                        middle_name: null,
-                        last_name: newCompanyName.trim(),
-                        full_name: `Admin ${newCompanyName.trim()}`,
-                        role: "company_admin",
-                        user_type: "internal",
-                        account_type: "admin",
-                        gender: null,
-                        department: null,
-                        job_title: "Administrator",
-                        employee_id: newCompanyEmail.trim().split("@")[0],
-                        status: "active",
-                        location_id: null,
-                        language: newLanguage as Language,
-                        theme: "system",
-                        two_factor_enabled: false,
-                        last_login_at: null,
-                        team_ids: [],
-                        custom_permissions: [],
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
-                      });
-                    }
-                    setShowAddModal(false);
-                    setFormStep("general");
-                    setNewCompanyName("");
-                    setNewCompanyEmail("");
-                    setNewAppName("");
-                    setNewCompanyCountry(SUPPORTED_COUNTRIES[0].code);
-                    setNewCompanyTier(PRICING_TIERS[0].value);
-                    setNewLanguage("en");
-                    setNewCurrency("USD");
-                    setNewDateFormat("MM/DD/YYYY");
-                    setNewTimezone("America/New_York");
-                    setNewMeasurementSystem("imperial");
-                    setNewPrimaryColor("#2563eb");
-                    setNewSecondaryColor("#1e40af");
-                    setNewUiStyle("rounded");
-                    toast(t("companies.companyCreated", { name: newCompany.name }));
-                  }}>{t("companies.createCompany")}</Button>
+                  <Button
+                    onClick={async () => {
+                      if (!newCompanyName.trim()) {
+                        toast(t("companies.enterCompanyName"), "error");
+                        setFormStep("general");
+                        return;
+                      }
+
+                      setIsSubmitting(true);
+                      try {
+                        const selectedCountry = SUPPORTED_COUNTRIES.find((c) => c.code === newCompanyCountry)!;
+                        const selectedTier = PRICING_TIERS.find((tier) => tier.value === newCompanyTier)!;
+                        const companyResponse = await fetch("/api/platform/companies", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            name: newCompanyName.trim(),
+                            app_name: newAppName.trim() || null,
+                            country: selectedCountry.code as Country,
+                            language: newLanguage as Language,
+                            currency: newCurrency,
+                            tier: selectedTier.value as SubscriptionTier,
+                            seat_limit: selectedTier.seats,
+                            status: "trial",
+                            primary_color: newPrimaryColor,
+                            secondary_color: newSecondaryColor,
+                            font_family: "Inter",
+                            ui_style: newUiStyle,
+                            trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+                          }),
+                        });
+
+                        const companyData = (await companyResponse.json()) as {
+                          error?: string;
+                          company?: Company;
+                        };
+
+                        if (!companyResponse.ok || !companyData.company) {
+                          throw new Error(companyData.error || "Failed to create company");
+                        }
+
+                        const createdCompany = companyData.company;
+                        addCompany(createdCompany);
+                        saveToStorage(getCompanySettingsKey(createdCompany.id), {
+                          selectedCountry: createdCompany.country,
+                          language: newLanguage,
+                          currency: newCurrency,
+                          dateFormat: newDateFormat,
+                          timezone: newTimezone,
+                          measurementSystem: newMeasurementSystem,
+                        });
+
+                        if (newCompanyEmail.trim()) {
+                          const invitationResponse = await fetch("/api/invitations", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              email: newCompanyEmail.trim(),
+                              first_name: "Admin",
+                              last_name: createdCompany.name,
+                              role: "company_admin",
+                              company_id: createdCompany.id,
+                            }),
+                          });
+
+                          const invitationData = (await invitationResponse.json()) as {
+                            error?: string;
+                            user?: User;
+                          };
+
+                          if (!invitationResponse.ok) {
+                            throw new Error(invitationData.error || "Company created but admin invitation failed");
+                          }
+
+                          if (invitationData.user) {
+                            addUser(invitationData.user);
+                          }
+                        }
+
+                        await logPlatformAuditEvent({
+                          action: "platform_company_onboarded",
+                          resource: "companies",
+                          companyId: createdCompany.id,
+                          details: {
+                            company_name: createdCompany.name,
+                            admin_email: newCompanyEmail.trim() || null,
+                          },
+                        });
+
+                        setShowAddModal(false);
+                        setFormStep("general");
+                        setNewCompanyName("");
+                        setNewCompanyEmail("");
+                        setNewAppName("");
+                        setNewCompanyCountry(SUPPORTED_COUNTRIES[0].code);
+                        setNewCompanyTier(PRICING_TIERS[0].value);
+                        setNewLanguage("en");
+                        setNewCurrency("USD");
+                        setNewDateFormat("MM/DD/YYYY");
+                        setNewTimezone("America/New_York");
+                        setNewMeasurementSystem("imperial");
+                        setNewPrimaryColor(DEFAULT_BRAND_PRIMARY_COLOR);
+                        setNewSecondaryColor(DEFAULT_BRAND_SECONDARY_COLOR);
+                        setNewUiStyle("rounded");
+                        toast(t("companies.companyCreated", { name: createdCompany.name }), "success");
+                      } catch (error) {
+                        toast(error instanceof Error ? error.message : "Failed to create company", "error");
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Creating..." : t("companies.createCompany")}
+                  </Button>
                 )}
               </div>
             </div>

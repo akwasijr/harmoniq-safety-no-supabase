@@ -78,12 +78,10 @@ export function BottomTabs({ company }: BottomTabsProps) {
   );
 
   return (
-    <nav aria-label="App navigation" className="field-app-surface fixed bottom-0 left-0 right-0 z-50 border-t bg-card safe-area-inset-bottom">
-      <ul className="flex h-16 items-center justify-around">
+    <nav aria-label="App navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background safe-area-inset-bottom">
+      <ul className="flex h-[68px] items-center justify-around">
         {visibleTabs.map((item) => {
           const href = `/${company}${item.href}`;
-          // For exact match items (like Home), only match the exact path
-          // For other items, match the path or any sub-paths
           const isActive = item.exactMatch 
             ? pathname === href
             : pathname === href || pathname.startsWith(`${href}/`)
@@ -100,20 +98,20 @@ export function BottomTabs({ company }: BottomTabsProps) {
                   "flex min-h-[44px] flex-col items-center justify-center px-2 py-1.5",
                   "transition-colors active:opacity-70",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  isActive ? "text-primary" : "text-muted-foreground"
+                  isActive ? "text-primary" : "text-muted-foreground/60"
                 )}
               >
                 {isActive && (
-                  <div className="h-0.5 w-5 rounded-full bg-primary mx-auto mb-1" />
+                  <div className="h-[3px] w-6 rounded-full bg-primary mx-auto mb-1" aria-hidden="true" />
                 )}
                 <item.icon
-                  className={cn("h-5 w-5", isActive && "fill-primary/20")}
+                  className="h-5 w-5"
                   aria-hidden="true"
                 />
                 <span
                   className={cn(
-                    "text-xs max-w-[4.5rem] truncate text-center mt-0.5",
-                    isActive ? "font-semibold text-primary" : "font-normal"
+                    "text-[11px] max-w-[4.5rem] truncate text-center mt-1",
+                    isActive ? "font-semibold" : "font-normal"
                   )}
                 >
                   {t(item.shortTitleKey) || item.fallback}

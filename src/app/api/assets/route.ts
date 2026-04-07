@@ -130,6 +130,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (location_id) {
+      const { data: location } = await supabase
+        .from("locations")
+        .select("company_id")
+        .eq("id", location_id)
+        .single();
+
+      if (!location || location.company_id !== profile.company_id) {
+        return NextResponse.json({ error: "Invalid location" }, { status: 400 });
+      }
+    }
+
     const now = new Date().toISOString();
     const assetTag = `AST-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
 

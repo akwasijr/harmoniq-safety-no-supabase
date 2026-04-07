@@ -314,7 +314,7 @@ export default function NotificationsPage() {
   return (
     <div className="flex flex-col min-h-full pb-20">
       {/* Header */}
-      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
+      <div className="sticky top-[60px] z-10 bg-background border-b px-4 pt-4 pb-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}

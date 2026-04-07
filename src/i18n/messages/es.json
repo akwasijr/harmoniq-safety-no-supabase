@@ -1528,7 +1528,9 @@
     "controlMeasuresSummary": "Resumen de medidas de control",
     "requiredPPE": "EPP requerido",
     "riskLabel": "Riesgo",
-    "standard": "Estándar"
+    "standard": "Estándar",
+    "workerHubHint": "Reanuda borradores, rastrea evaluaciones pendientes de revisión y conserva pruebas revisadas.",
+    "completedHint": "Las evaluaciones revisadas aparecerán aquí con el revisor y la fecha como prueba."
   },
   "auth": {
     "welcomeBack": "Bienvenido de nuevo",

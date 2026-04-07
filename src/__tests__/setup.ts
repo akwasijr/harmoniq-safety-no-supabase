@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   }),
   useParams: () => ({}),
   usePathname: () => "/",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(window.location.search),
 }));
 
 // Mock Next.js headers (used by server components)

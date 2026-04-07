@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
+import { subscribeToRealtimeInvalidation } from "@/lib/supabase/realtime-invalidation";
 import { sanitizeText } from "@/lib/validation";
 
 // ── Module-level cache ──────────────────────────────────────────────
@@ -101,6 +102,8 @@ interface StoreOptions {
   columnMap?: ColumnMap;
   /** Fields to strip before sending to Supabase (e.g., joined relations) */
   stripFields?: string[];
+  /** Subscribe to Supabase realtime invalidation for near-live updates */
+  realtimeSubscribe?: boolean;
 }
 
 /**
@@ -145,10 +148,14 @@ export function createEntityStore<T extends IdEntity>(
     );
     const isFetchingRef = React.useRef(false);
     const isMountedRef = React.useRef(true);
+    const realtimeRefreshTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
     React.useEffect(() => {
       return () => {
         isMountedRef.current = false;
+        if (realtimeRefreshTimerRef.current) {
+          clearTimeout(realtimeRefreshTimerRef.current);
+        }
       };
     }, []);
 
@@ -192,9 +199,19 @@ export function createEntityStore<T extends IdEntity>(
             const fetched = opts.columnMap
               ? raw.map((row) => mapFromSupabase<T>(row, opts.columnMap))
               : (raw as T[]);
-            setItems(fetched);
+            // Merge optimistic items: keep any locally-added items that
+            // aren't yet in the Supabase response (write may be in-flight)
+            const fetchedIds = new Set(fetched.map((item) => item.id));
+            const optimistic = itemsRef.current.filter(
+              (item) => !fetchedIds.has(item.id)
+            );
+            const merged = optimistic.length > 0
+              ? [...fetched, ...optimistic]
+              : fetched;
+            setItems(merged);
+            itemsRef.current = merged;
             // Cache to localStorage for offline resilience
-            saveToStorage(storageKey, fetched);
+            saveToStorage(storageKey, merged);
           }
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
@@ -218,6 +235,22 @@ export function createEntityStore<T extends IdEntity>(
     const saveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const itemsRef = React.useRef(items);
     itemsRef.current = items;
+
+    const invalidateAndRefresh = React.useCallback(() => {
+      globalLoadedCache.delete(storageKey);
+      hasLoadedRef.current = false;
+
+      if (realtimeRefreshTimerRef.current) {
+        return;
+      }
+
+      realtimeRefreshTimerRef.current = setTimeout(() => {
+        realtimeRefreshTimerRef.current = null;
+        if (isMountedRef.current) {
+          ensureLoaded();
+        }
+      }, 250);
+    }, [ensureLoaded]);
 
     React.useEffect(() => {
       if (isSupabaseConfigured) return;
@@ -245,6 +278,19 @@ export function createEntityStore<T extends IdEntity>(
         flushPendingSave();
       };
     }, []);
+
+    React.useEffect(() => {
+      if (!isSupabaseConfigured || !opts.realtimeSubscribe) return;
+
+      const supabase = createClient();
+
+      return subscribeToRealtimeInvalidation({
+        client: supabase,
+        table,
+        scope: storageKey,
+        onInvalidate: invalidateAndRefresh,
+      });
+    }, [invalidateAndRefresh]);
 
     // Cross-tab sync: listen for storage changes from other tabs/windows
     React.useEffect(() => {
@@ -306,20 +352,19 @@ export function createEntityStore<T extends IdEntity>(
             console.log(`[Harmoniq Debug] Upserting to ${table}:`, Object.keys(mapped), mapped);
           }
           // Route through server API to bypass RLS restrictions
-          const res = await fetch("/api/entity-upsert", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ table, data: mapped }),
-          });
-          if (!res.ok) {
-            const body = await res.json().catch(() => ({ error: "Unknown error" }));
-            const errMsg = body.error || `HTTP ${res.status}`;
-            if (process.env.NODE_ENV === "development") {
-              console.error(`[Harmoniq Debug] Upsert error for ${table}:`, errMsg);
+          try {
+            const res = await fetch("/api/entity-upsert", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ table, data: mapped }),
+            });
+            if (!res.ok) {
+              const body = await res.json().catch(() => ({ error: "Unknown error" }));
+              const errMsg = body.error || `HTTP ${res.status}`;
+              console.warn(`[Harmoniq] Cloud sync failed for ${table}: ${errMsg}`);
             }
-            // Keep optimistic update in localStorage — don't roll back
-            // Data persists locally; DB sync will succeed once permissions are fixed
-            console.warn(`[Harmoniq] Cloud sync failed for ${table}: ${errMsg} — data saved locally`);
+          } catch (syncErr) {
+            console.warn(`[Harmoniq] Cloud sync failed for ${table}:`, syncErr);
           }
         })();
       }
@@ -353,17 +398,20 @@ export function createEntityStore<T extends IdEntity>(
 
       if (isSupabaseConfigured) {
         void (async () => {
-          const mapped = mapToSupabase(sanitizedUpdates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
-          const res = await fetch("/api/entity-upsert", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ table, data: { ...mapped, id } }),
-          });
-          if (!res.ok) {
-            const body = await res.json().catch(() => ({ error: "Unknown error" }));
-            const errMsg = body.error || `HTTP ${res.status}`;
-            // Keep optimistic update — don't roll back
-            console.warn(`[Harmoniq] Cloud sync failed for ${table} update: ${errMsg} — data saved locally`);
+          try {
+            const mapped = mapToSupabase(sanitizedUpdates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
+            const res = await fetch("/api/entity-upsert", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ table, data: { ...mapped, id } }),
+            });
+            if (!res.ok) {
+              const body = await res.json().catch(() => ({ error: "Unknown error" }));
+              const errMsg = body.error || `HTTP ${res.status}`;
+              console.warn(`[Harmoniq] Cloud sync failed for ${table} update: ${errMsg}`);
+            }
+          } catch (syncErr) {
+            console.warn(`[Harmoniq] Cloud sync failed for ${table} update:`, syncErr);
           }
         })();
       }
@@ -433,7 +481,7 @@ export function createEntityStore<T extends IdEntity>(
       if (!options?.skipLoad) {
         ctx.ensureLoaded();
       }
-    }, [ctx.ensureLoaded, options?.skipLoad]);
+    }, [ctx, options?.skipLoad]);
     return ctx;
   }
 

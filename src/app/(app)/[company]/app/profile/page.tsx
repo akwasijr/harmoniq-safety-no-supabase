@@ -28,6 +28,7 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useTeamsStore } from "@/stores/teams-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useAuth } from "@/hooks/use-auth";
+import { LoadingPage } from "@/components/ui/loading";
 import { useTranslation, SUPPORTED_LOCALES } from "@/i18n";
 import { getUserTeamIds } from "@/lib/assignment-utils";
 
@@ -99,11 +100,7 @@ export default function EmployeeProfilePage() {
   // Never fall back to users[0]. That would expose another user's data.
   // If authUser is null the user is not authenticated.
   if (!authUser) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        {t("profile.loading") || "Loading profile..."}
-      </div>
-    );
+    return <LoadingPage message={t("profile.loading") || "Loading profile..."} />;
   }
 
   const currentUser = authUser;
@@ -143,16 +140,16 @@ export default function EmployeeProfilePage() {
       />
 
       {/* Profile header - brand color continuation */}
-      <div className="bg-brand-solid px-5 pt-4 pb-8 text-center">
+      <div className="bg-brand-solid px-5 pt-6 pb-10 text-center">
         <div className="relative inline-block">
           {currentUser.avatar_url ? (
             <img
               src={currentUser.avatar_url}
-              alt={`${user.firstName} ${user.lastName}`}
-              className="h-20 w-20 rounded-full border-[3px] border-white/30 object-cover mx-auto"
+              alt={`${user.firstName} ${user.lastName} profile photo`}
+              className="h-[88px] w-[88px] rounded-full border-[3px] border-white/30 object-cover mx-auto"
             />
           ) : (
-            <div className="h-20 w-20 rounded-full border-[3px] border-white/30 bg-white/10 flex items-center justify-center text-xl font-bold text-white mx-auto">
+            <div className="h-[88px] w-[88px] rounded-full border-[3px] border-white/30 bg-white/10 flex items-center justify-center text-xl font-bold text-white mx-auto">
               {(user.firstName?.[0] || "").toUpperCase()}
               {(user.lastName?.[0] || "").toUpperCase()}
             </div>
@@ -172,8 +169,8 @@ export default function EmployeeProfilePage() {
       </div>
 
       {/* Contact Info section */}
-      <div className="px-4 mt-5">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
+      <div className="px-4 mt-6">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5 px-1">
           {t("profile.contactInfo") || "Contact Info"}
         </h3>
         <div className="rounded-xl bg-card overflow-hidden ">
@@ -228,8 +225,8 @@ export default function EmployeeProfilePage() {
       </div>
 
       {/* Settings section */}
-      <div className="px-4 mt-5">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
+      <div className="px-4 mt-6">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5 px-1">
           {t("profile.settings") || "Settings"}
         </h3>
         <div className="rounded-xl bg-card overflow-hidden ">
@@ -284,8 +281,8 @@ export default function EmployeeProfilePage() {
       </div>
 
       {/* About section */}
-      <div className="px-4 mt-5">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
+      <div className="px-4 mt-6">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5 px-1">
           {t("profile.about") || "About"}
         </h3>
         <div className="rounded-xl bg-card overflow-hidden ">
@@ -310,7 +307,7 @@ export default function EmployeeProfilePage() {
       </div>
 
       {/* Sign out */}
-      <div className="px-4 mt-5 mb-4">
+      <div className="px-4 mt-6 mb-6">
         <button
           onClick={logout}
           className="w-full flex items-center justify-center gap-2 rounded-xl bg-card  py-3.5 text-red-600 font-medium text-sm transition-colors hover:bg-red-50"

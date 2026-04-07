@@ -14,7 +14,14 @@ const AssetLocationMap = dynamic(
     import("@/components/shared/asset-location-map").then((m) => ({
       default: m.AssetLocationMap,
     })),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[200px] items-center justify-center rounded-md border bg-muted/20 text-xs text-muted-foreground">
+        Loading map…
+      </div>
+    ),
+  }
 );
 
 interface GpsPickerProps {

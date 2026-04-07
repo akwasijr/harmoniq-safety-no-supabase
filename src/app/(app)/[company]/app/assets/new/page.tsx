@@ -370,9 +370,9 @@ export default function NewAssetPage() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="serial">{t("newAsset.serialNumber")}</Label>
+                <Label htmlFor="asset-serial">{t("newAsset.serialNumber")}</Label>
                 <Input
-                  id="serial"
+                  id="asset-serial"
                   placeholder={t("newAsset.serialNumberPlaceholder")}
                   value={serialNumber}
                   onChange={(e) => setSerialNumber(e.target.value)}
@@ -382,18 +382,18 @@ export default function NewAssetPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="manufacturer">{t("newAsset.manufacturer")}</Label>
+                  <Label htmlFor="asset-manufacturer">{t("newAsset.manufacturer")}</Label>
                   <Input
-                    id="manufacturer"
+                    id="asset-manufacturer"
                     placeholder={t("newAsset.manufacturerPlaceholder")}
                     value={manufacturer}
                     onChange={(e) => setManufacturer(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="model">{t("newAsset.model")}</Label>
+                  <Label htmlFor="asset-model">{t("newAsset.model")}</Label>
                   <Input
-                    id="model"
+                    id="asset-model"
                     placeholder={t("newAsset.modelPlaceholder")}
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
@@ -402,9 +402,9 @@ export default function NewAssetPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="department">{t("newAsset.department")}</Label>
+                <Label htmlFor="asset-department">{t("newAsset.department")}</Label>
                 <Input
-                  id="department"
+                  id="asset-department"
                   placeholder={t("newAsset.departmentPlaceholder")}
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
@@ -412,9 +412,9 @@ export default function NewAssetPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="warranty">{t("newAsset.warrantyExpiry")}</Label>
+                <Label htmlFor="asset-warranty">{t("newAsset.warrantyExpiry")}</Label>
                 <Input
-                  id="warranty"
+                  id="asset-warranty"
                   type="date"
                   value={warrantyExpiry}
                   onChange={(e) => setWarrantyExpiry(e.target.value)}
@@ -589,9 +589,9 @@ export default function NewAssetPage() {
 
             {/* Safety instructions */}
             <div className="space-y-2">
-              <Label htmlFor="safety">{t("newAsset.safetyInstructions")}</Label>
+              <Label htmlFor="asset-safety">{t("newAsset.safetyInstructions")}</Label>
               <Textarea
-                id="safety"
+                id="asset-safety"
                 placeholder={t("newAsset.safetyInstructionsPlaceholder")}
                 value={safetyInstructions}
                 onChange={(e) => setSafetyInstructions(e.target.value)}
@@ -601,9 +601,9 @@ export default function NewAssetPage() {
 
             {/* Additional notes */}
             <div className="space-y-2">
-              <Label htmlFor="notes">{t("newAsset.additionalNotes")}</Label>
+              <Label htmlFor="asset-notes">{t("newAsset.additionalNotes")}</Label>
               <Textarea
-                id="notes"
+                id="asset-notes"
                 placeholder={t("newAsset.additionalNotesPlaceholder")}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}

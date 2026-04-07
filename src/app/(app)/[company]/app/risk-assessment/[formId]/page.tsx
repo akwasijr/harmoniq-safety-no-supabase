@@ -237,6 +237,7 @@ export default function RiskAssessmentFormPage() {
   const [currentSection, setCurrentSection] = React.useState(0);
   const [answers, setAnswers] = React.useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showErrors, setShowErrors] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -288,9 +289,11 @@ export default function RiskAssessmentFormPage() {
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
+    setShowErrors(false);
     if (isLastSection) {
       handleSubmit();
     } else {
@@ -375,15 +378,21 @@ export default function RiskAssessmentFormPage() {
               <Label className="text-base">{q.question}</Label>
               
               {q.type === "text" && (
+                <>
                 <Input
                   value={answers[q.id] || ""}
                   onChange={(e) => handleAnswer(q.id, e.target.value)}
                   placeholder={t("riskAssessment.enterAnswer")}
                   className="h-12"
                 />
+                {showErrors && !answers[q.id]?.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
+                </>
               )}
 
               {q.type === "yesno" && (
+                <>
                 <div className="flex gap-3">
                   {["Yes", "No", "N/A"].map((option) => (
                     <button
@@ -400,9 +409,14 @@ export default function RiskAssessmentFormPage() {
                     </button>
                   ))}
                 </div>
+                {showErrors && !answers[q.id]?.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
+                </>
               )}
 
               {q.type === "rating" && (
+                <>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((rating) => (
                     <button
@@ -419,6 +433,10 @@ export default function RiskAssessmentFormPage() {
                     </button>
                   ))}
                 </div>
+                {showErrors && !answers[q.id]?.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
+                </>
               )}
             </div>
           ))}
@@ -429,7 +447,7 @@ export default function RiskAssessmentFormPage() {
       <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4 pb-6 z-20 safe-area-inset-bottom">
         <Button
           onClick={handleNext}
-          disabled={!canProceed() || isSubmitting}
+          disabled={isSubmitting}
           className="h-14 w-full gap-2 text-base"
         >
           {isSubmitting ? (

@@ -106,10 +106,27 @@ export default function EmployeeAppRootLayout({
 
   React.useEffect(() => {
     if (!currentCompany) return;
+
+    let primaryColor = currentCompany.primary_color;
+    let secondaryColor = currentCompany.secondary_color;
+
+    // Prefer locally-saved branding overrides over DB values
+    try {
+      const settingsKey = currentCompany.id
+        ? `harmoniq_settings_${currentCompany.id}`
+        : null;
+      const raw = settingsKey ? localStorage.getItem(settingsKey) : null;
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.primaryColor) primaryColor = saved.primaryColor;
+        if (saved.secondaryColor) secondaryColor = saved.secondaryColor;
+      }
+    } catch { /* ignore */ }
+
     applyBranding(
       {
-        primaryColor: currentCompany.primary_color,
-        secondaryColor: currentCompany.secondary_color,
+        primaryColor,
+        secondaryColor,
         fontFamily: currentCompany.font_family,
         uiStyle: currentCompany.ui_style,
       },

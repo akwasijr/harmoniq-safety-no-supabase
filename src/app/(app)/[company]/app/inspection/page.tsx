@@ -112,7 +112,7 @@ function InspectionIndexPageContent() {
 
   return (
     <div className="flex min-h-full flex-col pb-20">
-      <div className="sticky top-14 z-10 border-b bg-background px-4 pt-4 pb-3">
+      <div className="sticky top-[60px] z-10 border-b bg-background px-4 pt-4 pb-3">
         <h1 className="text-lg font-bold">{t("inspectionRounds.title") || "Inspection work"}</h1>
         <p className="mt-1 text-xs text-muted-foreground">
           {t("inspectionRounds.workerHubHint") || "Run published inspection rounds or inspect an individual asset."}

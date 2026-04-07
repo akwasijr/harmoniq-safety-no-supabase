@@ -145,6 +145,7 @@ export default function ArbowetFormPage() {
   const [currentSection, setCurrentSection] = React.useState(0);
   const [formData, setFormData] = React.useState<ArbowetFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showErrors, setShowErrors] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -200,9 +201,11 @@ export default function ArbowetFormPage() {
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
+    setShowErrors(false);
     if (isLastSection) {
       handleSubmit();
     } else {
@@ -308,11 +311,15 @@ export default function ArbowetFormPage() {
               <div className="space-y-2">
                 <Label className="text-base">Bedrijfsnaam (Company Name) *</Label>
                 <Input
+                  autoFocus
                   value={formData.companyName}
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                   placeholder="Enter company name"
                   className="h-12"
                 />
+                {showErrors && !formData.companyName.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -323,6 +330,9 @@ export default function ArbowetFormPage() {
                   placeholder="Name of person conducting audit"
                   className="h-12"
                 />
+                {showErrors && !formData.auditor.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -333,6 +343,9 @@ export default function ArbowetFormPage() {
                   onChange={(e) => setFormData({ ...formData, auditDate: e.target.value })}
                   className="h-12"
                 />
+                {showErrors && !formData.auditDate.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
             </div>
 
@@ -379,7 +392,7 @@ export default function ArbowetFormPage() {
               <Card className="bg-yellow-50 border-yellow-200">
                 <CardContent className="py-2 text-center">
                   <p className="text-lg font-bold text-yellow-600">{partialCount}</p>
-                  <p className="text-xs text-yellow-700">~</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">~</p>
                 </CardContent>
               </Card>
               <Card className="bg-red-50 border-red-200">
@@ -706,7 +719,7 @@ export default function ArbowetFormPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed() || isSubmitting}
+            disabled={isSubmitting}
             className="flex-1 h-14 gap-2 text-base"
           >
             {isSubmitting ? (

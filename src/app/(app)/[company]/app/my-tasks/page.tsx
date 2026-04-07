@@ -288,7 +288,7 @@ export default function MyTasksPage() {
   return (
     <div className="flex flex-col min-h-full bg-background">
       {/* Header */}
-      <div className="sticky top-14 z-10 border-b bg-background/95 backdrop-blur px-4 py-3">
+      <div className="sticky top-[60px] z-10 border-b bg-background/95 backdrop-blur px-4 py-3">
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-semibold">My Tasks</h1>
           <Badge variant="secondary" className="text-xs">

@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { DetailTabs, TabItem } from "@/components/ui/detail-tabs";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
+import { logPlatformAuditEvent } from "@/lib/platform-audit-client";
 import { useCompanyStore } from "@/stores/company-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
@@ -51,7 +52,7 @@ export default function PlatformCompanyDetailPage() {
 
   if (!targetCompany || !editedCompany) {
     return (
-      <RoleGuard allowedRoles={["super_admin", "company_admin"]}>
+      <RoleGuard requireSuperAdmin>
         <EmptyState
           title="Company not found"
           description="The requested company could not be found."
@@ -79,7 +80,7 @@ export default function PlatformCompanyDetailPage() {
   ];
 
   return (
-    <RoleGuard allowedRoles={["super_admin", "company_admin"]}>
+    <RoleGuard requireSuperAdmin>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -288,14 +289,22 @@ export default function PlatformCompanyDetailPage() {
                       </div>
                       <Button className="gap-2" onClick={async () => {
                         setIsSaving(true);
-                        await new Promise((r) => setTimeout(r, 800));
                         updateCompany(targetCompany.id, {
                           name: editedCompany.name,
                           primary_color: editedCompany.primary_color,
                           secondary_color: editedCompany.secondary_color,
                         });
+                        await logPlatformAuditEvent({
+                          action: "platform_company_updated",
+                          resource: "companies",
+                          companyId: targetCompany.id,
+                          details: {
+                            company_id: targetCompany.id,
+                            company_name: editedCompany.name,
+                          },
+                        });
                         setIsSaving(false);
-                        toast("Company settings saved successfully");
+                        toast("Company settings saved successfully", "success");
                       }} disabled={isSaving}>
                         <Save className="h-4 w-4" />
                         {isSaving ? "Saving..." : t("common.save")}
@@ -316,6 +325,16 @@ export default function PlatformCompanyDetailPage() {
                         if (!confirmed) return;
                         const newStatus = targetCompany.status === "suspended" ? "active" : "suspended";
                         updateCompany(targetCompany.id, { status: newStatus, updated_at: new Date().toISOString() });
+                        void logPlatformAuditEvent({
+                          action: newStatus === "suspended" ? "platform_company_suspended" : "platform_company_reactivated",
+                          resource: "companies",
+                          companyId: targetCompany.id,
+                          details: {
+                            company_id: targetCompany.id,
+                            company_name: targetCompany.name,
+                            status: newStatus,
+                          },
+                        });
                         toast(
                           newStatus === "suspended"
                             ? "Company has been suspended"

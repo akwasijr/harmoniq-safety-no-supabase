@@ -205,14 +205,20 @@ function ChecklistFormPageContent() {
     const now = new Date();
     const refNumber = `CHK-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const submission = getSubmissionData();
-    await addSubmission({
-      id: crypto.randomUUID(),
-      company_id: user.company_id || "",
-      created_at: now.toISOString(),
-      ...submission,
-    });
-    toast("Checklist submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=checklist`);
+    try {
+      await addSubmission({
+        id: crypto.randomUUID(),
+        company_id: user.company_id || "",
+        created_at: now.toISOString(),
+        ...submission,
+      });
+      toast("Checklist submitted");
+      router.push(`/${company}/app/report/success?ref=${refNumber}&type=checklist`);
+    } catch (err) {
+      console.error("[Checklist] Submission failed:", err);
+      toast("Failed to submit checklist. Please try again.", "error");
+      setIsSubmitting(false);
+    }
   };
 
   // Calculate progress
@@ -399,7 +405,7 @@ function ChecklistFormPageContent() {
           <div className="flex gap-2 mt-4">
             {photos[currentQuestion.id].map((photo, index) => (
               <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden border">
-                <img src={photo} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                <img src={photo} alt={`Checklist response photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
                 <button
                   type="button"
                   aria-label={`Remove photo ${index + 1}`}

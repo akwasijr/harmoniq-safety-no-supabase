@@ -88,7 +88,7 @@ export default function EmployeeIncidentsPage() {
   return (
     <div className="flex flex-col min-h-full bg-background">
       {/* Header */}
-      <div className="sticky top-14 z-10 border-b bg-background/95 backdrop-blur px-4 py-3">
+      <div className="sticky top-[60px] z-10 border-b bg-background/95 backdrop-blur px-4 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold">{t("app.myReports")}</h1>
           <Link href={`/${company}/app/report`}>
@@ -104,7 +104,7 @@ export default function EmployeeIncidentsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search your reports..."
-            className="pl-10 h-9"
+            className="pl-10 h-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -121,7 +121,7 @@ export default function EmployeeIncidentsPage() {
             <button
               key={filter.value}
               onClick={() => setStatusFilter(filter.value)}
-              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 ${
                 statusFilter === filter.value
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
@@ -134,7 +134,7 @@ export default function EmployeeIncidentsPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 py-4">
+      <div className="flex-1 px-4 py-5">
         {filteredIncidents.length === 0 ? (
           myIncidents.length === 0 ? (
             <NoDataEmptyState
@@ -163,7 +163,7 @@ export default function EmployeeIncidentsPage() {
                 <Link
                   key={incident.id}
                   href={`/${company}/app/incidents/${incident.id}`}
-                  className="flex items-center gap-3 p-3 rounded-xl border bg-card transition-colors active:bg-muted/50 hover:bg-muted/30"
+                  className="flex items-center gap-3.5 p-3.5 rounded-xl border bg-card transition-colors active:bg-muted/50 hover:bg-muted/30"
                 >
                   <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
                     incident.status === "new" || incident.status === "in_progress" || incident.status === "in_review"

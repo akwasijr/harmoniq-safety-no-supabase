@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useParams } from "next/navigation";
 import {
   Save,
   Shield,
@@ -23,6 +22,10 @@ import { DetailTabs, type Tab } from "@/components/ui/detail-tabs";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useToast } from "@/components/ui/toast";
 import { COUNTRY_OPTIONS } from "@/lib/country-config";
+import {
+  DEFAULT_PLATFORM_ADMIN_SETTINGS,
+  type PlatformAdminSettings,
+} from "@/lib/platform-admin-settings";
 import { useCompanyStore } from "@/stores/company-store";
 import { useTranslation } from "@/i18n";
 
@@ -47,63 +50,73 @@ const COUNTRY_FORM_SUMMARIES: Record<string, string[]> = {
 };
 
 export default function PlatformSettingsPage() {
-  const params = useParams();
-  const company = params.company as string;
   const { toast } = useToast();
-  const { items: mockCompanies } = useCompanyStore();
+  const { items: companies } = useCompanyStore();
   const { t } = useTranslation();
 
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isLoadingSettings, setIsLoadingSettings] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState("general");
 
-  // Platform settings state
-  const [settings, setSettings] = React.useState({
-    // General
-    platformName: "Harmoniq Safety",
-    supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@harmoniq.io",
-    supportUrl: process.env.NEXT_PUBLIC_SUPPORT_URL || "https://support.harmoniq.io",
+  const [settings, setSettings] = React.useState<PlatformAdminSettings>(
+    DEFAULT_PLATFORM_ADMIN_SETTINGS,
+  );
 
-    // Data Retention
-    retentionYears: 5,
+  React.useEffect(() => {
+    let active = true;
 
-    // Session
-    superAdminSessionHours: 8,
-    adminSessionHours: 24,
-    employeeSessionDays: 7,
+    const loadSettings = async () => {
+      setIsLoadingSettings(true);
+      try {
+        const response = await fetch("/api/platform/settings", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Failed to load platform settings");
+        }
 
-    // Email
-    emailProvider: "Resend",
-    fromName: "Harmoniq Safety",
-    fromEmail: "noreply@harmoniq.io",
+        const data = (await response.json()) as PlatformAdminSettings;
+        if (active) {
+          setSettings(data);
+        }
+      } catch {
+        if (active) {
+          setSettings(DEFAULT_PLATFORM_ADMIN_SETTINGS);
+          toast("Could not load platform settings", "error");
+        }
+      } finally {
+        if (active) {
+          setIsLoadingSettings(false);
+        }
+      }
+    };
 
-    // Notifications
-    newCompanyNotification: true,
-    incidentAlertNotification: true,
-    weeklyDigest: true,
-    securityAlerts: true,
+    void loadSettings();
 
-    // Security
-    requireSuperAdmin2fa: true,
-    requireAdmin2fa: true,
-
-    // Features
-    trialDurationDays: 60,
-    maxTrialSeats: 5,
-    allowSelfSignup: false,
-    maintenanceMode: false,
-
-    // Countries
-    enabledCountries: COUNTRY_OPTIONS.map((country) => country.code),
-
-    // Currencies
-    defaultCurrency: "USD",
-  });
+    return () => {
+      active = false;
+    };
+  }, [toast]);
 
   const handleSave = async () => {
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setIsSaving(false);
-    toast("Platform settings saved successfully");
+    try {
+      const response = await fetch("/api/platform/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save platform settings");
+      }
+
+      const data = (await response.json()) as PlatformAdminSettings;
+      setSettings(data);
+      toast("Platform settings saved successfully", "success");
+    } catch {
+      toast("Failed to save platform settings", "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const tabs: Tab[] = [
@@ -124,7 +137,7 @@ export default function PlatformSettingsPage() {
           </div>
           <Button className="gap-2" onClick={handleSave} disabled={isSaving}>
             <Save className="h-4 w-4" />
-            {isSaving ? t("settings.saving") : "Save All Changes"}
+            {isLoadingSettings ? "Loading..." : isSaving ? t("settings.saving") : "Save All Changes"}
           </Button>
         </div>
 
@@ -137,7 +150,7 @@ export default function PlatformSettingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{mockCompanies.length}</p>
+              <p className="text-2xl font-bold">{companies.length}</p>
             </CardContent>
           </Card>
           <Card>
@@ -148,7 +161,7 @@ export default function PlatformSettingsPage() {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">
-                {mockCompanies.filter((c) => c.status === "active").length}
+                {companies.filter((c) => c.status === "active").length}
               </p>
             </CardContent>
           </Card>
@@ -160,7 +173,7 @@ export default function PlatformSettingsPage() {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">
-                {mockCompanies.filter((c) => c.status === "trial").length}
+                {companies.filter((c) => c.status === "trial").length}
               </p>
             </CardContent>
           </Card>
@@ -345,19 +358,25 @@ export default function PlatformSettingsPage() {
               {activeTab === "security" && (
                 <div className="space-y-6">
                   {/* Demo Banner */}
-                  <div
-                    role="alert"
-                    className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 text-sm font-medium text-amber-900 dark:text-amber-300">
+                    <div
+                      role="status"
+                      className="rounded-xl border border-amber-400/70 bg-amber-100 px-4 py-4 text-amber-950 shadow-sm dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-50"
+                    >
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-200 text-amber-950 dark:bg-amber-900/70 dark:text-amber-100">
                         <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-                        Demo Mode
                       </span>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold tracking-tight text-amber-950 dark:text-amber-50">
+                          Saved policy controls
+                        </p>
+                        <p className="text-sm leading-6 text-amber-950/90 dark:text-amber-100">
+                          These settings now persist to the shared platform configuration. Authentication and
+                          session enforcement should read from the same saved values when login policies are
+                          applied.
+                        </p>
+                      </div>
                     </div>
-                    <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">
-                      Platform security settings are for demonstration only. In production, these would enforce actual security policies.
-                    </p>
                   </div>
 
                   <Card>

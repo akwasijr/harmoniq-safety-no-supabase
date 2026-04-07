@@ -131,7 +131,7 @@ export default function EmployeeAssetsPage() {
   return (
     <div className="flex flex-col min-h-full pb-20">
       {/* Header */}
-      <div className="sticky top-14 z-10 bg-background border-b px-4 pt-4 pb-3">
+      <div className="sticky top-[60px] z-10 bg-background border-b px-4 pt-4 pb-3">
         <h1 className="text-lg font-bold mb-3">{t("nav.assets")}</h1>
 
         <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist">
@@ -181,7 +181,7 @@ export default function EmployeeAssetsPage() {
               </div>
               <Link
                 href={`/${company}/app/scan`}
-                className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label="Scan QR code"
               >
                 <ScanLine className="h-4.5 w-4.5" />
