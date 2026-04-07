@@ -363,8 +363,8 @@ export function Sidebar({
           </div>
         )}
 
-        {/* Company Selector — only in platform mode for super admins */}
-        {showPlatformNav && isSuperAdmin && !isCollapsed && (
+        {/* Company Selector — shown in platform mode for all admin roles */}
+        {showPlatformNav && !isCollapsed && (
           <div ref={dropdownRef} className="relative my-3 px-1">
             <button
               onClick={() => setCompanyDropdownOpen(!companyDropdownOpen)}
@@ -429,13 +429,6 @@ export function Sidebar({
         {/* Divider between platform and company sections */}
         {showPlatformNav && hasSelectedCompany && (
           <div className="my-2 mx-2 border-t border-sidebar-border" />
-        )}
-
-        {/* Company Section Label */}
-        {showPlatformNav && hasSelectedCompany && !isCollapsed && (
-          <p className="px-3 mb-1.5 text-[11px] font-medium text-sidebar-foreground/40">
-            {currentCompany?.name || "Company"}
-          </p>
         )}
 
         {/* Company nav items */}
