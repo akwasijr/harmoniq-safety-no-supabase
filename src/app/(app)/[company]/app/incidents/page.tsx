@@ -114,7 +114,7 @@ export default function EmployeeIncidentsPage() {
         <div className="flex gap-2 mt-3 overflow-x-auto pb-1 -mx-1 px-1">
           {[
             { value: "all", label: t("common.all") },
-            { value: "new", label: t("incidents.statuses.new") },
+            { value: "new", label: t("incidents.statuses.open") || "Open" },
             { value: "in_progress", label: t("incidents.statuses.inProgress") },
             { value: "resolved", label: t("incidents.statuses.resolved") },
           ].map((filter) => (
@@ -194,9 +194,11 @@ export default function EmployeeIncidentsPage() {
                     </div>
                   </div>
 
-                  <Badge className={`text-[10px] ${statusConfig.color}`} variant="secondary">
-                    {statusLabel}
-                  </Badge>
+                  {incident.status !== "new" && (
+                    <Badge className={`text-[10px] ${statusConfig.color}`} variant="secondary">
+                      {statusLabel}
+                    </Badge>
+                  )}
                   
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 </Link>
