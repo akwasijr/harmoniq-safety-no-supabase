@@ -598,9 +598,9 @@ function LoginForm() {
               )}
               {/* Platform mode indicator (accessed via /admin) */}
               {hasMounted && isPlatformMode && (
-                <div className="flex items-center gap-2 rounded-lg bg-violet-950/40 px-4 py-2.5">
-                  <Shield className="h-4 w-4 text-violet-400" />
-                  <span className="text-sm font-medium text-violet-300">Platform Admin</span>
+                <div className="flex items-center gap-2 rounded-lg bg-zinc-800/40 px-4 py-2.5">
+                  <Shield className="h-4 w-4 text-zinc-400" />
+                  <span className="text-sm font-medium text-zinc-300">Platform Admin</span>
                 </div>
               )}
 
