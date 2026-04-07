@@ -467,12 +467,9 @@ function LoginForm() {
 
         <div className="rounded-xl bg-zinc-900/70 backdrop-blur-xl p-8">
           {/* Header */}
-          <h1 className="text-2xl font-bold tracking-tight mb-1 text-white">
+          <h1 className="text-2xl font-bold tracking-tight mb-6 text-white">
             Welcome
           </h1>
-          <p className="text-sm text-zinc-400 mb-6">
-            Enter your credentials to continue
-          </p>
 
           {/* Alerts */}
           {isLockedOut && (
