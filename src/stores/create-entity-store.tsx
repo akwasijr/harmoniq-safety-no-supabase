@@ -19,6 +19,43 @@ function isCacheFresh(key: string): boolean {
   return ts != null && Date.now() - ts < CACHE_TTL_MS;
 }
 
+/** Retry an entity-upsert POST with exponential backoff. Skips retry on 401/403. */
+async function syncWithRetry(
+  url: string,
+  body: object,
+  table: string,
+  maxAttempts = 3,
+): Promise<boolean> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) return true;
+      const resBody = await res.json().catch(() => ({ error: "Unknown error" }));
+      const errMsg = resBody.error || `HTTP ${res.status}`;
+      if (res.status === 401 || res.status === 403) {
+        console.warn(`[Harmoniq] Cloud sync denied for ${table}: ${errMsg}`);
+        return false;
+      }
+      if (attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, 1000 * attempt));
+      } else {
+        console.warn(`[Harmoniq] Cloud sync failed for ${table} after ${maxAttempts} attempts: ${errMsg}`);
+      }
+    } catch (syncErr) {
+      if (attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, 1000 * attempt));
+      } else {
+        console.warn(`[Harmoniq] Cloud sync failed for ${table}:`, syncErr);
+      }
+    }
+  }
+  return false;
+}
+
 /** Recursively sanitize all string values in an entity before writing. */
 function sanitizeEntity<T extends Record<string, unknown>>(entity: T): T {
   const sanitized = { ...entity };
@@ -356,38 +393,8 @@ export function createEntityStore<T extends IdEntity>(
           if (process.env.NODE_ENV === "development") {
             console.log(`[Harmoniq Debug] Upserting to ${table}:`, Object.keys(mapped), mapped);
           }
-          let attempts = 0;
-          const maxAttempts = 3;
           try {
-            while (attempts < maxAttempts) {
-              try {
-                const res = await fetch("/api/entity-upsert", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ table, data: mapped }),
-                });
-                if (res.ok) break;
-                const body = await res.json().catch(() => ({ error: "Unknown error" }));
-                const errMsg = body.error || `HTTP ${res.status}`;
-                if (res.status === 403 || res.status === 401) {
-                  console.warn(`[Harmoniq] Cloud sync denied for ${table}: ${errMsg}`);
-                  break;
-                }
-                attempts++;
-                if (attempts < maxAttempts) {
-                  await new Promise((r) => setTimeout(r, 1000 * attempts));
-                } else {
-                  console.warn(`[Harmoniq] Cloud sync failed for ${table} after ${maxAttempts} attempts: ${errMsg}`);
-                }
-              } catch (syncErr) {
-                attempts++;
-                if (attempts < maxAttempts) {
-                  await new Promise((r) => setTimeout(r, 1000 * attempts));
-                } else {
-                  console.warn(`[Harmoniq] Cloud sync failed for ${table}:`, syncErr);
-                }
-              }
-            }
+            await syncWithRetry("/api/entity-upsert", { table, data: mapped }, table);
           } finally {
             writeInFlightRef.current--;
           }
@@ -422,21 +429,17 @@ export function createEntityStore<T extends IdEntity>(
       }
 
       if (isSupabaseConfigured) {
+        writeInFlightRef.current++;
         void (async () => {
           try {
             const mapped = mapToSupabase(sanitizedUpdates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
-            const res = await fetch("/api/entity-upsert", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ table, data: { ...mapped, id } }),
-            });
-            if (!res.ok) {
-              const body = await res.json().catch(() => ({ error: "Unknown error" }));
-              const errMsg = body.error || `HTTP ${res.status}`;
-              console.warn(`[Harmoniq] Cloud sync failed for ${table} update: ${errMsg}`);
-            }
-          } catch (syncErr) {
-            console.warn(`[Harmoniq] Cloud sync failed for ${table} update:`, syncErr);
+            await syncWithRetry(
+              "/api/entity-upsert",
+              { table, data: { ...mapped, id } },
+              table,
+            );
+          } finally {
+            writeInFlightRef.current--;
           }
         })();
       }
@@ -469,12 +472,16 @@ export function createEntityStore<T extends IdEntity>(
       }
 
       if (isSupabaseConfigured) {
+        writeInFlightRef.current++;
         void (async () => {
-          const supabase = createClient();
-          const { error: persistError } = await supabase.from(table).delete().eq("id", id);
-          if (persistError) {
-            // Keep optimistic delete — don't roll back
-            console.warn(`[Harmoniq] Cloud sync failed for ${table} delete: ${persistError.message} — removed locally`);
+          try {
+            const supabase = createClient();
+            const { error: persistError } = await supabase.from(table).delete().eq("id", id);
+            if (persistError) {
+              console.warn(`[Harmoniq] Cloud sync failed for ${table} delete: ${persistError.message} — removed locally`);
+            }
+          } finally {
+            writeInFlightRef.current--;
           }
         })();
       }

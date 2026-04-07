@@ -64,13 +64,11 @@ async function flushFallbackEvents() {
   }
 }
 
-// Simple hash to anonymize IP
+import crypto from "crypto";
+
 function hashIp(ip: string): string {
-  let hash = 0;
-  for (let i = 0; i < ip.length; i++) {
-    hash = ((hash << 5) - hash + ip.charCodeAt(i)) | 0;
-  }
-  return `v${Math.abs(hash).toString(36)}`;
+  const salt = process.env.IP_HASH_SALT || "analytics-default";
+  return crypto.createHash("sha256").update(ip + salt).digest("hex").slice(0, 16);
 }
 
 function isAnalyticsOriginAllowed(request: NextRequest): boolean {

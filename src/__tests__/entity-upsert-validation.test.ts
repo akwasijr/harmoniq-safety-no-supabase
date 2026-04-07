@@ -74,7 +74,7 @@ describe("validateEntityUpsertRequest", () => {
     expect(result).toEqual({
       ok: false,
       status: 403,
-      error: "Insufficient permissions",
+      error: "You do not have permission to write to this resource",
     });
   });
 });

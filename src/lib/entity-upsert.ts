@@ -1,4 +1,5 @@
 import { isValidUUID } from "@/lib/validation";
+import { canAccessTable } from "@/lib/permissions";
 
 export const allowedEntityUpsertTables = [
   "incidents",
@@ -57,6 +58,11 @@ export function validateEntityUpsertRequest(
 ): EntityUpsertValidationResult {
   if (!isAllowedEntityUpsertTable(table)) {
     return { ok: false, status: 403, error: "Table not allowed" };
+  }
+
+  // RBAC: check whether this role can write to this table
+  if (!canAccessTable(profile.role, table, "create")) {
+    return { ok: false, status: 403, error: "You do not have permission to write to this resource" };
   }
 
   const rows = Array.isArray(data) ? data : [data];

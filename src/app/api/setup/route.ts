@@ -25,23 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if any companies exist
-    const { count, error: companyCountError } = await adminClient
-      .from("companies")
-      .select("id", { count: "exact", head: true });
-
-    if (companyCountError) {
-      console.error("[Setup API] Failed to count companies:", companyCountError);
-      return NextResponse.json({ error: "Unable to verify setup state." }, { status: 500 });
-    }
-
-    if (count && count > 0) {
-      return NextResponse.json(
-        { error: "Setup already completed. Companies already exist." },
-        { status: 409 }
-      );
-    }
-
+    // Parse and validate input before any writes
     const body = await request.json();
     const email = sanitizeText(body.email, 254).toLowerCase();
     const password = typeof body.password === "string" ? body.password : "";
@@ -65,7 +49,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: pwCheck.reason }, { status: 400 });
     }
 
-    // 1. Create the company
+    // Guard: reject if super_admin users already exist (covers edge cases)
+    const { count: adminCount } = await adminClient
+      .from("users")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "super_admin");
+
+    if (adminCount && adminCount > 0) {
+      return NextResponse.json(
+        { error: "Setup already completed. An administrator already exists." },
+        { status: 409 }
+      );
+    }
+
+    // Atomic insert: rely on the unique constraint on `slug` to prevent
+    // TOCTOU races — if two requests run concurrently, the second insert
+    // will fail with a conflict rather than creating a duplicate.
     const slug = company_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
     const { data: company, error: companyError } = await adminClient
       .from("companies")
@@ -84,6 +83,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (companyError) {
+      // Unique constraint violation means another request won the race
+      if (companyError.code === "23505") {
+        return NextResponse.json(
+          { error: "Setup already completed. Companies already exist." },
+          { status: 409 }
+        );
+      }
       console.error("[Setup API] Failed to create company:", companyError);
       return NextResponse.json({ error: "Failed to create the initial company." }, { status: 500 });
     }

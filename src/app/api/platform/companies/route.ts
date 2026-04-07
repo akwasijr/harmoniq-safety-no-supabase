@@ -93,8 +93,9 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      console.error("[Platform API]", error);
       return NextResponse.json(
-        { error: "Failed to create company", details: error.message },
+        { error: "Failed to create company" },
         { status: 500 },
       );
     }
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ company: createdCompany });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to create company";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[Platform API]", error);
+    return NextResponse.json({ error: "Failed to create company" }, { status: 500 });
   }
 }

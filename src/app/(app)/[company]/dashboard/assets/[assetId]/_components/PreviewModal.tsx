@@ -25,7 +25,7 @@ export function PreviewModal({ previewDoc, previewImage, onClose, getFileType }:
           {previewImage ? (
             <img src={previewImage.url} alt={previewImage.name} className="max-h-[75vh] max-w-full object-contain" loading="lazy" />
           ) : previewDoc && getFileType(previewDoc.name) === 'pdf' ? (
-            <iframe src={previewDoc.url} className="w-full h-[75vh] border-0" />
+            <iframe src={previewDoc.url} className="w-full h-[75vh] border-0" sandbox="allow-same-origin" />
           ) : previewDoc && getFileType(previewDoc.name) === 'image' ? (
             <img src={previewDoc.url} alt={previewDoc.name} className="max-h-[75vh] max-w-full object-contain" loading="lazy" />
           ) : (
