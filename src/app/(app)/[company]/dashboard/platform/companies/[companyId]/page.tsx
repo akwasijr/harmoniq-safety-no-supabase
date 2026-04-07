@@ -315,7 +315,7 @@ export default function PlatformCompanyDetailPage() {
                         );
                         if (!confirmed) return;
                         const newStatus = targetCompany.status === "suspended" ? "active" : "suspended";
-                        updateCompany(companyId, { status: newStatus, updated_at: new Date().toISOString() });
+                        updateCompany(targetCompany.id, { status: newStatus, updated_at: new Date().toISOString() });
                         toast(
                           newStatus === "suspended"
                             ? "Company has been suspended"

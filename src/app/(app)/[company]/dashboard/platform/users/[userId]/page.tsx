@@ -53,7 +53,7 @@ export default function PlatformUserDetailPage() {
 
   if (!user || !editedUser) {
     return (
-      <RoleGuard requireSuperAdmin>
+      <RoleGuard allowedRoles={["super_admin", "company_admin"]}>
         <EmptyState
           title="Platform user not found"
           description="The requested platform user could not be found."
@@ -87,7 +87,7 @@ export default function PlatformUserDetailPage() {
   ];
 
   return (
-    <RoleGuard requireSuperAdmin>
+    <RoleGuard allowedRoles={["super_admin", "company_admin"]}>
       <div className="space-y-6">
         {/* Header */}
         <div>
