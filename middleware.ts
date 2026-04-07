@@ -35,10 +35,7 @@ export const PUBLIC_API_ROUTES = ["/api/analytics", "/api/contact", "/api/health
 export const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 export const SAME_SITE_FETCH_CONTEXTS = new Set(["same-origin", "same-site", "none"]);
 const PLATFORM_ROUTE_SEGMENT = "/dashboard/platform";
-const PLATFORM_ANALYTICS_SEGMENT = "/dashboard/platform/analytics";
-const PLATFORM_OVERVIEW_SEGMENT = "/dashboard/platform/overview";
-const PLATFORM_ADMIN_ROLES: readonly UserRole[] = ["super_admin"];
-const PLATFORM_ANALYTICS_ROLES: readonly UserRole[] = ["super_admin", "company_admin"];
+const PLATFORM_ALLOWED_ROLES: readonly UserRole[] = ["super_admin", "company_admin"];
 
 export function detectLocale(acceptLanguage: string | null): string {
   if (!acceptLanguage) return "en";
@@ -65,11 +62,8 @@ export function getCompanySlugFromPath(pathname: string) {
   return pathname.split("/").filter(Boolean)[0] ?? null;
 }
 
-export function getAllowedPlatformRoles(pathname: string): readonly UserRole[] {
-  if (pathname.includes(PLATFORM_ANALYTICS_SEGMENT) || pathname.includes(PLATFORM_OVERVIEW_SEGMENT)) {
-    return PLATFORM_ANALYTICS_ROLES;
-  }
-  return PLATFORM_ADMIN_ROLES;
+export function getAllowedPlatformRoles(_pathname: string): readonly UserRole[] {
+  return PLATFORM_ALLOWED_ROLES;
 }
 
 export function isStaticAsset(pathname: string): boolean {
