@@ -60,9 +60,13 @@ export async function POST(
 
     if (error) {
       console.error("[PlatformUsers] Failed to send password reset:", error.message);
+      const isInvalidEmail = error.message.toLowerCase().includes("invalid");
       return NextResponse.json(
-        { error: "Failed to send password reset" },
-        { status: 500 },
+        { error: isInvalidEmail
+          ? "This user does not have a Supabase Auth account. They need to sign up first."
+          : "Failed to send password reset email. Please try again."
+        },
+        { status: isInvalidEmail ? 422 : 500 },
       );
     }
 
