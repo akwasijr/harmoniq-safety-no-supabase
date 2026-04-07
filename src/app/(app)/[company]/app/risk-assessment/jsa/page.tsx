@@ -127,6 +127,7 @@ export default function JSAFormPage() {
   const [currentSection, setCurrentSection] = React.useState(0);
   const [formData, setFormData] = React.useState<JSAFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showErrors, setShowErrors] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -177,12 +178,14 @@ export default function JSAFormPage() {
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
     if (isLastSection) {
       handleSubmit();
     } else {
+      setShowErrors(false);
       setCurrentSection(currentSection + 1);
     }
   };
@@ -289,6 +292,9 @@ export default function JSAFormPage() {
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                     className="h-12"
                   />
+                  {showErrors && !formData.date.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-base">Time *</Label>
@@ -298,6 +304,9 @@ export default function JSAFormPage() {
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                     className="h-12"
                   />
+                  {showErrors && !formData.time.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
               </div>
 
@@ -309,6 +318,9 @@ export default function JSAFormPage() {
                   placeholder="Describe today's work activities"
                   className="min-h-[80px]"
                 />
+                {showErrors && !formData.jobDescription.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -322,6 +334,9 @@ export default function JSAFormPage() {
                   placeholder="e.g., Building A, Floor 2"
                   className="h-12"
                 />
+                {showErrors && !formData.location.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -335,6 +350,9 @@ export default function JSAFormPage() {
                   placeholder="Name of crew leader"
                   className="h-12"
                 />
+                {showErrors && !formData.crewLeader.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -589,6 +607,9 @@ export default function JSAFormPage() {
                 </p>
               </div>
             </button>
+            {showErrors && !formData.acknowledgment && (
+              <p className="text-xs text-red-500 mt-1">Acknowledgment is required to submit</p>
+            )}
 
             <Card className="bg-muted/50">
               <CardContent className="py-4">

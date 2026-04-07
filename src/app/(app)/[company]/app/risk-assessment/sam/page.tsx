@@ -138,6 +138,7 @@ export default function SAMFormPage() {
   const [currentSection, setCurrentSection] = React.useState(0);
   const [formData, setFormData] = React.useState<SAMFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showErrors, setShowErrors] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -217,12 +218,14 @@ export default function SAMFormPage() {
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
     if (isLastSection) {
       handleSubmit();
     } else {
+      setShowErrors(false);
       setCurrentSection(currentSection + 1);
     }
   };
@@ -328,6 +331,9 @@ export default function SAMFormPage() {
                   placeholder="Organization name"
                   className="h-12"
                 />
+                {showErrors && !formData.organizationName.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -348,6 +354,9 @@ export default function SAMFormPage() {
                     placeholder="Workplace/location"
                     className="h-12"
                   />
+                  {showErrors && !formData.workplace.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
               </div>
 
@@ -360,6 +369,9 @@ export default function SAMFormPage() {
                     onChange={(e) => setFormData({ ...formData, assessmentDate: e.target.value })}
                     className="h-12"
                   />
+                  {showErrors && !formData.assessmentDate.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-base">Utförd av *</Label>
@@ -752,6 +764,9 @@ export default function SAMFormPage() {
                 placeholder="Your name (electronic signature)"
                 className="h-12"
               />
+              {showErrors && !formData.signedBy.trim() && (
+                <p className="text-xs text-red-500 mt-1">This field is required</p>
+              )}
             </div>
 
             <Card className="bg-muted/50">

@@ -165,6 +165,7 @@ export default function OSAFormPage() {
   const [currentSection, setCurrentSection] = React.useState(0);
   const [formData, setFormData] = React.useState<OSAFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showErrors, setShowErrors] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -217,9 +218,11 @@ export default function OSAFormPage() {
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
+    setShowErrors(false);
     if (isLastSection) {
       handleSubmit();
     } else {
@@ -345,6 +348,9 @@ export default function OSAFormPage() {
                   placeholder="Organization name"
                   className="h-12"
                 />
+                {showErrors && !formData.organizationName.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -365,6 +371,9 @@ export default function OSAFormPage() {
                   onChange={(e) => setFormData({ ...formData, assessmentDate: e.target.value })}
                   className="h-12"
                 />
+                {showErrors && !formData.assessmentDate.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -376,6 +385,9 @@ export default function OSAFormPage() {
                     placeholder="Your name"
                     className="h-12"
                   />
+                  {showErrors && !formData.respondent.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-base">Roll</Label>

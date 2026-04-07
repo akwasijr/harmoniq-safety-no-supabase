@@ -145,6 +145,7 @@ export default function JHAFormPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [expandedStep, setExpandedStep] = React.useState<string | null>("step_1");
+  const [showErrors, setShowErrors] = React.useState(false);
 
   const { t } = useTranslation();
 
@@ -224,6 +225,7 @@ export default function JHAFormPage() {
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
@@ -231,6 +233,7 @@ export default function JHAFormPage() {
       handleSubmit();
     } else {
       setCurrentSection(currentSection + 1);
+      setShowErrors(false);
     }
   };
 
@@ -331,6 +334,9 @@ export default function JHAFormPage() {
                   placeholder="e.g., Forklift Loading Operations"
                   className="h-12"
                 />
+                {showErrors && !formData.jobTitle.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -341,6 +347,9 @@ export default function JHAFormPage() {
                   placeholder="e.g., Warehouse A, Loading Bay 3"
                   className="h-12"
                 />
+                {showErrors && !formData.location.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -351,6 +360,9 @@ export default function JHAFormPage() {
                   placeholder="e.g., Logistics, Manufacturing"
                   className="h-12"
                 />
+                {showErrors && !formData.department.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -372,6 +384,9 @@ export default function JHAFormPage() {
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                     className="h-12"
                   />
+                  {showErrors && !formData.date.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-base">Supervisor *</Label>
@@ -463,6 +478,9 @@ export default function JHAFormPage() {
                             placeholder="Describe the action (start with a verb, e.g., 'Load pallets onto forklift')"
                             className="min-h-[80px]"
                           />
+                          {showErrors && !step.description.trim() && (
+                            <p className="text-xs text-red-500 mt-1">This field is required</p>
+                          )}
                         </div>
 
                         <div className="space-y-2">

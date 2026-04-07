@@ -168,6 +168,7 @@ export default function RIEFormPage() {
   const [currentSection, setCurrentSection] = React.useState(0);
   const [formData, setFormData] = React.useState<RIEFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showErrors, setShowErrors] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -251,12 +252,14 @@ export default function RIEFormPage() {
 
   const handleNext = () => {
     if (!canProceed()) {
+      setShowErrors(true);
       toast("Please fill in all required fields", "error");
       return;
     }
     if (isLastSection) {
       handleSubmit();
     } else {
+      setShowErrors(false);
       setCurrentSection(currentSection + 1);
     }
   };
@@ -364,6 +367,9 @@ export default function RIEFormPage() {
                   maxLength={200}
                   required
                 />
+                {showErrors && !formData.companyName.trim() && (
+                  <p className="text-xs text-red-500 mt-1">This field is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -423,6 +429,9 @@ export default function RIEFormPage() {
                     onChange={(e) => setFormData({ ...formData, assessmentDate: e.target.value })}
                     className="h-12"
                   />
+                  {showErrors && !formData.assessmentDate.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-base">Uitgevoerd door *</Label>
@@ -434,6 +443,9 @@ export default function RIEFormPage() {
                     maxLength={200}
                     required
                   />
+                  {showErrors && !formData.assessor.trim() && (
+                    <p className="text-xs text-red-500 mt-1">This field is required</p>
+                  )}
                 </div>
               </div>
 
