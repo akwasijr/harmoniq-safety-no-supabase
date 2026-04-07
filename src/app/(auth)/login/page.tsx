@@ -20,7 +20,6 @@ import { DEFAULT_COMPANY_SLUG } from "@/mocks/data";
 
 const APP_CHOICE_STORAGE_KEY = "harmoniq_app_choice";
 const APP_CHOICE_COOKIE = "harmoniq_app_choice";
-const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 const SELECTED_COMPANY_STORAGE_KEY = "harmoniq_selected_company";
 const LOGIN_ATTEMPTS_KEY = "harmoniq_login_attempts";
 const MAX_ATTEMPTS = 5;
@@ -181,7 +180,6 @@ function LoginForm() {
         const allowedApps = getAllowedApps(mockUser.role);
         const dest = allowedApps.includes(appChoice) ? appChoice : allowedApps[0];
         if (dest === "platform") {
-          setClientCookie(ADMIN_ENTRY_COOKIE, "true", 60 * 60);
           window.location.href = buildPlatformAnalyticsDestination(DEFAULT_COMPANY_SLUG);
           return;
         }
@@ -299,8 +297,6 @@ function LoginForm() {
       // Super admins: route based on app choice
       if (profile.role === "super_admin") {
         if (effectiveChoice === "platform") {
-          // Set admin entry cookie for platform access
-          setClientCookie(ADMIN_ENTRY_COOKIE, "true", 60 * 60);
           const { data: adminCompany } = await supabase
             .from("companies")
             .select("slug")

@@ -32,7 +32,6 @@ export const PUBLIC_ROUTES = [
 export const MARKETING_ROUTES = ["/", "/contact", "/privacy", "/terms", "/gdpr", "/cookies"];
 export const STATIC_PREFIXES = ["/_next", "/favicon", "/logo", "/screen-", "/bg-", "/icons", "/manifest", "/sw"];
 export const PUBLIC_API_ROUTES = ["/api/analytics", "/api/contact", "/api/health", "/api/setup"];
-const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 export const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 export const SAME_SITE_FETCH_CONTEXTS = new Set(["same-origin", "same-site", "none"]);
 const PLATFORM_ROUTE_SEGMENT = "/dashboard/platform";
@@ -150,22 +149,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Only clear admin-entry cookie on explicit auth page visits (login / signup).
-  // This allows super admins to switch between platform and company views without
-  // losing their admin session. The cookie still expires naturally after 60 min.
-  const isAuthResetPath = pathname === "/login" || pathname === "/signup";
-  const isPlatformLogin = pathname === "/login" && request.nextUrl.searchParams.get("mode") === "platform";
-  if (isAuthResetPath && !isPlatformLogin && request.cookies.get(ADMIN_ENTRY_COOKIE)) {
-    const response = NextResponse.next();
-    response.cookies.set(ADMIN_ENTRY_COOKIE, "", {
-      path: "/",
-      maxAge: 0,
-      sameSite: "lax",
-      secure: isSecure,
-    });
-    return response;
-  }
-
   // Marketing pages: set locale cookie
   if (isMarketingRoute(pathname)) {
     const response = NextResponse.next();
@@ -189,13 +172,6 @@ export async function middleware(request: NextRequest) {
   // Public API routes (analytics POST, contact) — handle auth internally
   if (isPublicApiRoute(pathname)) {
     return NextResponse.next();
-  }
-
-  // Platform admin routes require explicit admin entry flag (set by /admin login)
-  if (isPlatformPath && !request.cookies.get(ADMIN_ENTRY_COOKIE)) {
-    const adminUrl = new URL("/admin", request.url);
-    adminUrl.searchParams.set("redirect", sanitizeRelativePath(pathname));
-    return NextResponse.redirect(adminUrl);
   }
 
   // In mock mode (no Supabase), skip server-side auth — client handles it via localStorage

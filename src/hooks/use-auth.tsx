@@ -15,7 +15,6 @@ import type { User, Company, Permission, UserRole, CompanyRole } from "@/types";
 const MOCK_AUTH_KEY = "harmoniq_mock_user_email";
 const IS_MOCK_MODE = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true" && !hasSupabasePublicEnv();
 
-const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 const LEGACY_SESSION_STORAGE_KEY = "harmoniq_auth_session";
 const LEGACY_PROFILE_STORAGE_KEY = "harmoniq_auth_profile";
 const PLATFORM_SLUGS = getPlatformSlugs();
@@ -138,17 +137,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [clearLegacyAuthCache, clearStoredAuthState]
   );
 
-  // Ensure the platform admin entry flag is cleared on standard entry paths
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const path = window.location.pathname;
-    const search = window.location.search || "";
-    const isAdminEntry = path.startsWith("/admin") || search.includes("admin-link") || path.includes("/dashboard/platform");
-    if (!isAdminEntry) {
-      clearClientCookie(ADMIN_ENTRY_COOKIE);
-    }
-  }, []);
-  
   // Initialize auth state, mock mode (no Supabase) or real Supabase
   React.useEffect(() => {
     if (IS_MOCK_MODE) {
@@ -329,7 +317,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     clearAllHarmoniqStorage();
     if (typeof window !== "undefined") {
-      clearClientCookie(ADMIN_ENTRY_COOKIE);
       document.cookie.split(";").forEach((c) => {
         const name = c.trim().split("=")[0];
         if (name.startsWith("sb-") || name.startsWith("harmoniq")) {

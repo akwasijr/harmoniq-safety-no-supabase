@@ -165,7 +165,7 @@ export function Sidebar({
   const isCollapsed = collapsed && !hovered;
 
   // Platform admin nav is visible for any super_admin user.
-  // Route-level protection is handled by middleware (requires admin_entry cookie).
+  // Route-level protection is handled by middleware (Supabase JWT role check).
   const showPlatformNav = isSuperAdmin;
 
   // Helper to resolve nav item title via i18n

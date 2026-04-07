@@ -4,10 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { useAuth, useRole } from "@/hooks/use-auth";
-import { hasClientCookie } from "@/lib/client-cookies";
 import type { Permission, UserRole } from "@/types";
-
-const ADMIN_ENTRY_COOKIE = "harmoniq_admin_entry";
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -28,19 +25,6 @@ interface RoleGuardProps {
 
 /**
  * RoleGuard - Protects content based on user role or permissions
- * 
- * Usage:
- *   <RoleGuard requireSuperAdmin>
- *     <PlatformAdminContent />
- *   </RoleGuard>
- * 
- *   <RoleGuard allowedRoles={["company_admin", "manager"]}>
- *     <UserManagement />
- *   </RoleGuard>
- * 
- *   <RoleGuard requiredPermission="settings.edit">
- *     <SettingsEditor />
- *   </RoleGuard>
  */
 export function RoleGuard({
   children,
@@ -55,20 +39,6 @@ export function RoleGuard({
   const router = useRouter();
   const { user, isLoading, hasPermission, hasAnyPermission, hasAllPermissions } = useAuth();
   const { isSuperAdmin, role } = useRole();
-  const [hasAdminEntry, setHasAdminEntry] = React.useState(false);
-
-  React.useEffect(() => {
-    const sync = () => {
-      setHasAdminEntry(hasClientCookie(ADMIN_ENTRY_COOKIE, "true"));
-    };
-    sync();
-    window.addEventListener("focus", sync);
-    document.addEventListener("visibilitychange", sync);
-    return () => {
-      window.removeEventListener("focus", sync);
-      document.removeEventListener("visibilitychange", sync);
-    };
-  }, []);
   
   // Loading state
   if (isLoading) {
@@ -88,13 +58,13 @@ export function RoleGuard({
     return fallback || <AccessDenied message="Please log in to access this content." />;
   }
   
-  // Check super admin requirement
-  if (requireSuperAdmin && (!isSuperAdmin || !hasAdminEntry)) {
+  // Check super admin requirement (role-based only, no cookie)
+  if (requireSuperAdmin && !isSuperAdmin) {
     if (redirectTo) {
       router.push(redirectTo);
       return null;
     }
-    return fallback || <AccessDenied message="This section is only accessible via the platform administrator link." />;
+    return fallback || <AccessDenied message="This section requires platform administrator access." />;
   }
   
   // Check allowed roles
