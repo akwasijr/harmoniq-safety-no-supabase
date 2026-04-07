@@ -352,20 +352,19 @@ export function createEntityStore<T extends IdEntity>(
             console.log(`[Harmoniq Debug] Upserting to ${table}:`, Object.keys(mapped), mapped);
           }
           // Route through server API to bypass RLS restrictions
-          const res = await fetch("/api/entity-upsert", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ table, data: mapped }),
-          });
-          if (!res.ok) {
-            const body = await res.json().catch(() => ({ error: "Unknown error" }));
-            const errMsg = body.error || `HTTP ${res.status}`;
-            if (process.env.NODE_ENV === "development") {
-              console.error(`[Harmoniq Debug] Upsert error for ${table}:`, errMsg);
+          try {
+            const res = await fetch("/api/entity-upsert", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ table, data: mapped }),
+            });
+            if (!res.ok) {
+              const body = await res.json().catch(() => ({ error: "Unknown error" }));
+              const errMsg = body.error || `HTTP ${res.status}`;
+              console.warn(`[Harmoniq] Cloud sync failed for ${table}: ${errMsg}`);
             }
-            setError(errMsg);
-            console.warn(`[Harmoniq] Cloud sync failed for ${table}: ${errMsg}`);
-            toast.error("Could not sync your changes to the server.");
+          } catch (syncErr) {
+            console.warn(`[Harmoniq] Cloud sync failed for ${table}:`, syncErr);
           }
         })();
       }
@@ -399,18 +398,20 @@ export function createEntityStore<T extends IdEntity>(
 
       if (isSupabaseConfigured) {
         void (async () => {
-          const mapped = mapToSupabase(sanitizedUpdates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
-          const res = await fetch("/api/entity-upsert", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ table, data: { ...mapped, id } }),
-          });
-          if (!res.ok) {
-            const body = await res.json().catch(() => ({ error: "Unknown error" }));
-            const errMsg = body.error || `HTTP ${res.status}`;
-            setError(errMsg);
-            console.warn(`[Harmoniq] Cloud sync failed for ${table} update: ${errMsg}`);
-            toast.error("Could not sync your changes to the server.");
+          try {
+            const mapped = mapToSupabase(sanitizedUpdates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
+            const res = await fetch("/api/entity-upsert", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ table, data: { ...mapped, id } }),
+            });
+            if (!res.ok) {
+              const body = await res.json().catch(() => ({ error: "Unknown error" }));
+              const errMsg = body.error || `HTTP ${res.status}`;
+              console.warn(`[Harmoniq] Cloud sync failed for ${table} update: ${errMsg}`);
+            }
+          } catch (syncErr) {
+            console.warn(`[Harmoniq] Cloud sync failed for ${table} update:`, syncErr);
           }
         })();
       }

@@ -66,6 +66,10 @@ export async function POST(request: NextRequest) {
     const adminClient = createAdminClient();
     const writeClient = adminClient ?? supabase;
 
+    if (!adminClient) {
+      console.warn("[Entity Upsert API] Admin client unavailable — falling back to user session (may hit RLS)");
+    }
+
     const { error: upsertError } = await writeClient
       .from(table)
       .upsert(validated.rows, { onConflict: "id" });
