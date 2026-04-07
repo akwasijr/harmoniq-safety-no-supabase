@@ -19,9 +19,6 @@ function AnimatedCheckmark() {
           to { stroke-dashoffset: 0; }
         }
       `}</style>
-      {/* Pulse ring */}
-      <div className="absolute inset-0 animate-ping rounded-full bg-green-400/20" style={{ animationDuration: '1.5s', animationIterationCount: '1' }} />
-      {/* Circle */}
       <svg className="h-24 w-24" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle
           cx="48" cy="48" r="44"
