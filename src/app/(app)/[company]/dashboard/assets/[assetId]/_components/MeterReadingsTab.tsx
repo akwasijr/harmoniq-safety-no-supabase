@@ -121,7 +121,7 @@ export function MeterReadingsTab({
                 <Button variant="outline" onClick={() => setShowAddReading(false)}>Cancel</Button>
                 <Button disabled={!readingForm.meter_type.trim() || !readingForm.value} onClick={() => {
                   addMeterReading({
-                    id: `mr_${Date.now()}`,
+                    id: crypto.randomUUID(),
                     asset_id: assetId,
                     meter_type: readingForm.meter_type.trim(),
                     unit: readingForm.unit,

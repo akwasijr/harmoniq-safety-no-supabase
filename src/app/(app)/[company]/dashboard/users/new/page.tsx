@@ -102,7 +102,7 @@ export default function NewUserPage() {
     try {
       const now = new Date().toISOString();
       const newUser: User = {
-        id: `user_${Date.now()}`,
+        id: crypto.randomUUID(),
         company_id: currentCompany?.id || "",
         email: formData.email,
         first_name: formData.first_name,

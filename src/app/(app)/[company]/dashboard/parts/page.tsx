@@ -52,7 +52,7 @@ export default function PartsPage() {
   const handleCreate = () => {
     if (!form.name.trim() || !form.part_number.trim()) return;
     const part: Part = {
-      id: `part_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: user?.company_id || "",
       name: form.name.trim(),
       part_number: form.part_number.trim(),

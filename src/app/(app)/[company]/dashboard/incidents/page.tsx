@@ -179,7 +179,7 @@ export default function IncidentsPage() {
     }
     const now = new Date();
     const incident: Incident = {
-      id: `inc_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: user?.company_id || "",
       reference_number: `INC-${now.getTime().toString().slice(-6)}`,
       reporter_id: user?.id || "",

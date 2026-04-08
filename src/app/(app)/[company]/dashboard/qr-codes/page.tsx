@@ -88,7 +88,7 @@ export default function QRCodesPage() {
     const locationName = locations.find((loc) => loc.id === formData.locationId)?.name || "Unassigned";
     const linkedAsset = formData.assetId ? allAssets.find(a => a.id === formData.assetId) : null;
     const newCode: QRCodeItem = {
-      id: `qr_${Date.now()}`,
+      id: crypto.randomUUID(),
       name: formData.name.trim(),
       location: locationName,
       scans: 0,

@@ -277,7 +277,7 @@ export function MaintenanceTab({
                   }
 
                   const newSchedule: MaintenanceSchedule = {
-                    id: `sched_${Date.now()}`,
+                    id: crypto.randomUUID(),
                     asset_id: assetId,
                     company_id: companyId,
                     name: name.trim(),

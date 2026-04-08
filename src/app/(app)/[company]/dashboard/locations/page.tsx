@@ -186,8 +186,8 @@ function LocationsPageContent() {
 
   const handleAddLocation = () => {
     // Generate a unique ID for the new location
-    const newId = `loc_new_${Date.now()}`;
-    
+    const newId = crypto.randomUUID();
+
     // Create the main location
     const mainLocation = {
       id: newId,
@@ -198,20 +198,20 @@ function LocationsPageContent() {
       address: newLocation.address || null,
       gps_lat: newLocation.gps_lat,
       gps_lng: newLocation.gps_lng,
-      qr_code: `LOC-${newId.toUpperCase()}`,
+      qr_code: `LOC-${newId.slice(0, 8).toUpperCase()}`,
       metadata: {},
       created_at: new Date().toISOString(),
       employee_count: 0,
       asset_count: 0,
     };
-    
+
     // Collect all new locations to add
     const newLocations = [mainLocation];
-    
+
     // Auto-create floors if adding a building with floorCount
     if (newLocation.type === "building" && newLocation.floorCount > 0) {
       for (let i = 1; i <= newLocation.floorCount; i++) {
-        const floorId = `${newId}_f${i}`;
+        const floorId = crypto.randomUUID();
         newLocations.push({
           id: floorId,
           company_id: companyId || "",
@@ -221,7 +221,7 @@ function LocationsPageContent() {
           address: null,
           gps_lat: null,
           gps_lng: null,
-          qr_code: `LOC-${floorId.toUpperCase()}`,
+          qr_code: `LOC-${floorId.slice(0, 8).toUpperCase()}`,
           metadata: {},
           created_at: new Date().toISOString(),
           employee_count: 0,
@@ -229,12 +229,12 @@ function LocationsPageContent() {
         });
       }
     }
-    
+
     // Auto-create zones/rooms if adding a floor
     if (newLocation.type === "floor") {
       // Create zones
       for (let i = 1; i <= newLocation.zoneCount; i++) {
-        const zoneId = `${newId}_z${i}`;
+        const zoneId = crypto.randomUUID();
         newLocations.push({
           id: zoneId,
           company_id: companyId || "",
@@ -244,17 +244,17 @@ function LocationsPageContent() {
           address: null,
           gps_lat: null,
           gps_lng: null,
-          qr_code: `LOC-${zoneId.toUpperCase()}`,
+          qr_code: `LOC-${zoneId.slice(0, 8).toUpperCase()}`,
           metadata: {},
           created_at: new Date().toISOString(),
           employee_count: 0,
           asset_count: 0,
         });
       }
-      
+
       // Create rooms
       for (let i = 1; i <= newLocation.roomCount; i++) {
-        const roomId = `${newId}_r${i}`;
+        const roomId = crypto.randomUUID();
         newLocations.push({
           id: roomId,
           company_id: companyId || "",
@@ -264,7 +264,7 @@ function LocationsPageContent() {
           address: null,
           gps_lat: null,
           gps_lng: null,
-          qr_code: `LOC-${roomId.toUpperCase()}`,
+          qr_code: `LOC-${roomId.slice(0, 8).toUpperCase()}`,
           metadata: {},
           created_at: new Date().toISOString(),
           employee_count: 0,

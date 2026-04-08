@@ -153,7 +153,7 @@ export default function AssetsPage() {
           : `AST-${Date.now()}-${i}`;
         existingAssetTags.add(assetTag);
         addAsset({
-          id: `asset_import_${Date.now()}_${i}`,
+          id: crypto.randomUUID(),
           company_id: companyId || "",
           location_id: row.location_id || null,
           parent_asset_id: null,
@@ -380,7 +380,7 @@ export default function AssetsPage() {
     }
     const now = new Date().toISOString();
     const asset: Asset = {
-      id: `asset_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: companyId || "",
       location_id: newAsset.location_id || null,
       parent_asset_id: newAsset.parent_asset_id || null,

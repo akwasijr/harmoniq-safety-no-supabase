@@ -7,8 +7,9 @@ import {
   validateEntityUpsertRequest,
 } from "@/lib/entity-upsert";
 
-// 30 upsert requests per IP per minute
-const upsertLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "entity-upsert" });
+// 120 upsert requests per IP per minute (allows bulk operations like
+// creating a building with multiple floors/zones/rooms in one action)
+const upsertLimiter = createRateLimiter({ limit: 120, windowMs: 60_000, prefix: "entity-upsert" });
 
 export async function POST(request: NextRequest) {
   try {

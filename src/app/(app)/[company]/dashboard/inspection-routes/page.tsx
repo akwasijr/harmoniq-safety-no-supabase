@@ -69,7 +69,7 @@ export default function InspectionRoutesPage() {
     setFormCheckpoints([
       ...formCheckpoints,
       {
-        id: `cp_new_${Date.now()}_${formCheckpoints.length}`,
+        id: crypto.randomUUID(),
         asset_id: "",
         label: "",
         check_type: "visual",
@@ -100,7 +100,7 @@ export default function InspectionRoutesPage() {
 
     const now = new Date().toISOString();
     const route: InspectionRoute = {
-      id: `route_${Date.now()}`,
+      id: crypto.randomUUID(),
       company_id: companyId || "",
       name: formName.trim(),
       description: formDescription.trim() || null,
