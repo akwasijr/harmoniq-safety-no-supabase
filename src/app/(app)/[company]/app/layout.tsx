@@ -157,8 +157,63 @@ export default function EmployeeAppRootLayout({
 
   if (isLoading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4 animate-in fade-in duration-300">
+          {/* Animated Harmoniq shield logo */}
+          <div className="relative">
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 64 64"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="animate-[pulse_1.5s_ease-in-out_infinite]"
+            >
+              {/* Shield shape */}
+              <path
+                d="M32 4L8 16v16c0 14.4 10.24 27.84 24 32 13.76-4.16 24-17.6 24-32V16L32 4z"
+                className="fill-primary/10 stroke-primary"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  strokeDasharray: 160,
+                  strokeDashoffset: 0,
+                  animation: "shield-draw 1.2s ease-out forwards",
+                }}
+              />
+              {/* Checkmark inside */}
+              <path
+                d="M22 32l7 7 13-14"
+                className="stroke-primary"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+                style={{
+                  strokeDasharray: 40,
+                  strokeDashoffset: 40,
+                  animation: "check-draw 0.5s ease-out 0.8s forwards",
+                }}
+              />
+            </svg>
+            {/* Glow ring */}
+            <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-[pulse_2s_ease-in-out_infinite]" />
+          </div>
+          <p className="text-sm font-semibold text-muted-foreground tracking-wider uppercase animate-[pulse_1.5s_ease-in-out_infinite]">
+            Harmoniq
+          </p>
+        </div>
+        <style>{`
+          @keyframes shield-draw {
+            from { stroke-dashoffset: 160; opacity: 0; }
+            to { stroke-dashoffset: 0; opacity: 1; }
+          }
+          @keyframes check-draw {
+            from { stroke-dashoffset: 40; }
+            to { stroke-dashoffset: 0; }
+          }
+        `}</style>
       </div>
     );
   }
