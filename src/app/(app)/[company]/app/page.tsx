@@ -14,7 +14,7 @@ import {
   Search,
   ScanLine,
   ShieldCheck,
-  Lightbulb,
+  Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
@@ -382,7 +382,7 @@ export default function EmployeeAppHomePage() {
         <div className="mx-4 -mt-5 relative z-10 home-section" style={{ animationDelay: "0.3s" }}>
           <div className="field-app-panel field-app-surface bg-card border border-border/50 px-4 py-3.5 flex items-start gap-3">
             <div className="field-app-control h-8 w-8 bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Lightbulb className="h-4 w-4 text-primary" />
+              <Zap className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold text-primary tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
