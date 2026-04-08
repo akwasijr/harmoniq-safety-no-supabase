@@ -155,7 +155,7 @@ function WorkOrderCard({
           )}
 
           <div className="flex gap-2 mt-3">
-            {(wo.status === "requested" || wo.status === "approved") && (
+            {(wo.status === "waiting_approval" || wo.status === "waiting_material" || wo.status === "approved" || wo.status === "scheduled") && (
               <Button
                 size="sm"
                 className="gap-1 flex-1"
@@ -208,8 +208,10 @@ export default function MyTasksPage() {
     () =>
       myWorkOrders
         .filter((wo) =>
-          wo.status === "requested" ||
+          wo.status === "waiting_approval" ||
+          wo.status === "waiting_material" ||
           wo.status === "approved" ||
+          wo.status === "scheduled" ||
           wo.status === "in_progress"
         )
         .sort((a, b) => {

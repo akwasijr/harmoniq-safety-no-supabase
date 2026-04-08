@@ -39,13 +39,19 @@ import { useToast } from "@/components/ui/toast";
 import { useNotificationsStore } from "@/stores/notifications-store";
 import { useTranslation } from "@/i18n";
 import { capitalize } from "@/lib/utils";
-import type { WorkOrder } from "@/types";
+import type { WorkOrder, WorkOrderStatus, WorkOrderStatusLogEntry } from "@/types";
+import { WORK_ORDER_STATUS_TRANSITIONS } from "@/types";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { StatusPipeline } from "@/components/work-orders/status-pipeline";
+import { StatusChangeModal } from "@/components/work-orders/status-change-modal";
+import { useWorkOrderStatusLogStore } from "@/stores/work-order-status-log-store";
 
 const STATUS_FLOW: Record<string, string[]> = {
-  requested: ["approved", "cancelled"],
-  approved: ["in_progress", "cancelled"],
-  in_progress: ["completed"],
+  waiting_approval: ["waiting_material", "approved", "cancelled"],
+  waiting_material: ["approved", "cancelled"],
+  approved: ["scheduled", "in_progress", "cancelled"],
+  scheduled: ["in_progress", "cancelled"],
+  in_progress: ["completed", "cancelled"],
   completed: [],
   cancelled: [],
 };
@@ -53,8 +59,10 @@ const STATUS_FLOW: Record<string, string[]> = {
 const STATUS_COLORS = WORK_ORDER_STATUS_COLORS;
 
 const STATUS_ICONS: Record<string, typeof Clock> = {
-  requested: ClipboardList,
+  waiting_approval: ClipboardList,
+  waiting_material: Clock,
   approved: CheckCircle,
+  scheduled: Calendar,
   in_progress: Clock,
   completed: CheckCircle,
   cancelled: X,
@@ -78,10 +86,12 @@ export default function WorkOrderDetailPage() {
   const canAssign = hasPermission("work_orders.assign");
   const canComplete = hasPermission("work_orders.complete");
   const { add: addNotification } = useNotificationsStore();
+  const { items: statusLogItems, add: addStatusLog } = useWorkOrderStatusLogStore();
 
   const order = orders.find((o) => o.id === workOrderId);
 
   const [isEditing, setIsEditing] = React.useState(false);
+  const [showStatusModal, setShowStatusModal] = React.useState(false);
   const [editForm, setEditForm] = React.useState({
     title: "",
     description: "",
@@ -113,17 +123,39 @@ export default function WorkOrderDetailPage() {
 
   const getUserName = (id: string | null) => getUserFirstLastName(id, users, t("common.none"));
 
+  const orderStatusLog = React.useMemo(
+    () => statusLogItems.filter((e) => e.work_order_id === workOrderId),
+    [statusLogItems, workOrderId],
+  );
+
   const handleStatusChange = (newStatus: string) => {
     if (!order) return;
+    setShowStatusModal(true);
+  };
+
+  const handleStatusChangeConfirm = (targetStatus: WorkOrderStatus, comment: string) => {
+    if (!order) return;
+    const logEntry: WorkOrderStatusLogEntry = {
+      id: crypto.randomUUID(),
+      work_order_id: order.id,
+      from_status: order.status,
+      to_status: targetStatus,
+      comment,
+      changed_by: user?.id || "",
+      changed_at: new Date().toISOString(),
+    };
+    addStatusLog(logEntry);
+
     const updates: Partial<WorkOrder> = {
-      status: newStatus as WorkOrder["status"],
+      status: targetStatus,
       updated_at: new Date().toISOString(),
     };
-    if (newStatus === "completed") {
+    if (targetStatus === "completed") {
       updates.completed_at = new Date().toISOString();
     }
     update(order.id, updates);
-    toast(`${t("workOrders.detail.changeStatus")}: ${capitalize(newStatus.replace("_", " "))}`);
+    setShowStatusModal(false);
+    toast(`Status changed to ${capitalize(targetStatus.replace(/_/g, " "))}`);
   };
 
   const handleSave = () => {
@@ -235,10 +267,13 @@ export default function WorkOrderDetailPage() {
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <Badge
               variant={STATUS_COLORS[order.status] as "success" | "warning" | "secondary" | "destructive"}
-              className="capitalize gap-1"
+              className="gap-1"
             >
               <StatusIcon className="h-3 w-3" />
-              {t(`workOrders.statuses.${order.status === "in_progress" ? "inProgress" : order.status}`)}
+              {capitalize(order.status.replace(/_/g, " "))}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              {capitalize((order.type || "service_request").replace(/_/g, " "))}
             </Badge>
             <Badge
               variant={
@@ -248,9 +283,8 @@ export default function WorkOrderDetailPage() {
                     ? "warning"
                     : "secondary"
               }
-              className="capitalize"
             >
-              {order.priority}
+              {capitalize(order.priority)}
             </Badge>
             {order.due_date && (
               <span className="text-sm text-muted-foreground flex items-center gap-1">
@@ -278,40 +312,36 @@ export default function WorkOrderDetailPage() {
         </div>
       </div>
 
-      {/* Status change actions */}
+      {/* Status pipeline */}
+      <StatusPipeline currentStatus={order.status} className="rounded-lg border bg-card" />
+
+      {/* Status change action */}
       {nextStatuses.length > 0 && (canEdit || canComplete) && (
         <Card>
           <CardContent className="py-4">
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-medium text-muted-foreground">{t("workOrders.detail.changeStatus")}:</span>
-              {nextStatuses.map((next) => {
-                if (next === "completed" && !canComplete) return null;
-                if (next !== "completed" && next !== "cancelled" && !canEdit) return null;
-                if (next === "cancelled" && !canEdit) return null;
-                return (
-                  <Button
-                    key={next}
-                    size="sm"
-                    variant={next === "cancelled" ? "outline" : next === "completed" ? "success" : "default"}
-                    className="gap-1"
-                    onClick={() => handleStatusChange(next)}
-                  >
-                    {next === "approved" && t("workOrders.buttons.approve")}
-                    {next === "in_progress" && t("workOrders.buttons.start")}
-                    {next === "completed" && (
-                      <>
-                        <CheckCircle className="h-4 w-4" />
-                        {t("workOrders.buttons.complete")}
-                      </>
-                    )}
-                    {next === "cancelled" && t("workOrders.buttons.cancel")}
-                  </Button>
-                );
-              })}
+              <span className="text-sm font-medium text-muted-foreground">Actions:</span>
+              <Button
+                size="sm"
+                onClick={() => setShowStatusModal(true)}
+              >
+                Change status
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Status change modal */}
+      <StatusChangeModal
+        isOpen={showStatusModal}
+        currentStatus={order.status}
+        availableStatuses={WORK_ORDER_STATUS_TRANSITIONS[order.status] || []}
+        statusLog={orderStatusLog}
+        users={users}
+        onSubmit={handleStatusChangeConfirm}
+        onCancel={() => setShowStatusModal(false)}
+      />
 
       {/* Main content grid */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -541,6 +571,50 @@ export default function WorkOrderDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Status audit log */}
+      {orderStatusLog.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Status history</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[...orderStatusLog]
+                .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
+                .map((entry) => (
+                  <div key={entry.id} className="flex items-start gap-3 text-sm">
+                    <div className="flex flex-col items-center pt-1">
+                      <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+                      <div className="w-px flex-1 bg-border mt-1" />
+                    </div>
+                    <div className="flex-1 min-w-0 pb-3">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {entry.from_status && (
+                          <>
+                            <Badge variant={WORK_ORDER_STATUS_COLORS[entry.from_status] || "secondary"} className="text-[10px]">
+                              {capitalize(entry.from_status.replace(/_/g, " "))}
+                            </Badge>
+                            <span className="text-muted-foreground text-xs">→</span>
+                          </>
+                        )}
+                        <Badge variant={WORK_ORDER_STATUS_COLORS[entry.to_status] || "secondary"} className="text-[10px]">
+                          {capitalize(entry.to_status.replace(/_/g, " "))}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {getUserName(entry.changed_by)} · {formatDate(entry.changed_at)}
+                      </p>
+                      {entry.comment && (
+                        <p className="text-xs text-muted-foreground mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
     </RoleGuard>
   );

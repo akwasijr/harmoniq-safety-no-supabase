@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { WORK_ORDER_STATUS_COLORS, getAssetDisplayName, getUserFirstLastName } from "@/lib/status-utils";
+import { formatStatusLabel } from "@/components/tasks/task-detail-header";
 import { PAGINATION, LIMITS } from "@/lib/constants";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
@@ -35,14 +36,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import { capitalize } from "@/lib/utils";
 import { getOverdueMaintenanceWorkOrders } from "@/lib/work-order-generator";
-import type { WorkOrder, Priority } from "@/types";
+import { WORK_ORDER_TYPES } from "@/types";
+import type { WorkOrder, WorkOrderType, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 
 const STATUS_FLOW: Record<string, string[]> = {
-  requested: ["approved", "cancelled"],
-  approved: ["in_progress", "cancelled"],
-  in_progress: ["completed"],
+  waiting_approval: ["waiting_material", "approved", "cancelled"],
+  waiting_material: ["approved", "cancelled"],
+  approved: ["scheduled", "in_progress", "cancelled"],
+  scheduled: ["in_progress", "cancelled"],
+  in_progress: ["completed", "cancelled"],
   completed: [],
   cancelled: [],
 };
@@ -56,6 +60,7 @@ export default function WorkOrdersPage() {
   const { add, update, isLoading } = stores.workOrders;
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
+  const [typeFilter, setTypeFilter] = React.useState("all");
   const [assignmentFilter, setAssignmentFilter] = React.useState<"all" | "unassigned" | "assigned">("all");
   const [showCreate, setShowCreate] = React.useState(false);
   const [expandedParts, setExpandedParts] = React.useState<string | null>(null);
@@ -83,6 +88,7 @@ export default function WorkOrdersPage() {
     title: "",
     description: "",
     asset_id: "",
+    type: "service_request" as string,
     priority: "medium" as Priority,
     assigned_to: "",
     assigned_to_team_id: "",
@@ -92,6 +98,7 @@ export default function WorkOrdersPage() {
 
   const filtered = orders.filter((o) => {
     if (statusFilter !== "all" && o.status !== statusFilter) return false;
+    if (typeFilter !== "all" && o.type !== typeFilter) return false;
     if (assignmentFilter === "unassigned" && (o.assigned_to !== null || o.assigned_to_team_id)) return false;
     if (assignmentFilter === "assigned" && o.assigned_to === null && !o.assigned_to_team_id) return false;
     if (searchQuery) {
@@ -102,13 +109,14 @@ export default function WorkOrdersPage() {
     return true;
   });
 
-  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, assignmentFilter]);
+  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, typeFilter, assignmentFilter]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginatedOrders = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const unassignedCount = orders.filter((o) => o.assigned_to === null && !o.assigned_to_team_id).length;
-  const openCount = orders.filter((o) => o.status === "requested" || o.status === "approved").length;
+  const openCount = orders.filter((o) => o.status === "waiting_approval" || o.status === "waiting_material" || o.status === "approved").length;
+  const scheduledCount = orders.filter((o) => o.status === "scheduled").length;
   const inProgressCount = orders.filter((o) => o.status === "in_progress").length;
   const completedCount = orders.filter((o) => o.status === "completed").length;
   const totalCost = orders.filter((o) => o.status === "completed").reduce((sum, o) => sum + (o.parts_cost || 0) + (o.labor_cost || 0), 0);
@@ -122,7 +130,8 @@ export default function WorkOrdersPage() {
       title: form.title.trim(),
       description: form.description.trim(),
       priority: form.priority,
-      status: "requested",
+      type: form.type as WorkOrder["type"],
+      status: "waiting_approval" as const,
       requested_by: user?.id || "",
       assigned_to: form.assigned_to || null,
       assigned_to_team_id: form.assigned_to_team_id || null,
@@ -139,7 +148,7 @@ export default function WorkOrdersPage() {
     add(order);
     toast("Work order created");
     setShowCreate(false);
-    setForm({ title: "", description: "", asset_id: "", priority: "medium", assigned_to: "", assigned_to_team_id: "", due_date: "", estimated_hours: "" });
+    setForm({ title: "", description: "", asset_id: "", type: "service_request", priority: "medium", assigned_to: "", assigned_to_team_id: "", due_date: "", estimated_hours: "" });
   };
 
   const handleStatusChange = (id: string, newStatus: string) => {
@@ -220,11 +229,24 @@ export default function WorkOrdersPage() {
           <Input placeholder={t("workOrders.placeholders.searchWorkOrders")} className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {["all", "requested", "approved", "in_progress", "completed"].map((s) => (
+          {["all", "waiting_approval", "waiting_material", "approved", "scheduled", "in_progress", "completed", "cancelled"].map((s) => (
             <Button key={s} size="sm" variant={statusFilter === s ? "default" : "outline"} onClick={() => setStatusFilter(s)}>
-              {s === "all" ? "All" : capitalize(s.replace("_", " "))}
+              {s === "all" ? "All" : formatStatusLabel(s)}
             </Button>
           ))}
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[180px] h-8 text-xs">
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {WORK_ORDER_TYPES.map((woType) => (
+                <SelectItem key={woType} value={woType}>{formatStatusLabel(woType)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex gap-2 flex-wrap">
           {(["all", "unassigned", "assigned"] as const).map((val) => (
@@ -406,6 +428,17 @@ export default function WorkOrdersPage() {
                 </Select>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>Type</Label>
+                  <Select value={form.type} onValueChange={(v) => setForm((p) => ({ ...p, type: v }))}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {WORK_ORDER_TYPES.map((woType) => (
+                        <SelectItem key={woType} value={woType}>{formatStatusLabel(woType)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <Label>{t("workOrders.labels.priority")}</Label>
                   <Select value={form.priority} onValueChange={(v) => setForm((p) => ({ ...p, priority: v as Priority }))}>

@@ -1241,8 +1241,52 @@ export interface CorrectiveAction {
 }
 
 // Work Orders
-export type WorkOrderStatus = "requested" | "approved" | "in_progress" | "completed" | "cancelled";
+export type WorkOrderStatus =
+  | "waiting_approval"
+  | "waiting_material"
+  | "approved"
+  | "scheduled"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
+
+export type WorkOrderType =
+  | "preventive_maintenance"
+  | "corrective_maintenance"
+  | "emergency"
+  | "inspection"
+  | "service_request";
+
 export type WorkOrderPriority = Priority;
+
+export const WORK_ORDER_STATUSES: WorkOrderStatus[] = [
+  "waiting_approval",
+  "waiting_material",
+  "approved",
+  "scheduled",
+  "in_progress",
+  "completed",
+  "cancelled",
+];
+
+export const WORK_ORDER_TYPES: WorkOrderType[] = [
+  "preventive_maintenance",
+  "corrective_maintenance",
+  "emergency",
+  "inspection",
+  "service_request",
+];
+
+/** Valid next statuses from each work order status */
+export const WORK_ORDER_STATUS_TRANSITIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
+  waiting_approval: ["waiting_material", "approved", "cancelled"],
+  waiting_material: ["approved", "cancelled"],
+  approved: ["scheduled", "in_progress", "cancelled"],
+  scheduled: ["in_progress", "cancelled"],
+  in_progress: ["completed", "cancelled"],
+  completed: [],
+  cancelled: [],
+};
 
 export interface WorkOrderPartUsage {
   part_id: string;
@@ -1255,6 +1299,7 @@ export interface WorkOrder {
   asset_id: string | null;
   title: string;
   description: string;
+  type: WorkOrderType;
   priority: WorkOrderPriority;
   status: WorkOrderStatus;
   requested_by: string;
@@ -1274,9 +1319,19 @@ export interface WorkOrder {
 
   created_at: string;
   updated_at: string;
-  
+
   // Parts tracking (persisted)
   parts_used?: WorkOrderPartUsage[];
+}
+
+export interface WorkOrderStatusLogEntry {
+  id: string;
+  work_order_id: string;
+  from_status: WorkOrderStatus | null;
+  to_status: WorkOrderStatus;
+  comment: string;
+  changed_by: string;
+  changed_at: string;
 }
 
 // Meter Readings

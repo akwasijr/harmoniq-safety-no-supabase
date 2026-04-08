@@ -61,8 +61,9 @@ function makeWorkOrder(overrides: Partial<WorkOrder> = {}): WorkOrder {
     asset_id: "asset-1",
     title: "Existing WO",
     description: "",
+    type: "service_request",
     priority: "medium",
-    status: "requested",
+    status: "waiting_approval",
     requested_by: "user-1",
     assigned_to: null,
     due_date: null,
@@ -92,7 +93,8 @@ describe("createWorkOrderFromInspection", () => {
     expect(wo.title).toBe("Inspection Failed — Conveyor Belt");
     expect(wo.description).toContain("fail");
     expect(wo.description).toContain("Broken belt");
-    expect(wo.status).toBe("requested");
+    expect(wo.status).toBe("waiting_approval");
+    expect(wo.type).toBe("inspection");
     expect(wo.requested_by).toBe("user-42");
     expect(wo.assigned_to).toBeNull();
     expect(wo.priority).toBe("medium"); // default when no criticality
@@ -158,7 +160,8 @@ describe("createWorkOrderFromMaintenance", () => {
     expect(wo.title).toBe("Scheduled Maintenance — Generator");
     expect(wo.description).toContain("Oil Change");
     expect(wo.priority).toBe("high");
-    expect(wo.status).toBe("requested");
+    expect(wo.status).toBe("waiting_approval");
+    expect(wo.type).toBe("preventive_maintenance");
     expect(wo.requested_by).toBe("system");
   });
 
@@ -199,7 +202,7 @@ describe("getOverdueMaintenanceWorkOrders", () => {
     expect(result).toHaveLength(1);
     expect(result[0].title).toBe("Scheduled Maintenance — Old Pump");
     expect(result[0].priority).toBe("high");
-    expect(result[0].status).toBe("requested");
+    expect(result[0].status).toBe("waiting_approval");
   });
 
   it("skips assets with no next_maintenance_date", () => {

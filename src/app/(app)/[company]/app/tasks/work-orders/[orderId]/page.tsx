@@ -24,6 +24,7 @@ import { TaskDocuments } from "@/components/tasks/task-documents";
 import { WorkOrderWorkLog } from "@/components/tasks/work-order-work-log";
 import { getFilesForEntity } from "@/lib/file-storage";
 import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
+import { useWorkOrderStatusLogStore } from "@/stores/work-order-status-log-store";
 import { ArrowLeft } from "lucide-react";
 import type { WorkOrderStatus } from "@/types";
 
@@ -43,6 +44,7 @@ export default function WorkOrderDetailPage() {
   const { items: users } = useUsersStore();
   const { items: assets } = useAssetsStore();
   const { items: parts } = usePartsStore();
+  const { add: addStatusLog } = useWorkOrderStatusLogStore();
 
   const [activeTab, setActiveTab] = React.useState("details");
 
@@ -69,6 +71,18 @@ export default function WorkOrderDetailPage() {
 
   const handleStatusChange = React.useCallback(
     (targetStatus: string) => {
+      if (!order) return;
+      // Log the status change
+      addStatusLog({
+        id: crypto.randomUUID(),
+        work_order_id: orderId,
+        from_status: order.status,
+        to_status: targetStatus as WorkOrderStatus,
+        comment: "",
+        changed_by: user?.id || "",
+        changed_at: new Date().toISOString(),
+      });
+
       const updates: Partial<typeof order & Record<string, unknown>> = {
         status: targetStatus as WorkOrderStatus,
         updated_at: new Date().toISOString(),
@@ -77,7 +91,7 @@ export default function WorkOrderDetailPage() {
       updateOrder(orderId, updates as never);
       toast("Status updated", "success");
     },
-    [orderId, updateOrder, toast],
+    [orderId, order, user, updateOrder, addStatusLog, toast],
   );
 
   if (isLoading && orders.length === 0) return <LoadingPage />;

@@ -6,6 +6,7 @@ export const allowedEntityUpsertTables = [
   "assets",
   "tickets",
   "work_orders",
+  "work_order_status_log",
   "locations",
   "teams",
   "content",

@@ -48,7 +48,8 @@ export function createWorkOrderFromInspection(params: {
       inspection.notes ? `\nNotes: ${inspection.notes}` : ""
     }`,
     priority: priorityFromCriticality(asset.criticality ?? "medium"),
-    status: "requested",
+    type: "inspection",
+    status: "waiting_approval",
     requested_by: inspectorId,
     assigned_to: null,
     due_date: null,
@@ -118,7 +119,8 @@ export function createWorkOrderFromMaintenance(params: {
     title: `Scheduled Maintenance — ${asset.name}`,
     description: `Overdue scheduled maintenance: "${schedule.name}".`,
     priority,
-    status: "requested",
+    type: "preventive_maintenance",
+    status: "waiting_approval",
     requested_by: "system",
     assigned_to: null,
     due_date: null,
@@ -133,7 +135,7 @@ export function createWorkOrderFromMaintenance(params: {
   };
 }
 
-const OPEN_STATUSES = new Set(["requested", "approved", "in_progress"]);
+const OPEN_STATUSES = new Set(["waiting_approval", "waiting_material", "approved", "scheduled", "in_progress"]);
 
 /**
  * Check which assets have overdue maintenance and return work orders to create.
