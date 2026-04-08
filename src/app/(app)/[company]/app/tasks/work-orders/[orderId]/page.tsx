@@ -55,8 +55,7 @@ export default function WorkOrderDetailPage() {
   const order =
     matchedOrder &&
     user?.company_id &&
-    matchedOrder.company_id === user.company_id &&
-    isAssignedToUserOrTeam(matchedOrder, user)
+    matchedOrder.company_id === user.company_id
       ? matchedOrder
       : undefined;
   const assignee = order?.assigned_to ? users.find((u) => u.id === order.assigned_to) : null;
