@@ -10,15 +10,7 @@ import {
   ArrowLeft,
   Edit,
   Save,
-  ClipboardList,
-  CheckCircle,
-  Clock,
   AlertTriangle,
-  Calendar,
-  User,
-  Package,
-  DollarSign,
-  X,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -60,9 +52,11 @@ const STATUS_FLOW: Record<string, string[]> = {
 
 const STATUS_COLORS = WORK_ORDER_STATUS_COLORS;
 
-const NAV_ITEMS = [
+type SectionId = "summary" | "related" | "work-log" | "status-history";
+
+const NAV_ITEMS: { id: SectionId; label: string }[] = [
   { id: "summary", label: "Summary" },
-  { id: "related-records", label: "Related records" },
+  { id: "related", label: "Related records" },
   { id: "work-log", label: "Work log" },
   { id: "status-history", label: "Status history" },
 ];
@@ -91,7 +85,7 @@ export default function WorkOrderDetailPage() {
 
   const [isEditing, setIsEditing] = React.useState(false);
   const [showStatusModal, setShowStatusModal] = React.useState(false);
-  const [activeSection, setActiveSection] = React.useState("summary");
+  const [activeSection, setActiveSection] = React.useState<SectionId>("summary");
   const [editForm, setEditForm] = React.useState({
     title: "",
     description: "",
@@ -100,7 +94,6 @@ export default function WorkOrderDetailPage() {
 
   const highlightRef = React.useRef<HTMLDivElement>(null);
 
-  // Record navigation: determine position in the orders list
   const currentOrderIndex = orders.findIndex((o) => o.id === workOrderId);
   const totalOrders = orders.length;
   const prevOrderId = currentOrderIndex > 0 ? orders[currentOrderIndex - 1].id : null;
@@ -122,28 +115,6 @@ export default function WorkOrderDetailPage() {
     }
   }, [highlight]);
 
-  // Track active section via scroll
-  React.useEffect(() => {
-    const handleScroll = () => {
-      const sections = NAV_ITEMS.map((item) => ({
-        id: item.id,
-        el: document.getElementById(item.id),
-      }));
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const el = sections[i].el;
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= 120) {
-            setActiveSection(sections[i].id);
-            break;
-          }
-        }
-      }
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const getAssetName = (id: string | null) => {
     if (!id) return null;
     return assets.find((a) => a.id === id);
@@ -155,11 +126,6 @@ export default function WorkOrderDetailPage() {
     () => statusLogItems.filter((e) => e.work_order_id === workOrderId),
     [statusLogItems, workOrderId],
   );
-
-  const handleStatusChange = (newStatus: string) => {
-    if (!order) return;
-    setShowStatusModal(true);
-  };
 
   const handleStatusChangeConfirm = (targetStatus: WorkOrderStatus, comment: string) => {
     if (!order) return;
@@ -245,13 +211,6 @@ export default function WorkOrderDetailPage() {
       updated_at: new Date().toISOString(),
     } as Partial<WorkOrder>);
     toast(newDate ? `Due date set to ${formatDate(newDate)}` : "Due date removed");
-  };
-
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
   };
 
   if (!isLoading && !order) {
@@ -376,7 +335,7 @@ export default function WorkOrderDetailPage() {
       </div>
 
       {/* Status pipeline */}
-      <StatusPipeline currentStatus={order.status} statusDate={order.updated_at} />
+      <StatusPipeline currentStatus={order.status} />
 
       {/* Status change modal */}
       <StatusChangeModal
@@ -389,7 +348,7 @@ export default function WorkOrderDetailPage() {
         onCancel={() => setShowStatusModal(false)}
       />
 
-      {/* Main content with sidebar nav */}
+      {/* Main content with sidebar tabs */}
       <div className="flex gap-6">
         {/* Left sidebar navigation */}
         <nav className="hidden lg:block w-44 shrink-0">
@@ -397,11 +356,11 @@ export default function WorkOrderDetailPage() {
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.id}
-                onClick={() => scrollToSection(item.id)}
+                onClick={() => setActiveSection(item.id)}
                 className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
                   activeSection === item.id
-                    ? "border-l-2 border-foreground font-medium text-foreground bg-muted/50"
-                    : "border-l-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    ? "font-medium text-foreground bg-muted"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                 }`}
               >
                 {item.label}
@@ -410,158 +369,170 @@ export default function WorkOrderDetailPage() {
           </div>
         </nav>
 
-        {/* Main content area */}
-        <div className="flex-1 min-w-0 space-y-8">
-          {/* Summary section */}
-          <section id="summary">
-            <h2 className="text-lg font-semibold mb-4">Summary</h2>
+        {/* Mobile tab bar */}
+        <div className="lg:hidden flex gap-1 -mt-2 mb-2 overflow-x-auto w-full">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveSection(item.id)}
+              className={`whitespace-nowrap px-3 py-1.5 text-sm rounded-md transition-colors ${
+                activeSection === item.id
+                  ? "font-medium text-foreground bg-muted"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
 
-            <div className="grid gap-6 sm:grid-cols-2">
-              {/* Summary grid */}
-              <Card>
-                <CardContent className="pt-5 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-muted-foreground text-xs">Type</Label>
-                      <p className="font-medium text-sm mt-0.5">
-                        {capitalize((order.type || "service_request").replace(/_/g, " "))}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground text-xs">{t("workOrders.labels.priority")}</Label>
-                      {canEdit ? (
-                        <Select value={order.priority} onValueChange={handlePriorityChange}>
-                          <SelectTrigger className="mt-1 h-8">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="critical">Critical</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <p className="font-medium text-sm mt-0.5">{capitalize(order.priority)}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground text-xs">{t("workOrders.detail.requestedBy")}</Label>
-                      <p className="font-medium text-sm mt-0.5">{getUserName(order.requested_by)}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground text-xs">{t("workOrders.detail.assignedTo")}</Label>
-                      {canAssign ? (
-                        <Select value={order.assigned_to || "__none__"} onValueChange={handleAssignedToChange}>
-                          <SelectTrigger className="mt-1 h-8">
-                            <SelectValue placeholder={t("common.none")} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none__">{t("common.none")}</SelectItem>
-                            {users.map((u) => (
-                              <SelectItem key={u.id} value={u.id}>
-                                {u.first_name} {u.last_name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <p className="font-medium text-sm mt-0.5">{getUserName(order.assigned_to)}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground text-xs">{t("workOrders.labels.dueDate")}</Label>
-                      {canEdit ? (
-                        <Input
-                          type="date"
-                          className="mt-1 h-8"
-                          value={order.due_date ? order.due_date.split("T")[0] : ""}
-                          onChange={(e) => handleDueDateChange(e.target.value)}
-                        />
-                      ) : (
-                        <p className="font-medium text-sm mt-0.5">{order.due_date ? formatDate(order.due_date) : "—"}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground text-xs">{t("workOrders.detail.created")}</Label>
-                      <p className="font-medium text-sm mt-0.5">{formatDate(order.created_at)}</p>
-                    </div>
+        {/* Main content area — only one section visible at a time */}
+        <div className="flex-1 min-w-0">
+          {/* Summary */}
+          {activeSection === "summary" && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Summary</h2>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label className="text-muted-foreground">Type</Label>
+                  <p className="font-medium mt-0.5">
+                    {capitalize((order.type || "service_request").replace(/_/g, " "))}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("workOrders.labels.priority")}</Label>
+                  {canEdit ? (
+                    <Select value={order.priority} onValueChange={handlePriorityChange}>
+                      <SelectTrigger className="mt-1 h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="font-medium mt-0.5">{capitalize(order.priority)}</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("workOrders.detail.requestedBy")}</Label>
+                  <p className="font-medium mt-0.5">{getUserName(order.requested_by)}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("workOrders.detail.assignedTo")}</Label>
+                  {canAssign ? (
+                    <Select value={order.assigned_to || "__none__"} onValueChange={handleAssignedToChange}>
+                      <SelectTrigger className="mt-1 h-8">
+                        <SelectValue placeholder={t("common.none")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">{t("common.none")}</SelectItem>
+                        {users.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.first_name} {u.last_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="font-medium mt-0.5">{getUserName(order.assigned_to)}</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("workOrders.labels.dueDate")}</Label>
+                  {canEdit ? (
+                    <Input
+                      type="date"
+                      className="mt-1 h-8"
+                      value={order.due_date ? order.due_date.split("T")[0] : ""}
+                      onChange={(e) => handleDueDateChange(e.target.value)}
+                    />
+                  ) : (
+                    <p className="font-medium mt-0.5">{order.due_date ? formatDate(order.due_date) : "—"}</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("workOrders.labels.estimatedHours")}</Label>
+                  <p className="font-medium mt-0.5">
+                    {order.estimated_hours != null ? `${order.estimated_hours}h` : "—"}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("workOrders.detail.actualHours")}</Label>
+                  <p className="font-medium mt-0.5">
+                    {order.actual_hours != null ? `${order.actual_hours}h` : "—"}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{t("workOrders.detail.created")}</Label>
+                  <p className="font-medium mt-0.5">{formatDate(order.created_at)}</p>
+                </div>
+                {order.completed_at && (
+                  <div>
+                    <Label className="text-muted-foreground">{t("workOrders.detail.completedAt")}</Label>
+                    <p className="font-medium mt-0.5">{formatDate(order.completed_at)}</p>
                   </div>
+                )}
+              </div>
+
+              {/* Description */}
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle className="text-sm">Description</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isEditing ? (
+                    <Textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
+                      rows={4}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{order.description}</p>
+                  )}
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="pt-5 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-muted-foreground text-xs">{t("workOrders.labels.estimatedHours")}</Label>
-                      <p className="font-medium text-sm mt-0.5">
-                        {order.estimated_hours != null ? `${order.estimated_hours}h` : "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground text-xs">{t("workOrders.detail.actualHours")}</Label>
-                      <p className="font-medium text-sm mt-0.5">
-                        {order.actual_hours != null ? `${order.actual_hours}h` : "—"}
-                      </p>
-                    </div>
-                    {order.completed_at && (
-                      <div className="col-span-2">
-                        <Label className="text-muted-foreground text-xs">{t("workOrders.detail.completedAt")}</Label>
-                        <p className="font-medium text-sm mt-0.5">{formatDate(order.completed_at)}</p>
+              {/* Cost summary */}
+              {totalCost > 0 && (
+                <Card className="mt-4">
+                  <CardHeader>
+                    <CardTitle className="text-sm">Cost summary</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {order.parts_cost != null && order.parts_cost > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Parts</span>
+                        <span className="font-medium">${formatNumber(order.parts_cost)}</span>
                       </div>
                     )}
-                    {totalCost > 0 && (
-                      <>
-                        {order.parts_cost != null && order.parts_cost > 0 && (
-                          <div>
-                            <Label className="text-muted-foreground text-xs">{t("workOrders.labels.partsUsed")} cost</Label>
-                            <p className="font-medium text-sm mt-0.5">${formatNumber(order.parts_cost)}</p>
-                          </div>
-                        )}
-                        {order.labor_cost != null && order.labor_cost > 0 && (
-                          <div>
-                            <Label className="text-muted-foreground text-xs">{t("workOrders.detail.laborCost")}</Label>
-                            <p className="font-medium text-sm mt-0.5">${formatNumber(order.labor_cost)}</p>
-                          </div>
-                        )}
-                        <div className="col-span-2 pt-2 border-t">
-                          <Label className="text-muted-foreground text-xs">{t("workOrders.labels.totalCost")}</Label>
-                          <p className="font-semibold text-sm mt-0.5">${formatNumber(totalCost)}</p>
-                        </div>
-                      </>
+                    {order.labor_cost != null && order.labor_cost > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Labor</span>
+                        <span className="font-medium">${formatNumber(order.labor_cost)}</span>
+                      </div>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                    <div className="flex justify-between font-semibold border-t pt-2">
+                      <span>Total</span>
+                      <span>${formatNumber(totalCost)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </section>
+          )}
 
-            {/* Description */}
-            <Card className="mt-4">
-              <CardHeader>
-                <CardTitle className="text-base">{t("workOrders.labels.description")}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isEditing ? (
-                  <Textarea
-                    value={editForm.description}
-                    onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
-                    rows={4}
-                  />
-                ) : (
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{order.description}</p>
-                )}
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Related records section */}
-          <section id="related-records">
-            <h2 className="text-lg font-semibold mb-4">Related records</h2>
-            <Card>
-              <CardContent className="pt-5 space-y-4">
+          {/* Related records */}
+          {activeSection === "related" && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Related records</h2>
+              <div className="space-y-4">
                 <div>
-                  <Label className="text-muted-foreground text-xs">Asset</Label>
+                  <Label className="text-muted-foreground">Asset</Label>
                   {asset ? (
                     <Link
                       href={`/${company}/dashboard/assets/${asset.id}`}
@@ -575,7 +546,7 @@ export default function WorkOrderDetailPage() {
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground text-xs">Corrective action</Label>
+                  <Label className="text-muted-foreground">Corrective action</Label>
                   {linkedCorrectiveAction ? (
                     <Link
                       href={`/${company}/dashboard/corrective-actions/${linkedCorrectiveAction.id}`}
@@ -589,7 +560,7 @@ export default function WorkOrderDetailPage() {
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground text-xs">Source inspection</Label>
+                  <Label className="text-muted-foreground">Source inspection</Label>
                   {linkedInspection ? (
                     <Link
                       href={`/${company}/dashboard/inspections/${linkedInspection.id}`}
@@ -602,10 +573,9 @@ export default function WorkOrderDetailPage() {
                   )}
                 </div>
 
-                {/* Parts used */}
                 {order.parts_used && order.parts_used.length > 0 && (
                   <div>
-                    <Label className="text-muted-foreground text-xs mb-2 block">Parts used</Label>
+                    <Label className="text-muted-foreground mb-2 block">Parts used</Label>
                     <div className="space-y-2">
                       {order.parts_used.map((pu) => {
                         const part = parts.find((p) => p.id === pu.part_id);
@@ -626,101 +596,105 @@ export default function WorkOrderDetailPage() {
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </section>
+              </div>
+            </section>
+          )}
 
-          {/* Work log section */}
-          <section id="work-log">
-            <h2 className="text-lg font-semibold mb-4">Work log</h2>
-            <Card>
-              <CardContent className="pt-5">
-                <div className="space-y-3 text-sm">
-                  {order.estimated_hours != null && (
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground">Estimated hours</span>
-                      <span className="font-medium">{order.estimated_hours}h</span>
-                    </div>
-                  )}
-                  {order.actual_hours != null && (
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground">Actual hours</span>
-                      <span className="font-medium">{order.actual_hours}h</span>
-                    </div>
-                  )}
-                  {totalCost > 0 && (
-                    <>
-                      {order.parts_cost != null && order.parts_cost > 0 && (
-                        <div className="flex justify-between py-2 border-b">
-                          <span className="text-muted-foreground">Parts cost</span>
-                          <span className="font-medium">${formatNumber(order.parts_cost)}</span>
-                        </div>
-                      )}
-                      {order.labor_cost != null && order.labor_cost > 0 && (
-                        <div className="flex justify-between py-2 border-b">
-                          <span className="text-muted-foreground">Labor cost</span>
-                          <span className="font-medium">${formatNumber(order.labor_cost)}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between py-2 font-medium">
-                        <span>Total cost</span>
-                        <span>${formatNumber(totalCost)}</span>
+          {/* Work log */}
+          {activeSection === "work-log" && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Work log</h2>
+              <Card>
+                <CardContent className="pt-5">
+                  <div className="space-y-3 text-sm">
+                    {order.estimated_hours != null && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Estimated hours</span>
+                        <span className="font-medium">{order.estimated_hours}h</span>
                       </div>
-                    </>
-                  )}
-                  {order.estimated_hours == null && order.actual_hours == null && totalCost === 0 && (
-                    <p className="text-muted-foreground py-4 text-center">No work log entries yet</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Status history section */}
-          <section id="status-history">
-            <h2 className="text-lg font-semibold mb-4">Status history</h2>
-            <Card>
-              <CardContent className="pt-5">
-                {orderStatusLog.length > 0 ? (
-                  <div className="space-y-3">
-                    {[...orderStatusLog]
-                      .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
-                      .map((entry) => (
-                        <div key={entry.id} className="flex items-start gap-3 text-sm">
-                          <div className="flex flex-col items-center pt-1">
-                            <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
-                            <div className="w-px flex-1 bg-border mt-1" />
+                    )}
+                    {order.actual_hours != null && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Actual hours</span>
+                        <span className="font-medium">{order.actual_hours}h</span>
+                      </div>
+                    )}
+                    {totalCost > 0 && (
+                      <>
+                        {order.parts_cost != null && order.parts_cost > 0 && (
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Parts cost</span>
+                            <span className="font-medium">${formatNumber(order.parts_cost)}</span>
                           </div>
-                          <div className="flex-1 min-w-0 pb-3">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              {entry.from_status && (
-                                <>
-                                  <Badge variant={WORK_ORDER_STATUS_COLORS[entry.from_status] || "secondary"} className="text-[10px]">
-                                    {capitalize(entry.from_status.replace(/_/g, " "))}
-                                  </Badge>
-                                  <span className="text-muted-foreground text-xs">→</span>
-                                </>
-                              )}
-                              <Badge variant={WORK_ORDER_STATUS_COLORS[entry.to_status] || "secondary"} className="text-[10px]">
-                                {capitalize(entry.to_status.replace(/_/g, " "))}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {getUserName(entry.changed_by)} · {formatDate(entry.changed_at)}
-                            </p>
-                            {entry.comment && (
-                              <p className="text-xs text-muted-foreground mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>
-                            )}
+                        )}
+                        {order.labor_cost != null && order.labor_cost > 0 && (
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Labor cost</span>
+                            <span className="font-medium">${formatNumber(order.labor_cost)}</span>
                           </div>
+                        )}
+                        <div className="flex justify-between py-2 font-medium">
+                          <span>Total cost</span>
+                          <span>${formatNumber(totalCost)}</span>
                         </div>
-                      ))}
+                      </>
+                    )}
+                    {order.estimated_hours == null && order.actual_hours == null && totalCost === 0 && (
+                      <p className="text-muted-foreground py-4 text-center">No work log entries yet</p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground py-4 text-center">No status changes recorded</p>
-                )}
-              </CardContent>
-            </Card>
-          </section>
+                </CardContent>
+              </Card>
+            </section>
+          )}
+
+          {/* Status history */}
+          {activeSection === "status-history" && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Status history</h2>
+              <Card>
+                <CardContent className="pt-5">
+                  {orderStatusLog.length > 0 ? (
+                    <div className="space-y-3">
+                      {[...orderStatusLog]
+                        .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
+                        .map((entry) => (
+                          <div key={entry.id} className="flex items-start gap-3 text-sm">
+                            <div className="flex flex-col items-center pt-1">
+                              <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+                              <div className="w-px flex-1 bg-border mt-1" />
+                            </div>
+                            <div className="flex-1 min-w-0 pb-3">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {entry.from_status && (
+                                  <>
+                                    <Badge variant={WORK_ORDER_STATUS_COLORS[entry.from_status] || "secondary"} className="text-[10px]">
+                                      {capitalize(entry.from_status.replace(/_/g, " "))}
+                                    </Badge>
+                                    <span className="text-muted-foreground text-xs">→</span>
+                                  </>
+                                )}
+                                <Badge variant={WORK_ORDER_STATUS_COLORS[entry.to_status] || "secondary"} className="text-[10px]">
+                                  {capitalize(entry.to_status.replace(/_/g, " "))}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {getUserName(entry.changed_by)} · {formatDate(entry.changed_at)}
+                              </p>
+                              {entry.comment && (
+                                <p className="text-xs text-muted-foreground mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-4 text-center">No status changes recorded</p>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+          )}
         </div>
       </div>
     </div>
