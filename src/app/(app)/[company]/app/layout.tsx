@@ -58,6 +58,17 @@ export default function EmployeeAppRootLayout({
   // Compute notification count from real DB notifications + derived
   const notificationCount = React.useMemo(() => {
     if (!user) return 0;
+
+    // Read derived notification IDs that were already dismissed this session
+    let readDerivedCount = 0;
+    try {
+      const stored = typeof window !== "undefined" ? sessionStorage.getItem("harmoniq_read_derived") : null;
+      if (stored) {
+        const ids = JSON.parse(stored) as string[];
+        readDerivedCount = ids.length;
+      }
+    } catch { /* ignore */ }
+
     // Count unread DB notifications
     const unreadDb = dbNotifications.filter(
       (n) => !n.read && (n.user_id === null || n.user_id === user.id)
@@ -99,7 +110,8 @@ export default function EmployeeAppRootLayout({
         evaluation.submitter_id === user.id &&
         (evaluation.status === "draft" || evaluation.status === "submitted"),
     ).length;
-    return unreadDb + pendingTasks + openTickets + openWorkOrders + openActions + assessmentFollowUp;
+    const totalDerived = pendingTasks + openTickets + openWorkOrders + openActions + assessmentFollowUp;
+    return unreadDb + Math.max(0, totalDerived - readDerivedCount);
   }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, workOrders, correctiveActions, riskEvaluations]);
 
   const { resolvedTheme } = useTheme();

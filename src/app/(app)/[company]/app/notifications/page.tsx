@@ -78,6 +78,14 @@ export default function NotificationsPage() {
   const { t, formatDate } = useTranslation();
   const [fallbackTimestamp] = React.useState(() => Date.now());
 
+  const [readDerivedIds, setReadDerivedIds] = React.useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = sessionStorage.getItem("harmoniq_read_derived");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
+
   const notifications = React.useMemo<NotificationItem[]>(() => {
     if (!user) return [];
     const items: NotificationItem[] = [];
@@ -170,7 +178,7 @@ export default function NotificationsPage() {
           title: template.name,
           description: `${template.items?.length || 0} items to complete`,
           timestamp: new Date(template.created_at || fallbackTimestamp),
-          read: false,
+          read: readDerivedIds.has(derivedId),
           href: `/${company}/app/checklists/${template.id}`,
           icon: ClipboardCheck,
           iconColor: "text-primary bg-primary/15",
@@ -196,7 +204,7 @@ export default function NotificationsPage() {
           title: ticket.title || "Ticket",
           description: `Priority: ${ticket.priority || "normal"}`,
           timestamp: new Date(ticket.created_at || fallbackTimestamp),
-          read: false,
+          read: readDerivedIds.has(derivedId),
           href: `/${company}/app/tasks/tickets/${ticket.id}`,
           icon: Wrench,
           iconColor: "text-purple-600 bg-purple-100 dark:bg-purple-900/40 dark:text-purple-300",
@@ -222,7 +230,7 @@ export default function NotificationsPage() {
           title: workOrder.title,
           description: `Status: ${workOrder.status.replace(/_/g, " ")}`,
           timestamp: new Date(workOrder.updated_at || workOrder.created_at || fallbackTimestamp),
-          read: false,
+          read: readDerivedIds.has(derivedId),
           href: `/${company}/app/tasks/work-orders/${workOrder.id}`,
           icon: Wrench,
           iconColor: "text-amber-700 bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300",
@@ -247,7 +255,7 @@ export default function NotificationsPage() {
           title: t("tasks.actions") || "Corrective action",
           description: action.description,
           timestamp: new Date(action.updated_at || action.created_at || fallbackTimestamp),
-          read: false,
+          read: readDerivedIds.has(derivedId),
           href: `/${company}/app/tasks/actions/${action.id}`,
           icon: ShieldAlert,
           iconColor: "text-red-700 bg-red-100 dark:bg-red-900/40 dark:text-red-300",
@@ -273,7 +281,7 @@ export default function NotificationsPage() {
           title: assessmentLabelMap[evaluation.form_type] || evaluation.form_type,
           description: isDraft ? "Draft assessment ready to resume" : "Assessment submitted and awaiting review",
           timestamp: new Date(evaluation.reviewed_at || evaluation.submitted_at || evaluation.created_at || fallbackTimestamp),
-          read: false,
+          read: readDerivedIds.has(derivedId),
           href: isDraft
             ? `/${company}/app/risk-assessment/${evaluation.form_type.toLowerCase()}?draft=${evaluation.id}`
             : `/${company}/app/risk-assessment/view/${evaluation.id}`,
@@ -290,19 +298,26 @@ export default function NotificationsPage() {
       return b.timestamp.getTime() - a.timestamp.getTime();
     });
     return items;
-  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, workOrders, correctiveActions, riskEvaluations, company, fallbackTimestamp, t]);
+  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, workOrders, correctiveActions, riskEvaluations, company, fallbackTimestamp, t, readDerivedIds]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleNotificationClick = (notification: NotificationItem) => {
     if (
       !notification.read &&
-      !notification.id.startsWith("task-") &&
-      !notification.id.startsWith("ticket-") &&
-      !notification.id.startsWith("work-order-") &&
-      !notification.id.startsWith("action-") &&
-      !notification.id.startsWith("risk-evaluation-")
+      (notification.id.startsWith("task-") ||
+        notification.id.startsWith("ticket-") ||
+        notification.id.startsWith("work-order-") ||
+        notification.id.startsWith("action-") ||
+        notification.id.startsWith("risk-evaluation-"))
     ) {
+      setReadDerivedIds((prev) => {
+        const next = new Set(prev);
+        next.add(notification.id);
+        sessionStorage.setItem("harmoniq_read_derived", JSON.stringify([...next]));
+        return next;
+      });
+    } else if (!notification.read) {
       updateNotification(notification.id, { read: true } as Partial<import("@/stores/notifications-store").Notification>);
     }
   };

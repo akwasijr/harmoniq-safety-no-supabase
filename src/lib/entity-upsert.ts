@@ -60,8 +60,8 @@ export function validateEntityUpsertRequest(
     return { ok: false, status: 403, error: "Table not allowed" };
   }
 
-  // RBAC: check whether this role can write to this table
-  if (!canAccessTable(profile.role, table, "create")) {
+  // RBAC: check whether this role can write to this table (upsert may be create or update)
+  if (!canAccessTable(profile.role, table, "create") && !canAccessTable(profile.role, table, "update")) {
     return { ok: false, status: 403, error: "You do not have permission to write to this resource" };
   }
 
@@ -91,8 +91,13 @@ export function validateEntityUpsertRequest(
     }
 
     if (table === "companies") {
-      if (profile.role !== "super_admin") {
-        return { ok: false, status: 403, error: "Insufficient permissions" };
+      if (profile.role === "company_admin") {
+        // company_admin can only update their own company
+        if (normalizedRow.id && normalizedRow.id !== profile.company_id) {
+          return { ok: false, status: 403, error: "Cannot modify other companies" };
+        }
+      } else if (profile.role !== "super_admin") {
+        return { ok: false, status: 403, error: "Only admins can modify companies" };
       }
 
       normalizedRows.push(normalizedRow);

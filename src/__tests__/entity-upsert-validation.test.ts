@@ -64,7 +64,7 @@ describe("validateEntityUpsertRequest", () => {
     });
   });
 
-  it("blocks company writes for non-super-admins", () => {
+  it("allows company_admin to write to their own company", () => {
     const result = validateEntityUpsertRequest(
       "companies",
       { id: companyId, name: "Acme" },
@@ -72,9 +72,22 @@ describe("validateEntityUpsertRequest", () => {
     );
 
     expect(result).toEqual({
+      ok: true,
+      rows: [{ id: companyId, name: "Acme" }],
+    });
+  });
+
+  it("blocks company_admin from writing to another company", () => {
+    const result = validateEntityUpsertRequest(
+      "companies",
+      { id: otherCompanyId, name: "Evil Corp" },
+      { role: "company_admin", company_id: companyId }
+    );
+
+    expect(result).toEqual({
       ok: false,
       status: 403,
-      error: "You do not have permission to write to this resource",
+      error: "Cannot modify other companies",
     });
   });
 });
