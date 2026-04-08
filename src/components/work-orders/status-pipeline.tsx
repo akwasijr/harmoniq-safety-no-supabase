@@ -26,7 +26,7 @@ export function StatusPipeline({ currentStatus, className }: StatusPipelineProps
         <div className="h-6 w-6 rounded-full bg-[#6b7280] flex items-center justify-center">
           <span className="text-[10px] text-white font-bold">✕</span>
         </div>
-        <span className="text-sm font-medium text-muted-foreground">Cancelled</span>
+        <span className="text-sm font-medium text-[#374151] dark:text-[#d1d5db]">Cancelled</span>
       </div>
     );
   }
@@ -49,8 +49,8 @@ export function StatusPipeline({ currentStatus, className }: StatusPipelineProps
                   className={cn(
                     "h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0",
                     isCompleted && "bg-[#059669] text-white",
-                    isActive && "bg-[#1e293b] text-white dark:bg-[#f1f5f9] dark:text-[#0f172a]",
-                    !isCompleted && !isActive && "bg-[#e2e8f0] text-[#94a3b8] dark:bg-[#334155] dark:text-[#64748b]",
+                    isActive && "bg-[#2563eb] text-white ring-4 ring-[#2563eb]/20",
+                    !isCompleted && !isActive && "border-2 border-[#d1d5db] bg-white text-[#9ca3af] dark:border-[#4b5563] dark:bg-[#1f2937] dark:text-[#6b7280]",
                   )}
                 >
                   {isCompleted ? (
@@ -64,8 +64,8 @@ export function StatusPipeline({ currentStatus, className }: StatusPipelineProps
                   className={cn(
                     "text-[11px] leading-tight text-center whitespace-nowrap",
                     isCompleted && "text-[#059669] dark:text-[#6ee7b7] font-medium",
-                    isActive && "text-[#1e293b] dark:text-[#f1f5f9] font-semibold",
-                    !isCompleted && !isActive && "text-[#94a3b8] dark:text-[#64748b]",
+                    isActive && "text-[#2563eb] dark:text-[#93c5fd] font-semibold",
+                    !isCompleted && !isActive && "text-[#9ca3af] dark:text-[#6b7280]",
                   )}
                 >
                   {step.label}
@@ -80,7 +80,7 @@ export function StatusPipeline({ currentStatus, className }: StatusPipelineProps
                       "h-0.5 w-full rounded-full",
                       index < currentIndex
                         ? "bg-[#059669] dark:bg-[#6ee7b7]"
-                        : "bg-[#e2e8f0] dark:bg-[#334155]",
+                        : "bg-[#e5e7eb] dark:bg-[#374151]",
                     )}
                   />
                 </div>
