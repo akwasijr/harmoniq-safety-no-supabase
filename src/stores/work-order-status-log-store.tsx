@@ -7,6 +7,7 @@ const store = createEntityStore<WorkOrderStatusLogEntry>(
   "harmoniq_work_order_status_log",
   [],
   {
+    allowMissingTable: true,
     columnMap: {
       work_order_id: "work_order_id",
       from_status: "from_status",

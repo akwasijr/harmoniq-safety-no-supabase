@@ -141,6 +141,17 @@ interface StoreOptions {
   stripFields?: string[];
   /** Subscribe to Supabase realtime invalidation for near-live updates */
   realtimeSubscribe?: boolean;
+  /** Treat a missing Supabase table as an optional empty store */
+  allowMissingTable?: boolean;
+}
+
+function isMissingSupabaseTable(message: string | null | undefined): boolean {
+  if (!message) return false;
+  return (
+    message.includes("Could not find the table") ||
+    message.includes("schema cache") ||
+    (message.includes("relation") && message.includes("does not exist"))
+  );
 }
 
 /**
@@ -234,6 +245,15 @@ export function createEntityStore<T extends IdEntity>(
               isFetchingRef.current = false;
               return;
             }
+            if (opts.allowMissingTable && isMissingSupabaseTable(error.message)) {
+              if (isMountedRef.current) {
+                setError(null);
+                const cached = loadFromStorage<T[]>(storageKey, []);
+                setItems(cached);
+                itemsRef.current = cached;
+              }
+              return;
+            }
             console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
             if (isMountedRef.current) setError(error.message);
             // Fallback to localStorage cache only (never mock data in Supabase mode)
@@ -263,6 +283,15 @@ export function createEntityStore<T extends IdEntity>(
           const msg = err instanceof Error ? err.message : String(err);
           // Suppress AbortError from React strict mode or navigation
           if (msg.includes("AbortError") || msg.includes("aborted")) {
+            return;
+          }
+          if (opts.allowMissingTable && isMissingSupabaseTable(msg)) {
+            if (isMountedRef.current) {
+              setError(null);
+              const cached = loadFromStorage<T[]>(storageKey, []);
+              setItems(cached);
+              itemsRef.current = cached;
+            }
             return;
           }
           console.warn(`[Harmoniq] Fetch ${table} failed:`, msg);
