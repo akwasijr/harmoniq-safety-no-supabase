@@ -182,7 +182,7 @@ export default function WorkOrderDetailPage() {
         title: "Work Order Assigned",
         message: `You have been assigned to work order "${order.title}"`,
         type: "work_order_assignment",
-        source: "work_orders",
+        source: "work_order",
         source_id: order.id,
         read: false,
         created_at: new Date().toISOString(),
