@@ -2,41 +2,37 @@
 
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Wrench, Calendar, User as UserIcon, AlertTriangle, Clock, FileText, Package, CheckCircle, MapPin, ScanLine } from "lucide-react";
+import {
+  ArrowLeft, MapPin, Package, ScanLine, Calendar, User as UserIcon,
+  AlertTriangle, CheckCircle, Navigation, Clock, ChevronDown, ChevronUp,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useAssetsStore } from "@/stores/assets-store";
+import { useLocationsStore } from "@/stores/locations-store";
 import { usePartsStore } from "@/stores/parts-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
-import { TaskDetailHeader, PRIORITY_CONFIG } from "@/components/tasks/task-detail-header";
-import { TaskInfoCard } from "@/components/tasks/task-info-card";
-import { TaskStatusActions } from "@/components/tasks/task-status-actions";
-import { TaskDetailTabs } from "@/components/tasks/task-detail-tabs";
-import { TaskComments, loadComments } from "@/components/tasks/task-comments";
-import { TaskDocuments } from "@/components/tasks/task-documents";
-import { WorkOrderWorkLog } from "@/components/tasks/work-order-work-log";
-import { StatusPipeline } from "@/components/work-orders/status-pipeline";
-import { getFilesForEntity } from "@/lib/file-storage";
-import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
-import { useLocationsStore } from "@/stores/locations-store";
 import { useWorkOrderStatusLogStore } from "@/stores/work-order-status-log-store";
-import { ArrowLeft } from "lucide-react";
+import { WorkOrderWorkLog } from "@/components/tasks/work-order-work-log";
+import { TaskComments } from "@/components/tasks/task-comments";
+import { TaskDocuments } from "@/components/tasks/task-documents";
+import { capitalize } from "@/lib/utils";
+import { hasValidCoordinates } from "@/lib/map-utils";
 import type { WorkOrderStatus } from "@/types";
 
 export default function WorkOrderDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const rawCompany = params.company;
-  const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
-  const rawOrderId = params.orderId;
-  const orderId = typeof rawOrderId === "string" ? rawOrderId : Array.isArray(rawOrderId) ? rawOrderId[0] : "";
+  const company = typeof params.company === "string" ? params.company : "";
+  const orderId = typeof params.orderId === "string" ? params.orderId : "";
 
   const { user } = useAuth();
   const { t, formatDate, formatNumber } = useTranslation();
@@ -49,136 +45,225 @@ export default function WorkOrderDetailPage() {
   const { items: locations } = useLocationsStore();
   const { add: addStatusLog } = useWorkOrderStatusLogStore();
 
-  const [activeTab, setActiveTab] = React.useState("details");
-  const [assetVerified, setAssetVerified] = React.useState(false);
+  const [completionNotes, setCompletionNotes] = React.useState("");
+  const [showWorkDetails, setShowWorkDetails] = React.useState(false);
+  const mapRef = React.useRef<HTMLDivElement>(null);
 
-  const matchedOrder = orders.find((o) => o.id === orderId);
-  const order =
-    matchedOrder &&
-    user?.company_id &&
-    matchedOrder.company_id === user.company_id
-      ? matchedOrder
-      : undefined;
+  const order = orders.find((o) => o.id === orderId && o.company_id === user?.company_id);
   const assignee = order?.assigned_to ? users.find((u) => u.id === order.assigned_to) : null;
-  const requester = order?.requested_by ? users.find((u) => u.id === order.requested_by) : null;
   const asset = order?.asset_id ? assets.find((a) => a.id === order.asset_id) : null;
   const location = asset?.location_id ? locations.find((l) => l.id === asset.location_id) : null;
+  const hasGps = location && hasValidCoordinates(location.gps_lat, location.gps_lng);
 
-  const isOverdue = React.useMemo(() => {
-    if (!order?.due_date) return false;
-    if (["completed", "cancelled"].includes(order.status)) return false;
-    return new Date(order.due_date) < new Date();
-  }, [order]);
+  const isInProgress = order?.status === "in_progress";
+  const isCompleted = order?.status === "completed";
+  const isOverdue = order?.due_date && !["completed", "cancelled"].includes(order?.status || "") && new Date(order.due_date) < new Date();
 
-  const commentCount = React.useMemo(() => loadComments("work-order", orderId).length, [orderId]);
-  const docCount = React.useMemo(() => getFilesForEntity("work-order", orderId).length, [orderId]);
+  // Initialize map
+  React.useEffect(() => {
+    if (!hasGps || !mapRef.current || !location) return;
+    const L = require("leaflet");
+    require("leaflet/dist/leaflet.css");
+
+    const map = L.map(mapRef.current, { zoomControl: false, attributionControl: false })
+      .setView([location.gps_lat!, location.gps_lng!], 16);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+    L.circleMarker([location.gps_lat!, location.gps_lng!], {
+      radius: 8, fillColor: "#2563eb", fillOpacity: 1, color: "#fff", weight: 2,
+    }).addTo(map);
+
+    return () => { map.remove(); };
+  }, [hasGps, location]);
 
   const handleStatusChange = React.useCallback(
-    (targetStatus: string) => {
+    (targetStatus: WorkOrderStatus) => {
       if (!order) return;
-      // Log the status change
       addStatusLog({
         id: crypto.randomUUID(),
         work_order_id: orderId,
         from_status: order.status,
-        to_status: targetStatus as WorkOrderStatus,
-        comment: "",
+        to_status: targetStatus,
+        comment: completionNotes,
         changed_by: user?.id || "",
         changed_at: new Date().toISOString(),
       });
-
-      const updates: Partial<typeof order & Record<string, unknown>> = {
-        status: targetStatus as WorkOrderStatus,
+      const updates: Record<string, unknown> = {
+        status: targetStatus,
         updated_at: new Date().toISOString(),
       };
       if (targetStatus === "completed") updates.completed_at = new Date().toISOString();
       updateOrder(orderId, updates as never);
       toast("Status updated", "success");
     },
-    [orderId, order, user, updateOrder, addStatusLog, toast],
+    [orderId, order, user, completionNotes, updateOrder, addStatusLog, toast],
   );
+
+  const openInMaps = () => {
+    if (!location?.gps_lat || !location?.gps_lng) return;
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${location.gps_lat},${location.gps_lng}`, "_blank");
+  };
 
   if (isLoading && orders.length === 0) return <LoadingPage />;
 
   if (!order) {
     return (
       <EmptyState
-        icon={AlertTriangle}
-        title="Work Order Not Found"
-        description="This work order may have been deleted or you don't have access."
-        action={<Button variant="outline" onClick={() => router.back()}><ArrowLeft className="h-4 w-4 mr-2" />Go Back</Button>}
+        icon={Package}
+        title="Work order not found"
+        description="This work order may have been deleted."
+        action={<Button variant="outline" onClick={() => router.back()}>Go back</Button>}
       />
     );
   }
 
-  const showAssetBanner = !assetVerified && order.asset_id && !["in_progress", "completed", "cancelled"].includes(order.status);
-
-  const priorityConf = PRIORITY_CONFIG[order.priority];
-
-  const typeLabel = order.type?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-
-  const tabs = [
-    { id: "details", label: "Details" },
-    { id: "worklog", label: "Work Log" },
-    { id: "activity", label: "Activity", count: commentCount },
-    { id: "files", label: "Files", count: docCount },
-  ];
+  const typeLabel = capitalize((order.type || "service_request").replace(/_/g, " "));
 
   return (
-    <div className="flex flex-col min-h-full bg-background">
-      <TaskDetailHeader title={order.title} status={order.status} overdue={isOverdue} />
-
-      {isOverdue && (
-        <div className="mx-4 mt-3 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-3 py-2">
-          <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
-          <p className="text-xs font-medium text-red-700 dark:text-red-300">
-            Overdue — due {formatDate(new Date(order.due_date!), { month: "short", day: "numeric" })}
-          </p>
+    <div className="flex flex-col min-h-full bg-background pb-safe">
+      {/* App header */}
+      <div className="sticky top-0 z-10 border-b bg-background px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.back()} className="shrink-0 p-1 -ml-1 rounded-md hover:bg-muted">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold truncate">{order.title}</p>
+          </div>
+          <Badge variant={isCompleted ? "completed" : isInProgress ? "info" : "secondary"}>
+            {capitalize(order.status.replace(/_/g, " "))}
+          </Badge>
         </div>
-      )}
+      </div>
 
-      <TaskDetailTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-
-      <div className="flex-1 px-4 py-4 space-y-4">
-        {activeTab === "details" && (
-          <>
-            {/* Instructions first — the most important thing */}
-            <Card>
-              <CardContent className="pt-4">
-                <p className="text-sm whitespace-pre-wrap">{order.description || "No instructions provided."}</p>
-              </CardContent>
-            </Card>
-
-            {/* Asset & location */}
-            <TaskInfoCard rows={[
-              ...(asset ? [{ icon: Package, label: "Asset", value: asset.name }] : []),
-              ...(location ? [{ icon: MapPin, label: "Location", value: location.name }] : []),
-              ...(order.due_date ? [{ icon: Calendar, label: "Due date", value: formatDate(new Date(order.due_date), { month: "short", day: "numeric", year: "numeric" }), valueClassName: isOverdue ? "text-red-600 dark:text-red-400" : undefined }] : []),
-              { icon: UserIcon, label: "Assigned to", value: assignee?.full_name || "Unassigned" },
-            ]} />
-
-            {/* Asset scan/verify */}
-            {showAssetBanner && (
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => router.push(`/${company}/app/scan`)}>
-                  <ScanLine className="h-3.5 w-3.5" /> Scan asset QR
-                </Button>
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => setAssetVerified(true)}>
-                  Confirm asset
-                </Button>
-              </div>
+      <div className="flex-1 overflow-y-auto">
+        {/* Summary */}
+        <div className="px-4 pt-4 pb-3 space-y-2">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>{typeLabel}</span>
+            <span>·</span>
+            <span>{capitalize(order.priority)} priority</span>
+            {order.due_date && (
+              <>
+                <span>·</span>
+                <span className={isOverdue ? "text-red-600 dark:text-red-400 font-medium" : ""}>
+                  Due {formatDate(order.due_date)}
+                </span>
+              </>
             )}
+          </div>
+          <p className="text-sm">{order.description || "No description provided."}</p>
+          {assignee && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <UserIcon className="h-3 w-3" /> Assigned to {assignee.full_name || `${assignee.first_name} ${assignee.last_name}`}
+            </p>
+          )}
+        </div>
 
-            {/* Status actions */}
-            <TaskStatusActions kind="work-order" currentStatus={order.status} onStatusChange={handleStatusChange} />
-          </>
+        {/* Location section */}
+        <div className="border-t">
+          {hasGps ? (
+            <>
+              <div ref={mapRef} className="h-40 w-full" />
+              <button
+                onClick={openInMaps}
+                className="flex items-center gap-2 px-4 py-3 w-full text-left hover:bg-muted/50 transition-colors border-b"
+              >
+                <Navigation className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">{location!.name}</p>
+                  {location!.address && <p className="text-xs text-muted-foreground">{location!.address}</p>}
+                </div>
+                <span className="text-xs text-muted-foreground">Navigate</span>
+              </button>
+            </>
+          ) : location ? (
+            <div className="flex items-center gap-3 px-4 py-3 border-b">
+              <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{location.name}</p>
+                {location.address && <p className="text-xs text-muted-foreground">{location.address}</p>}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Asset identification */}
+        {asset && (
+          <div className="border-b">
+            <div className="flex items-center gap-3 px-4 py-3">
+              <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{asset.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {[asset.asset_tag, asset.serial_number && `SN: ${asset.serial_number}`].filter(Boolean).join(" · ") || "No identifier"}
+                </p>
+              </div>
+              <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={() => router.push(`/${company}/app/scan`)}>
+                <ScanLine className="h-3.5 w-3.5" /> Scan
+              </Button>
+            </div>
+          </div>
         )}
 
-        {activeTab === "worklog" && (
-          <WorkOrderWorkLog workOrder={order} parts={parts} onUpdate={updateOrder as never} formatNumber={formatNumber} />
-        )}
-        {activeTab === "activity" && <TaskComments entityType="work-order" entityId={orderId} formatDate={formatDate} />}
-        {activeTab === "files" && <TaskDocuments entityType="work-order" entityId={orderId} formatDate={formatDate} />}
+        {/* Main action */}
+        <div className="px-4 py-4">
+          {!isInProgress && !isCompleted && (
+            <Button className="w-full" size="lg" onClick={() => handleStatusChange("in_progress")}>
+              Start work
+            </Button>
+          )}
+
+          {isInProgress && !showWorkDetails && (
+            <div className="space-y-3">
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() => setShowWorkDetails(true)}
+              >
+                <ChevronDown className="h-4 w-4 mr-2" /> Log work details
+              </Button>
+              <Button className="w-full" size="lg" onClick={() => handleStatusChange("completed")}>
+                <CheckCircle className="h-4 w-4 mr-2" /> Mark as complete
+              </Button>
+            </div>
+          )}
+
+          {isInProgress && showWorkDetails && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Work details</p>
+                <button onClick={() => setShowWorkDetails(false)} className="text-xs text-muted-foreground hover:text-foreground">
+                  <ChevronUp className="h-4 w-4 inline" /> Hide
+                </button>
+              </div>
+
+              <WorkOrderWorkLog workOrder={order} parts={parts} onUpdate={updateOrder as never} formatNumber={formatNumber} />
+
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Completion notes</p>
+                <Textarea
+                  placeholder="Describe what was done..."
+                  value={completionNotes}
+                  onChange={(e) => setCompletionNotes(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <Button className="w-full" size="lg" onClick={() => { handleStatusChange("completed"); router.back(); }}>
+                <CheckCircle className="h-4 w-4 mr-2" /> Mark as complete
+              </Button>
+            </div>
+          )}
+
+          {isCompleted && (
+            <div className="text-center py-4">
+              <CheckCircle className="h-8 w-8 text-[#059669] mx-auto mb-2" />
+              <p className="font-medium">Work order completed</p>
+              {order.completed_at && <p className="text-sm text-muted-foreground mt-1">{formatDate(order.completed_at)}</p>}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
