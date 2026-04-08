@@ -19,6 +19,8 @@ import {
   Package,
   DollarSign,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,15 +60,12 @@ const STATUS_FLOW: Record<string, string[]> = {
 
 const STATUS_COLORS = WORK_ORDER_STATUS_COLORS;
 
-const STATUS_ICONS: Record<string, typeof Clock> = {
-  waiting_approval: ClipboardList,
-  waiting_material: Clock,
-  approved: CheckCircle,
-  scheduled: Calendar,
-  in_progress: Clock,
-  completed: CheckCircle,
-  cancelled: X,
-};
+const NAV_ITEMS = [
+  { id: "summary", label: "Summary" },
+  { id: "related-records", label: "Related records" },
+  { id: "work-log", label: "Work log" },
+  { id: "status-history", label: "Status history" },
+];
 
 export default function WorkOrderDetailPage() {
   const router = useRouter();
@@ -92,6 +91,7 @@ export default function WorkOrderDetailPage() {
 
   const [isEditing, setIsEditing] = React.useState(false);
   const [showStatusModal, setShowStatusModal] = React.useState(false);
+  const [activeSection, setActiveSection] = React.useState("summary");
   const [editForm, setEditForm] = React.useState({
     title: "",
     description: "",
@@ -99,6 +99,12 @@ export default function WorkOrderDetailPage() {
   });
 
   const highlightRef = React.useRef<HTMLDivElement>(null);
+
+  // Record navigation: determine position in the orders list
+  const currentOrderIndex = orders.findIndex((o) => o.id === workOrderId);
+  const totalOrders = orders.length;
+  const prevOrderId = currentOrderIndex > 0 ? orders[currentOrderIndex - 1].id : null;
+  const nextOrderId = currentOrderIndex < totalOrders - 1 ? orders[currentOrderIndex + 1].id : null;
 
   React.useEffect(() => {
     if (order) {
@@ -115,6 +121,28 @@ export default function WorkOrderDetailPage() {
       highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [highlight]);
+
+  // Track active section via scroll
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const sections = NAV_ITEMS.map((item) => ({
+        id: item.id,
+        el: document.getElementById(item.id),
+      }));
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const el = sections[i].el;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 120) {
+            setActiveSection(sections[i].id);
+            break;
+          }
+        }
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const getAssetName = (id: string | null) => {
     if (!id) return null;
@@ -219,6 +247,13 @@ export default function WorkOrderDetailPage() {
     toast(newDate ? `Due date set to ${formatDate(newDate)}` : "Due date removed");
   };
 
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   if (!isLoading && !order) {
     return (
       <EmptyState
@@ -227,7 +262,7 @@ export default function WorkOrderDetailPage() {
         description="This work order may have been removed."
         action={
           <Button variant="outline" size="sm" onClick={() => router.push(`/${company}/dashboard/work-orders`)}>
-            Back to Work Orders
+            Back to work orders
           </Button>
         }
       />
@@ -242,58 +277,77 @@ export default function WorkOrderDetailPage() {
   const linkedInspection = linkedCorrectiveAction?.inspection_id
     ? inspections.find((inspection) => inspection.id === linkedCorrectiveAction.inspection_id) || null
     : null;
-  const StatusIcon = STATUS_ICONS[order.status] || Clock;
   const nextStatuses = STATUS_FLOW[order.status] || [];
   const totalCost = (order.parts_cost || 0) + (order.labor_cost || 0);
+  const woNumber = `WO-${order.id.substring(0, 8).toUpperCase()}`;
+
+  const priorityBadgeVariant = (
+    order.priority === "critical" || order.priority === "high"
+      ? "destructive"
+      : order.priority === "medium"
+        ? "secondary"
+        : "outline"
+  ) as "destructive" | "secondary" | "outline";
 
   return (
     <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6" ref={highlight ? highlightRef : undefined}>
+      {/* Record navigation */}
+      {totalOrders > 1 && currentOrderIndex >= 0 && (
+        <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
+          <span>{currentOrderIndex + 1} of {totalOrders}</span>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            disabled={!prevOrderId}
+            onClick={() => prevOrderId && router.push(`/${company}/dashboard/work-orders/${prevOrderId}`)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            disabled={!nextOrderId}
+            onClick={() => nextOrderId && router.push(`/${company}/dashboard/work-orders/${nextOrderId}`)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start gap-4">
         <Button variant="ghost" size="icon" className="mt-1 shrink-0" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
+
         <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <Input
-              className="text-xl font-semibold"
-              value={editForm.title}
-              onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
-            />
-          ) : (
-            <h1 className="text-2xl font-semibold truncate">{order.title}</h1>
-          )}
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <Badge
-              variant={STATUS_COLORS[order.status] as "success" | "warning" | "secondary" | "destructive"}
-              className="gap-1"
-            >
-              <StatusIcon className="h-3 w-3" />
+          <div className="flex items-center gap-3 flex-wrap">
+            {isEditing ? (
+              <Input
+                className="text-xl font-semibold flex-1"
+                value={editForm.title}
+                onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+              />
+            ) : (
+              <h1 className="text-2xl font-semibold truncate">{order.title}</h1>
+            )}
+            <span className="text-sm font-mono text-muted-foreground shrink-0">{woNumber}</span>
+          </div>
+
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <Badge variant={STATUS_COLORS[order.status] as "success" | "secondary" | "destructive" | "info" | "in_progress" | "completed" | "cancelled"}>
               {capitalize(order.status.replace(/_/g, " "))}
             </Badge>
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline">
               {capitalize((order.type || "service_request").replace(/_/g, " "))}
             </Badge>
-            <Badge
-              variant={
-                order.priority === "critical" || order.priority === "high"
-                  ? "destructive"
-                  : order.priority === "medium"
-                    ? "warning"
-                    : "secondary"
-              }
-            >
+            <Badge variant={priorityBadgeVariant}>
               {capitalize(order.priority)}
             </Badge>
-            {order.due_date && (
-              <span className="text-sm text-muted-foreground flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {t("workOrders.labels.dueDate")}: {formatDate(order.due_date)}
-              </span>
-            )}
           </div>
         </div>
+
         <div className="flex gap-2 shrink-0">
           {canEdit && (
             <>
@@ -309,24 +363,20 @@ export default function WorkOrderDetailPage() {
               )}
             </>
           )}
+          {nextStatuses.length > 0 && (canEdit || canComplete) && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowStatusModal(true)}
+            >
+              Change status
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Status pipeline */}
-      <StatusPipeline currentStatus={order.status} />
-
-      {/* Status change action */}
-      {nextStatuses.length > 0 && (canEdit || canComplete) && (
-        <div className="flex justify-end">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setShowStatusModal(true)}
-          >
-            Change status
-          </Button>
-        </div>
-      )}
+      <StatusPipeline currentStatus={order.status} statusDate={order.updated_at} />
 
       {/* Status change modal */}
       <StatusChangeModal
@@ -339,278 +389,340 @@ export default function WorkOrderDetailPage() {
         onCancel={() => setShowStatusModal(false)}
       />
 
-      {/* Main content grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left: description + notes */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t("workOrders.labels.description")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isEditing ? (
-                <Textarea
-                  value={editForm.description}
-                  onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
-                  rows={4}
-                />
-              ) : (
-                <p className="text-muted-foreground whitespace-pre-wrap">{order.description}</p>
-              )}
-            </CardContent>
-          </Card>
+      {/* Main content with sidebar nav */}
+      <div className="flex gap-6">
+        {/* Left sidebar navigation */}
+        <nav className="hidden lg:block w-44 shrink-0">
+          <div className="sticky top-20 space-y-0.5">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
+                  activeSection === item.id
+                    ? "border-l-2 border-foreground font-medium text-foreground bg-muted/50"
+                    : "border-l-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </nav>
 
-          {/* Parts used */}
-          {order.parts_used && order.parts_used.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  {t("workOrders.labels.partsUsed")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {order.parts_used.map((pu) => {
-                    const part = parts.find((p) => p.id === pu.part_id);
-                    return (
-                      <div key={pu.part_id} className="flex items-center justify-between text-sm rounded-lg border p-3">
-                        <div>
-                          <span className="font-medium">{part?.name || "Unknown part"}</span>
-                          {part?.part_number && (
-                            <span className="text-muted-foreground ml-2">({part.part_number})</span>
-                          )}
-                        </div>
-                        <div className="text-muted-foreground">
-                          Qty: {pu.quantity} {part?.unit_cost != null && `• $${(part.unit_cost * pu.quantity).toFixed(2)}`}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {order.parts_cost != null && order.parts_cost > 0 && (
-                    <div className="pt-2 border-t mt-2 text-sm font-medium flex justify-between">
-                      <span>{t("workOrders.labels.totalCost")}:</span>
-                      <span>${formatNumber(order.parts_cost)}</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+        {/* Main content area */}
+        <div className="flex-1 min-w-0 space-y-8">
+          {/* Summary section */}
+          <section id="summary">
+            <h2 className="text-lg font-semibold mb-4">Summary</h2>
 
-          {/* Cost summary */}
-          {totalCost > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
-                  {t("workOrders.labels.totalCost")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  {order.parts_cost != null && order.parts_cost > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t("workOrders.labels.partsUsed")}</span>
-                      <span>${formatNumber(order.parts_cost)}</span>
-                    </div>
-                  )}
-                  {order.labor_cost != null && order.labor_cost > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t("workOrders.detail.laborCost")}</span>
-                      <span>${formatNumber(order.labor_cost)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-2 border-t font-medium">
-                    <span>{t("workOrders.labels.totalCost")}</span>
-                    <span>${formatNumber(totalCost)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Right sidebar */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t("workOrders.detail.title")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-muted-foreground">{t("workOrders.detail.requestedBy")}</Label>
-                <p className="font-medium flex items-center gap-2 mt-0.5">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  {getUserName(order.requested_by)}
-                </p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground">{t("workOrders.detail.assignedTo")}</Label>
-                {canAssign ? (
-                  <Select
-                    value={order.assigned_to || "__none__"}
-                    onValueChange={handleAssignedToChange}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder={t("common.none")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">{t("common.none")}</SelectItem>
-                      {users.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.first_name} {u.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="font-medium flex items-center gap-2 mt-0.5">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    {getUserName(order.assigned_to)}
-                  </p>
-                )}
-              </div>
-              {asset && (
-                <div>
-                  <Label className="text-muted-foreground">{t("workOrders.detail.relatedAsset")}</Label>
-                  <Link
-                    href={`/${company}/dashboard/assets/${asset.id}`}
-                    className="font-medium text-primary hover:underline flex items-center gap-2 mt-0.5"
-                  >
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    {asset.name}
-                  </Link>
-                </div>
-              )}
-              {linkedCorrectiveAction && (
-                <div>
-                  <Label className="text-muted-foreground">Linked corrective action</Label>
-                  <Link
-                    href={`/${company}/dashboard/corrective-actions/${linkedCorrectiveAction.id}`}
-                    className="font-medium text-primary hover:underline flex items-start gap-2 mt-0.5"
-                  >
-                    <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <span className="line-clamp-2">{linkedCorrectiveAction.description}</span>
-                  </Link>
-                </div>
-              )}
-              {linkedInspection && (
-                <div>
-                  <Label className="text-muted-foreground">Source inspection</Label>
-                  <Link
-                    href={`/${company}/dashboard/inspections/${linkedInspection.id}`}
-                    className="font-medium text-primary hover:underline flex items-center gap-2 mt-0.5"
-                  >
-                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                    Inspection {linkedInspection.id}
-                  </Link>
-                </div>
-              )}
-              <div>
-                <Label className="text-muted-foreground">{t("workOrders.labels.priority")}</Label>
-                {canEdit ? (
-                  <Select
-                    value={order.priority}
-                    onValueChange={handlePriorityChange}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="font-medium capitalize mt-0.5">{order.priority}</p>
-                )}
-              </div>
-              <div>
-                <Label className="text-muted-foreground">{t("workOrders.labels.dueDate")}</Label>
-                {canEdit ? (
-                  <Input
-                    type="date"
-                    className="mt-1"
-                    value={order.due_date ? order.due_date.split("T")[0] : ""}
-                    onChange={(e) => handleDueDateChange(e.target.value)}
-                  />
-                ) : (
-                  <p className="font-medium mt-0.5">{order.due_date ? formatDate(order.due_date) : "—"}</p>
-                )}
-              </div>
-              {order.estimated_hours != null && (
-                <div>
-                  <Label className="text-muted-foreground">{t("workOrders.labels.estimatedHours")}</Label>
-                  <p className="font-medium mt-0.5">{order.estimated_hours}h</p>
-                </div>
-              )}
-              {order.actual_hours != null && (
-                <div>
-                  <Label className="text-muted-foreground">{t("workOrders.detail.actualHours")}</Label>
-                  <p className="font-medium mt-0.5">{order.actual_hours}h</p>
-                </div>
-              )}
-              <div>
-                <Label className="text-muted-foreground">{t("workOrders.detail.created")}</Label>
-                <p className="font-medium mt-0.5">{formatDate(order.created_at)}</p>
-              </div>
-              {order.completed_at && (
-                <div>
-                  <Label className="text-muted-foreground">{t("workOrders.detail.completedAt")}</Label>
-                  <p className="font-medium mt-0.5">{formatDate(order.completed_at)}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Status audit log */}
-      {orderStatusLog.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Status history</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[...orderStatusLog]
-                .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
-                .map((entry) => (
-                  <div key={entry.id} className="flex items-start gap-3 text-sm">
-                    <div className="flex flex-col items-center pt-1">
-                      <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
-                      <div className="w-px flex-1 bg-border mt-1" />
-                    </div>
-                    <div className="flex-1 min-w-0 pb-3">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {entry.from_status && (
-                          <>
-                            <Badge variant={WORK_ORDER_STATUS_COLORS[entry.from_status] || "secondary"} className="text-[10px]">
-                              {capitalize(entry.from_status.replace(/_/g, " "))}
-                            </Badge>
-                            <span className="text-muted-foreground text-xs">→</span>
-                          </>
-                        )}
-                        <Badge variant={WORK_ORDER_STATUS_COLORS[entry.to_status] || "secondary"} className="text-[10px]">
-                          {capitalize(entry.to_status.replace(/_/g, " "))}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {getUserName(entry.changed_by)} · {formatDate(entry.changed_at)}
+            <div className="grid gap-6 sm:grid-cols-2">
+              {/* Summary grid */}
+              <Card>
+                <CardContent className="pt-5 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground text-xs">Type</Label>
+                      <p className="font-medium text-sm mt-0.5">
+                        {capitalize((order.type || "service_request").replace(/_/g, " "))}
                       </p>
-                      {entry.comment && (
-                        <p className="text-xs text-muted-foreground mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-xs">{t("workOrders.labels.priority")}</Label>
+                      {canEdit ? (
+                        <Select value={order.priority} onValueChange={handlePriorityChange}>
+                          <SelectTrigger className="mt-1 h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="critical">Critical</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="font-medium text-sm mt-0.5">{capitalize(order.priority)}</p>
                       )}
                     </div>
+                    <div>
+                      <Label className="text-muted-foreground text-xs">{t("workOrders.detail.requestedBy")}</Label>
+                      <p className="font-medium text-sm mt-0.5">{getUserName(order.requested_by)}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-xs">{t("workOrders.detail.assignedTo")}</Label>
+                      {canAssign ? (
+                        <Select value={order.assigned_to || "__none__"} onValueChange={handleAssignedToChange}>
+                          <SelectTrigger className="mt-1 h-8">
+                            <SelectValue placeholder={t("common.none")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">{t("common.none")}</SelectItem>
+                            {users.map((u) => (
+                              <SelectItem key={u.id} value={u.id}>
+                                {u.first_name} {u.last_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="font-medium text-sm mt-0.5">{getUserName(order.assigned_to)}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-xs">{t("workOrders.labels.dueDate")}</Label>
+                      {canEdit ? (
+                        <Input
+                          type="date"
+                          className="mt-1 h-8"
+                          value={order.due_date ? order.due_date.split("T")[0] : ""}
+                          onChange={(e) => handleDueDateChange(e.target.value)}
+                        />
+                      ) : (
+                        <p className="font-medium text-sm mt-0.5">{order.due_date ? formatDate(order.due_date) : "—"}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-xs">{t("workOrders.detail.created")}</Label>
+                      <p className="font-medium text-sm mt-0.5">{formatDate(order.created_at)}</p>
+                    </div>
                   </div>
-                ))}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-5 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground text-xs">{t("workOrders.labels.estimatedHours")}</Label>
+                      <p className="font-medium text-sm mt-0.5">
+                        {order.estimated_hours != null ? `${order.estimated_hours}h` : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-xs">{t("workOrders.detail.actualHours")}</Label>
+                      <p className="font-medium text-sm mt-0.5">
+                        {order.actual_hours != null ? `${order.actual_hours}h` : "—"}
+                      </p>
+                    </div>
+                    {order.completed_at && (
+                      <div className="col-span-2">
+                        <Label className="text-muted-foreground text-xs">{t("workOrders.detail.completedAt")}</Label>
+                        <p className="font-medium text-sm mt-0.5">{formatDate(order.completed_at)}</p>
+                      </div>
+                    )}
+                    {totalCost > 0 && (
+                      <>
+                        {order.parts_cost != null && order.parts_cost > 0 && (
+                          <div>
+                            <Label className="text-muted-foreground text-xs">{t("workOrders.labels.partsUsed")} cost</Label>
+                            <p className="font-medium text-sm mt-0.5">${formatNumber(order.parts_cost)}</p>
+                          </div>
+                        )}
+                        {order.labor_cost != null && order.labor_cost > 0 && (
+                          <div>
+                            <Label className="text-muted-foreground text-xs">{t("workOrders.detail.laborCost")}</Label>
+                            <p className="font-medium text-sm mt-0.5">${formatNumber(order.labor_cost)}</p>
+                          </div>
+                        )}
+                        <div className="col-span-2 pt-2 border-t">
+                          <Label className="text-muted-foreground text-xs">{t("workOrders.labels.totalCost")}</Label>
+                          <p className="font-semibold text-sm mt-0.5">${formatNumber(totalCost)}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
-      )}
+
+            {/* Description */}
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="text-base">{t("workOrders.labels.description")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isEditing ? (
+                  <Textarea
+                    value={editForm.description}
+                    onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
+                    rows={4}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{order.description}</p>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Related records section */}
+          <section id="related-records">
+            <h2 className="text-lg font-semibold mb-4">Related records</h2>
+            <Card>
+              <CardContent className="pt-5 space-y-4">
+                <div>
+                  <Label className="text-muted-foreground text-xs">Asset</Label>
+                  {asset ? (
+                    <Link
+                      href={`/${company}/dashboard/assets/${asset.id}`}
+                      className="block font-medium text-sm text-primary hover:underline mt-0.5"
+                    >
+                      {asset.name}
+                    </Link>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-0.5">—</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="text-muted-foreground text-xs">Corrective action</Label>
+                  {linkedCorrectiveAction ? (
+                    <Link
+                      href={`/${company}/dashboard/corrective-actions/${linkedCorrectiveAction.id}`}
+                      className="block font-medium text-sm text-primary hover:underline mt-0.5 line-clamp-2"
+                    >
+                      {linkedCorrectiveAction.description}
+                    </Link>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-0.5">—</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="text-muted-foreground text-xs">Source inspection</Label>
+                  {linkedInspection ? (
+                    <Link
+                      href={`/${company}/dashboard/inspections/${linkedInspection.id}`}
+                      className="block font-medium text-sm text-primary hover:underline mt-0.5"
+                    >
+                      Inspection {linkedInspection.id.substring(0, 8)}
+                    </Link>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-0.5">—</p>
+                  )}
+                </div>
+
+                {/* Parts used */}
+                {order.parts_used && order.parts_used.length > 0 && (
+                  <div>
+                    <Label className="text-muted-foreground text-xs mb-2 block">Parts used</Label>
+                    <div className="space-y-2">
+                      {order.parts_used.map((pu) => {
+                        const part = parts.find((p) => p.id === pu.part_id);
+                        return (
+                          <div key={pu.part_id} className="flex items-center justify-between text-sm rounded-lg border p-3">
+                            <div>
+                              <span className="font-medium">{part?.name || "Unknown part"}</span>
+                              {part?.part_number && (
+                                <span className="text-muted-foreground ml-2">({part.part_number})</span>
+                              )}
+                            </div>
+                            <div className="text-muted-foreground">
+                              Qty: {pu.quantity} {part?.unit_cost != null && `· $${(part.unit_cost * pu.quantity).toFixed(2)}`}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Work log section */}
+          <section id="work-log">
+            <h2 className="text-lg font-semibold mb-4">Work log</h2>
+            <Card>
+              <CardContent className="pt-5">
+                <div className="space-y-3 text-sm">
+                  {order.estimated_hours != null && (
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-muted-foreground">Estimated hours</span>
+                      <span className="font-medium">{order.estimated_hours}h</span>
+                    </div>
+                  )}
+                  {order.actual_hours != null && (
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-muted-foreground">Actual hours</span>
+                      <span className="font-medium">{order.actual_hours}h</span>
+                    </div>
+                  )}
+                  {totalCost > 0 && (
+                    <>
+                      {order.parts_cost != null && order.parts_cost > 0 && (
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Parts cost</span>
+                          <span className="font-medium">${formatNumber(order.parts_cost)}</span>
+                        </div>
+                      )}
+                      {order.labor_cost != null && order.labor_cost > 0 && (
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Labor cost</span>
+                          <span className="font-medium">${formatNumber(order.labor_cost)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between py-2 font-medium">
+                        <span>Total cost</span>
+                        <span>${formatNumber(totalCost)}</span>
+                      </div>
+                    </>
+                  )}
+                  {order.estimated_hours == null && order.actual_hours == null && totalCost === 0 && (
+                    <p className="text-muted-foreground py-4 text-center">No work log entries yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Status history section */}
+          <section id="status-history">
+            <h2 className="text-lg font-semibold mb-4">Status history</h2>
+            <Card>
+              <CardContent className="pt-5">
+                {orderStatusLog.length > 0 ? (
+                  <div className="space-y-3">
+                    {[...orderStatusLog]
+                      .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
+                      .map((entry) => (
+                        <div key={entry.id} className="flex items-start gap-3 text-sm">
+                          <div className="flex flex-col items-center pt-1">
+                            <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+                            <div className="w-px flex-1 bg-border mt-1" />
+                          </div>
+                          <div className="flex-1 min-w-0 pb-3">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {entry.from_status && (
+                                <>
+                                  <Badge variant={WORK_ORDER_STATUS_COLORS[entry.from_status] || "secondary"} className="text-[10px]">
+                                    {capitalize(entry.from_status.replace(/_/g, " "))}
+                                  </Badge>
+                                  <span className="text-muted-foreground text-xs">→</span>
+                                </>
+                              )}
+                              <Badge variant={WORK_ORDER_STATUS_COLORS[entry.to_status] || "secondary"} className="text-[10px]">
+                                {capitalize(entry.to_status.replace(/_/g, " "))}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {getUserName(entry.changed_by)} · {formatDate(entry.changed_at)}
+                            </p>
+                            {entry.comment && (
+                              <p className="text-xs text-muted-foreground mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">No status changes recorded</p>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+        </div>
+      </div>
     </div>
     </RoleGuard>
   );
