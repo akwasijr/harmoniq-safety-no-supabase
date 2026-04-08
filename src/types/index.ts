@@ -1300,6 +1300,8 @@ export interface WorkOrder {
   title: string;
   description: string;
   type: WorkOrderType;
+  checklist_template_id?: string | null;
+  checklist_submission_id?: string | null;
   priority: WorkOrderPriority;
   status: WorkOrderStatus;
   requested_by: string;

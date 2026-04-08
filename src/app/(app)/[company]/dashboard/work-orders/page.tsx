@@ -51,12 +51,28 @@ const STATUS_FLOW: Record<string, string[]> = {
   cancelled: [],
 };
 
+function getTemplateKeywordsForWorkOrderType(type: WorkOrderType): string[] {
+  switch (type) {
+    case "inspection":
+      return ["inspection", "inspect", "check", "walkaround", "audit"];
+    case "preventive_maintenance":
+      return ["preventive", "maintenance", "pm", "service", "routine"];
+    case "corrective_maintenance":
+      return ["corrective", "repair", "fix", "maintenance"];
+    case "emergency":
+      return ["emergency", "repair", "response", "urgent"];
+    case "service_request":
+    default:
+      return ["service", "request", "repair", "task"];
+  }
+}
+
 export default function WorkOrdersPage() {
   const { t, formatDate, formatNumber } = useTranslation();
   const company = useCompanyParam();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { workOrders: orders, teams, assets, users, parts, stores } = useCompanyData();
+  const { workOrders: orders, teams, assets, users, parts, checklistTemplates, stores } = useCompanyData();
   const { add, update, isLoading } = stores.workOrders;
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
@@ -89,12 +105,50 @@ export default function WorkOrdersPage() {
     description: "",
     asset_id: "",
     type: "service_request" as string,
+    checklist_template_id: "",
     priority: "medium" as Priority,
     assigned_to: "",
     assigned_to_team_id: "",
     due_date: "",
     estimated_hours: "",
   });
+
+  const availableProcedureTemplates = React.useMemo(
+    () =>
+      checklistTemplates.filter(
+        (template) =>
+          template.is_active &&
+          template.publish_status !== "archived",
+      ),
+    [checklistTemplates],
+  );
+
+  const getRecommendedTemplateId = React.useCallback(
+    (type: WorkOrderType) => {
+      const keywords = getTemplateKeywordsForWorkOrderType(type);
+      const match = availableProcedureTemplates.find((template) => {
+        const haystack = [
+          template.name,
+          template.description || "",
+          template.category || "",
+          ...(template.tags || []),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return keywords.some((keyword) => haystack.includes(keyword));
+      });
+      return match?.id || "";
+    },
+    [availableProcedureTemplates],
+  );
+
+  React.useEffect(() => {
+    setForm((prev) => {
+      if (prev.checklist_template_id) return prev;
+      const recommended = getRecommendedTemplateId(prev.type as WorkOrderType);
+      return recommended ? { ...prev, checklist_template_id: recommended } : prev;
+    });
+  }, [getRecommendedTemplateId]);
 
   const filtered = orders.filter((o) => {
     if (statusFilter !== "all" && o.status !== statusFilter) return false;
@@ -131,6 +185,8 @@ export default function WorkOrdersPage() {
       description: form.description.trim(),
       priority: form.priority,
       type: form.type as WorkOrder["type"],
+      checklist_template_id: form.checklist_template_id || null,
+      checklist_submission_id: null,
       status: "waiting_approval" as const,
       requested_by: user?.id || "",
       assigned_to: form.assigned_to || null,
@@ -148,7 +204,18 @@ export default function WorkOrdersPage() {
     add(order);
     toast("Work order created");
     setShowCreate(false);
-    setForm({ title: "", description: "", asset_id: "", type: "service_request", priority: "medium", assigned_to: "", assigned_to_team_id: "", due_date: "", estimated_hours: "" });
+    setForm({
+      title: "",
+      description: "",
+      asset_id: "",
+      type: "service_request",
+      checklist_template_id: getRecommendedTemplateId("service_request"),
+      priority: "medium",
+      assigned_to: "",
+      assigned_to_team_id: "",
+      due_date: "",
+      estimated_hours: "",
+    });
   };
 
   const handleStatusChange = (id: string, newStatus: string) => {
@@ -420,7 +487,16 @@ export default function WorkOrdersPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label>Type</Label>
-                  <Select value={form.type} onValueChange={(v) => setForm((p) => ({ ...p, type: v }))}>
+                  <Select
+                    value={form.type}
+                    onValueChange={(v) =>
+                      setForm((p) => ({
+                        ...p,
+                        type: v,
+                        checklist_template_id: getRecommendedTemplateId(v as WorkOrderType),
+                      }))
+                    }
+                  >
                     <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {WORK_ORDER_TYPES.map((woType) => (
@@ -428,6 +504,31 @@ export default function WorkOrdersPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label>Procedure template</Label>
+                  <Select
+                    value={form.checklist_template_id || "__none__"}
+                    onValueChange={(v) =>
+                      setForm((p) => ({
+                        ...p,
+                        checklist_template_id: v === "__none__" ? "" : v,
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select procedure" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">No procedure selected</SelectItem>
+                      {availableProcedureTemplates.map((template) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Preselected from work order type. You can change it before sending.
+                  </p>
                 </div>
                 <div>
                   <Label>{t("workOrders.labels.priority")}</Label>

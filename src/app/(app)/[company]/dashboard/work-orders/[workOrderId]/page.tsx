@@ -71,7 +71,7 @@ export default function WorkOrderDetailPage() {
   const { t, formatDate, formatNumber } = useTranslation();
   const { user, hasPermission } = useAuth();
   const { toast } = useToast();
-  const { correctiveActions, inspections, workOrders: orders, assets, users, parts, companyId, stores } = useCompanyData();
+  const { correctiveActions, inspections, workOrders: orders, assets, users, parts, checklistTemplates, checklistSubmissions, companyId, stores } = useCompanyData();
   const { update, isLoading } = stores.workOrders;
 
   const canEdit = hasPermission("work_orders.edit");
@@ -235,6 +235,13 @@ export default function WorkOrderDetailPage() {
   const linkedInspection = linkedCorrectiveAction?.inspection_id
     ? inspections.find((inspection) => inspection.id === linkedCorrectiveAction.inspection_id) || null
     : null;
+  const linkedProcedureTemplate = order.checklist_template_id
+    ? checklistTemplates.find((template) => template.id === order.checklist_template_id) || null
+    : null;
+  const linkedProcedureSubmission = order.checklist_submission_id
+    ? checklistSubmissions.find((submission) => submission.id === order.checklist_submission_id) || null
+    : null;
+  const linkedProcedureFailCount = linkedProcedureSubmission?.responses.filter((response) => response.value === false).length ?? 0;
   const nextStatuses = STATUS_FLOW[order.status] || [];
   const totalCost = (order.parts_cost || 0) + (order.labor_cost || 0);
   const woNumber = `WO-${order.id.substring(0, 8).toUpperCase()}`;
@@ -541,6 +548,39 @@ export default function WorkOrderDetailPage() {
                     </Link>
                   ) : (
                     <p className="text-muted-foreground mt-0.5">—</p>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-muted-foreground">Procedure template</p>
+                  {linkedProcedureTemplate ? (
+                    <Link
+                      href={`/${company}/dashboard/checklists/${linkedProcedureTemplate.id}`}
+                      className="block font-medium text-primary hover:underline mt-0.5"
+                    >
+                      {linkedProcedureTemplate.name}
+                    </Link>
+                  ) : (
+                    <p className="text-muted-foreground mt-0.5">—</p>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-muted-foreground">Procedure result</p>
+                  {linkedProcedureSubmission ? (
+                    <div className="mt-0.5 space-y-1">
+                      <p className="font-medium">
+                        Submitted {linkedProcedureSubmission.submitted_at ? formatDate(linkedProcedureSubmission.submitted_at) : "—"}
+                      </p>
+                      <p className="text-muted-foreground">
+                        {linkedProcedureSubmission.responses.length} steps · {linkedProcedureFailCount} failed
+                      </p>
+                      {linkedProcedureSubmission.general_comments && (
+                        <p className="line-clamp-3 text-muted-foreground">{linkedProcedureSubmission.general_comments}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground mt-0.5">Not submitted yet</p>
                   )}
                 </div>
 
