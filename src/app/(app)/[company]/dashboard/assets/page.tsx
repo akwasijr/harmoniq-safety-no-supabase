@@ -26,6 +26,7 @@ import {
   ClipboardList,
   Cog,
   DollarSign,
+  Search,
   Shield,
   Activity,
 } from "lucide-react";
@@ -37,7 +38,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useFilterOptions } from "@/components/ui/filter-panel";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useCompanyData } from "@/hooks/use-company-data";
+import { useAuth } from "@/hooks/use-auth";
 import { LoadingPage } from "@/components/ui/loading";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
@@ -46,7 +51,10 @@ import { WORK_ORDER_STATUS_COLORS } from "@/lib/status-utils";
 import { DetailTabs } from "@/components/ui/detail-tabs";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 
-import type { Asset, Alert } from "@/types";
+import type { Asset, Alert, WorkOrder, CorrectiveAction, Part, Priority, Severity } from "@/types";
+import { WORK_ORDER_TYPES } from "@/types";
+import { formatStatusLabel } from "@/components/tasks/task-detail-header";
+import { getUserFirstLastName, getAssetDisplayName } from "@/lib/status-utils";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
 
@@ -64,6 +72,27 @@ export default function AssetsPage() {
   const [activeTab, setActiveTab] = React.useState<"assets" | "alerts" | "corrective-actions" | "work-orders" | "parts">("assets");
   const [alertSeverityFilter, setAlertSeverityFilter] = React.useState<string>("");
   const [stableNow] = React.useState(() => Date.now());
+
+  // Work Orders tab state
+  const [woSearch, setWoSearch] = React.useState("");
+  const [woStatusFilter, setWoStatusFilter] = React.useState("all");
+  const [woTypeFilter, setWoTypeFilter] = React.useState("all");
+  const [woPage, setWoPage] = React.useState(1);
+  const [showWoCreate, setShowWoCreate] = React.useState(false);
+  const [woForm, setWoForm] = React.useState({ title: "", description: "", asset_id: "", type: "service_request", priority: "medium" as Priority, due_date: "" });
+
+  // Parts tab state
+  const [partsSearch, setPartsSearch] = React.useState("");
+  const [partsPage, setPartsPage] = React.useState(1);
+  const [showPartsCreate, setShowPartsCreate] = React.useState(false);
+  const [partsForm, setPartsForm] = React.useState({ name: "", part_number: "", unit_cost: "", quantity_in_stock: "", minimum_stock: "", supplier: "" });
+
+  // Corrective Actions tab state
+  const [caSearch, setCaSearch] = React.useState("");
+  const [caStatusFilter, setCaStatusFilter] = React.useState("all");
+  const [caPage, setCaPage] = React.useState(1);
+  const [showCaCreate, setShowCaCreate] = React.useState(false);
+  const [caForm, setCaForm] = React.useState({ asset_id: "", description: "", severity: "medium" as Severity, due_date: "" });
 
   // Filters
   const [statusFilter, setStatusFilter] = React.useState("");
@@ -103,8 +132,9 @@ export default function AssetsPage() {
     { id: "compliance", titleKey: "assets.wizard.compliance", descKey: "assets.wizard.complianceDesc", icon: Shield },
   ] as const;
 
-  const { companyId, assets, locations, users, workOrders, correctiveActions, parts, stores } = useCompanyData();
+  const { companyId, assets, locations, users, teams, workOrders, correctiveActions, parts, stores } = useCompanyData();
   const { isLoading, add: addAsset } = stores.assets;
+  const { user } = useAuth();
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
   const filterOptions = useFilterOptions();
@@ -786,40 +816,389 @@ export default function AssetsPage() {
       </>
       )}
 
-      {/* Work Orders Tab — navigate to full page */}
+      {/* Work Orders Tab — Full inline content */}
       {activeTab === "work-orders" && (() => {
-        // Redirect to the dedicated work orders page
-        if (typeof window !== "undefined") {
-          window.location.href = `/${company}/dashboard/work-orders`;
-        }
+        const woFiltered = workOrders.filter((o) => {
+          if (woStatusFilter !== "all" && o.status !== woStatusFilter) return false;
+          if (woTypeFilter !== "all" && o.type !== woTypeFilter) return false;
+          if (woSearch) {
+            const q = woSearch.toLowerCase();
+            const asset = o.asset_id ? assets.find((a) => a.id === o.asset_id) : null;
+            return o.title.toLowerCase().includes(q) || o.description.toLowerCase().includes(q) || (asset?.name || "").toLowerCase().includes(q);
+          }
+          return true;
+        });
+        const woOpenCount = workOrders.filter((o) => ["waiting_approval", "waiting_material", "approved"].includes(o.status)).length;
+        const woInProgressCount = workOrders.filter((o) => o.status === "in_progress").length;
+        const woCompletedCount = workOrders.filter((o) => o.status === "completed").length;
+        const woPaginated = woFiltered.slice((woPage - 1) * 10, woPage * 10);
+        const handleWoCreate = () => {
+          if (!woForm.title.trim() || !woForm.description.trim()) return;
+          stores.workOrders.add({
+            id: crypto.randomUUID(), company_id: user?.company_id || "", asset_id: woForm.asset_id || null,
+            title: woForm.title.trim(), description: woForm.description.trim(), type: woForm.type as WorkOrder["type"],
+            priority: woForm.priority, status: "waiting_approval", requested_by: user?.id || "",
+            assigned_to: null, assigned_to_team_id: null, due_date: woForm.due_date || null,
+            estimated_hours: null, actual_hours: null, parts_cost: null, labor_cost: null,
+            corrective_action_id: null, completed_at: null,
+            created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+          } as WorkOrder);
+          toast("Work order created");
+          setShowWoCreate(false);
+          setWoForm({ title: "", description: "", asset_id: "", type: "service_request", priority: "medium", due_date: "" });
+        };
+
         return (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-          </div>
+          <>
+            <div className="flex items-center justify-between">
+              <div className="grid gap-4 sm:grid-cols-3 flex-1">
+                <KPICard title="Open" value={woOpenCount} icon={ClipboardList} />
+                <KPICard title="In progress" value={woInProgressCount} icon={Clock} />
+                <KPICard title="Completed" value={woCompletedCount} icon={CheckCircle} />
+              </div>
+              <Button size="sm" className="gap-2 ml-4 shrink-0" onClick={() => setShowWoCreate(true)}>
+                <Plus className="h-4 w-4" /> New work order
+              </Button>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search work orders..." className="pl-10" value={woSearch} onChange={(e) => { setWoSearch(e.target.value); setWoPage(1); }} />
+              </div>
+              <Select value={woStatusFilter} onValueChange={(v) => { setWoStatusFilter(v); setWoPage(1); }}>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  {["waiting_approval", "waiting_material", "approved", "scheduled", "in_progress", "completed", "cancelled"].map((s) => (
+                    <SelectItem key={s} value={s}>{formatStatusLabel(s)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={woTypeFilter} onValueChange={(v) => { setWoTypeFilter(v); setWoPage(1); }}>
+                <SelectTrigger className="w-[200px]"><SelectValue placeholder="All types" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All types</SelectItem>
+                  {WORK_ORDER_TYPES.map((woType) => (
+                    <SelectItem key={woType} value={woType}>{formatStatusLabel(woType)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {woFiltered.length === 0 ? (
+              <NoDataEmptyState entityName="work orders" onAdd={() => setShowWoCreate(true)} addLabel="New work order" />
+            ) : (
+              <>
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-border text-sm">
+                        <thead className="bg-muted/40">
+                          <tr className="text-left">
+                            <th className="px-4 py-3 font-medium">Title</th>
+                            <th className="px-4 py-3 font-medium">Type</th>
+                            <th className="px-4 py-3 font-medium">Asset</th>
+                            <th className="px-4 py-3 font-medium">Priority</th>
+                            <th className="px-4 py-3 font-medium">Status</th>
+                            <th className="px-4 py-3 font-medium">Due date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {woPaginated.map((wo) => {
+                            const asset = wo.asset_id ? assets.find((a) => a.id === wo.asset_id) : null;
+                            return (
+                              <tr key={wo.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => router.push(`/${company}/dashboard/work-orders/${wo.id}`)}>
+                                <td className="px-4 py-3 font-medium">{wo.title}</td>
+                                <td className="px-4 py-3 text-muted-foreground">{capitalize((wo.type || "service_request").replace(/_/g, " "))}</td>
+                                <td className="px-4 py-3 text-muted-foreground">{asset?.name || "—"}</td>
+                                <td className="px-4 py-3"><Badge variant={wo.priority === "critical" || wo.priority === "high" ? "destructive" : wo.priority === "medium" ? "warning" : "secondary"}>{capitalize(wo.priority)}</Badge></td>
+                                <td className="px-4 py-3"><Badge variant={WORK_ORDER_STATUS_COLORS[wo.status] || "secondary"}>{capitalize(wo.status.replace(/_/g, " "))}</Badge></td>
+                                <td className="px-4 py-3 text-muted-foreground">{wo.due_date ? formatDate(wo.due_date) : "—"}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+                {woFiltered.length > 10 && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Showing {(woPage - 1) * 10 + 1}–{Math.min(woPage * 10, woFiltered.length)} of {woFiltered.length}</p>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" disabled={woPage === 1} onClick={() => setWoPage((p) => p - 1)}>Previous</Button>
+                      <Button size="sm" variant="outline" disabled={woPage * 10 >= woFiltered.length} onClick={() => setWoPage((p) => p + 1)}>Next</Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {showWoCreate && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                <Card className="w-full max-w-lg"><CardHeader className="flex flex-row items-center justify-between"><CardTitle>New work order</CardTitle><Button variant="ghost" size="icon" onClick={() => setShowWoCreate(false)} aria-label="Close"><X className="h-4 w-4" /></Button></CardHeader>
+                  <CardContent className="space-y-4">
+                    <div><Label>Title *</Label><Input className="mt-1" placeholder="Work order title" value={woForm.title} onChange={(e) => setWoForm((p) => ({ ...p, title: e.target.value }))} /></div>
+                    <div><Label>Description *</Label><Textarea className="mt-1" placeholder="Describe the work" value={woForm.description} onChange={(e) => setWoForm((p) => ({ ...p, description: e.target.value }))} /></div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div><Label>Asset</Label><Select value={woForm.asset_id} onValueChange={(v) => setWoForm((p) => ({ ...p, asset_id: v }))}><SelectTrigger className="mt-1"><SelectValue placeholder="Select asset" /></SelectTrigger><SelectContent>{assets.filter((a) => a.status !== "retired").map((a) => (<SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>))}</SelectContent></Select></div>
+                      <div><Label>Type</Label><Select value={woForm.type} onValueChange={(v) => setWoForm((p) => ({ ...p, type: v }))}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{WORK_ORDER_TYPES.map((t) => (<SelectItem key={t} value={t}>{formatStatusLabel(t)}</SelectItem>))}</SelectContent></Select></div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div><Label>Priority</Label><Select value={woForm.priority} onValueChange={(v) => setWoForm((p) => ({ ...p, priority: v as Priority }))}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{(["low", "medium", "high", "critical"] as Priority[]).map((p) => (<SelectItem key={p} value={p}>{capitalize(p)}</SelectItem>))}</SelectContent></Select></div>
+                      <div><Label>Due date</Label><Input type="date" className="mt-1" value={woForm.due_date} onChange={(e) => setWoForm((p) => ({ ...p, due_date: e.target.value }))} /></div>
+                    </div>
+                    <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setShowWoCreate(false)}>Cancel</Button><Button onClick={handleWoCreate} disabled={!woForm.title.trim() || !woForm.description.trim()}>Create</Button></div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </>
         );
       })()}
 
-      {/* Parts Tab — navigate to full page */}
+      {/* Parts Tab — Full inline content */}
       {activeTab === "parts" && (() => {
-        if (typeof window !== "undefined") {
-          window.location.href = `/${company}/dashboard/parts`;
-        }
+        const partsFiltered = parts.filter((p) => {
+          if (!partsSearch) return true;
+          const q = partsSearch.toLowerCase();
+          return p.name.toLowerCase().includes(q) || p.part_number.toLowerCase().includes(q);
+        });
+        const totalValue = parts.reduce((sum, p) => sum + (p.unit_cost || 0) * (p.quantity_in_stock || 0), 0);
+        const lowStockCount = parts.filter((p) => (p.quantity_in_stock || 0) <= (p.minimum_stock || 0)).length;
+        const partsPaginated = partsFiltered.slice((partsPage - 1) * 10, partsPage * 10);
+        const handlePartsCreate = () => {
+          if (!partsForm.name.trim() || !partsForm.part_number.trim()) return;
+          stores.parts.add({
+            id: `part_${Date.now()}`, company_id: user?.company_id || "",
+            name: partsForm.name.trim(), part_number: partsForm.part_number.trim(),
+            unit_cost: parseFloat(partsForm.unit_cost) || 0, quantity_in_stock: parseInt(partsForm.quantity_in_stock) || 0,
+            minimum_stock: parseInt(partsForm.minimum_stock) || 0, supplier: partsForm.supplier.trim() || null,
+            created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+          } as Part);
+          toast("Part added"); setShowPartsCreate(false);
+          setPartsForm({ name: "", part_number: "", unit_cost: "", quantity_in_stock: "", minimum_stock: "", supplier: "" });
+        };
+
         return (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-          </div>
+          <>
+            <div className="flex items-center justify-between">
+              <div className="grid gap-4 sm:grid-cols-3 flex-1">
+                <KPICard title="Total parts" value={parts.length} icon={Package} />
+                <KPICard title="Inventory value" value={`$${totalValue.toLocaleString()}`} icon={DollarSign} />
+                <KPICard title="Low stock" value={lowStockCount} icon={AlertTriangle} />
+              </div>
+              <Button size="sm" className="gap-2 ml-4 shrink-0" onClick={() => setShowPartsCreate(true)}>
+                <Plus className="h-4 w-4" /> Add part
+              </Button>
+            </div>
+
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input placeholder="Search parts..." className="pl-10" value={partsSearch} onChange={(e) => { setPartsSearch(e.target.value); setPartsPage(1); }} />
+            </div>
+
+            {partsFiltered.length === 0 ? (
+              <NoDataEmptyState entityName="parts" onAdd={() => setShowPartsCreate(true)} addLabel="Add part" />
+            ) : (
+              <>
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-border text-sm">
+                        <thead className="bg-muted/40">
+                          <tr className="text-left">
+                            <th className="px-4 py-3 font-medium">Part</th>
+                            <th className="px-4 py-3 font-medium">Supplier</th>
+                            <th className="px-4 py-3 font-medium">Unit cost</th>
+                            <th className="px-4 py-3 font-medium">In stock</th>
+                            <th className="px-4 py-3 font-medium">Min stock</th>
+                            <th className="px-4 py-3 font-medium">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {partsPaginated.map((part) => {
+                            const isLow = (part.quantity_in_stock || 0) <= (part.minimum_stock || 0);
+                            return (
+                              <tr key={part.id} className="hover:bg-muted/50">
+                                <td className="px-4 py-3"><div className="font-medium">{part.name}</div><div className="font-mono text-xs text-muted-foreground">{part.part_number}</div></td>
+                                <td className="px-4 py-3 text-muted-foreground">{part.supplier || "—"}</td>
+                                <td className="px-4 py-3">${(part.unit_cost || 0).toFixed(2)}</td>
+                                <td className="px-4 py-3">{part.quantity_in_stock || 0}</td>
+                                <td className="px-4 py-3">{part.minimum_stock || 0}</td>
+                                <td className="px-4 py-3"><Badge variant={isLow ? "warning" : "secondary"}>{isLow ? "Low stock" : "In stock"}</Badge></td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+                {partsFiltered.length > 10 && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Showing {(partsPage - 1) * 10 + 1}–{Math.min(partsPage * 10, partsFiltered.length)} of {partsFiltered.length}</p>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" disabled={partsPage === 1} onClick={() => setPartsPage((p) => p - 1)}>Previous</Button>
+                      <Button size="sm" variant="outline" disabled={partsPage * 10 >= partsFiltered.length} onClick={() => setPartsPage((p) => p + 1)}>Next</Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {showPartsCreate && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                <Card className="w-full max-w-md"><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Add part</CardTitle><Button variant="ghost" size="icon" onClick={() => setShowPartsCreate(false)} aria-label="Close"><X className="h-4 w-4" /></Button></CardHeader>
+                  <CardContent className="space-y-4">
+                    <div><Label>Part name *</Label><Input className="mt-1" value={partsForm.name} onChange={(e) => setPartsForm((p) => ({ ...p, name: e.target.value }))} /></div>
+                    <div><Label>Part number *</Label><Input className="mt-1" value={partsForm.part_number} onChange={(e) => setPartsForm((p) => ({ ...p, part_number: e.target.value }))} /></div>
+                    <div className="grid gap-4 grid-cols-2">
+                      <div><Label>Unit cost</Label><Input type="number" min="0" step="0.01" className="mt-1" value={partsForm.unit_cost} onChange={(e) => setPartsForm((p) => ({ ...p, unit_cost: e.target.value }))} /></div>
+                      <div><Label>Qty in stock</Label><Input type="number" min="0" className="mt-1" value={partsForm.quantity_in_stock} onChange={(e) => setPartsForm((p) => ({ ...p, quantity_in_stock: e.target.value }))} /></div>
+                    </div>
+                    <div className="grid gap-4 grid-cols-2">
+                      <div><Label>Min stock</Label><Input type="number" min="0" className="mt-1" value={partsForm.minimum_stock} onChange={(e) => setPartsForm((p) => ({ ...p, minimum_stock: e.target.value }))} /></div>
+                      <div><Label>Supplier</Label><Input className="mt-1" value={partsForm.supplier} onChange={(e) => setPartsForm((p) => ({ ...p, supplier: e.target.value }))} /></div>
+                    </div>
+                    <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setShowPartsCreate(false)}>Cancel</Button><Button onClick={handlePartsCreate} disabled={!partsForm.name.trim() || !partsForm.part_number.trim()}>Add part</Button></div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </>
         );
       })()}
 
-      {/* Corrective Actions Tab — navigate to full page */}
+      {/* Corrective Actions Tab — Full inline content */}
       {activeTab === "corrective-actions" && (() => {
-        if (typeof window !== "undefined") {
-          window.location.href = `/${company}/dashboard/corrective-actions`;
-        }
+        const caFiltered = correctiveActions.filter((a) => {
+          if (caStatusFilter !== "all" && a.status !== caStatusFilter) return false;
+          if (caSearch) {
+            const q = caSearch.toLowerCase();
+            const asset = assets.find((as) => as.id === a.asset_id);
+            return a.description.toLowerCase().includes(q) || (asset?.name || "").toLowerCase().includes(q);
+          }
+          return true;
+        });
+        const caOpenCount = correctiveActions.filter((a) => a.status === "open").length;
+        const caInProgressCount = correctiveActions.filter((a) => a.status === "in_progress").length;
+        const caOverdueCount = correctiveActions.filter((a) => a.status !== "completed" && a.due_date && new Date(a.due_date).getTime() < stableNow).length;
+        const caCompletedCount = correctiveActions.filter((a) => a.status === "completed").length;
+        const caPaginated = caFiltered.slice((caPage - 1) * 10, caPage * 10);
+        const handleCaCreate = () => {
+          if (!caForm.asset_id || !caForm.description.trim() || !caForm.due_date) return;
+          stores.correctiveActions.add({
+            id: `ca_${crypto.randomUUID().slice(0, 8)}`, company_id: user?.company_id || "",
+            asset_id: caForm.asset_id, inspection_id: null, description: caForm.description.trim(),
+            severity: caForm.severity, assigned_to: null, assigned_to_team_id: null,
+            due_date: caForm.due_date, status: "open", resolution_notes: null, completed_at: null,
+            created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+          } as CorrectiveAction);
+          toast("Corrective action created"); setShowCaCreate(false);
+          setCaForm({ asset_id: "", description: "", severity: "medium", due_date: "" });
+        };
+
         return (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-          </div>
+          <>
+            <div className="flex items-center justify-between">
+              <div className="grid gap-4 sm:grid-cols-4 flex-1">
+                <KPICard title="Open" value={caOpenCount} icon={ClipboardList} />
+                <KPICard title="In progress" value={caInProgressCount} icon={Clock} />
+                <KPICard title="Overdue" value={caOverdueCount} icon={AlertTriangle} />
+                <KPICard title="Completed" value={caCompletedCount} icon={CheckCircle} />
+              </div>
+              <Button size="sm" className="gap-2 ml-4 shrink-0" onClick={() => setShowCaCreate(true)}>
+                <Plus className="h-4 w-4" /> New action
+              </Button>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search actions..." className="pl-10" value={caSearch} onChange={(e) => { setCaSearch(e.target.value); setCaPage(1); }} />
+              </div>
+              <Select value={caStatusFilter} onValueChange={(v) => { setCaStatusFilter(v); setCaPage(1); }}>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="open">Open</SelectItem>
+                  <SelectItem value="in_progress">In progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {caFiltered.length === 0 ? (
+              <NoDataEmptyState entityName="corrective actions" onAdd={() => setShowCaCreate(true)} addLabel="New action" />
+            ) : (
+              <>
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-border text-sm">
+                        <thead className="bg-muted/40">
+                          <tr className="text-left">
+                            <th className="px-4 py-3 font-medium">Description</th>
+                            <th className="px-4 py-3 font-medium">Asset</th>
+                            <th className="px-4 py-3 font-medium">Severity</th>
+                            <th className="px-4 py-3 font-medium">Status</th>
+                            <th className="px-4 py-3 font-medium">Due date</th>
+                            <th className="px-4 py-3 font-medium sr-only">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {caPaginated.map((action) => {
+                            const asset = action.asset_id ? assets.find((a) => a.id === action.asset_id) : null;
+                            const isOverdue = action.due_date && action.status !== "completed" && new Date(action.due_date).getTime() < stableNow;
+                            return (
+                              <tr key={action.id} className={cn("hover:bg-muted/50 cursor-pointer", isOverdue && "border-l-2 border-l-destructive")} onClick={() => router.push(`/${company}/dashboard/corrective-actions/${action.id}`)}>
+                                <td className="px-4 py-3 font-medium max-w-xs truncate">{action.description}</td>
+                                <td className="px-4 py-3 text-muted-foreground">{asset?.name || "—"}</td>
+                                <td className="px-4 py-3"><Badge variant={action.severity === "critical" || action.severity === "high" ? "destructive" : action.severity === "medium" ? "warning" : "secondary"}>{capitalize(action.severity)}</Badge></td>
+                                <td className="px-4 py-3"><Badge variant={action.status === "completed" ? "completed" : action.status === "in_progress" ? "in_progress" : "secondary"}>{isOverdue ? "Overdue" : capitalize(action.status.replace(/_/g, " "))}</Badge></td>
+                                <td className="px-4 py-3 text-muted-foreground">{action.due_date ? formatDate(action.due_date) : "—"}</td>
+                                <td className="px-4 py-3">
+                                  {action.status === "open" && <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); stores.correctiveActions.update(action.id, { status: "in_progress", updated_at: new Date().toISOString() }); toast("Started"); }}>Start</Button>}
+                                  {action.status === "in_progress" && <Button size="sm" onClick={(e) => { e.stopPropagation(); stores.correctiveActions.update(action.id, { status: "completed", completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }); toast("Completed"); }}>Complete</Button>}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+                {caFiltered.length > 10 && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Showing {(caPage - 1) * 10 + 1}–{Math.min(caPage * 10, caFiltered.length)} of {caFiltered.length}</p>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" disabled={caPage === 1} onClick={() => setCaPage((p) => p - 1)}>Previous</Button>
+                      <Button size="sm" variant="outline" disabled={caPage * 10 >= caFiltered.length} onClick={() => setCaPage((p) => p + 1)}>Next</Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {showCaCreate && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                <Card className="w-full max-w-lg"><CardHeader className="flex flex-row items-center justify-between"><CardTitle>New corrective action</CardTitle><Button variant="ghost" size="icon" onClick={() => setShowCaCreate(false)} aria-label="Close"><X className="h-4 w-4" /></Button></CardHeader>
+                  <CardContent className="space-y-4">
+                    <div><Label>Asset *</Label><Select value={caForm.asset_id} onValueChange={(v) => setCaForm((p) => ({ ...p, asset_id: v }))}><SelectTrigger className="mt-1"><SelectValue placeholder="Select asset" /></SelectTrigger><SelectContent>{assets.filter((a) => a.status !== "retired").map((a) => (<SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>))}</SelectContent></Select></div>
+                    <div><Label>Description *</Label><Textarea className="mt-1" placeholder="Describe the corrective action" value={caForm.description} onChange={(e) => setCaForm((p) => ({ ...p, description: e.target.value }))} /></div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div><Label>Severity</Label><Select value={caForm.severity} onValueChange={(v) => setCaForm((p) => ({ ...p, severity: v as Severity }))}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{(["low", "medium", "high", "critical"] as Severity[]).map((s) => (<SelectItem key={s} value={s}>{capitalize(s)}</SelectItem>))}</SelectContent></Select></div>
+                      <div><Label>Due date *</Label><Input type="date" className="mt-1" value={caForm.due_date} onChange={(e) => setCaForm((p) => ({ ...p, due_date: e.target.value }))} /></div>
+                    </div>
+                    <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setShowCaCreate(false)}>Cancel</Button><Button onClick={handleCaCreate} disabled={!caForm.asset_id || !caForm.description.trim() || !caForm.due_date}>Create</Button></div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </>
         );
       })()}
 
