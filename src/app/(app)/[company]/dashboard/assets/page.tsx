@@ -705,30 +705,30 @@ export default function AssetsPage() {
       <Card>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-3 font-medium">{t("assets.tabs.assets")}</th>
-                  <th className="pb-3 font-medium">{t("assets.labels.category")}</th>
-                  <th className="hidden pb-3 font-medium md:table-cell">{t("assets.labels.location")}</th>
-                  <th className="hidden pb-3 font-medium lg:table-cell">{t("assets.labels.purchaseDate")}</th>
-                  <th className="pb-3 font-medium">{t("assets.labels.status")}</th>
-                  <th className="pb-3 font-medium w-10"></th>
+            <table className="min-w-full divide-y divide-border text-sm">
+              <thead className="bg-muted/40">
+                <tr className="text-left">
+                  <th className="px-4 py-3 font-medium">{t("assets.tabs.assets")}</th>
+                  <th className="px-4 py-3 font-medium">{t("assets.labels.category")}</th>
+                  <th className="hidden px-4 py-3 font-medium md:table-cell">{t("assets.labels.location")}</th>
+                  <th className="hidden px-4 py-3 font-medium lg:table-cell">{t("assets.labels.purchaseDate")}</th>
+                  <th className="px-4 py-3 font-medium">{t("assets.labels.status")}</th>
+                  <th className="px-4 py-3 font-medium w-10"></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border">
                 {paginatedAssets.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">{t("assets.empty.noAssets")}</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("assets.empty.noAssets")}</td>
                   </tr>
                 ) : (
                   paginatedAssets.map((asset) => (
                     <tr 
                       key={asset.id} 
-                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
                       onClick={() => router.push(`/${company}/dashboard/assets/${asset.id}`)}
                     >
-                      <td className="py-3">
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                             <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -739,8 +739,8 @@ export default function AssetsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 capitalize text-xs">{asset.category.replace("_", " ")}</td>
-                      <td className="hidden py-3 md:table-cell">
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{capitalize(asset.category.replace("_", " "))}</td>
+                      <td className="hidden px-4 py-3 md:table-cell">
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           {asset.location_id ? (
                             <>
@@ -752,16 +752,16 @@ export default function AssetsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">
-                        {asset.purchase_date ? formatDate(asset.purchase_date) : "N/A"}
+                      <td className="hidden px-4 py-3 lg:table-cell text-xs text-muted-foreground">
+                        {asset.purchase_date ? formatDate(asset.purchase_date) : "—"}
                       </td>
-                      <td className="py-3">
+                      <td className="px-4 py-3">
                         <Badge variant={asset.status === "active" ? "success" : asset.status === "maintenance" ? "warning" : "destructive"} className="text-xs">
-                          {asset.status.replace("_", " ")}
+                          {capitalize(asset.status.replace("_", " "))}
                         </Badge>
                       </td>
-                      <td className="py-3">
-                        <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <td className="px-4 py-3">
+                        <Eye className="h-4 w-4 text-muted-foreground" />
                       </td>
                     </tr>
                   ))

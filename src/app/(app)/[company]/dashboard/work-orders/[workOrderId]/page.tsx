@@ -251,7 +251,7 @@ export default function WorkOrderDetailPage() {
     <div className="space-y-6" ref={highlight ? highlightRef : undefined}>
       {/* Header */}
       <div className="flex items-start gap-4">
-        <Button variant="ghost" size="icon" className="mt-1 shrink-0" onClick={() => router.push(`/${company}/dashboard/work-orders`)}>
+        <Button variant="ghost" size="icon" className="mt-1 shrink-0" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
@@ -313,23 +313,19 @@ export default function WorkOrderDetailPage() {
       </div>
 
       {/* Status pipeline */}
-      <StatusPipeline currentStatus={order.status} className="rounded-lg border bg-card" />
+      <StatusPipeline currentStatus={order.status} />
 
       {/* Status change action */}
       {nextStatuses.length > 0 && (canEdit || canComplete) && (
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-medium text-muted-foreground">Actions:</span>
-              <Button
-                size="sm"
-                onClick={() => setShowStatusModal(true)}
-              >
-                Change status
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowStatusModal(true)}
+          >
+            Change status
+          </Button>
+        </div>
       )}
 
       {/* Status change modal */}
