@@ -35,7 +35,7 @@ const item = (
 });
 
 const US_CENTRIC_REGULATION_PATTERN =
-  /\b(OSHA|MSHA|FDA|USDA|NFPA|FMCSA|FAA|TSA|CPSC|NIOSH|NERC|Joint Commission|Needlestick Safety Act|FMVSS|State oil & gas commission|State fire codes|State education codes|State AED laws|state health dept|state DOT)\b/i;
+  /\b(OSHA|MSHA|FDA|USDA|NFPA|FMCSA|FAA|TSA|CPSC|NIOSH|NERC|Joint Commission|Needlestick Safety Act|FMVSS|EM 385|State oil & gas commission|State fire codes|State education codes|State AED laws|state health dept|state DOT)\b/i;
 
 const COUNTRY_INDUSTRY_REGULATION_OVERRIDES: Record<
   Exclude<Country, "US">,
@@ -154,7 +154,7 @@ export const INDUSTRY_METADATA: Record<
 };
 
 // ==========================================
-// 1. CONSTRUCTION (6 templates)
+// 1. CONSTRUCTION (14 templates)
 // ==========================================
 
 const constructionTemplates: IndustryChecklistTemplate[] = [
@@ -287,10 +287,200 @@ const constructionTemplates: IndustryChecklistTemplate[] = [
       item("construction", "crane", "pre_lift_meeting", "yes_no_na", 7, false),
     ],
   },
+
+  // 1-7  EM 385 Activity Hazard Analysis (AHA)
+  {
+    id: "construction_aha_em385",
+    industry: "construction",
+    name_key: k("construction", "aha_em385", "name"),
+    description_key: k("construction", "aha_em385", "description"),
+    category: "hazard_analysis",
+    regulation: "EM 385-1-1 §01.A.13",
+    frequency: "per_event",
+    tags: ["aha", "em385", "hazard_analysis", "usace"],
+    items: [
+      item("construction", "aha_em385", "work_activity_defined", "yes_no_na", 1),
+      item("construction", "aha_em385", "hazards_identified", "yes_no_na", 2),
+      item("construction", "aha_em385", "severity_probability_assessed", "yes_no_na", 3),
+      item("construction", "aha_em385", "controls_listed", "yes_no_na", 4),
+      item("construction", "aha_em385", "responsible_person_assigned", "yes_no_na", 5),
+      item("construction", "aha_em385", "ppe_requirements", "yes_no_na", 6),
+      item("construction", "aha_em385", "training_verified", "yes_no_na", 7),
+      item("construction", "aha_em385", "emergency_procedures", "yes_no_na", 8),
+      item("construction", "aha_em385", "supervisor_approval", "yes_no_na", 9),
+      item("construction", "aha_em385", "crew_briefed", "yes_no_na", 10),
+    ],
+  },
+
+  // 1-8  EM 385 Daily Safety & Health Inspection
+  {
+    id: "construction_daily_em385",
+    industry: "construction",
+    name_key: k("construction", "daily_em385", "name"),
+    description_key: k("construction", "daily_em385", "description"),
+    category: "site_inspection",
+    regulation: "EM 385-1-1 §01.A.14",
+    frequency: "daily",
+    tags: ["daily_inspection", "em385", "site_safety", "usace"],
+    items: [
+      item("construction", "daily_em385", "housekeeping", "pass_fail", 1),
+      item("construction", "daily_em385", "ppe_compliance", "pass_fail", 2),
+      item("construction", "daily_em385", "barricades_signage", "yes_no_na", 3),
+      item("construction", "daily_em385", "electrical_safety", "pass_fail", 4),
+      item("construction", "daily_em385", "fire_protection", "pass_fail", 5),
+      item("construction", "daily_em385", "first_aid_available", "yes_no_na", 6),
+      item("construction", "daily_em385", "emergency_info_posted", "yes_no_na", 7),
+      item("construction", "daily_em385", "fall_protection", "pass_fail", 8),
+      item("construction", "daily_em385", "excavation_protection", "pass_fail", 9),
+      item("construction", "daily_em385", "scaffolding_condition", "pass_fail", 10),
+      item("construction", "daily_em385", "vehicle_equipment", "pass_fail", 11),
+      item("construction", "daily_em385", "environmental_controls", "yes_no_na", 12),
+    ],
+  },
+
+  // 1-9  EM 385 Crane Critical Lift Plan
+  {
+    id: "construction_crane_em385",
+    industry: "construction",
+    name_key: k("construction", "crane_em385", "name"),
+    description_key: k("construction", "crane_em385", "description"),
+    category: "equipment",
+    regulation: "EM 385-1-1 §16",
+    frequency: "per_event",
+    tags: ["crane", "critical_lift", "em385", "rigging", "usace"],
+    items: [
+      item("construction", "crane_em385", "crane_capacity_verified", "yes_no_na", 1),
+      item("construction", "crane_em385", "load_weight_calculated", "yes_no_na", 2),
+      item("construction", "crane_em385", "rigging_inspected", "pass_fail", 3),
+      item("construction", "crane_em385", "ground_conditions", "pass_fail", 4),
+      item("construction", "crane_em385", "swing_radius_clear", "yes_no_na", 5),
+      item("construction", "crane_em385", "signal_person_designated", "yes_no_na", 6),
+      item("construction", "crane_em385", "lift_plan_reviewed", "yes_no_na", 7),
+      item("construction", "crane_em385", "weather_conditions", "yes_no_na", 8),
+      item("construction", "crane_em385", "communication_established", "yes_no_na", 9),
+      item("construction", "crane_em385", "competent_person_present", "yes_no_na", 10),
+    ],
+  },
+
+  // 1-10 EM 385 Confined Space Entry
+  {
+    id: "construction_confined_em385",
+    industry: "construction",
+    name_key: k("construction", "confined_em385", "name"),
+    description_key: k("construction", "confined_em385", "description"),
+    category: "confined_space",
+    regulation: "EM 385-1-1 §06.H",
+    frequency: "per_event",
+    tags: ["confined_space", "em385", "permit_required", "usace"],
+    items: [
+      item("construction", "confined_em385", "atmosphere_tested", "pass_fail", 1),
+      item("construction", "confined_em385", "ventilation_adequate", "pass_fail", 2),
+      item("construction", "confined_em385", "rescue_plan_in_place", "yes_no_na", 3),
+      item("construction", "confined_em385", "entrant_attendant_supervisor", "yes_no_na", 4),
+      item("construction", "confined_em385", "communication_system", "yes_no_na", 5),
+      item("construction", "confined_em385", "lockout_completed", "yes_no_na", 6),
+      item("construction", "confined_em385", "emergency_services_notified", "yes_no_na", 7),
+      item("construction", "confined_em385", "continuous_monitoring", "yes_no_na", 8),
+      item("construction", "confined_em385", "entry_log_maintained", "yes_no_na", 9),
+      item("construction", "confined_em385", "permit_signed", "yes_no_na", 10),
+    ],
+  },
+
+  // 1-11 EM 385 Fall Protection Plan
+  {
+    id: "construction_fall_em385",
+    industry: "construction",
+    name_key: k("construction", "fall_em385", "name"),
+    description_key: k("construction", "fall_em385", "description"),
+    category: "fall_protection",
+    regulation: "EM 385-1-1 §21",
+    frequency: "weekly",
+    tags: ["fall_protection", "em385", "pfas", "guardrail", "usace"],
+    items: [
+      item("construction", "fall_em385", "leading_edges_identified", "yes_no_na", 1),
+      item("construction", "fall_em385", "guardrails_installed", "pass_fail", 2),
+      item("construction", "fall_em385", "pfas_inspected", "pass_fail", 3),
+      item("construction", "fall_em385", "anchorage_points_rated", "yes_no_na", 4),
+      item("construction", "fall_em385", "rescue_plan", "yes_no_na", 5),
+      item("construction", "fall_em385", "controlled_access_zones", "yes_no_na", 6),
+      item("construction", "fall_em385", "safety_nets", "pass_fail", 7),
+      item("construction", "fall_em385", "warning_lines", "yes_no_na", 8),
+      item("construction", "fall_em385", "hole_covers_secured", "pass_fail", 9),
+      item("construction", "fall_em385", "training_current", "yes_no_na", 10),
+    ],
+  },
+
+  // 1-12 EM 385 Excavation Safety
+  {
+    id: "construction_excavation_em385",
+    industry: "construction",
+    name_key: k("construction", "excavation_em385", "name"),
+    description_key: k("construction", "excavation_em385", "description"),
+    category: "excavation",
+    regulation: "EM 385-1-1 §25",
+    frequency: "daily",
+    tags: ["excavation", "em385", "shoring", "trenching", "usace"],
+    items: [
+      item("construction", "excavation_em385", "soil_classified", "yes_no_na", 1),
+      item("construction", "excavation_em385", "shoring_sloping_adequate", "pass_fail", 2),
+      item("construction", "excavation_em385", "spoil_pile_distance", "pass_fail", 3),
+      item("construction", "excavation_em385", "access_egress_provided", "pass_fail", 4),
+      item("construction", "excavation_em385", "utilities_located", "yes_no_na", 5),
+      item("construction", "excavation_em385", "atmosphere_tested", "pass_fail", 6),
+      item("construction", "excavation_em385", "water_control", "yes_no_na", 7),
+      item("construction", "excavation_em385", "adjacent_structures_stable", "yes_no_na", 8),
+      item("construction", "excavation_em385", "competent_person_assigned", "yes_no_na", 9),
+      item("construction", "excavation_em385", "daily_inspection_documented", "yes_no_na", 10),
+    ],
+  },
+
+  // 1-13 Marine Terminal Safety
+  {
+    id: "construction_marine_terminal",
+    industry: "construction",
+    name_key: k("construction", "marine_terminal", "name"),
+    description_key: k("construction", "marine_terminal", "description"),
+    category: "maritime",
+    regulation: "OSHA 1917/1918",
+    frequency: "daily",
+    tags: ["maritime", "marine_terminal", "longshoring", "port"],
+    items: [
+      item("construction", "marine_terminal", "walking_surfaces", "pass_fail", 1),
+      item("construction", "marine_terminal", "edge_protection", "pass_fail", 2),
+      item("construction", "marine_terminal", "cargo_handling_equipment", "pass_fail", 3),
+      item("construction", "marine_terminal", "lighting_adequate", "yes_no_na", 4),
+      item("construction", "marine_terminal", "emergency_equipment", "yes_no_na", 5),
+      item("construction", "marine_terminal", "vessel_access", "pass_fail", 6),
+      item("construction", "marine_terminal", "hazcom_compliance", "yes_no_na", 7),
+      item("construction", "marine_terminal", "ppe_in_use", "pass_fail", 8),
+    ],
+  },
+
+  // 1-14 Shipyard Competent Person Inspection
+  {
+    id: "construction_shipyard",
+    industry: "construction",
+    name_key: k("construction", "shipyard", "name"),
+    description_key: k("construction", "shipyard", "description"),
+    category: "maritime",
+    regulation: "OSHA 1915.135",
+    frequency: "daily",
+    tags: ["shipyard", "maritime", "competent_person", "hot_work"],
+    items: [
+      item("construction", "shipyard", "fire_watch_posted", "yes_no_na", 1),
+      item("construction", "shipyard", "hot_work_permit", "yes_no_na", 2),
+      item("construction", "shipyard", "confined_space_tested", "pass_fail", 3),
+      item("construction", "shipyard", "scaffolding_inspected", "pass_fail", 4),
+      item("construction", "shipyard", "fall_protection_in_place", "pass_fail", 5),
+      item("construction", "shipyard", "electrical_safety", "pass_fail", 6),
+      item("construction", "shipyard", "ventilation_adequate", "pass_fail", 7),
+      item("construction", "shipyard", "housekeeping", "pass_fail", 8),
+    ],
+  },
 ];
 
 // ==========================================
-// 2. MANUFACTURING (6 templates)
+// 2. MANUFACTURING (11 templates)
 // ==========================================
 
 const manufacturingTemplates: IndustryChecklistTemplate[] = [
@@ -425,6 +615,124 @@ const manufacturingTemplates: IndustryChecklistTemplate[] = [
       item("manufacturing", "safety_walk", "noise_levels", "yes_no_na", 6),
       item("manufacturing", "safety_walk", "first_aid_kit", "yes_no_na", 7, false),
       item("manufacturing", "safety_walk", "general_observations", "yes_no_na", 8, false),
+    ],
+  },
+
+  // 2-7  Process Hazard Analysis (PHA) Review
+  {
+    id: "manufacturing_pha",
+    industry: "manufacturing",
+    name_key: k("manufacturing", "pha", "name"),
+    description_key: k("manufacturing", "pha", "description"),
+    category: "process_safety",
+    regulation: "OSHA 1910.119(e)",
+    frequency: "per_event",
+    tags: ["psm", "pha", "process_hazard", "chemical"],
+    items: [
+      item("manufacturing", "pha", "process_description_current", "yes_no_na", 1),
+      item("manufacturing", "pha", "hazards_identified", "yes_no_na", 2),
+      item("manufacturing", "pha", "previous_incidents_reviewed", "yes_no_na", 3),
+      item("manufacturing", "pha", "engineering_controls", "yes_no_na", 4),
+      item("manufacturing", "pha", "administrative_controls", "yes_no_na", 5),
+      item("manufacturing", "pha", "consequences_analyzed", "yes_no_na", 6),
+      item("manufacturing", "pha", "safeguards_adequate", "yes_no_na", 7),
+      item("manufacturing", "pha", "human_factors_considered", "yes_no_na", 8),
+      item("manufacturing", "pha", "recommendations_documented", "yes_no_na", 9),
+      item("manufacturing", "pha", "team_qualifications_verified", "yes_no_na", 10),
+    ],
+  },
+
+  // 2-8  Management of Change (MOC)
+  {
+    id: "manufacturing_moc",
+    industry: "manufacturing",
+    name_key: k("manufacturing", "moc", "name"),
+    description_key: k("manufacturing", "moc", "description"),
+    category: "process_safety",
+    regulation: "OSHA 1910.119(l)",
+    frequency: "per_event",
+    tags: ["psm", "moc", "management_of_change", "chemical"],
+    items: [
+      item("manufacturing", "moc", "change_description", "yes_no_na", 1),
+      item("manufacturing", "moc", "technical_basis", "yes_no_na", 2),
+      item("manufacturing", "moc", "safety_impact_assessed", "yes_no_na", 3),
+      item("manufacturing", "moc", "operating_procedures_updated", "yes_no_na", 4),
+      item("manufacturing", "moc", "training_completed", "yes_no_na", 5),
+      item("manufacturing", "moc", "pre_startup_review", "yes_no_na", 6),
+      item("manufacturing", "moc", "authorization_obtained", "yes_no_na", 7),
+      item("manufacturing", "moc", "affected_personnel_notified", "yes_no_na", 8),
+    ],
+  },
+
+  // 2-9  Pre-Startup Safety Review (PSSR)
+  {
+    id: "manufacturing_pssr",
+    industry: "manufacturing",
+    name_key: k("manufacturing", "pssr", "name"),
+    description_key: k("manufacturing", "pssr", "description"),
+    category: "process_safety",
+    regulation: "OSHA 1910.119(i)",
+    frequency: "per_event",
+    tags: ["psm", "pssr", "pre_startup", "chemical"],
+    items: [
+      item("manufacturing", "pssr", "construction_meets_specs", "yes_no_na", 1),
+      item("manufacturing", "pssr", "safety_systems_functional", "pass_fail", 2),
+      item("manufacturing", "pssr", "procedures_in_place", "yes_no_na", 3),
+      item("manufacturing", "pssr", "pha_recommendations_resolved", "yes_no_na", 4),
+      item("manufacturing", "pssr", "training_completed", "yes_no_na", 5),
+      item("manufacturing", "pssr", "emergency_procedures_ready", "yes_no_na", 6),
+      item("manufacturing", "pssr", "moc_requirements_met", "yes_no_na", 7),
+      item("manufacturing", "pssr", "environmental_permits", "yes_no_na", 8),
+      item("manufacturing", "pssr", "process_safety_info_updated", "yes_no_na", 9),
+      item("manufacturing", "pssr", "management_authorization", "yes_no_na", 10),
+    ],
+  },
+
+  // 2-10 Arc Flash Risk Assessment
+  {
+    id: "manufacturing_arc_flash",
+    industry: "manufacturing",
+    name_key: k("manufacturing", "arc_flash", "name"),
+    description_key: k("manufacturing", "arc_flash", "description"),
+    category: "electrical_safety",
+    regulation: "NFPA 70E / OSHA 1910.269",
+    frequency: "per_event",
+    tags: ["arc_flash", "nfpa_70e", "electrical", "ppe"],
+    items: [
+      item("manufacturing", "arc_flash", "incident_energy_calculated", "yes_no_na", 1),
+      item("manufacturing", "arc_flash", "arc_flash_labels_posted", "pass_fail", 2),
+      item("manufacturing", "arc_flash", "ppe_category_determined", "yes_no_na", 3),
+      item("manufacturing", "arc_flash", "approach_boundaries_marked", "yes_no_na", 4),
+      item("manufacturing", "arc_flash", "energized_work_permit", "yes_no_na", 5),
+      item("manufacturing", "arc_flash", "qualified_personnel_verified", "yes_no_na", 6),
+      item("manufacturing", "arc_flash", "de_energization_feasible", "yes_no_na", 7),
+      item("manufacturing", "arc_flash", "protective_equipment_available", "pass_fail", 8),
+      item("manufacturing", "arc_flash", "emergency_procedures", "yes_no_na", 9),
+      item("manufacturing", "arc_flash", "documentation_complete", "yes_no_na", 10),
+    ],
+  },
+
+  // 2-11 Electrical Safety Program Audit
+  {
+    id: "manufacturing_electrical_audit",
+    industry: "manufacturing",
+    name_key: k("manufacturing", "electrical_audit", "name"),
+    description_key: k("manufacturing", "electrical_audit", "description"),
+    category: "electrical_safety",
+    regulation: "NFPA 70E §110.3",
+    frequency: "monthly",
+    tags: ["electrical_safety", "nfpa_70e", "audit", "program"],
+    items: [
+      item("manufacturing", "electrical_audit", "written_program_current", "yes_no_na", 1),
+      item("manufacturing", "electrical_audit", "training_records", "pass_fail", 2),
+      item("manufacturing", "electrical_audit", "ppe_inspection_records", "pass_fail", 3),
+      item("manufacturing", "electrical_audit", "energized_work_permits", "yes_no_na", 4),
+      item("manufacturing", "electrical_audit", "lockout_tagout_procedures", "pass_fail", 5),
+      item("manufacturing", "electrical_audit", "arc_flash_study_current", "yes_no_na", 6),
+      item("manufacturing", "electrical_audit", "equipment_labeling", "pass_fail", 7),
+      item("manufacturing", "electrical_audit", "incident_investigation", "yes_no_na", 8),
+      item("manufacturing", "electrical_audit", "contractor_compliance", "yes_no_na", 9),
+      item("manufacturing", "electrical_audit", "program_audit_documented", "yes_no_na", 10),
     ],
   },
 ];
