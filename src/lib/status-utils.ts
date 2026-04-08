@@ -128,8 +128,8 @@ export function getStatusVariant(
  * Work-order-specific status → variant map (constant lookup).
  */
 export const WORK_ORDER_STATUS_COLORS: Record<string, BadgeVariant> = {
-  waiting_approval: "pending",
-  waiting_material: "warning",
+  waiting_approval: "secondary",
+  waiting_material: "info",
   approved: "info",
   scheduled: "in_progress",
   in_progress: "in_progress",

@@ -23,8 +23,8 @@ export function StatusPipeline({ currentStatus, className }: StatusPipelineProps
   if (currentStatus === "cancelled") {
     return (
       <div className={cn("flex items-center gap-2 px-4 py-3 rounded-lg border bg-muted/30", className)}>
-        <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center">
-          <span className="text-[10px] text-muted-foreground">✕</span>
+        <div className="h-6 w-6 rounded-full bg-[#6b7280] flex items-center justify-center">
+          <span className="text-[10px] text-white font-bold">✕</span>
         </div>
         <span className="text-sm font-medium text-muted-foreground">Cancelled</span>
       </div>
@@ -34,36 +34,38 @@ export function StatusPipeline({ currentStatus, className }: StatusPipelineProps
   const currentIndex = PIPELINE_STEPS.findIndex((s) => s.status === currentStatus);
 
   return (
-    <div className={cn("rounded-lg border bg-card px-4 py-4", className)}>
-      <div className="flex items-center">
+    <div className={cn("px-2 py-5", className)}>
+      <div className="flex items-start">
         {PIPELINE_STEPS.map((step, index) => {
           const isCompleted = index < currentIndex;
           const isActive = index === currentIndex;
+          const isLast = index === PIPELINE_STEPS.length - 1;
 
           return (
             <React.Fragment key={step.status}>
-              {/* Step circle + label */}
-              <div className="flex flex-col items-center gap-1.5 min-w-0">
+              <div className="flex flex-col items-center gap-2" style={{ minWidth: 0, flex: "0 0 auto" }}>
+                {/* Circle */}
                 <div
                   className={cn(
-                    "h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 transition-colors",
-                    isCompleted && "bg-emerald-600 text-white dark:bg-emerald-500",
-                    isActive && "bg-foreground text-background ring-2 ring-foreground/20 ring-offset-2 ring-offset-background",
-                    !isCompleted && !isActive && "bg-muted text-muted-foreground/50",
+                    "h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0",
+                    isCompleted && "bg-[#059669] text-white",
+                    isActive && "bg-[#1e293b] text-white dark:bg-[#f1f5f9] dark:text-[#0f172a]",
+                    !isCompleted && !isActive && "bg-[#e2e8f0] text-[#94a3b8] dark:bg-[#334155] dark:text-[#64748b]",
                   )}
                 >
                   {isCompleted ? (
-                    <Check className="h-3.5 w-3.5" />
+                    <Check className="h-4 w-4" />
                   ) : (
                     <span>{index + 1}</span>
                   )}
                 </div>
+                {/* Label */}
                 <span
                   className={cn(
-                    "text-[11px] leading-tight text-center max-w-[80px]",
-                    isCompleted && "text-emerald-700 dark:text-emerald-400 font-medium",
-                    isActive && "text-foreground font-semibold",
-                    !isCompleted && !isActive && "text-muted-foreground/50",
+                    "text-[11px] leading-tight text-center whitespace-nowrap",
+                    isCompleted && "text-[#059669] dark:text-[#6ee7b7] font-medium",
+                    isActive && "text-[#1e293b] dark:text-[#f1f5f9] font-semibold",
+                    !isCompleted && !isActive && "text-[#94a3b8] dark:text-[#64748b]",
                   )}
                 >
                   {step.label}
@@ -71,15 +73,17 @@ export function StatusPipeline({ currentStatus, className }: StatusPipelineProps
               </div>
 
               {/* Connecting line */}
-              {index < PIPELINE_STEPS.length - 1 && (
-                <div
-                  className={cn(
-                    "flex-1 h-0.5 mx-1 mt-[-20px]",
-                    index < currentIndex
-                      ? "bg-emerald-600 dark:bg-emerald-500"
-                      : "bg-border",
-                  )}
-                />
+              {!isLast && (
+                <div className="flex-1 flex items-center px-1" style={{ marginTop: 16 }}>
+                  <div
+                    className={cn(
+                      "h-0.5 w-full rounded-full",
+                      index < currentIndex
+                        ? "bg-[#059669] dark:bg-[#6ee7b7]"
+                        : "bg-[#e2e8f0] dark:bg-[#334155]",
+                    )}
+                  />
+                </div>
               )}
             </React.Fragment>
           );
