@@ -7,6 +7,8 @@ import {
   Search,
   X,
   AlertTriangle,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,9 +29,12 @@ export default function PartsPage() {
   const { t, formatNumber } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { items: parts, add, isLoading } = usePartsStore();
+  const { items: parts, add, update, remove, isLoading } = usePartsStore();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showCreate, setShowCreate] = React.useState(false);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const ITEMS_PER_PAGE = 10;
   const [form, setForm] = React.useState({
     name: "",
     part_number: "",
@@ -76,7 +81,8 @@ export default function PartsPage() {
   return (
     <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Parts Inventory</h1>
         <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4" />
           {t("parts.addPart")}
@@ -89,9 +95,9 @@ export default function PartsPage() {
         <KPICard title={t("parts.labels.lowStock")} value={lowStockCount} icon={AlertTriangle} />
       </div>
 
-      <div className="relative max-w-md">
+      <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder={t("parts.placeholders.searchParts")} className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <Input placeholder={t("parts.placeholders.searchParts")} className="pl-10" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
       </div>
 
       {filtered.length === 0 ? (
@@ -101,6 +107,7 @@ export default function PartsPage() {
           addLabel={t("parts.addPart")}
         />
       ) : (
+        <>
         <Card>
           <CardHeader>
             <CardTitle>{t("parts.title")}</CardTitle>
@@ -115,16 +122,17 @@ export default function PartsPage() {
                     <th className="px-4 py-3 font-medium">{t("parts.labels.unitCost")}</th>
                     <th className="px-4 py-3 font-medium">{t("parts.labels.inStock")}</th>
                     <th className="px-4 py-3 font-medium">{t("parts.labels.minimumStock")}</th>
-                    <th className="px-4 py-3 font-medium">Stock status</th>
-                    <th className="px-4 py-3 font-medium">Inventory value</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">Value</th>
+                    <th className="px-4 py-3 font-medium sr-only">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filtered.map((part) => {
+                  {filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((part) => {
                     const isLow = part.quantity_in_stock <= part.minimum_stock;
                     const inventoryValue = part.quantity_in_stock * part.unit_cost;
                     return (
-                      <tr key={part.id} className="align-top">
+                      <tr key={part.id} className="align-top hover:bg-muted/50">
                         <td className="px-4 py-3">
                           <div className="font-medium">{part.name}</div>
                           <div className="font-mono text-xs text-muted-foreground">{part.part_number}</div>
@@ -139,6 +147,22 @@ export default function PartsPage() {
                           </Badge>
                         </td>
                         <td className="px-4 py-3">${formatNumber(inventoryValue)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              aria-label="Delete part"
+                              onClick={() => {
+                                remove(part.id);
+                                toast("Part removed");
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
@@ -147,6 +171,18 @@ export default function PartsPage() {
             </div>
           </CardContent>
         </Card>
+        {filtered.length > ITEMS_PER_PAGE && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
+            </p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</Button>
+              <Button size="sm" variant="outline" disabled={currentPage * ITEMS_PER_PAGE >= filtered.length} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {/* Create Modal */}

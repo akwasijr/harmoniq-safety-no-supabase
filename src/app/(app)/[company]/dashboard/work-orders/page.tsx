@@ -209,7 +209,8 @@ export default function WorkOrdersPage() {
   return (
     <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Work Orders</h1>
         <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4" />
           {t("workOrders.newWorkOrder")}
@@ -311,7 +312,9 @@ export default function WorkOrdersPage() {
                   <div className="flex gap-2 flex-wrap">
                     {STATUS_FLOW[order.status]?.map((next) => (
                       <Button key={next} size="sm" variant={next === "cancelled" ? "outline" : "default"} onClick={() => handleStatusChange(order.id, next)}>
+                        {next === "waiting_material" && "Request material"}
                         {next === "approved" && t("workOrders.buttons.approve")}
+                        {next === "scheduled" && "Schedule"}
                         {next === "in_progress" && t("workOrders.buttons.start")}
                         {next === "completed" && <><CheckCircle className="h-4 w-4 mr-1" />{t("workOrders.buttons.complete")}</>}
                         {next === "cancelled" && t("workOrders.buttons.cancel")}

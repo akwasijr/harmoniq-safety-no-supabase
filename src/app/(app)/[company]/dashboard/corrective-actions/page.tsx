@@ -43,6 +43,8 @@ export default function CorrectiveActionsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [showCreate, setShowCreate] = React.useState(false);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const ITEMS_PER_PAGE = 10;
   const [form, setForm] = React.useState({
     asset_id: "",
     description: "",
@@ -145,7 +147,8 @@ export default function CorrectiveActionsPage() {
   return (
     <RoleGuard requiredPermission="incidents.view_all">
     <div className="space-y-6">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Corrective Actions</h1>
         <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4" />
           {t("correctiveActions.newAction")}
@@ -159,18 +162,22 @@ export default function CorrectiveActionsPage() {
         <KPICard title={t("correctiveActions.statuses.completed")} value={completedCount} icon={CheckCircle} />
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder={t("correctiveActions.placeholders.searchActions")} className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          <Input placeholder={t("correctiveActions.placeholders.searchActions")} className="pl-10" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
         </div>
-        <div className="flex gap-2">
-          {["all", "open", "in_progress", "completed"].map((s) => (
-            <Button key={s} size="sm" variant={statusFilter === s ? "default" : "outline"} onClick={() => setStatusFilter(s)}>
-              {s === "all" ? "All" : capitalize(s.replace("_", " "))}
-            </Button>
-          ))}
-        </div>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="open">Open</SelectItem>
+            <SelectItem value="in_progress">In progress</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {filtered.length === 0 ? (
@@ -180,8 +187,9 @@ export default function CorrectiveActionsPage() {
           addLabel={t("correctiveActions.newAction")}
         />
       ) : (
+        <>
         <div className="space-y-3">
-          {filtered.map((action) => {
+          {filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((action) => {
             const isOverdue = action.status !== "completed" && new Date(action.due_date) < stableNow;
             return (
               <Card key={action.id} className={isOverdue ? "border-destructive/50" : ""}>
@@ -233,6 +241,18 @@ export default function CorrectiveActionsPage() {
             );
           })}
         </div>
+        {filtered.length > ITEMS_PER_PAGE && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
+            </p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</Button>
+              <Button size="sm" variant="outline" disabled={currentPage * ITEMS_PER_PAGE >= filtered.length} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {/* Create Modal */}
