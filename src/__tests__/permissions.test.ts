@@ -125,7 +125,7 @@ describe("Role-based permissions", () => {
   });
 
   describe("all roles are defined", () => {
-    const allRoles: UserRole[] = ["super_admin", "company_admin", "manager", "employee"];
+    const allRoles: UserRole[] = ["super_admin", "company_admin", "manager", "safety_officer", "employee", "viewer"];
 
     it("ROLE_PERMISSIONS has entries for all roles", () => {
       for (const role of allRoles) {

@@ -114,7 +114,7 @@ export default function NewTicketPage() {
   };
 
   return (
-    <RoleGuard requiredPermission="incidents.create">
+    <RoleGuard requiredPermission="tickets.create">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">

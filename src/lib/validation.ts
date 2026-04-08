@@ -44,7 +44,7 @@ export function isValidUUID(id: string): boolean {
 }
 
 // Validate a role value against allowed set
-export function isValidRole(role: string, allowed = ["worker", "supervisor", "safety_officer", "company_admin", "super_admin"]): boolean {
+export function isValidRole(role: string, allowed = ["super_admin", "company_admin", "manager", "safety_officer", "employee", "viewer"]): boolean {
   return allowed.includes(role);
 }
 

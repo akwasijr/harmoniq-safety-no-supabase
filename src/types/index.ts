@@ -23,7 +23,7 @@ export type IndustryCode =
 
 // User Roles
 export type SuperAdminRole = "super_admin";
-export type CompanyRole = "company_admin" | "manager" | "employee";
+export type CompanyRole = "company_admin" | "manager" | "safety_officer" | "employee" | "viewer";
 export type UserRole = SuperAdminRole | CompanyRole;
 
 // Permission Types
@@ -64,6 +64,20 @@ export type Permission =
   | "settings.view"
   | "settings.edit"
   | "settings.billing"
+  // User (own)
+  | "users.view_own"
+  // Risk Assessments
+  | "risk_assessments.view"
+  | "risk_assessments.create"
+  | "risk_assessments.edit"
+  // Corrective Actions
+  | "corrective_actions.view"
+  | "corrective_actions.create"
+  | "corrective_actions.edit"
+  // Locations
+  | "locations.view"
+  // Assets
+  | "assets.view"
   // Work Orders
   | "work_orders.view"
   | "work_orders.view_all"
@@ -71,7 +85,14 @@ export type Permission =
   | "work_orders.edit"
   | "work_orders.assign"
   | "work_orders.complete"
-  | "work_orders.delete";
+  | "work_orders.delete"
+  // Tickets
+  | "tickets.view"
+  | "tickets.view_own"
+  | "tickets.create"
+  | "tickets.edit"
+  | "tickets.delete"
+  | "tickets.assign";
 
 // Role-based default permissions
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -81,11 +102,56 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "incidents.delete", "incidents.assign", "incidents.investigate",
     "checklists.view", "checklists.complete", "checklists.create_templates", "checklists.manage",
     "reports.view_own", "reports.view_team", "reports.view_all", "reports.export",
-    "users.view", "users.create", "users.edit", "users.delete", "users.manage_roles",
+    "users.view", "users.view_own", "users.create", "users.edit", "users.delete", "users.manage_roles",
     "teams.view", "teams.create", "teams.edit", "teams.delete", "teams.manage_members",
     "settings.view", "settings.edit", "settings.billing",
+    "risk_assessments.view", "risk_assessments.create", "risk_assessments.edit",
+    "corrective_actions.view", "corrective_actions.create", "corrective_actions.edit",
+    "locations.view", "assets.view",
     "work_orders.view", "work_orders.view_all", "work_orders.create", "work_orders.edit",
     "work_orders.assign", "work_orders.complete", "work_orders.delete",
+    "tickets.view", "tickets.view_own", "tickets.create", "tickets.edit", "tickets.delete", "tickets.assign",
+  ],
+  company_admin: [
+    "incidents.view_own", "incidents.view_team", "incidents.view_all",
+    "incidents.create", "incidents.edit_own", "incidents.edit_all",
+    "incidents.delete", "incidents.assign", "incidents.investigate",
+    "checklists.view", "checklists.complete", "checklists.create_templates", "checklists.manage",
+    "reports.view_own", "reports.view_team", "reports.view_all", "reports.export",
+    "users.view", "users.view_own", "users.create", "users.edit", "users.delete", "users.manage_roles",
+    "teams.view", "teams.create", "teams.edit", "teams.delete", "teams.manage_members",
+    "settings.view", "settings.edit", "settings.billing",
+    "risk_assessments.view", "risk_assessments.create", "risk_assessments.edit",
+    "corrective_actions.view", "corrective_actions.create", "corrective_actions.edit",
+    "locations.view", "assets.view",
+    "work_orders.view", "work_orders.view_all", "work_orders.create", "work_orders.edit",
+    "work_orders.assign", "work_orders.complete", "work_orders.delete",
+    "tickets.view", "tickets.view_own", "tickets.create", "tickets.edit", "tickets.delete", "tickets.assign",
+  ],
+  manager: [
+    "incidents.view_own", "incidents.view_team",
+    "incidents.create", "incidents.edit_own", "incidents.edit_all",
+    "incidents.assign", "incidents.investigate",
+    "checklists.view", "checklists.complete", "checklists.create_templates",
+    "reports.view_own", "reports.view_team", "reports.export",
+    "users.view",
+    "teams.view", "teams.manage_members",
+    "risk_assessments.view", "risk_assessments.create", "risk_assessments.edit",
+    "corrective_actions.view", "corrective_actions.create", "corrective_actions.edit",
+    "locations.view", "assets.view",
+    "work_orders.view", "work_orders.view_all", "work_orders.create", "work_orders.edit",
+    "work_orders.assign", "work_orders.complete",
+    "tickets.view", "tickets.view_own", "tickets.create", "tickets.edit", "tickets.assign",
+  ],
+  safety_officer: [
+    "incidents.view_own", "incidents.create", "incidents.edit_own",
+    "risk_assessments.view", "risk_assessments.create", "risk_assessments.edit",
+    "corrective_actions.view", "corrective_actions.create", "corrective_actions.edit",
+    "checklists.view",
+    "locations.view",
+    "assets.view",
+    "users.view_own",
+    "tickets.view_own", "tickets.create",
   ],
   employee: [
     "incidents.view_own",
@@ -97,69 +163,15 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "work_orders.view",
     "work_orders.create",
     "work_orders.complete",
+    "tickets.view_own", "tickets.create",
   ],
-  manager: [
+  viewer: [
     "incidents.view_own",
-    "incidents.view_team",
-    "incidents.create",
-    "incidents.edit_own",
-    "incidents.edit_all",
-    "incidents.assign",
-    "incidents.investigate",
+    "assets.view",
+    "locations.view",
     "checklists.view",
-    "checklists.complete",
-    "checklists.create_templates",
-    "reports.view_own",
-    "reports.view_team",
-    "reports.export",
-    "users.view",
-    "teams.view",
-    "teams.manage_members",
-    "work_orders.view",
-    "work_orders.view_all",
-    "work_orders.create",
-    "work_orders.edit",
-    "work_orders.assign",
-    "work_orders.complete",
-  ],
-  company_admin: [
-    "incidents.view_own",
-    "incidents.view_team",
-    "incidents.view_all",
-    "incidents.create",
-    "incidents.edit_own",
-    "incidents.edit_all",
-    "incidents.delete",
-    "incidents.assign",
-    "incidents.investigate",
-    "checklists.view",
-    "checklists.complete",
-    "checklists.create_templates",
-    "checklists.manage",
-    "reports.view_own",
-    "reports.view_team",
-    "reports.view_all",
-    "reports.export",
-    "users.view",
-    "users.create",
-    "users.edit",
-    "users.delete",
-    "users.manage_roles",
-    "teams.view",
-    "teams.create",
-    "teams.edit",
-    "teams.delete",
-    "teams.manage_members",
-    "settings.view",
-    "settings.edit",
-    "settings.billing",
-    "work_orders.view",
-    "work_orders.view_all",
-    "work_orders.create",
-    "work_orders.edit",
-    "work_orders.assign",
-    "work_orders.complete",
-    "work_orders.delete",
+    "users.view_own",
+    "tickets.view_own",
   ],
 };
 

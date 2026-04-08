@@ -55,7 +55,7 @@ export default function TicketDetailPage() {
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
   const { hasPermission, user } = useAuth();
-  const canDeleteTicket = hasPermission("incidents.delete");
+  const canDeleteTicket = hasPermission("tickets.delete");
   const { tickets, users, stores } = useCompanyData();
   const { isLoading, update: updateTicket, remove: removeTicket } = stores.tickets;
   const ticket = tickets.find((t) => t.id === ticketId);
@@ -177,7 +177,7 @@ export default function TicketDetailPage() {
   const taskProgress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
 
   return (
-    <RoleGuard requiredPermission="incidents.view_own">
+    <RoleGuard requiredPermission="tickets.view_own">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">

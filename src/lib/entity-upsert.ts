@@ -20,6 +20,7 @@ export const allowedEntityUpsertTables = [
   "inspection_rounds",
   "notifications",
   "companies",
+  "users",
 ] as const;
 
 export type AllowedEntityUpsertTable = (typeof allowedEntityUpsertTables)[number];
