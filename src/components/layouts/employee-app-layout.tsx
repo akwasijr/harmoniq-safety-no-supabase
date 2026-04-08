@@ -95,7 +95,7 @@ export function EmployeeAppLayout({
       )}
 
       {/* Main content */}
-      <main className={`flex-1 ${isFullPage ? "pb-0" : "pb-[72px]"}`}>{children}</main>
+      <main className={`flex-1 ${isFullPage ? "pb-0" : "pb-[72px]"}`} style={{ marginTop: showHeader && !isFullPage ? -1 : 0 }}>{children}</main>
 
       {/* Bottom navigation — hidden on full-page flows like report incident */}
       {!isFullPage && <BottomTabs company={company} />}

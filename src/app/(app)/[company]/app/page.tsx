@@ -417,11 +417,11 @@ export default function EmployeeAppHomePage() {
       <style>{`
         .home-section {
           opacity: 0;
-          transform: translateY(16px);
-          animation: home-ease-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          transform: translateY(40px);
+          animation: home-ease-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
         @keyframes home-ease-in {
-          from { opacity: 0; transform: translateY(16px); }
+          from { opacity: 0; transform: translateY(40px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
