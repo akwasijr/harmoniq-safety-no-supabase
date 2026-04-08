@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Wrench, Calendar, User as UserIcon, AlertTriangle, Clock, FileText, Package, CheckCircle } from "lucide-react";
+import { Wrench, Calendar, User as UserIcon, AlertTriangle, Clock, FileText, Package, CheckCircle, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,10 @@ import { TaskDetailTabs } from "@/components/tasks/task-detail-tabs";
 import { TaskComments, loadComments } from "@/components/tasks/task-comments";
 import { TaskDocuments } from "@/components/tasks/task-documents";
 import { WorkOrderWorkLog } from "@/components/tasks/work-order-work-log";
+import { StatusPipeline } from "@/components/work-orders/status-pipeline";
 import { getFilesForEntity } from "@/lib/file-storage";
 import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
+import { useLocationsStore } from "@/stores/locations-store";
 import { useWorkOrderStatusLogStore } from "@/stores/work-order-status-log-store";
 import { ArrowLeft } from "lucide-react";
 import type { WorkOrderStatus } from "@/types";
@@ -44,6 +46,7 @@ export default function WorkOrderDetailPage() {
   const { items: users } = useUsersStore();
   const { items: assets } = useAssetsStore();
   const { items: parts } = usePartsStore();
+  const { items: locations } = useLocationsStore();
   const { add: addStatusLog } = useWorkOrderStatusLogStore();
 
   const [activeTab, setActiveTab] = React.useState("details");
@@ -59,6 +62,7 @@ export default function WorkOrderDetailPage() {
   const assignee = order?.assigned_to ? users.find((u) => u.id === order.assigned_to) : null;
   const requester = order?.requested_by ? users.find((u) => u.id === order.requested_by) : null;
   const asset = order?.asset_id ? assets.find((a) => a.id === order.asset_id) : null;
+  const location = asset?.location_id ? locations.find((l) => l.id === asset.location_id) : null;
 
   const isOverdue = React.useMemo(() => {
     if (!order?.due_date) return false;
@@ -109,6 +113,8 @@ export default function WorkOrderDetailPage() {
 
   const priorityConf = PRIORITY_CONFIG[order.priority];
 
+  const typeLabel = order.type?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
   const tabs = [
     { id: "details", label: "Details" },
     { id: "worklog", label: "Work Log" },
@@ -118,7 +124,13 @@ export default function WorkOrderDetailPage() {
 
   return (
     <div className="flex flex-col min-h-full bg-background">
-      <TaskDetailHeader title="Work Order" subtitle={`#${orderId.slice(0, 10)}`} status={order.status} overdue={isOverdue} />
+      <TaskDetailHeader title="Work Order" subtitle={`#${orderId.slice(0, 10)}`} status={order.status} overdue={isOverdue}>
+        {typeLabel && (
+          <div className="mt-2">
+            <Badge variant="outline">{typeLabel}</Badge>
+          </div>
+        )}
+      </TaskDetailHeader>
 
       {isOverdue && (
         <div className="mx-4 mt-3 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-3 py-2">
@@ -129,6 +141,10 @@ export default function WorkOrderDetailPage() {
         </div>
       )}
 
+      <div className="px-4 mt-3 overflow-x-auto">
+        <StatusPipeline currentStatus={order.status} />
+      </div>
+
       <TaskDetailTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="flex-1 px-4 py-4 space-y-4">
@@ -136,8 +152,8 @@ export default function WorkOrderDetailPage() {
           <>
             <div>
               <div className="flex items-start gap-3 mb-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 shrink-0">
-                  <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+                  <Wrench className="h-5 w-5 text-primary" aria-hidden="true" />
                 </div>
                 <h2 className="text-lg font-semibold leading-tight pt-1">{order.title}</h2>
               </div>
@@ -150,6 +166,7 @@ export default function WorkOrderDetailPage() {
               { icon: UserIcon, label: "Requested by", value: requester?.full_name || "Unknown" },
               { icon: UserIcon, label: "Assigned to", value: assignee?.full_name || "Unassigned" },
               ...(asset ? [{ icon: Package, label: "Asset", value: asset.name, valueClassName: "text-primary" }] : []),
+              ...(location ? [{ icon: MapPin, label: "Location", value: location.name }] : []),
               ...(order.due_date ? [{ icon: Calendar, label: "Due date", value: formatDate(new Date(order.due_date), { weekday: "short", month: "short", day: "numeric", year: "numeric" }), valueClassName: isOverdue ? "text-red-600 dark:text-red-400" : undefined }] : []),
               { icon: Clock, label: "Created", value: formatDate(order.created_at) },
               ...(order.completed_at ? [{ icon: CheckCircle, label: "Completed", value: formatDate(order.completed_at) }] : []),
@@ -157,10 +174,10 @@ export default function WorkOrderDetailPage() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4" />Description</CardTitle>
+                <CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4" />Instructions</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{order.description || "No description provided."}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{order.description || "No instructions provided."}</p>
               </CardContent>
             </Card>
 

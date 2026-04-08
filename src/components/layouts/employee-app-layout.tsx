@@ -17,6 +17,7 @@ const FULL_PAGE_ROUTES = [
   "/app/inspection/",
   "/app/inspection-round",
   "/app/incidents/",
+  "/app/tasks/work-orders/",
 ];
 
 // Risk assessment form routes — all sub-paths except the index and view pages

@@ -21,6 +21,7 @@ import {
   ScanLine,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useLocationsStore } from "@/stores/locations-store";
@@ -65,7 +66,7 @@ export default function EmployeeAssetsPage() {
   const myOpenWorkOrders = workOrders.filter(
     (wo) =>
       wo.company_id === user?.company_id &&
-      (wo.status === "in_progress" || wo.status === "approved") &&
+      !["completed", "cancelled"].includes(wo.status) &&
       isAssignedToUserOrTeam(wo, user),
   );
 
@@ -320,8 +321,10 @@ export default function EmployeeAssetsPage() {
               </p>
               {myOpenWorkOrders.map(wo => {
                 const asset = assets.find(a => a.id === wo.asset_id);
+                const woOverdue = wo.due_date && !["completed", "cancelled"].includes(wo.status) && new Date(wo.due_date) < new Date();
+                const typeLabel = wo.type?.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
                 return (
-                  <Link key={wo.id} href={`/${company}/app/asset?id=${wo.asset_id}`} className="block">
+                  <Link key={wo.id} href={`/${company}/app/tasks/work-orders/${wo.id}`} className="block">
                     <Card className="hover:bg-muted/50 active:bg-muted/70 transition-colors">
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between gap-3">
@@ -330,13 +333,14 @@ export default function EmployeeAssetsPage() {
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {asset?.name || t("assets.unknownAsset")} · {wo.priority}
                             </p>
-                            <div className="flex items-center gap-3 mt-1.5">
+                            <div className="flex items-center gap-2 flex-wrap mt-1.5">
+                              {typeLabel && <Badge variant="outline" className="text-[10px] py-0">{typeLabel}</Badge>}
                               <span className="text-xs capitalize">
                                 {wo.status.replace(/_/g, " ")}
                               </span>
                               {wo.due_date && (
-                                <span className="text-xs text-muted-foreground">
-                                  Due: {formatDate(wo.due_date)}
+                                <span className={cn("text-xs", woOverdue ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground")}>
+                                  {woOverdue ? "Overdue" : `Due: ${formatDate(wo.due_date)}`}
                                 </span>
                               )}
                             </div>
