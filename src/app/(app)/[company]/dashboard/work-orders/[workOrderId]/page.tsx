@@ -252,28 +252,6 @@ export default function WorkOrderDetailPage() {
     <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6" ref={highlight ? highlightRef : undefined}>
       {/* Record navigation */}
-      {totalOrders > 1 && currentOrderIndex >= 0 && (
-        <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-          <span>{currentOrderIndex + 1} of {totalOrders}</span>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            disabled={!prevOrderId}
-            onClick={() => prevOrderId && router.push(`/${company}/dashboard/work-orders/${prevOrderId}`)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            disabled={!nextOrderId}
-            onClick={() => nextOrderId && router.push(`/${company}/dashboard/work-orders/${nextOrderId}`)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex items-start gap-4">
         <Button variant="ghost" size="icon" className="mt-1 shrink-0" onClick={() => router.back()}>
