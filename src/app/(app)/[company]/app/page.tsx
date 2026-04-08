@@ -346,10 +346,10 @@ export default function EmployeeAppHomePage() {
   // ── Always show full feed (no early return for empty state) ──
   return (
     <div className="flex flex-col min-h-full">
-      {/* ── Hero Section ── */}
-      <div className="bg-brand-solid px-5 pt-8 pb-10 home-section" style={{ animationDelay: "0s" }}>
-        <p className="text-brand-solid-foreground/60 text-sm">{greeting}</p>
-        <h1 className="text-2xl font-bold text-brand-solid-foreground mt-1">
+      {/* ── Hero Section — no animation, visible immediately to avoid white flash ── */}
+      <div className="bg-brand-solid px-5 pt-8 pb-10">
+        <p className="text-brand-solid-foreground/60 text-sm home-section" style={{ animationDelay: "0s" }}>{greeting}</p>
+        <h1 className="text-2xl font-bold text-brand-solid-foreground mt-1 home-section" style={{ animationDelay: "0.05s" }}>
           {user?.first_name || t("app.welcome")}
         </h1>
 
