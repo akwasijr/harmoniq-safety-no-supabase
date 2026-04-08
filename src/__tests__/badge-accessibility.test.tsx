@@ -60,9 +60,9 @@ describe("Badge — color correctness", () => {
     expect(classes).toContain("#dc2626");
   });
 
-  it("warning variant contains amber hex #d97706", () => {
+  it("warning variant contains amber hex #b45309", () => {
     const classes = badgeVariants({ variant: "warning" });
-    expect(classes).toContain("#d97706");
+    expect(classes).toContain("#b45309");
   });
 
   it("info variant contains blue hex #2563eb", () => {

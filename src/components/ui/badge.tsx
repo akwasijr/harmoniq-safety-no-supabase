@@ -22,21 +22,21 @@ const badgeVariants = cva(
         success:
           "bg-[#059669] text-white dark:bg-[#064e3b] dark:text-[#6ee7b7]",
         warning:
-          "bg-[#d97706] text-white dark:bg-[#78350f] dark:text-[#fcd34d]",
+          "bg-[#b45309] text-white dark:bg-[#78350f] dark:text-[#fcd34d]",
         info:
           "bg-[#2563eb] text-white dark:bg-[#1e3a5f] dark:text-[#93c5fd]",
         outline: "text-foreground bg-muted/50 border-border",
         // Status variants
-        "in-progress": "bg-[#d97706] text-white dark:bg-[#78350f] dark:text-[#fcd34d]",
-        in_progress: "bg-[#d97706] text-white dark:bg-[#78350f] dark:text-[#fcd34d]",
+        "in-progress": "bg-[#2563eb] text-white dark:bg-[#1e3a5f] dark:text-[#93c5fd]",
+        in_progress: "bg-[#2563eb] text-white dark:bg-[#1e3a5f] dark:text-[#93c5fd]",
         "in-review": "bg-[#7c3aed] text-white dark:bg-[#4c1d95] dark:text-[#c4b5fd]",
         in_review: "bg-[#7c3aed] text-white dark:bg-[#4c1d95] dark:text-[#c4b5fd]",
         resolved: "bg-[#059669] text-white dark:bg-[#064e3b] dark:text-[#6ee7b7]",
         archived: "bg-[#6b7280] text-white dark:bg-[#374151] dark:text-[#d1d5db]",
-        pending: "bg-[#ca8a04] text-white dark:bg-[#713f12] dark:text-[#fde047]",
+        pending: "bg-[#475569] text-white dark:bg-[#334155] dark:text-[#e2e8f0]",
         // Severity variants
         low: "bg-[#059669] text-white dark:bg-[#064e3b] dark:text-[#6ee7b7]",
-        medium: "bg-[#ca8a04] text-white dark:bg-[#713f12] dark:text-[#fde047]",
+        medium: "bg-[#b45309] text-white dark:bg-[#78350f] dark:text-[#fcd34d]",
         high: "bg-[#ea580c] text-white dark:bg-[#7c2d12] dark:text-[#fdba74]",
         critical: "bg-[#dc2626] text-white dark:bg-[#7f1d1d] dark:text-[#fca5a5]",
         // Semantic status variants

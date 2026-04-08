@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Wrench, Calendar, User as UserIcon, AlertTriangle, Clock, FileText, Package, CheckCircle, MapPin } from "lucide-react";
+import { Wrench, Calendar, User as UserIcon, AlertTriangle, Clock, FileText, Package, CheckCircle, MapPin, ScanLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,7 @@ export default function WorkOrderDetailPage() {
   const { add: addStatusLog } = useWorkOrderStatusLogStore();
 
   const [activeTab, setActiveTab] = React.useState("details");
+  const [assetVerified, setAssetVerified] = React.useState(false);
 
   const matchedOrder = orders.find((o) => o.id === orderId);
   const order =
@@ -107,6 +108,68 @@ export default function WorkOrderDetailPage() {
         description="This work order may have been deleted or you don't have access."
         action={<Button variant="outline" onClick={() => router.back()}><ArrowLeft className="h-4 w-4 mr-2" />Go Back</Button>}
       />
+    );
+  }
+
+  const skipVerification = !order.asset_id || ["in_progress", "completed", "cancelled"].includes(order.status);
+
+  // Asset verification screen
+  if (!assetVerified && !skipVerification) {
+    return (
+      <div className="flex flex-col min-h-full bg-background">
+        <div className="sticky top-14 z-10 border-b bg-background/95 backdrop-blur px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => router.back()}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-base font-semibold truncate">{order.title}</h1>
+              <p className="text-xs text-muted-foreground">Verify asset before starting</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 px-4 py-6 space-y-6">
+          <div className="text-center space-y-2">
+            <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+              <Package className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h2 className="text-lg font-semibold">Locate the asset</h2>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              Confirm you&apos;re at the right asset before starting work.
+            </p>
+          </div>
+          <Card>
+            <CardContent className="pt-4 space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Asset</p>
+                <p className="font-medium">{asset?.name || "Unknown asset"}</p>
+                {asset?.asset_tag && <p className="text-xs text-muted-foreground">{asset.asset_tag}</p>}
+              </div>
+              {location && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Location</p>
+                  <p className="font-medium flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{location.name}</p>
+                </div>
+              )}
+              {asset?.serial_number && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Serial number</p>
+                  <p className="font-mono text-sm">{asset.serial_number}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          <div className="space-y-3">
+            <Button className="w-full gap-2" onClick={() => router.push(`/${company}/app/scan`)}>
+              <ScanLine className="h-4 w-4" />
+              Scan asset QR code
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => setAssetVerified(true)}>
+              I&apos;m at the asset — proceed
+            </Button>
+          </div>
+        </div>
+      </div>
     );
   }
 
