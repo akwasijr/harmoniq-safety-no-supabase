@@ -60,7 +60,11 @@ export function StatusPipeline({ currentStatus, className }: StatusPipelineProps
                   !done && !active && "bg-muted text-muted-foreground",
                 )}
               >
-                {done && <Check className="h-3 w-3" strokeWidth={3} />}
+                {done ? (
+                  <Check className="h-3 w-3" strokeWidth={3} />
+                ) : (
+                  <span>{i + 1}.</span>
+                )}
                 {LABELS[step]}
               </div>
 
