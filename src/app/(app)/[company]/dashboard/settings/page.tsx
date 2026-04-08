@@ -509,6 +509,7 @@ export default function SettingsPage() {
           {activeTab === "industry" && (
             <IndustrySettingsSection
               companySlug={company}
+              companyCountry={activeCompany.country}
               settings={settings}
               t={t}
               updateSetting={updateSetting}

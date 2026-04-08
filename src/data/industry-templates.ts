@@ -2792,3 +2792,68 @@ export function getTemplatesByRegulation(
     t.regulation.toLowerCase().includes(lower),
   );
 }
+
+// ==========================================
+// COUNTRY-BASED TEMPLATE FILTERING
+// ==========================================
+
+/**
+ * Regulation text patterns that identify templates as belonging to a specific
+ * country. Templates whose `regulation` field matches a country's pattern are
+ * considered country-specific; templates that match NO pattern are generic.
+ */
+const COUNTRY_REGULATION_PATTERNS: Record<string, RegExp> = {
+  US: /\b(OSHA|MSHA|FDA|USDA|NFPA|FMCSA|FAA|TSA|CPSC|NIOSH|NERC|Joint Commission|Needlestick Safety Act|FMVSS|EM 385|State oil|State fire|State education|State AED|state health|state DOT|API|ANSI)\b/i,
+  NL: /\b(Arbowet|NEN 3140|VCA|BRZO|Seveso|NVWA|LMRA|BHV|Mijnbouwwet|ARIE|HACCP \/ NVWA)\b/i,
+  SE: /\b(AFS|LSO|Livsmedelsverket|Skolverket|Transportstyrelsen|Patientsäkerhetslagen|ESA)\b/i,
+  GB: /\b(CDM|COSHH|RIDDOR|MHOR|DSE Regulations|PUWER|LOLER|Fire Safety Order|HSE|COMAH|DSEAR|DVSA|CAA|HSG|Health and Safety at Work|Mines Regulations|Quarries Regulations|Food Safety Act)\b/i,
+};
+
+/** True when a regulation string does not match any country-specific pattern */
+function isGenericRegulation(regulation: string): boolean {
+  return !Object.values(COUNTRY_REGULATION_PATTERNS).some((p) =>
+    p.test(regulation),
+  );
+}
+
+/**
+ * Return only the templates relevant to `country` for the given `industry`.
+ *
+ * - Templates whose regulation matches the country's pattern are included.
+ * - Templates that match NO country pattern (truly generic / best-practice)
+ *   are included for every country.
+ * - Countries without an explicit pattern (DE, FR, ES, …) receive US-specific
+ *   templates plus generic ones (their regulations are overridden at
+ *   activation time via `resolveTemplateRegulation`).
+ */
+export function getTemplatesForCountry(
+  industry: IndustryCode,
+  country: Country,
+): IndustryChecklistTemplate[] {
+  const allForIndustry = getTemplatesByIndustry(industry);
+  const countryPattern = COUNTRY_REGULATION_PATTERNS[country];
+
+  if (!countryPattern) {
+    // Countries without specific patterns get US templates + generic ones
+    const usPattern = COUNTRY_REGULATION_PATTERNS.US;
+    return allForIndustry.filter(
+      (t) => usPattern.test(t.regulation) || isGenericRegulation(t.regulation),
+    );
+  }
+
+  return allForIndustry.filter(
+    (t) =>
+      countryPattern.test(t.regulation) || isGenericRegulation(t.regulation),
+  );
+}
+
+/**
+ * Like `getTemplatesForCountry` but across ALL industries.
+ */
+export function getAllTemplatesForCountry(
+  country: Country,
+): IndustryChecklistTemplate[] {
+  return industryTemplatePacks.flatMap((p) =>
+    getTemplatesForCountry(p.industry, country),
+  );
+}

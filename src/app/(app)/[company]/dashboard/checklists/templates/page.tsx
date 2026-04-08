@@ -18,8 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 import {
-  getAllTemplates,
-  getTemplatesByIndustry,
+  getAllTemplatesForCountry,
+  getTemplatesForCountry,
   INDUSTRY_METADATA,
   resolveTemplateRegulation,
 } from "@/data/industry-templates";
@@ -158,11 +158,13 @@ export default function TemplateLibraryPage() {
   }, []);
 
   // ---- Derived data ---------------------------------------------------------
+  const companyCountry = currentCompany?.country ?? "US";
+
   const filteredTemplates = React.useMemo(() => {
     let templates =
       selectedIndustry === "all"
-        ? getAllTemplates()
-        : getTemplatesByIndustry(selectedIndustry);
+        ? getAllTemplatesForCountry(companyCountry)
+        : getTemplatesForCountry(selectedIndustry, companyCountry);
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -170,13 +172,13 @@ export default function TemplateLibraryPage() {
         (tmpl) =>
           t(tmpl.name_key).toLowerCase().includes(q) ||
           t(tmpl.description_key).toLowerCase().includes(q) ||
-          resolveTemplateRegulation(tmpl, currentCompany?.country ?? "US").toLowerCase().includes(q) ||
+          resolveTemplateRegulation(tmpl, companyCountry).toLowerCase().includes(q) ||
           tmpl.tags.some((tag) => tag.toLowerCase().includes(q)),
       );
     }
 
     return templates;
-  }, [selectedIndustry, searchQuery, t, currentCompany?.country]);
+  }, [selectedIndustry, searchQuery, t, companyCountry]);
 
   const groupedTemplates = React.useMemo(() => {
     const groups: Record<string, IndustryChecklistTemplate[]> = {};
