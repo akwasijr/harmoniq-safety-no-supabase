@@ -209,13 +209,7 @@ export default function WorkOrdersPage() {
   return (
     <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Work Orders</h1>
-        <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4" />
-          {t("workOrders.newWorkOrder")}
-        </Button>
-      </div>
+      <h1 className="text-2xl font-semibold">Work Orders</h1>
 
       <div className="grid gap-4 sm:grid-cols-4">
         <KPICard title="Open" value={openCount} icon={ClipboardList} />
@@ -279,129 +273,115 @@ export default function WorkOrdersPage() {
           addLabel={t("workOrders.newWorkOrder")}
         />
       ) : (
-        <div className="space-y-3">
-          {paginatedOrders.map((order) => (
-            <Card key={order.id}>
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Link href={`/${company}/dashboard/work-orders/${order.id}`} className="font-medium hover:underline text-primary">
-                        {order.title}
-                      </Link>
-                      <Badge variant={order.priority === "critical" || order.priority === "high" ? "destructive" : order.priority === "medium" ? "warning" : "secondary"} className="capitalize">
-                        {order.priority}
-                      </Badge>
-                      <Badge variant={statusColors[order.status] as "success" | "warning" | "secondary" | "destructive"} className="capitalize">
-                        {order.status.replace("_", " ")}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">{order.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
-                      {order.asset_id && (
-                        <Link href={`/${company}/dashboard/assets/${order.asset_id}`} className="text-primary hover:underline">
-                          {getAssetName(order.asset_id)}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">Work Orders</CardTitle>
+            <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
+              <Plus className="h-4 w-4" /> {t("workOrders.newWorkOrder")}
+            </Button>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted/40">
+                  <tr className="text-left">
+                    <th className="px-4 py-3 font-medium">Title</th>
+                    <th className="px-4 py-3 font-medium">Type</th>
+                    <th className="px-4 py-3 font-medium">Asset</th>
+                    <th className="px-4 py-3 font-medium">Priority</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">Assigned</th>
+                    <th className="px-4 py-3 font-medium">Due date</th>
+                    <th className="px-4 py-3 font-medium sr-only">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {paginatedOrders.map((order) => (
+                    <tr key={order.id} className="hover:bg-muted/50">
+                      <td className="px-4 py-3 font-medium">
+                        <Link href={`/${company}/dashboard/work-orders/${order.id}`} className="text-primary hover:underline">
+                          {order.title}
                         </Link>
-                      )}
-                      <span>Assigned: {getUserName(order.assigned_to) !== "Unassigned" ? getUserName(order.assigned_to) : getTeamName(order.assigned_to_team_id) || "Unassigned"}</span>
-                      {order.due_date && <span>Due: {formatDate(order.due_date)}</span>}
-                      {order.estimated_hours && <span>Est: {order.estimated_hours}h</span>}
-                      <span>Created: {formatDate(order.created_at)}</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    {STATUS_FLOW[order.status]?.map((next) => (
-                      <Button key={next} size="sm" variant={next === "cancelled" ? "outline" : "default"} onClick={() => handleStatusChange(order.id, next)}>
-                        {next === "waiting_material" && "Request material"}
-                        {next === "approved" && t("workOrders.buttons.approve")}
-                        {next === "scheduled" && "Schedule"}
-                        {next === "in_progress" && t("workOrders.buttons.start")}
-                        {next === "completed" && <><CheckCircle className="h-4 w-4 mr-1" />{t("workOrders.buttons.complete")}</>}
-                        {next === "cancelled" && t("workOrders.buttons.cancel")}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{capitalize((order.type || "service_request").replace(/_/g, " "))}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {order.asset_id ? (
+                          <Link href={`/${company}/dashboard/assets/${order.asset_id}`} className="text-primary hover:underline">
+                            {getAssetName(order.asset_id)}
+                          </Link>
+                        ) : "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={order.priority === "critical" || order.priority === "high" ? "destructive" : order.priority === "medium" ? "warning" : "secondary"} className="capitalize">
+                          {order.priority}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={statusColors[order.status] as "success" | "warning" | "secondary" | "destructive"} className="capitalize">
+                          {order.status.replace(/_/g, " ")}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {getUserName(order.assigned_to) !== "Unassigned" ? getUserName(order.assigned_to) : getTeamName(order.assigned_to_team_id) || "Unassigned"}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{order.due_date ? formatDate(order.due_date) : "—"}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1 flex-wrap">
+                          {STATUS_FLOW[order.status]?.map((next) => (
+                            <Button key={next} size="sm" variant={next === "cancelled" ? "outline" : "default"} onClick={() => handleStatusChange(order.id, next)}>
+                              {next === "waiting_material" && "Request material"}
+                              {next === "approved" && t("workOrders.buttons.approve")}
+                              {next === "scheduled" && "Schedule"}
+                              {next === "in_progress" && t("workOrders.buttons.start")}
+                              {next === "completed" && <><CheckCircle className="h-4 w-4 mr-1" />{t("workOrders.buttons.complete")}</>}
+                              {next === "cancelled" && t("workOrders.buttons.cancel")}
+                            </Button>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
+              </p>
+              <div className="flex gap-1">
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                {(() => {
+                  const pages: (number | "...")[] = totalPages <= 7
+                    ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                    : (() => {
+                        const p: (number | "...")[] = [1];
+                        if (currentPage > 3) p.push("...");
+                        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) p.push(i);
+                        if (currentPage < totalPages - 2) p.push("...");
+                        p.push(totalPages);
+                        return p;
+                      })();
+                  return pages.map((p, idx) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
+                    ) : (
+                      <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p as number)}>
+                        {p}
                       </Button>
-                    ))}
-                  </div>
-                </div>
-                {/* Parts Used Section */}
-                {parts.length > 0 && (
-                  <div className="mt-3 border-t pt-3">
-                    <button
-                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-                      onClick={() => setExpandedParts(expandedParts === order.id ? null : order.id)}
-                    >
-                      <Package className="h-3.5 w-3.5" />
-                      {t("workOrders.labels.partsUsed")} ({order.parts_used?.length || 0})
-                      {expandedParts === order.id ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                    </button>
-                    {expandedParts === order.id && (
-                      <div className="mt-2 space-y-1">
-                        {parts.map((part) => {
-                          const isUsed = order.parts_used?.some((pu) => pu.part_id === part.id) || false;
-                          return (
-                            <label key={part.id} className="flex items-center gap-2 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={isUsed}
-                                onChange={(e) => handleTogglePart(order.id, part.id, e.target.checked)}
-                                className="rounded border"
-                              />
-                              <span>{part.name}</span>
-                              <span className="text-muted-foreground">({part.part_number})</span>
-                              <span className="text-muted-foreground ml-auto">${part.unit_cost.toFixed(2)} • Stock: {part.quantity_in_stock}</span>
-                            </label>
-                          );
-                        })}
-                        {order.parts_cost != null && order.parts_cost > 0 && (
-                          <div className="pt-2 border-t mt-2 text-sm font-medium flex justify-between">
-                            <span>Total Parts Cost:</span>
-                            <span>${order.parts_cost.toFixed(2)}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-4 border-t mt-4">
-          <p className="text-sm text-muted-foreground">
-            Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
-          </p>
-          <div className="flex gap-1">
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            {(() => {
-              const pages: (number | "...")[] = totalPages <= 7
-                ? Array.from({ length: totalPages }, (_, i) => i + 1)
-                : (() => {
-                    const p: (number | "...")[] = [1];
-                    if (currentPage > 3) p.push("...");
-                    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) p.push(i);
-                    if (currentPage < totalPages - 2) p.push("...");
-                    p.push(totalPages);
-                    return p;
-                  })();
-              return pages.map((p, idx) =>
-                p === "..." ? (
-                  <span key={`ellipsis-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
-                ) : (
-                  <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p as number)}>
-                    {p}
-                  </Button>
-                )
-              );
-            })()}
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+                    )
+                  );
+                })()}
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
       )}
 
       {/* Create Modal */}

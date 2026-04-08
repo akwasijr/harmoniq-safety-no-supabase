@@ -501,10 +501,6 @@ export default function AssetsPage() {
                 <Download className="h-4 w-4" />
                 {t("assets.buttons.export")}
               </Button>
-              <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                {t("assets.buttons.newAsset")}
-              </Button>
             </>
           )}
         </div>
@@ -700,10 +696,13 @@ export default function AssetsPage() {
       {/* Assets table (List View) */}
       {viewMode === "list" && (
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">{filteredAssets.length} asset{filteredAssets.length !== 1 ? "s" : ""}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base">{filteredAssets.length} asset{filteredAssets.length !== 1 ? "s" : ""}</CardTitle>
+          <div className="flex items-center gap-3">
             <p className="text-sm text-muted-foreground">Page {currentPage} of {totalPages || 1}</p>
+            <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
+              <Plus className="h-4 w-4" aria-hidden="true" /> {t("assets.buttons.newAsset")}
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -850,15 +849,10 @@ export default function AssetsPage() {
 
         return (
           <>
-            <div className="flex items-center justify-between">
-              <div className="grid gap-4 sm:grid-cols-3 flex-1">
-                <KPICard title="Open" value={woOpenCount} icon={ClipboardList} />
-                <KPICard title="In progress" value={woInProgressCount} icon={Clock} />
-                <KPICard title="Completed" value={woCompletedCount} icon={CheckCircle} />
-              </div>
-              <Button size="sm" className="gap-2 ml-4 shrink-0" onClick={() => setShowWoCreate(true)}>
-                <Plus className="h-4 w-4" /> New work order
-              </Button>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <KPICard title="Open" value={woOpenCount} icon={ClipboardList} />
+              <KPICard title="In progress" value={woInProgressCount} icon={Clock} />
+              <KPICard title="Completed" value={woCompletedCount} icon={CheckCircle} />
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -891,6 +885,12 @@ export default function AssetsPage() {
             ) : (
               <>
                 <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-base">Work Orders</CardTitle>
+                    <Button size="sm" className="gap-2" onClick={() => setShowWoCreate(true)}>
+                      <Plus className="h-4 w-4" /> New work order
+                    </Button>
+                  </CardHeader>
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-border text-sm">
@@ -922,16 +922,16 @@ export default function AssetsPage() {
                       </table>
                     </div>
                   </CardContent>
-                </Card>
-                {woFiltered.length > 10 && (
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">Showing {(woPage - 1) * 10 + 1}–{Math.min(woPage * 10, woFiltered.length)} of {woFiltered.length}</p>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" disabled={woPage === 1} onClick={() => setWoPage((p) => p - 1)}>Previous</Button>
-                      <Button size="sm" variant="outline" disabled={woPage * 10 >= woFiltered.length} onClick={() => setWoPage((p) => p + 1)}>Next</Button>
+                  {woFiltered.length > 10 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t">
+                      <p className="text-sm text-muted-foreground">Showing {(woPage - 1) * 10 + 1}–{Math.min(woPage * 10, woFiltered.length)} of {woFiltered.length}</p>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" disabled={woPage === 1} onClick={() => setWoPage((p) => p - 1)}>Previous</Button>
+                        <Button size="sm" variant="outline" disabled={woPage * 10 >= woFiltered.length} onClick={() => setWoPage((p) => p + 1)}>Next</Button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </Card>
               </>
             )}
 
@@ -983,15 +983,10 @@ export default function AssetsPage() {
 
         return (
           <>
-            <div className="flex items-center justify-between">
-              <div className="grid gap-4 sm:grid-cols-3 flex-1">
-                <KPICard title="Total parts" value={parts.length} icon={Package} />
-                <KPICard title="Inventory value" value={`$${totalValue.toLocaleString()}`} icon={DollarSign} />
-                <KPICard title="Low stock" value={lowStockCount} icon={AlertTriangle} />
-              </div>
-              <Button size="sm" className="gap-2 ml-4 shrink-0" onClick={() => setShowPartsCreate(true)}>
-                <Plus className="h-4 w-4" /> Add part
-              </Button>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <KPICard title="Total parts" value={parts.length} icon={Package} />
+              <KPICard title="Inventory value" value={`$${totalValue.toLocaleString()}`} icon={DollarSign} />
+              <KPICard title="Low stock" value={lowStockCount} icon={AlertTriangle} />
             </div>
 
             <div className="relative max-w-sm">
@@ -1004,6 +999,12 @@ export default function AssetsPage() {
             ) : (
               <>
                 <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-base">Parts</CardTitle>
+                    <Button size="sm" className="gap-2" onClick={() => setShowPartsCreate(true)}>
+                      <Plus className="h-4 w-4" /> Add part
+                    </Button>
+                  </CardHeader>
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-border text-sm">
@@ -1035,16 +1036,16 @@ export default function AssetsPage() {
                       </table>
                     </div>
                   </CardContent>
-                </Card>
-                {partsFiltered.length > 10 && (
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">Showing {(partsPage - 1) * 10 + 1}–{Math.min(partsPage * 10, partsFiltered.length)} of {partsFiltered.length}</p>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" disabled={partsPage === 1} onClick={() => setPartsPage((p) => p - 1)}>Previous</Button>
-                      <Button size="sm" variant="outline" disabled={partsPage * 10 >= partsFiltered.length} onClick={() => setPartsPage((p) => p + 1)}>Next</Button>
+                  {partsFiltered.length > 10 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t">
+                      <p className="text-sm text-muted-foreground">Showing {(partsPage - 1) * 10 + 1}–{Math.min(partsPage * 10, partsFiltered.length)} of {partsFiltered.length}</p>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" disabled={partsPage === 1} onClick={() => setPartsPage((p) => p - 1)}>Previous</Button>
+                        <Button size="sm" variant="outline" disabled={partsPage * 10 >= partsFiltered.length} onClick={() => setPartsPage((p) => p + 1)}>Next</Button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </Card>
               </>
             )}
 
@@ -1102,16 +1103,11 @@ export default function AssetsPage() {
 
         return (
           <>
-            <div className="flex items-center justify-between">
-              <div className="grid gap-4 sm:grid-cols-4 flex-1">
-                <KPICard title="Open" value={caOpenCount} icon={ClipboardList} />
-                <KPICard title="In progress" value={caInProgressCount} icon={Clock} />
-                <KPICard title="Overdue" value={caOverdueCount} icon={AlertTriangle} />
-                <KPICard title="Completed" value={caCompletedCount} icon={CheckCircle} />
-              </div>
-              <Button size="sm" className="gap-2 ml-4 shrink-0" onClick={() => setShowCaCreate(true)}>
-                <Plus className="h-4 w-4" /> New action
-              </Button>
+            <div className="grid gap-4 sm:grid-cols-4">
+              <KPICard title="Open" value={caOpenCount} icon={ClipboardList} />
+              <KPICard title="In progress" value={caInProgressCount} icon={Clock} />
+              <KPICard title="Overdue" value={caOverdueCount} icon={AlertTriangle} />
+              <KPICard title="Completed" value={caCompletedCount} icon={CheckCircle} />
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -1135,6 +1131,12 @@ export default function AssetsPage() {
             ) : (
               <>
                 <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-base">Corrective Actions</CardTitle>
+                    <Button size="sm" className="gap-2" onClick={() => setShowCaCreate(true)}>
+                      <Plus className="h-4 w-4" /> New action
+                    </Button>
+                  </CardHeader>
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-border text-sm">
@@ -1170,16 +1172,16 @@ export default function AssetsPage() {
                       </table>
                     </div>
                   </CardContent>
-                </Card>
-                {caFiltered.length > 10 && (
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">Showing {(caPage - 1) * 10 + 1}–{Math.min(caPage * 10, caFiltered.length)} of {caFiltered.length}</p>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" disabled={caPage === 1} onClick={() => setCaPage((p) => p - 1)}>Previous</Button>
-                      <Button size="sm" variant="outline" disabled={caPage * 10 >= caFiltered.length} onClick={() => setCaPage((p) => p + 1)}>Next</Button>
+                  {caFiltered.length > 10 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t">
+                      <p className="text-sm text-muted-foreground">Showing {(caPage - 1) * 10 + 1}–{Math.min(caPage * 10, caFiltered.length)} of {caFiltered.length}</p>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" disabled={caPage === 1} onClick={() => setCaPage((p) => p - 1)}>Previous</Button>
+                        <Button size="sm" variant="outline" disabled={caPage * 10 >= caFiltered.length} onClick={() => setCaPage((p) => p + 1)}>Next</Button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </Card>
               </>
             )}
 

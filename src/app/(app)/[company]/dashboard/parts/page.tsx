@@ -81,13 +81,7 @@ export default function PartsPage() {
   return (
     <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Parts Inventory</h1>
-        <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4" />
-          {t("parts.addPart")}
-        </Button>
-      </div>
+      <h1 className="text-2xl font-semibold">Parts Inventory</h1>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <KPICard title={t("parts.title")} value={totalParts} icon={Package} />
@@ -109,8 +103,11 @@ export default function PartsPage() {
       ) : (
         <>
         <Card>
-          <CardHeader>
-            <CardTitle>{t("parts.title")}</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">{t("parts.title")}</CardTitle>
+            <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
+              <Plus className="h-4 w-4" /> {t("parts.addPart")}
+            </Button>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -170,18 +167,18 @@ export default function PartsPage() {
               </table>
             </div>
           </CardContent>
-        </Card>
-        {filtered.length > ITEMS_PER_PAGE && (
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
-            </p>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</Button>
-              <Button size="sm" variant="outline" disabled={currentPage * ITEMS_PER_PAGE >= filtered.length} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
+          {filtered.length > ITEMS_PER_PAGE && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</Button>
+                <Button size="sm" variant="outline" disabled={currentPage * ITEMS_PER_PAGE >= filtered.length} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </Card>
         </>
       )}
 
