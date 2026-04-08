@@ -371,18 +371,34 @@ export default function WorkOrderDetailPage() {
             <section>
               <h2 className="text-lg font-semibold mb-4">Summary</h2>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              {/* Description first — it's the most important info */}
+              <Card className="mb-4">
+                <CardContent className="pt-4">
+                  {isEditing ? (
+                    <Textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
+                      rows={4}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{order.description || "No description provided"}</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Details grid */}
+              <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2 text-sm">
                 <div>
-                  <Label className="text-muted-foreground">Type</Label>
+                  <p className="text-muted-foreground">Type</p>
                   <p className="font-medium mt-0.5">
                     {capitalize((order.type || "service_request").replace(/_/g, " "))}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("workOrders.labels.priority")}</Label>
+                  <p className="text-muted-foreground">{t("workOrders.labels.priority")}</p>
                   {canEdit ? (
                     <Select value={order.priority} onValueChange={handlePriorityChange}>
-                      <SelectTrigger className="mt-1 h-8">
+                      <SelectTrigger className="mt-1 h-8 w-full max-w-[200px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -397,18 +413,18 @@ export default function WorkOrderDetailPage() {
                   )}
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("workOrders.detail.requestedBy")}</Label>
+                  <p className="text-muted-foreground">{t("workOrders.detail.requestedBy")}</p>
                   <p className="font-medium mt-0.5">{getUserName(order.requested_by)}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("workOrders.detail.assignedTo")}</Label>
+                  <p className="text-muted-foreground">{t("workOrders.detail.assignedTo")}</p>
                   {canAssign ? (
                     <Select value={order.assigned_to || "__none__"} onValueChange={handleAssignedToChange}>
-                      <SelectTrigger className="mt-1 h-8">
-                        <SelectValue placeholder={t("common.none")} />
+                      <SelectTrigger className="mt-1 h-8 w-full max-w-[200px]">
+                        <SelectValue placeholder="Unassigned" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__none__">{t("common.none")}</SelectItem>
+                        <SelectItem value="__none__">Unassigned</SelectItem>
                         {users.map((u) => (
                           <SelectItem key={u.id} value={u.id}>
                             {u.first_name} {u.last_name}
@@ -421,11 +437,11 @@ export default function WorkOrderDetailPage() {
                   )}
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("workOrders.labels.dueDate")}</Label>
+                  <p className="text-muted-foreground">{t("workOrders.labels.dueDate")}</p>
                   {canEdit ? (
                     <Input
                       type="date"
-                      className="mt-1 h-8"
+                      className="mt-1 h-8 w-full max-w-[200px]"
                       value={order.due_date ? order.due_date.split("T")[0] : ""}
                       onChange={(e) => handleDueDateChange(e.target.value)}
                     />
@@ -434,54 +450,33 @@ export default function WorkOrderDetailPage() {
                   )}
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("workOrders.labels.estimatedHours")}</Label>
+                  <p className="text-muted-foreground">{t("workOrders.labels.estimatedHours")}</p>
                   <p className="font-medium mt-0.5">
                     {order.estimated_hours != null ? `${order.estimated_hours}h` : "—"}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("workOrders.detail.actualHours")}</Label>
+                  <p className="text-muted-foreground">{t("workOrders.detail.actualHours")}</p>
                   <p className="font-medium mt-0.5">
                     {order.actual_hours != null ? `${order.actual_hours}h` : "—"}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("workOrders.detail.created")}</Label>
+                  <p className="text-muted-foreground">{t("workOrders.detail.created")}</p>
                   <p className="font-medium mt-0.5">{formatDate(order.created_at)}</p>
                 </div>
                 {order.completed_at && (
                   <div>
-                    <Label className="text-muted-foreground">{t("workOrders.detail.completedAt")}</Label>
+                    <p className="text-muted-foreground">{t("workOrders.detail.completedAt")}</p>
                     <p className="font-medium mt-0.5">{formatDate(order.completed_at)}</p>
                   </div>
                 )}
               </div>
 
-              {/* Description */}
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle className="text-sm">Description</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isEditing ? (
-                    <Textarea
-                      value={editForm.description}
-                      onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
-                      rows={4}
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{order.description}</p>
-                  )}
-                </CardContent>
-              </Card>
-
               {/* Cost summary */}
               {totalCost > 0 && (
-                <Card className="mt-4">
-                  <CardHeader>
-                    <CardTitle className="text-sm">Cost summary</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
+                <div className="mt-6 pt-4 border-t space-y-2 text-sm">
+                  <p className="font-semibold">Cost summary</p>
                     {order.parts_cost != null && order.parts_cost > 0 && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Parts</span>
@@ -498,8 +493,7 @@ export default function WorkOrderDetailPage() {
                       <span>Total</span>
                       <span>${formatNumber(totalCost)}</span>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
               )}
             </section>
           )}
@@ -508,52 +502,52 @@ export default function WorkOrderDetailPage() {
           {activeSection === "related" && (
             <section>
               <h2 className="text-lg font-semibold mb-4">Related records</h2>
-              <div className="space-y-4">
+              <div className="space-y-4 text-sm">
                 <div>
-                  <Label className="text-muted-foreground">Asset</Label>
+                  <p className="text-muted-foreground">Asset</p>
                   {asset ? (
                     <Link
                       href={`/${company}/dashboard/assets/${asset.id}`}
-                      className="block font-medium text-sm text-primary hover:underline mt-0.5"
+                      className="block font-medium text-primary hover:underline mt-0.5"
                     >
                       {asset.name}
                     </Link>
                   ) : (
-                    <p className="text-sm text-muted-foreground mt-0.5">—</p>
+                    <p className="text-muted-foreground mt-0.5">—</p>
                   )}
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Corrective action</Label>
+                  <p className="text-muted-foreground">Corrective action</p>
                   {linkedCorrectiveAction ? (
                     <Link
                       href={`/${company}/dashboard/corrective-actions/${linkedCorrectiveAction.id}`}
-                      className="block font-medium text-sm text-primary hover:underline mt-0.5 line-clamp-2"
+                      className="block font-medium text-primary hover:underline mt-0.5 line-clamp-2"
                     >
                       {linkedCorrectiveAction.description}
                     </Link>
                   ) : (
-                    <p className="text-sm text-muted-foreground mt-0.5">—</p>
+                    <p className="text-muted-foreground mt-0.5">—</p>
                   )}
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Source inspection</Label>
+                  <p className="text-muted-foreground">Source inspection</p>
                   {linkedInspection ? (
                     <Link
                       href={`/${company}/dashboard/inspections/${linkedInspection.id}`}
-                      className="block font-medium text-sm text-primary hover:underline mt-0.5"
+                      className="block font-medium text-primary hover:underline mt-0.5"
                     >
                       Inspection {linkedInspection.id.substring(0, 8)}
                     </Link>
                   ) : (
-                    <p className="text-sm text-muted-foreground mt-0.5">—</p>
+                    <p className="text-muted-foreground mt-0.5">—</p>
                   )}
                 </div>
 
                 {order.parts_used && order.parts_used.length > 0 && (
                   <div>
-                    <Label className="text-muted-foreground mb-2 block">Parts used</Label>
+                    <p className="text-muted-foreground mb-2">Parts used</p>
                     <div className="space-y-2">
                       {order.parts_used.map((pu) => {
                         const part = parts.find((p) => p.id === pu.part_id);
