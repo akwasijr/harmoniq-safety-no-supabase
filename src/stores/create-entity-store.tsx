@@ -403,7 +403,13 @@ export function createEntityStore<T extends IdEntity>(
             console.log(`[Harmoniq Debug] Upserting to ${table}:`, Object.keys(mapped), mapped);
           }
           try {
-            await syncWithRetry("/api/entity-upsert", { table, data: mapped }, table);
+            const ok = await syncWithRetry("/api/entity-upsert", { table, data: mapped }, table);
+            if (!ok) {
+              toast.warning("Saved offline — changes will sync when the connection is restored.", {
+                description: `Failed to save ${table.replace(/_/g, " ")} to the server.`,
+                duration: 6000,
+              });
+            }
           } finally {
             writeInFlightRef.current--;
           }
@@ -442,11 +448,17 @@ export function createEntityStore<T extends IdEntity>(
         void (async () => {
           try {
             const mapped = mapToSupabase(sanitizedUpdates as unknown as Record<string, unknown>, opts.columnMap, opts.stripFields);
-            await syncWithRetry(
+            const ok = await syncWithRetry(
               "/api/entity-upsert",
               { table, data: { ...mapped, id } },
               table,
             );
+            if (!ok) {
+              toast.warning("Saved offline — changes will sync when the connection is restored.", {
+                description: `Failed to update ${table.replace(/_/g, " ")} on the server.`,
+                duration: 6000,
+              });
+            }
           } finally {
             writeInFlightRef.current--;
           }
@@ -488,6 +500,10 @@ export function createEntityStore<T extends IdEntity>(
             const { error: persistError } = await supabase.from(table).delete().eq("id", id);
             if (persistError) {
               console.warn(`[Harmoniq] Cloud sync failed for ${table} delete: ${persistError.message} — removed locally`);
+              toast.warning("Removed offline — change will sync when the connection is restored.", {
+                description: `Failed to delete ${table.replace(/_/g, " ")} on the server.`,
+                duration: 6000,
+              });
             }
           } finally {
             writeInFlightRef.current--;

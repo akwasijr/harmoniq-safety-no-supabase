@@ -18,9 +18,12 @@ export async function POST(request: NextRequest) {
 
     // Verify the user is authenticated
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (process.env.NODE_ENV === "development") {
+      console.log("[entity-upsert] auth check:", { hasUser: !!user, userId: user?.id, authError: authErr?.message });
+    }
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized", debug: authErr?.message }, { status: 401 });
     }
 
     // Fetch user profile to enforce company isolation
@@ -38,6 +41,9 @@ export async function POST(request: NextRequest) {
 
     const validated = validateEntityUpsertRequest(table, data, profile);
     if (!validated.ok) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("[entity-upsert] validation failed:", { table, status: validated.status, error: validated.error, profile, data });
+      }
       return NextResponse.json({ error: validated.error }, { status: validated.status });
     }
 
