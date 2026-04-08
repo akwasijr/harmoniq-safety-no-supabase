@@ -36,16 +36,26 @@ async function syncWithRetry(
       if (res.ok) return true;
       const resBody = await res.json().catch(() => ({ error: "Unknown error" }));
       const errMsg = resBody.error || `HTTP ${res.status}`;
-      if (res.status === 401 || res.status === 403) {
-        console.warn(`[Harmoniq] Cloud sync denied for ${table}: ${errMsg}`);
+      // Do not retry on auth errors, client errors (4xx), or rate limits.
+      // Retrying 429s worsens the rate limit situation.
+      if (res.status >= 400 && res.status < 500) {
+        if (res.status === 429) {
+          console.warn(`[Harmoniq] Cloud sync rate-limited for ${table}: ${errMsg}`);
+        } else if (res.status === 401 || res.status === 403) {
+          console.warn(`[Harmoniq] Cloud sync denied for ${table}: ${errMsg}`);
+        } else {
+          console.warn(`[Harmoniq] Cloud sync rejected for ${table}: ${errMsg}`);
+        }
         return false;
       }
+      // Only retry on 5xx server errors
       if (attempt < maxAttempts) {
         await new Promise((r) => setTimeout(r, 1000 * attempt));
       } else {
         console.warn(`[Harmoniq] Cloud sync failed for ${table} after ${maxAttempts} attempts: ${errMsg}`);
       }
     } catch (syncErr) {
+      // Network errors — retry
       if (attempt < maxAttempts) {
         await new Promise((r) => setTimeout(r, 1000 * attempt));
       } else {
