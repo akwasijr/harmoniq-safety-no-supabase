@@ -228,6 +228,12 @@ export function createEntityStore<T extends IdEntity>(
           clearTimeout(timeout);
 
           if (error) {
+            // AbortError is expected during React strict mode double-mount or navigation — suppress
+            if (error.message?.includes("AbortError") || error.message?.includes("aborted")) {
+              if (isMountedRef.current) setIsLoading(false);
+              isFetchingRef.current = false;
+              return;
+            }
             console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
             if (isMountedRef.current) setError(error.message);
             // Fallback to localStorage cache only (never mock data in Supabase mode)
@@ -255,9 +261,12 @@ export function createEntityStore<T extends IdEntity>(
           }
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
-          console.warn(`[Harmoniq] Fetch ${table} aborted/failed:`, msg);
+          // Suppress AbortError from React strict mode or navigation
+          if (msg.includes("AbortError") || msg.includes("aborted")) {
+            return;
+          }
+          console.warn(`[Harmoniq] Fetch ${table} failed:`, msg);
           if (isMountedRef.current) setError(msg);
-          // Fallback to localStorage cache only (never mock data in Supabase mode)
           const cached = loadFromStorage<T[]>(storageKey, []);
           if (isMountedRef.current && cached.length > 0) setItems(cached);
         } finally {
