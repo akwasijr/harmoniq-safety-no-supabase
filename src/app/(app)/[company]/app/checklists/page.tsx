@@ -24,6 +24,7 @@ import {
   Percent,
   HardHat,
   Scale,
+  Download,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
@@ -105,6 +106,7 @@ type ChecklistSubTab = "assigned" | "history";
 
 function ChecklistsTabContent({
   company,
+  companyName,
   templates,
   pendingTemplates,
   userSubmissions,
@@ -114,6 +116,7 @@ function ChecklistsTabContent({
   formatDate,
 }: {
   company: string;
+  companyName: string;
   templates: ChecklistTemplate[];
   pendingTemplates: ChecklistTemplate[];
   userSubmissions: ChecklistSubmission[];
@@ -125,6 +128,35 @@ function ChecklistsTabContent({
   const [subTab, setSubTab] = React.useState<ChecklistSubTab>("assigned");
   const completedSubmissions = userSubmissions.filter(s => s.status === "submitted");
   const draftSubmissions = userSubmissions.filter(s => s.status === "draft");
+  const [exportingId, setExportingId] = React.useState<string | null>(null);
+
+  const handleExportChecklist = async (submission: ChecklistSubmission, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExportingId(submission.id);
+    try {
+      const { ChecklistPDF, downloadPDF } = await import("@/lib/pdf-export");
+      const tpl = templates.find(t => t.id === submission.template_id);
+      const doc = <ChecklistPDF
+        companyName={companyName}
+        templateName={tpl?.name || "Checklist"}
+        submission={{
+          responses: submission.responses,
+          submitted_at: submission.submitted_at,
+          submitter_name: user?.full_name || "Unknown",
+          general_comments: submission.general_comments,
+        }}
+        items={tpl?.items || []}
+      />;
+      const datePart = new Date(submission.submitted_at || submission.created_at)
+        .toISOString().split("T")[0];
+      await downloadPDF(doc, `checklist-${tpl?.name?.replace(/\s+/g, "-").toLowerCase() || "report"}-${datePart}.pdf`);
+    } catch {
+      // silently fail
+    } finally {
+      setExportingId(null);
+    }
+  };
   const [historyLimit, setHistoryLimit] = React.useState(10);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
@@ -358,16 +390,26 @@ function ChecklistsTabContent({
                             {formatDate(new Date(submission.submitted_at || submission.created_at))}
                           </p>
                         </div>
-                        {score !== null && (
-                          <div className={cn(
-                            "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
-                            score >= 80 ? "bg-green-200 text-green-900 dark:bg-green-900/40 dark:text-green-100" :
-                            score >= 50 ? "bg-amber-200 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100" :
-                            "bg-red-200 text-red-900 dark:bg-red-900/40 dark:text-red-100"
-                          )}>
-                            {score}%
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          {score !== null && (
+                            <div className={cn(
+                              "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
+                              score >= 80 ? "bg-green-200 text-green-900 dark:bg-green-900/40 dark:text-green-100" :
+                              score >= 50 ? "bg-amber-200 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100" :
+                              "bg-red-200 text-red-900 dark:bg-red-900/40 dark:text-red-100"
+                            )}>
+                              {score}%
+                            </div>
+                          )}
+                          <button
+                            onClick={(e) => handleExportChecklist(submission, e)}
+                            disabled={exportingId === submission.id}
+                            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                            aria-label="Export PDF"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                       
                       <div className="flex items-center gap-3 text-[10px]">
@@ -624,20 +666,30 @@ type RiskAssessmentSubTab = "assigned" | "history";
 
 function RiskAssessmentTabContent({
   company,
+  companyName,
   availableForms,
   inProgressAssessments,
   awaitingReviewAssessments,
   reviewedAssessments,
   assessmentTypeConf,
+  riskEvaluations,
+  users: allUsers,
+  locations: allLocations,
+  user,
   t,
   formatDate,
 }: {
   company: string;
+  companyName: string;
   availableForms: Array<{ id: string; name: string; fullName: string; icon: typeof FileCheck }>;
   inProgressAssessments: Array<{ id: string; formId: string; name: string; location: string; progress: number }>;
   awaitingReviewAssessments: Array<{ id: string; formType: string; name: string; location: string; date: string }>;
   reviewedAssessments: Array<{ id: string; formType: string; name: string; location: string; date: string; reviewerName: string }>;
   assessmentTypeConf: Record<string, { icon: typeof ShieldCheck; color: string; bg: string }>;
+  riskEvaluations: import("@/types").RiskEvaluation[];
+  users: import("@/types").User[];
+  locations: import("@/types").Location[];
+  user: User | null;
   t: (key: string) => string;
   formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
 }) {
@@ -645,6 +697,42 @@ function RiskAssessmentTabContent({
   const [historyLimit, setHistoryLimit] = React.useState(10);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
+  const [exportingId, setExportingId] = React.useState<string | null>(null);
+
+  const handleExportAssessment = async (itemId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExportingId(itemId);
+    try {
+      const { RiskAssessmentPDF, downloadPDF } = await import("@/lib/pdf-export");
+      const evaluation = riskEvaluations.find((ev) => ev.id === itemId);
+      if (!evaluation) return;
+      const submitter = allUsers.find((u) => u.id === evaluation.submitter_id);
+      const location = allLocations.find((l) => l.id === evaluation.location_id);
+      const reviewer = evaluation.reviewed_by ? allUsers.find((u) => u.id === evaluation.reviewed_by) : null;
+      const doc = <RiskAssessmentPDF
+        companyName={companyName}
+        formType={evaluation.form_type}
+        evaluation={{
+          responses: evaluation.responses,
+          country: evaluation.country,
+          location: location?.name,
+          submitted_at: evaluation.submitted_at,
+          submitter_name: submitter?.full_name || "Unknown",
+          status: evaluation.status,
+          reviewed_by: reviewer?.full_name || null,
+          reviewed_at: evaluation.reviewed_at,
+        }}
+      />;
+      const datePart = new Date(evaluation.submitted_at || evaluation.created_at)
+        .toISOString().split("T")[0];
+      await downloadPDF(doc, `risk-assessment-${evaluation.form_type.toLowerCase()}-${datePart}.pdf`);
+    } catch {
+      // silently fail
+    } finally {
+      setExportingId(null);
+    }
+  };
 
   const historyItems = React.useMemo(() => {
     const all = [
@@ -814,9 +902,19 @@ function RiskAssessmentTabContent({
                         </p>
                       )}
                     </div>
-                    <Badge variant={isReviewed ? "success" : "warning"} className="text-[10px] shrink-0">
-                      {isReviewed ? "Reviewed" : "Awaiting"}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Badge variant={isReviewed ? "success" : "warning"} className="text-[10px]">
+                        {isReviewed ? "Reviewed" : "Awaiting"}
+                      </Badge>
+                      <button
+                        onClick={(e) => handleExportAssessment(item.id, e)}
+                        disabled={exportingId === item.id}
+                        className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                        aria-label="Export PDF"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </Link>
                 );
               })}
@@ -1051,6 +1149,7 @@ function EmployeeChecklistsPageContent() {
         {activeTab === "checklists" && (
           <ChecklistsTabContent
             company={company}
+            companyName={currentCompany?.name || company}
             templates={templates}
             pendingTemplates={pendingTemplates}
             userSubmissions={userSubmissions}
@@ -1076,11 +1175,16 @@ function EmployeeChecklistsPageContent() {
         {activeTab === "risk-assessment" && (
           <RiskAssessmentTabContent
             company={company}
+            companyName={currentCompany?.name || company}
             availableForms={availableAssessmentForms}
             inProgressAssessments={inProgressAssessments}
             awaitingReviewAssessments={awaitingReviewAssessments}
             reviewedAssessments={reviewedAssessments}
             assessmentTypeConf={assessmentTypeConf}
+            riskEvaluations={riskEvaluations}
+            users={users}
+            locations={locations}
+            user={user}
             t={t}
             formatDate={formatDate}
           />

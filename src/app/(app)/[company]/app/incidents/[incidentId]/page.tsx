@@ -19,6 +19,7 @@ import {
   Flag,
   Hash,
   Zap,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,7 +63,7 @@ export default function EmployeeIncidentDetailPage() {
   const incidentId = typeof rawIncidentId === "string" ? rawIncidentId : Array.isArray(rawIncidentId) ? rawIncidentId[0] : "";
   const rawCompany = params.company;
   const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { t, formatDate } = useTranslation();
 
   const { items: incidents, isLoading } = useIncidentsStore();
@@ -74,6 +75,8 @@ export default function EmployeeIncidentDetailPage() {
   const location = incident?.location_id ? locations.find((l) => l.id === incident.location_id) : null;
   const reporter = incident?.reporter_id ? users.find((u) => u.id === incident.reporter_id) : null;
 
+  const [isExporting, setIsExporting] = React.useState(false);
+
   // Load attached photos
   const [photos, setPhotos] = React.useState<StoredFile[]>([]);
   React.useEffect(() => {
@@ -81,6 +84,50 @@ export default function EmployeeIncidentDetailPage() {
       setPhotos(getFilesForEntity("incident", incident.id));
     }
   }, [incident]);
+
+  const handleExportPDF = async () => {
+    if (!incident) return;
+    setIsExporting(true);
+    try {
+      const { IncidentReportPDF, downloadPDF } = await import("@/lib/pdf-export");
+      const doc = <IncidentReportPDF
+        companyName={currentCompany?.name || company}
+        incident={{
+          title: incident.title,
+          type: incident.type,
+          severity: incident.severity,
+          priority: incident.priority,
+          status: incident.status,
+          incident_date: incident.incident_date,
+          incident_time: incident.incident_time,
+          location: location?.name,
+          location_description: incident.location_description,
+          building: incident.building,
+          floor: incident.floor,
+          zone: incident.zone,
+          room: incident.room,
+          description: incident.description,
+          reference_number: incident.reference_number || `#${incident.id.slice(0, 8)}`,
+          reporter_name: reporter?.full_name || "Unknown",
+          corrective_actions: incident.actions?.map((a) => ({
+            title: a.title,
+            status: a.status,
+            dueDate: a.dueDate,
+          })),
+          media_urls: incident.media_urls,
+          active_hazard: incident.active_hazard,
+          lost_time: incident.lost_time,
+          lost_time_amount: incident.lost_time_amount,
+          created_at: incident.created_at,
+        }}
+      />;
+      await downloadPDF(doc, `incident-${incident.reference_number || incident.id.slice(0, 8)}.pdf`);
+    } catch {
+      // silently fail
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (isLoading && incidents.length === 0) {
     return <LoadingPage />;
@@ -127,6 +174,16 @@ export default function EmployeeIncidentDetailPage() {
             {incident.reference_number || `#${incident.id.slice(0, 8)}`}
           </p>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleExportPDF}
+          disabled={isExporting}
+          className="shrink-0"
+          aria-label="Export PDF"
+        >
+          <Download className="h-4 w-4" />
+        </Button>
         {incident.status !== "new" && (
           <Badge className={statusConfig.color}>{statusConfig.label}</Badge>
         )}

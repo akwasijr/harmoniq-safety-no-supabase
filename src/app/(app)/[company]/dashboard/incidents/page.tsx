@@ -99,7 +99,7 @@ export default function IncidentsPage() {
     location_description: "",
   });
 
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { t, formatDate } = useTranslation();
   const filterOptions = useFilterOptions();
   const { toast } = useToast();
@@ -446,12 +446,13 @@ export default function IncidentsPage() {
                   <th className="hidden pb-3 font-medium lg:table-cell">Date</th>
                   <th className="pb-3 font-medium">Status</th>
                   <th className="pb-3 font-medium w-10"></th>
+                  <th className="pb-3 font-medium w-10"></th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedIncidents.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={9} className="py-8 text-center text-muted-foreground">
                       {t("incidents.empty.noIncidents")}
                     </td>
                   </tr>
@@ -483,6 +484,52 @@ export default function IncidentsPage() {
                       </td>
                       <td className="py-3">
                         <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </td>
+                      <td className="py-3">
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const { IncidentReportPDF, downloadPDF } = await import("@/lib/pdf-export");
+                              const reporterUser = users.find((u) => u.id === incident.reporter_id);
+                              const loc = locations.find((l) => l.id === incident.location_id);
+                              const doc = <IncidentReportPDF
+                                companyName={currentCompany?.name || company}
+                                incident={{
+                                  title: incident.title,
+                                  type: incident.type,
+                                  severity: incident.severity,
+                                  priority: incident.priority,
+                                  status: incident.status,
+                                  incident_date: incident.incident_date,
+                                  incident_time: incident.incident_time,
+                                  location: loc?.name,
+                                  location_description: incident.location_description,
+                                  building: incident.building,
+                                  floor: incident.floor,
+                                  zone: incident.zone,
+                                  room: incident.room,
+                                  description: incident.description,
+                                  reference_number: incident.reference_number,
+                                  reporter_name: reporterUser?.full_name || "Unknown",
+                                  corrective_actions: incident.actions?.map((a) => ({ title: a.title, status: a.status, dueDate: a.dueDate })),
+                                  media_urls: incident.media_urls,
+                                  active_hazard: incident.active_hazard,
+                                  lost_time: incident.lost_time,
+                                  lost_time_amount: incident.lost_time_amount,
+                                  created_at: incident.created_at,
+                                }}
+                              />;
+                              await downloadPDF(doc, `incident-${incident.reference_number || incident.id.slice(0, 8)}.pdf`);
+                            } catch {
+                              // silently fail
+                            }
+                          }}
+                          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          aria-label="Export PDF"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
                       </td>
                     </tr>
                   ))

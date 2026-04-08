@@ -36,6 +36,7 @@ import {
   PenTool,
   List,
   Star,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +84,7 @@ export default function ChecklistDetailPage() {
   const { checklistTemplates: templates, checklistSubmissions: submissions, users, locations, stores } = useCompanyData();
   const { isLoading, add: addTemplate, update: updateTemplate, remove: removeTemplate } = stores.checklistTemplates;
   const { update: updateSubmission } = stores.checklistSubmissions;
-  const { isSuperAdmin, isCompanyAdmin, isManager } = useAuth();
+  const { isSuperAdmin, isCompanyAdmin, isManager, currentCompany } = useAuth();
   const canApprove = isSuperAdmin || isCompanyAdmin || isManager;
 
   const submission = submissions.find((item) => item.id === checklistId);
@@ -501,8 +502,31 @@ export default function ChecklistDetailPage() {
                 <XCircle className="h-3 w-3" /> {t("checklists.rejected")}
               </Badge>
             )}
-            <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Copy className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const { ChecklistPDF, downloadPDF } = await import("@/lib/pdf-export");
+                  const doc = <ChecklistPDF
+                    companyName={currentCompany?.name || company}
+                    templateName={template?.name || "Checklist"}
+                    submission={{
+                      responses: submission.responses,
+                      submitted_at: submission.submitted_at,
+                      submitter_name: submissionUser?.full_name || "Unknown",
+                      general_comments: submission.general_comments,
+                    }}
+                    items={template?.items || []}
+                  />;
+                  const datePart = new Date(submittedAt).toISOString().split("T")[0];
+                  await downloadPDF(doc, `checklist-${template?.name?.replace(/\s+/g, "-").toLowerCase() || "report"}-${datePart}.pdf`);
+                } catch {
+                  // silently fail
+                }
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
               Export PDF
             </Button>
           </div>
