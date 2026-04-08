@@ -154,7 +154,7 @@ export const INDUSTRY_METADATA: Record<
 };
 
 // ==========================================
-// 1. CONSTRUCTION (14 templates)
+// 1. CONSTRUCTION (18 templates)
 // ==========================================
 
 const constructionTemplates: IndustryChecklistTemplate[] = [
@@ -477,10 +477,102 @@ const constructionTemplates: IndustryChecklistTemplate[] = [
       item("construction", "shipyard", "housekeeping", "pass_fail", 8),
     ],
   },
+
+  // 1-NL-1  LMRA (Laatste Minuut Risico Analyse)
+  {
+    id: "construction_lmra",
+    industry: "construction",
+    name_key: k("construction", "lmra", "name"),
+    description_key: k("construction", "lmra", "description"),
+    category: "hazard_analysis",
+    regulation: "Arbowet Art. 5 / LMRA",
+    frequency: "per_shift",
+    tags: ["lmra", "risico_analyse", "laatste_minuut", "nl"],
+    items: [
+      item("construction", "lmra", "taak_begrepen", "yes_no_na", 1),
+      item("construction", "lmra", "gevaren_geidentificeerd", "yes_no_na", 2),
+      item("construction", "lmra", "pbm_correct", "yes_no_na", 3),
+      item("construction", "lmra", "gereedschap_geinspecteerd", "pass_fail", 4),
+      item("construction", "lmra", "werkplek_veilig", "yes_no_na", 5),
+      item("construction", "lmra", "nooduitgang_bekend", "yes_no_na", 6),
+      item("construction", "lmra", "collega_geinformeerd", "yes_no_na", 7),
+      item("construction", "lmra", "stopwerk_bevoegdheid_begrepen", "yes_no_na", 8),
+    ],
+  },
+
+  // 1-NL-2  Toolbox Meeting (NL)
+  {
+    id: "construction_toolbox_nl",
+    industry: "construction",
+    name_key: k("construction", "toolbox_nl", "name"),
+    description_key: k("construction", "toolbox_nl", "description"),
+    category: "training",
+    regulation: "Arbowet Art. 8",
+    frequency: "weekly",
+    tags: ["toolbox", "voorlichting", "training", "nl"],
+    items: [
+      item("construction", "toolbox_nl", "onderwerp_gekozen", "yes_no_na", 1),
+      item("construction", "toolbox_nl", "alle_medewerkers_aanwezig", "yes_no_na", 2),
+      item("construction", "toolbox_nl", "gevaren_van_de_week_besproken", "yes_no_na", 3),
+      item("construction", "toolbox_nl", "pbm_herinneringen", "yes_no_na", 4),
+      item("construction", "toolbox_nl", "bijna_incidenten_besproken", "yes_no_na", 5),
+      item("construction", "toolbox_nl", "vragen_behandeld", "yes_no_na", 6),
+      item("construction", "toolbox_nl", "presentielijst_ingevuld", "yes_no_na", 7),
+      item("construction", "toolbox_nl", "vervolgacties_genoteerd", "text", 8),
+    ],
+  },
+
+  // 1-NL-3  Werkvergunning (Work Permit Check)
+  {
+    id: "construction_werkvergunning",
+    industry: "construction",
+    name_key: k("construction", "werkvergunning", "name"),
+    description_key: k("construction", "werkvergunning", "description"),
+    category: "permits",
+    regulation: "Arbowet / BRZO",
+    frequency: "per_event",
+    tags: ["werkvergunning", "vergunning", "permits", "nl"],
+    items: [
+      item("construction", "werkvergunning", "werkvergunning_afgegeven", "yes_no_na", 1),
+      item("construction", "werkvergunning", "werkomvang_duidelijk", "yes_no_na", 2),
+      item("construction", "werkvergunning", "gevaren_geidentificeerd", "yes_no_na", 3),
+      item("construction", "werkvergunning", "beheersmaatregelen_getroffen", "yes_no_na", 4),
+      item("construction", "werkvergunning", "gasvrij_verklaring", "yes_no_na", 5, false),
+      item("construction", "werkvergunning", "brandwacht_geregeld", "yes_no_na", 6),
+      item("construction", "werkvergunning", "besloten_ruimte_vergunning", "yes_no_na", 7, false),
+      item("construction", "werkvergunning", "isolatie_bevestigd", "yes_no_na", 8),
+      item("construction", "werkvergunning", "noodprocedures_doorgenomen", "yes_no_na", 9),
+      item("construction", "werkvergunning", "leidinggevende_getekend", "yes_no_na", 10),
+    ],
+  },
+
+  // 1-NL-4  VCA Audit (Contractor Safety)
+  {
+    id: "construction_vca",
+    industry: "construction",
+    name_key: k("construction", "vca", "name"),
+    description_key: k("construction", "vca", "description"),
+    category: "audit",
+    regulation: "VCA 2017/6.0",
+    frequency: "quarterly",
+    tags: ["vca", "aannemers", "audit", "nl"],
+    items: [
+      item("construction", "vca", "vca_certificaat_geldig", "yes_no_na", 1),
+      item("construction", "vca", "toolboxmeetings_gehouden", "yes_no_na", 2),
+      item("construction", "vca", "incidentregistratie_bijgewerkt", "yes_no_na", 3),
+      item("construction", "vca", "pbm_naleving", "pass_fail", 4),
+      item("construction", "vca", "risico_inventarisaties_actueel", "yes_no_na", 5),
+      item("construction", "vca", "deskundig_toezicht", "yes_no_na", 6),
+      item("construction", "vca", "opleidingsregistratie_compleet", "yes_no_na", 7),
+      item("construction", "vca", "onderaannemer_naleving", "yes_no_na", 8),
+      item("construction", "vca", "werkvergunningen_gebruikt", "yes_no_na", 9),
+      item("construction", "vca", "veiligheidsobservaties_gedocumenteerd", "yes_no_na", 10),
+    ],
+  },
 ];
 
 // ==========================================
-// 2. MANUFACTURING (11 templates)
+// 2. MANUFACTURING (15 templates)
 // ==========================================
 
 const manufacturingTemplates: IndustryChecklistTemplate[] = [
@@ -735,10 +827,104 @@ const manufacturingTemplates: IndustryChecklistTemplate[] = [
       item("manufacturing", "electrical_audit", "program_audit_documented", "yes_no_na", 10),
     ],
   },
+
+  // 2-NL-1  BHV Oefening (Emergency Drill)
+  {
+    id: "manufacturing_bhv_drill",
+    industry: "manufacturing",
+    name_key: k("manufacturing", "bhv_drill", "name"),
+    description_key: k("manufacturing", "bhv_drill", "description"),
+    category: "emergency",
+    regulation: "Arbowet Art. 15",
+    frequency: "quarterly",
+    tags: ["bhv", "ontruiming", "oefening", "noodplan", "nl"],
+    items: [
+      item("manufacturing", "bhv_drill", "alarmsysteem_getest", "pass_fail", 1),
+      item("manufacturing", "bhv_drill", "vluchtroute_vrij", "pass_fail", 2),
+      item("manufacturing", "bhv_drill", "verzamelplaats_bereikbaar", "yes_no_na", 3),
+      item("manufacturing", "bhv_drill", "bhv_team_aanwezig", "yes_no_na", 4),
+      item("manufacturing", "bhv_drill", "ehbo_koffer_compleet", "pass_fail", 5),
+      item("manufacturing", "bhv_drill", "aed_operationeel", "pass_fail", 6),
+      item("manufacturing", "bhv_drill", "communicatie_werkend", "pass_fail", 7),
+      item("manufacturing", "bhv_drill", "brandblussers_gecontroleerd", "pass_fail", 8),
+      item("manufacturing", "bhv_drill", "bezoekers_geregistreerd", "yes_no_na", 9),
+      item("manufacturing", "bhv_drill", "oefentijd_genoteerd", "number", 10),
+    ],
+  },
+
+  // 2-NL-2  BHV Middelen Inspectie (Emergency Equipment)
+  {
+    id: "manufacturing_bhv_equipment",
+    industry: "manufacturing",
+    name_key: k("manufacturing", "bhv_equipment", "name"),
+    description_key: k("manufacturing", "bhv_equipment", "description"),
+    category: "emergency",
+    regulation: "Arbowet Art. 15",
+    frequency: "monthly",
+    tags: ["bhv", "middelen", "inspectie", "nooduitrusting", "nl"],
+    items: [
+      item("manufacturing", "bhv_equipment", "aed_batterij_pads", "pass_fail", 1),
+      item("manufacturing", "bhv_equipment", "ehbo_koffers_gevuld", "pass_fail", 2),
+      item("manufacturing", "bhv_equipment", "brandblussers_binnen_datum", "pass_fail", 3),
+      item("manufacturing", "bhv_equipment", "noodverlichting", "pass_fail", 4),
+      item("manufacturing", "bhv_equipment", "blusdekens", "pass_fail", 5),
+      item("manufacturing", "bhv_equipment", "oogdouches", "pass_fail", 6),
+      item("manufacturing", "bhv_equipment", "brancard_beschikbaar", "yes_no_na", 7),
+      item("manufacturing", "bhv_equipment", "noodnummers_opgehangen", "yes_no_na", 8),
+      item("manufacturing", "bhv_equipment", "ontruimingsplattegronden_actueel", "yes_no_na", 9),
+      item("manufacturing", "bhv_equipment", "pbm_voorraad_aangevuld", "yes_no_na", 10),
+    ],
+  },
+
+  // 2-NL-3  NEN 3140 Elektrische Veiligheid (Electrical Safety)
+  {
+    id: "manufacturing_nen3140",
+    industry: "manufacturing",
+    name_key: k("manufacturing", "nen3140", "name"),
+    description_key: k("manufacturing", "nen3140", "description"),
+    category: "electrical",
+    regulation: "NEN 3140",
+    frequency: "monthly",
+    tags: ["nen3140", "elektrisch", "veiligheid", "installatie", "nl"],
+    items: [
+      item("manufacturing", "nen3140", "schakelpanelen_bereikbaar", "yes_no_na", 1),
+      item("manufacturing", "nen3140", "waarschuwingsborden_aanwezig", "yes_no_na", 2),
+      item("manufacturing", "nen3140", "vergrendeling_materiaal_beschikbaar", "yes_no_na", 3),
+      item("manufacturing", "nen3140", "isolatiegereedschap_geinspecteerd", "pass_fail", 4),
+      item("manufacturing", "nen3140", "aardlekbeveiliging_getest", "pass_fail", 5),
+      item("manufacturing", "nen3140", "kabelconditie", "pass_fail", 6),
+      item("manufacturing", "nen3140", "verlengsnoeren_geinspecteerd", "pass_fail", 7),
+      item("manufacturing", "nen3140", "vakbekwaam_persoon_aangewezen", "yes_no_na", 8),
+      item("manufacturing", "nen3140", "werkvergunning_elektrisch", "yes_no_na", 9),
+      item("manufacturing", "nen3140", "documentatie_actueel", "yes_no_na", 10),
+    ],
+  },
+
+  // 2-NL-4  Plan van Aanpak Review (RI&E Action Plan)
+  {
+    id: "manufacturing_pva",
+    industry: "manufacturing",
+    name_key: k("manufacturing", "pva", "name"),
+    description_key: k("manufacturing", "pva", "description"),
+    category: "management",
+    regulation: "Arbowet Art. 5",
+    frequency: "quarterly",
+    tags: ["pva", "plan_van_aanpak", "rie", "management", "nl"],
+    items: [
+      item("manufacturing", "pva", "acties_uit_rie_opgesomd", "yes_no_na", 1),
+      item("manufacturing", "pva", "prioriteiten_toegekend", "yes_no_na", 2),
+      item("manufacturing", "pva", "deadlines_vastgesteld", "yes_no_na", 3),
+      item("manufacturing", "pva", "verantwoordelijken_aangewezen", "yes_no_na", 4),
+      item("manufacturing", "pva", "budget_toegewezen", "yes_no_na", 5),
+      item("manufacturing", "pva", "voortgang_bijgehouden", "yes_no_na", 6),
+      item("manufacturing", "pva", "achterstallige_items_aangepakt", "yes_no_na", 7),
+      item("manufacturing", "pva", "volgende_reviewdatum_gepland", "yes_no_na", 8),
+    ],
+  },
 ];
 
 // ==========================================
-// 3. OIL & GAS (6 templates)
+// 3. OIL & GAS (8 templates)
 // ==========================================
 
 const oilGasTemplates: IndustryChecklistTemplate[] = [
@@ -869,6 +1055,54 @@ const oilGasTemplates: IndustryChecklistTemplate[] = [
       item("oil_gas", "contractor", "ppe_verified", "pass_fail", 4),
       item("oil_gas", "contractor", "work_permit", "yes_no_na", 5, false),
       item("oil_gas", "contractor", "insurance_docs", "yes_no_na", 6, false),
+    ],
+  },
+
+  // 3-NL-1  BRZO/Seveso Inspectie
+  {
+    id: "oil_gas_brzo",
+    industry: "oil_gas",
+    name_key: k("oil_gas", "brzo", "name"),
+    description_key: k("oil_gas", "brzo", "description"),
+    category: "major_hazards",
+    regulation: "BRZO 2015 / Seveso III",
+    frequency: "monthly",
+    tags: ["brzo", "seveso", "zwaar_ongeval", "veiligheidsrapport", "nl"],
+    items: [
+      item("oil_gas", "brzo", "veiligheidsrapport_actueel", "yes_no_na", 1),
+      item("oil_gas", "brzo", "noodplan_getest", "yes_no_na", 2),
+      item("oil_gas", "brzo", "zwaar_ongeval_scenarios_beoordeeld", "yes_no_na", 3),
+      item("oil_gas", "brzo", "veiligheidsbeheerssysteem_audit", "yes_no_na", 4),
+      item("oil_gas", "brzo", "procesveiligheid_indicatoren_bijgehouden", "yes_no_na", 5),
+      item("oil_gas", "brzo", "onderhoud_veiligheidskritieke_apparatuur", "pass_fail", 6),
+      item("oil_gas", "brzo", "wijzigingsbeheer_toegepast", "yes_no_na", 7),
+      item("oil_gas", "brzo", "bevoegd_gezag_geinformeerd", "yes_no_na", 8),
+      item("oil_gas", "brzo", "domino_effecten_beoordeeld", "yes_no_na", 9),
+      item("oil_gas", "brzo", "publieksinformatie_verplichtingen_voldaan", "yes_no_na", 10),
+    ],
+  },
+
+  // 3-NL-2  ARIE (Aanvullende RI&E)
+  {
+    id: "oil_gas_arie",
+    industry: "oil_gas",
+    name_key: k("oil_gas", "arie", "name"),
+    description_key: k("oil_gas", "arie", "description"),
+    category: "hazard_analysis",
+    regulation: "Arbowet Art. 2a / ARIE",
+    frequency: "per_event",
+    tags: ["arie", "aanvullende_rie", "gevaarlijke_stoffen", "nl"],
+    items: [
+      item("oil_gas", "arie", "gevaarlijke_stoffen_geidentificeerd", "yes_no_na", 1),
+      item("oil_gas", "arie", "blootstellingslimieten_beoordeeld", "yes_no_na", 2),
+      item("oil_gas", "arie", "beheersmaatregelen_geevalueerd", "yes_no_na", 3),
+      item("oil_gas", "arie", "noodscenarios_gedefinieerd", "yes_no_na", 4),
+      item("oil_gas", "arie", "gezondheidsmonitoring_werknemers", "yes_no_na", 5),
+      item("oil_gas", "arie", "pbm_geschiktheid", "pass_fail", 6),
+      item("oil_gas", "arie", "opslagcondities", "pass_fail", 7),
+      item("oil_gas", "arie", "afvalverwerking", "yes_no_na", 8),
+      item("oil_gas", "arie", "ventilatie_voldoende", "pass_fail", 9),
+      item("oil_gas", "arie", "documentatie_compleet", "yes_no_na", 10),
     ],
   },
 ];
