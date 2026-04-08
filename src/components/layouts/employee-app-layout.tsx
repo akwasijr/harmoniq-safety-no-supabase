@@ -64,9 +64,9 @@ export function EmployeeAppLayout({
 
   return (
     <div
-      className="field-app-shell flex min-h-screen flex-col bg-muted"
+      className="field-app-shell flex min-h-screen flex-col"
       data-field-shadow={settings.shadow}
-      style={getFieldAppShellStyle(settings)}
+      style={{ ...getFieldAppShellStyle(settings), backgroundColor: "hsl(var(--brand-solid, var(--primary)))" }}
     >
       {/* Header */}
       {showHeader && !isFullPage && (
@@ -95,7 +95,7 @@ export function EmployeeAppLayout({
       )}
 
       {/* Main content */}
-      <main className={`flex-1 ${isFullPage ? "pb-0" : "pb-[72px]"}`} style={{ marginTop: showHeader && !isFullPage ? -1 : 0 }}>{children}</main>
+      <main className={`flex-1 bg-muted ${isFullPage ? "pb-0" : "pb-[72px]"}`} style={{ marginTop: showHeader && !isFullPage ? -1 : 0 }}>{children}</main>
 
       {/* Bottom navigation — hidden on full-page flows like report incident */}
       {!isFullPage && <BottomTabs company={company} />}
