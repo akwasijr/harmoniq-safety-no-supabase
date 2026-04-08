@@ -630,47 +630,39 @@ export default function WorkOrderDetailPage() {
           {activeSection === "status-history" && (
             <section>
               <h2 className="text-lg font-semibold mb-4">Status history</h2>
-              <Card>
-                <CardContent className="pt-5">
-                  {orderStatusLog.length > 0 ? (
-                    <div className="space-y-3">
-                      {[...orderStatusLog]
-                        .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
-                        .map((entry) => (
-                          <div key={entry.id} className="flex items-start gap-3 text-sm">
-                            <div className="flex flex-col items-center pt-1">
-                              <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
-                              <div className="w-px flex-1 bg-border mt-1" />
-                            </div>
-                            <div className="flex-1 min-w-0 pb-3">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                {entry.from_status && (
-                                  <>
-                                    <Badge variant={WORK_ORDER_STATUS_COLORS[entry.from_status] || "secondary"} className="text-[10px]">
-                                      {capitalize(entry.from_status.replace(/_/g, " "))}
-                                    </Badge>
-                                    <span className="text-muted-foreground text-xs">→</span>
-                                  </>
-                                )}
-                                <Badge variant={WORK_ORDER_STATUS_COLORS[entry.to_status] || "secondary"} className="text-[10px]">
-                                  {capitalize(entry.to_status.replace(/_/g, " "))}
-                                </Badge>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {getUserName(entry.changed_by)} · {formatDate(entry.changed_at)}
-                              </p>
-                              {entry.comment && (
-                                <p className="text-xs text-muted-foreground mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground py-4 text-center">No status changes recorded</p>
-                  )}
-                </CardContent>
-              </Card>
+              {orderStatusLog.length > 0 ? (
+                <div className="relative ml-3">
+                  {/* Vertical line */}
+                  <div className="absolute left-0 top-2 bottom-2 w-px bg-border" />
+
+                  <div className="space-y-6">
+                    {[...orderStatusLog]
+                      .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
+                      .map((entry) => (
+                        <div key={entry.id} className="relative pl-6">
+                          {/* Dot on the line */}
+                          <div className="absolute left-0 top-1.5 -translate-x-1/2 h-2.5 w-2.5 rounded-full bg-muted-foreground/30 border-2 border-background" />
+
+                          <p className="text-sm font-medium">
+                            {entry.from_status
+                              ? `${capitalize(entry.from_status.replace(/_/g, " "))} → ${capitalize(entry.to_status.replace(/_/g, " "))}`
+                              : capitalize(entry.to_status.replace(/_/g, " "))}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {getUserName(entry.changed_by)} · {formatDate(entry.changed_at)}
+                          </p>
+                          {entry.comment && (
+                            <p className="text-xs text-muted-foreground mt-1 italic">
+                              &ldquo;{entry.comment}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No status changes recorded</p>
+              )}
             </section>
           )}
         </div>
