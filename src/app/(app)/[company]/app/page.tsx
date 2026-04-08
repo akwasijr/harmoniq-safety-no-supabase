@@ -348,22 +348,22 @@ export default function EmployeeAppHomePage() {
     <div className="flex flex-col min-h-full">
       {/* ── Hero Section — no animation, visible immediately to avoid white flash ── */}
       <div className="bg-brand-solid px-5 pt-8 pb-10">
-        <p className="text-brand-solid-foreground/60 text-sm home-section" style={{ animationDelay: "0s" }}>{greeting}</p>
-        <h1 className="text-2xl font-bold text-brand-solid-foreground mt-1 home-section" style={{ animationDelay: "0.05s" }}>
+        <p className="text-brand-solid-foreground/60 text-sm home-section" style={{ animationDelay: "0.55s" }}>{greeting}</p>
+        <h1 className="text-2xl font-bold text-brand-solid-foreground mt-1 home-section" style={{ animationDelay: "0.5s" }}>
           {user?.first_name || t("app.welcome")}
         </h1>
 
         {/* Stats row - white/glass cards */}
         <div className="grid grid-cols-3 gap-2.5 mt-6">
-          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center home-section" style={{ animationDelay: "0.1s" }}>
+          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center home-section" style={{ animationDelay: "0.45s" }}>
             <p className="text-2xl font-bold text-brand-solid-foreground">{safeDays}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.safeDays")}</p>
           </div>
-          <Link href={`/${company}/app/checklists?tab=checklists`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center hover:bg-white/20 transition-colors home-section" style={{ animationDelay: "0.15s" }}>
+          <Link href={`/${company}/app/checklists?tab=checklists`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center hover:bg-white/20 transition-colors home-section" style={{ animationDelay: "0.4s" }}>
             <p className="text-2xl font-bold text-brand-solid-foreground">{pendingTaskCount}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
           </Link>
-          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center home-section" style={{ animationDelay: "0.2s" }}>
+          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center home-section" style={{ animationDelay: "0.35s" }}>
             <p className="text-2xl font-bold text-brand-solid-foreground">{completedThisWeek}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.completedWeek") || "This Week"}</p>
           </div>
@@ -372,7 +372,7 @@ export default function EmployeeAppHomePage() {
 
       {/* ── Tip of the Day ── */}
       {fieldAppSettings.tipOfTheDayEnabled && (
-        <div className="mx-4 -mt-5 relative z-10 home-section" style={{ animationDelay: "0.25s" }}>
+        <div className="mx-4 -mt-5 relative z-10 home-section" style={{ animationDelay: "0.3s" }}>
           <div className="field-app-panel field-app-surface bg-card border border-border/50 px-4 py-3.5 flex items-start gap-3">
             <div className="field-app-control h-8 w-8 bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
               <Lightbulb className="h-4 w-4 text-primary" />
@@ -386,7 +386,7 @@ export default function EmployeeAppHomePage() {
       )}
 
       {/* ── Quick Actions ── */}
-      <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.3s" }}>
+      <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.2s" }}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold">{t("app.quickActions") || "Quick Actions"}</h2>
         </div>
@@ -394,7 +394,7 @@ export default function EmployeeAppHomePage() {
           {quickActions.map((action, i) => (
             <Link key={action.href + action.labelKey} href={action.href}
               className="field-app-panel field-app-surface flex items-center gap-3 bg-card px-4 py-4 border border-border/50 active:scale-[0.98] hover:shadow-sm hover:border-border transition-all home-section"
-              style={{ animationDelay: `${0.35 + i * 0.05}s` }}>
+              style={{ animationDelay: `${0.15 - Math.min(i * 0.02, 0.12)}s` }}>
               <div className="field-app-control h-11 w-11 bg-primary/10 flex items-center justify-center shrink-0">
                 <action.icon className="h-5 w-5 text-primary" />
               </div>
@@ -405,7 +405,7 @@ export default function EmployeeAppHomePage() {
       </div>
 
       {/* ── Content Feed ── */}
-      <div className="px-4 pt-6 pb-24 space-y-1 home-section" style={{ animationDelay: "0.55s" }}>
+      <div className="px-4 pt-6 pb-24 space-y-1 home-section" style={{ animationDelay: "0s" }}>
 
         {/* Featured News Carousel */}
         {fieldAppSettings.newsEnabled && (
