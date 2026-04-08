@@ -14,6 +14,7 @@ import { AssetInspectionsProvider } from "@/stores/inspections-store";
 import { RiskEvaluationsProvider } from "@/stores/risk-evaluations-store";
 import { CorrectiveActionsProvider } from "@/stores/corrective-actions-store";
 import { WorkOrdersProvider } from "@/stores/work-orders-store";
+import { WorkOrderStatusLogProvider } from "@/stores/work-order-status-log-store";
 import { MeterReadingsProvider } from "@/stores/meter-readings-store";
 import { PartsProvider } from "@/stores/parts-store";
 import { InspectionRoutesProvider } from "@/stores/inspection-routes-store";
@@ -33,6 +34,7 @@ const APP_DATA_PROVIDERS: DataProvider[] = [
   RiskEvaluationsProvider,
   CorrectiveActionsProvider,
   WorkOrdersProvider,
+  WorkOrderStatusLogProvider,
   MeterReadingsProvider,
   PartsProvider,
   InspectionRoutesProvider,
