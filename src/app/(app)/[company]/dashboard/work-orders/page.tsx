@@ -223,45 +223,51 @@ export default function WorkOrdersPage() {
         <KPICard title={t("workOrders.labels.totalCost")} value={`$${formatNumber(totalCost)}`} icon={DollarSign} />
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder={t("workOrders.placeholders.searchWorkOrders")} className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {["all", "waiting_approval", "waiting_material", "approved", "scheduled", "in_progress", "completed", "cancelled"].map((s) => (
-            <Button key={s} size="sm" variant={statusFilter === s ? "default" : "outline"} onClick={() => setStatusFilter(s)}>
-              {s === "all" ? "All" : formatStatusLabel(s)}
-            </Button>
-          ))}
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[180px] h-8 text-xs">
-              <SelectValue placeholder="All types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              {WORK_ORDER_TYPES.map((woType) => (
-                <SelectItem key={woType} value={woType}>{formatStatusLabel(woType)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {(["all", "unassigned", "assigned"] as const).map((val) => (
-            <Button
-              key={val}
-              size="sm"
-              variant={assignmentFilter === val ? "default" : "outline"}
-              onClick={() => setAssignmentFilter(val)}
-              className="gap-1.5"
-            >
-              {val === "unassigned" && <UserX className="h-3.5 w-3.5" />}
-              {val === "all" ? "All assignments" : capitalize(val)}
-              {val === "unassigned" && ` (${unassignedCount})`}
-            </Button>
-          ))}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder={t("workOrders.placeholders.searchWorkOrders")} className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {["waiting_approval", "waiting_material", "approved", "scheduled", "in_progress", "completed", "cancelled"].map((s) => (
+                  <SelectItem key={s} value={s}>{formatStatusLabel(s)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="All types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                {WORK_ORDER_TYPES.map((woType) => (
+                  <SelectItem key={woType} value={woType}>{formatStatusLabel(woType)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={assignmentFilter} onValueChange={(v) => setAssignmentFilter(v as typeof assignmentFilter)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All assignments" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All assignments</SelectItem>
+                <SelectItem value="unassigned">Unassigned ({unassignedCount})</SelectItem>
+                <SelectItem value="assigned">Assigned</SelectItem>
+              </SelectContent>
+            </Select>
+            {(statusFilter !== "all" || typeFilter !== "all" || assignmentFilter !== "all") && (
+              <Button variant="ghost" size="sm" onClick={() => { setStatusFilter("all"); setTypeFilter("all"); setAssignmentFilter("all"); }}>
+                Clear filters
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
