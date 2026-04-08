@@ -786,190 +786,40 @@ export default function AssetsPage() {
       </>
       )}
 
-      {/* Work Orders Tab */}
+      {/* Work Orders Tab — navigate to full page */}
       {activeTab === "work-orders" && (() => {
-        const woOpenCount = workOrders.filter((o) => ["waiting_approval", "waiting_material", "approved"].includes(o.status)).length;
-        const woInProgressCount = workOrders.filter((o) => o.status === "in_progress").length;
-        const woCompletedCount = workOrders.filter((o) => o.status === "completed").length;
-        const woOverdueCount = workOrders.filter((o) => {
-          if (!o.due_date || ["completed", "cancelled"].includes(o.status)) return false;
-          return new Date(o.due_date).getTime() < stableNow;
-        }).length;
-        const recentOrders = workOrders
-          .filter((o) => o.status !== "cancelled")
-          .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-          .slice(0, 10);
-
+        // Redirect to the dedicated work orders page
+        if (typeof window !== "undefined") {
+          window.location.href = `/${company}/dashboard/work-orders`;
+        }
         return (
-          <>
-            <div className="grid gap-4 sm:grid-cols-4">
-              <KPICard title="Open" value={woOpenCount} icon={ClipboardList} />
-              <KPICard title="In progress" value={woInProgressCount} icon={Clock} />
-              <KPICard title="Overdue" value={woOverdueCount} icon={AlertTriangle} />
-              <KPICard title="Completed" value={woCompletedCount} icon={CheckCircle} />
-            </div>
-            {recentOrders.length === 0 ? (
-              <div className="text-center py-8">
-                <Wrench className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">No work orders yet</p>
-              </div>
-            ) : (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between py-3">
-                  <CardTitle className="text-sm">Recent work orders</CardTitle>
-                  <Link href={`/${company}/dashboard/work-orders`}>
-                    <Button variant="outline" size="sm">View all</Button>
-                  </Link>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="divide-y">
-                    {recentOrders.map((wo) => {
-                      const asset = wo.asset_id ? assets.find((a) => a.id === wo.asset_id) : null;
-                      const isOverdue = wo.due_date && !["completed", "cancelled"].includes(wo.status) && new Date(wo.due_date).getTime() < stableNow;
-                      return (
-                        <Link key={wo.id} href={`/${company}/dashboard/work-orders/${wo.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{wo.title}</p>
-                            <p className="text-xs text-muted-foreground">{asset?.name || "No asset"} · {capitalize((wo.type || "service_request").replace(/_/g, " "))}</p>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {isOverdue && <Badge variant="overdue">Overdue</Badge>}
-                            <Badge variant={wo.priority === "critical" || wo.priority === "high" ? "destructive" : wo.priority === "medium" ? "warning" : "secondary"}>{capitalize(wo.priority)}</Badge>
-                            <Badge variant={WORK_ORDER_STATUS_COLORS[wo.status] || "secondary"}>{capitalize(wo.status.replace(/_/g, " "))}</Badge>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+          </div>
         );
       })()}
 
-      {/* Parts Tab */}
+      {/* Parts Tab — navigate to full page */}
       {activeTab === "parts" && (() => {
-        const totalPartsCount = parts.length;
-        const totalValue = parts.reduce((sum, p) => sum + (p.unit_cost || 0) * (p.quantity_in_stock || 0), 0);
-        const lowStockCount = parts.filter((p) => (p.quantity_in_stock || 0) <= (p.minimum_stock || 0)).length;
-
+        if (typeof window !== "undefined") {
+          window.location.href = `/${company}/dashboard/parts`;
+        }
         return (
-          <>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <KPICard title="Total parts" value={totalPartsCount} icon={Package} />
-              <KPICard title="Inventory value" value={`$${totalValue.toLocaleString()}`} icon={DollarSign} />
-              <KPICard title="Low stock" value={lowStockCount} icon={AlertTriangle} />
-            </div>
-            {parts.length === 0 ? (
-              <div className="text-center py-8">
-                <Box className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">No parts in inventory yet</p>
-              </div>
-            ) : (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between py-3">
-                  <CardTitle className="text-sm">Parts inventory</CardTitle>
-                  <Link href={`/${company}/dashboard/parts`}>
-                    <Button variant="outline" size="sm">Manage parts</Button>
-                  </Link>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-left text-muted-foreground">
-                          <th className="px-4 py-2 font-medium">Part</th>
-                          <th className="px-4 py-2 font-medium">Unit cost</th>
-                          <th className="px-4 py-2 font-medium">In stock</th>
-                          <th className="px-4 py-2 font-medium">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {parts.slice(0, 10).map((part) => {
-                          const isLow = (part.quantity_in_stock || 0) <= (part.minimum_stock || 0);
-                          return (
-                            <tr key={part.id} className="hover:bg-muted/50">
-                              <td className="px-4 py-2">
-                                <p className="font-medium">{part.name}</p>
-                                {part.part_number && <p className="text-xs text-muted-foreground">{part.part_number}</p>}
-                              </td>
-                              <td className="px-4 py-2">${(part.unit_cost || 0).toFixed(2)}</td>
-                              <td className="px-4 py-2">{part.quantity_in_stock || 0}</td>
-                              <td className="px-4 py-2">
-                                <Badge variant={isLow ? "warning" : "secondary"}>{isLow ? "Low stock" : "In stock"}</Badge>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+          </div>
         );
       })()}
 
-      {/* Corrective Actions Tab */}
+      {/* Corrective Actions Tab — navigate to full page */}
       {activeTab === "corrective-actions" && (() => {
-        const caOpenCount = correctiveActions.filter((a) => a.status === "open").length;
-        const caInProgressCount = correctiveActions.filter((a) => a.status === "in_progress").length;
-        const caOverdueCount = correctiveActions.filter((a) => {
-          if (!a.due_date || a.status === "completed") return false;
-          return new Date(a.due_date).getTime() < stableNow;
-        }).length;
-        const caCompletedCount = correctiveActions.filter((a) => a.status === "completed").length;
-        const recentActions = correctiveActions
-          .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-          .slice(0, 10);
-
+        if (typeof window !== "undefined") {
+          window.location.href = `/${company}/dashboard/corrective-actions`;
+        }
         return (
-          <>
-            <div className="grid gap-4 sm:grid-cols-4">
-              <KPICard title="Open" value={caOpenCount} icon={ClipboardList} />
-              <KPICard title="In progress" value={caInProgressCount} icon={Clock} />
-              <KPICard title="Overdue" value={caOverdueCount} icon={AlertTriangle} />
-              <KPICard title="Completed" value={caCompletedCount} icon={CheckCircle} />
-            </div>
-            {recentActions.length === 0 ? (
-              <div className="text-center py-8">
-                <ClipboardList className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">No corrective actions yet</p>
-              </div>
-            ) : (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between py-3">
-                  <CardTitle className="text-sm">Recent corrective actions</CardTitle>
-                  <Link href={`/${company}/dashboard/corrective-actions`}>
-                    <Button variant="outline" size="sm">View all</Button>
-                  </Link>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="divide-y">
-                    {recentActions.map((action) => {
-                      const asset = action.asset_id ? assets.find((a) => a.id === action.asset_id) : null;
-                      const isOverdue = action.due_date && action.status !== "completed" && new Date(action.due_date).getTime() < stableNow;
-                      return (
-                        <Link key={action.id} href={`/${company}/dashboard/corrective-actions/${action.id}`} className={cn("flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors", isOverdue && "border-l-2 border-l-destructive")}>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{action.description}</p>
-                            <p className="text-xs text-muted-foreground">{asset?.name || "No asset"} · Due {action.due_date ? formatDate(action.due_date) : "—"}</p>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {isOverdue && <Badge variant="overdue">Overdue</Badge>}
-                            <Badge variant={action.severity === "critical" || action.severity === "high" ? "destructive" : action.severity === "medium" ? "warning" : "secondary"}>{capitalize(action.severity)}</Badge>
-                            <Badge variant={action.status === "completed" ? "completed" : action.status === "in_progress" ? "in_progress" : "secondary"}>{capitalize(action.status.replace(/_/g, " "))}</Badge>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+          </div>
         );
       })()}
 
