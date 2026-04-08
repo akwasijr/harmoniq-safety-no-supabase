@@ -162,7 +162,7 @@ export default function EmployeeAppRootLayout({
   React.useEffect(() => {
     if (!isLoading && user) {
       const elapsed = Date.now() - splashMinTimeRef.current;
-      const remaining = Math.max(0, 4000 - elapsed);
+      const remaining = Math.max(0, 5000 - elapsed);
       const timer = setTimeout(() => setShowSplash(false), remaining);
       return () => clearTimeout(timer);
     }
@@ -194,15 +194,13 @@ export default function EmployeeAppRootLayout({
         <style>{`
           .splash-blob {
             opacity: 0;
-            filter: blur(8px);
             transform: translate(var(--dx), var(--dy));
             animation: fly-in 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             animation-delay: inherit;
           }
           @keyframes fly-in {
-            0% { opacity: 0; filter: blur(8px); transform: translate(var(--dx), var(--dy)); }
-            70% { opacity: 1; filter: blur(1px); transform: translate(0, 0); }
-            100% { opacity: 1; filter: blur(0px); transform: translate(0, 0); }
+            0% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
+            100% { opacity: 1; transform: translate(0, 0); }
           }
         `}</style>
       </div>
