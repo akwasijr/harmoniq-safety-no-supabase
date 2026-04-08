@@ -119,7 +119,7 @@ function FeaturesDropdown() {
       </button>
       {open && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3">
-          <div className="w-[480px] rounded-2xl border border-zinc-800/60 bg-zinc-900/95 backdrop-blur-xl p-5 shadow-2xl">
+          <div className="w-[480px] rounded-2xl border border-white/10 bg-zinc-900/95 backdrop-blur-xl p-5 shadow-2xl">
             <div className="grid grid-cols-2 gap-x-8 gap-y-5">
               {[
                 { title: "Incident Management", desc: "Report & Resolve", href: "#feature-details" },
@@ -778,7 +778,7 @@ export default function Home() {
                     <select
                       value={selectedIndustry}
                       onChange={(e) => setSelectedIndustry(Number(e.target.value))}
-                      className="w-full rounded-lg border border-zinc-800/60 bg-zinc-900/80 px-4 py-3 text-sm text-white appearance-none cursor-pointer focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/40"
+                      className="w-full rounded-lg border border-white/10 bg-zinc-900/80 px-4 py-3 text-sm text-white appearance-none cursor-pointer focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/40"
                       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 5.646a.5.5 0 0 1 .708 0L8 8.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
                     >
                       {industries.map((industry, i) => (
@@ -1393,7 +1393,7 @@ function WaitlistSection() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@company.com"
-                className="flex-1 rounded-full bg-zinc-800 px-5 py-3 text-base text-white placeholder-zinc-500 border border-zinc-800/60 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/40 focus:outline-none transition-colors"
+                className="flex-1 rounded-full bg-zinc-800 px-5 py-3 text-base text-white placeholder-zinc-500 border border-white/10 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/40 focus:outline-none transition-colors"
               />
               <button
                 type="submit"
