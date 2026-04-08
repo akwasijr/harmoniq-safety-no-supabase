@@ -181,13 +181,13 @@ export default function CorrectiveActionsPage() {
           addLabel={t("correctiveActions.newAction")}
         />
       ) : (
+        <>
+        <div className="flex justify-end">
+          <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4" /> {t("correctiveActions.newAction")}
+          </Button>
+        </div>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Corrective Actions</CardTitle>
-            <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
-              <Plus className="h-4 w-4" /> {t("correctiveActions.newAction")}
-            </Button>
-          </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-border text-sm">
@@ -271,9 +271,8 @@ export default function CorrectiveActionsPage() {
             </div>
           )}
         </Card>
+        </>
       )}
-
-      {/* Create Modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <Card className="w-full max-w-lg">

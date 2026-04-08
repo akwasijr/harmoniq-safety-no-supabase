@@ -695,16 +695,14 @@ export default function AssetsPage() {
 
       {/* Assets table (List View) */}
       {viewMode === "list" && (
+      <>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{filteredAssets.length} asset{filteredAssets.length !== 1 ? "s" : ""}</p>
+        <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
+          <Plus className="h-4 w-4" aria-hidden="true" /> {t("assets.buttons.newAsset")}
+        </Button>
+      </div>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base">{filteredAssets.length} asset{filteredAssets.length !== 1 ? "s" : ""}</CardTitle>
-          <div className="flex items-center gap-3">
-            <p className="text-sm text-muted-foreground">Page {currentPage} of {totalPages || 1}</p>
-            <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
-              <Plus className="h-4 w-4" aria-hidden="true" /> {t("assets.buttons.newAsset")}
-            </Button>
-          </div>
-        </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -811,7 +809,9 @@ export default function AssetsPage() {
           )}
         </CardContent>
       </Card>
+      </>
       )}
+
       </>
       )}
 
@@ -884,13 +884,12 @@ export default function AssetsPage() {
               <NoDataEmptyState entityName="work orders" onAdd={() => setShowWoCreate(true)} addLabel="New work order" />
             ) : (
               <>
+                <div className="flex justify-end">
+                  <Button size="sm" className="gap-2" onClick={() => setShowWoCreate(true)}>
+                    <Plus className="h-4 w-4" /> New work order
+                  </Button>
+                </div>
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base">Work Orders</CardTitle>
-                    <Button size="sm" className="gap-2" onClick={() => setShowWoCreate(true)}>
-                      <Plus className="h-4 w-4" /> New work order
-                    </Button>
-                  </CardHeader>
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-border text-sm">
@@ -998,13 +997,12 @@ export default function AssetsPage() {
               <NoDataEmptyState entityName="parts" onAdd={() => setShowPartsCreate(true)} addLabel="Add part" />
             ) : (
               <>
+                <div className="flex justify-end">
+                  <Button size="sm" className="gap-2" onClick={() => setShowPartsCreate(true)}>
+                    <Plus className="h-4 w-4" /> Add part
+                  </Button>
+                </div>
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base">Parts</CardTitle>
-                    <Button size="sm" className="gap-2" onClick={() => setShowPartsCreate(true)}>
-                      <Plus className="h-4 w-4" /> Add part
-                    </Button>
-                  </CardHeader>
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-border text-sm">
@@ -1130,13 +1128,12 @@ export default function AssetsPage() {
               <NoDataEmptyState entityName="corrective actions" onAdd={() => setShowCaCreate(true)} addLabel="New action" />
             ) : (
               <>
+                <div className="flex justify-end">
+                  <Button size="sm" className="gap-2" onClick={() => setShowCaCreate(true)}>
+                    <Plus className="h-4 w-4" /> New action
+                  </Button>
+                </div>
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base">Corrective Actions</CardTitle>
-                    <Button size="sm" className="gap-2" onClick={() => setShowCaCreate(true)}>
-                      <Plus className="h-4 w-4" /> New action
-                    </Button>
-                  </CardHeader>
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-border text-sm">

@@ -102,13 +102,12 @@ export default function PartsPage() {
         />
       ) : (
         <>
+        <div className="flex justify-end">
+          <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4" /> {t("parts.addPart")}
+          </Button>
+        </div>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">{t("parts.title")}</CardTitle>
-            <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
-              <Plus className="h-4 w-4" /> {t("parts.addPart")}
-            </Button>
-          </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-border text-sm">
