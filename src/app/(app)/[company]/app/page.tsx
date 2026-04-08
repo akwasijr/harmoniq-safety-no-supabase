@@ -282,6 +282,13 @@ export default function EmployeeAppHomePage() {
   // Use state for time-dependent values to prevent hydration mismatch
   const [mounted, setMounted] = React.useState(false);
   const [stableNow] = React.useState(() => Date.now());
+  const [shouldAnimate] = React.useState(() => {
+    if (typeof window === "undefined") return false;
+    const key = "harmoniq_home_animated";
+    if (sessionStorage.getItem(key)) return false;
+    sessionStorage.setItem(key, "1");
+    return true;
+  });
   React.useEffect(() => {
     setMounted(true);
   }, []);
@@ -345,7 +352,7 @@ export default function EmployeeAppHomePage() {
 
   // ── Always show full feed (no early return for empty state) ──
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full" data-animate={shouldAnimate ? "true" : "false"}>
       {/* ── Hero Section — no animation, visible immediately to avoid white flash ── */}
       <div className="bg-brand-solid px-5 pt-8 pb-10">
         <p className="text-brand-solid-foreground/60 text-sm home-section" style={{ animationDelay: "0.55s" }}>{greeting}</p>
@@ -415,7 +422,7 @@ export default function EmployeeAppHomePage() {
       </div>
 
       <style>{`
-        .home-section {
+        [data-animate="true"] .home-section {
           opacity: 0;
           transform: translateY(40px);
           animation: home-ease-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
