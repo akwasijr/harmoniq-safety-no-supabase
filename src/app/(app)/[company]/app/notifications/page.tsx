@@ -112,13 +112,13 @@ export default function NotificationsPage() {
               ? `/${company}/app/incidents/${n.source_id}`
               : n.source === "ticket"
                 ? `/${company}/app/tasks/tickets/${n.source_id}`
-                : n.source === "work_order"
+                : n.source === "work_order" || n.source === "work_orders"
                   ? `/${company}/app/tasks/work-orders/${n.source_id}`
                   : n.source === "corrective_action"
                     ? `/${company}/app/tasks/actions/${n.source_id}`
                     : n.source === "checklist"
                       ? `/${company}/app/checklists/${n.source_id}`
-                      : `/${company}/app/tasks`
+                      : `/${company}/app`
           : `/${company}/app`;
         const sourceTicket = n.source === "ticket" ? tickets.find((ticket) => ticket.id === n.source_id) : null;
         const sourceWorkOrder = n.source === "work_order" ? workOrders.find((workOrder) => workOrder.id === n.source_id) : null;
