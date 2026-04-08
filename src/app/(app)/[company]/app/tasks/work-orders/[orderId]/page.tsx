@@ -4,8 +4,7 @@ import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft, MapPin, Package, ScanLine, Calendar, User as UserIcon,
-  AlertTriangle, CheckCircle, Navigation, Clock, FileText, Wrench,
-  MessageSquare, Camera,
+  AlertTriangle, CheckCircle, Navigation, Clock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,12 +30,12 @@ import type { WorkOrderStatus } from "@/types";
 
 type TabId = "overview" | "location" | "instructions" | "work-log" | "complete";
 
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: "overview", label: "Overview", icon: FileText },
-  { id: "location", label: "Location", icon: MapPin },
-  { id: "instructions", label: "Work", icon: Wrench },
-  { id: "work-log", label: "Log", icon: Clock },
-  { id: "complete", label: "Complete", icon: CheckCircle },
+const TABS: { id: TabId; label: string }[] = [
+  { id: "overview", label: "Overview" },
+  { id: "location", label: "Location" },
+  { id: "instructions", label: "Work" },
+  { id: "work-log", label: "Log" },
+  { id: "complete", label: "Complete" },
 ];
 
 export default function WorkOrderDetailPage() {
@@ -46,7 +45,7 @@ export default function WorkOrderDetailPage() {
   const orderId = typeof params.orderId === "string" ? params.orderId : "";
 
   const { user } = useAuth();
-  const { t, formatDate, formatNumber } = useTranslation();
+  const { formatDate, formatNumber } = useTranslation();
   const { toast } = useToast();
 
   const { items: orders, update: updateOrder, isLoading } = useWorkOrdersStore();
@@ -58,7 +57,8 @@ export default function WorkOrderDetailPage() {
 
   const [activeTab, setActiveTab] = React.useState<TabId>("overview");
   const [completionNotes, setCompletionNotes] = React.useState("");
-  const mapRef = React.useRef<HTMLDivElement>(null);
+  const overviewMapRef = React.useRef<HTMLDivElement>(null);
+  const locationMapRef = React.useRef<HTMLDivElement>(null);
   const mapInstanceRef = React.useRef<unknown>(null);
 
   const order = orders.find((o) => o.id === orderId && o.company_id === user?.company_id);
@@ -73,11 +73,13 @@ export default function WorkOrderDetailPage() {
 
   // Map
   React.useEffect(() => {
-    if (!hasGps || !mapRef.current || mapInstanceRef.current || activeTab !== "location") return;
+    const mapNode = activeTab === "overview" ? overviewMapRef.current : activeTab === "location" ? locationMapRef.current : null;
+    if (!hasGps || !mapNode || mapInstanceRef.current) return;
     const L = require("leaflet");
     require("leaflet/dist/leaflet.css");
-    const map = L.map(mapRef.current, { zoomControl: false, attributionControl: false })
-      .setView([location!.gps_lat!, location!.gps_lng!], 16);
+    const zoom = activeTab === "overview" ? 15 : 16;
+    const map = L.map(mapNode, { zoomControl: false, attributionControl: false })
+      .setView([location!.gps_lat!, location!.gps_lng!], zoom);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
     L.circleMarker([location!.gps_lat!, location!.gps_lng!], {
       radius: 8, fillColor: "#2563eb", fillOpacity: 1, color: "#fff", weight: 2,
@@ -114,6 +116,7 @@ export default function WorkOrderDetailPage() {
   }
 
   const typeLabel = capitalize((order.type || "service_request").replace(/_/g, " "));
+  const priorityLabel = capitalize(order.priority);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -125,7 +128,7 @@ export default function WorkOrderDetailPage() {
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold truncate">{order.title}</p>
-            <p className="text-xs text-muted-foreground">{typeLabel} · {capitalize(order.priority)}</p>
+            <p className="text-xs text-muted-foreground">{typeLabel} · {priorityLabel}</p>
           </div>
           <Badge variant={isCompleted ? "completed" : isInProgress ? "info" : "secondary"}>
             {capitalize(order.status.replace(/_/g, " "))}
@@ -135,22 +138,20 @@ export default function WorkOrderDetailPage() {
 
       {/* Tab bar */}
       <div className="shrink-0 border-b bg-background overflow-x-auto">
-        <div className="flex min-w-max">
+        <div className="flex min-w-max px-2">
           {TABS.map((tab) => {
-            const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium relative whitespace-nowrap transition-colors",
+                  "px-3 py-3 text-sm font-medium relative whitespace-nowrap transition-colors",
                   isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="h-3.5 w-3.5" />
                 {tab.label}
-                {isActive && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />}
+                {isActive && <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-foreground" />}
               </button>
             );
           })}
@@ -164,54 +165,81 @@ export default function WorkOrderDetailPage() {
         {activeTab === "overview" && (
           <div className="px-4 py-4 space-y-4">
             {isOverdue && (
-              <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-3 py-2">
+              <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-900 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">
                 <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
-                <p className="text-xs font-medium text-red-700 dark:text-red-300">Overdue — due {formatDate(order.due_date!)}</p>
+                <p className="text-xs font-medium">Overdue — due {formatDate(order.due_date!)}</p>
               </div>
             )}
 
-            <div>
-              <p className="text-sm">{order.description || "No description provided."}</p>
-            </div>
+            <Card>
+              <CardContent className="pt-4 space-y-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Summary</p>
+                  <p className="text-sm leading-6">{order.description || "No description provided."}</p>
+                </div>
+                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                  <span>{typeLabel}</span>
+                  <span>{priorityLabel} priority</span>
+                  {order.due_date && (
+                    <span className={cn(isOverdue && "text-red-700 dark:text-red-300 font-medium")}>
+                      Due {formatDate(order.due_date)}
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="divide-y rounded-lg border">
-              {asset && (
-                <div className="flex items-center gap-3 px-3 py-2.5">
-                  <Package className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">Asset</p>
-                    <p className="text-sm font-medium">{asset.name}</p>
+            {(location || hasGps) && (
+              <Card>
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-muted-foreground">Location</p>
+                      <p className="text-sm font-medium mt-1">{location?.name || "Mapped location"}</p>
+                      {location?.address && <p className="text-xs text-muted-foreground mt-1">{location.address}</p>}
+                    </div>
+                    {hasGps && (
+                      <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={openInMaps}>
+                        <Navigation className="h-3.5 w-3.5" /> Navigate
+                      </Button>
+                    )}
                   </div>
-                </div>
-              )}
-              {location && (
-                <div className="flex items-center gap-3 px-3 py-2.5">
-                  <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">Location</p>
-                    <p className="text-sm font-medium">{location.name}</p>
+                  {hasGps && <div ref={overviewMapRef} className="h-36 w-full overflow-hidden rounded-lg border" />}
+                </CardContent>
+              </Card>
+            )}
+
+            {asset && (
+              <Card>
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Package className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-muted-foreground">Asset identification</p>
+                      <p className="text-sm font-medium mt-1">{asset.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {[asset.asset_tag, asset.serial_number && `SN: ${asset.serial_number}`].filter(Boolean).join(" · ") || "No asset identifier"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
-              {assignee && (
-                <div className="flex items-center gap-3 px-3 py-2.5">
-                  <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">Assigned to</p>
-                    <p className="text-sm font-medium">{assignee.full_name || `${assignee.first_name} ${assignee.last_name}`}</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => router.push(`/${company}/app/scan`)}>
+                      <ScanLine className="h-3.5 w-3.5" /> Scan asset
+                    </Button>
+                    <Button size="sm" className="flex-1" onClick={() => setActiveTab("instructions")}>
+                      Open work details
+                    </Button>
                   </div>
-                </div>
-              )}
-              {order.due_date && (
-                <div className="flex items-center gap-3 px-3 py-2.5">
-                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">Due date</p>
-                    <p className={cn("text-sm font-medium", isOverdue && "text-red-600 dark:text-red-400")}>{formatDate(order.due_date)}</p>
-                  </div>
-                </div>
-              )}
-            </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {assignee && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <UserIcon className="h-3.5 w-3.5" />
+                Assigned to {assignee.full_name || `${assignee.first_name} ${assignee.last_name}`}
+              </div>
+            )}
 
             {!isInProgress && !isCompleted && (
               <Button className="w-full" size="lg" onClick={() => handleStatusChange("in_progress")}>
@@ -226,7 +254,7 @@ export default function WorkOrderDetailPage() {
           <div>
             {hasGps ? (
               <>
-                <div ref={mapRef} className="h-56 w-full" />
+                <div ref={locationMapRef} className="h-56 w-full" />
                 <button onClick={openInMaps} className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-muted/50 transition-colors border-b">
                   <Navigation className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -274,17 +302,23 @@ export default function WorkOrderDetailPage() {
         {/* Instructions / Work tab */}
         {activeTab === "instructions" && (
           <div className="px-4 py-4 space-y-4">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-2">Instructions</p>
-              <Card>
-                <CardContent className="pt-4">
-                  <p className="text-sm whitespace-pre-wrap">{order.description || "No instructions provided."}</p>
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardContent className="pt-4 space-y-3">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Work instructions</p>
+                  <p className="text-sm whitespace-pre-wrap mt-2">{order.description || "No instructions provided."}</p>
+                </div>
+                {asset && (
+                  <div className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                    {asset.name}
+                    {location ? ` · ${location.name}` : ""}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             <div>
-              <p className="text-xs font-medium text-muted-foreground mb-2">Documents and photos</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2">Reference files</p>
               <TaskDocuments entityType="work-order" entityId={orderId} formatDate={formatDate} />
             </div>
           </div>

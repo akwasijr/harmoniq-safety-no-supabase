@@ -8,7 +8,7 @@ import { BottomTabs } from "@/components/navigation/bottom-tabs";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { getFieldAppShellStyle } from "@/lib/field-app-settings";
 
-const FULL_PAGE_ROUTES = [
+const BOTTOM_NAV_HIDDEN_ROUTES = [
   "/app/report",
   "/app/maintenance",
   "/app/scan",
@@ -18,6 +18,17 @@ const FULL_PAGE_ROUTES = [
   "/app/inspection-round",
   "/app/incidents/",
   "/app/tasks/work-orders/",
+];
+
+const HEADER_HIDDEN_ROUTES = [
+  "/app/report",
+  "/app/maintenance",
+  "/app/scan",
+  "/app/assets/new",
+  "/app/checklists/",
+  "/app/inspection/",
+  "/app/inspection-round",
+  "/app/incidents/",
 ];
 
 // Risk assessment form routes — all sub-paths except the index and view pages
@@ -45,17 +56,31 @@ export function EmployeeAppLayout({
 }: EmployeeAppLayoutProps) {
   const { settings } = useFieldAppSettings();
   const pathname = usePathname();
-  const isFullPage = (() => {
+  const hideBottomNav = (() => {
     const p = pathname;
     const base = `/${company}`;
-    // Check explicit full-page routes
-    if (FULL_PAGE_ROUTES.some((route) => {
+    if (BOTTOM_NAV_HIDDEN_ROUTES.some((route) => {
       const fullRoute = `${base}${route}`;
       return p === fullRoute || p.startsWith(fullRoute.endsWith("/") ? fullRoute : `${fullRoute}/`);
     })) {
       return true;
     }
-    // Check risk-assessment form routes (exclude index and view pages)
+    const raPrefix = `${base}${RISK_ASSESSMENT_FORM_PREFIX}`;
+    if (p.startsWith(raPrefix) && !RISK_ASSESSMENT_EXCLUDED.some((ex) => p.startsWith(`${base}${ex}`))) {
+      return true;
+    }
+    return false;
+  })();
+
+  const hideHeader = (() => {
+    const p = pathname;
+    const base = `/${company}`;
+    if (HEADER_HIDDEN_ROUTES.some((route) => {
+      const fullRoute = `${base}${route}`;
+      return p === fullRoute || p.startsWith(fullRoute.endsWith("/") ? fullRoute : `${fullRoute}/`);
+    })) {
+      return true;
+    }
     const raPrefix = `${base}${RISK_ASSESSMENT_FORM_PREFIX}`;
     if (p.startsWith(raPrefix) && !RISK_ASSESSMENT_EXCLUDED.some((ex) => p.startsWith(`${base}${ex}`))) {
       return true;
@@ -70,7 +95,7 @@ export function EmployeeAppLayout({
       style={{ ...getFieldAppShellStyle(settings), backgroundColor: "hsl(var(--brand-solid, var(--primary)))" }}
     >
       {/* Header */}
-      {showHeader && !isFullPage && (
+      {showHeader && !hideHeader && (
         <header className="field-app-surface sticky top-0 z-30 flex h-[60px] items-center justify-between bg-brand-solid px-4">
           <Link href={`/${company}/app`} className="flex items-center gap-2">
             {companyLogo ? (
@@ -96,10 +121,10 @@ export function EmployeeAppLayout({
       )}
 
       {/* Main content */}
-      <main className={`flex-1 bg-muted ${isFullPage ? "pb-0" : "pb-[72px]"}`} style={{ marginTop: showHeader && !isFullPage ? -1 : 0 }}>{children}</main>
+      <main className={`flex-1 bg-muted ${hideBottomNav ? "pb-0" : "pb-[72px]"}`} style={{ marginTop: showHeader && !hideHeader ? -1 : 0 }}>{children}</main>
 
       {/* Bottom navigation — hidden on full-page flows like report incident */}
-      {!isFullPage && <BottomTabs company={company} />}
+      {!hideBottomNav && <BottomTabs company={company} />}
     </div>
   );
 }
