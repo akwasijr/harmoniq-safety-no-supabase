@@ -20,74 +20,79 @@ interface StatusPipelineProps {
 }
 
 export function StatusPipeline({ currentStatus, className }: StatusPipelineProps) {
-  if (currentStatus === "cancelled") {
-    return (
-      <div className={cn("flex items-center gap-2 px-4 py-3 rounded-lg border bg-muted/30", className)}>
-        <div className="h-6 w-6 rounded-full bg-[#6b7280] flex items-center justify-center">
-          <span className="text-[10px] text-white font-bold">✕</span>
-        </div>
-        <span className="text-sm font-medium text-[#374151] dark:text-[#d1d5db]">Cancelled</span>
-      </div>
-    );
-  }
-
-  const currentIndex = PIPELINE_STEPS.findIndex((s) => s.status === currentStatus);
+  const currentIndex = currentStatus === "cancelled"
+    ? -1
+    : PIPELINE_STEPS.findIndex((s) => s.status === currentStatus);
 
   return (
-    <div className={cn("px-2 py-5", className)}>
-      <div className="flex items-start">
-        {PIPELINE_STEPS.map((step, index) => {
-          const isCompleted = index < currentIndex;
-          const isActive = index === currentIndex;
-          const isLast = index === PIPELINE_STEPS.length - 1;
+    <div className={cn("rounded-lg border bg-card", className)}>
+      {/* Header */}
+      <div className="px-4 py-3 border-b">
+        <h3 className="text-sm font-medium text-foreground">
+          Status: {currentStatus === "cancelled" ? "Cancelled" : PIPELINE_STEPS[currentIndex]?.label || "Unknown"}
+        </h3>
+      </div>
 
-          return (
-            <React.Fragment key={step.status}>
-              <div className="flex flex-col items-center gap-2" style={{ minWidth: 0, flex: "0 0 auto" }}>
-                {/* Circle */}
-                <div
-                  className={cn(
-                    "h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0",
-                    isCompleted && "bg-[#059669] text-white",
-                    isActive && "bg-[#2563eb] text-white ring-4 ring-[#2563eb]/20",
-                    !isCompleted && !isActive && "border-2 border-[#d1d5db] bg-white text-[#9ca3af] dark:border-[#4b5563] dark:bg-[#1f2937] dark:text-[#6b7280]",
-                  )}
-                >
-                  {isCompleted ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <span>{index + 1}</span>
-                  )}
-                </div>
-                {/* Label */}
-                <span
-                  className={cn(
-                    "text-[11px] leading-tight text-center whitespace-nowrap",
-                    isCompleted && "text-[#059669] dark:text-[#6ee7b7] font-medium",
-                    isActive && "text-[#2563eb] dark:text-[#93c5fd] font-semibold",
-                    !isCompleted && !isActive && "text-[#9ca3af] dark:text-[#6b7280]",
-                  )}
-                >
-                  {step.label}
-                </span>
-              </div>
+      {/* Stepper */}
+      <div className="px-6 py-6">
+        {currentStatus === "cancelled" ? (
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-[#dc2626] flex items-center justify-center shrink-0">
+              <span className="text-white text-sm font-bold">✕</span>
+            </div>
+            <span className="text-sm font-medium text-[#dc2626]">This work order has been cancelled</span>
+          </div>
+        ) : (
+          <div className="flex items-center">
+            {PIPELINE_STEPS.map((step, index) => {
+              const isCompleted = index < currentIndex;
+              const isActive = index === currentIndex;
+              const isLast = index === PIPELINE_STEPS.length - 1;
 
-              {/* Connecting line */}
-              {!isLast && (
-                <div className="flex-1 flex items-center px-1" style={{ marginTop: 16 }}>
-                  <div
-                    className={cn(
-                      "h-0.5 w-full rounded-full",
-                      index < currentIndex
-                        ? "bg-[#059669] dark:bg-[#6ee7b7]"
-                        : "bg-[#e5e7eb] dark:bg-[#374151]",
-                    )}
-                  />
-                </div>
-              )}
-            </React.Fragment>
-          );
-        })}
+              return (
+                <React.Fragment key={step.status}>
+                  {/* Step */}
+                  <div className="flex flex-col items-center gap-2 shrink-0">
+                    <div
+                      className={cn(
+                        "relative h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold",
+                        isCompleted && "bg-[#059669] text-white",
+                        isActive && "bg-[#2563eb] text-white shadow-[0_0_0_4px_rgba(37,99,235,0.15)]",
+                        !isCompleted && !isActive && "border-2 border-[#d1d5db] text-[#9ca3af] dark:border-[#4b5563] dark:text-[#6b7280]",
+                      )}
+                    >
+                      {isCompleted ? <Check className="h-4 w-4" strokeWidth={3} /> : index + 1}
+                    </div>
+                    <span
+                      className={cn(
+                        "text-xs text-center whitespace-nowrap leading-tight",
+                        isCompleted && "text-[#047857] dark:text-[#6ee7b7] font-medium",
+                        isActive && "text-[#1d4ed8] dark:text-[#93c5fd] font-semibold",
+                        !isCompleted && !isActive && "text-[#9ca3af] dark:text-[#6b7280]",
+                      )}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
+
+                  {/* Line */}
+                  {!isLast && (
+                    <div className="flex-1 mx-2 mt-[-20px]">
+                      <div
+                        className={cn(
+                          "h-[3px] w-full rounded-full",
+                          index < currentIndex
+                            ? "bg-[#059669] dark:bg-[#6ee7b7]"
+                            : "bg-[#e5e7eb] dark:bg-[#374151]",
+                        )}
+                      />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
