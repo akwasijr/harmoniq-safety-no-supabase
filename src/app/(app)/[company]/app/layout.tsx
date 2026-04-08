@@ -158,60 +158,33 @@ export default function EmployeeAppRootLayout({
   if (isLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4 animate-in fade-in duration-300">
-          {/* Animated Harmoniq shield logo */}
-          <div className="relative">
-            <svg
-              width="64"
-              height="64"
-              viewBox="0 0 64 64"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="animate-[pulse_1.5s_ease-in-out_infinite]"
-            >
-              {/* Shield shape */}
-              <path
-                d="M32 4L8 16v16c0 14.4 10.24 27.84 24 32 13.76-4.16 24-17.6 24-32V16L32 4z"
-                className="fill-primary/10 stroke-primary"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{
-                  strokeDasharray: 160,
-                  strokeDashoffset: 0,
-                  animation: "shield-draw 1.2s ease-out forwards",
-                }}
-              />
-              {/* Checkmark inside */}
-              <path
-                d="M22 32l7 7 13-14"
-                className="stroke-primary"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-                style={{
-                  strokeDasharray: 40,
-                  strokeDashoffset: 40,
-                  animation: "check-draw 0.5s ease-out 0.8s forwards",
-                }}
-              />
-            </svg>
-            {/* Glow ring */}
-            <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-[pulse_2s_ease-in-out_infinite]" />
-          </div>
-          <p className="text-sm font-semibold text-muted-foreground tracking-wider uppercase animate-[pulse_1.5s_ease-in-out_infinite]">
+        <div className="flex flex-col items-center gap-5">
+          {/* Animated Harmoniq logo icon — 6 organic blobs that pop in sequentially */}
+          <svg
+            width="80"
+            height="80"
+            viewBox="0 0 100 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g transform="translate(3, 2) scale(1.02)">
+              <path d="M84.84,5.97c11.18,10.61,16.12,21.58,10.4,28.43-6.89,8.24-23.06,5.18-30.43-.96-5.43-4.53-10.3-16.74-8.84-23.72,2.88-13.82,21.41-10.83,28.87-3.75Z" className="fill-primary" style={{ opacity: 0, animation: "blob-in 0.4s ease-out 0.1s forwards" }} />
+              <path d="M43.06,1.77c6.62,4.14,5.61,16.37,1.9,22.31-6.48,10.36-27.92,19.25-37.08,8.53C-3.27,19.57,29.34-6.81,43.06,1.77Z" className="fill-primary" style={{ opacity: 0, animation: "blob-in 0.4s ease-out 0.25s forwards" }} />
+              <path d="M90.61,47.51c10.09,5.18,6.28,21.92.93,29.4-9.71,13.59-31.32,20.76-30.13-2.94.56-11.1,5.84-19.13,15.81-24.32,2.78-1.45,10.59-3.58,13.39-2.14Z" className="fill-primary" style={{ opacity: 0, animation: "blob-in 0.4s ease-out 0.4s forwards" }} />
+              <path d="M16.97,43.36c10,6.66,11.37,25.03,1.35,32.13-9.67,6.85-24.05-19.32-15.93-30.07,3.23-4.27,10.25-4.95,14.58-2.06Z" className="fill-primary" style={{ opacity: 0, animation: "blob-in 0.4s ease-out 0.55s forwards" }} />
+              <path d="M58.61,36.16c13.98,10.11-3.21,34.51-17.24,24.68-16.58-11.62,2.07-35.66,17.24-24.68Z" className="fill-primary" style={{ opacity: 0, animation: "blob-in 0.5s ease-out 0.7s forwards" }} />
+              <path d="M50.19,78.06c5.81,3.95,8.59,8.6,4.65,15.15-5.77,9.62-28.57,2.57-31.26-7.18-3.6-13.08,19.27-12.96,26.6-7.97h0Z" className="fill-primary" style={{ opacity: 0, animation: "blob-in 0.4s ease-out 0.85s forwards" }} />
+            </g>
+          </svg>
+          <p className="text-sm font-semibold text-muted-foreground tracking-widest uppercase" style={{ opacity: 0, animation: "blob-in 0.5s ease-out 1s forwards" }}>
             Harmoniq
           </p>
         </div>
         <style>{`
-          @keyframes shield-draw {
-            from { stroke-dashoffset: 160; opacity: 0; }
-            to { stroke-dashoffset: 0; opacity: 1; }
-          }
-          @keyframes check-draw {
-            from { stroke-dashoffset: 40; }
-            to { stroke-dashoffset: 0; }
+          @keyframes blob-in {
+            from { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.1); }
+            to { opacity: 1; transform: scale(1); }
           }
         `}</style>
       </div>
