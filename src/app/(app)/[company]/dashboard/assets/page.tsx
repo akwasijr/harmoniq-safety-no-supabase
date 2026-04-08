@@ -23,6 +23,8 @@ import {
   Download,
   Upload,
   Wrench,
+  ClipboardList,
+  Cog,
   Shield,
   Activity,
 } from "lucide-react";
@@ -480,6 +482,9 @@ export default function AssetsPage() {
       <DetailTabs
         tabs={[
           { id: "assets", label: t("assets.tabs.assets"), icon: Package },
+          { id: "work-orders", label: t("workOrders.title"), icon: ClipboardList },
+          { id: "parts", label: t("parts.title"), icon: Cog },
+          { id: "corrective-actions", label: t("correctiveActions.title"), icon: Wrench },
           { id: "alerts", label: t("assets.tabs.alerts"), icon: AlertTriangle, count: activeAlerts.length },
         ]}
         activeTab={activeTab}
@@ -777,6 +782,39 @@ export default function AssetsPage() {
       </Card>
       )}
       </>
+      )}
+
+      {/* Work Orders Tab */}
+      {activeTab === "work-orders" && (
+        <div className="text-center py-12">
+          <Wrench className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground mb-4">View and manage work orders for this asset</p>
+          <Link href={`/${company}/dashboard/work-orders`}>
+            <Button>Go to Work Orders</Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Parts Tab */}
+      {activeTab === "parts" && (
+        <div className="text-center py-12">
+          <Box className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground mb-4">View and manage parts inventory</p>
+          <Link href={`/${company}/dashboard/parts`}>
+            <Button>Go to Parts</Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Corrective Actions Tab */}
+      {activeTab === "corrective-actions" && (
+        <div className="text-center py-12">
+          <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground mb-4">View and manage corrective actions</p>
+          <Link href={`/${company}/dashboard/corrective-actions`}>
+            <Button>Go to Corrective Actions</Button>
+          </Link>
+        </div>
       )}
 
       {/* Alerts Tab Content */}
