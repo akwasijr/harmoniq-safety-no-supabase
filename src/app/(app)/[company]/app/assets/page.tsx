@@ -66,8 +66,7 @@ export default function EmployeeAssetsPage() {
   const myOpenWorkOrders = workOrders.filter(
     (wo) =>
       wo.company_id === user?.company_id &&
-      !["completed", "cancelled"].includes(wo.status) &&
-      isAssignedToUserOrTeam(wo, user),
+      !["completed", "cancelled"].includes(wo.status),
   );
 
   // Search results for the Find tab (only when user types)
