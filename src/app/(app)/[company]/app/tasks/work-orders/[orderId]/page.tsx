@@ -111,67 +111,7 @@ export default function WorkOrderDetailPage() {
     );
   }
 
-  const skipVerification = !order.asset_id || ["in_progress", "completed", "cancelled"].includes(order.status);
-
-  // Asset verification screen
-  if (!assetVerified && !skipVerification) {
-    return (
-      <div className="flex flex-col min-h-full bg-background">
-        <div className="sticky top-14 z-10 border-b bg-background/95 backdrop-blur px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => router.back()}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-base font-semibold truncate">{order.title}</h1>
-              <p className="text-xs text-muted-foreground">Verify asset before starting</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 px-4 py-6 space-y-6">
-          <div className="text-center space-y-2">
-            <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-              <Package className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-semibold">Locate the asset</h2>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              Confirm you&apos;re at the right asset before starting work.
-            </p>
-          </div>
-          <Card>
-            <CardContent className="pt-4 space-y-3">
-              <div>
-                <p className="text-xs text-muted-foreground">Asset</p>
-                <p className="font-medium">{asset?.name || "Unknown asset"}</p>
-                {asset?.asset_tag && <p className="text-xs text-muted-foreground">{asset.asset_tag}</p>}
-              </div>
-              {location && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Location</p>
-                  <p className="font-medium flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{location.name}</p>
-                </div>
-              )}
-              {asset?.serial_number && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Serial number</p>
-                  <p className="font-mono text-sm">{asset.serial_number}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          <div className="space-y-3">
-            <Button className="w-full gap-2" onClick={() => router.push(`/${company}/app/scan`)}>
-              <ScanLine className="h-4 w-4" />
-              Scan asset QR code
-            </Button>
-            <Button variant="outline" className="w-full" onClick={() => setAssetVerified(true)}>
-              I&apos;m at the asset — proceed
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const showAssetBanner = !assetVerified && order.asset_id && !["in_progress", "completed", "cancelled"].includes(order.status);
 
   const priorityConf = PRIORITY_CONFIG[order.priority];
 
@@ -233,6 +173,27 @@ export default function WorkOrderDetailPage() {
               { icon: Clock, label: "Created", value: formatDate(order.created_at) },
               ...(order.completed_at ? [{ icon: CheckCircle, label: "Completed", value: formatDate(order.completed_at) }] : []),
             ]} />
+
+            {showAssetBanner && (
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Package className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">Verify you&apos;re at the right asset</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{asset?.name}{asset?.asset_tag ? ` · ${asset.asset_tag}` : ""}{asset?.serial_number ? ` · SN: ${asset.serial_number}` : ""}</p>
+                    {location && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="h-3 w-3" />{location.name}</p>}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => router.push(`/${company}/app/scan`)}>
+                    <ScanLine className="h-3.5 w-3.5" /> Scan QR
+                  </Button>
+                  <Button size="sm" className="flex-1" onClick={() => setAssetVerified(true)}>
+                    Confirm asset
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <Card>
               <CardHeader className="pb-2">
