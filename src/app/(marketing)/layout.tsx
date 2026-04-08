@@ -27,6 +27,7 @@ export default async function MarketingLayout({
 
   return (
     <>
+      <style>{`html { background-color: #000; }`}</style>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
