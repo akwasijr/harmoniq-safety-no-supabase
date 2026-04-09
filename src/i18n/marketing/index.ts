@@ -7,7 +7,7 @@ import es from "./es.json";
 
 export type MarketingLocale = "en" | "sv" | "nl" | "de" | "fr" | "es";
 
-const translations: Record<MarketingLocale, typeof en> = { en, sv, nl, de, fr, es };
+const translations: Record<MarketingLocale, Record<string, unknown>> = { en, sv, nl, de, fr, es };
 
 /**
  * Get a nested translation value by dot-path, e.g. "hero.title"
@@ -30,9 +30,12 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string {
  * Usage: const t = getMarketingTranslations("sv"); t("hero.title")
  */
 export function getMarketingTranslations(locale: MarketingLocale) {
-  const dict = translations[locale] || translations.en;
+  const dict = (translations[locale] || translations.en) as Record<string, unknown>;
+  const fallback = translations.en as Record<string, unknown>;
   return (key: string, replacements?: Record<string, string>) => {
-    let value = getNestedValue(dict as unknown as Record<string, unknown>, key);
+    let value = getNestedValue(dict, key);
+    // Fall back to English if key not found in current locale
+    if (value === key) value = getNestedValue(fallback, key);
     if (replacements) {
       for (const [k, v] of Object.entries(replacements)) {
         value = value.replace(`{${k}}`, v);

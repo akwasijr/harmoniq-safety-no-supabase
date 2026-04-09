@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRef, useEffect, useState, type FormEvent } from "react";
+import { LanguageSelector } from "@/components/ui/language-selector";
 import {
   Shield,
   ArrowRight,
@@ -919,6 +920,11 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Fixed language selector — bottom-left */}
+      <div className="fixed bottom-6 left-6 z-50">
+        <LanguageSelector variant="pill" />
+      </div>
     </div>
   );
 }
