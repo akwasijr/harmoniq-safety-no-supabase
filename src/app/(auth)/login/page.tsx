@@ -552,10 +552,9 @@ function LoginForm() {
           <span className="text-lg font-semibold text-white">Harmoniq</span>
         </div>
 
-        <div className="p-8">
+        <div className="rounded-xl bg-zinc-900/70 backdrop-blur-xl p-8">
           {/* Header */}
-          <h1 className="text-2xl font-bold tracking-tight text-white">{loginHeading}</h1>
-          <p className="mt-2 mb-6 text-sm text-zinc-400">{loginDescription}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white mb-6">{loginHeading}</h1>
 
           {/* Alerts */}
           {isLockedOut && (
@@ -732,7 +731,7 @@ function LoginForm() {
         </div>
 
         {/* Footer */}
-        <div className="mt-5 py-3 text-center text-sm text-zinc-400">
+        <div className="mt-5 rounded-lg bg-zinc-900/40 py-3 text-center text-sm text-zinc-400">
           {"Don't have an account?"}{" "}
           <Link href="/signup" className="font-semibold text-white hover:text-zinc-300 transition-colors">
             Sign up for wait list
