@@ -254,21 +254,21 @@ export default function Home() {
       </header>
 
       {/* ── Hero ── */}
-      <section ref={heroRef} className="relative pt-32 pb-0 lg:pt-44 lg:pb-0 z-10">
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
+      <section ref={heroRef} className="relative min-h-[85vh] flex items-end z-10">
+        <div className="container mx-auto px-4 lg:px-8 relative z-10 pb-16 lg:pb-24">
           <motion.div
             initial="hidden"
             animate="visible"
             variants={stagger}
-            className="max-w-4xl mx-auto text-center"
+            className="max-w-5xl"
           >
-            <motion.h1 variants={fadeUp} className="text-3xl sm:text-5xl lg:text-[5.5rem] font-medium tracking-tight leading-[1.05] text-white">
+            <motion.h1 variants={fadeUp} className="font-[family-name:var(--font-playfair)] text-4xl sm:text-6xl lg:text-[6.5rem] font-normal italic tracking-tight leading-[1.0] text-white">
               Safety and asset{"\n"}management, reimagined
             </motion.h1>
-            <motion.p variants={fadeUp} className="mt-6 text-lg lg:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+            <motion.p variants={fadeUp} className="mt-8 text-lg lg:text-xl text-zinc-400 max-w-2xl leading-relaxed">
               {t("hero.description")}
             </motion.p>
-            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4">
               <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
                 {t("hero.cta_start")}
                 <ArrowRight className="h-4 w-4" />
