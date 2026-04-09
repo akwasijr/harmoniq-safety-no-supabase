@@ -514,17 +514,17 @@ export default function Home() {
           >
             <motion.div variants={slideLeft}>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-6">
-                Safety & assets in your pocket
+                {t("mobile.heading")}
               </h2>
               <p className="text-zinc-400 text-lg leading-relaxed mb-8">
-                Empower workers with a mobile app for instant incident reporting, asset inspections, QR code scanning, and real-time alerts, even offline.
+                {t("mobile.description")}
               </p>
               <div className="space-y-4">
                 {[
-                  { icon: Smartphone, text: "Report incidents & inspect assets anywhere" },
-                  { icon: ClipboardCheck, text: "Complete checklists and audits on-site" },
-                  { icon: Bell, text: "Real-time push notifications" },
-                  { icon: Cloud, text: "Offline-capable, syncs automatically" },
+                  { icon: Smartphone, text: t("mobile.feature_report") },
+                  { icon: ClipboardCheck, text: t("mobile.feature_checklists") },
+                  { icon: Bell, text: t("mobile.feature_notifications") },
+                  { icon: Cloud, text: t("mobile.feature_offline") },
                 ].map(item => (
                   <div key={item.text} className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800">
@@ -643,7 +643,7 @@ export default function Home() {
             variants={fadeUp}
             className="text-4xl sm:text-5xl font-bold text-center mb-16"
           >
-            Safety Success
+            {t("success.heading")}
           </motion.h2>
           <motion.div
             initial="hidden"
@@ -653,16 +653,16 @@ export default function Home() {
             className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
           >
             <motion.div variants={scaleUp} className="rounded-3xl bg-zinc-900/40 p-8">
-              <h3 className="text-xl font-bold mb-3">AI-Powered Insights</h3>
+              <h3 className="text-xl font-bold mb-3">{t("success.ai_title")}</h3>
               <p className="text-sm text-zinc-400 leading-relaxed mb-6">
-                Smart insights that predict risks and asset failures before they happen.
+                {t("success.ai_desc")}
               </p>
               <Link href="/login" className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors">
-                Explore
+                {t("success.explore")}
               </Link>
             </motion.div>
             <motion.div variants={scaleUp} className="rounded-3xl bg-zinc-900/40 p-8">
-              <h3 className="text-xl font-bold mb-6">Key Statistics</h3>
+              <h3 className="text-xl font-bold mb-6">{t("success.key_stats")}</h3>
               <div className="space-y-5">
                 {[
                   { label: t("stats.incidents_reported"), pct: 92 },

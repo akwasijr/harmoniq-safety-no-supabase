@@ -106,5 +106,21 @@
     "about": "Om oss",
     "blog": "Blogg",
     "careers": "Karriär"
-  }
+  },
+  "mobile": {
+    "heading": "Säkerhet & tillgångar i fickan",
+    "description": "Ge arbetare en mobilapp för omedelbar incidentrapportering, tillgångsinspektioner, QR-kodskanning och realtidsvarningar, även offline.",
+    "feature_report": "Rapportera incidenter & inspektera tillgångar var som helst",
+    "feature_checklists": "Fyll i checklistor och revisioner på plats",
+    "feature_notifications": "Realtids push-notiser",
+    "feature_offline": "Fungerar offline, synkroniserar automatiskt"
+  },
+  "success": {
+    "heading": "Säkerhetsframgång",
+    "ai_title": "AI-drivna Insikter",
+    "ai_desc": "Smarta insikter som förutser risker och tillgångsfel innan de inträffar.",
+    "explore": "Utforska",
+    "key_stats": "Nyckelstatistik"
+  },
+  "industry_explore": "Utforska"
 }

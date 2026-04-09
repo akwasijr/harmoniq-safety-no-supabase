@@ -106,5 +106,21 @@
     "about": "About",
     "blog": "Blog",
     "careers": "Careers"
-  }
+  },
+  "mobile": {
+    "heading": "Safety & assets in your pocket",
+    "description": "Empower workers with a mobile app for instant incident reporting, asset inspections, QR code scanning, and real-time alerts, even offline.",
+    "feature_report": "Report incidents & inspect assets anywhere",
+    "feature_checklists": "Complete checklists and audits on-site",
+    "feature_notifications": "Real-time push notifications",
+    "feature_offline": "Offline-capable, syncs automatically"
+  },
+  "success": {
+    "heading": "Safety Success",
+    "ai_title": "AI-Powered Insights",
+    "ai_desc": "Smart insights that predict risks and asset failures before they happen.",
+    "explore": "Explore",
+    "key_stats": "Key Statistics"
+  },
+  "industry_explore": "Explore"
 }

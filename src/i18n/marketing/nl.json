@@ -106,5 +106,21 @@
     "about": "Over ons",
     "blog": "Blog",
     "careers": "Vacatures"
-  }
+  },
+  "mobile": {
+    "heading": "Veiligheid & assets in je zak",
+    "description": "Geef medewerkers een mobiele app voor directe incidentrapportage, asset-inspecties, QR-code scanning en realtime meldingen, zelfs offline.",
+    "feature_report": "Meld incidenten & inspecteer assets overal",
+    "feature_checklists": "Vul checklists en audits ter plaatse in",
+    "feature_notifications": "Realtime pushmeldingen",
+    "feature_offline": "Offline beschikbaar, synchroniseert automatisch"
+  },
+  "success": {
+    "heading": "Veiligheidssucces",
+    "ai_title": "AI-gedreven Inzichten",
+    "ai_desc": "Slimme inzichten die risico's en asset-storingen voorspellen voordat ze optreden.",
+    "explore": "Ontdek",
+    "key_stats": "Belangrijke Statistieken"
+  },
+  "industry_explore": "Ontdek"
 }
