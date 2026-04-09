@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
+import { useTicketsStore } from "@/stores/tickets-store";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import { TIMEOUTS } from "@/lib/constants";
@@ -38,7 +39,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import type { Incident, IncidentType, Severity, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
-import { storeFile, getFilesForEntity, deleteFile, FileValidationError, type StoredFile } from "@/lib/file-storage";
+import { storeFile, getFilesForEntity, deleteFile, FileValidationError, MAX_INCIDENT_PHOTOS, type StoredFile } from "@/lib/file-storage";
+import { BodyMap, type InjuryMarker } from "@/components/incidents/body-map";
+import { enqueueReport, isOnline as isOnlineFn } from "@/lib/offline-queue";
+import { compressImage } from "@/lib/image-compression";
 
 const TOTAL_STEPS = 7;
 
@@ -112,9 +116,9 @@ function ReportIncidentPageContent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGettingLocation, setIsGettingLocation] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const refCounterRef = React.useRef(0);
   const { items: locations } = useLocationsStore();
-  const { add: addIncident } = useIncidentsStore({ skipLoad: true });
+  const { add: addIncident, items: incidents } = useIncidentsStore({ skipLoad: true });
+  const { add: addTicket } = useTicketsStore({ skipLoad: true });
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -168,13 +172,14 @@ function ReportIncidentPageContent() {
     photoFileIds: [] as string[],
     lostTime: false,
     activeHazard: false,
+    anonymous: false,
     reporterId: user?.id || "",
     gpsLat: null as number | null,
     gpsLng: null as number | null,
   });
 
   const [incidentDraftId] = React.useState(() => `draft_${Date.now()}`);
-
+  const [injuryMarkers, setInjuryMarkers] = React.useState<InjuryMarker[]>([]);
   React.useEffect(() => {
     if (!selectedLocation) return;
     setFormData((prev) => ({
@@ -230,7 +235,7 @@ function ReportIncidentPageContent() {
     const files = e.target.files;
     if (!files) return;
     
-    const remainingSlots = 4 - formData.photos.length;
+    const remainingSlots = MAX_INCIDENT_PHOTOS - formData.photos.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
     
     for (const file of filesToProcess) {
@@ -241,9 +246,10 @@ function ReportIncidentPageContent() {
           incidentDraftId,
           user?.id || "unknown",
         );
+        const compressed = await compressImage(stored.dataUrl);
         setFormData((prev) => ({
           ...prev,
-          photos: [...prev.photos, stored.dataUrl],
+          photos: [...prev.photos, compressed],
           photoFileIds: [...prev.photoFileIds, stored.id],
         }));
       } catch (err) {
@@ -304,13 +310,14 @@ function ReportIncidentPageContent() {
       return;
     }
     const now = new Date();
-    refCounterRef.current = (refCounterRef.current % 999) + 1;
-    const refNumber = `INC-${now.getFullYear()}-${String(refCounterRef.current).padStart(3, "0")}`;
+    const existingCount = incidents.filter((i) => i.company_id === user.company_id).length;
+    const seqNum = existingCount + 1;
+    const refNumber = `INC-${now.getFullYear()}-${String(seqNum).padStart(4, "0")}`;
     const incident: Incident = {
       id: crypto.randomUUID(),
       company_id: user.company_id || "",
       reference_number: refNumber,
-      reporter_id: user.id,
+      reporter_id: formData.anonymous ? "__anonymous__" : user.id,
       type: formData.type as IncidentType,
       type_other: formData.type === "other" ? "Other" : null,
       severity: formData.severity as Severity,
@@ -332,6 +339,7 @@ function ReportIncidentPageContent() {
       location_description: formData.location || null,
       asset_id: assetParam || null,
       media_urls: formData.photos,
+      injury_locations: formData.type === "injury" ? injuryMarkers : [],
       status: "new",
       flagged: false,
       resolved_at: null,
@@ -341,13 +349,37 @@ function ReportIncidentPageContent() {
       updated_at: now.toISOString(),
     };
     try {
-      addIncident(incident);
-      toast("Incident submitted");
+      if (isOnlineFn()) {
+        addIncident(incident);
+        // Auto-create investigation ticket for critical/high
+        if (incident.severity === "critical" || incident.severity === "high") {
+          addTicket({
+            id: crypto.randomUUID(),
+            company_id: incident.company_id,
+            title: `Investigate: ${incident.title}`,
+            description: `Auto-created for ${incident.severity} severity incident ${incident.reference_number}`,
+            priority: incident.severity === "critical" ? "critical" : "high",
+            status: "new",
+            due_date: null,
+            assigned_to: null,
+            assigned_groups: [],
+            incident_ids: [incident.id],
+            created_by: user?.id || "",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        }
+        toast("Incident submitted");
+      } else {
+        enqueueReport(incident, formData.photoFileIds);
+        toast("Saved offline — will sync when connected");
+      }
       router.push(`/${company}/app/report/success?ref=${refNumber}&id=${incident.id}`);
     } catch (err) {
       console.error("[Report] Submission failed:", err);
-      toast("Failed to submit report. Please try again.", "error");
-      setIsSubmitting(false);
+      enqueueReport(incident, formData.photoFileIds);
+      toast("Saved offline — will sync when connected");
+      router.push(`/${company}/app/report/success?ref=${refNumber}&id=${incident.id}`);
     }
   };
 
@@ -425,6 +457,20 @@ function ReportIncidentPageContent() {
             })}
           </div>
           {stepErrors.type && <p className="text-sm text-red-500 mt-3">{stepErrors.type}</p>}
+
+          <button
+            type="button"
+            onClick={() => setFormData({ ...formData, anonymous: !formData.anonymous })}
+            className="flex w-full items-center justify-between rounded-xl border px-4 py-3 mt-4 transition-colors hover:bg-muted/50"
+          >
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Report anonymously</span>
+            </div>
+            <div className={`h-5 w-9 rounded-full transition-colors ${formData.anonymous ? "bg-primary" : "bg-muted"}`}>
+              <div className={`h-5 w-5 rounded-full bg-white shadow transition-transform ${formData.anonymous ? "translate-x-4" : "translate-x-0"}`} />
+            </div>
+          </button>
           </>
         )}
 
@@ -458,6 +504,20 @@ function ReportIncidentPageContent() {
                 </button>
               );
             })}
+
+            {/* Body map for injury type */}
+            {formData.type === "injury" && formData.severity && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-xs font-medium text-muted-foreground mb-2">
+                  Mark injury location {injuryMarkers.length > 0 ? `(${injuryMarkers.length} marked)` : "(optional)"}
+                </p>
+                <BodyMap
+                  markers={injuryMarkers}
+                  onAddMarker={(marker) => setInjuryMarkers((prev) => [...prev, marker])}
+                  onRemoveMarker={(id) => setInjuryMarkers((prev) => prev.filter((m) => m.id !== id))}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -661,7 +721,7 @@ function ReportIncidentPageContent() {
               </div>
             )}
             
-            {formData.photos.length < 4 && (
+            {formData.photos.length < MAX_INCIDENT_PHOTOS && (
               <>
                 <button
                   type="button"

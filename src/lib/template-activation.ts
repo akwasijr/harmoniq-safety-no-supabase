@@ -112,21 +112,6 @@ export function getActivatedTemplate(
 }
 
 /**
- * Change the publish status of a checklist template.
- * Returns a new object (does not mutate).
- */
-export function changePublishStatus(
-  template: ChecklistTemplate,
-  newStatus: "draft" | "published" | "archived",
-): ChecklistTemplate {
-  return {
-    ...template,
-    publish_status: newStatus,
-    updated_at: new Date().toISOString(),
-  };
-}
-
-/**
  * Resolve a template's effective publish status.
  * Missing publish_status is treated as draft so templates do not leak into the
  * field app unless publication was made explicit.

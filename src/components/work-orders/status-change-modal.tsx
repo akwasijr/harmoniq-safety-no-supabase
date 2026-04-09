@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -145,13 +145,13 @@ export function StatusChangeModal({
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {fromConf && (
                           <>
-                            <Badge className={cn("text-[10px] px-1.5 py-0", fromConf.color)}>
+                            <Badge className="text-[10px] px-1.5 py-0" variant={fromConf.variant as BadgeProps["variant"]}>
                               {fromConf.label}
                             </Badge>
                             <span className="text-muted-foreground">→</span>
                           </>
                         )}
-                        <Badge className={cn("text-[10px] px-1.5 py-0", toConf.color)}>
+                        <Badge className="text-[10px] px-1.5 py-0" variant={toConf.variant as BadgeProps["variant"]}>
                           {toConf.label}
                         </Badge>
                       </div>

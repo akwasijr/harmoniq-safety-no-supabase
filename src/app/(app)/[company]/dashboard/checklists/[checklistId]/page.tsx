@@ -964,7 +964,7 @@ export default function ChecklistDetailPage() {
                       const ti = ITEM_TYPES.find((x) => x.value === itemType);
                       const TIcon = ti?.icon || ToggleLeft;
                       return (
-                        <Badge variant="outline" className="text-xs gap-1 capitalize">
+                        <Badge variant="outline" className="text-xs gap-1">
                           <TIcon className="h-3 w-3" />
                           {ti?.label || itemType}
                         </Badge>

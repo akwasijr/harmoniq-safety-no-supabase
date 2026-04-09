@@ -18,6 +18,8 @@ import {
   AlertTriangle,
   Lock,
   X,
+  Download,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +30,7 @@ import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanyStore } from "@/stores/company-store";
 import { LoadingPage } from "@/components/ui/loading";
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import { getTemplatePublishStatus } from "@/lib/template-activation";
@@ -35,6 +38,8 @@ import type { ChecklistTemplate } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
+import { WORK_ORDER_PROCEDURE_TEMPLATES } from "@/data/work-order-procedure-templates";
+import { downloadCsv } from "@/lib/csv";
 
 const mockRiskTemplates: { id: string; name: string; description: string; type: string; status: string; sections: number; submissions: number; lastUpdated?: string; locked: boolean }[] = [];
 const mockRiskAssessments: { id: string; template: string; templateId: string; type: string; location: string; date: string; status: string; by: string; riskLevel: string; riskScore: number }[] = [];
@@ -107,6 +112,7 @@ function ChecklistsPageContent() {
   const { isLoading } = stores.checklistTemplates;
   const { t, formatDate, formatNumber } = useTranslation();
   const { currentCompany } = useAuth();
+  const { toast } = useToast();
   const { update: updateCompany } = useCompanyStore();
 
   // Toggle assessment type visibility for field app
@@ -240,7 +246,7 @@ function ChecklistsPageContent() {
 
   const subTabs = [
     { id: "submissions" as SubTabType, label: "Submissions" },
-    { id: "active" as SubTabType, label: "Active" },
+    { id: "active" as SubTabType, label: "Templates" },
   ];
 
   const getFilters = () => {
@@ -501,6 +507,50 @@ function ChecklistsPageContent() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (activeTab === "checklists" && subTab === "submissions") {
+      downloadCsv("checklist-submissions.csv", checklistSubmissions.map((s) => ({
+        template: s.template,
+        location: s.location,
+        submitted_by: s.by,
+        date: s.date,
+        status: s.status,
+        score: s.score,
+        issues: s.issues,
+      })));
+    } else if (activeTab === "checklists" && subTab === "active") {
+      downloadCsv("checklist-templates.csv", checklistTemplates.map((t_) => ({
+        name: t_.name,
+        description: t_.description,
+        category: t_.category,
+        items: t_.items,
+        status: t_.status,
+        times_used: t_.used,
+      })));
+    } else if (activeTab === "risk-assessment" && subTab === "submissions") {
+      downloadCsv("risk-assessments.csv", riskSubmissions.map((r) => ({
+        template: r.template,
+        type: r.type,
+        location: r.location,
+        date: r.date,
+        status: r.status,
+        assessed_by: r.by,
+        risk_level: r.riskLevel,
+        risk_score: r.riskScore,
+      })));
+    } else if (activeTab === "inspection" && subTab === "submissions") {
+      downloadCsv("inspection-submissions.csv", inspectionSubmissions.map((i) => ({
+        asset: i.asset,
+        template: i.template,
+        date: i.date,
+        status: i.status,
+        inspected_by: i.by,
+        issues: i.issues,
+        next_due: i.nextDue,
+      })));
+    }
+  };
+
   if (isLoading && checklistTemplates.length === 0) {
     return <LoadingPage />;
   }
@@ -510,12 +560,12 @@ function ChecklistsPageContent() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold truncate">{t("checklists.safetyTasks")}</h1>
-        <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            className="gap-2"
-            onClick={handleAddButtonClick}
-          >
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleExportCSV}>
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <Button size="sm" className="gap-2" onClick={handleAddButtonClick}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             {getAddButtonLabel()}
           </Button>
@@ -595,6 +645,7 @@ function ChecklistsPageContent() {
           })}
         </div>
       </div>
+
 
       {/* Sub Tabs */}
       <div className="flex gap-2">
@@ -676,16 +727,32 @@ function ChecklistsPageContent() {
                         </td>
                         <td className="py-3 text-xs">{template.items} {t("checklists.labels.items")}</td>
                         <td className="hidden py-3 md:table-cell">
-                          <Badge variant="outline" className="text-xs capitalize">{template.category.replace(/_/g, " ")}</Badge>
+                          <Badge variant="outline" className="text-xs">{template.category.replace(/_/g, " ")}</Badge>
                         </td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{template.used} times</td>
                         <td className="py-3">
-                          <Badge variant={template.status === "active" ? "success" : template.status === "draft" ? "warning" : "secondary"} className="text-xs capitalize">
+                          <Badge variant={template.status === "active" ? "success" : template.status === "draft" ? "warning" : "secondary"} className="text-xs">
                             {template.status}
                           </Badge>
                         </td>
                         <td className="py-3">
-                          <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <button
+                              type="button"
+                              title="Delete template"
+                              className="p-1 rounded opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Delete "${template.name}"? This cannot be undone.`)) {
+                                  stores.checklistTemplates.remove(template.id);
+                                  toast(`Deleted "${template.name}"`);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -742,7 +809,7 @@ function ChecklistsPageContent() {
                           </Badge>
                         </td>
                         <td className="py-3">
-                          <Badge variant={submission.status === "completed" ? "success" : "warning"} className="text-xs capitalize">
+                          <Badge variant={submission.status === "completed" ? "success" : "warning"} className="text-xs">
                             {submission.status.replace("_", " ")}
                           </Badge>
                         </td>
@@ -876,12 +943,12 @@ function ChecklistsPageContent() {
                         <td className="py-3 text-xs">{assessment.location}</td>
                         <td className="hidden py-3 md:table-cell text-xs text-muted-foreground">{assessment.by}</td>
                         <td className="py-3">
-                          <Badge variant={assessment.riskLevel === "high" ? "destructive" : assessment.riskLevel === "medium" ? "warning" : "success"} className="text-xs capitalize">
+                          <Badge variant={assessment.riskLevel === "high" ? "destructive" : assessment.riskLevel === "medium" ? "warning" : "success"} className="text-xs">
                             {assessment.riskLevel} ({assessment.riskScore})
                           </Badge>
                         </td>
                         <td className="py-3">
-                          <Badge variant={assessment.status === "completed" ? "success" : "warning"} className="text-xs capitalize">
+                          <Badge variant={assessment.status === "completed" ? "success" : "warning"} className="text-xs">
                             {assessment.status.replace("_", " ")}
                           </Badge>
                         </td>
@@ -931,11 +998,11 @@ function ChecklistsPageContent() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3"><Badge variant="outline" className="text-xs capitalize">{template.category.replace("_", " ")}</Badge></td>
+                        <td className="py-3"><Badge variant="outline" className="text-xs">{template.category.replace("_", " ")}</Badge></td>
                         <td className="hidden py-3 md:table-cell text-xs">{template.checkpoints} {t("checklists.labels.items")}</td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{template.used} times</td>
                         <td className="py-3">
-                          <Badge variant={template.status === "active" ? "success" : template.status === "draft" ? "warning" : "secondary"} className="text-xs capitalize">{template.status}</Badge>
+                          <Badge variant={template.status === "active" ? "success" : template.status === "draft" ? "warning" : "secondary"} className="text-xs">{template.status}</Badge>
                         </td>
                         <td className="py-3">
                           <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -1002,7 +1069,7 @@ function ChecklistsPageContent() {
                            )}
                          </td>
                         <td className="py-3">
-                          <Badge variant={inspection.status === "passed" ? "success" : "destructive"} className="text-xs capitalize">{inspection.status}</Badge>
+                          <Badge variant={inspection.status === "passed" ? "success" : "destructive"} className="text-xs">{inspection.status}</Badge>
                         </td>
                         <td className="py-3">
                           <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />

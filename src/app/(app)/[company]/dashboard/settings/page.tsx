@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  AlertTriangle,
   Bell,
   Building,
   Check,
@@ -49,6 +50,7 @@ import { BrandingSettingsSection } from "./_components/branding-settings-section
 import { FieldAppSettingsSection } from "./_components/field-app-settings-section";
 import { GeneralSettingsSection } from "./_components/general-settings-section";
 import { IndustrySettingsSection } from "./_components/industry-settings-section";
+import { IncidentSettingsSection } from "./_components/incident-settings-section";
 import {
   BillingSettingsSection,
   NotificationsSettingsSection,
@@ -153,6 +155,7 @@ export default function SettingsPage() {
       { value: "branding", label: t("settings.tabs.branding"), icon: Palette },
       { value: "fieldApp", label: "Field App", icon: Smartphone },
       { value: "industry", label: "Industry", icon: Factory },
+      { value: "incidents", label: "Incidents", icon: AlertTriangle },
       {
         value: "notifications",
         label: t("settings.tabs.notifications"),
@@ -514,6 +517,10 @@ export default function SettingsPage() {
               t={t}
               updateSetting={updateSetting}
             />
+          )}
+
+          {activeTab === "incidents" && (
+            <IncidentSettingsSection />
           )}
 
           {activeTab === "notifications" && (

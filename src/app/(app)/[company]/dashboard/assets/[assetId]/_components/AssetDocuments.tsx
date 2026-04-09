@@ -131,7 +131,7 @@ export function AssetDocuments({
               <div className="space-y-2">
                 {certifications.map((cert) => {
                   const CertIcon = cert.certType === "safety" ? Shield : cert.certType === "quality" ? Award : FileCheck;
-                  const statusColor = cert.status === "valid" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : cert.status === "expiring" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+                  const statusVariant = cert.status === "valid" ? "success" : cert.status === "expiring" ? "warning" : "destructive";
                   const iconColor = cert.status === "valid" ? "text-green-600" : cert.status === "expiring" ? "text-amber-500" : "text-red-500";
                   return (
                     <div key={cert.id} className="flex items-center justify-between rounded-lg border p-3">
@@ -153,7 +153,7 @@ export function AssetDocuments({
                             </Button>
                           ) : null;
                         })()}
-                        <Badge className={`${statusColor} border-0 text-xs`}>
+                        <Badge variant={statusVariant as "success" | "warning" | "destructive"} className="text-xs">
                           {t(`assets.certStatus.${cert.status}`)}
                         </Badge>
                       </div>

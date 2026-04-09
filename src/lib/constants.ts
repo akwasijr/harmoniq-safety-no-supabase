@@ -1,7 +1,7 @@
 /** Pagination defaults */
 export const PAGINATION = {
-  DEFAULT_PAGE_SIZE: 10,
-  WORK_ORDERS_PAGE_SIZE: 20,
+  DEFAULT_PAGE_SIZE: 15,
+  WORK_ORDERS_PAGE_SIZE: 15,
 } as const;
 
 /** Timeouts in milliseconds */

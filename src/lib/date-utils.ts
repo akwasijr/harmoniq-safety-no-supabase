@@ -96,25 +96,3 @@ export function isWithinDateRange(
   return targetDate >= range.start && targetDate <= range.end;
 }
 
-export function formatDateRange(
-  value: DateRangeValue,
-  customStart?: string,
-  customEnd?: string
-): string {
-  const labels: Record<DateRangeValue, string> = {
-    today: "Today",
-    yesterday: "Yesterday",
-    last_7_days: "Last 7 days",
-    last_30_days: "Last 30 days",
-    last_90_days: "Last 90 days",
-    last_6_months: "Last 6 months",
-    all_time: "All time",
-    custom: "Custom range",
-  };
-
-  if (value === "custom" && customStart && customEnd) {
-    return `${new Date(customStart).toLocaleDateString()} - ${new Date(customEnd).toLocaleDateString()}`;
-  }
-
-  return labels[value];
-}

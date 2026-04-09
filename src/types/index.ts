@@ -245,6 +245,25 @@ export interface Company {
   created_at: string;
   updated_at: string;
   trial_ends_at: string | null;
+
+  // Incident configuration
+  custom_incident_types?: {
+    id: string;
+    name: string;
+    icon?: string;
+    color?: string;
+    is_active: boolean;
+  }[];
+  custom_incident_fields?: {
+    id: string;
+    label: string;
+    type: "text" | "number" | "select" | "date" | "toggle";
+    options?: string[];
+    required: boolean;
+    applies_to?: string[];
+    order: number;
+  }[];
+  allow_anonymous_reporting?: boolean;
 }
 
 // User Types and Account Types
@@ -449,9 +468,26 @@ export interface Incident {
   // Media
   media_urls: string[];
 
+  // Injury body map (only for type === "injury")
+  injury_locations?: {
+    id: string;
+    body_part: string;
+    view: "front" | "back";
+    x: number;
+    y: number;
+    description?: string;
+  }[];
+
   // Status
   status: IncidentStatus;
   flagged: boolean;
+
+  // Escalation
+  escalated?: boolean;
+  escalated_at?: string | null;
+
+  // Custom fields (company-specific)
+  custom_fields?: Record<string, string | number | boolean | null>;
 
   // Resolution
   resolved_at: string | null;
@@ -933,6 +969,9 @@ export interface ChecklistTemplate {
   recurrence?: "daily" | "weekly" | "monthly" | "once";
   items: ChecklistItem[];
 
+  // Work order type association — when set, this template appears only for that WO type
+  work_order_type?: WorkOrderType | null;
+
   // Industry template tracking
   source_template_id?: string; // Links to the industry template it was activated from
   regulation?: string; // Regulatory reference (e.g. "OSHA 29 CFR 1926")
@@ -1297,6 +1336,7 @@ export interface WorkOrder {
   id: string;
   company_id: string;
   asset_id: string | null;
+  location_id?: string | null;
   title: string;
   description: string;
   type: WorkOrderType;
@@ -1314,6 +1354,11 @@ export interface WorkOrder {
   labor_cost: number | null;
   corrective_action_id: string | null;
   completed_at: string | null;
+
+  // Rejection / unable to complete
+  declined_reason?: string | null;
+  declined_at?: string | null;
+  declined_by?: string | null;
 
   // GPS
   location_lat?: number | null;

@@ -31,6 +31,7 @@ import {
   Lock,
   Download,
   ChevronDown,
+  FileCheck,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,9 +48,12 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/hooks/use-auth";
+import { useCompanyStore } from "@/stores/company-store";
 import { storeFile } from "@/lib/file-storage";
-import type { IncidentInvestigation, IncidentAction, IncidentComment, IncidentTimelineEvent, RCAAttachment, IncidentDocument, Priority } from "@/types";
+import type { IncidentInvestigation, IncidentAction, IncidentComment, IncidentTimelineEvent, RCAAttachment, IncidentDocument, Priority, Incident, User as UserType } from "@/types";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { BodyMap } from "@/components/incidents/body-map";
+import { ImageViewer } from "@/components/ui/image-viewer";
 
 const tabs: Tab[] = [
   { id: "details", label: "Details", icon: Info },
@@ -58,6 +62,7 @@ const tabs: Tab[] = [
   { id: "actions", label: "Actions", icon: CheckCircle },
   { id: "comments", label: "Comments", icon: MessageSquare },
   { id: "documents", label: "Documents", icon: FileText },
+  { id: "compliance", label: "Compliance", icon: FileCheck },
   { id: "settings", label: "Settings", icon: Settings, variant: "danger" },
 ];
 
@@ -124,13 +129,16 @@ export default function IncidentDetailPage() {
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
   const { user: authUser } = useAuth();
-  const { incidents, tickets, correctiveActions, users, teams, stores } = useCompanyData();
+  const { items: companiesList } = useCompanyStore();
+  const currentCompany = companiesList.find((c) => c.slug === company);
+  const { incidents, tickets, correctiveActions, users, teams, locations, stores } = useCompanyData();
   const { isLoading, update: updateIncident, remove: removeIncident } = stores.incidents;
   const { add: addTicket, update: updateTicket } = stores.tickets;
   const { add: addCorrectiveAction, update: updateCorrectiveAction } = stores.correctiveActions;
 
   const incident = incidents.find((i) => i.id === incidentId);
   const isLocked = incident?.status === "resolved" || incident?.status === "archived";
+  const location = incident?.location_id ? locations.find((l) => l.id === incident.location_id) : null;
   
   // Read investigation and actions from store (persisted)
   const investigation = incident?.investigation ?? null;
@@ -140,6 +148,7 @@ export default function IncidentDetailPage() {
 
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [viewerImage, setViewerImage] = React.useState<{ src: string; index: number } | null>(null);
 
   // Documents state
   const documentsInputRef = React.useRef<HTMLInputElement>(null);
@@ -240,11 +249,14 @@ export default function IncidentDetailPage() {
     toast("Root cause analysis saved.", "success");
   };
 
-  const reporter = users.find((u) => u.id === incident?.reporter_id);
+  const isAnonymous = incident?.reporter_id === "__anonymous__";
+  const reporter = isAnonymous ? null : users.find((u) => u.id === incident?.reporter_id);
+  const reporterName = isAnonymous ? "Anonymous" : (reporter?.full_name || "Unknown");
   const relatedTickets = tickets.filter((t) => t.incident_ids?.includes(incidentId));
   const correctiveIncidentActions = actions.filter((action) => action.actionType === "corrective");
   const openCorrectiveActionCount = correctiveIncidentActions.filter((action) => action.status !== "completed").length;
-  const canResolveIncident = openCorrectiveActionCount === 0;
+  const openTicketCount = relatedTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length;
+  const canResolveIncident = openCorrectiveActionCount === 0 && openTicketCount === 0;
   const [statusValue, setStatusValue] = React.useState("new");
   const [investigatorIdValue, setInvestigatorIdValue] = React.useState("");
 
@@ -375,7 +387,7 @@ export default function IncidentDetailPage() {
 
   // Build timeline from incident data + actions
   const timelineEvents: IncidentTimelineEvent[] = [
-    { id: 1, type: "created" as const, description: "Incident reported", user: reporter?.full_name || "System", date: incident.incident_date },
+    { id: 1, type: "created" as const, description: "Incident reported", user: reporterName, date: incident.incident_date },
     ...(incident.status !== 'new' ? [{ id: 2, type: "status" as const, description: "Status changed to In Progress", user: "Safety Manager", date: new Date(new Date(incident.incident_date).getTime() + 86400000).toISOString() }] : []),
     ...(investigation ? [{ id: 3, type: "investigation" as const, description: "Investigation started", user: users.find(u => u.id === investigation.investigator)?.full_name || "Investigator", date: investigation.startDate }] : []),
     ...actions.map((a, idx) => ({
@@ -426,60 +438,47 @@ export default function IncidentDetailPage() {
               <span className="text-sm text-muted-foreground capitalize">{incident.status.replace("_", " ")}</span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {incident.reference_number} • {formatDate(new Date(incident.incident_date))} • {incident.building || "Unknown location"}
+              {incident.reference_number} • {formatDate(new Date(incident.incident_date))} • {incident.building || incident.location_description || location?.name || "Unknown location"}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => {
-            const exportData = {
-              id: incident.id,
-              reference_number: incident.reference_number,
-              title: incident.title,
-              description: incident.description,
-              type: incident.type,
-              severity: incident.severity,
-              priority: incident.priority,
-              status: incident.status,
-              incident_date: incident.incident_date,
-              incident_time: incident.incident_time,
-              building: incident.building,
-              floor: incident.floor,
-              zone: incident.zone,
-              room: incident.room,
-              reporter: reporter?.full_name || "Unknown",
-              investigation: investigation ? {
-                status: investigation.status,
-                investigator: getAssigneeName(investigation.investigator),
-                rootCauseCategory: investigation.rootCauseCategory,
-                rootCauseDescription: investigation.rootCauseDescription,
-                contributingFactors: investigation.contributingFactors,
-                lessonsLearned: investigation.lessonsLearned,
-              } : null,
-              actions: actions.map(a => ({
-                title: a.title,
-                status: a.status,
-                priority: a.priority,
-                assignee: getAssigneeName(a.assignee),
-                dueDate: a.dueDate,
-              })),
-              comments: comments.map(c => ({
-                user: c.user,
-                text: c.text,
-                date: c.date,
-              })),
-              exported_at: new Date().toISOString(),
-            };
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `${incident.reference_number || incident.id}-export.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            toast("Incident exported", "success");
+          <Button variant="outline" onClick={async () => {
+            const { IncidentReportPDF, downloadPDF } = await import("@/lib/pdf-export");
+            const loc = location;
+            const doc = <IncidentReportPDF
+              companyName={currentCompany?.name || company}
+              incident={{
+                title: incident.title,
+                type: incident.type,
+                severity: incident.severity,
+                priority: incident.priority,
+                status: incident.status,
+                incident_date: incident.incident_date,
+                incident_time: incident.incident_time,
+                location: loc?.name,
+                location_description: incident.location_description,
+                building: incident.building,
+                floor: incident.floor,
+                zone: incident.zone,
+                room: incident.room,
+                description: incident.description,
+                reference_number: incident.reference_number,
+                reporter_name: reporterName,
+                corrective_actions: actions.map((a) => ({
+                  title: a.title,
+                  status: a.status,
+                  dueDate: a.dueDate,
+                })),
+                media_urls: incident.media_urls,
+                active_hazard: incident.active_hazard,
+                lost_time: incident.lost_time,
+                lost_time_amount: incident.lost_time_amount,
+                created_at: incident.created_at,
+              }}
+            />;
+            await downloadPDF(doc, `${incident.reference_number || incident.id}.pdf`);
+            toast("PDF exported", "success");
           }}>{t("incidents.buttons.export")}</Button>
           <Button onClick={() => {
             updateIncident(incidentId, { updated_at: new Date().toISOString() });
@@ -513,19 +512,75 @@ export default function IncidentDetailPage() {
                   <div className="mt-4 pt-4 border-t">
                     <p className="text-sm font-medium mb-2 flex items-center gap-2">
                       <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                      Photos & Media ({incident.media_urls.length})
+                      Photos ({incident.media_urls.length})
                     </p>
                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                       {incident.media_urls.map((url, idx) => (
-                        <div key={url || idx} className="aspect-square rounded-lg bg-muted border flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary cursor-pointer">
-                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                        </div>
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => url.startsWith("data:image") && setViewerImage({ src: url, index: idx })}
+                          className="aspect-square rounded-lg bg-muted border overflow-hidden hover:ring-2 hover:ring-primary cursor-pointer"
+                        >
+                          {url.startsWith("data:image") ? (
+                            <img src={url} alt={`Photo ${idx + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center">
+                              <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </button>
                       ))}
                     </div>
                   </div>
                 )}
               </CardContent>
             </Card>
+
+            {/* Body map — injury incidents only */}
+            {incident.type === "injury" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Injury location</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(incident.injury_locations && incident.injury_locations.length > 0) ? (
+                    <BodyMap
+                      markers={incident.injury_locations}
+                      onAddMarker={(marker) => {
+                        if (isLocked) return;
+                        const existing = incident.injury_locations || [];
+                        updateIncident(incidentId, {
+                          injury_locations: [...existing, marker],
+                          updated_at: new Date().toISOString(),
+                        });
+                      }}
+                      onRemoveMarker={(id) => {
+                        if (isLocked) return;
+                        const existing = incident.injury_locations || [];
+                        updateIncident(incidentId, {
+                          injury_locations: existing.filter((m) => m.id !== id),
+                          updated_at: new Date().toISOString(),
+                        });
+                      }}
+                      readOnly={isLocked}
+                    />
+                  ) : (
+                    <BodyMap
+                      markers={[]}
+                      onAddMarker={(marker) => {
+                        if (isLocked) return;
+                        updateIncident(incidentId, {
+                          injury_locations: [marker],
+                          updated_at: new Date().toISOString(),
+                        });
+                      }}
+                      readOnly={isLocked}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
@@ -566,7 +621,7 @@ export default function IncidentDetailPage() {
                     <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                     <div>
                       <p className="text-sm text-muted-foreground">Reported By</p>
-                      <p className="font-medium">{reporter?.full_name || "Unknown"}</p>
+                      <p className="font-medium">{reporterName}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -610,52 +665,61 @@ export default function IncidentDetailPage() {
                 <CardTitle className="text-base">{t("incidents.labels.location")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Building</p>
-                      <p className="font-medium">{incident.building || "Not specified"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Floor</p>
-                      <p className="font-medium">{incident.floor || "Not specified"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Zone / Area</p>
-                      <p className="font-medium">{incident.zone || "Not specified"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Room</p>
-                      <p className="font-medium">{incident.room || "Not specified"}</p>
-                    </div>
-                  </div>
-                  {incident.location_description && (
-                    <div className="sm:col-span-2 flex items-start gap-3">
+                <div className="space-y-4">
+                  {/* Resolved location from location_id */}
+                  {location && (
+                    <div className="flex items-start gap-3">
                       <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Description</p>
+                        <p className="font-medium">{location.name}</p>
+                        <p className="text-sm capitalize text-muted-foreground">{location.type.replace(/_/g, " ")}</p>
+                        {location.address && <p className="text-sm text-muted-foreground mt-1">{location.address}</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Manual location fields — only show if they have data */}
+                  {(incident.building || incident.floor || incident.zone || incident.room) && (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {incident.building && (
+                        <div className="text-sm"><span className="text-muted-foreground">Building:</span> {incident.building}</div>
+                      )}
+                      {incident.floor && (
+                        <div className="text-sm"><span className="text-muted-foreground">Floor:</span> {incident.floor}</div>
+                      )}
+                      {incident.zone && (
+                        <div className="text-sm"><span className="text-muted-foreground">Zone:</span> {incident.zone}</div>
+                      )}
+                      {incident.room && (
+                        <div className="text-sm"><span className="text-muted-foreground">Room:</span> {incident.room}</div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Location description from field app */}
+                  {incident.location_description && !location && (
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
                         <p className="font-medium">{incident.location_description}</p>
                       </div>
                     </div>
                   )}
+
+                  {/* GPS coordinates */}
                   {incident.gps_lat && incident.gps_lng && (
-                    <div className="sm:col-span-2 flex items-start gap-3">
+                    <div className="flex items-start gap-3">
                       <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div>
-                        <p className="text-sm text-muted-foreground">GPS Coordinates</p>
-                        <p className="font-medium">{incident.gps_lat}, {incident.gps_lng}</p>
+                        <p className="text-sm text-muted-foreground">GPS</p>
+                        <p className="font-medium font-mono text-sm">{incident.gps_lat.toFixed(6)}, {incident.gps_lng.toFixed(6)}</p>
                       </div>
                     </div>
+                  )}
+
+                  {/* No location at all */}
+                  {!location && !incident.building && !incident.location_description && !incident.gps_lat && (
+                    <p className="text-sm text-muted-foreground">No location data captured</p>
                   )}
                 </div>
               </CardContent>
@@ -907,6 +971,67 @@ export default function IncidentDetailPage() {
                     </div>
                   );
                 })()}
+              </CardContent>
+            </Card>
+
+            {/* Follow-up tickets */}
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm">Follow-up tickets</CardTitle>
+                  {!isLocked && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => {
+                        const ticketId = crypto.randomUUID();
+                        addTicket({
+                          id: ticketId,
+                          company_id: incident.company_id,
+                          title: `Follow-up: ${incident.title}`,
+                          description: "",
+                          priority: incident.priority,
+                          status: "new",
+                          due_date: null,
+                          assigned_to: incident.assigned_to || null,
+                          assigned_groups: [],
+                          incident_ids: [incidentId],
+                          created_by: authUser?.id || "",
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString(),
+                        });
+                        toast("Ticket created");
+                        router.push(`/${company}/dashboard/tickets/${ticketId}`);
+                      }}
+                    >
+                      <Plus className="h-3 w-3" /> Create
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {relatedTickets.length > 0 ? (
+                  <div className="space-y-2">
+                    {relatedTickets.map((ticket) => (
+                      <Link
+                        key={ticket.id}
+                        href={`/${company}/dashboard/tickets/${ticket.id}`}
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{ticket.title}</p>
+                          <p className="text-xs text-muted-foreground">{ticket.assigned_to ? getUserDisplayName(ticket.assigned_to, users) : "Unassigned"}</p>
+                        </div>
+                        <Badge variant={ticket.status === "resolved" || ticket.status === "closed" ? "completed" : ticket.status === "in_progress" ? "in_progress" : "secondary"} className="text-[10px]">
+                          {ticket.status.replace(/_/g, " ")}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No tickets linked</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1785,13 +1910,19 @@ export default function IncidentDetailPage() {
               {incident.media_urls && incident.media_urls.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {incident.media_urls.map((url, idx) => (
-                    <div key={url || idx} className="aspect-square rounded-lg bg-muted border flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary cursor-pointer">
-                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    <div key={idx} className="aspect-square rounded-lg bg-muted border overflow-hidden">
+                      {url.startsWith("data:image") ? (
+                        <img src={url} alt={`Photo ${idx + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center">
+                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No photos attached to original report</p>
+                <p className="text-sm text-muted-foreground text-center py-4">No photos attached</p>
               )}
             </CardContent>
           </Card>
@@ -1890,6 +2021,11 @@ export default function IncidentDetailPage() {
         </div>
       )}
 
+      {/* Compliance tab */}
+      {activeTab === "compliance" && (
+        <ComplianceTab incident={incident} companyCountry={currentCompany?.country || "US"} reporter={reporter} />
+      )}
+
       {activeTab === "settings" && !isLocked && (
         <div className="space-y-6">
           <Card>
@@ -1909,7 +2045,10 @@ export default function IncidentDetailPage() {
                     const value = e.target.value;
                     if (!incident) return;
                     if (value === "resolved" && !canResolveIncident) {
-                      toast(`Cannot resolve incident while ${openCorrectiveActionCount} corrective action(s) remain open.`, "error");
+                      const reasons = [];
+                      if (openCorrectiveActionCount > 0) reasons.push(`${openCorrectiveActionCount} open action(s)`);
+                      if (openTicketCount > 0) reasons.push(`${openTicketCount} open ticket(s)`);
+                      toast(`Cannot resolve: ${reasons.join(" and ")} remaining`, "error");
                       return;
                     }
                     setStatusValue(value);
@@ -1929,7 +2068,7 @@ export default function IncidentDetailPage() {
                 </select>
                 {!canResolveIncident && (
                   <p className="mt-2 text-sm text-destructive">
-                    Resolution is blocked until all corrective follow-up actions are completed.
+                    Resolution blocked: {openCorrectiveActionCount > 0 ? `${openCorrectiveActionCount} open action(s)` : ""}{openCorrectiveActionCount > 0 && openTicketCount > 0 ? " and " : ""}{openTicketCount > 0 ? `${openTicketCount} open ticket(s)` : ""}
                   </p>
                 )}
               </div>
@@ -2036,6 +2175,111 @@ export default function IncidentDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Image viewer */}
+      {viewerImage && (
+        <ImageViewer
+          src={viewerImage.src}
+          alt="Incident photo"
+          onClose={() => setViewerImage(null)}
+          onSave={!isLocked ? (annotated) => {
+            if (!incident?.media_urls) return;
+            const updated = [...incident.media_urls];
+            updated[viewerImage.index] = annotated;
+            updateIncident(incidentId, { media_urls: updated, updated_at: new Date().toISOString() });
+            setViewerImage(null);
+          } : undefined}
+        />
+      )}
     </RoleGuard>
+  );
+}
+
+// ── Compliance Tab ──────────────────────────────────────────────────
+const REGULATORY_FORMS: Record<string, { id: string; name: string; regulation: string }[]> = {
+  US: [
+    { id: "osha_300", name: "OSHA Form 300 — Log of Work-Related Injuries", regulation: "29 CFR 1904" },
+    { id: "osha_301", name: "OSHA Form 301 — Injury and Illness Report", regulation: "29 CFR 1904.29" },
+  ],
+  GB: [
+    { id: "riddor", name: "RIDDOR Report", regulation: "Reporting of Injuries, Diseases and Dangerous Occurrences Regulations 2013" },
+  ],
+  NL: [
+    { id: "arbowet_melding", name: "Arbowet Incident Melding", regulation: "Arbeidsomstandighedenwet Art. 9" },
+  ],
+  SE: [
+    { id: "afs_report", name: "AFS Incident Report", regulation: "Arbetsmiljöverket AFS 2001:1" },
+  ],
+  DE: [
+    { id: "bg_unfall", name: "BG Unfallanzeige", regulation: "SGB VII §193" },
+  ],
+  FR: [
+    { id: "dat", name: "Déclaration d'accident du travail", regulation: "Code de la sécurité sociale L441-2" },
+  ],
+  ES: [
+    { id: "parte_accidente", name: "Parte de accidente de trabajo", regulation: "Orden TAS/2926/2002" },
+  ],
+};
+
+function ComplianceTab({ incident, companyCountry, reporter }: {
+  incident: Incident;
+  companyCountry: string;
+  reporter: UserType | null | undefined;
+}) {
+  const forms = REGULATORY_FORMS[companyCountry] || [];
+  const isInjury = incident.type === "injury" || incident.lost_time;
+
+  if (!isInjury || forms.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-sm text-muted-foreground">
+          {forms.length === 0
+            ? "No regulatory forms configured for this country."
+            : "Compliance forms are available for injury incidents and lost-time cases."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {forms.map((form) => (
+        <Card key={form.id}>
+          <CardContent className="pt-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium">{form.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{form.regulation}</p>
+              </div>
+              <Badge variant="secondary" className="shrink-0 text-xs">Draft</Badge>
+            </div>
+            <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Employee</p>
+                <p className="font-medium">{reporter?.full_name || "Anonymous"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Date of injury</p>
+                <p className="font-medium">{incident.incident_date}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Location</p>
+                <p className="font-medium">{incident.building || incident.location_description || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Description</p>
+                <p className="font-medium line-clamp-2">{incident.description}</p>
+              </div>
+              {incident.lost_time && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Days away from work</p>
+                  <p className="font-medium">{incident.lost_time_amount ?? "—"}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }

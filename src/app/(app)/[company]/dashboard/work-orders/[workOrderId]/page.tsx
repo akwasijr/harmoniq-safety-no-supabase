@@ -11,8 +11,16 @@ import {
   Edit,
   Save,
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
+  ChevronDown,
+  MapPin,
+  Info,
+  Link2,
+  Clock3,
+  User,
+  Calendar,
+  ClipboardCheck,
+  Package,
+  Paperclip,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,15 +38,18 @@ import {
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
-import { useNotificationsStore } from "@/stores/notifications-store";
 import { useTranslation } from "@/i18n";
 import { capitalize } from "@/lib/utils";
-import type { WorkOrder, WorkOrderStatus, WorkOrderStatusLogEntry } from "@/types";
-import { WORK_ORDER_STATUS_TRANSITIONS } from "@/types";
+import type { Priority, WorkOrder, WorkOrderStatus, WorkOrderStatusLogEntry } from "@/types";
+import { WORK_ORDER_STATUS_TRANSITIONS, WORK_ORDER_TYPES } from "@/types";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { formatStatusLabel } from "@/components/tasks/task-detail-header";
 import { StatusPipeline } from "@/components/work-orders/status-pipeline";
 import { StatusChangeModal } from "@/components/work-orders/status-change-modal";
 import { useWorkOrderStatusLogStore } from "@/stores/work-order-status-log-store";
+import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
+import { getProcedureTemplateIdForType } from "@/data/work-order-procedure-templates";
+import { storeFile, getFilesForEntity, downloadFile } from "@/lib/file-storage";
 
 const STATUS_FLOW: Record<string, string[]> = {
   waiting_approval: ["waiting_material", "approved", "cancelled"],
@@ -54,11 +65,13 @@ const STATUS_COLORS = WORK_ORDER_STATUS_COLORS;
 
 type SectionId = "summary" | "related" | "work-log";
 
-const NAV_ITEMS: { id: SectionId; label: string }[] = [
-  { id: "summary", label: "Summary" },
-  { id: "related", label: "Related records" },
-  { id: "work-log", label: "Work log" },
+const NAV_ITEMS: Tab[] = [
+  { id: "summary", label: "Summary", icon: Info },
+  { id: "related", label: "Related records", icon: Link2 },
+  { id: "work-log", label: "Work log", icon: Clock3 },
 ];
+
+
 
 export default function WorkOrderDetailPage() {
   const router = useRouter();
@@ -71,13 +84,12 @@ export default function WorkOrderDetailPage() {
   const { t, formatDate, formatNumber } = useTranslation();
   const { user, hasPermission } = useAuth();
   const { toast } = useToast();
-  const { correctiveActions, inspections, workOrders: orders, assets, users, parts, checklistTemplates, checklistSubmissions, companyId, stores } = useCompanyData();
+  const { correctiveActions, inspections, workOrders: orders, assets, locations, users, teams, parts, checklistTemplates, checklistSubmissions, stores } = useCompanyData();
   const { update, isLoading } = stores.workOrders;
 
   const canEdit = hasPermission("work_orders.edit");
   const canAssign = hasPermission("work_orders.assign");
   const canComplete = hasPermission("work_orders.complete");
-  const { add: addNotification } = useNotificationsStore();
   const { items: statusLogItems, add: addStatusLog } = useWorkOrderStatusLogStore();
 
   const order = orders.find((o) => o.id === workOrderId);
@@ -85,25 +97,40 @@ export default function WorkOrderDetailPage() {
   const [isEditing, setIsEditing] = React.useState(false);
   const [showStatusModal, setShowStatusModal] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState<SectionId>("summary");
+  const [showActionMenu, setShowActionMenu] = React.useState(false);
+  const [pendingActionStatus, setPendingActionStatus] = React.useState<WorkOrderStatus | null>(null);
+  const [attachmentRefresh, setAttachmentRefresh] = React.useState(0);
   const [editForm, setEditForm] = React.useState({
     title: "",
     description: "",
-    notes: "",
+    asset_id: "__none__",
+    location_id: "__none__",
+    type: "service_request",
+    checklist_template_id: "__none__",
+    priority: "medium" as Priority,
+    assigned_to: "__none__",
+    assigned_to_team_id: "__none__",
+    due_date: "",
+    estimated_hours: "",
   });
 
   const highlightRef = React.useRef<HTMLDivElement>(null);
-
-  const currentOrderIndex = orders.findIndex((o) => o.id === workOrderId);
-  const totalOrders = orders.length;
-  const prevOrderId = currentOrderIndex > 0 ? orders[currentOrderIndex - 1].id : null;
-  const nextOrderId = currentOrderIndex < totalOrders - 1 ? orders[currentOrderIndex + 1].id : null;
+  const actionMenuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (order) {
       setEditForm({
         title: order.title,
         description: order.description,
-        notes: "",
+        asset_id: order.asset_id || "__none__",
+        location_id: order.location_id || "__none__",
+        type: order.type,
+        checklist_template_id: order.checklist_template_id || "__none__",
+        priority: order.priority,
+        assigned_to: order.assigned_to || "__none__",
+        assigned_to_team_id: order.assigned_to_team_id || "__none__",
+        due_date: order.due_date ? order.due_date.split("T")[0] : "",
+        estimated_hours: order.estimated_hours != null ? String(order.estimated_hours) : "",
       });
     }
   }, [order?.id]);
@@ -114,12 +141,26 @@ export default function WorkOrderDetailPage() {
     }
   }, [highlight]);
 
+  React.useEffect(() => {
+    if (!showActionMenu) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!actionMenuRef.current?.contains(event.target as Node)) {
+        setShowActionMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [showActionMenu]);
+
   const getAssetName = (id: string | null) => {
     if (!id) return null;
     return assets.find((a) => a.id === id);
   };
 
   const getUserName = (id: string | null) => getUserFirstLastName(id, users, t("common.none"));
+  const getTeamName = (id: string | null | undefined) => teams.find((team) => team.id === id)?.name ?? t("common.none");
 
   const orderStatusLog = React.useMemo(
     () => statusLogItems.filter((e) => e.work_order_id === workOrderId),
@@ -147,6 +188,7 @@ export default function WorkOrderDetailPage() {
       updates.completed_at = new Date().toISOString();
     }
     update(order.id, updates);
+    setPendingActionStatus(null);
     setShowStatusModal(false);
     toast(`Status changed to ${capitalize(targetStatus.replace(/_/g, " "))}`);
   };
@@ -156,60 +198,19 @@ export default function WorkOrderDetailPage() {
     update(order.id, {
       title: editForm.title.trim(),
       description: editForm.description.trim(),
+      asset_id: editForm.asset_id === "__none__" ? null : editForm.asset_id,
+      location_id: editForm.location_id === "__none__" ? null : editForm.location_id,
+      type: editForm.type as WorkOrder["type"],
+      checklist_template_id: getProcedureTemplateIdForType(editForm.type as WorkOrder["type"]),
+      priority: editForm.priority,
+      assigned_to: editForm.assigned_to === "__none__" ? null : editForm.assigned_to,
+      assigned_to_team_id: editForm.assigned_to_team_id === "__none__" ? null : editForm.assigned_to_team_id,
+      due_date: editForm.due_date || null,
+      estimated_hours: editForm.estimated_hours ? parseFloat(editForm.estimated_hours) : null,
       updated_at: new Date().toISOString(),
     });
     setIsEditing(false);
     toast(t("common.save"));
-  };
-
-  const handleAssignedToChange = (newUserId: string) => {
-    if (!order) return;
-    const value = newUserId === "__none__" ? null : newUserId;
-    update(order.id, {
-      assigned_to: value,
-      updated_at: new Date().toISOString(),
-    } as Partial<WorkOrder>);
-
-    if (value) {
-      const assignedUser = users.find((u) => u.id === value);
-      const assigneeName = assignedUser
-        ? `${assignedUser.first_name} ${assignedUser.last_name}`
-        : "someone";
-      addNotification({
-        id: crypto.randomUUID(),
-        company_id: companyId || "",
-        user_id: value,
-        title: "Work Order Assigned",
-        message: `You have been assigned to work order "${order.title}"`,
-        type: "work_order_assignment",
-        source: "work_order",
-        source_id: order.id,
-        read: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-      toast(`Assigned to ${assigneeName}`);
-    } else {
-      toast("Assignment removed");
-    }
-  };
-
-  const handlePriorityChange = (newPriority: string) => {
-    if (!order) return;
-    update(order.id, {
-      priority: newPriority as WorkOrder["priority"],
-      updated_at: new Date().toISOString(),
-    });
-    toast(`Priority changed to ${newPriority}`);
-  };
-
-  const handleDueDateChange = (newDate: string) => {
-    if (!order) return;
-    update(order.id, {
-      due_date: newDate || null,
-      updated_at: new Date().toISOString(),
-    } as Partial<WorkOrder>);
-    toast(newDate ? `Due date set to ${formatDate(newDate)}` : "Due date removed");
   };
 
   if (!isLoading && !order) {
@@ -228,31 +229,73 @@ export default function WorkOrderDetailPage() {
   }
   if (!order) return <LoadingPage />;
 
-  const asset = getAssetName(order.asset_id);
+  const assetIdForView = isEditing ? (editForm.asset_id === "__none__" ? null : editForm.asset_id) : order.asset_id;
+  const locationIdForView = isEditing ? (editForm.location_id === "__none__" ? null : editForm.location_id) : (order.location_id ?? null);
+  const templateIdForView = isEditing
+    ? (editForm.checklist_template_id === "__none__" ? null : editForm.checklist_template_id)
+    : (order.checklist_template_id || getProcedureTemplateIdForType(order.type));
+  const asset = getAssetName(assetIdForView);
+  const selectedLocation = locationIdForView ? locations.find((location) => location.id === locationIdForView) ?? null : null;
+  const assetLocation = asset?.location_id ? locations.find((location) => location.id === asset.location_id) ?? null : null;
+  const workOrderLocation = selectedLocation ?? assetLocation;
+  const locationHierarchy = React.useMemo(() => {
+    if (!workOrderLocation) return [];
+
+    const chain: (typeof locations)[number][] = [];
+    const seen = new Set<string>();
+    let current: (typeof locations)[number] | null = workOrderLocation;
+
+    while (current && !seen.has(current.id)) {
+      chain.unshift(current);
+      seen.add(current.id);
+      const parentId: string | null = current.parent_id;
+      current = parentId ? (locations.find((item) => item.id === parentId) ?? null) : null;
+    }
+
+    return chain;
+  }, [workOrderLocation, locations]);
   const linkedCorrectiveAction = order.corrective_action_id
     ? correctiveActions.find((action) => action.id === order.corrective_action_id) || null
     : null;
   const linkedInspection = linkedCorrectiveAction?.inspection_id
     ? inspections.find((inspection) => inspection.id === linkedCorrectiveAction.inspection_id) || null
     : null;
-  const linkedProcedureTemplate = order.checklist_template_id
-    ? checklistTemplates.find((template) => template.id === order.checklist_template_id) || null
+  const linkedProcedureTemplate = templateIdForView
+    ? checklistTemplates.find((template) => template.id === templateIdForView) || null
     : null;
   const linkedProcedureSubmission = order.checklist_submission_id
     ? checklistSubmissions.find((submission) => submission.id === order.checklist_submission_id) || null
     : null;
   const linkedProcedureFailCount = linkedProcedureSubmission?.responses.filter((response) => response.value === false).length ?? 0;
-  const nextStatuses = STATUS_FLOW[order.status] || [];
+  const nextStatuses = (STATUS_FLOW[order.status] || []) as WorkOrderStatus[];
   const totalCost = (order.parts_cost || 0) + (order.labor_cost || 0);
   const woNumber = `WO-${order.id.substring(0, 8).toUpperCase()}`;
+  const woFiles = React.useMemo(() => getFilesForEntity("work-order", order.id), [order.id, attachmentRefresh]);
 
-  const priorityBadgeVariant = (
-    order.priority === "critical" || order.priority === "high"
-      ? "destructive"
-      : order.priority === "medium"
-        ? "secondary"
-        : "outline"
-  ) as "destructive" | "secondary" | "outline";
+  const getActionLabel = (status: WorkOrderStatus) => {
+    switch (status) {
+      case "waiting_material":
+        return "Request material";
+      case "approved":
+        return t("workOrders.buttons.approve");
+      case "scheduled":
+        return "Schedule";
+      case "in_progress":
+        return t("workOrders.buttons.start");
+      case "completed":
+        return t("workOrders.buttons.complete");
+      case "cancelled":
+        return t("workOrders.buttons.cancel");
+      default:
+        return formatStatusLabel(status);
+    }
+  };
+
+  const headerMeta = [
+    woNumber,
+    order.due_date ? `Due ${formatDate(order.due_date)}` : `Created ${formatDate(order.created_at)}`,
+    asset?.name || workOrderLocation?.name || "No asset or location linked",
+  ].filter(Boolean);
 
   return (
     <RoleGuard requiredPermission="work_orders.view">
@@ -260,7 +303,7 @@ export default function WorkOrderDetailPage() {
       {/* Record navigation */}
       {/* Header */}
       <div className="flex items-start gap-4">
-        <Button variant="ghost" size="icon" className="mt-1 shrink-0" onClick={() => router.back()}>
+        <Button variant="ghost" size="icon" className="mt-1 shrink-0" onClick={() => router.push(`/${company}/dashboard/work-orders`)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
 
@@ -275,23 +318,50 @@ export default function WorkOrderDetailPage() {
             ) : (
               <h1 className="text-2xl font-semibold truncate">{order.title}</h1>
             )}
-            <span className="text-sm font-mono text-muted-foreground shrink-0">{woNumber}</span>
-          </div>
-
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <Badge variant={STATUS_COLORS[order.status] as "success" | "secondary" | "destructive" | "info" | "in_progress" | "completed" | "cancelled"}>
-              {capitalize(order.status.replace(/_/g, " "))}
-            </Badge>
-            <Badge variant="outline">
-              {capitalize((order.type || "service_request").replace(/_/g, " "))}
-            </Badge>
-            <Badge variant={priorityBadgeVariant}>
-              {capitalize(order.priority)}
-            </Badge>
           </div>
         </div>
 
         <div className="flex gap-2 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={async () => {
+              const { WorkOrderPDF, downloadPDF } = await import("@/lib/pdf-export");
+              const a = asset;
+              const loc = workOrderLocation;
+              const tmpl = linkedProcedureTemplate;
+              const doc = <WorkOrderPDF
+                companyName={company}
+                workOrder={{
+                  reference: woNumber,
+                  title: order.title,
+                  description: order.description,
+                  type: order.type,
+                  priority: order.priority,
+                  status: order.status,
+                  asset: a?.name,
+                  location: loc?.name,
+                  assigned_to: getUserName(order.assigned_to),
+                  assigned_team: getTeamName(order.assigned_to_team_id) || undefined,
+                  due_date: order.due_date,
+                  estimated_hours: order.estimated_hours,
+                  actual_hours: order.actual_hours,
+                  parts_cost: order.parts_cost,
+                  labor_cost: order.labor_cost,
+                  declined_reason: order.declined_reason,
+                  completed_at: order.completed_at,
+                  created_at: order.created_at,
+                  procedure_name: tmpl?.name,
+                  procedure_steps: tmpl?.items.length,
+                }}
+              />;
+              await downloadPDF(doc, `${woNumber}.pdf`);
+            }}
+          >
+            <ArrowLeft className="h-3.5 w-3.5 rotate-[225deg]" />
+            PDF
+          </Button>
           {canEdit && (
             <>
               <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsEditing(!isEditing)}>
@@ -306,201 +376,375 @@ export default function WorkOrderDetailPage() {
               )}
             </>
           )}
-          {nextStatuses.length > 0 && (canEdit || canComplete) && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowStatusModal(true)}
-            >
-              Change status
-            </Button>
+          {(canEdit || canComplete) && (
+            <div className="relative" ref={actionMenuRef}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                aria-haspopup="menu"
+                aria-expanded={showActionMenu}
+                onClick={() => setShowActionMenu((current) => !current)}
+              >
+                Action items
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+
+              {showActionMenu && (
+                <div
+                  role="menu"
+                  className="absolute right-0 z-20 mt-2 min-w-[190px] rounded-md border bg-background p-1 shadow-md"
+                >
+                  {nextStatuses.length > 0 ? (
+                    nextStatuses.map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full items-center rounded-sm px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          setPendingActionStatus(status);
+                          setShowStatusModal(true);
+                          setShowActionMenu(false);
+                        }}
+                      >
+                        {getActionLabel(status)}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">No action items available</div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
 
-      {/* Status pipeline */}
       <StatusPipeline currentStatus={order.status} />
 
       {/* Status change modal */}
-      <StatusChangeModal
-        isOpen={showStatusModal}
-        currentStatus={order.status}
-        availableStatuses={WORK_ORDER_STATUS_TRANSITIONS[order.status] || []}
-        statusLog={orderStatusLog}
-        users={users}
-        onSubmit={handleStatusChangeConfirm}
-        onCancel={() => setShowStatusModal(false)}
-      />
+        <StatusChangeModal
+          isOpen={showStatusModal}
+          currentStatus={order.status}
+          availableStatuses={pendingActionStatus ? [pendingActionStatus] : WORK_ORDER_STATUS_TRANSITIONS[order.status] || []}
+          statusLog={orderStatusLog}
+          users={users}
+          onSubmit={handleStatusChangeConfirm}
+          onCancel={() => {
+            setPendingActionStatus(null);
+            setShowStatusModal(false);
+          }}
+        />
 
-      {/* Main content with sidebar tabs */}
-      <div className="flex gap-6">
-        {/* Left sidebar navigation */}
-        <nav className="hidden lg:block w-44 shrink-0">
-          <div className="sticky top-20 space-y-0.5">
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
-                  activeSection === item.id
-                    ? "font-medium text-foreground bg-muted"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </nav>
+      <DetailTabs tabs={NAV_ITEMS} activeTab={activeSection} onTabChange={(tabId) => setActiveSection(tabId as SectionId)} />
 
-        {/* Mobile tab bar */}
-        <div className="lg:hidden flex gap-1 -mt-2 mb-2 overflow-x-auto w-full">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveSection(item.id)}
-              className={`whitespace-nowrap px-3 py-1.5 text-sm rounded-md transition-colors ${
-                activeSection === item.id
-                  ? "font-medium text-foreground bg-muted"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Main content area — only one section visible at a time */}
-        <div className="flex-1 min-w-0">
+      <div className="min-w-0">
           {/* Summary */}
           {activeSection === "summary" && (
             <section>
-              <h2 className="text-lg font-semibold mb-4">Summary</h2>
-
-              {/* Description first — it's the most important info */}
-              <Card className="mb-4">
-                <CardContent className="pt-4">
-                  {isEditing ? (
-                    <Textarea
-                      value={editForm.description}
-                      onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
-                      rows={4}
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{order.description || "No description provided"}</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Details grid */}
-              <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Type</p>
-                  <p className="font-medium mt-0.5">
-                    {capitalize((order.type || "service_request").replace(/_/g, " "))}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">{t("workOrders.labels.priority")}</p>
-                  {canEdit ? (
-                    <Select value={order.priority} onValueChange={handlePriorityChange}>
-                      <SelectTrigger className="mt-1 h-8 w-full max-w-[200px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="critical">Critical</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <p className="font-medium mt-0.5">{capitalize(order.priority)}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-muted-foreground">{t("workOrders.detail.requestedBy")}</p>
-                  <p className="font-medium mt-0.5">{getUserName(order.requested_by)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">{t("workOrders.detail.assignedTo")}</p>
-                  {canAssign ? (
-                    <Select value={order.assigned_to || "__none__"} onValueChange={handleAssignedToChange}>
-                      <SelectTrigger className="mt-1 h-8 w-full max-w-[200px]">
-                        <SelectValue placeholder="Unassigned" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">Unassigned</SelectItem>
-                        {users.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>
-                            {u.first_name} {u.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <p className="font-medium mt-0.5">{getUserName(order.assigned_to)}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-muted-foreground">{t("workOrders.labels.dueDate")}</p>
-                  {canEdit ? (
-                    <Input
-                      type="date"
-                      className="mt-1 h-8 w-full max-w-[200px]"
-                      value={order.due_date ? order.due_date.split("T")[0] : ""}
-                      onChange={(e) => handleDueDateChange(e.target.value)}
-                    />
-                  ) : (
-                    <p className="font-medium mt-0.5">{order.due_date ? formatDate(order.due_date) : "—"}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-muted-foreground">{t("workOrders.labels.estimatedHours")}</p>
-                  <p className="font-medium mt-0.5">
-                    {order.estimated_hours != null ? `${order.estimated_hours}h` : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">{t("workOrders.detail.actualHours")}</p>
-                  <p className="font-medium mt-0.5">
-                    {order.actual_hours != null ? `${order.actual_hours}h` : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">{t("workOrders.detail.created")}</p>
-                  <p className="font-medium mt-0.5">{formatDate(order.created_at)}</p>
-                </div>
-                {order.completed_at && (
-                  <div>
-                    <p className="text-muted-foreground">{t("workOrders.detail.completedAt")}</p>
-                    <p className="font-medium mt-0.5">{formatDate(order.completed_at)}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Cost summary */}
-              {totalCost > 0 && (
-                <div className="mt-6 pt-4 border-t space-y-2 text-sm">
-                  <p className="font-semibold">Cost summary</p>
-                    {order.parts_cost != null && order.parts_cost > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Parts</span>
-                        <span className="font-medium">${formatNumber(order.parts_cost)}</span>
-                      </div>
-                    )}
-                    {order.labor_cost != null && order.labor_cost > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Labor</span>
-                        <span className="font-medium">${formatNumber(order.labor_cost)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between font-semibold border-t pt-2">
-                      <span>Total</span>
-                      <span>${formatNumber(totalCost)}</span>
+              <div className="grid gap-6 lg:grid-cols-3">
+                <div className="space-y-6 lg:col-span-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Work summary</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                    <div>
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          <Input
+                            value={editForm.title}
+                            onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+                          />
+                          <Textarea
+                            value={editForm.description}
+                            onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
+                            rows={5}
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          <p className="mt-1 text-sm font-medium">{order.title}</p>
+                          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                            {order.description || "No description provided"}
+                          </p>
+                          </>
+                      )}
                     </div>
-                  </div>
-              )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Work order details</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                    <div className="grid gap-4 text-sm sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Reference</p>
+                          <p className="mt-0.5 text-sm font-medium font-mono">{woNumber}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Type</p>
+                          {isEditing ? (
+                            <Select
+                              value={editForm.type}
+                              onValueChange={(value) =>
+                                setEditForm((p) => ({
+                                  ...p,
+                                  type: value,
+                                  checklist_template_id: getProcedureTemplateIdForType(value as WorkOrder["type"]),
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="mt-1 h-9">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {WORK_ORDER_TYPES.map((woType) => (
+                                  <SelectItem key={woType} value={woType}>
+                                    {formatStatusLabel(woType)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <p className="mt-0.5 text-sm font-medium">{capitalize((order.type || "service_request").replace(/_/g, " "))}</p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t("workOrders.labels.priority")}</p>
+                          {isEditing ? (
+                            <Select value={editForm.priority} onValueChange={(value) => setEditForm((p) => ({ ...p, priority: value as Priority }))}>
+                              <SelectTrigger className="mt-1 h-9">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(["low", "medium", "high", "critical"] as Priority[]).map((priority) => (
+                                  <SelectItem key={priority} value={priority}>
+                                    {capitalize(priority)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <p className="mt-0.5 text-sm font-medium">{capitalize(order.priority)}</p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Procedure checklist</p>
+                          {linkedProcedureTemplate ? (
+                            <div className="mt-0.5 flex items-start gap-3">
+                              <ClipboardCheck className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <Link
+                                  href={`/${company}/dashboard/checklists/${linkedProcedureTemplate.id}`}
+                                  className="block text-sm font-medium text-primary hover:underline"
+                                >
+                                  {linkedProcedureTemplate.name}
+                                </Link>
+                                {linkedProcedureTemplate.description && (
+                                  <p className="text-sm text-muted-foreground">{linkedProcedureTemplate.description}</p>
+                                )}
+                                <p className="text-xs text-muted-foreground">{linkedProcedureTemplate.items.length} steps</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="mt-0.5 text-sm font-medium">—</p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t("workOrders.labels.dueDate")}</p>
+                          {isEditing ? (
+                            <Input
+                              type="date"
+                              className="mt-1 h-9"
+                              value={editForm.due_date}
+                              onChange={(e) => setEditForm((p) => ({ ...p, due_date: e.target.value }))}
+                            />
+                          ) : (
+                            <div className="mt-0.5 flex items-start gap-3">
+                              <Calendar className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-sm font-medium">{order.due_date ? formatDate(order.due_date) : "—"}</p>
+                                <p className="text-sm text-muted-foreground">Created {formatDate(order.created_at)}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                    </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Asset & location</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("workOrders.labels.asset")}</p>
+                        {isEditing ? (
+                          <Select
+                            value={editForm.asset_id}
+                            onValueChange={(value) =>
+                              setEditForm((p) => {
+                                const nextAsset = value === "__none__" ? null : assets.find((item) => item.id === value) ?? null;
+                                return {
+                                  ...p,
+                                  asset_id: value,
+                                  location_id: nextAsset?.location_id || p.location_id,
+                                };
+                              })
+                            }
+                          >
+                            <SelectTrigger className="mt-1 h-9">
+                              <SelectValue placeholder="No asset" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__">No asset</SelectItem>
+                              {assets.filter((item) => item.status !== "retired").map((item) => (
+                                <SelectItem key={item.id} value={item.id}>
+                                  {item.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : asset ? (
+                          <div className="mt-0.5 flex items-start gap-3">
+                            <Package className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <Link
+                                href={`/${company}/dashboard/assets/${asset.id}`}
+                                className="block text-sm font-medium text-primary hover:underline"
+                              >
+                                {asset.name}
+                              </Link>
+                              <p className="text-sm text-muted-foreground">
+                                {asset.asset_tag || asset.serial_number || "No asset identifier"}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="mt-0.5 text-sm font-medium">—</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-muted-foreground">Location</p>
+                        {isEditing ? (
+                          <Select value={editForm.location_id} onValueChange={(value) => setEditForm((p) => ({ ...p, location_id: value }))}>
+                            <SelectTrigger className="mt-1 h-9">
+                              <SelectValue placeholder="No location" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__">No location</SelectItem>
+                              {locations.map((location) => (
+                                <SelectItem key={location.id} value={location.id}>
+                                  {location.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : locationHierarchy.length > 0 ? (
+                          <div className="mt-2 space-y-3">
+                            {locationHierarchy.map((item, index) => (
+                              <div key={item.id} className="flex items-start gap-3">
+                                <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium">{item.name}</p>
+                                  <p className="text-sm capitalize text-muted-foreground">
+                                    Step {index + 1} · {item.type.replace(/_/g, " ")}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                            {workOrderLocation?.address && (
+                              <div className="border-t pt-3">
+                                <p className="text-sm text-muted-foreground">{workOrderLocation.address}</p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="mt-0.5 text-sm text-muted-foreground">No location linked.</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Assignment & progress</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <User className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t("workOrders.detail.assignedTo")}</p>
+                          <p className="text-sm font-medium">{getUserName(isEditing ? (editForm.assigned_to === "__none__" ? null : editForm.assigned_to) : order.assigned_to)}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Team: {getTeamName(isEditing ? (editForm.assigned_to_team_id === "__none__" ? null : editForm.assigned_to_team_id) : order.assigned_to_team_id)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Clock3 className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                        <div className="flex gap-6">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Estimated hours</p>
+                            <p className="text-sm font-medium">
+                              {order.estimated_hours != null ? `${order.estimated_hours}h` : "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Actual hours</p>
+                            <p className="text-sm font-medium">
+                              {order.actual_hours != null ? `${order.actual_hours}h` : "—"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      {totalCost > 0 && (
+                        <div className="border-t pt-4 text-sm">
+                          <p className="text-sm font-medium">Cost summary</p>
+                          {order.parts_cost != null && order.parts_cost > 0 && (
+                            <div className="mt-2 flex justify-between">
+                              <span className="text-muted-foreground">Parts</span>
+                              <span className="font-medium">${formatNumber(order.parts_cost)}</span>
+                            </div>
+                          )}
+                          {order.labor_cost != null && order.labor_cost > 0 && (
+                            <div className="mt-2 flex justify-between">
+                              <span className="text-muted-foreground">Labor</span>
+                              <span className="font-medium">${formatNumber(order.labor_cost)}</span>
+                            </div>
+                          )}
+                          <div className="mt-2 flex justify-between border-t pt-2 font-medium">
+                            <span>Total</span>
+                            <span>${formatNumber(totalCost)}</span>
+                          </div>
+                        </div>
+                      )}
+                      {order.declined_reason && (
+                        <div className="border-t pt-4">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" />
+                            <div>
+                              <p className="text-xs text-destructive font-medium">Declined by field worker</p>
+                              <p className="mt-1 text-sm text-muted-foreground">{order.declined_reason}</p>
+                              {order.declined_at && (
+                                <p className="mt-1 text-xs text-muted-foreground">{formatDate(order.declined_at)}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </section>
           )}
 
@@ -552,7 +796,7 @@ export default function WorkOrderDetailPage() {
                 </div>
 
                 <div>
-                  <p className="text-muted-foreground">Procedure template</p>
+                  <p className="text-muted-foreground">Procedure checklist</p>
                   {linkedProcedureTemplate ? (
                     <Link
                       href={`/${company}/dashboard/checklists/${linkedProcedureTemplate.id}`}
@@ -617,49 +861,130 @@ export default function WorkOrderDetailPage() {
               <h2 className="text-lg font-semibold mb-4">Work log</h2>
               <Card>
                 <CardContent className="pt-5">
-                  <div className="space-y-3 text-sm">
-                    {order.estimated_hours != null && (
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-muted-foreground">Estimated hours</span>
-                        <span className="font-medium">{order.estimated_hours}h</span>
+                  <div className="space-y-4 text-sm">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="text-xs text-muted-foreground">Estimated hours</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          className="mt-1 h-9"
+                          value={order.estimated_hours ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value ? parseFloat(e.target.value) : null;
+                            update(order.id, { estimated_hours: val, updated_at: new Date().toISOString() });
+                          }}
+                        />
                       </div>
-                    )}
-                    {order.actual_hours != null && (
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-muted-foreground">Actual hours</span>
-                        <span className="font-medium">{order.actual_hours}h</span>
+                      <div>
+                        <label className="text-xs text-muted-foreground">Actual hours</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          className="mt-1 h-9"
+                          value={order.actual_hours ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value ? parseFloat(e.target.value) : null;
+                            update(order.id, { actual_hours: val, updated_at: new Date().toISOString() });
+                          }}
+                        />
                       </div>
-                    )}
+                      <div>
+                        <label className="text-xs text-muted-foreground">Parts cost</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="mt-1 h-9"
+                          value={order.parts_cost ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value ? parseFloat(e.target.value) : null;
+                            update(order.id, { parts_cost: val, updated_at: new Date().toISOString() });
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground">Labor cost</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="mt-1 h-9"
+                          value={order.labor_cost ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value ? parseFloat(e.target.value) : null;
+                            update(order.id, { labor_cost: val, updated_at: new Date().toISOString() });
+                          }}
+                        />
+                      </div>
+                    </div>
                     {totalCost > 0 && (
-                      <>
-                        {order.parts_cost != null && order.parts_cost > 0 && (
-                          <div className="flex justify-between py-2 border-b">
-                            <span className="text-muted-foreground">Parts cost</span>
-                            <span className="font-medium">${formatNumber(order.parts_cost)}</span>
-                          </div>
-                        )}
-                        {order.labor_cost != null && order.labor_cost > 0 && (
-                          <div className="flex justify-between py-2 border-b">
-                            <span className="text-muted-foreground">Labor cost</span>
-                            <span className="font-medium">${formatNumber(order.labor_cost)}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between py-2 font-medium">
-                          <span>Total cost</span>
-                          <span>${formatNumber(totalCost)}</span>
-                        </div>
-                      </>
-                    )}
-                    {order.estimated_hours == null && order.actual_hours == null && totalCost === 0 && (
-                      <p className="text-muted-foreground py-4 text-center">No work log entries yet</p>
+                      <div className="flex justify-between py-2 border-t font-medium">
+                        <span>Total cost</span>
+                        <span>${formatNumber(totalCost)}</span>
+                      </div>
                     )}
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Attachments */}
+              <Card className="mt-4">
+                <CardContent className="pt-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium">Attachments</h3>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*,.pdf,.csv"
+                        multiple
+                        onChange={async (e) => {
+                          const files = e.target.files;
+                          if (!files) return;
+                          for (const file of Array.from(files)) {
+                            try {
+                              await storeFile(file, "work-order", order.id, user?.id || "");
+                              toast("File uploaded");
+                            } catch (err) {
+                              toast(err instanceof Error ? err.message : "Upload failed", "error");
+                            }
+                          }
+                          setAttachmentRefresh((c) => c + 1);
+                          e.target.value = "";
+                        }}
+                      />
+                      <span className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors">
+                        <Paperclip className="h-3.5 w-3.5" />
+                        Add file
+                      </span>
+                    </label>
+                  </div>
+                  {woFiles.length > 0 ? (
+                    <div className="space-y-2">
+                      {woFiles.map((file) => (
+                        <div key={file.id} className="flex items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                          <Paperclip className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-medium">{file.name}</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(file.uploadedAt)}</p>
+                          </div>
+                          <Button variant="ghost" size="icon-sm" onClick={() => downloadFile(file)}>
+                            <ArrowLeft className="h-3.5 w-3.5 rotate-[225deg]" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">No files attached yet</p>
+                  )}
                 </CardContent>
               </Card>
             </section>
           )}
 
-        </div>
       </div>
     </div>
     </RoleGuard>

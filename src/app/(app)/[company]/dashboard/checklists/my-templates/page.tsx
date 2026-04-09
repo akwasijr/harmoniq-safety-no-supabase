@@ -77,15 +77,11 @@ function MyTemplatesContent() {
     const status = getTemplatePublishStatus(template);
     switch (status) {
       case "published":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
-            <CheckCircle className="h-3 w-3" />Active
-          </span>
-        );
+        return <Badge variant="active" className="text-xs gap-1"><CheckCircle className="h-3 w-3" />Active</Badge>;
       case "draft":
         return <Badge variant="secondary" className="text-xs gap-1"><FileText className="h-3 w-3" />Draft</Badge>;
       case "archived":
-        return <Badge variant="outline" className="text-xs gap-1 text-muted-foreground"><Archive className="h-3 w-3" />Archived</Badge>;
+        return <Badge variant="archived" className="text-xs gap-1"><Archive className="h-3 w-3" />Archived</Badge>;
       default:
         return <Badge variant="secondary" className="text-xs">Unknown</Badge>;
     }
@@ -181,7 +177,7 @@ function MyTemplatesContent() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">My Templates</h1>
         <Link href={`/${company}/dashboard/checklists/new`}>
-          <Button className="gap-2">
+          <Button size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
             {t("industry_templates._ui.createTemplate")}
           </Button>
@@ -207,6 +203,13 @@ function MyTemplatesContent() {
           >
             <Library className="h-4 w-4 shrink-0" />
             {t("industry_templates._ui.templateLibrary")}
+          </Link>
+          <Link
+            href={`/${company}/dashboard/checklists/procedures`}
+            className="flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative whitespace-nowrap text-muted-foreground hover:text-foreground"
+          >
+            <FileText className="h-4 w-4 shrink-0" />
+            Procedure Templates
           </Link>
         </div>
       </div>
@@ -327,7 +330,7 @@ function MyTemplatesContent() {
                         </td>
                         <td className="py-3 text-xs">{template.items?.length || 0} items</td>
                         <td className="hidden py-3 md:table-cell">
-                          <Badge variant="outline" className="text-xs capitalize">{category.replace(/_/g, " ")}</Badge>
+                          <Badge variant="outline" className="text-xs">{category.replace(/_/g, " ")}</Badge>
                         </td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{subCount} times</td>
                         <td className="py-3">

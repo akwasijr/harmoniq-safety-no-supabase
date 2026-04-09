@@ -50,6 +50,7 @@ import { cn, capitalize } from "@/lib/utils";
 import { WORK_ORDER_STATUS_COLORS } from "@/lib/status-utils";
 import { DetailTabs } from "@/components/ui/detail-tabs";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
+import { downloadCsv, parseCsv, downloadCsvTemplate } from "@/lib/csv";
 
 import type { Asset, Alert, WorkOrder, CorrectiveAction, Part, Priority, Severity } from "@/types";
 import { WORK_ORDER_TYPES } from "@/types";
@@ -59,6 +60,242 @@ import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
+
+/* ── Asset CSV import helpers ── */
+const ASSET_COLUMN_ALIASES: Record<string, string> = {
+  // Name
+  "asset_name": "name", "asset name": "name", "equipment_name": "name", "equipment name": "name",
+  "machine_name": "name", "machine name": "name", "item_name": "name", "item name": "name",
+  // Tag
+  "asset_tag": "asset_tag", "asset tag": "asset_tag", "tag": "asset_tag", "asset_id": "asset_tag",
+  "asset id": "asset_tag", "equipment_id": "asset_tag", "equipment id": "asset_tag", "barcode": "asset_tag",
+  // Serial
+  "serial_number": "serial_number", "serial number": "serial_number", "serial": "serial_number", "sn": "serial_number",
+  // Category
+  "asset_category": "category", "asset category": "category", "equipment_type": "category",
+  "equipment type": "category", "type": "category",
+  // Status
+  "asset_status": "status", "asset status": "status",
+  // Condition
+  "asset_condition": "condition", "asset condition": "condition",
+  // Manufacturer
+  "make": "manufacturer", "brand": "manufacturer", "oem": "manufacturer",
+  // Department
+  "dept": "department", "dept.": "department", "cost_center": "department", "cost center": "department",
+  // Cost
+  "cost": "purchase_cost", "price": "purchase_cost", "purchase_price": "purchase_cost",
+  "purchase price": "purchase_cost", "acquisition_cost": "purchase_cost",
+  // Location
+  "site": "location", "building": "location", "location_name": "location", "location name": "location",
+  // Dates
+  "purchase_date": "purchase_date", "purchase date": "purchase_date", "acquired_date": "purchase_date",
+  "warranty_expiry": "warranty_expiry", "warranty expiry": "warranty_expiry", "warranty_end": "warranty_expiry",
+  "warranty end": "warranty_expiry", "warranty_date": "warranty_expiry",
+};
+
+const ASSET_CATEGORY_ALIASES: Record<string, string> = {
+  "machine": "machinery", "machines": "machinery",
+  "car": "vehicle", "truck": "vehicle", "fleet": "vehicle", "vehicles": "vehicle",
+  "tools": "tool", "hand tool": "tool", "power tool": "tool",
+  "ppe": "ppe", "safety": "safety_equipment", "safety gear": "safety_equipment",
+  "electric": "electrical", "electronics": "electrical",
+  "hvac": "hvac", "heating": "hvac", "cooling": "hvac", "air conditioning": "hvac",
+  "plumbing": "plumbing", "pipe": "plumbing", "pipes": "plumbing",
+  "fire": "fire_safety", "fire safety": "fire_safety", "fire equipment": "fire_safety",
+  "crane": "lifting_equipment", "hoist": "lifting_equipment", "forklift": "lifting_equipment", "lift": "lifting_equipment",
+  "boiler": "pressure_vessel", "tank": "pressure_vessel", "compressor": "pressure_vessel",
+};
+
+const VALID_ASSET_CATEGORIES = ["machinery", "vehicle", "safety_equipment", "tool", "electrical", "hvac", "plumbing", "fire_safety", "lifting_equipment", "pressure_vessel", "ppe", "other"];
+const VALID_ASSET_STATUSES = ["active", "inactive", "maintenance", "retired"];
+const VALID_ASSET_CONDITIONS = ["excellent", "good", "fair", "poor", "failed"];
+
+function mapAssetImportColumns(data: { headers: string[]; rows: Record<string, string>[] }) {
+  const headerMap: Record<string, string> = {};
+  data.headers.forEach((h) => {
+    const lower = h.toLowerCase().trim();
+    headerMap[h] = ASSET_COLUMN_ALIASES[lower] || lower.replace(/\s+/g, "_");
+  });
+
+  const mappedRows = data.rows.map((row) => {
+    const mapped: Record<string, string> = {};
+    for (const [key, value] of Object.entries(row)) {
+      mapped[headerMap[key] || key] = value;
+    }
+    if (mapped.category) {
+      const lower = mapped.category.toLowerCase().trim();
+      mapped.category = ASSET_CATEGORY_ALIASES[lower] || lower.replace(/\s+/g, "_");
+    }
+    if (mapped.status) mapped.status = mapped.status.toLowerCase().trim();
+    if (mapped.condition) mapped.condition = mapped.condition.toLowerCase().trim();
+    return mapped;
+  });
+
+  return { headers: data.headers.map((h) => headerMap[h]), rows: mappedRows };
+}
+
+function AssetImportPreview({ importData, assets: existing, companyId, addAsset, toast, onBack, onDone }: {
+  importData: { headers: string[]; rows: Record<string, string>[] };
+  assets: Asset[];
+  companyId: string;
+  addAsset: (a: Asset) => void;
+  toast: (msg: string, type?: "success" | "error" | "info") => void;
+  onBack: () => void;
+  onDone: () => void;
+}) {
+  const [rows, setRows] = React.useState(() => importData.rows.map((r) => ({ ...r })));
+  const existingTags = React.useMemo(() => new Set(existing.map((a) => a.asset_tag)), [existing]);
+
+  const updateCell = (idx: number, field: string, value: string) => {
+    setRows((prev) => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
+  };
+  const removeRow = (idx: number) => {
+    setRows((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const validated = rows.map((row, i) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    if (!row.name?.trim()) errors.push("Missing name");
+    if (row.asset_tag && existingTags.has(row.asset_tag.trim())) warnings.push("Duplicate tag");
+    if (row.category && !VALID_ASSET_CATEGORIES.includes(row.category.toLowerCase().trim())) warnings.push("Unknown category");
+    if (row.status && !VALID_ASSET_STATUSES.includes(row.status.toLowerCase().trim())) warnings.push("Unknown status");
+    return { row, index: i, errors, warnings, valid: errors.length === 0 };
+  });
+
+  const validCount = validated.filter((v) => v.valid).length;
+  const errorCount = validated.filter((v) => !v.valid).length;
+
+  const handleImport = () => {
+    const now = new Date();
+    const usedTags = new Set(existingTags);
+    let imported = 0;
+    validated.forEach((v, idx) => {
+      if (!v.valid) return;
+      const row = v.row;
+      const category = (VALID_ASSET_CATEGORIES.includes((row.category || "").toLowerCase()) ? row.category.toLowerCase() : "other") as Asset["category"];
+      const status = (VALID_ASSET_STATUSES.includes((row.status || "").toLowerCase()) ? row.status.toLowerCase() : "active") as Asset["status"];
+      const condition = (VALID_ASSET_CONDITIONS.includes((row.condition || "").toLowerCase()) ? row.condition.toLowerCase() : "good") as Asset["condition"];
+      let tag = row.asset_tag?.trim();
+      if (!tag || usedTags.has(tag)) tag = `AST-${Date.now()}-${idx}`;
+      usedTags.add(tag);
+
+      const asset: Asset = {
+        id: crypto.randomUUID(),
+        company_id: companyId,
+        location_id: null,
+        parent_asset_id: null,
+        is_system: false,
+        name: row.name.trim(),
+        asset_tag: tag,
+        serial_number: row.serial_number || null,
+        qr_code: null,
+        category,
+        sub_category: null,
+        asset_type: (row.asset_type === "movable" ? "movable" : "static") as Asset["asset_type"],
+        criticality: "medium",
+        department: row.department || null,
+        manufacturer: row.manufacturer || null,
+        model: row.model || null,
+        purchase_date: row.purchase_date || null,
+        installation_date: null,
+        warranty_expiry: row.warranty_expiry || null,
+        expected_life_years: null,
+        condition,
+        last_condition_assessment: null,
+        purchase_cost: row.purchase_cost ? parseFloat(row.purchase_cost) : null,
+        current_value: null,
+        depreciation_rate: null,
+        currency: "USD",
+        maintenance_frequency_days: null,
+        last_maintenance_date: null,
+        next_maintenance_date: null,
+        requires_certification: false,
+        safety_instructions: null,
+        status,
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      };
+      addAsset(asset);
+      imported++;
+    });
+    toast(`${imported} assets imported${errorCount > 0 ? `, ${errorCount} skipped` : ""}`);
+    onDone();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 text-sm">
+        <span className="font-medium">{rows.length} rows</span>
+        <Badge variant="success" className="text-[10px]">{validCount} valid</Badge>
+        {errorCount > 0 && <Badge variant="destructive" className="text-[10px]">{errorCount} errors</Badge>}
+      </div>
+      <div className="max-h-72 overflow-auto rounded border text-xs">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-muted sticky top-0 z-10">
+              <th className="px-1.5 py-1 text-left font-medium w-6">#</th>
+              <th className="px-1.5 py-1 text-left font-medium">Name</th>
+              <th className="px-1.5 py-1 text-left font-medium w-28">Category</th>
+              <th className="px-1.5 py-1 text-left font-medium w-20">Status</th>
+              <th className="px-1.5 py-1 text-left font-medium w-16">Result</th>
+              <th className="px-1.5 py-1 w-6"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {validated.map((v) => (
+              <tr key={v.index} className={`border-t ${!v.valid ? "bg-destructive/5" : ""}`}>
+                <td className="px-1.5 py-1 text-muted-foreground">{v.index + 1}</td>
+                <td className="px-1.5 py-1">
+                  <input
+                    className={`w-full bg-transparent border-0 outline-none text-xs ${!v.row.name?.trim() ? "border-b border-destructive" : ""}`}
+                    value={v.row.name || ""}
+                    onChange={(e) => updateCell(v.index, "name", e.target.value)}
+                    placeholder="Required"
+                  />
+                </td>
+                <td className="px-1.5 py-1">
+                  <select
+                    className="w-full bg-transparent border-0 outline-none text-xs"
+                    value={VALID_ASSET_CATEGORIES.includes((v.row.category || "").toLowerCase()) ? v.row.category.toLowerCase() : "other"}
+                    onChange={(e) => updateCell(v.index, "category", e.target.value)}
+                  >
+                    {VALID_ASSET_CATEGORIES.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
+                  </select>
+                </td>
+                <td className="px-1.5 py-1">
+                  <select
+                    className="w-full bg-transparent border-0 outline-none text-xs"
+                    value={VALID_ASSET_STATUSES.includes((v.row.status || "").toLowerCase()) ? v.row.status.toLowerCase() : "active"}
+                    onChange={(e) => updateCell(v.index, "status", e.target.value)}
+                  >
+                    {VALID_ASSET_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </td>
+                <td className="px-1.5 py-1">
+                  {v.valid ? (
+                    <span className="text-green-600 dark:text-green-400">Ready</span>
+                  ) : (
+                    <span className="text-destructive">{v.errors[0]}</span>
+                  )}
+                </td>
+                <td className="px-1.5 py-1">
+                  <button type="button" onClick={() => removeRow(v.index)} className="text-muted-foreground hover:text-destructive">×</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" className="flex-1" onClick={onBack}>Back</Button>
+        <Button className="flex-1" disabled={validCount === 0} onClick={handleImport}>
+          Import {validCount} of {rows.length}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function AssetsPage() {
   const router = useRouter();
@@ -145,85 +382,37 @@ export default function AssetsPage() {
 
   // CSV export
   const handleExportCSV = () => {
-    const headers = ["name","asset_tag","serial_number","category","asset_type","department","status","condition","manufacturer","model","location_id","purchase_date","purchase_cost","warranty_expiry"];
-    const rows = assets.map(a => headers.map(h => {
-      const val = a[h as keyof typeof a];
-      return val !== null && val !== undefined ? `"${String(val).replace(/"/g, '""')}"` : "";
-    }).join(","));
-    const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `assets-export-${new Date().toISOString().split("T")[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`assets-export-${new Date().toISOString().split("T")[0]}.csv`, assets.map((a) => {
+      const loc = a.location_id ? locations.find((l) => l.id === a.location_id) : null;
+      return {
+        name: a.name,
+        asset_tag: a.asset_tag,
+        serial_number: a.serial_number || "",
+        category: a.category,
+        asset_type: a.asset_type,
+        criticality: a.criticality,
+        department: a.department || "",
+        status: a.status,
+        condition: a.condition,
+        manufacturer: a.manufacturer || "",
+        model: a.model || "",
+        location: loc?.name || "",
+        purchase_date: a.purchase_date || "",
+        purchase_cost: a.purchase_cost ?? "",
+        currency: a.currency,
+        warranty_expiry: a.warranty_expiry || "",
+        maintenance_frequency_days: a.maintenance_frequency_days ?? "",
+        last_maintenance_date: a.last_maintenance_date || "",
+        next_maintenance_date: a.next_maintenance_date || "",
+        created_at: a.created_at,
+      };
+    }));
     toast(t("assets.assetsExported"));
   };
 
-  // CSV import
-  const importRef = React.useRef<HTMLInputElement>(null);
-  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = reader.result as string;
-      const lines = text.split("\n").filter(l => l.trim());
-      if (lines.length < 2) { toast("No data rows found in CSV"); return; }
-      const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim());
-      const existingAssetTags = new Set(assets.map((asset) => asset.asset_tag));
-      let imported = 0;
-      for (let i = 1; i < lines.length; i++) {
-        const vals = lines[i].match(/(".*?"|[^,]*)/g)?.map(v => v.replace(/^"|"$/g, "").replace(/""/g, '"').trim()) || [];
-        const row: Record<string, string> = {};
-        headers.forEach((h, idx) => { row[h] = vals[idx] || ""; });
-        if (!row.name) continue;
-        const requestedAssetTag = row.asset_tag?.trim();
-        const assetTag = requestedAssetTag && !existingAssetTags.has(requestedAssetTag)
-          ? requestedAssetTag
-          : `AST-${Date.now()}-${i}`;
-        existingAssetTags.add(assetTag);
-        addAsset({
-          id: `asset_import_${Date.now()}_${i}`,
-          company_id: companyId || "",
-          location_id: row.location_id || null,
-          parent_asset_id: null,
-          is_system: false,
-          name: row.name,
-          asset_tag: assetTag,
-          serial_number: row.serial_number || null,
-          qr_code: null,
-          category: (row.category as Asset["category"]) || "other",
-          sub_category: null,
-          asset_type: (row.asset_type as Asset["asset_type"]) || "static",
-          criticality: "medium",
-          department: row.department || null,
-          manufacturer: row.manufacturer || null,
-          model: row.model || null,
-          purchase_date: row.purchase_date || null,
-          installation_date: null,
-          warranty_expiry: row.warranty_expiry || null,
-          expected_life_years: null,
-          condition: (row.condition as Asset["condition"]) || "good",
-          last_condition_assessment: null,
-          purchase_cost: row.purchase_cost ? parseFloat(row.purchase_cost) : null,
-          current_value: null, depreciation_rate: null, currency: "USD",
-          maintenance_frequency_days: null, last_maintenance_date: null,
-          next_maintenance_date: null,
-          requires_certification: false,
-          safety_instructions: null,
-          status: (row.status as Asset["status"]) || "active",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-        imported++;
-      }
-      toast(`${imported} assets imported`);
-    };
-    reader.readAsText(file);
-    e.target.value = "";
-  };
+  // CSV import state
+  const [showImport, setShowImport] = React.useState(false);
+  const [importData, setImportData] = React.useState<{ headers: string[]; rows: Record<string, string>[] } | null>(null);
   
   // Compute alerts from asset data
   const computedAlerts = React.useMemo(() => {
@@ -492,8 +681,7 @@ export default function AssetsPage() {
         <div className="flex gap-2">
           {activeTab === "assets" && (
             <>
-              <input ref={importRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
-              <Button size="sm" variant="outline" className="gap-2" onClick={() => importRef.current?.click()}>
+              <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowImport(true)}>
                 <Upload className="h-4 w-4" />
                 {t("assets.buttons.import")}
               </Button>
@@ -1686,6 +1874,56 @@ export default function AssetsPage() {
                 </Button>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Asset Import modal */}
+      {showImport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowImport(false); setImportData(null); }}>
+          <div className="relative w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto rounded-lg bg-background p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Import assets</h2>
+              <button onClick={() => { setShowImport(false); setImportData(null); }} className="text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {!importData ? (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">Upload a CSV file to bulk-import assets. Download the template first to see the required format.</p>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => downloadCsvTemplate("asset-import-template.csv", ["name", "asset_tag", "serial_number", "category", "asset_type", "department", "manufacturer", "model", "condition", "status", "purchase_date", "purchase_cost", "warranty_expiry"])}>
+                  <Download className="h-4 w-4" /> Download template
+                </Button>
+                <label className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <input type="file" accept=".csv,.txt" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const data = await parseCsv(file);
+                      if (data.rows.length === 0) { toast("File is empty", "error"); return; }
+                      const mapped = mapAssetImportColumns(data);
+                      setImportData(mapped);
+                    } catch {
+                      toast("Failed to parse CSV file", "error");
+                    }
+                    e.target.value = "";
+                  }} />
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Choose CSV file</span>
+                </label>
+              </div>
+            ) : (
+              <AssetImportPreview
+                importData={importData}
+                assets={assets}
+                companyId={companyId || ""}
+                addAsset={addAsset}
+                toast={toast}
+                onBack={() => setImportData(null)}
+                onDone={() => { setShowImport(false); setImportData(null); }}
+              />
+            )}
           </div>
         </div>
       )}

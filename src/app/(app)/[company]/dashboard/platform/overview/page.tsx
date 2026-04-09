@@ -84,31 +84,31 @@ export default function PlatformOverviewPage() {
     void fetchHealth();
   }, [fetchHealth]);
 
-  const statusColor = (status: string) => {
+  const statusVariant = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-emerald-500/15 text-emerald-600 border-emerald-500/20";
+        return "active" as const;
       case "trial":
-        return "bg-blue-500/15 text-blue-600 border-blue-500/20";
+        return "info" as const;
       case "suspended":
-        return "bg-red-500/15 text-red-600 border-red-500/20";
+        return "destructive" as const;
       default:
-        return "bg-muted text-muted-foreground";
+        return "secondary" as const;
     }
   };
 
-  const severityColor = (severity: string) => {
+  const severityVariant = (severity: string) => {
     switch (severity) {
       case "critical":
-        return "bg-red-500/15 text-red-600";
+        return "critical" as const;
       case "high":
-        return "bg-orange-500/15 text-orange-600";
+        return "high" as const;
       case "medium":
-        return "bg-amber-500/15 text-amber-600";
+        return "medium" as const;
       case "low":
-        return "bg-emerald-500/15 text-emerald-600";
+        return "low" as const;
       default:
-        return "bg-muted text-muted-foreground";
+        return "secondary" as const;
     }
   };
 
@@ -318,14 +318,9 @@ export default function PlatformOverviewPage() {
                         <p className="truncate text-sm font-medium">{companyRecord.name}</p>
                         <p className="text-xs text-muted-foreground">{companyRecord.country}</p>
                       </div>
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
-                          statusColor(companyRecord.status)
-                        )}
-                      >
+                      <Badge variant={statusVariant(companyRecord.status)} className="text-[11px]">
                         {companyRecord.status}
-                      </span>
+                      </Badge>
                     </Link>
                   ))}
                 </div>
@@ -354,14 +349,9 @@ export default function PlatformOverviewPage() {
                         </p>
                       </div>
                       <div className="ml-2 flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                            severityColor(incident.severity)
-                          )}
-                        >
+                        <Badge variant={severityVariant(incident.severity)} className="text-xs">
                           {incident.severity}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
                   ))}

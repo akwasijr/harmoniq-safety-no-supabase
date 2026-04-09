@@ -12,6 +12,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/i18n";
 
 interface AssetAnalyticsProps {
@@ -60,15 +61,12 @@ export function AssetAnalytics({
             <div className="flex-1">
               <div className="flex items-center gap-3">
                 <p className="font-semibold text-lg">{t("assets.sections.healthScore")}</p>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  healthScore >= 90
-                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                    : healthScore >= 80
-                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                    : healthScore >= 50
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
-                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                }`}>
+                <Badge variant={
+                  healthScore >= 90 ? "success"
+                    : healthScore >= 80 ? "info"
+                    : healthScore >= 50 ? "warning"
+                    : "destructive"
+                } className="text-xs">
                   {healthScore >= 90
                     ? (t("assets.healthScore.excellent") || "Excellent")
                     : healthScore >= 80
@@ -76,7 +74,7 @@ export function AssetAnalytics({
                     : healthScore >= 50
                     ? (t("assets.healthScore.fair") || "Fair")
                     : (t("assets.healthScore.poor") || "Poor")}
-                </span>
+                </Badge>
                 <button
                   type="button"
                   onClick={() => setShowScoreBreakdown(!showScoreBreakdown)}

@@ -50,7 +50,7 @@ export default function EmployeeAppRootLayout({
   // Prefetch all tab routes so JS chunks are ready before user navigates
   React.useEffect(() => {
     if (!company) return;
-    const tabs = ["checklists", "assets", "news", "profile", "tasks", "my-tasks", "notifications", "location"];
+    const tabs = ["checklists", "assets", "news", "profile", "tasks", "notifications", "location"];
     tabs.forEach((tab) => router.prefetch(`/${company}/app/${tab}`));
     router.prefetch(`/${company}/app`);
   }, [company, router]);

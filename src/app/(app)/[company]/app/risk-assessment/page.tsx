@@ -21,6 +21,7 @@ import { useUsersStore } from "@/stores/users-store";
 import { useTranslation } from "@/i18n";
 import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
+import { SubTabs } from "@/components/ui/sub-tabs";
 
 const assessmentLabelMap: Record<string, string> = {
   JHA: "Job Hazard Analysis",
@@ -179,32 +180,15 @@ export default function RiskAssessmentIndexPage() {
         </section>
 
         {/* Sub-tab pills */}
-        <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
-          <button
-            onClick={() => setSubTab("assigned")}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80",
-              subTab === "assigned"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground",
-            )}
-          >
-            <FileCheck className="h-3.5 w-3.5 shrink-0" />
-            <span>Assessments</span>
-          </button>
-          <button
-            onClick={() => setSubTab("history")}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80",
-              subTab === "history"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground",
-            )}
-          >
-            <Clock className="h-3.5 w-3.5 shrink-0" />
-            <span>History</span>
-          </button>
-        </div>
+        <SubTabs
+          tabs={[
+            { id: "assigned", label: "Assessments", icon: FileCheck },
+            { id: "history", label: "History", icon: Clock },
+          ]}
+          activeTab={subTab}
+          onTabChange={(id) => setSubTab(id as "assigned" | "history")}
+          size="sm"
+        />
 
         {/* ── ASSESSMENTS (action items) sub-tab ── */}
         {subTab === "assigned" && (

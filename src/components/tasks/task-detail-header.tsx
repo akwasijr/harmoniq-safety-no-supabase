@@ -4,25 +4,24 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  new: { label: "New", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
-  in_progress: { label: "In Progress", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-  blocked: { label: "Blocked", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
-  waiting: { label: "Waiting", color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
-  resolved: { label: "Resolved", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
-  closed: { label: "Closed", color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400" },
-  requested: { label: "Requested", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
-  approved: { label: "Approved", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400" },
-  completed: { label: "Completed", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
-  cancelled: { label: "Cancelled", color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400" },
-  open: { label: "Open", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
-  // Work order CMMS statuses
-  waiting_approval: { label: "Waiting Approval", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-  waiting_material: { label: "Waiting Material", color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400" },
-  scheduled: { label: "Scheduled", color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400" },
+const STATUS_CONFIG: Record<string, { label: string; variant: string }> = {
+  new: { label: "New", variant: "info" },
+  in_progress: { label: "In Progress", variant: "in_progress" },
+  blocked: { label: "Blocked", variant: "destructive" },
+  waiting: { label: "Waiting", variant: "warning" },
+  resolved: { label: "Resolved", variant: "resolved" },
+  closed: { label: "Closed", variant: "archived" },
+  requested: { label: "Requested", variant: "info" },
+  approved: { label: "Approved", variant: "in_review" },
+  completed: { label: "Completed", variant: "completed" },
+  cancelled: { label: "Cancelled", variant: "cancelled" },
+  open: { label: "Open", variant: "info" },
+  waiting_approval: { label: "Waiting Approval", variant: "warning" },
+  waiting_material: { label: "Waiting Material", variant: "warning" },
+  scheduled: { label: "Scheduled", variant: "info" },
 };
 
 export function formatStatusLabel(status: string): string {
@@ -30,14 +29,14 @@ export function formatStatusLabel(status: string): string {
 }
 
 export function getStatusConfig(status: string) {
-  return STATUS_CONFIG[status] || { label: formatStatusLabel(status), color: "bg-gray-100 text-gray-800" };
+  return STATUS_CONFIG[status] || { label: formatStatusLabel(status), variant: "secondary" };
 }
 
-export const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
-  critical: { label: "Critical", color: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200" },
-  high: { label: "High", color: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200" },
-  medium: { label: "Medium", color: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200" },
-  low: { label: "Low", color: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200" },
+export const PRIORITY_CONFIG: Record<string, { label: string; variant: string }> = {
+  critical: { label: "Critical", variant: "critical" },
+  high: { label: "High", variant: "high" },
+  medium: { label: "Medium", variant: "medium" },
+  low: { label: "Low", variant: "low" },
 };
 
 interface TaskDetailHeaderProps {
@@ -64,9 +63,9 @@ export function TaskDetailHeader({ title, subtitle, status, overdue, children }:
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {overdue && (
-            <Badge className="bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200">Overdue</Badge>
+            <Badge variant="overdue">Overdue</Badge>
           )}
-          <Badge className={conf.color}>{conf.label}</Badge>
+          <Badge variant={conf.variant as BadgeProps["variant"]}>{conf.label}</Badge>
         </div>
       </div>
       {children}

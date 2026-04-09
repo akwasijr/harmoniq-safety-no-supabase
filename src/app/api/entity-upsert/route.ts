@@ -6,9 +6,54 @@ import {
   getAssetScopedRowIds,
   validateEntityUpsertRequest,
 } from "@/lib/entity-upsert";
+import type { AllowedEntityUpsertTable, EntityUpsertRow } from "@/lib/entity-upsert";
 
 // 30 upsert requests per IP per minute
 const upsertLimiter = createRateLimiter({ limit: 30, windowMs: 60_000, prefix: "entity-upsert" });
+type UpsertClient = NonNullable<ReturnType<typeof createAdminClient>> | Awaited<ReturnType<typeof createClient>>;
+
+function getMissingSchemaColumn(message: string | null | undefined): string | null {
+  if (!message) return null;
+  const match = message.match(/Could not find the '([^']+)' column of '([^']+)' in the schema cache/);
+  return match?.[1] ?? null;
+}
+
+async function upsertWithSchemaFallback(
+  writeClient: UpsertClient,
+  table: AllowedEntityUpsertTable,
+  rows: EntityUpsertRow[],
+) {
+  let nextRows = rows.map((row) => ({ ...row }));
+  const strippedColumns = new Set<string>();
+
+  while (true) {
+    const { error } = await writeClient
+      .from(table)
+      .upsert(nextRows, { onConflict: "id" });
+
+    if (!error) {
+      return { error: null };
+    }
+
+    const missingColumn = table === "work_orders" ? getMissingSchemaColumn(error.message) : null;
+    if (
+      missingColumn &&
+      !strippedColumns.has(missingColumn) &&
+      nextRows.some((row) => Object.prototype.hasOwnProperty.call(row, missingColumn))
+    ) {
+      strippedColumns.add(missingColumn);
+      nextRows = nextRows.map((row) => {
+        const clone = { ...row };
+        delete clone[missingColumn];
+        return clone;
+      });
+      console.warn(`[Entity Upsert API] Retrying ${table} upsert without unsupported column: ${missingColumn}`);
+      continue;
+    }
+
+    return { error };
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,9 +115,7 @@ export async function POST(request: NextRequest) {
       console.warn("[Entity Upsert API] Admin client unavailable — falling back to user session (may hit RLS)");
     }
 
-    const { error: upsertError } = await writeClient
-      .from(table)
-      .upsert(validated.rows, { onConflict: "id" });
+    const { error: upsertError } = await upsertWithSchemaFallback(writeClient, table, validated.rows);
 
     if (upsertError) {
       const msg = upsertError.message || "Upsert failed";

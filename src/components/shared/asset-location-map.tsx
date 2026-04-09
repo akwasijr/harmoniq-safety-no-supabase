@@ -15,11 +15,15 @@ export interface MapMarker {
   status?: string;
 }
 
+const LIGHT_TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+const DARK_TILES = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
 interface AssetLocationMapProps {
   markers: MapMarker[];
   center?: [number, number];
   zoom?: number;
   height?: string;
+  darkMode?: boolean;
   onMapClick?: (lat: number, lng: number) => void;
   selectedMarkerId?: string;
 }
@@ -29,6 +33,7 @@ export function AssetLocationMap({
   center,
   zoom = 13,
   height = "400px",
+  darkMode = false,
   onMapClick,
   selectedMarkerId,
 }: AssetLocationMapProps) {
@@ -41,7 +46,7 @@ export function AssetLocationMap({
     const defaultCenter: [number, number] = center || [52.3676, 4.9041];
     const map = L.map(mapRef.current).setView(defaultCenter, zoom);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer(darkMode ? DARK_TILES : LIGHT_TILES, {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);

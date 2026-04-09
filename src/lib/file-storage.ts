@@ -4,7 +4,8 @@
  */
 
 const STORAGE_KEY = "harmoniq_files";
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB (images are compressed before storage)
+export const MAX_INCIDENT_PHOTOS = 5;
 
 const ALLOWED_TYPES = new Set([
   "image/png",

@@ -35,15 +35,15 @@ export function StatusPipeline({ currentStatus, className }: StatusPipelineProps
 
   if (currentStatus === "cancelled") {
     return (
-      <div className={cn("rounded-lg border bg-card px-4 py-3", className)}>
+      <div className={cn("px-1 py-1", className)}>
         <p className="text-sm text-muted-foreground">Status: <span className="font-medium text-foreground">Cancelled</span></p>
       </div>
     );
   }
 
   return (
-    <div className={cn("rounded-lg border bg-card px-4 py-4", className)}>
-      <div className="flex items-center gap-1">
+    <div className={cn("overflow-x-auto px-1 py-1", className)}>
+      <div className="flex min-w-max items-center gap-1">
         {STEPS.map((step, i) => {
           const done = i < currentIndex;
           const active = i === currentIndex;

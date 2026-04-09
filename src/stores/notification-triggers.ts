@@ -214,3 +214,53 @@ export function checkOverdueChecklists(params: ChecklistOverdueParams) {
     );
   });
 }
+
+// ── Incident notifications ──────────────────────────────────────────
+
+export function notifyIncidentStatusChange(
+  addNotification: (n: Notification) => void,
+  params: { companyId: string; incidentTitle: string; incidentId: string; newStatus: string; changedBy: string },
+) {
+  addNotification(
+    createNotification({
+      title: "Incident status updated",
+      message: `"${params.incidentTitle}" moved to ${params.newStatus.replace(/_/g, " ")}`,
+      type: "incident_status",
+      company_id: params.companyId,
+      source: "incident",
+      source_id: params.incidentId,
+    }),
+  );
+}
+
+export function notifyIncidentComment(
+  addNotification: (n: Notification) => void,
+  params: { companyId: string; incidentTitle: string; incidentId: string; commenterName: string },
+) {
+  addNotification(
+    createNotification({
+      title: "New comment on incident",
+      message: `${params.commenterName} commented on "${params.incidentTitle}"`,
+      type: "incident_comment",
+      company_id: params.companyId,
+      source: "incident",
+      source_id: params.incidentId,
+    }),
+  );
+}
+
+export function notifyIncidentEscalated(
+  addNotification: (n: Notification) => void,
+  params: { companyId: string; incidentTitle: string; incidentId: string; severity: string },
+) {
+  addNotification(
+    createNotification({
+      title: "Incident auto-escalated",
+      message: `${params.severity} severity incident "${params.incidentTitle}" was not acknowledged in time`,
+      type: "incident_escalation",
+      company_id: params.companyId,
+      source: "incident",
+      source_id: params.incidentId,
+    }),
+  );
+}

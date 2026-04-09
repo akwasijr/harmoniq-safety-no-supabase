@@ -300,10 +300,10 @@ export function AssetOverview({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={getSeverityVariant(incident.severity)} className="capitalize">
+                    <Badge variant={getSeverityVariant(incident.severity)}>
                       {incident.severity}
                     </Badge>
-                    <Badge variant="secondary" className="capitalize">{incident.status}</Badge>
+                    <Badge variant="secondary">{incident.status}</Badge>
                   </div>
                 </Link>
               ))}

@@ -6,13 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { subscribeToRealtimeInvalidation } from "@/lib/supabase/realtime-invalidation";
-import { sanitizeText } from "@/lib/validation";
+import { stripHtml } from "@/lib/validation";
 
 // ── Module-level cache ──────────────────────────────────────────────
 // Persists across Provider re-mounts so tab navigation never re-fetches
 // fresh data from Supabase unless stale.
 const globalLoadedCache = new Map<string, number>();
-const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 function isCacheFresh(key: string): boolean {
   const ts = globalLoadedCache.get(key);
@@ -62,7 +62,8 @@ function sanitizeEntity<T extends Record<string, unknown>>(entity: T): T {
   for (const key of Object.keys(sanitized)) {
     const val = sanitized[key];
     if (typeof val === "string") {
-      (sanitized as Record<string, unknown>)[key] = sanitizeText(val);
+      // Strip HTML but preserve full length — DB columns handle their own limits
+      (sanitized as Record<string, unknown>)[key] = stripHtml(val);
     } else if (val && typeof val === "object" && !Array.isArray(val) && !(val instanceof Date)) {
       (sanitized as Record<string, unknown>)[key] = sanitizeEntity(val as Record<string, unknown>);
     }
@@ -266,14 +267,34 @@ export function createEntityStore<T extends IdEntity>(
               ? raw.map((row) => mapFromSupabase<T>(row, opts.columnMap))
               : (raw as T[]);
             // Merge optimistic items: keep any locally-added items that
-            // aren't yet in the Supabase response (write may be in-flight)
+            // aren't yet in the Supabase response (write may be in-flight).
+            // For items in BOTH local + Supabase, merge local fields into
+            // the Supabase version so local-only data isn't lost.
             const fetchedIds = new Set(fetched.map((item) => item.id));
+            const localById = new Map(itemsRef.current.map((item) => [item.id, item]));
             const optimistic = itemsRef.current.filter(
               (item) => !fetchedIds.has(item.id)
             );
+            const mergedFetched = fetched.map((fetchedItem) => {
+              const localItem = localById.get(fetchedItem.id);
+              if (!localItem) return fetchedItem;
+              // Preserve local-only fields that Supabase doesn't return
+              const combined = { ...localItem, ...fetchedItem };
+              // Restore local fields that were stripped/missing from Supabase
+              for (const key of Object.keys(localItem as Record<string, unknown>)) {
+                const localVal = (localItem as Record<string, unknown>)[key];
+                const fetchedVal = (fetchedItem as Record<string, unknown>)[key];
+                const fetchedEmpty = fetchedVal === undefined || fetchedVal === null || (Array.isArray(fetchedVal) && fetchedVal.length === 0);
+                const localHasData = localVal != null && !(Array.isArray(localVal) && localVal.length === 0);
+                if (localHasData && fetchedEmpty) {
+                  (combined as Record<string, unknown>)[key] = localVal;
+                }
+              }
+              return combined;
+            });
             const merged = optimistic.length > 0
-              ? [...fetched, ...optimistic]
-              : fetched;
+              ? [...mergedFetched, ...optimistic]
+              : mergedFetched;
             setItems(merged);
             itemsRef.current = merged;
             // Cache to localStorage for offline resilience
@@ -529,7 +550,10 @@ export function createEntityStore<T extends IdEntity>(
         // With Supabase, RLS already filters by company, but filter client-side too for safety
         if (!companyId) return [];
         return items.filter(
-          (item) => "company_id" in item && (item as unknown as CompanyEntity).company_id === companyId
+          (item) => "company_id" in item && (
+            (item as unknown as CompanyEntity).company_id === companyId ||
+            (item as unknown as CompanyEntity).company_id === "__built_in__"
+          )
         );
       },
       [items]

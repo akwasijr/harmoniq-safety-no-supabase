@@ -218,12 +218,12 @@ export default function CorrectiveActionsPage() {
                           </Link>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge variant={action.severity === "critical" || action.severity === "high" ? "destructive" : action.severity === "medium" ? "warning" : "secondary"} className="capitalize">
+                          <Badge variant={action.severity === "critical" || action.severity === "high" ? "destructive" : action.severity === "medium" ? "warning" : "secondary"}>
                             {action.severity}
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge variant={action.status === "completed" ? "success" : action.status === "in_progress" ? "warning" : isOverdue ? "destructive" : "secondary"} className="capitalize">
+                          <Badge variant={action.status === "completed" ? "success" : action.status === "in_progress" ? "warning" : isOverdue ? "destructive" : "secondary"}>
                             {isOverdue && action.status !== "completed" ? "Overdue" : action.status.replace(/_/g, " ")}
                           </Badge>
                         </td>

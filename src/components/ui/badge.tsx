@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
  * Dark mode: inline styles with specific hex values for guaranteed contrast
  */
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border border-transparent px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
@@ -25,7 +25,7 @@ const badgeVariants = cva(
           "bg-[#b45309] text-white dark:bg-[#78350f] dark:text-[#fcd34d]",
         info:
           "bg-[#2563eb] text-white dark:bg-[#1e3a5f] dark:text-[#93c5fd]",
-        outline: "text-foreground bg-muted/50 border-border",
+        outline: "text-foreground bg-muted/50 border border-border",
         // Status variants
         "in-progress": "bg-[#2563eb] text-white dark:bg-[#1e3a5f] dark:text-[#93c5fd]",
         in_progress: "bg-[#2563eb] text-white dark:bg-[#1e3a5f] dark:text-[#93c5fd]",

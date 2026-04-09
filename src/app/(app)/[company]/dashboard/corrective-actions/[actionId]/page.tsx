@@ -161,10 +161,10 @@ export default function CorrectiveActionDetailPage() {
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-semibold">{t("correctiveActions.detail.title")}</h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <Badge variant={severityVariant as "destructive" | "warning" | "secondary"} className="capitalize">
+            <Badge variant={severityVariant as "destructive" | "warning" | "secondary"}>
               {action.severity}
             </Badge>
-            <Badge variant={statusVariant as "success" | "warning" | "secondary" | "destructive"} className="capitalize gap-1">
+            <Badge variant={statusVariant as "success" | "warning" | "secondary" | "destructive"} className="gap-1">
               {isOverdue ? (
                 <>
                   <AlertTriangle className="h-3 w-3" />
@@ -333,7 +333,7 @@ export default function CorrectiveActionDetailPage() {
                       <p className="font-medium truncate">{workOrder.title}</p>
                       <p className="text-sm text-muted-foreground capitalize">{workOrder.status.replace(/_/g, " ")}</p>
                     </div>
-                    <Badge variant="secondary" className="capitalize shrink-0">{workOrder.priority}</Badge>
+                    <Badge variant="secondary" className="shrink-0">{workOrder.priority}</Badge>
                   </Link>
                 ))}
               </CardContent>
@@ -359,7 +359,7 @@ export default function CorrectiveActionDetailPage() {
                     <p className="font-medium truncate">{linkedIncident.title}</p>
                     <p className="text-sm text-muted-foreground capitalize">{linkedIncident.status.replace("_", " ")}</p>
                   </div>
-                  <Badge variant="secondary" className="capitalize shrink-0">{linkedIncident.severity}</Badge>
+                  <Badge variant="secondary" className="shrink-0">{linkedIncident.severity}</Badge>
                 </Link>
               </CardContent>
             </Card>

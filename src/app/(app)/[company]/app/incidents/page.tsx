@@ -25,11 +25,11 @@ import { NoDataEmptyState, NoResultsEmptyState } from "@/components/ui/empty-sta
 import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
 
 const STATUS_CLASSES = {
-  new: { color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: Clock },
-  in_progress: { color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", icon: Clock },
-  in_review: { color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400", icon: Clock },
-  resolved: { color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle },
-  archived: { color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200", icon: CheckCircle },
+  new: { variant: "info" as const, icon: Clock },
+  in_progress: { variant: "in_progress" as const, icon: Clock },
+  in_review: { variant: "in_review" as const, icon: Clock },
+  resolved: { variant: "resolved" as const, icon: CheckCircle },
+  archived: { variant: "archived" as const, icon: CheckCircle },
 };
 
 const STATUS_TRANSLATION_KEYS: Record<string, string> = {
@@ -195,7 +195,7 @@ export default function EmployeeIncidentsPage() {
                   </div>
 
                   {incident.status !== "new" && (
-                    <Badge className={`text-[10px] ${statusConfig.color}`} variant="secondary">
+                    <Badge className="text-[10px]" variant={statusConfig.variant}>
                       {statusLabel}
                     </Badge>
                   )}

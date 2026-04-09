@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -50,8 +50,13 @@ export default function EmployeeAssetsPage() {
   const { items: workOrders } = useWorkOrdersStore();
   const { items: inspectionRoutes } = useInspectionRoutesStore();
   const { t, formatDate } = useTranslation();
+  const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = React.useState<SubTab>("browse");
+  const [activeTab, setActiveTab] = React.useState<SubTab>(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "work" || tabParam === "rounds" || tabParam === "browse") return tabParam;
+    return "browse";
+  });
   const [search, setSearch] = React.useState("");
   const [browseSearch, setBrowseSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");

@@ -28,6 +28,7 @@ import { useToast } from "@/components/ui/toast";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ChecklistResponse } from "@/types";
+import { getProcedureTemplateIdForType } from "@/data/work-order-procedure-templates";
 
 export default function WorkOrderProcedurePage() {
   const router = useRouter();
@@ -53,8 +54,11 @@ export default function WorkOrderProcedurePage() {
 
   const order = workOrders.find((item) => item.id === orderId && item.company_id === user?.company_id);
   const asset = order?.asset_id ? assets.find((item) => item.id === order.asset_id) : null;
-  const location = asset?.location_id ? locations.find((item) => item.id === asset.location_id) : null;
-  const template = order?.checklist_template_id ? templates.find((tpl) => tpl.id === order.checklist_template_id) : undefined;
+  const directLocation = order?.location_id ? locations.find((item) => item.id === order.location_id) : null;
+  const assetLocation = asset?.location_id ? locations.find((item) => item.id === asset.location_id) : null;
+  const location = directLocation ?? assetLocation;
+  const templateId = order?.checklist_template_id || (order ? getProcedureTemplateIdForType(order.type) : undefined);
+  const template = templateId ? templates.find((tpl) => tpl.id === templateId) : undefined;
   const existingSubmission = order?.checklist_submission_id ? submissions.find((item) => item.id === order.checklist_submission_id) : null;
 
   React.useEffect(() => {
@@ -130,7 +134,7 @@ export default function WorkOrderProcedurePage() {
     return {
       template_id: template.id,
       submitter_id: user?.id || "user_1",
-      location_id: asset?.location_id || user?.location_id || null,
+        location_id: order?.location_id || asset?.location_id || user?.location_id || null,
       responses: Object.entries(answers).map(([item_id, value]) => ({
         item_id,
         value: toResponseValue(value),
@@ -242,20 +246,6 @@ export default function WorkOrderProcedurePage() {
           <div className="h-full bg-primary transition-all duration-300" style={{ width: `${((currentItem + 1) / items.length) * 100}%` }} />
         </div>
       </header>
-
-      <div className="border-b bg-muted/30 p-4">
-        <div className="space-y-2 text-sm">
-          <p className="font-medium">{order.description}</p>
-          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-            {asset && (
-              <span className="inline-flex items-center gap-1"><Package className="h-3.5 w-3.5" />{asset.name}</span>
-            )}
-            {location && (
-              <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{location.name}</span>
-            )}
-          </div>
-        </div>
-      </div>
 
       <div className="flex-1 p-4 pb-56">
         <div className="mb-6 flex items-center gap-3">
@@ -370,9 +360,9 @@ export default function WorkOrderProcedurePage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background p-4 pb-6 safe-area-inset-bottom">
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background p-4 pb-[calc(env(safe-area-inset-bottom,0px)+80px)]">
         {answers[currentQuestion.id] && (
-          <Button onClick={handleNext} disabled={isSubmitting} className="h-14 w-full gap-2 text-base">
+          <Button onClick={handleNext} disabled={isSubmitting} size="xl" className="w-full gap-2">
             {isSubmitting ? t("checklists.submitting") : isLastItem ? <><CheckCircle className="h-5 w-5" />Submit work order</> : <>{t("checklists.nextItem")}<ArrowRight className="h-5 w-5" /></>}
           </Button>
         )}

@@ -4,6 +4,7 @@ import {
   Page,
   Text,
   View,
+  Image as PdfImage,
   StyleSheet,
 } from "@react-pdf/renderer";
 import type {
@@ -675,13 +676,14 @@ export function IncidentReportPDF({
           {incident.description || "No description provided."}
         </Text>
 
-        {/* Attachments count */}
+        {/* Photos */}
         {incident.media_urls && incident.media_urls.length > 0 && (
           <>
-            <View style={s.spacer} />
-            <View style={s.detailRow}>
-              <Text style={s.detailLabel}>Attachments</Text>
-              <Text style={s.detailValue}>{incident.media_urls.length} file(s) attached</Text>
+            <Text style={s.sectionHeader}>Photos ({incident.media_urls.length})</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {incident.media_urls.filter((url) => url.startsWith("data:image")).slice(0, 6).map((url, idx) => (
+                <PdfImage key={idx} src={url} style={{ width: 150, height: 120, objectFit: "cover", borderRadius: 4 }} />
+              ))}
             </View>
           </>
         )}
@@ -724,6 +726,99 @@ export function IncidentReportPDF({
     </Document>
   );
 }
+
+// ── Work Order PDF ─────────────────────────────────────────────────────────────
+
+export interface WorkOrderPDFProps {
+  companyName: string;
+  workOrder: {
+    reference: string;
+    title: string;
+    description: string;
+    type: string;
+    priority: string;
+    status: string;
+    asset?: string;
+    location?: string;
+    assigned_to?: string;
+    assigned_team?: string;
+    due_date?: string | null;
+    estimated_hours?: number | null;
+    actual_hours?: number | null;
+    parts_cost?: number | null;
+    labor_cost?: number | null;
+    declined_reason?: string | null;
+    completed_at?: string | null;
+    created_at: string;
+    procedure_name?: string;
+    procedure_steps?: number;
+  };
+}
+
+export function WorkOrderPDF({ companyName, workOrder }: WorkOrderPDFProps) {
+  const generatedAt = fmtDateTime(new Date());
+  const totalCost = (workOrder.parts_cost || 0) + (workOrder.labor_cost || 0);
+  const fields: Array<{ label: string; value: string }> = [
+    { label: 'Reference', value: workOrder.reference },
+    { label: 'Type', value: workOrder.type.replace(/_/g, ' ') },
+    { label: 'Priority', value: workOrder.priority },
+    { label: 'Status', value: workOrder.status.replace(/_/g, ' ') },
+    { label: 'Asset', value: workOrder.asset || '—' },
+    { label: 'Location', value: workOrder.location || '—' },
+    { label: 'Assigned to', value: workOrder.assigned_to || 'Unassigned' },
+    { label: 'Team', value: workOrder.assigned_team || '—' },
+    { label: 'Due date', value: workOrder.due_date || '—' },
+    { label: 'Estimated hours', value: workOrder.estimated_hours != null ? workOrder.estimated_hours + 'h' : '—' },
+    { label: 'Actual hours', value: workOrder.actual_hours != null ? workOrder.actual_hours + 'h' : '—' },
+  ];
+  if (totalCost > 0) fields.push({ label: 'Total cost', value: '$' + totalCost.toFixed(2) });
+  if (workOrder.procedure_name) fields.push({ label: 'Procedure', value: workOrder.procedure_name + ' (' + (workOrder.procedure_steps || 0) + ' steps)' });
+  if (workOrder.declined_reason) fields.push({ label: 'Declined', value: workOrder.declined_reason });
+  if (workOrder.completed_at) fields.push({ label: 'Completed', value: fmtDateTime(new Date(workOrder.completed_at)) });
+  fields.push({ label: 'Created', value: fmtDateTime(new Date(workOrder.created_at)) });
+
+  return (
+    <Document>
+      <Page size="A4" style={s.page}>
+        <View style={s.header}>
+          <Text style={s.companyName}>{companyName}</Text>
+          <Text style={s.headerTitle}>Work Order Report</Text>
+          <View style={s.headerMeta}>
+            <Text style={s.metaItem}>{workOrder.reference}</Text>
+            <Text style={s.metaItem}>Generated {generatedAt}</Text>
+          </View>
+          <View style={s.headerDivider} />
+        </View>
+
+        <Text style={s.sectionHeader}>Details</Text>
+        <View style={s.summaryRow}>
+          {fields.slice(0, 4).map((f) => (
+            <View key={f.label} style={s.summaryBox}>
+              <Text style={s.summaryLabel}>{f.label}</Text>
+              <Text style={s.summaryValue}>{f.value}</Text>
+            </View>
+          ))}
+        </View>
+
+        {workOrder.description && (
+          <>
+            <Text style={s.sectionHeader}>Description</Text>
+            <Text style={{ fontSize: 9, color: colors.darkGrey, lineHeight: 1.5 }}>{workOrder.description}</Text>
+          </>
+        )}
+
+        <Text style={s.sectionHeader}>Assignment & Work Log</Text>
+        {fields.slice(4).map((f) => (
+          <View key={f.label} style={{ flexDirection: "row", marginBottom: 4 }}>
+            <Text style={{ fontSize: 8, color: colors.grey, width: 100 }}>{f.label}</Text>
+            <Text style={{ fontSize: 9, color: colors.black }}>{f.value}</Text>
+          </View>
+        ))}
+      </Page>
+    </Document>
+  );
+}
+
 
 // ── Download helper ────────────────────────────────────────────────────────────
 

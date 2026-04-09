@@ -13,7 +13,10 @@ interface Location {
   count: number;
 }
 
-export default function LeafletMap({ locations }: { locations: Location[] }) {
+const LIGHT_TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+const DARK_TILES = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
+export default function LeafletMap({ locations, darkMode = false }: { locations: Location[]; darkMode?: boolean }) {
   const mapRef = React.useRef<HTMLDivElement>(null);
   const mapInstanceRef = React.useRef<L.Map | null>(null);
 
@@ -29,7 +32,7 @@ export default function LeafletMap({ locations }: { locations: Location[] }) {
       zoomControl: true,
     });
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer(darkMode ? DARK_TILES : LIGHT_TILES, {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
       maxZoom: 18,
     }).addTo(map);

@@ -29,6 +29,16 @@
   transform: rotate(3deg) translate(0px, -4px);
 }
 
+/* Page content fade-in animation */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#main-content > * {
+  animation: page-fade-in 0.2s ease-out;
+}
+
 /* ============================================
    STRIPE-STYLE CORNER GRADIENT — Auth pages
    ============================================ */

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import jsQR from "jsqr";
+import type jsQRType from "jsqr";
 import {
   ArrowLeft,
   QrCode,
@@ -51,6 +51,7 @@ export default function ScanAssetPage() {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
   const scanIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  const jsQRRef = React.useRef<typeof jsQRType | null>(null);
   const [lastScannedCode, setLastScannedCode] = React.useState<string | null>(null);
 
   const rawFoundAsset = foundAssetId ? assets.find((a) => a.id === foundAssetId) : null;
@@ -99,7 +100,7 @@ export default function ScanAssetPage() {
         }
 
         // Start scanning frames with jsQR
-        const scanFrame = () => {
+        const scanFrame = async () => {
           if (cancelled || !videoRef.current || !canvasRef.current) return;
           
           const video = videoRef.current;
@@ -121,8 +122,11 @@ export default function ScanAssetPage() {
           // Get image data for jsQR
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           
-          // Decode QR code
-          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          // Decode QR code (lazy-load jsQR on first frame)
+          if (!jsQRRef.current) {
+            jsQRRef.current = (await import("jsqr")).default;
+          }
+          const code = jsQRRef.current(imageData.data, imageData.width, imageData.height, {
             inversionAttempts: "dontInvert",
           });
           
@@ -346,6 +350,10 @@ export default function ScanAssetPage() {
             <Button className="w-full h-14 gap-2 text-base" onClick={navigateToInspection}>
               <ScanLine className="h-5 w-5" />
               {t("assets.startInspection")}
+            </Button>
+            <Button variant="outline" className="w-full h-12 gap-2" onClick={() => router.push(`/${company}/app/report?asset=${foundAssetId}`)}>
+              <AlertTriangle className="h-5 w-5" />
+              Report incident
             </Button>
             <Button variant="outline" className="w-full h-12 gap-2" onClick={navigateToAsset}>
               <Package className="h-5 w-5" />

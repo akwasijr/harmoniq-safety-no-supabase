@@ -3,10 +3,36 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, Bell } from "lucide-react";
+import { Shield, Bell, RefreshCw } from "lucide-react";
 import { BottomTabs } from "@/components/navigation/bottom-tabs";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { getFieldAppShellStyle } from "@/lib/field-app-settings";
+import { useOfflineSync, getPendingReports } from "@/lib/offline-queue";
+import { useIncidentsStore } from "@/stores/incidents-store";
+
+function SyncIcon({ company }: { company: string }) {
+  const count = getPendingReports().length;
+  if (count === 0) return null;
+  return (
+    <Link href={`/${company}/app/sync`} className="relative p-2" aria-label={`${count} pending sync`}>
+      <RefreshCw className="h-5 w-5 text-brand-solid-foreground/80" />
+      <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
+        {count}
+      </span>
+    </Link>
+  );
+}
+
+function OfflineBanner() {
+  const { add: addIncident } = useIncidentsStore();
+  const { online } = useOfflineSync(addIncident);
+  if (online) return null;
+  return (
+    <div className="bg-amber-600 text-white text-center text-xs py-1.5 px-4">
+      You're offline — submissions are saved locally
+    </div>
+  );
+}
 
 const BOTTOM_NAV_HIDDEN_ROUTES = [
   "/app/report",
@@ -17,7 +43,6 @@ const BOTTOM_NAV_HIDDEN_ROUTES = [
   "/app/inspection/",
   "/app/inspection-round",
   "/app/incidents/",
-  "/app/tasks/work-orders/",
 ];
 
 const HEADER_HIDDEN_ROUTES = [
@@ -56,13 +81,17 @@ export function EmployeeAppLayout({
 }: EmployeeAppLayoutProps) {
   const { settings } = useFieldAppSettings();
   const pathname = usePathname();
+  const base = `/${company}`;
+  const isWorkOrderProcedureRoute = pathname.startsWith(`${base}/app/tasks/work-orders/`) && pathname.endsWith("/procedure");
   const hideBottomNav = (() => {
     const p = pathname;
-    const base = `/${company}`;
     if (BOTTOM_NAV_HIDDEN_ROUTES.some((route) => {
       const fullRoute = `${base}${route}`;
       return p === fullRoute || p.startsWith(fullRoute.endsWith("/") ? fullRoute : `${fullRoute}/`);
     })) {
+      return true;
+    }
+    if (isWorkOrderProcedureRoute) {
       return true;
     }
     const raPrefix = `${base}${RISK_ASSESSMENT_FORM_PREFIX}`;
@@ -74,7 +103,9 @@ export function EmployeeAppLayout({
 
   const hideHeader = (() => {
     const p = pathname;
-    const base = `/${company}`;
+    if (isWorkOrderProcedureRoute) {
+      return true;
+    }
     if (HEADER_HIDDEN_ROUTES.some((route) => {
       const fullRoute = `${base}${route}`;
       return p === fullRoute || p.startsWith(fullRoute.endsWith("/") ? fullRoute : `${fullRoute}/`);
@@ -109,16 +140,22 @@ export function EmployeeAppLayout({
             )}
             <span className="font-semibold text-sm text-brand-solid-foreground">{headerTitle || companyName}</span>
           </Link>
-          <Link href={`/${company}/app/notifications`} className="relative p-2" aria-label={`${notificationCount} notifications`}>
-            <Bell className="h-5 w-5 text-brand-solid-foreground/80" />
-            {notificationCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                {notificationCount > 99 ? "99+" : notificationCount}
-              </span>
-            )}
-          </Link>
+          <div className="flex items-center gap-1">
+            <SyncIcon company={company} />
+            <Link href={`/${company}/app/notifications`} className="relative p-2" aria-label={`${notificationCount} notifications`}>
+              <Bell className="h-5 w-5 text-brand-solid-foreground/80" />
+              {notificationCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {notificationCount > 99 ? "99+" : notificationCount}
+                </span>
+              )}
+            </Link>
+          </div>
         </header>
       )}
+
+      {/* Offline banner */}
+      <OfflineBanner />
 
       {/* Main content */}
       <main className={`flex-1 bg-muted ${hideBottomNav ? "pb-0" : "pb-[72px]"}`} style={{ marginTop: showHeader && !hideHeader ? -1 : 0 }}>{children}</main>
