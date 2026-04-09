@@ -225,7 +225,7 @@ export default function Home() {
 
 
       {/* ── Header ── */}
-      <header className="fixed top-20 left-1/2 -translate-x-1/2 z-50">
+      <header className="fixed top-5 left-1/2 -translate-x-1/2 z-50">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{
@@ -254,8 +254,8 @@ export default function Home() {
       </header>
 
       {/* ── Hero ── */}
-      <section ref={heroRef} className="relative min-h-[85vh] flex items-end z-10">
-        <div className="container mx-auto px-4 lg:px-8 relative z-10 pb-16 lg:pb-24">
+      <section ref={heroRef} className="relative min-h-screen flex items-end z-10">
+        <div className="container mx-auto px-4 lg:px-8 relative z-10 pb-12 lg:pb-16">
           <motion.div
             initial="hidden"
             animate="visible"
