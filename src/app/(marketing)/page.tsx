@@ -260,15 +260,15 @@ export default function Home() {
             initial="hidden"
             animate="visible"
             variants={stagger}
-            className="max-w-5xl"
+            className="max-w-5xl ml-auto text-right"
           >
-            <motion.h1 variants={fadeUp} className="font-[family-name:var(--font-playfair)] text-4xl sm:text-6xl lg:text-[6.5rem] font-normal italic tracking-tight leading-[1.0] text-white">
+            <motion.h1 variants={fadeUp} className="font-[family-name:var(--font-playfair)] text-4xl sm:text-6xl lg:text-[6.5rem] font-normal tracking-tight leading-[1.0] text-white">
               Safety and asset{"\n"}management, reimagined
             </motion.h1>
-            <motion.p variants={fadeUp} className="mt-8 text-lg lg:text-xl text-zinc-400 max-w-2xl leading-relaxed">
+            <motion.p variants={fadeUp} className="mt-8 text-lg lg:text-xl text-zinc-400 max-w-2xl ml-auto leading-relaxed">
               {t("hero.description")}
             </motion.p>
-            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4">
+            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-end">
               <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
                 {t("hero.cta_start")}
                 <ArrowRight className="h-4 w-4" />
