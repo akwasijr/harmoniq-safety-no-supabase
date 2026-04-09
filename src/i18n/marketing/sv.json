@@ -3,7 +3,7 @@
     "title": "Harmoniq",
     "subtitle": "Plattform för Arbetssäkerhet & Tillgångshantering",
     "description": "Rapportera incidenter, hantera risker, spåra tillgångar och säkerställ efterlevnad — allt i en kraftfull plattform byggd för moderna säkerhetsteam.",
-    "cta_start": "Kom igång",
+    "cta_start": "Logga in",
     "cta_demo": "Boka en Demo"
   },
   "trust": {
@@ -47,7 +47,7 @@
   "nav": {
     "industries": "Branscher",
     "faq": "FAQ",
-    "get_started": "Kom igång"
+    "get_started": "Logga in"
   },
   "stats": {
     "incidents_reported": "Incidenter rapporterade",

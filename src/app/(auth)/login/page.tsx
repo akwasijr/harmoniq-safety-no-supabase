@@ -61,6 +61,10 @@ function LoginForm() {
   const [emailError, setEmailError] = React.useState("");
   const [passwordError, setPasswordError] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
+  const [rememberMe, setRememberMe] = React.useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("harmoniq_remember") === "true";
+    return false;
+  });
   const [loginMode, setLoginMode] = React.useState<"password" | "magic">("password");
   const [lockoutRemaining, setLockoutRemaining] = React.useState(0);
   const [failedAttempts, setFailedAttempts] = React.useState(0);
@@ -83,6 +87,12 @@ function LoginForm() {
       setAppChoice(mobile ? "app" : (stored === "app" || stored === "dashboard" ? stored as AppChoice : "dashboard"));
     }
     setHasMounted(true);
+
+    // Restore remembered email
+    if (localStorage.getItem("harmoniq_remember") === "true") {
+      const savedEmail = localStorage.getItem("harmoniq_saved_email");
+      if (savedEmail) setEmail(savedEmail);
+    }
 
     const onResize = () => {
       const m = window.innerWidth < 768;
@@ -211,6 +221,15 @@ function LoginForm() {
       setSuccess("");
       setEmailError("");
       setPasswordError("");
+
+      // Save/clear remembered email
+      if (rememberMe) {
+        localStorage.setItem("harmoniq_remember", "true");
+        localStorage.setItem("harmoniq_saved_email", email);
+      } else {
+        localStorage.removeItem("harmoniq_remember");
+        localStorage.removeItem("harmoniq_saved_email");
+      }
 
       // Mock mode: authenticate against local mock users (password: demo123)
       if (IS_MOCK_MODE) {
@@ -533,7 +552,7 @@ function LoginForm() {
           <span className="text-lg font-semibold text-white">Harmoniq</span>
         </div>
 
-        <div className="rounded-xl bg-zinc-900/70 backdrop-blur-xl p-8">
+        <div className="p-8">
           {/* Header */}
           <h1 className="text-2xl font-bold tracking-tight text-white">{loginHeading}</h1>
           <p className="mt-2 mb-6 text-sm text-zinc-400">{loginDescription}</p>
@@ -627,6 +646,29 @@ function LoginForm() {
                 </div>
               </div>
 
+              {/* Remember me */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={rememberMe}
+                  onClick={() => setRememberMe(!rememberMe)}
+                  className={`flex h-4 w-4 items-center justify-center rounded border transition-colors ${rememberMe ? "bg-white border-white" : "border-zinc-600 bg-transparent hover:border-zinc-400"}`}
+                >
+                  {rememberMe && (
+                    <svg viewBox="0 0 12 12" className="h-3 w-3 text-black" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M2 6l3 3 5-5" />
+                    </svg>
+                  )}
+                </button>
+                <label
+                  className="text-xs text-zinc-400 cursor-pointer select-none"
+                  onClick={() => setRememberMe(!rememberMe)}
+                >
+                  {t("auth.rememberMe") || "Remember me"}
+                </label>
+              </div>
+
               {/* App chooser — hidden on mobile (auto-selects Field Worker), Platform only via /admin */}
               {hasMounted && !isMobile && !isPlatformMode && (
                 <div role="radiogroup" aria-label={t("auth.chooseApp") || "Choose app"}>
@@ -690,7 +732,7 @@ function LoginForm() {
         </div>
 
         {/* Footer */}
-        <div className="mt-5 rounded-lg bg-zinc-900/40 py-3 text-center text-sm text-zinc-400">
+        <div className="mt-5 py-3 text-center text-sm text-zinc-400">
           {"Don't have an account?"}{" "}
           <Link href="/signup" className="font-semibold text-white hover:text-zinc-300 transition-colors">
             Sign up for wait list

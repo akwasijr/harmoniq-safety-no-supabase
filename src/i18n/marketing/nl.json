@@ -3,7 +3,7 @@
     "title": "Harmoniq",
     "subtitle": "Platform voor Arbeidsveiligheid & Assetbeheer",
     "description": "Meld incidenten, beheer risico's, volg assets en zorg voor naleving — alles in één krachtig platform gebouwd voor moderne veiligheidsteams.",
-    "cta_start": "Aan de slag",
+    "cta_start": "Inloggen",
     "cta_demo": "Boek een Demo"
   },
   "trust": {
@@ -47,7 +47,7 @@
   "nav": {
     "industries": "Industrieën",
     "faq": "FAQ",
-    "get_started": "Aan de slag"
+    "get_started": "Inloggen"
   },
   "stats": {
     "incidents_reported": "Incidenten gemeld",

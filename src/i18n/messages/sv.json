@@ -1545,6 +1545,7 @@
     "signUp": "Registrera",
     "signingIn": "Loggar in…",
     "forgotPassword": "Glömt lösenord?",
+    "rememberMe": "Kom ihåg mig",
     "forgotPasswordTitle": "Återställ ditt lösenord",
     "forgotPasswordDesc": "Ange din e-post så skickar vi en återställningslänk",
     "sendResetLink": "Skicka återställningslänk",
