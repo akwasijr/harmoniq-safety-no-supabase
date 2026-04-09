@@ -225,7 +225,7 @@ export default function Home() {
 
 
       {/* ── Header ── */}
-      <header className="fixed top-5 left-1/2 -translate-x-1/2 z-50">
+      <header className="fixed top-10 left-1/2 -translate-x-1/2 z-50">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{
