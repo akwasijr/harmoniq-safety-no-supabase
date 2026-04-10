@@ -127,6 +127,7 @@ export default function NewUserPage() {
         created_at: now,
         updated_at: now,
         team_ids: formData.team_ids,
+        reports_to: null,
       };
       addUser(newUser);
       formData.team_ids.forEach((teamId) => {

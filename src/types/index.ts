@@ -322,6 +322,9 @@ export interface User {
   // Team membership
   team_ids: string[];
   
+  // Reporting hierarchy
+  reports_to: string | null; // User ID of direct manager/supervisor
+  
   // Custom permissions (in addition to role-based defaults)
   custom_permissions?: Permission[];
 }

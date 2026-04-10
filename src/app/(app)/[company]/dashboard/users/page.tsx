@@ -147,6 +147,8 @@ export default function UsersPage() {
     role: "employee",
     department: "",
     team_ids: [] as string[],
+    location_id: "",
+    reports_to: "",
   });
   const [showPermissions, setShowPermissions] = React.useState(false);
   const [customPermissions, setCustomPermissions] = React.useState<Permission[]>(() => [...ROLE_PERMISSIONS.employee]);
@@ -161,7 +163,7 @@ export default function UsersPage() {
 
   const { toast } = useToast();
   const filterOptions = useFilterOptions();
-  const { companyId, users, teams, stores } = useCompanyData();
+  const { companyId, users, teams, locations, stores } = useCompanyData();
   const { isLoading, add: addUser } = stores.users;
   const { add: addTeam, update: updateTeam } = stores.teams;
 
@@ -334,7 +336,7 @@ export default function UsersPage() {
 
       setShowAddModal(false);
       fetchInvitations();
-      setNewUser({ first_name: "", last_name: "", email: "", role: "employee", department: "", team_ids: [] });
+      setNewUser({ first_name: "", last_name: "", email: "", role: "employee", department: "", team_ids: [], location_id: "", reports_to: "" });
     } catch (err: unknown) {
       toast(err instanceof Error ? err.message : "Failed to create invitation");
     } finally {
@@ -701,6 +703,73 @@ export default function UsersPage() {
               <div>
                 <Label htmlFor="department">{t("users.labels.department")}</Label>
                 <Input id="department" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} placeholder={t("users.placeholders.department")} className="mt-1" />
+              </div>
+            </div>
+
+            {/* Location, Reports To, Team */}
+            <div className="grid gap-4 sm:grid-cols-2 mt-4">
+              <div>
+                <Label htmlFor="location">Location / Site</Label>
+                <select
+                  id="location"
+                  value={newUser.location_id}
+                  onChange={(e) => setNewUser({ ...newUser, location_id: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">All locations</option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="reports_to">Reports To</Label>
+                <select
+                  id="reports_to"
+                  value={newUser.reports_to}
+                  onChange={(e) => setNewUser({ ...newUser, reports_to: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">None</option>
+                  {users
+                    .filter((u) => ["company_admin", "manager", "safety_officer"].includes(u.role))
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>{u.full_name} ({u.role.replace(/_/g, " ")})</option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Label>Team / Group</Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {teams.map((team) => (
+                  <button
+                    key={team.id}
+                    type="button"
+                    onClick={() => {
+                      setNewUser((prev) => ({
+                        ...prev,
+                        team_ids: prev.team_ids.includes(team.id)
+                          ? prev.team_ids.filter((id) => id !== team.id)
+                          : [...prev.team_ids, team.id],
+                      }));
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                      newUser.team_ids.includes(team.id)
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: team.color }} />
+                    {team.name}
+                    {team.leader_id && <span className="text-[9px] opacity-60">· {users.find((u) => u.id === team.leader_id)?.first_name || "Lead"}</span>}
+                  </button>
+                ))}
+                {teams.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No teams created yet</p>
+                )}
               </div>
             </div>
 
