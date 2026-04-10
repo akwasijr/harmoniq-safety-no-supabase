@@ -149,7 +149,6 @@ const companyNavGroups: NavGroup[] = [
         href: "/dashboard/compliance",
         icon: ClipboardList,
         requiredRoles: ["company_admin", "manager", "super_admin", "viewer"],
-        comingSoon: true,
       },
     ],
   },

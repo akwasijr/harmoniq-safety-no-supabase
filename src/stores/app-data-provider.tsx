@@ -22,6 +22,9 @@ import { InspectionRoundsProvider } from "@/stores/inspection-rounds-store";
 import { TrainingCertTypesProvider } from "@/stores/training-cert-types-store";
 import { WorkerCertificationsProvider } from "@/stores/worker-certifications-store";
 import { TrainingAssignmentsProvider } from "@/stores/training-assignments-store";
+import { ComplianceObligationsProvider } from "@/stores/compliance-obligations-store";
+import { ComplianceEvidenceProvider } from "@/stores/compliance-evidence-store";
+import { ComplianceDocumentsProvider } from "@/stores/compliance-documents-store";
 import { NotificationsStoreProvider } from "@/stores/notifications-store";
 
 type DataProvider = React.ComponentType<{ children: React.ReactNode }>;
@@ -49,6 +52,9 @@ const APP_DATA_PROVIDERS: DataProvider[] = [
   TrainingCertTypesProvider,
   WorkerCertificationsProvider,
   TrainingAssignmentsProvider,
+  ComplianceObligationsProvider,
+  ComplianceEvidenceProvider,
+  ComplianceDocumentsProvider,
   NotificationsStoreProvider,
 ];
 

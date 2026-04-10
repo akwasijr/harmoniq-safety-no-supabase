@@ -1549,6 +1549,70 @@ export interface TrainingAssignment {
 }
 
 // ============================================
+// COMPLIANCE
+// ============================================
+
+export type ComplianceObligationFrequency = "one_time" | "daily" | "weekly" | "monthly" | "quarterly" | "annual" | "custom";
+export type ComplianceObligationStatus = "compliant" | "due_soon" | "overdue" | "not_started";
+export type ComplianceEvidenceType = "auto" | "manual" | "document";
+export type ComplianceEvidenceSource = "incident" | "inspection" | "training" | "risk_assessment" | "document" | "manual";
+
+export interface ComplianceObligation {
+  id: string;
+  company_id: string;
+  title: string;
+  description: string | null;
+  regulation: string;
+  country: Country;
+  category: "incident_reporting" | "risk_assessment" | "training" | "inspection" | "environmental" | "general";
+  frequency: ComplianceObligationFrequency;
+  custom_frequency_days: number | null;
+  next_due_date: string;
+  last_completed_date: string | null;
+  owner_id: string | null;
+  evidence_type: ComplianceEvidenceType;
+  auto_evidence_source: string | null;
+  status: ComplianceObligationStatus;
+  is_builtin: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ComplianceEvidence {
+  id: string;
+  company_id: string;
+  obligation_id: string;
+  period_start: string;
+  period_end: string;
+  source_type: ComplianceEvidenceSource;
+  source_id: string | null;
+  document_url: string | null;
+  notes: string | null;
+  submitted_by: string;
+  status: "pending_review" | "accepted" | "rejected";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
+export interface ComplianceDocument {
+  id: string;
+  company_id: string;
+  title: string;
+  category: "policy" | "procedure" | "sds" | "certificate" | "report" | "plan" | "other";
+  document_url: string;
+  version: string;
+  status: "draft" | "current" | "archived";
+  review_date: string | null;
+  owner_id: string | null;
+  tags: string[];
+  applicable_countries: Country[];
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
 // OFFLINE SYNC
 // ============================================
 

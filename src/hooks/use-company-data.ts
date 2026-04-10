@@ -21,6 +21,9 @@ import { useInspectionRoundsStore } from "@/stores/inspection-rounds-store";
 import { useTrainingCertTypesStore } from "@/stores/training-cert-types-store";
 import { useWorkerCertificationsStore } from "@/stores/worker-certifications-store";
 import { useTrainingAssignmentsStore } from "@/stores/training-assignments-store";
+import { useComplianceObligationsStore } from "@/stores/compliance-obligations-store";
+import { useComplianceEvidenceStore } from "@/stores/compliance-evidence-store";
+import { useComplianceDocumentsStore } from "@/stores/compliance-documents-store";
 
 /**
  * Returns all entity stores with items pre-filtered by the current user's company.
@@ -53,6 +56,9 @@ export function useCompanyData() {
   const trainingCertTypesStore = useTrainingCertTypesStore();
   const workerCertificationsStore = useWorkerCertificationsStore();
   const trainingAssignmentsStore = useTrainingAssignmentsStore();
+  const complianceObligationsStore = useComplianceObligationsStore();
+  const complianceEvidenceStore = useComplianceEvidenceStore();
+  const complianceDocumentsStore = useComplianceDocumentsStore();
 
   const incidents = useMemo(() => incidentsStore.itemsForCompany(companyId), [incidentsStore, companyId]);
   const assets = useMemo(() => assetsStore.itemsForCompany(companyId), [assetsStore, companyId]);
@@ -74,6 +80,9 @@ export function useCompanyData() {
   const trainingCertTypes = useMemo(() => trainingCertTypesStore.itemsForCompany(companyId), [trainingCertTypesStore, companyId]);
   const workerCertifications = useMemo(() => workerCertificationsStore.itemsForCompany(companyId), [workerCertificationsStore, companyId]);
   const trainingAssignments = useMemo(() => trainingAssignmentsStore.itemsForCompany(companyId), [trainingAssignmentsStore, companyId]);
+  const complianceObligations = useMemo(() => complianceObligationsStore.itemsForCompany(companyId), [complianceObligationsStore, companyId]);
+  const complianceEvidence = useMemo(() => complianceEvidenceStore.itemsForCompany(companyId), [complianceEvidenceStore, companyId]);
+  const complianceDocuments = useMemo(() => complianceDocumentsStore.itemsForCompany(companyId), [complianceDocumentsStore, companyId]);
 
   return {
     incidents,
@@ -96,6 +105,9 @@ export function useCompanyData() {
     trainingCertTypes,
     workerCertifications,
     trainingAssignments,
+    complianceObligations,
+    complianceEvidence,
+    complianceDocuments,
     // Expose raw stores for mutations (add/update/remove don't need filtering)
     stores: {
       incidents: incidentsStore,
@@ -118,6 +130,9 @@ export function useCompanyData() {
       trainingCertTypes: trainingCertTypesStore,
       workerCertifications: workerCertificationsStore,
       trainingAssignments: trainingAssignmentsStore,
+      complianceObligations: complianceObligationsStore,
+      complianceEvidence: complianceEvidenceStore,
+      complianceDocuments: complianceDocumentsStore,
     },
     companyId,
   };
