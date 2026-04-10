@@ -104,6 +104,24 @@ const companyNavGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Reporting",
+    items: [
+      {
+        title: "Analytics",
+        titleKey: "nav.analytics",
+        href: "/dashboard/analytics",
+        icon: BarChart3,
+        requiredRoles: ["company_admin", "manager", "super_admin", "viewer"],
+      },
+      {
+        title: "Documents",
+        href: "/dashboard/content",
+        icon: FileText,
+        requiredRoles: ["company_admin", "manager", "super_admin", "safety_officer"],
+      },
+    ],
+  },
+  {
     label: "Management",
     items: [
       {
@@ -133,24 +151,6 @@ const companyNavGroups: NavGroup[] = [
         icon: ClipboardList,
         requiredRoles: ["company_admin", "manager", "super_admin", "viewer"],
         comingSoon: true,
-      },
-    ],
-  },
-  {
-    label: "Reporting",
-    items: [
-      {
-        title: "Analytics",
-        titleKey: "nav.analytics",
-        href: "/dashboard/analytics",
-        icon: BarChart3,
-        requiredRoles: ["company_admin", "manager", "super_admin", "viewer"],
-      },
-      {
-        title: "Documents",
-        href: "/dashboard/content",
-        icon: FileText,
-        requiredRoles: ["company_admin", "manager", "super_admin", "safety_officer"],
       },
     ],
   },
