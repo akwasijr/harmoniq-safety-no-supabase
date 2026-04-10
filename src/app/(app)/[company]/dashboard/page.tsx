@@ -78,7 +78,7 @@ function getDateRangeFilter(dateRange: string): { start: Date; end: Date } {
 
 // ── Dashboard Focus Strip ──
 function DashboardFocusStrip({ tabs, company }: {
-  tabs: { id: string; label: string; dot: string; items: { id: string; title: string; href: string; time?: string }[] }[];
+  tabs: { id: string; label: string; dot: string; items: { id: string; title: string; subtitle?: string; type?: string; href: string; time?: string }[] }[];
   company: string;
 }) {
   const [activeTab, setActiveTab] = React.useState(tabs[0]?.id || "urgent");
@@ -122,9 +122,15 @@ function DashboardFocusStrip({ tabs, company }: {
               <Link
                 key={item.id}
                 href={item.href}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted/50 transition-colors group"
+                className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-muted/50 transition-colors group"
               >
-                <p className="flex-1 text-sm truncate">{item.title}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{item.title}</p>
+                  {item.subtitle && <p className="text-xs text-muted-foreground mt-0.5 truncate">{item.subtitle}</p>}
+                </div>
+                {item.type && (
+                  <Badge variant="outline" className="text-[10px] shrink-0">{item.type}</Badge>
+                )}
                 {item.time && (
                   <span className={cn(
                     "shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full",
@@ -409,9 +415,10 @@ export default function DashboardPage() {
   const isManager = ["company_admin", "manager", "super_admin"].includes(user?.role || "");
   const isDirector = user?.role === "viewer";
 
-  const focusUrgent: { id: string; title: string; href: string; time: string }[] = [];
-  const focusUpcoming: { id: string; title: string; href: string; time: string }[] = [];
-  const focusGoodToKnow: { id: string; title: string; href: string }[] = [];
+  type FocusStripItem = { id: string; title: string; subtitle?: string; type?: string; href: string; time?: string };
+  const focusUrgent: FocusStripItem[] = [];
+  const focusUpcoming: FocusStripItem[] = [];
+  const focusGoodToKnow: FocusStripItem[] = [];
 
   const daysOverdue = (date: string) => {
     const d = Math.floor((focusNow.getTime() - new Date(date).getTime()) / 86400000);
@@ -425,32 +432,38 @@ export default function DashboardPage() {
   // Manager sees: all critical incidents, overdue items across the board
   if (isManager) {
     incidents.filter((i) => (i.severity === "critical" || i.severity === "high") && i.status !== "resolved" && i.status !== "archived")
-      .slice(0, 3).forEach((i) => focusUrgent.push({ id: `inc-${i.id}`, title: i.title, href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) }));
+      .slice(0, 3).forEach((i) => {
+        const loc = locations.find((l) => l.id === i.location_id);
+        focusUrgent.push({ id: `inc-${i.id}`, title: i.title, subtitle: `${i.reference_number || ""} · ${loc?.name || i.building || "Unknown location"}`, type: i.severity, href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) });
+      });
     tickets.filter((t_) => t_.status !== "resolved" && t_.status !== "closed" && t_.due_date && new Date(t_.due_date) < focusNow)
-      .slice(0, 3).forEach((t_) => focusUrgent.push({ id: `tk-${t_.id}`, title: t_.title, href: `/${company}/dashboard/tickets/${t_.id}`, time: daysOverdue(t_.due_date!) }));
+      .slice(0, 3).forEach((t_) => focusUrgent.push({ id: `tk-${t_.id}`, title: t_.title, subtitle: `Ticket · ${t_.priority} priority`, type: "Ticket", href: `/${company}/dashboard/tickets/${t_.id}`, time: daysOverdue(t_.due_date!) }));
     workOrders.filter((w) => w.status !== "completed" && w.status !== "cancelled" && w.due_date && new Date(w.due_date) < focusNow)
-      .slice(0, 3).forEach((w) => focusUrgent.push({ id: `wo-${w.id}`, title: w.title, href: `/${company}/dashboard/work-orders/${w.id}`, time: daysOverdue(w.due_date!) }));
+      .slice(0, 3).forEach((w) => focusUrgent.push({ id: `wo-${w.id}`, title: w.title, subtitle: `Work order · ${w.type.replace(/_/g, " ")}`, type: "WO", href: `/${company}/dashboard/work-orders/${w.id}`, time: daysOverdue(w.due_date!) }));
     correctiveActions.filter((c) => c.status !== "completed" && c.due_date && new Date(c.due_date) < focusNow)
-      .slice(0, 2).forEach((c) => focusUrgent.push({ id: `ca-${c.id}`, title: c.description?.slice(0, 50) || "Corrective action", href: `/${company}/dashboard/corrective-actions/${c.id}`, time: daysOverdue(c.due_date!) }));
+      .slice(0, 2).forEach((c) => focusUrgent.push({ id: `ca-${c.id}`, title: c.description?.slice(0, 60) || "Corrective action", subtitle: `${c.severity} severity`, type: "Action", href: `/${company}/dashboard/corrective-actions/${c.id}`, time: daysOverdue(c.due_date!) }));
 
     // Upcoming
     tickets.filter((t_) => t_.status !== "resolved" && t_.status !== "closed" && t_.due_date && new Date(t_.due_date) >= focusNow && new Date(t_.due_date) <= focus7Days)
-      .slice(0, 3).forEach((t_) => focusUpcoming.push({ id: `tk-${t_.id}`, title: t_.title, href: `/${company}/dashboard/tickets/${t_.id}`, time: daysUntil(t_.due_date!) }));
+      .slice(0, 3).forEach((t_) => focusUpcoming.push({ id: `tk-${t_.id}`, title: t_.title, subtitle: `Ticket · ${t_.priority} priority`, type: "Ticket", href: `/${company}/dashboard/tickets/${t_.id}`, time: daysUntil(t_.due_date!) }));
     workOrders.filter((w) => w.status !== "completed" && w.status !== "cancelled" && w.due_date && new Date(w.due_date) >= focusNow && new Date(w.due_date) <= focus7Days)
-      .slice(0, 3).forEach((w) => focusUpcoming.push({ id: `wo-${w.id}`, title: w.title, href: `/${company}/dashboard/work-orders/${w.id}`, time: daysUntil(w.due_date!) }));
+      .slice(0, 3).forEach((w) => focusUpcoming.push({ id: `wo-${w.id}`, title: w.title, subtitle: `Work order · ${w.type.replace(/_/g, " ")}`, type: "WO", href: `/${company}/dashboard/work-orders/${w.id}`, time: daysUntil(w.due_date!) }));
   }
 
   // Director sees: high-level status items
   if (isDirector) {
     incidents.filter((i) => i.severity === "critical" && i.status !== "resolved" && i.status !== "archived")
-      .slice(0, 3).forEach((i) => focusUrgent.push({ id: `inc-${i.id}`, title: i.title, href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) }));
+      .slice(0, 3).forEach((i) => {
+        const loc = locations.find((l) => l.id === i.location_id);
+        focusUrgent.push({ id: `inc-${i.id}`, title: i.title, subtitle: `${i.reference_number || ""} · ${loc?.name || ""}`, type: i.severity, href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) });
+      });
   }
 
   // Good to Know for both
   const weekAgo = new Date(focusNow.getTime() - 7 * 86400000);
   const resolvedThisWeek = incidents.filter((i) => i.status === "resolved" && i.resolved_at && new Date(i.resolved_at) > weekAgo).length;
-  if (resolvedThisWeek > 0) focusGoodToKnow.push({ id: "resolved-week", title: `${resolvedThisWeek} incidents resolved this week`, href: `/${company}/dashboard/incidents` });
-  if (expiryAlerts.length === 0) focusGoodToKnow.push({ id: "no-expiry", title: "No upcoming asset expiries", href: `/${company}/dashboard/assets` });
+  if (resolvedThisWeek > 0) focusGoodToKnow.push({ id: "resolved-week", title: `${resolvedThisWeek} incidents resolved this week`, subtitle: "Team is making progress", href: `/${company}/dashboard/incidents` });
+  if (expiryAlerts.length === 0) focusGoodToKnow.push({ id: "no-expiry", title: "No upcoming asset expiries", subtitle: "All assets within compliance window", href: `/${company}/dashboard/assets` });
 
   const focusTabs = [
     { id: "urgent" as const, label: "Urgent", dot: "bg-red-500", items: focusUrgent },
@@ -476,11 +489,6 @@ export default function DashboardPage() {
 
       {/* Onboarding Checklist */}
       <OnboardingChecklist />
-
-      {/* Focus Strip */}
-      {(isManager || isDirector) && (
-        <DashboardFocusStrip tabs={focusTabs} company={company} />
-      )}
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -558,51 +566,10 @@ export default function DashboardPage() {
             />
           </ChartCard>
 
-          {/* Recent Incidents */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-base font-medium">{t("dashboard.recentIncidents")}</CardTitle>
-              <Link href={`/${company}/dashboard/incidents`}>
-                <Button variant="ghost" size="sm" className="gap-1">
-                  {t("common.viewAll")} <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {recentFilteredIncidents.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No incidents match the current filters</p>
-                ) : recentFilteredIncidents.map((incident) => (
-                  <Link
-                    key={incident.id}
-                    href={`/${company}/dashboard/incidents/${incident.id}`}
-                    className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">{incident.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {incident.reference_number} • {formatDate(incident.incident_date)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={incident.severity}>{incident.severity}</Badge>
-                      <Badge
-                        variant={
-                          incident.status === "new"
-                            ? "destructive"
-                            : incident.status === "resolved"
-                            ? "success"
-                            : "secondary"
-                        }
-                      >
-                        {incident.status.replace("_", " ")}
-                      </Badge>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Focus Strip — replaces Recent Incidents */}
+          {(isManager || isDirector) && (
+            <DashboardFocusStrip tabs={focusTabs} company={company} />
+          )}
         </div>
       </div>
     </div>
