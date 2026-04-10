@@ -383,7 +383,7 @@ export default function Home() {
             >
               <motion.h2
                 variants={fadeUp}
-                className="text-3xl sm:text-4xl lg:text-6xl font-normal leading-tight text-white"
+                className="text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight text-white"
               >
                 {t("features.heading")}
               </motion.h2>
@@ -638,7 +638,7 @@ export default function Home() {
             whileInView="visible"
             viewport={{ once: false }}
             variants={fadeUp}
-            className="text-4xl sm:text-5xl font-bold text-center mb-16"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-16"
           >
             {t("success.heading")}
           </motion.h2>
@@ -701,7 +701,7 @@ export default function Home() {
           >
             <motion.div variants={fadeUp} className="mb-16">
               <h2
-                className="text-3xl sm:text-4xl lg:text-6xl font-normal leading-tight text-white mb-4"
+                className="text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight text-white mb-4"
               >
                 {t("industries.heading")}
               </h2>
@@ -852,7 +852,7 @@ export default function Home() {
             whileInView="visible"
             viewport={{ once: false }}
             variants={fadeUp}
-            className="text-3xl sm:text-4xl font-bold text-center mb-12"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12"
           >
             {t("faq_section.heading")}
           </motion.h2>
@@ -1385,7 +1385,7 @@ function WaitlistSection() {
             className="rounded-3xl bg-zinc-900/40 p-10"
           >
             <CheckCircle2 className="h-12 w-12 text-green-400 mx-auto mb-4" />
-            <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-3">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-3">
               You&apos;re on the list!
             </h2>
             <p className="text-lg text-zinc-400 leading-relaxed">
@@ -1395,7 +1395,7 @@ function WaitlistSection() {
         ) : (
           <div className="rounded-3xl bg-zinc-900/40 p-10">
             <Mail className="h-10 w-10 text-zinc-400 mx-auto mb-4" />
-            <h2 className="text-4xl sm:text-5xl font-bold leading-tight mb-3">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-3">
               {t("cta.heading")}
             </h2>
             <p className="text-lg text-zinc-400 leading-relaxed mb-8">
