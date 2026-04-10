@@ -62,6 +62,7 @@ type FocusItem = {
   subtitle: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  time?: string;
 };
 
 type FocusTab = "urgent" | "upcoming" | "good_to_know";
@@ -123,6 +124,12 @@ function FieldFocus({
             >
               <item.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
               <p className="flex-1 text-sm font-normal truncate">{item.title}</p>
+              {item.time && (
+                <span className={cn(
+                  "shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full",
+                  activeTab === "urgent" ? "text-red-500 bg-red-500/10" : "text-amber-500 bg-amber-500/10"
+                )}>{item.time}</span>
+              )}
               <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
             </Link>
           ))}
@@ -437,6 +444,14 @@ export default function EmployeeAppHomePage() {
   const now = new Date(stableNow);
   const sevenDaysFromNow = new Date(stableNow + 7 * 24 * 60 * 60 * 1000);
 
+  const overdueSince = (date: string) => {
+    const diff = now.getTime() - new Date(date).getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return "Today";
+    if (days === 1) return "1d overdue";
+    return `${days}d overdue`;
+  };
+
   const focusUrgent: FocusItem[] = [];
   const focusUpcoming: FocusItem[] = [];
   const focusGoodToKnow: FocusItem[] = [];
@@ -452,6 +467,7 @@ export default function EmployeeAppHomePage() {
         subtitle: `${inc.severity} incident · ${inc.status}`,
         href: `/${company}/app/incidents/${inc.id}`,
         icon: AlertCircle,
+        time: overdueSince(inc.incident_date),
       });
     });
 
@@ -465,6 +481,7 @@ export default function EmployeeAppHomePage() {
         subtitle: `Overdue · was due ${tk.due_date}`,
         href: `/${company}/app/tasks/tickets/${tk.id}`,
         icon: Ticket,
+        time: overdueSince(tk.due_date!),
       });
     });
 
@@ -478,6 +495,7 @@ export default function EmployeeAppHomePage() {
         subtitle: `Overdue work order · ${wo.priority}`,
         href: `/${company}/app/tasks/work-orders/${wo.id}`,
         icon: Wrench,
+        time: overdueSince(wo.due_date!),
       });
     });
 
@@ -491,6 +509,7 @@ export default function EmployeeAppHomePage() {
         subtitle: `Overdue · ${ca.severity} severity`,
         href: `/${company}/app/tasks/actions/${ca.id}`,
         icon: AlertTriangle,
+        time: overdueSince(ca.due_date!),
       });
     });
 
@@ -502,8 +521,17 @@ export default function EmployeeAppHomePage() {
       subtitle: dc.label || "Checklist due",
       href: `/${company}/app/checklists/${dc.template.id}`,
       icon: ClipboardCheck,
+      time: "Due now",
     });
   });
+
+  const dueIn = (date: string) => {
+    const diff = new Date(date).getTime() - now.getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return "Today";
+    if (days === 1) return "Tomorrow";
+    return `In ${days}d`;
+  };
 
   // Upcoming: tickets/WOs/actions due within 7 days
   userTickets
@@ -515,6 +543,7 @@ export default function EmployeeAppHomePage() {
         subtitle: `Due ${tk.due_date}`,
         href: `/${company}/app/tasks/tickets/${tk.id}`,
         icon: Clock,
+        time: dueIn(tk.due_date!),
       });
     });
 
@@ -527,6 +556,7 @@ export default function EmployeeAppHomePage() {
         subtitle: `Due ${wo.due_date} · ${wo.type.replace(/_/g, " ")}`,
         href: `/${company}/app/tasks/work-orders/${wo.id}`,
         icon: Wrench,
+        time: dueIn(wo.due_date!),
       });
     });
 
@@ -539,6 +569,7 @@ export default function EmployeeAppHomePage() {
         subtitle: `Due ${ca.due_date}`,
         href: `/${company}/app/tasks/actions/${ca.id}`,
         icon: Clock,
+        time: dueIn(ca.due_date!),
       });
     });
 
