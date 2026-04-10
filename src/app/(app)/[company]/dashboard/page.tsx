@@ -351,8 +351,9 @@ export default function DashboardPage() {
   const trir = hoursWorked > 0 ? Math.round((recordableIncidents * 200000 / hoursWorked) * 100) / 100 : 0;
 
   // LTIFR = (Lost Time Injuries × 1,000,000) / Total Hours Worked
-  const lostTimeIncidents = incidents.filter((i) => i.lost_time === true).length;
-  const ltifr = hoursWorked > 0 ? Math.round((lostTimeIncidents * 1000000 / hoursWorked) * 100) / 100 : 0;
+  const lostTimeIncidents = incidents.filter((i) => i.lost_time === true);
+  const totalLostDays = lostTimeIncidents.reduce((sum, i) => sum + (i.lost_time_amount || 0) + (i.lost_time_restricted_days || 0), 0);
+  const ltifr = hoursWorked > 0 ? Math.round((lostTimeIncidents.length * 1000000 / hoursWorked) * 100) / 100 : 0;
   const recentIncidents = incidents.slice(0, 5);
 
   // Compute asset expiry alerts (warranty, calibration, maintenance)
@@ -510,6 +511,15 @@ export default function DashboardPage() {
       focusUpcoming.push({ id: `co-${o.id}`, title: o.title, subtitle: o.regulation, type: "Compliance", href: `/${company}/dashboard/compliance`, time: daysUntil(o.next_due_date) });
     });
 
+  // Lost time: remind managers to update incidents without return dates
+  if (isManager) {
+    const sevenDaysAgo = new Date(focusNow.getTime() - 7 * 86400000);
+    incidents.filter((i) => i.lost_time && !i.lost_time_return_date && new Date(i.incident_date) < sevenDaysAgo && i.status !== "resolved" && i.status !== "archived")
+      .slice(0, 2).forEach((i) => {
+        focusUpcoming.push({ id: `lt-${i.id}`, title: `Update lost time: ${i.title}`, subtitle: "Return date not recorded", type: "Lost Time", href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) });
+      });
+  }
+
   const focusTabs = [
     { id: "urgent" as const, label: "Urgent", dot: "bg-red-500", items: focusUrgent },
     { id: "upcoming" as const, label: "Upcoming", dot: "bg-amber-500", items: focusUpcoming },
@@ -538,7 +548,7 @@ export default function DashboardPage() {
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          title="Incidents"
+          title={t("nav.incidents")}
           value={`${formatNumber(filteredStats.open_incidents)} open`}
           icon={AlertTriangle}
           trend={{
@@ -562,9 +572,9 @@ export default function DashboardPage() {
           value={String(ltifr)}
           icon={Clock}
           trend={{
-            value: lostTimeIncidents,
+            value: totalLostDays,
             direction: ltifr > 0 ? "up" : "down",
-            label: `${lostTimeIncidents} lost time`,
+            label: `${totalLostDays} lost days`,
           }}
         />
         <KPICard

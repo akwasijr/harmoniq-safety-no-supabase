@@ -93,7 +93,7 @@ function FieldFocus({
 
   return (
     <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-4">
-      <p className="text-[10px] font-bold text-primary mb-3">Field Focus</p>
+      <p className="text-[10px] font-bold text-primary mb-3">{t("focusStrip.fieldFocus")}</p>
       {/* Tabs */}
       <div className="flex gap-1 mb-3">
         {tabs.map((tab) => (

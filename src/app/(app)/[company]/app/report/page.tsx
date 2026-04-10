@@ -171,6 +171,7 @@ function ReportIncidentPageContent() {
     photos: [] as string[],
     photoFileIds: [] as string[],
     lostTime: false,
+    lostTimeDays: "",
     activeHazard: false,
     anonymous: false,
     reporterId: user?.id || "",
@@ -327,7 +328,11 @@ function ReportIncidentPageContent() {
       incident_date: formData.date,
       incident_time: formData.time,
       lost_time: formData.lostTime,
-      lost_time_amount: formData.lostTime ? 1 : null,
+      lost_time_amount: formData.lostTime && formData.lostTimeDays ? parseInt(formData.lostTimeDays, 10) : null,
+      lost_time_restricted_days: null,
+      lost_time_return_date: null,
+      lost_time_updated_at: null,
+      lost_time_updated_by: null,
       active_hazard: formData.activeHazard,
       location_id: formData.locationId || null,
       building: null,
@@ -601,6 +606,22 @@ function ReportIncidentPageContent() {
                   <span className={`block w-6 h-6 rounded-full bg-white shadow transform transition-transform ${formData.lostTime ? "translate-x-7" : "translate-x-1"}`} />
                 </button>
               </div>
+              {formData.lostTime && (
+                <div className="ml-0 mt-2">
+                  <label htmlFor="lost-days" className="text-sm text-muted-foreground">Estimated days away from work</label>
+                  <input
+                    id="lost-days"
+                    type="number"
+                    min="1"
+                    max="365"
+                    value={formData.lostTimeDays}
+                    onChange={(e) => setFormData({ ...formData, lostTimeDays: e.target.value })}
+                    placeholder="e.g. 3"
+                    className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Can be updated later by your manager</p>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -626,17 +626,72 @@ export default function IncidentDetailPage() {
                   </div>
                   <div className="flex items-start gap-3">
                     <Timer className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm text-muted-foreground">{t("incidents.labels.lostTime")}</p>
-                      <p className="font-medium">
-                        {incident.lost_time ? (
-                          <span className="text-destructive">
-                            Yes {incident.lost_time_amount ? `(${incident.lost_time_amount} hours)` : ""}
-                          </span>
-                        ) : (
-                          <span className="text-success">No</span>
-                        )}
-                      </p>
+                      {incident.lost_time ? (
+                        <div className="space-y-2 mt-1">
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Days away</p>
+                              <input
+                                type="number"
+                                min="0"
+                                max="365"
+                                value={incident.lost_time_amount ?? ""}
+                                onChange={(e) => {
+                                  const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                                  updateIncident(incident.id, {
+                                    lost_time_amount: val,
+                                    lost_time_updated_at: new Date().toISOString(),
+                                    lost_time_updated_by: authUser?.id || null,
+                                  });
+                                }}
+                                className="w-20 rounded border border-input bg-background px-2 py-1 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Restricted days</p>
+                              <input
+                                type="number"
+                                min="0"
+                                max="365"
+                                value={incident.lost_time_restricted_days ?? ""}
+                                onChange={(e) => {
+                                  const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                                  updateIncident(incident.id, {
+                                    lost_time_restricted_days: val,
+                                    lost_time_updated_at: new Date().toISOString(),
+                                    lost_time_updated_by: authUser?.id || null,
+                                  });
+                                }}
+                                className="w-20 rounded border border-input bg-background px-2 py-1 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Return date</p>
+                              <input
+                                type="date"
+                                value={incident.lost_time_return_date ?? ""}
+                                onChange={(e) => {
+                                  updateIncident(incident.id, {
+                                    lost_time_return_date: e.target.value || null,
+                                    lost_time_updated_at: new Date().toISOString(),
+                                    lost_time_updated_by: authUser?.id || null,
+                                  });
+                                }}
+                                className="rounded border border-input bg-background px-2 py-1 text-sm"
+                              />
+                            </div>
+                          </div>
+                          {incident.lost_time_updated_at && (
+                            <p className="text-[10px] text-muted-foreground">
+                              Last updated {formatDate(incident.lost_time_updated_at)}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="font-medium text-success">No</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-start gap-3">

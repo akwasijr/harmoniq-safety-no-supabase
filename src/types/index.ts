@@ -459,7 +459,11 @@ export interface Incident {
   incident_date: string;
   incident_time: string;
   lost_time: boolean;
-  lost_time_amount: number | null;
+  lost_time_amount: number | null;       // Total days away from work
+  lost_time_restricted_days: number | null; // Days on restricted/modified duty
+  lost_time_return_date: string | null;  // Date worker returned to full duty
+  lost_time_updated_at: string | null;   // Last time lost time data was updated
+  lost_time_updated_by: string | null;   // Who last updated lost time data
   active_hazard: boolean;
 
   // Location

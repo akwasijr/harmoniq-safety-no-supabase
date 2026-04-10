@@ -272,7 +272,7 @@ export default function EnvironmentPage() {
     () => [
       {
         id: "category",
-        label: t("environment.wasteType"),
+        label: t("compliance.category"),
         options: Object.entries(WASTE_CATEGORY_LABELS).map(([value, key]) => ({ value, label: t(key) })),
         value: categoryFilter,
         onChange: setCategoryFilter,
@@ -297,18 +297,18 @@ export default function EnvironmentPage() {
       },
       {
         id: "status",
-        label: "Status",
+        label: t("assets.labels.status"),
         options: [
-          { value: "open", label: "Open" },
-          { value: "contained", label: "Contained" },
-          { value: "cleaned", label: "Cleaned" },
-          { value: "closed", label: "Closed" },
+          { value: "open", label: t("environment.open") },
+          { value: "contained", label: t("environment.contained") },
+          { value: "cleaned", label: t("environment.cleaned") },
+          { value: "closed", label: t("environment.closed") },
         ],
         value: statusFilter,
         onChange: setStatusFilter,
       },
     ],
-    [categoryFilter, statusFilter],
+    [categoryFilter, statusFilter, t],
   );
 
   // ── Add Waste form ──
@@ -457,7 +457,7 @@ export default function EnvironmentPage() {
   const overviewData = React.useMemo(() => {
     const wasteByCategory: Record<string, number> = {};
     wasteLogs.forEach((w) => {
-      const label = WASTE_CATEGORY_LABELS[w.category] ?? w.category;
+      const label = t(WASTE_CATEGORY_LABELS[w.category] ?? w.category);
       wasteByCategory[label] = (wasteByCategory[label] ?? 0) + w.volume;
     });
 
@@ -481,7 +481,7 @@ export default function EnvironmentPage() {
     }
 
     return { wasteByCategory, disposalMethods, monthlySpills };
-  }, [wasteLogs, spillRecords]);
+  }, [wasteLogs, spillRecords, t]);
 
   // ── Loading ──
   if (wasteLogsStore.isLoading || spillRecordsStore.isLoading) {
@@ -495,7 +495,7 @@ export default function EnvironmentPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Environment</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{t("environment.title")}</h1>
             <p className="text-sm text-muted-foreground">Track waste disposal, spill incidents, and environmental metrics</p>
           </div>
           <div className="flex gap-2">
@@ -509,7 +509,7 @@ export default function EnvironmentPage() {
               }}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Add Waste Entry
+              {t("environment.addWasteEntry")}
             </Button>
             <Button
               size="sm"
@@ -520,7 +520,7 @@ export default function EnvironmentPage() {
               }}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Add Spill Record
+              {t("environment.addSpillRecord")}
             </Button>
           </div>
         </div>
@@ -586,19 +586,19 @@ export default function EnvironmentPage() {
             />
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Waste Log ({filteredWaste.length})</CardTitle>
+                <CardTitle className="text-base">{t("environment.wasteLog")} ({filteredWaste.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-muted-foreground border-b">
-                        <SortableTh sortKey="date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Date</SortableTh>
-                        <SortableTh sortKey="waste_type" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Waste Type</SortableTh>
-                        <SortableTh sortKey="category" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Category</SortableTh>
-                        <SortableTh sortKey="volume" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Volume</SortableTh>
-                        <SortableTh sortKey="disposal_method" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Disposal Method</SortableTh>
-                        <SortableTh sortKey="contractor" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Contractor</SortableTh>
+                        <SortableTh sortKey="date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("common.date")}</SortableTh>
+                        <SortableTh sortKey="waste_type" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("environment.wasteType")}</SortableTh>
+                        <SortableTh sortKey="category" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.category")}</SortableTh>
+                        <SortableTh sortKey="volume" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("environment.volume")}</SortableTh>
+                        <SortableTh sortKey="disposal_method" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("environment.disposalMethod")}</SortableTh>
+                        <SortableTh sortKey="contractor" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("environment.contractor")}</SortableTh>
                         <SortableTh sortKey="location" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Location</SortableTh>
                         <SortableTh sortKey="recorded_by" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Recorded By</SortableTh>
                         <th className="pb-3 font-medium text-right">Actions</th>
@@ -619,7 +619,7 @@ export default function EnvironmentPage() {
                               <td className="py-3 pr-4">{formatDate(w.date)}</td>
                               <td className="py-3 pr-4 font-medium">{w.waste_type}</td>
                               <td className="py-3 pr-4">
-                                <Badge variant={catBadge.variant}>{WASTE_CATEGORY_LABELS[w.category]}</Badge>
+                                <Badge variant={catBadge.variant}>{t(WASTE_CATEGORY_LABELS[w.category])}</Badge>
                               </td>
                               <td className="py-3 pr-4">{w.volume} {w.unit}</td>
                               <td className="py-3 pr-4">{w.disposal_method}</td>
@@ -664,7 +664,7 @@ export default function EnvironmentPage() {
             />
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Spill Records ({filteredSpills.length})</CardTitle>
+                <CardTitle className="text-base">{t("environment.spills")} ({filteredSpills.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -672,12 +672,12 @@ export default function EnvironmentPage() {
                     <thead>
                       <tr className="text-left text-muted-foreground border-b">
                         <SortableTh sortKey="date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Date</SortableTh>
-                        <SortableTh sortKey="material" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Material</SortableTh>
-                        <SortableTh sortKey="volume" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Volume</SortableTh>
-                        <SortableTh sortKey="severity" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Severity</SortableTh>
+                        <SortableTh sortKey="material" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("environment.material")}</SortableTh>
+                        <SortableTh sortKey="volume" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("environment.volume")}</SortableTh>
+                        <SortableTh sortKey="severity" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("environment.severity")}</SortableTh>
                         <SortableTh sortKey="location" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Location</SortableTh>
                         <SortableTh sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Status</SortableTh>
-                        <SortableTh sortKey="containment_action" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Containment</SortableTh>
+                        <SortableTh sortKey="containment_action" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("environment.containmentAction")}</SortableTh>
                         <SortableTh sortKey="reported_by" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Reported By</SortableTh>
                         <th className="pb-3 font-medium text-right">Actions</th>
                       </tr>
@@ -699,13 +699,13 @@ export default function EnvironmentPage() {
                               <td className="py-3 pr-4 font-medium">{s.material}</td>
                               <td className="py-3 pr-4">{s.volume} {s.unit}</td>
                               <td className="py-3 pr-4">
-                                <Badge variant={sevBadge.variant}>{sevBadge.label}</Badge>
+                                <Badge variant={sevBadge.variant}>{t(sevBadge.label)}</Badge>
                               </td>
                               <td className="py-3 pr-4 text-muted-foreground">
                                 {locationMap.get(s.location_id ?? "") ?? s.location_description ?? "—"}
                               </td>
                               <td className="py-3 pr-4">
-                                <Badge variant={stsBadge.variant}>{stsBadge.label}</Badge>
+                                <Badge variant={stsBadge.variant}>{t(stsBadge.label)}</Badge>
                               </td>
                               <td className="py-3 pr-4">
                                 <p className="line-clamp-1">{s.containment_action}</p>
@@ -775,7 +775,7 @@ export default function EnvironmentPage() {
             {/* Waste by Category */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Waste by Category</CardTitle>
+                <CardTitle className="text-base">{t("environment.wasteByCategory")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {Object.keys(overviewData.wasteByCategory).length === 0 ? (
@@ -798,7 +798,7 @@ export default function EnvironmentPage() {
             {/* Top Disposal Methods */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Top Disposal Methods</CardTitle>
+                <CardTitle className="text-base">{t("environment.topDisposalMethods")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {Object.keys(overviewData.disposalMethods).length === 0 ? (
@@ -822,7 +822,7 @@ export default function EnvironmentPage() {
             {/* Monthly Spill Trend */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Spill Trend (6 months)</CardTitle>
+                <CardTitle className="text-base">{t("environment.spillTrend")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {overviewData.monthlySpills.every((m) => m.count === 0) ? (
@@ -859,7 +859,7 @@ export default function EnvironmentPage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold">Add Waste Entry</h2>
+                  <h2 className="text-xl font-semibold">{t("environment.addWasteEntry")}</h2>
                   <p className="text-sm text-muted-foreground">Record a new waste disposal entry</p>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => { setShowAddWaste(false); resetWasteForm(); }}>
@@ -870,7 +870,7 @@ export default function EnvironmentPage() {
               <div className="space-y-4">
                 {/* Waste Type */}
                 <div>
-                  <Label htmlFor="waste-type">Waste Type *</Label>
+                  <Label htmlFor="waste-type">{t("environment.wasteType")} *</Label>
                   <Input
                     id="waste-type"
                     value={wasteForm.waste_type}
@@ -882,7 +882,7 @@ export default function EnvironmentPage() {
 
                 {/* Category */}
                 <div>
-                  <Label htmlFor="waste-category">Category *</Label>
+                  <Label htmlFor="waste-category">{t("compliance.category")} *</Label>
                   <select
                     id="waste-category"
                     aria-label="Select waste category"
@@ -891,8 +891,8 @@ export default function EnvironmentPage() {
                     className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     <option value="">Select category...</option>
-                    {Object.entries(WASTE_CATEGORY_LABELS).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
+                    {Object.entries(WASTE_CATEGORY_LABELS).map(([value, key]) => (
+                      <option key={value} value={value}>{t(key)}</option>
                     ))}
                   </select>
                 </div>
@@ -900,7 +900,7 @@ export default function EnvironmentPage() {
                 {/* Volume + Unit */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="waste-volume">Volume *</Label>
+                    <Label htmlFor="waste-volume">{t("environment.volume")} *</Label>
                     <Input
                       id="waste-volume"
                       type="number"
@@ -912,7 +912,7 @@ export default function EnvironmentPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="waste-unit">Unit</Label>
+                    <Label htmlFor="waste-unit">{t("environment.unit")}</Label>
                     <select
                       id="waste-unit"
                       aria-label="Select unit"
@@ -931,7 +931,7 @@ export default function EnvironmentPage() {
 
                 {/* Disposal Method */}
                 <div>
-                  <Label htmlFor="waste-disposal">Disposal Method *</Label>
+                  <Label htmlFor="waste-disposal">{t("environment.disposalMethod")} *</Label>
                   <Input
                     id="waste-disposal"
                     value={wasteForm.disposal_method}
@@ -944,7 +944,7 @@ export default function EnvironmentPage() {
                 {/* Contractor + Location */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="waste-contractor">Contractor</Label>
+                    <Label htmlFor="waste-contractor">{t("environment.contractor")}</Label>
                     <Input
                       id="waste-contractor"
                       value={wasteForm.contractor}
@@ -1022,7 +1022,7 @@ export default function EnvironmentPage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold">Add Spill Record</h2>
+                  <h2 className="text-xl font-semibold">{t("environment.addSpillRecord")}</h2>
                   <p className="text-sm text-muted-foreground">Report a new spill incident</p>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => { setShowAddSpill(false); resetSpillForm(); }}>
@@ -1033,7 +1033,7 @@ export default function EnvironmentPage() {
               <div className="space-y-4">
                 {/* Material */}
                 <div>
-                  <Label htmlFor="spill-material">Material *</Label>
+                  <Label htmlFor="spill-material">{t("environment.material")} *</Label>
                   <Input
                     id="spill-material"
                     value={spillForm.material}
@@ -1046,7 +1046,7 @@ export default function EnvironmentPage() {
                 {/* Volume + Unit + Severity */}
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="spill-volume">Volume *</Label>
+                    <Label htmlFor="spill-volume">{t("environment.volume")} *</Label>
                     <Input
                       id="spill-volume"
                       type="number"
@@ -1058,7 +1058,7 @@ export default function EnvironmentPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="spill-unit">Unit</Label>
+                    <Label htmlFor="spill-unit">{t("environment.unit")}</Label>
                     <select
                       id="spill-unit"
                       aria-label="Select unit"
@@ -1073,7 +1073,7 @@ export default function EnvironmentPage() {
                     </select>
                   </div>
                   <div>
-                    <Label htmlFor="spill-severity">Severity *</Label>
+                    <Label htmlFor="spill-severity">{t("environment.severity")} *</Label>
                     <select
                       id="spill-severity"
                       aria-label="Select severity"
@@ -1082,9 +1082,9 @@ export default function EnvironmentPage() {
                       className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
                       <option value="">Select severity...</option>
-                      <option value="minor">Minor</option>
-                      <option value="moderate">Moderate</option>
-                      <option value="major">Major</option>
+                      <option value="minor">{t("environment.minor")}</option>
+                      <option value="moderate">{t("environment.moderate")}</option>
+                      <option value="major">{t("environment.major")}</option>
                     </select>
                   </div>
                 </div>
@@ -1120,7 +1120,7 @@ export default function EnvironmentPage() {
 
                 {/* Containment Action */}
                 <div>
-                  <Label htmlFor="spill-containment">Containment Action *</Label>
+                  <Label htmlFor="spill-containment">{t("environment.containmentAction")} *</Label>
                   <Textarea
                     id="spill-containment"
                     value={spillForm.containment_action}
@@ -1165,7 +1165,7 @@ export default function EnvironmentPage() {
                   onClick={handleSaveSpill}
                   disabled={!spillForm.material || !spillForm.volume || !spillForm.severity || !spillForm.containment_action || !spillForm.date}
                 >
-                  Add Spill Record
+                  {t("environment.addSpillRecord")}
                 </Button>
               </div>
             </div>
