@@ -31,8 +31,77 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 import { PAGINATION } from "@/lib/constants";
 import { addUserToTeam } from "@/lib/assignment-utils";
+import { ROLE_PERMISSIONS, type Permission, type CompanyRole } from "@/types";
+import { ChevronDown } from "lucide-react";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
+
+// Human-readable permission group labels
+const PERMISSION_GROUPS: { label: string; permissions: { id: Permission; label: string }[] }[] = [
+  {
+    label: "Incidents",
+    permissions: [
+      { id: "incidents.view_own", label: "View own incidents" },
+      { id: "incidents.view_team", label: "View team incidents" },
+      { id: "incidents.view_all", label: "View all incidents" },
+      { id: "incidents.create", label: "Report incidents" },
+      { id: "incidents.edit_own", label: "Edit own incidents" },
+      { id: "incidents.edit_all", label: "Edit all incidents" },
+      { id: "incidents.assign", label: "Assign incidents" },
+      { id: "incidents.investigate", label: "Investigate incidents" },
+      { id: "incidents.delete", label: "Delete incidents" },
+    ],
+  },
+  {
+    label: "Checklists & Inspections",
+    permissions: [
+      { id: "checklists.view", label: "View checklists" },
+      { id: "checklists.complete", label: "Complete checklists" },
+      { id: "checklists.create_templates", label: "Create templates" },
+      { id: "checklists.manage", label: "Manage all checklists" },
+    ],
+  },
+  {
+    label: "Work Orders",
+    permissions: [
+      { id: "work_orders.view", label: "View work orders" },
+      { id: "work_orders.view_all", label: "View all work orders" },
+      { id: "work_orders.create", label: "Create work orders" },
+      { id: "work_orders.edit", label: "Edit work orders" },
+      { id: "work_orders.assign", label: "Assign work orders" },
+      { id: "work_orders.complete", label: "Complete work orders" },
+    ],
+  },
+  {
+    label: "Risk & Corrective Actions",
+    permissions: [
+      { id: "risk_assessments.view", label: "View risk assessments" },
+      { id: "risk_assessments.create", label: "Create risk assessments" },
+      { id: "corrective_actions.view", label: "View corrective actions" },
+      { id: "corrective_actions.create", label: "Create corrective actions" },
+    ],
+  },
+  {
+    label: "Reports & Analytics",
+    permissions: [
+      { id: "reports.view_own", label: "View own reports" },
+      { id: "reports.view_team", label: "View team reports" },
+      { id: "reports.view_all", label: "View all reports" },
+      { id: "reports.export", label: "Export reports" },
+    ],
+  },
+  {
+    label: "Users & Settings",
+    permissions: [
+      { id: "users.view", label: "View users" },
+      { id: "users.create", label: "Create users" },
+      { id: "users.edit", label: "Edit users" },
+      { id: "users.manage_roles", label: "Manage roles" },
+      { id: "settings.view", label: "View settings" },
+      { id: "settings.edit", label: "Edit settings" },
+    ],
+  },
+];
 
 interface Invitation {
   id: string;
@@ -79,6 +148,8 @@ export default function UsersPage() {
     department: "",
     team_ids: [] as string[],
   });
+  const [showPermissions, setShowPermissions] = React.useState(false);
+  const [customPermissions, setCustomPermissions] = React.useState<Permission[]>(() => [...ROLE_PERMISSIONS.employee]);
 
   // New team form
   const [newTeam, setNewTeam] = React.useState({
@@ -578,11 +649,54 @@ export default function UsersPage() {
               </div>
               <div>
                 <Label htmlFor="role">{t("users.labels.role")} *</Label>
-                <select id="role" title="Select role" aria-label="Select role" value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select id="role" title="Select role" aria-label="Select role" value={newUser.role} onChange={(e) => {
+                  const role = e.target.value as CompanyRole;
+                  setNewUser({ ...newUser, role });
+                  setCustomPermissions([...ROLE_PERMISSIONS[role]]);
+                }} className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
                   <option value="employee">{t("users.roles.employee")}</option>
+                  <option value="safety_officer">Supervisor / Team Lead</option>
                   <option value="manager">{t("users.roles.manager")}</option>
                   <option value="company_admin">{t("users.roles.companyAdmin")}</option>
+                  <option value="viewer">Viewer / Director</option>
                 </select>
+                <button
+                  type="button"
+                  onClick={() => setShowPermissions(!showPermissions)}
+                  className="flex items-center gap-1 mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", showPermissions && "rotate-180")} />
+                  {showPermissions ? "Hide permissions" : `View permissions (${customPermissions.length})`}
+                </button>
+                {showPermissions && (
+                  <div className="mt-2 max-h-48 overflow-y-auto rounded-md border bg-muted/30 p-3 space-y-3">
+                    {PERMISSION_GROUPS.map((group) => {
+                      const groupPerms = group.permissions.filter((p) => ROLE_PERMISSIONS[newUser.role as CompanyRole]?.includes(p.id) || customPermissions.includes(p.id));
+                      return (
+                        <div key={group.label}>
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{group.label}</p>
+                          <div className="space-y-0.5">
+                            {group.permissions.map((perm) => (
+                              <label key={perm.id} className="flex items-center gap-2 py-0.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={customPermissions.includes(perm.id)}
+                                  onChange={(e) => {
+                                    setCustomPermissions((prev) =>
+                                      e.target.checked ? [...prev, perm.id] : prev.filter((p) => p !== perm.id)
+                                    );
+                                  }}
+                                  className="h-3.5 w-3.5 rounded border-input accent-primary"
+                                />
+                                <span className="text-xs">{perm.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div>
                 <Label htmlFor="department">{t("users.labels.department")}</Label>
