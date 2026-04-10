@@ -340,9 +340,19 @@ export default function DashboardPage() {
     total_incidents: incidents.length,
     resolved_today: resolvedToday.length,
     avg_resolution_time_hours: avgResolutionHours,
-    ltir: incidents.length > 0 ? Math.round((openIncidents.length / Math.max(incidents.length, 1)) * 100) / 10 : 0,
     compliance_rate: incidents.length > 0 ? Math.round(((incidents.length - openIncidents.length) / Math.max(incidents.length, 1)) * 1000) / 10 : 100,
   };
+
+  // TRIR = (Total Recordable Incidents × 200,000) / Total Hours Worked
+  // Using headcount × 2000 annual hours as proxy
+  const headcount = Math.max(users.length, 1);
+  const hoursWorked = headcount * 2000;
+  const recordableIncidents = incidents.filter((i) => i.type === "injury" || i.severity === "critical" || i.severity === "high").length;
+  const trir = hoursWorked > 0 ? Math.round((recordableIncidents * 200000 / hoursWorked) * 100) / 100 : 0;
+
+  // LTIFR = (Lost Time Injuries × 1,000,000) / Total Hours Worked
+  const lostTimeIncidents = incidents.filter((i) => i.lost_time === true).length;
+  const ltifr = hoursWorked > 0 ? Math.round((lostTimeIncidents * 1000000 / hoursWorked) * 100) / 100 : 0;
   const recentIncidents = incidents.slice(0, 5);
 
   // Compute asset expiry alerts (warranty, calibration, maintenance)
@@ -493,33 +503,33 @@ export default function DashboardPage() {
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          title={t("dashboard.openIncidents")}
-          value={formatNumber(filteredStats.open_incidents)}
+          title="Incidents"
+          value={`${formatNumber(filteredStats.open_incidents)} / ${formatNumber(filteredStats.total_incidents)}`}
           icon={AlertTriangle}
           trend={{
             value: Math.abs(trendPercentage),
             direction: trendPercentage <= 0 ? "down" : "up",
-            label: t("dashboard.fromLastMonth"),
+            label: `${filteredStats.open_incidents} open`,
           }}
         />
         <KPICard
-          title={t("dashboard.totalIncidents")}
-          value={formatNumber(filteredStats.total_incidents)}
-          icon={Users}
+          title="TRIR"
+          value={String(trir)}
+          icon={TrendingUp}
           trend={{
-            value: Math.abs(trendPercentage),
-            direction: trendPercentage >= 0 ? "up" : "down",
-            label: t("dashboard.fromLastMonth"),
+            value: recordableIncidents,
+            direction: trir > 2 ? "up" : "down",
+            label: `${recordableIncidents} recordable`,
           }}
         />
         <KPICard
-          title="Upcoming expiries"
-          value={formatNumber(expiryAlerts.length)}
+          title="LTIFR"
+          value={String(ltifr)}
           icon={Clock}
           trend={{
-            value: expiryAlerts.filter(a => a.daysLeft <= 0).length,
-            direction: "up",
-            label: "overdue",
+            value: lostTimeIncidents,
+            direction: ltifr > 0 ? "up" : "down",
+            label: `${lostTimeIncidents} lost time`,
           }}
         />
         <KPICard
