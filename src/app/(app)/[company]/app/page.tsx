@@ -88,7 +88,7 @@ function FieldFocus({
   const items = activeTab === "urgent" ? urgent : activeTab === "upcoming" ? upcoming : goodToKnow;
 
   return (
-    <div>
+    <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-4">
       <h2 className="text-base font-semibold mb-3">Field Focus</h2>
       {/* Tabs */}
       <div className="flex gap-1 mb-3">
@@ -105,9 +105,6 @@ function FieldFocus({
             style={activeTab === tab.id ? { backgroundColor: `color-mix(in srgb, currentColor 10%, transparent)` } : undefined}
           >
             {tab.label}
-            {tab.count > 0 && (
-              <span className="ml-1 text-[10px] opacity-70">({tab.count})</span>
-            )}
           </button>
         ))}
       </div>
