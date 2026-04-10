@@ -878,7 +878,7 @@ export default function Home() {
       {/* ── Footer ── */}
       <footer className="py-16 relative z-10">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-10 lg:grid-cols-5">
             <div className="lg:col-span-2">
               <Image src="/logo-white.svg" alt="Harmoniq" width={130} height={30} className="h-6 w-auto" />
               <p className="mt-4 text-sm text-zinc-500 leading-relaxed max-w-xs">
@@ -892,6 +892,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
+            <div className="grid grid-cols-3 gap-6 lg:col-span-3">
             <div>
               <h4 className="font-semibold text-white text-sm mb-4">{t("footer_links.product")}</h4>
               <ul className="space-y-3">
@@ -916,6 +917,7 @@ export default function Home() {
                 <li><Link href="/cookies" className="text-sm text-zinc-500 hover:text-white transition-colors">Cookie Policy</Link></li>
                 <li><Link href="/gdpr" className="text-sm text-zinc-500 hover:text-white transition-colors">GDPR</Link></li>
               </ul>
+            </div>
             </div>
           </div>
           <div className="mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
