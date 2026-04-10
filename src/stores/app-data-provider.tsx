@@ -19,6 +19,9 @@ import { MeterReadingsProvider } from "@/stores/meter-readings-store";
 import { PartsProvider } from "@/stores/parts-store";
 import { InspectionRoutesProvider } from "@/stores/inspection-routes-store";
 import { InspectionRoundsProvider } from "@/stores/inspection-rounds-store";
+import { TrainingCertTypesProvider } from "@/stores/training-cert-types-store";
+import { WorkerCertificationsProvider } from "@/stores/worker-certifications-store";
+import { TrainingAssignmentsProvider } from "@/stores/training-assignments-store";
 import { NotificationsStoreProvider } from "@/stores/notifications-store";
 
 type DataProvider = React.ComponentType<{ children: React.ReactNode }>;
@@ -43,6 +46,9 @@ const APP_DATA_PROVIDERS: DataProvider[] = [
   ContentStoreProvider,
   ChecklistTemplatesProvider,
   ChecklistSubmissionsProvider,
+  TrainingCertTypesProvider,
+  WorkerCertificationsProvider,
+  TrainingAssignmentsProvider,
   NotificationsStoreProvider,
 ];
 

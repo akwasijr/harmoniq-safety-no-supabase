@@ -136,7 +136,6 @@ const companyNavGroups: NavGroup[] = [
         href: "/dashboard/training",
         icon: GraduationCap,
         requiredRoles: ["company_admin", "manager", "super_admin"],
-        comingSoon: true,
       },
       {
         title: "Environment",

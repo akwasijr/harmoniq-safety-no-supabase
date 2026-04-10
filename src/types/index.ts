@@ -1496,6 +1496,59 @@ export interface InspectionRound {
 }
 
 // ============================================
+// TRAINING & COMPETENCY
+// ============================================
+
+export interface TrainingCertificationType {
+  id: string;
+  company_id: string;
+  name: string;
+  category: "safety" | "equipment" | "regulatory" | "general";
+  country_specific: Country | null;
+  regulation_ref: string | null;
+  default_validity_days: number | null;
+  renewal_required: boolean;
+  is_builtin: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkerCertification {
+  id: string;
+  company_id: string;
+  user_id: string;
+  certification_type_id: string;
+  certificate_number: string | null;
+  issuer: string | null;
+  issued_date: string;
+  expiry_date: string | null;
+  status: "valid" | "expiring" | "expired" | "revoked";
+  document_url: string | null;
+  notes: string | null;
+  verified_by: string | null;
+  verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrainingAssignment {
+  id: string;
+  company_id: string;
+  course_name: string;
+  description: string | null;
+  user_id: string;
+  assigned_by: string;
+  linked_certification_type_id: string | null;
+  due_date: string;
+  status: "assigned" | "in_progress" | "completed" | "overdue";
+  completed_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
 // OFFLINE SYNC
 // ============================================
 
