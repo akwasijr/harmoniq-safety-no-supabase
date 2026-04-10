@@ -46,17 +46,17 @@ const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 type SubTab = "certifications" | "training" | "compliance";
 
 const CERT_STATUS_BADGE: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-  valid: { variant: "default", label: "Valid" },
-  expiring: { variant: "outline", label: "Expiring Soon" },
-  expired: { variant: "destructive", label: "Expired" },
-  revoked: { variant: "secondary", label: "Revoked" },
+  valid: { variant: "default", label: "training.valid" },
+  expiring: { variant: "outline", label: "training.expiringSoon" },
+  expired: { variant: "destructive", label: "training.expired" },
+  revoked: { variant: "secondary", label: "training.revoked" },
 };
 
 const ASSIGNMENT_STATUS_BADGE: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-  assigned: { variant: "secondary", label: "Assigned" },
-  in_progress: { variant: "outline", label: "In Progress" },
-  completed: { variant: "default", label: "Completed" },
-  overdue: { variant: "destructive", label: "Overdue" },
+  assigned: { variant: "secondary", label: "training.assigned" },
+  in_progress: { variant: "outline", label: "training.inProgress" },
+  completed: { variant: "default", label: "training.completed" },
+  overdue: { variant: "destructive", label: "training.overdue" },
 };
 
 // ---------------------------------------------------------------------------
@@ -320,43 +320,43 @@ export default function TrainingPage() {
     () => [
       {
         id: "certType",
-        label: "Certification Type",
+        label: t("training.certType"),
         options: certTypeOptions,
         value: certTypeFilter,
         onChange: setCertTypeFilter,
       },
       {
         id: "status",
-        label: "Status",
+        label: t("training.status"),
         options: [
-          { value: "valid", label: "Valid" },
-          { value: "expiring", label: "Expiring Soon" },
-          { value: "expired", label: "Expired" },
-          { value: "revoked", label: "Revoked" },
+          { value: "valid", label: t("training.valid") },
+          { value: "expiring", label: t("training.expiringSoon") },
+          { value: "expired", label: t("training.expired") },
+          { value: "revoked", label: t("training.revoked") },
         ],
         value: statusFilter,
         onChange: setStatusFilter,
       },
     ],
-    [certTypeOptions, certTypeFilter, statusFilter],
+    [certTypeOptions, certTypeFilter, statusFilter, t],
   );
 
   const assignmentFilters = React.useMemo(
     () => [
       {
         id: "status",
-        label: "Status",
+        label: t("training.status"),
         options: [
-          { value: "assigned", label: "Assigned" },
-          { value: "in_progress", label: "In Progress" },
-          { value: "completed", label: "Completed" },
-          { value: "overdue", label: "Overdue" },
+          { value: "assigned", label: t("training.assigned") },
+          { value: "in_progress", label: t("training.inProgress") },
+          { value: "completed", label: t("training.completed") },
+          { value: "overdue", label: t("training.overdue") },
         ],
         value: statusFilter,
         onChange: setStatusFilter,
       },
     ],
-    [statusFilter],
+    [statusFilter, t],
   );
 
   // ── Add Certification ──
@@ -504,7 +504,7 @@ export default function TrainingPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Training &amp; Competency</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{t("training.title")}</h1>
             <p className="text-sm text-muted-foreground">Manage worker certifications, training assignments, and compliance</p>
           </div>
           <div className="flex gap-2">
@@ -518,7 +518,7 @@ export default function TrainingPage() {
               }}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Add Certification
+              {t("training.addCertification")}
             </Button>
             <Button
               size="sm"
@@ -529,29 +529,29 @@ export default function TrainingPage() {
               }}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Assign Training
+              {t("training.assignTraining")}
             </Button>
           </div>
         </div>
 
         {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard title="Total Workers" value={kpis.totalWorkers} icon={Users} />
+          <KPICard title={t("training.totalWorkers")} value={kpis.totalWorkers} icon={Users} />
           <KPICard
-            title="Compliant"
+            title={t("training.compliant")}
             value={`${kpis.compliantPct}%`}
             icon={ShieldCheck}
             description={`${kpis.compliantCount} of ${kpis.totalWorkers} workers`}
           />
           <KPICard
-            title="Expiring Soon"
+            title={t("training.expiringSoon")}
             value={kpis.expiringSoon}
             icon={Clock}
             className={kpis.expiringSoon > 0 ? "border-amber-500/50" : undefined}
             description="Within 30 days"
           />
           <KPICard
-            title="Overdue"
+            title={t("training.overdue")}
             value={kpis.overdue}
             icon={AlertTriangle}
             className={kpis.overdue > 0 ? "border-destructive/50" : undefined}
@@ -563,9 +563,9 @@ export default function TrainingPage() {
         <div className="border-b">
           <div className="flex gap-4">
             {([
-              { key: "certifications" as const, label: "Certifications", icon: Award },
-              { key: "training" as const, label: "Training", icon: BookOpen },
-              { key: "compliance" as const, label: "Compliance Matrix", icon: LayoutGrid },
+              { key: "certifications" as const, label: t("training.certifications"), icon: Award },
+              { key: "training" as const, label: t("training.assignments"), icon: BookOpen },
+              { key: "compliance" as const, label: t("training.complianceMatrix"), icon: LayoutGrid },
             ] as const).map((tab) => {
               const Icon = tab.icon;
               return (
@@ -607,12 +607,12 @@ export default function TrainingPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-muted-foreground border-b">
-                        <SortableTh sortKey="worker" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Worker</SortableTh>
-                        <SortableTh sortKey="certification" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Certification</SortableTh>
-                        <th className="pb-3 font-medium">Certificate #</th>
-                        <SortableTh sortKey="issued_date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Issued</SortableTh>
-                        <SortableTh sortKey="expiry_date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Expires</SortableTh>
-                        <SortableTh sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Status</SortableTh>
+                        <SortableTh sortKey="worker" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("training.worker")}</SortableTh>
+                        <SortableTh sortKey="certification" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("training.certType")}</SortableTh>
+                        <th className="pb-3 font-medium">{t("training.certNumber")}</th>
+                        <SortableTh sortKey="issued_date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("training.issued")}</SortableTh>
+                        <SortableTh sortKey="expiry_date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("training.expires")}</SortableTh>
+                        <SortableTh sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("training.status")}</SortableTh>
                         <th className="pb-3 font-medium text-right">Actions</th>
                       </tr>
                     </thead>
@@ -643,7 +643,7 @@ export default function TrainingPage() {
                               <td className="py-3 pr-4">{formatDate(cert.issued_date)}</td>
                               <td className="py-3 pr-4">{cert.expiry_date ? formatDate(cert.expiry_date) : "No expiry"}</td>
                               <td className="py-3 pr-4">
-                                <Badge variant={badge.variant}>{badge.label}</Badge>
+                                <Badge variant={badge.variant}>{t(badge.label)}</Badge>
                               </td>
                               <td className="py-3 text-right">
                                 <div className="flex justify-end gap-1">
@@ -691,11 +691,11 @@ export default function TrainingPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-muted-foreground border-b">
-                        <SortableTh sortKey="worker" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Worker</SortableTh>
-                        <SortableTh sortKey="course" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Course</SortableTh>
-                        <SortableTh sortKey="due_date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Due Date</SortableTh>
-                        <SortableTh sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Status</SortableTh>
-                        <SortableTh sortKey="assigned_by" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Assigned By</SortableTh>
+                        <SortableTh sortKey="worker" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("training.worker")}</SortableTh>
+                        <SortableTh sortKey="course" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("training.courseName")}</SortableTh>
+                        <SortableTh sortKey="due_date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("training.dueDate")}</SortableTh>
+                        <SortableTh sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("training.status")}</SortableTh>
+                        <SortableTh sortKey="assigned_by" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("training.assignedBy")}</SortableTh>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -714,7 +714,7 @@ export default function TrainingPage() {
                               <td className="py-3 pr-4">{a.course_name}</td>
                               <td className="py-3 pr-4">{formatDate(a.due_date)}</td>
                               <td className="py-3 pr-4">
-                                <Badge variant={badge.variant}>{badge.label}</Badge>
+                                <Badge variant={badge.variant}>{t(badge.label)}</Badge>
                               </td>
                               <td className="py-3 pr-4 text-muted-foreground">{getUserDisplayName(a.assigned_by, users)}</td>
                             </tr>
@@ -748,7 +748,7 @@ export default function TrainingPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-muted-foreground border-b">
-                        <th className="pb-3 pr-4 font-medium sticky left-0 bg-card z-10 min-w-[160px]">Worker</th>
+                        <th className="pb-3 pr-4 font-medium sticky left-0 bg-card z-10 min-w-[160px]">{t("training.worker")}</th>
                         {allCertTypes.map((ct) => (
                           <th
                             key={ct.id}
@@ -774,17 +774,17 @@ export default function TrainingPage() {
                               (c) => c.user_id === u.id && c.certification_type_id === ct.id,
                             );
                             let dotColor = "bg-muted-foreground/30";
-                            let label = "Not required";
+                            let label = t("training.notRequired");
                             if (cert) {
                               if (cert._status === "valid") {
                                 dotColor = "bg-green-500";
-                                label = "Valid";
+                                label = t("training.valid");
                               } else if (cert._status === "expiring") {
                                 dotColor = "bg-amber-500";
-                                label = "Expiring soon";
+                                label = t("training.expiringSoon");
                               } else {
                                 dotColor = "bg-red-500";
-                                label = cert._status === "revoked" ? "Revoked" : "Expired";
+                                label = cert._status === "revoked" ? t("training.revoked") : t("training.expired");
                               }
                             }
                             return (
@@ -805,10 +805,10 @@ export default function TrainingPage() {
               )}
               {/* Legend */}
               <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" /> Valid</span>
-                <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" /> Expiring Soon</span>
-                <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> Expired / Revoked</span>
-                <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-muted-foreground/30" /> Not Required</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" /> {t("training.valid")}</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" /> {t("training.expiringSoon")}</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> {t("training.expired")} / {t("training.revoked")}</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-muted-foreground/30" /> {t("training.notRequired")}</span>
               </div>
             </CardContent>
           </Card>
@@ -825,7 +825,7 @@ export default function TrainingPage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold">{editCertId ? "Edit Certification" : "Add Certification"}</h2>
+                  <h2 className="text-xl font-semibold">{editCertId ? t("training.editCertification") : t("training.addCertification")}</h2>
                   <p className="text-sm text-muted-foreground">Record a worker&apos;s certification details</p>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => { setShowAddCert(false); resetCertForm(); }}>
@@ -940,7 +940,7 @@ export default function TrainingPage() {
                   onClick={handleSaveCert}
                   disabled={!certForm.user_id || !certForm.certification_type_id || !certForm.issued_date}
                 >
-                  {editCertId ? "Update Certification" : "Add Certification"}
+                  {editCertId ? t("training.update") : t("training.addCertification")}
                 </Button>
               </div>
             </div>
@@ -958,7 +958,7 @@ export default function TrainingPage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold">Assign Training</h2>
+                  <h2 className="text-xl font-semibold">{t("training.assignTraining")}</h2>
                   <p className="text-sm text-muted-foreground">Create a new training assignment for a worker</p>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => { setShowAssignTraining(false); resetAssignForm(); }}>

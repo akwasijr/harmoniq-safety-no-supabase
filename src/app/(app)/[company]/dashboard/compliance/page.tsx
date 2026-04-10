@@ -45,9 +45,9 @@ const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 type SubTab = "obligations" | "documents" | "calendar";
 
 const OBLIGATION_STATUS_BADGE: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-  compliant: { variant: "default", label: "Compliant" },
-  due_soon: { variant: "outline", label: "Due Soon" },
-  overdue: { variant: "destructive", label: "Overdue" },
+  compliant: { variant: "default", label: "compliance.compliant" },
+  due_soon: { variant: "outline", label: "compliance.dueSoon" },
+  overdue: { variant: "destructive", label: "compliance.overdue" },
   not_started: { variant: "secondary", label: "Not Started" },
 };
 
@@ -58,12 +58,12 @@ const DOC_STATUS_BADGE: Record<string, { variant: "default" | "secondary" | "des
 };
 
 const CATEGORY_LABELS: Record<ComplianceObligation["category"], string> = {
-  incident_reporting: "Incident Reporting",
-  risk_assessment: "Risk Assessment",
+  incident_reporting: "compliance.incidentReporting",
+  risk_assessment: "compliance.riskAssessment",
   training: "Training",
-  inspection: "Inspection",
-  environmental: "Environmental",
-  general: "General",
+  inspection: "compliance.inspection",
+  environmental: "compliance.environmental",
+  general: "compliance.general",
 };
 
 const FREQUENCY_LABELS: Record<ComplianceObligation["frequency"], string> = {
@@ -337,8 +337,8 @@ export default function CompliancePage() {
     () => [
       {
         id: "category",
-        label: "Category",
-        options: Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
+        label: t("compliance.category"),
+        options: Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label: t(label) })),
         value: categoryFilter,
         onChange: setCategoryFilter,
       },
@@ -346,16 +346,16 @@ export default function CompliancePage() {
         id: "status",
         label: "Status",
         options: [
-          { value: "compliant", label: "Compliant" },
-          { value: "due_soon", label: "Due Soon" },
-          { value: "overdue", label: "Overdue" },
+          { value: "compliant", label: t("compliance.compliant") },
+          { value: "due_soon", label: t("compliance.dueSoon") },
+          { value: "overdue", label: t("compliance.overdue") },
           { value: "not_started", label: "Not Started" },
         ],
         value: statusFilter,
         onChange: setStatusFilter,
       },
     ],
-    [categoryFilter, statusFilter],
+    [categoryFilter, statusFilter, t],
   );
 
   // ── Document filters ──
@@ -363,7 +363,7 @@ export default function CompliancePage() {
     () => [
       {
         id: "category",
-        label: "Category",
+        label: t("compliance.category"),
         options: Object.entries(DOC_CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
         value: categoryFilter,
         onChange: setCategoryFilter,
@@ -380,7 +380,7 @@ export default function CompliancePage() {
         onChange: setStatusFilter,
       },
     ],
-    [categoryFilter, statusFilter],
+    [categoryFilter, statusFilter, t],
   );
 
   // ── Add Obligation form ──
@@ -548,7 +548,7 @@ export default function CompliancePage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Compliance</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{t("compliance.title")}</h1>
             <p className="text-sm text-muted-foreground">Manage regulatory obligations, documents, and compliance calendar</p>
           </div>
           <div className="flex gap-2">
@@ -562,7 +562,7 @@ export default function CompliancePage() {
               }}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Add Obligation
+              {t("compliance.addObligation")}
             </Button>
             <Button
               size="sm"
@@ -573,38 +573,38 @@ export default function CompliancePage() {
               }}
             >
               <Upload className="h-4 w-4" aria-hidden="true" />
-              Upload Document
+              {t("compliance.uploadDocument")}
             </Button>
           </div>
         </div>
 
         {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard title="Compliant" value={kpis.compliant} icon={ShieldCheck} description="Obligations met" />
+          <KPICard title={t("compliance.compliant")} value={kpis.compliant} icon={ShieldCheck} description={t("compliance.obligationsMet")} />
           <KPICard
-            title="Due Soon"
+            title={t("compliance.dueSoon")}
             value={kpis.dueSoon}
             icon={Clock}
             className={kpis.dueSoon > 0 ? "border-amber-500/50" : undefined}
-            description="Within 14 days"
+            description={t("compliance.within14Days")}
           />
           <KPICard
-            title="Overdue"
+            title={t("compliance.overdue")}
             value={kpis.overdue}
             icon={AlertTriangle}
             className={kpis.overdue > 0 ? "border-destructive/50" : undefined}
-            description="Past due date"
+            description={t("compliance.pastDueDate")}
           />
-          <KPICard title="Documents" value={kpis.totalDocs} icon={FileText} description="Compliance documents" />
+          <KPICard title={t("compliance.documents")} value={kpis.totalDocs} icon={FileText} description={t("compliance.complianceDocs")} />
         </div>
 
         {/* Sub Tabs */}
         <div className="border-b">
           <div className="flex gap-4">
             {([
-              { key: "obligations" as const, label: "Obligations", icon: ClipboardList },
-              { key: "documents" as const, label: "Documents", icon: FileText },
-              { key: "calendar" as const, label: "Calendar", icon: Calendar },
+              { key: "obligations" as const, label: t("compliance.obligations"), icon: ClipboardList },
+              { key: "documents" as const, label: t("compliance.documents"), icon: FileText },
+              { key: "calendar" as const, label: t("compliance.calendar"), icon: Calendar },
             ] as const).map((tab) => {
               const Icon = tab.icon;
               return (
@@ -646,12 +646,12 @@ export default function CompliancePage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-muted-foreground border-b">
-                        <SortableTh sortKey="title" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Title</SortableTh>
-                        <SortableTh sortKey="regulation" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Regulation</SortableTh>
-                        <SortableTh sortKey="category" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Category</SortableTh>
-                        <SortableTh sortKey="frequency" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Frequency</SortableTh>
-                        <SortableTh sortKey="next_due_date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Next Due</SortableTh>
-                        <SortableTh sortKey="owner" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Owner</SortableTh>
+                        <SortableTh sortKey="title" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.obligationTitle")}</SortableTh>
+                        <SortableTh sortKey="regulation" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.regulation")}</SortableTh>
+                        <SortableTh sortKey="category" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.category")}</SortableTh>
+                        <SortableTh sortKey="frequency" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.frequency")}</SortableTh>
+                        <SortableTh sortKey="next_due_date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.nextDue")}</SortableTh>
+                        <SortableTh sortKey="owner" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.owner")}</SortableTh>
                         <SortableTh sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Status</SortableTh>
                         <th className="pb-3 font-medium text-right">Actions</th>
                       </tr>
@@ -678,13 +678,13 @@ export default function CompliancePage() {
                               </td>
                               <td className="py-3 pr-4 text-muted-foreground">{ob.regulation}</td>
                               <td className="py-3 pr-4">
-                                <Badge variant="secondary">{CATEGORY_LABELS[ob.category]}</Badge>
+                                <Badge variant="secondary">{t(CATEGORY_LABELS[ob.category])}</Badge>
                               </td>
                               <td className="py-3 pr-4">{FREQUENCY_LABELS[ob.frequency]}</td>
                               <td className="py-3 pr-4">{formatDate(ob.next_due_date)}</td>
                               <td className="py-3 pr-4 text-muted-foreground">{getUserDisplayName(ob.owner_id, users)}</td>
                               <td className="py-3 pr-4">
-                                <Badge variant={badge.variant}>{badge.label}</Badge>
+                                <Badge variant={badge.variant}>{t(badge.label)}</Badge>
                               </td>
                               <td className="py-3 text-right">
                                 <div className="flex justify-end gap-1">
@@ -694,10 +694,10 @@ export default function CompliancePage() {
                                       size="icon"
                                       className="h-8 w-8 text-green-600 hover:text-green-700"
                                       onClick={() => handleMarkComplete(ob)}
-                                      title="Mark as complete"
+                                      title={t("compliance.markComplete")}
                                     >
                                       <CheckCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                                      <span className="sr-only">Mark complete</span>
+                                      <span className="sr-only">{t("compliance.markComplete")}</span>
                                     </Button>
                                   )}
                                   {!ob.is_builtin && (
@@ -747,12 +747,12 @@ export default function CompliancePage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-muted-foreground border-b">
-                        <SortableTh sortKey="title" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Title</SortableTh>
-                        <SortableTh sortKey="category" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Category</SortableTh>
-                        <SortableTh sortKey="version" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Version</SortableTh>
+                        <SortableTh sortKey="title" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.document")}</SortableTh>
+                        <SortableTh sortKey="category" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.category")}</SortableTh>
+                        <SortableTh sortKey="version" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.version")}</SortableTh>
                         <SortableTh sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Status</SortableTh>
-                        <SortableTh sortKey="review_date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Review Date</SortableTh>
-                        <SortableTh sortKey="owner" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Owner</SortableTh>
+                        <SortableTh sortKey="review_date" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.reviewDate")}</SortableTh>
+                        <SortableTh sortKey="owner" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("compliance.owner")}</SortableTh>
                         <th className="pb-3 font-medium text-right">Actions</th>
                       </tr>
                     </thead>
@@ -848,7 +848,7 @@ export default function CompliancePage() {
                                 <p className="font-medium truncate">{ob.title}</p>
                                 <p className="text-xs text-muted-foreground">{ob.regulation} &middot; {FREQUENCY_LABELS[ob.frequency]}</p>
                               </div>
-                              <Badge variant={badge.variant}>{badge.label}</Badge>
+                              <Badge variant={badge.variant}>{t(badge.label)}</Badge>
                               {getUserDisplayName(ob.owner_id, users, "") && (
                                 <span className="text-xs text-muted-foreground hidden sm:inline">
                                   {getUserDisplayName(ob.owner_id, users)}
@@ -865,13 +865,13 @@ export default function CompliancePage() {
             {/* Legend */}
             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" /> Compliant
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" /> {t("compliance.compliant")}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" /> Due Soon
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" /> {t("compliance.dueSoon")}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> Overdue
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> {t("compliance.overdue")}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-2.5 w-2.5 rounded-full bg-muted-foreground/30" /> Not Started
@@ -891,7 +891,7 @@ export default function CompliancePage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold">Add Compliance Obligation</h2>
+                  <h2 className="text-xl font-semibold">{t("compliance.addObligation")}</h2>
                   <p className="text-sm text-muted-foreground">Define a new regulatory obligation to track</p>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => { setShowAddObligation(false); resetObligationForm(); }}>
@@ -902,7 +902,7 @@ export default function CompliancePage() {
               <div className="space-y-4">
                 {/* Title */}
                 <div>
-                  <Label htmlFor="ob-title">Title *</Label>
+                  <Label htmlFor="ob-title">{t("compliance.obligationTitle")} *</Label>
                   <Input
                     id="ob-title"
                     value={obligationForm.title}
@@ -914,7 +914,7 @@ export default function CompliancePage() {
 
                 {/* Regulation */}
                 <div>
-                  <Label htmlFor="ob-regulation">Regulation *</Label>
+                  <Label htmlFor="ob-regulation">{t("compliance.regulation")} *</Label>
                   <Input
                     id="ob-regulation"
                     value={obligationForm.regulation}
@@ -941,7 +941,7 @@ export default function CompliancePage() {
                     </select>
                   </div>
                   <div>
-                    <Label htmlFor="ob-category">Category *</Label>
+                    <Label htmlFor="ob-category">{t("compliance.category")} *</Label>
                     <select
                       id="ob-category"
                       aria-label="Select category"
@@ -951,7 +951,7 @@ export default function CompliancePage() {
                     >
                       <option value="">Select category...</option>
                       {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
+                        <option key={value} value={value}>{t(label)}</option>
                       ))}
                     </select>
                   </div>
@@ -960,7 +960,7 @@ export default function CompliancePage() {
                 {/* Frequency + Next Due Date */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="ob-frequency">Frequency *</Label>
+                    <Label htmlFor="ob-frequency">{t("compliance.frequency")} *</Label>
                     <select
                       id="ob-frequency"
                       aria-label="Select frequency"
@@ -975,7 +975,7 @@ export default function CompliancePage() {
                     </select>
                   </div>
                   <div>
-                    <Label htmlFor="ob-due-date">Next Due Date *</Label>
+                    <Label htmlFor="ob-due-date">{t("compliance.nextDue")} *</Label>
                     <Input
                       id="ob-due-date"
                       type="date"
@@ -989,7 +989,7 @@ export default function CompliancePage() {
                 {/* Owner + Evidence Type */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="ob-owner">Owner</Label>
+                    <Label htmlFor="ob-owner">{t("compliance.owner")}</Label>
                     <select
                       id="ob-owner"
                       aria-label="Select owner"
@@ -1004,7 +1004,7 @@ export default function CompliancePage() {
                     </select>
                   </div>
                   <div>
-                    <Label htmlFor="ob-evidence">Evidence Type</Label>
+                    <Label htmlFor="ob-evidence">{t("compliance.evidenceType")}</Label>
                     <select
                       id="ob-evidence"
                       aria-label="Select evidence type"
@@ -1012,9 +1012,9 @@ export default function CompliancePage() {
                       onChange={(e) => setObligationForm((f) => ({ ...f, evidence_type: e.target.value as ComplianceObligation["evidence_type"] }))}
                       className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                      <option value="manual">Manual</option>
-                      <option value="auto">Automatic</option>
-                      <option value="document">Document</option>
+                      <option value="manual">{t("compliance.manual")}</option>
+                      <option value="auto">{t("compliance.auto")}</option>
+                      <option value="document">{t("compliance.document")}</option>
                     </select>
                   </div>
                 </div>
@@ -1028,7 +1028,7 @@ export default function CompliancePage() {
                   onClick={handleSaveObligation}
                   disabled={!obligationForm.title || !obligationForm.regulation || !obligationForm.category || !obligationForm.frequency || !obligationForm.next_due_date}
                 >
-                  Add Obligation
+                  {t("compliance.addObligation")}
                 </Button>
               </div>
             </div>
@@ -1046,7 +1046,7 @@ export default function CompliancePage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold">Upload Compliance Document</h2>
+                  <h2 className="text-xl font-semibold">{t("compliance.uploadDocument")}</h2>
                   <p className="text-sm text-muted-foreground">Add a new compliance document to track</p>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => { setShowAddDocument(false); resetDocForm(); }}>
@@ -1057,7 +1057,7 @@ export default function CompliancePage() {
               <div className="space-y-4">
                 {/* Title */}
                 <div>
-                  <Label htmlFor="doc-title">Title *</Label>
+                  <Label htmlFor="doc-title">{t("compliance.obligationTitle")} *</Label>
                   <Input
                     id="doc-title"
                     value={docForm.title}
@@ -1069,7 +1069,7 @@ export default function CompliancePage() {
 
                 {/* Category */}
                 <div>
-                  <Label htmlFor="doc-category">Category *</Label>
+                  <Label htmlFor="doc-category">{t("compliance.category")} *</Label>
                   <select
                     id="doc-category"
                     aria-label="Select document category"
@@ -1087,7 +1087,7 @@ export default function CompliancePage() {
                 {/* Version + Review Date */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="doc-version">Version</Label>
+                    <Label htmlFor="doc-version">{t("compliance.version")}</Label>
                     <Input
                       id="doc-version"
                       value={docForm.version}
@@ -1097,7 +1097,7 @@ export default function CompliancePage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="doc-review">Review Date</Label>
+                    <Label htmlFor="doc-review">{t("compliance.reviewDate")}</Label>
                     <Input
                       id="doc-review"
                       type="date"
@@ -1110,7 +1110,7 @@ export default function CompliancePage() {
 
                 {/* Owner */}
                 <div>
-                  <Label htmlFor="doc-owner">Owner</Label>
+                  <Label htmlFor="doc-owner">{t("compliance.owner")}</Label>
                   <select
                     id="doc-owner"
                     aria-label="Select document owner"
@@ -1127,7 +1127,7 @@ export default function CompliancePage() {
 
                 {/* Tags */}
                 <div>
-                  <Label htmlFor="doc-tags">Tags</Label>
+                  <Label htmlFor="doc-tags">{t("compliance.tags")}</Label>
                   <Input
                     id="doc-tags"
                     value={docForm.tags}
@@ -1146,7 +1146,7 @@ export default function CompliancePage() {
                   onClick={handleSaveDocument}
                   disabled={!docForm.title || !docForm.category}
                 >
-                  Upload Document
+                  {t("compliance.uploadDocument")}
                 </Button>
               </div>
             </div>

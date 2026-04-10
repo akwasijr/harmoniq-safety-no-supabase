@@ -41,11 +41,11 @@ const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 type SubTab = "waste" | "spills" | "overview";
 
 const WASTE_CATEGORY_LABELS: Record<WasteCategory, string> = {
-  hazardous: "Hazardous",
-  non_hazardous: "Non-Hazardous",
-  recyclable: "Recyclable",
-  special: "Special",
-  clinical: "Clinical",
+  hazardous: "environment.hazardous",
+  non_hazardous: "environment.nonHazardous",
+  recyclable: "environment.recyclable",
+  special: "environment.special",
+  clinical: "environment.clinical",
 };
 
 const WASTE_CATEGORY_BADGE: Record<WasteCategory, { variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -57,16 +57,16 @@ const WASTE_CATEGORY_BADGE: Record<WasteCategory, { variant: "default" | "second
 };
 
 const SPILL_SEVERITY_BADGE: Record<SpillSeverity, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-  minor: { variant: "secondary", label: "Minor" },
-  moderate: { variant: "outline", label: "Moderate" },
-  major: { variant: "destructive", label: "Major" },
+  minor: { variant: "secondary", label: "environment.minor" },
+  moderate: { variant: "outline", label: "environment.moderate" },
+  major: { variant: "destructive", label: "environment.major" },
 };
 
 const SPILL_STATUS_BADGE: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-  open: { variant: "destructive", label: "Open" },
-  contained: { variant: "outline", label: "Contained" },
-  cleaned: { variant: "default", label: "Cleaned" },
-  closed: { variant: "secondary", label: "Closed" },
+  open: { variant: "destructive", label: "environment.open" },
+  contained: { variant: "outline", label: "environment.contained" },
+  cleaned: { variant: "default", label: "environment.cleaned" },
+  closed: { variant: "secondary", label: "environment.closed" },
 };
 
 // ---------------------------------------------------------------------------
@@ -272,13 +272,13 @@ export default function EnvironmentPage() {
     () => [
       {
         id: "category",
-        label: "Category",
-        options: Object.entries(WASTE_CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
+        label: t("environment.wasteType"),
+        options: Object.entries(WASTE_CATEGORY_LABELS).map(([value, key]) => ({ value, label: t(key) })),
         value: categoryFilter,
         onChange: setCategoryFilter,
       },
     ],
-    [categoryFilter],
+    [categoryFilter, t],
   );
 
   // ── Spill filters ──
@@ -286,11 +286,11 @@ export default function EnvironmentPage() {
     () => [
       {
         id: "severity",
-        label: "Severity",
+        label: t("environment.severity"),
         options: [
-          { value: "minor", label: "Minor" },
-          { value: "moderate", label: "Moderate" },
-          { value: "major", label: "Major" },
+          { value: "minor", label: t("environment.minor") },
+          { value: "moderate", label: t("environment.moderate") },
+          { value: "major", label: t("environment.major") },
         ],
         value: categoryFilter,
         onChange: setCategoryFilter,
@@ -527,21 +527,21 @@ export default function EnvironmentPage() {
 
         {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard title="Total Waste" value={`${kpis.totalWaste.toLocaleString()} kg`} icon={Trash2Icon} description="This month" />
+          <KPICard title={t("environment.totalWaste")} value={`${kpis.totalWaste.toLocaleString()} kg`} icon={Trash2Icon} description={t("environment.thisMonth")} />
           <KPICard
-            title="Spills"
+            title={t("environment.spills")}
             value={kpis.spillCount}
             icon={AlertTriangle}
             className={kpis.spillCount > 0 ? "border-amber-500/50" : undefined}
-            description="This month"
+            description={t("environment.thisMonth")}
           />
-          <KPICard title="Recycling Rate" value={`${kpis.recyclingRate}%`} icon={Recycle} description="Of total waste volume" />
+          <KPICard title={t("environment.recyclingRate")} value={`${kpis.recyclingRate}%`} icon={Recycle} description={t("environment.ofTotalVolume")} />
           <KPICard
-            title="Open Spills"
+            title={t("environment.openSpills")}
             value={kpis.openSpills}
             icon={Droplets}
             className={kpis.openSpills > 0 ? "border-destructive/50" : undefined}
-            description="Requiring attention"
+            description={t("environment.requiringAttention")}
           />
         </div>
 
@@ -549,9 +549,9 @@ export default function EnvironmentPage() {
         <div className="border-b">
           <div className="flex gap-4">
             {([
-              { key: "waste" as const, label: "Waste Log", icon: Trash2Icon },
-              { key: "spills" as const, label: "Spills", icon: Droplets },
-              { key: "overview" as const, label: "Overview", icon: BarChart3 },
+              { key: "waste" as const, label: t("environment.wasteLog"), icon: Trash2Icon },
+              { key: "spills" as const, label: t("environment.spills"), icon: Droplets },
+              { key: "overview" as const, label: t("environment.overview"), icon: BarChart3 },
             ] as const).map((tab) => {
               const Icon = tab.icon;
               return (

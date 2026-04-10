@@ -46,17 +46,17 @@ const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 type SubTab = "active" | "all" | "history";
 
 const PERMIT_TYPE_LABELS: Record<PermitType, string> = {
-  hot_work: "Hot Work",
-  confined_space: "Confined Space",
-  working_at_height: "Working at Height",
-  electrical_isolation: "Electrical Isolation",
-  excavation: "Excavation",
-  other: "Other",
+  hot_work: "permits.hotWork",
+  confined_space: "permits.confinedSpace",
+  working_at_height: "permits.workingAtHeight",
+  electrical_isolation: "permits.electricalIsolation",
+  excavation: "permits.excavation",
+  other: "permits.other",
 };
 
 const PERMIT_STATUS_BADGE: Record<PermitStatus, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
   draft: { variant: "secondary", label: "Draft" },
-  pending_approval: { variant: "outline", label: "Pending Approval" },
+  pending_approval: { variant: "outline", label: "permits.pendingApproval" },
   approved: { variant: "default", label: "Approved" },
   active: { variant: "default", label: "Active" },
   expired: { variant: "destructive", label: "Expired" },
@@ -299,19 +299,19 @@ export default function PermitsPage() {
       {
         id: "type",
         label: "Type",
-        options: Object.entries(PERMIT_TYPE_LABELS).map(([value, label]) => ({ value, label })),
+        options: Object.entries(PERMIT_TYPE_LABELS).map(([value, key]) => ({ value, label: t(key) })),
         value: typeFilter,
         onChange: setTypeFilter,
       },
       {
         id: "status",
         label: "Status",
-        options: Object.entries(PERMIT_STATUS_BADGE).map(([value, { label }]) => ({ value, label })),
+        options: Object.entries(PERMIT_STATUS_BADGE).map(([value, { label }]) => ({ value, label: t(label) })),
         value: statusFilter,
         onChange: setStatusFilter,
       },
     ],
-    [typeFilter, statusFilter],
+    [typeFilter, statusFilter, t],
   );
 
   // ── Create Permit form ──
@@ -453,7 +453,7 @@ export default function PermitsPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Permits to Work</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{t("permits.title")}</h1>
             <p className="text-sm text-muted-foreground">Manage work permits, approvals, and compliance</p>
           </div>
           <div className="flex gap-2">
@@ -466,38 +466,38 @@ export default function PermitsPage() {
               }}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Create Permit
+              {t("permits.createPermit")}
             </Button>
           </div>
         </div>
 
         {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard title="Active Permits" value={kpis.active} icon={FileKey} description="Currently active" />
+          <KPICard title={t("permits.activePermits")} value={kpis.active} icon={FileKey} description={t("permits.currentlyActive")} />
           <KPICard
-            title="Pending Approval"
+            title={t("permits.pendingApproval")}
             value={kpis.pendingApproval}
             icon={Clock}
             className={kpis.pendingApproval > 0 ? "border-amber-500/50" : undefined}
-            description="Awaiting review"
+            description={t("permits.awaitingReview")}
           />
           <KPICard
-            title="Expiring Today"
+            title={t("permits.expiringToday")}
             value={kpis.expiringToday}
             icon={AlertTriangle}
             className={kpis.expiringToday > 0 ? "border-destructive/50" : undefined}
-            description="Expires by end of day"
+            description={t("permits.expiresByEndOfDay")}
           />
-          <KPICard title="Total This Month" value={kpis.totalThisMonth} icon={ShieldCheck} description="Permits created" />
+          <KPICard title={t("permits.totalThisMonth")} value={kpis.totalThisMonth} icon={ShieldCheck} description={t("permits.permitsCreated")} />
         </div>
 
         {/* Sub Tabs */}
         <div className="border-b">
           <div className="flex gap-4">
             {([
-              { key: "active" as const, label: "Active Permits", icon: Zap },
-              { key: "all" as const, label: "All Permits", icon: List },
-              { key: "history" as const, label: "History", icon: History },
+              { key: "active" as const, label: t("permits.activePermits"), icon: Zap },
+              { key: "all" as const, label: t("permits.allPermits"), icon: List },
+              { key: "history" as const, label: t("permits.history"), icon: History },
             ] as const).map((tab) => {
               const Icon = tab.icon;
               return (
@@ -531,7 +531,7 @@ export default function PermitsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              {activeTab === "active" ? "Active Permits" : activeTab === "history" ? "Permit History" : "All Permits"} ({filteredPermits.length})
+              {activeTab === "active" ? t("permits.activePermits") : activeTab === "history" ? t("permits.history") : t("permits.allPermits")} ({filteredPermits.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -539,14 +539,14 @@ export default function PermitsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-muted-foreground border-b">
-                    <SortableTh sortKey="permit_number" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Permit #</SortableTh>
-                    <SortableTh sortKey="type" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Type</SortableTh>
+                    <SortableTh sortKey="permit_number" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("permits.permitNumber")}</SortableTh>
+                    <SortableTh sortKey="type" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("permits.type")}</SortableTh>
                     <SortableTh sortKey="title" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Title</SortableTh>
-                    <SortableTh sortKey="location" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Location</SortableTh>
-                    <SortableTh sortKey="start_time" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Start</SortableTh>
-                    <SortableTh sortKey="end_time" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>End</SortableTh>
+                    <SortableTh sortKey="location" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("permits.location")}</SortableTh>
+                    <SortableTh sortKey="start_time" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("permits.startTime")}</SortableTh>
+                    <SortableTh sortKey="end_time" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("permits.endTime")}</SortableTh>
                     <SortableTh sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Status</SortableTh>
-                    <SortableTh sortKey="approved_by" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>Approved By</SortableTh>
+                    <SortableTh sortKey="approved_by" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort}>{t("permits.approvedBy")}</SortableTh>
                     <th className="pb-3 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
@@ -564,7 +564,7 @@ export default function PermitsPage() {
                         <tr key={p.id} className="hover:bg-muted/50 transition-colors">
                           <td className="py-3 pr-4 font-mono text-xs">{p.permit_number}</td>
                           <td className="py-3 pr-4">
-                            <Badge variant="secondary">{PERMIT_TYPE_LABELS[p.type]}</Badge>
+                            <Badge variant="secondary">{t(PERMIT_TYPE_LABELS[p.type])}</Badge>
                           </td>
                           <td className="py-3 pr-4">
                             <div>
@@ -578,7 +578,7 @@ export default function PermitsPage() {
                           <td className="py-3 pr-4 text-muted-foreground">{formatDate(p.start_time)}</td>
                           <td className="py-3 pr-4 text-muted-foreground">{formatDate(p.end_time)}</td>
                           <td className="py-3 pr-4">
-                            <Badge variant={badge.variant}>{badge.label}</Badge>
+                            <Badge variant={badge.variant}>{t(badge.label)}</Badge>
                           </td>
                           <td className="py-3 pr-4 text-muted-foreground">{getUserDisplayName(p.approved_by, users)}</td>
                           <td className="py-3 text-right">
@@ -592,7 +592,7 @@ export default function PermitsPage() {
                                   title="Approve permit"
                                 >
                                   <CheckCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                                  <span className="sr-only">Approve</span>
+                                  <span className="sr-only">{t("permits.approve")}</span>
                                 </Button>
                               )}
                               {(p._status === "active" || p._status === "approved") && (
@@ -604,7 +604,7 @@ export default function PermitsPage() {
                                   title="Close permit"
                                 >
                                   <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                                  <span className="sr-only">Close</span>
+                                  <span className="sr-only">{t("permits.close")}</span>
                                 </Button>
                               )}
                               {(p._status === "draft" || p._status === "pending_approval") && (
@@ -616,7 +616,7 @@ export default function PermitsPage() {
                                   title="Cancel permit"
                                 >
                                   <Ban className="h-3.5 w-3.5" aria-hidden="true" />
-                                  <span className="sr-only">Cancel</span>
+                                  <span className="sr-only">{t("permits.cancel")}</span>
                                 </Button>
                               )}
                               {(p._status === "draft" || p._status === "cancelled") && (
@@ -654,7 +654,7 @@ export default function PermitsPage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold">Create Permit to Work</h2>
+                  <h2 className="text-xl font-semibold">{t("permits.createPermit")}</h2>
                   <p className="text-sm text-muted-foreground">Submit a new permit request for approval</p>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => { setShowCreatePermit(false); resetPermitForm(); }}>
@@ -674,8 +674,8 @@ export default function PermitsPage() {
                     className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     <option value="">Select type...</option>
-                    {Object.entries(PERMIT_TYPE_LABELS).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
+                    {Object.entries(PERMIT_TYPE_LABELS).map(([value, key]) => (
+                      <option key={value} value={value}>{t(key)}</option>
                     ))}
                   </select>
                 </div>
@@ -707,7 +707,7 @@ export default function PermitsPage() {
 
                 {/* Location */}
                 <div>
-                  <Label htmlFor="permit-location">Location</Label>
+                  <Label htmlFor="permit-location">{t("permits.location")}</Label>
                   <select
                     id="permit-location"
                     aria-label="Select location"
@@ -725,7 +725,7 @@ export default function PermitsPage() {
                 {/* Start Time + End Time */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="permit-start">Start Time *</Label>
+                    <Label htmlFor="permit-start">{t("permits.startTime")} *</Label>
                     <Input
                       id="permit-start"
                       type="datetime-local"
@@ -735,7 +735,7 @@ export default function PermitsPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="permit-end">End Time *</Label>
+                    <Label htmlFor="permit-end">{t("permits.endTime")} *</Label>
                     <Input
                       id="permit-end"
                       type="datetime-local"
@@ -748,7 +748,7 @@ export default function PermitsPage() {
 
                 {/* Precautions */}
                 <div>
-                  <Label htmlFor="permit-precautions">Precautions</Label>
+                  <Label htmlFor="permit-precautions">{t("permits.precautions")}</Label>
                   <Textarea
                     id="permit-precautions"
                     value={permitForm.precautions}
@@ -762,7 +762,7 @@ export default function PermitsPage() {
 
                 {/* Workers */}
                 <div>
-                  <Label>Workers</Label>
+                  <Label>{t("permits.workers")}</Label>
                   <div className="mt-1 max-h-40 overflow-y-auto rounded-md border border-input p-2 space-y-1">
                     {users.length === 0 ? (
                       <p className="text-sm text-muted-foreground">No users available</p>
@@ -801,13 +801,13 @@ export default function PermitsPage() {
 
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
                 <Button variant="outline" onClick={() => { setShowCreatePermit(false); resetPermitForm(); }}>
-                  Cancel
+                  {t("permits.cancel")}
                 </Button>
                 <Button
                   onClick={handleSavePermit}
                   disabled={!permitForm.type || !permitForm.title || !permitForm.start_time || !permitForm.end_time}
                 >
-                  Create Permit
+                  {t("permits.createPermit")}
                 </Button>
               </div>
             </div>

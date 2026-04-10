@@ -84,9 +84,9 @@ function FieldFocus({
   const [activeTab, setActiveTab] = React.useState<FocusTab>(defaultTab);
 
   const tabs: { id: FocusTab; label: string; dot: string; count: number }[] = [
-    { id: "urgent", label: "Urgent", dot: "bg-red-500", count: urgent.length },
-    { id: "upcoming", label: "Upcoming", dot: "bg-amber-500", count: upcoming.length },
-    { id: "good_to_know", label: "Good to Know", dot: "bg-blue-500", count: goodToKnow.length },
+    { id: "urgent", label: t("focusStrip.urgent"), dot: "bg-red-500", count: urgent.length },
+    { id: "upcoming", label: t("focusStrip.upcoming"), dot: "bg-amber-500", count: upcoming.length },
+    { id: "good_to_know", label: t("focusStrip.goodToKnow"), dot: "bg-blue-500", count: goodToKnow.length },
   ];
 
   const items = activeTab === "urgent" ? urgent : activeTab === "upcoming" ? upcoming : goodToKnow;
@@ -124,7 +124,7 @@ function FieldFocus({
               <Info className="h-8 w-8 mb-2" />
             )}
             <p className="text-xs">
-              {activeTab === "urgent" ? "No urgent items" : activeTab === "upcoming" ? "Nothing upcoming" : "All clear"}
+              {activeTab === "urgent" ? t("focusStrip.noUrgent") : activeTab === "upcoming" ? t("focusStrip.nothingUpcoming") : t("focusStrip.allClear")}
             </p>
           </div>
         ) : (
