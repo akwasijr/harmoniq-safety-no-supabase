@@ -29,6 +29,8 @@ import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
+import { useWorkerCertificationsStore } from "@/stores/worker-certifications-store";
+import { useTrainingAssignmentsStore } from "@/stores/training-assignments-store";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { cn } from "@/lib/utils";
@@ -377,6 +379,8 @@ export default function EmployeeAppHomePage() {
   const { items: tickets } = useTicketsStore();
   const { items: workOrders } = useWorkOrdersStore();
   const { items: correctiveActions } = useCorrectiveActionsStore();
+  const { items: workerCertifications } = useWorkerCertificationsStore();
+  const { items: trainingAssignments } = useTrainingAssignmentsStore();
   const { items: checklistTemplates } = useChecklistTemplatesStore();
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { t, formatDate } = useTranslation();
@@ -636,6 +640,48 @@ export default function EmployeeAppHomePage() {
         subtitle: inc.reference_number || "Incident closed",
         href: `/${company}/app/incidents/${inc.id}`,
         icon: Info,
+      });
+    });
+
+  // Training: expired certs for this user → urgent
+  const myCerts = workerCertifications.filter((c) => c.user_id === user.id);
+  myCerts.filter((c) => c.expiry_date && new Date(c.expiry_date) < now && c.status !== "revoked")
+    .slice(0, 2).forEach((c) => {
+      focusUrgent.push({
+        id: `cert-${c.id}`,
+        title: "Certification expired",
+        subtitle: c.issuer || "Renew now",
+        href: `/${company}/app`,
+        icon: AlertCircle,
+        time: overdueSince(c.expiry_date!),
+      });
+    });
+
+  // Training: expiring certs within 30 days → upcoming
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 86400000);
+  myCerts.filter((c) => c.expiry_date && new Date(c.expiry_date) >= now && new Date(c.expiry_date) <= thirtyDaysFromNow)
+    .slice(0, 2).forEach((c) => {
+      focusUpcoming.push({
+        id: `cert-${c.id}`,
+        title: "Certification expiring",
+        subtitle: c.issuer || "",
+        href: `/${company}/app`,
+        icon: Clock,
+        time: dueIn(c.expiry_date!),
+      });
+    });
+
+  // Training: overdue assignments → urgent
+  const myAssignments = trainingAssignments.filter((a) => a.user_id === user.id);
+  myAssignments.filter((a) => a.status !== "completed" && new Date(a.due_date) < now)
+    .slice(0, 2).forEach((a) => {
+      focusUrgent.push({
+        id: `ta-${a.id}`,
+        title: a.course_name,
+        subtitle: "Training overdue",
+        href: `/${company}/app`,
+        icon: AlertTriangle,
+        time: overdueSince(a.due_date),
       });
     });
 

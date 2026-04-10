@@ -161,7 +161,7 @@ export default function DashboardPage() {
 
   const { isSuperAdmin, hasSelectedCompany, switchCompany, user } = useAuth();
   const { items: allCompanies } = useCompanyStore();
-  const { incidents, locations, users, assets: allAssets, tickets, workOrders, correctiveActions, stores } = useCompanyData();
+  const { incidents, locations, users, assets: allAssets, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, stores } = useCompanyData();
 
   // Track platform entry state to avoid hydration mismatch
   const [isPlatformEntry, setIsPlatformEntry] = React.useState(false);
@@ -474,6 +474,28 @@ export default function DashboardPage() {
   const resolvedThisWeek = incidents.filter((i) => i.status === "resolved" && i.resolved_at && new Date(i.resolved_at) > weekAgo).length;
   if (resolvedThisWeek > 0) focusGoodToKnow.push({ id: "resolved-week", title: `${resolvedThisWeek} incidents resolved this week`, subtitle: "Team is making progress", href: `/${company}/dashboard/incidents` });
   if (expiryAlerts.length === 0) focusGoodToKnow.push({ id: "no-expiry", title: "No upcoming asset expiries", subtitle: "All assets within compliance window", href: `/${company}/dashboard/assets` });
+
+  // Training: expired certifications → urgent
+  const expiredCerts = workerCertifications.filter((c) => c.expiry_date && new Date(c.expiry_date) < focusNow && c.status !== "revoked");
+  expiredCerts.slice(0, 3).forEach((c) => {
+    const worker = users.find((u) => u.id === c.user_id);
+    focusUrgent.push({ id: `cert-${c.id}`, title: `${worker?.full_name || "Worker"} — expired certification`, subtitle: c.issuer || "", type: "Training", href: `/${company}/dashboard/training`, time: daysOverdue(c.expiry_date!) });
+  });
+
+  // Training: expiring certs within 30 days → upcoming
+  const thirtyDays = new Date(focusNow.getTime() + 30 * 86400000);
+  const expiringCerts = workerCertifications.filter((c) => c.expiry_date && new Date(c.expiry_date) >= focusNow && new Date(c.expiry_date) <= thirtyDays);
+  expiringCerts.slice(0, 3).forEach((c) => {
+    const worker = users.find((u) => u.id === c.user_id);
+    focusUpcoming.push({ id: `cert-${c.id}`, title: `${worker?.full_name || "Worker"} — cert expiring`, subtitle: c.issuer || "", type: "Training", href: `/${company}/dashboard/training`, time: daysUntil(c.expiry_date!) });
+  });
+
+  // Training: overdue assignments → urgent
+  trainingAssignments.filter((a) => a.status !== "completed" && new Date(a.due_date) < focusNow)
+    .slice(0, 2).forEach((a) => {
+      const worker = users.find((u) => u.id === a.user_id);
+      focusUrgent.push({ id: `ta-${a.id}`, title: `${worker?.full_name || "Worker"} — overdue training`, subtitle: a.course_name, type: "Training", href: `/${company}/dashboard/training`, time: daysOverdue(a.due_date) });
+    });
 
   const focusTabs = [
     { id: "urgent" as const, label: "Urgent", dot: "bg-red-500", items: focusUrgent },
