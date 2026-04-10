@@ -166,18 +166,18 @@ const companyNavGroups: NavGroup[] = [
         requiredRoles: ["company_admin", "manager", "super_admin", "safety_officer", "viewer"],
       },
       {
-        title: "Users & Teams",
-        titleKey: "nav.usersTeams",
-        href: "/dashboard/users",
-        icon: Users,
-        requiredRoles: ["company_admin", "manager", "super_admin"],
-      },
-      {
         title: "Locations",
         titleKey: "nav.locations",
         href: "/dashboard/locations",
         icon: MapPin,
         additionalPaths: ["/dashboard/qr-codes"],
+        requiredRoles: ["company_admin", "manager", "super_admin"],
+      },
+      {
+        title: "Users & Teams",
+        titleKey: "nav.usersTeams",
+        href: "/dashboard/users",
+        icon: Users,
         requiredRoles: ["company_admin", "manager", "super_admin"],
       },
       {
