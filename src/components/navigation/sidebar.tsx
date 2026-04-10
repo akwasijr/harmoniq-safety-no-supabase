@@ -30,6 +30,7 @@ import {
   GraduationCap,
   Leaf,
   ClipboardList,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -58,12 +59,13 @@ interface NavItem {
 }
 
 type NavGroup = {
+  label: string;
   items: NavItem[];
 };
 
 const companyNavGroups: NavGroup[] = [
-  // OVERVIEW
   {
+    label: "Overview",
     items: [
       {
         title: "Dashboard",
@@ -82,6 +84,7 @@ const companyNavGroups: NavGroup[] = [
   },
   // OPERATIONS
   {
+    label: "Operations",
     items: [
       {
         title: "Incidents",
@@ -113,6 +116,7 @@ const companyNavGroups: NavGroup[] = [
   },
   // MANAGEMENT
   {
+    label: "Management",
     items: [
       {
         title: "Risk Register",
@@ -142,6 +146,7 @@ const companyNavGroups: NavGroup[] = [
   },
   // REPORTING
   {
+    label: "Reporting",
     items: [
       {
         title: "Analytics",
@@ -160,6 +165,7 @@ const companyNavGroups: NavGroup[] = [
   },
   // ADMIN
   {
+    label: "Admin",
     items: [
       {
         title: "Asset Management",
@@ -229,6 +235,32 @@ const superAdminPlatformNav: NavItem[] = [
 ];
 
 const PLATFORM_ENTRY_KEY = "harmoniq_platform_entry";
+
+// Collapsible sidebar group
+function SidebarGroup({ label, isCollapsed, children }: { label: string; isCollapsed: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = React.useState(true);
+
+  if (isCollapsed) {
+    return <ul className="space-y-0.5">{children}</ul>;
+  }
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 hover:text-sidebar-foreground/60 transition-colors"
+      >
+        <span>{label}</span>
+        <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <ul className="space-y-0.5 mt-0.5">
+          {children}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function Sidebar({ 
   company, 
@@ -434,16 +466,20 @@ export function Sidebar({
           <div className="my-2 mx-2 border-t border-sidebar-border" />
         )}
 
-        {/* Company nav items — grouped with spacing */}
+        {/* Company nav items — collapsible groups */}
         {(!showPlatformNav || hasSelectedCompany) && (
-          <div className="space-y-4">
+          <div className="space-y-1">
             {companyNavGroups.map((group, groupIdx) => {
               const visibleItems = group.items.filter((item) =>
                 !item.requiredRoles || item.requiredRoles.includes(actualRole)
               );
               if (visibleItems.length === 0) return null;
               return (
-                <ul key={groupIdx} className="space-y-0.5">
+                <SidebarGroup
+                  key={groupIdx}
+                  label={group.label}
+                  isCollapsed={isCollapsed}
+                >
                   {visibleItems.map((item) => {
                     const href = `/${company}${item.href}`;
                     const isActive = isNavItemActive(item);
@@ -452,17 +488,17 @@ export function Sidebar({
                         <Link
                           href={href}
                           className={cn(
-                            "flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors",
+                            "flex items-center gap-2.5 rounded-md py-1.5 text-[13px] transition-colors",
+                            isCollapsed ? "justify-center px-2" : "pl-7 pr-3",
                             "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                             isActive
                               ? "bg-primary text-primary-foreground font-semibold"
-                              : "text-sidebar-foreground/60",
-                            isCollapsed && "justify-center px-2"
+                              : "text-sidebar-foreground/40"
                           )}
                           title={isCollapsed ? getTitle(item) : undefined}
                         >
-                          <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          <item.icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                           {!isCollapsed && <span>{getTitle(item)}</span>}
                           {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
                             <span className="ml-auto rounded-full bg-sidebar-primary px-1.5 py-0.5 text-[10px] text-sidebar-primary-foreground">
@@ -473,7 +509,7 @@ export function Sidebar({
                       </li>
                     );
                   })}
-                </ul>
+                </SidebarGroup>
               );
             })}
           </div>
