@@ -255,7 +255,7 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <section ref={heroRef} className="relative min-h-screen flex items-end z-10">
-        <div className="container mx-auto px-4 lg:px-8 relative z-10 pb-12 lg:pb-16">
+        <div className="container mx-auto px-4 lg:px-8 relative z-10 pb-20 lg:pb-28">
           <motion.div
             initial="hidden"
             animate="visible"
