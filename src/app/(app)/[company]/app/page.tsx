@@ -15,6 +15,12 @@ import {
   ScanLine,
   ShieldCheck,
   Zap,
+  AlertCircle,
+  Clock,
+  Info,
+  Ticket,
+  CheckCircle,
+  TrendingDown,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
@@ -38,7 +44,7 @@ import {
   getFieldAppTip,
 } from "@/lib/field-app-settings";
 
-const QUICK_ACTION_ICON_MAP: Record<FieldAppQuickActionId, React.ComponentType<{ className?: string }>> = {
+const QUICK_ACTION_ICON_MAP: Record<FieldAppQuickActionId, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
   report_incident: AlertTriangle,
   my_tasks: ClipboardCheck,
   browse_assets: Search,
@@ -48,6 +54,91 @@ const QUICK_ACTION_ICON_MAP: Record<FieldAppQuickActionId, React.ComponentType<{
   checklists: ClipboardCheck,
   news: Newspaper,
 };
+
+/* ── Field Focus ── */
+type FocusItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
+
+type FocusTab = "urgent" | "upcoming" | "good_to_know";
+
+function FieldFocus({
+  urgent,
+  upcoming,
+  goodToKnow,
+  t,
+}: {
+  urgent: FocusItem[];
+  upcoming: FocusItem[];
+  goodToKnow: FocusItem[];
+  t: (key: string) => string;
+}) {
+  const [activeTab, setActiveTab] = React.useState<FocusTab>("urgent");
+
+  const tabs: { id: FocusTab; label: string; color: string; count: number }[] = [
+    { id: "urgent", label: t("app.focusUrgent") || "Urgent", color: "text-red-500 border-red-500", count: urgent.length },
+    { id: "upcoming", label: t("app.focusUpcoming") || "Upcoming", color: "text-amber-500 border-amber-500", count: upcoming.length },
+    { id: "good_to_know", label: t("app.focusGoodToKnow") || "Good to Know", color: "text-blue-500 border-blue-500", count: goodToKnow.length },
+  ];
+
+  const items = activeTab === "urgent" ? urgent : activeTab === "upcoming" ? upcoming : goodToKnow;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-semibold">{t("app.fieldFocus") || "Field Focus"}</h2>
+      </div>
+      {/* Tabs */}
+      <div className="flex gap-1 mb-3">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "flex-1 text-xs font-medium py-2 rounded-lg text-center transition-colors",
+              activeTab === tab.id
+                ? `${tab.color} bg-current/10 border-b-2`
+                : "text-muted-foreground"
+            )}
+            style={activeTab === tab.id ? { backgroundColor: `color-mix(in srgb, currentColor 10%, transparent)` } : undefined}
+          >
+            {tab.label}
+            {tab.count > 0 && (
+              <span className="ml-1 text-[10px] opacity-70">({tab.count})</span>
+            )}
+          </button>
+        ))}
+      </div>
+      {/* Items */}
+      {items.length === 0 ? (
+        <div className="py-6 text-center text-sm text-muted-foreground">
+          {activeTab === "urgent" ? "No urgent items" : activeTab === "upcoming" ? "Nothing upcoming" : "All clear"}
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          {items.slice(0, 5).map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              className="flex items-center gap-3 rounded-xl bg-card px-3.5 py-3 active:bg-muted/50 transition-colors"
+            >
+              <item.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium leading-tight truncate">{item.title}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{item.subtitle}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function getGreetingKey(): string {
   if (typeof window === "undefined") return "app.goodMorning"; // SSR default
@@ -350,6 +441,149 @@ export default function EmployeeAppHomePage() {
     };
   });
 
+  // ── Field Focus data ──
+  const now = new Date(stableNow);
+  const sevenDaysFromNow = new Date(stableNow + 7 * 24 * 60 * 60 * 1000);
+
+  const focusUrgent: FocusItem[] = [];
+  const focusUpcoming: FocusItem[] = [];
+  const focusGoodToKnow: FocusItem[] = [];
+
+  // Critical/high incidents still open
+  incidents
+    .filter((inc) => (inc.severity === "critical" || inc.severity === "high") && inc.status !== "resolved" && inc.status !== "archived")
+    .slice(0, 5)
+    .forEach((inc) => {
+      focusUrgent.push({
+        id: `inc-${inc.id}`,
+        title: inc.title,
+        subtitle: `${inc.severity} incident · ${inc.status}`,
+        href: `/${company}/app/incidents/${inc.id}`,
+        icon: AlertCircle,
+      });
+    });
+
+  // Overdue tickets
+  userTickets
+    .filter((tk) => tk.status !== "resolved" && tk.status !== "closed" && tk.due_date && new Date(tk.due_date) < now)
+    .forEach((tk) => {
+      focusUrgent.push({
+        id: `tk-${tk.id}`,
+        title: tk.title,
+        subtitle: `Overdue · was due ${tk.due_date}`,
+        href: `/${company}/app/tasks/tickets/${tk.id}`,
+        icon: Ticket,
+      });
+    });
+
+  // Overdue work orders
+  userWorkOrders
+    .filter((wo) => wo.status !== "completed" && wo.status !== "cancelled" && wo.due_date && new Date(wo.due_date) < now)
+    .forEach((wo) => {
+      focusUrgent.push({
+        id: `wo-${wo.id}`,
+        title: wo.title,
+        subtitle: `Overdue work order · ${wo.priority}`,
+        href: `/${company}/app/tasks/work-orders/${wo.id}`,
+        icon: Wrench,
+      });
+    });
+
+  // Overdue corrective actions
+  userActions
+    .filter((ca) => ca.status !== "completed" && ca.due_date && new Date(ca.due_date) < now)
+    .forEach((ca) => {
+      focusUrgent.push({
+        id: `ca-${ca.id}`,
+        title: ca.description?.slice(0, 60) || "Corrective action",
+        subtitle: `Overdue · ${ca.severity} severity`,
+        href: `/${company}/app/tasks/actions/${ca.id}`,
+        icon: AlertTriangle,
+      });
+    });
+
+  // Due checklists (urgent)
+  dueChecklists.slice(0, 3).forEach((dc) => {
+    focusUrgent.push({
+      id: `cl-${dc.template.id}`,
+      title: dc.template.name,
+      subtitle: dc.label || "Checklist due",
+      href: `/${company}/app/checklists/${dc.template.id}`,
+      icon: ClipboardCheck,
+    });
+  });
+
+  // Upcoming: tickets/WOs/actions due within 7 days
+  userTickets
+    .filter((tk) => tk.status !== "resolved" && tk.status !== "closed" && tk.due_date && new Date(tk.due_date) >= now && new Date(tk.due_date) <= sevenDaysFromNow)
+    .forEach((tk) => {
+      focusUpcoming.push({
+        id: `tk-${tk.id}`,
+        title: tk.title,
+        subtitle: `Due ${tk.due_date}`,
+        href: `/${company}/app/tasks/tickets/${tk.id}`,
+        icon: Clock,
+      });
+    });
+
+  userWorkOrders
+    .filter((wo) => wo.status !== "completed" && wo.status !== "cancelled" && wo.due_date && new Date(wo.due_date) >= now && new Date(wo.due_date) <= sevenDaysFromNow)
+    .forEach((wo) => {
+      focusUpcoming.push({
+        id: `wo-${wo.id}`,
+        title: wo.title,
+        subtitle: `Due ${wo.due_date} · ${wo.type.replace(/_/g, " ")}`,
+        href: `/${company}/app/tasks/work-orders/${wo.id}`,
+        icon: Wrench,
+      });
+    });
+
+  userActions
+    .filter((ca) => ca.status !== "completed" && ca.due_date && new Date(ca.due_date) >= now && new Date(ca.due_date) <= sevenDaysFromNow)
+    .forEach((ca) => {
+      focusUpcoming.push({
+        id: `ca-${ca.id}`,
+        title: ca.description?.slice(0, 60) || "Corrective action",
+        subtitle: `Due ${ca.due_date}`,
+        href: `/${company}/app/tasks/actions/${ca.id}`,
+        icon: Clock,
+      });
+    });
+
+  // Good to Know: safe days milestone, completed tasks this week, resolved incidents
+  if (safeDays > 0 && safeDays % 7 === 0) {
+    focusGoodToKnow.push({
+      id: "safe-milestone",
+      title: `${safeDays} days without incidents`,
+      subtitle: "Keep up the great work!",
+      href: `/${company}/app`,
+      icon: CheckCircle,
+    });
+  }
+
+  if (completedThisWeek > 0) {
+    focusGoodToKnow.push({
+      id: "completed-week",
+      title: `${completedThisWeek} tasks completed this week`,
+      subtitle: "Your team is on track",
+      href: `/${company}/app/checklists?tab=checklists`,
+      icon: CheckCircle,
+    });
+  }
+
+  incidents
+    .filter((inc) => inc.status === "resolved" && inc.resolved_at && new Date(inc.resolved_at) > oneWeekAgo)
+    .slice(0, 3)
+    .forEach((inc) => {
+      focusGoodToKnow.push({
+        id: `resolved-${inc.id}`,
+        title: `${inc.title} resolved`,
+        subtitle: inc.reference_number || "Incident closed",
+        href: `/${company}/app/incidents/${inc.id}`,
+        icon: Info,
+      });
+    });
+
   // ── Always show full feed (no early return for empty state) ──
   return (
     <div className="flex flex-col min-h-full" data-animate={shouldAnimate ? "true" : "false"}>
@@ -401,6 +635,11 @@ export default function EmployeeAppHomePage() {
             </Link>
           ))}
         </div>
+      </div>
+
+      {/* ── Field Focus ── */}
+      <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.1s" }}>
+        <FieldFocus urgent={focusUrgent} upcoming={focusUpcoming} goodToKnow={focusGoodToKnow} t={t} />
       </div>
 
       {/* ── Content Feed ── */}
