@@ -24,6 +24,9 @@ import { useTrainingAssignmentsStore } from "@/stores/training-assignments-store
 import { useComplianceObligationsStore } from "@/stores/compliance-obligations-store";
 import { useComplianceEvidenceStore } from "@/stores/compliance-evidence-store";
 import { useComplianceDocumentsStore } from "@/stores/compliance-documents-store";
+import { usePermitsStore } from "@/stores/permits-store";
+import { useWasteLogsStore } from "@/stores/waste-logs-store";
+import { useSpillRecordsStore } from "@/stores/spill-records-store";
 
 /**
  * Returns all entity stores with items pre-filtered by the current user's company.
@@ -59,6 +62,9 @@ export function useCompanyData() {
   const complianceObligationsStore = useComplianceObligationsStore();
   const complianceEvidenceStore = useComplianceEvidenceStore();
   const complianceDocumentsStore = useComplianceDocumentsStore();
+  const permitsStore = usePermitsStore();
+  const wasteLogsStore = useWasteLogsStore();
+  const spillRecordsStore = useSpillRecordsStore();
 
   const incidents = useMemo(() => incidentsStore.itemsForCompany(companyId), [incidentsStore, companyId]);
   const assets = useMemo(() => assetsStore.itemsForCompany(companyId), [assetsStore, companyId]);
@@ -83,6 +89,9 @@ export function useCompanyData() {
   const complianceObligations = useMemo(() => complianceObligationsStore.itemsForCompany(companyId), [complianceObligationsStore, companyId]);
   const complianceEvidence = useMemo(() => complianceEvidenceStore.itemsForCompany(companyId), [complianceEvidenceStore, companyId]);
   const complianceDocuments = useMemo(() => complianceDocumentsStore.itemsForCompany(companyId), [complianceDocumentsStore, companyId]);
+  const permits = useMemo(() => permitsStore.itemsForCompany(companyId), [permitsStore, companyId]);
+  const wasteLogs = useMemo(() => wasteLogsStore.itemsForCompany(companyId), [wasteLogsStore, companyId]);
+  const spillRecords = useMemo(() => spillRecordsStore.itemsForCompany(companyId), [spillRecordsStore, companyId]);
 
   return {
     incidents,
@@ -108,6 +117,9 @@ export function useCompanyData() {
     complianceObligations,
     complianceEvidence,
     complianceDocuments,
+    permits,
+    wasteLogs,
+    spillRecords,
     // Expose raw stores for mutations (add/update/remove don't need filtering)
     stores: {
       incidents: incidentsStore,
@@ -133,6 +145,9 @@ export function useCompanyData() {
       complianceObligations: complianceObligationsStore,
       complianceEvidence: complianceEvidenceStore,
       complianceDocuments: complianceDocumentsStore,
+      permits: permitsStore,
+      wasteLogs: wasteLogsStore,
+      spillRecords: spillRecordsStore,
     },
     companyId,
   };

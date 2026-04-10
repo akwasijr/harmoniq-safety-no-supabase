@@ -99,7 +99,6 @@ const companyNavGroups: NavGroup[] = [
         href: "/dashboard/permits",
         icon: FileKey,
         requiredRoles: ["company_admin", "manager", "super_admin"],
-        comingSoon: true,
       },
     ],
   },
@@ -142,7 +141,6 @@ const companyNavGroups: NavGroup[] = [
         href: "/dashboard/environment",
         icon: Leaf,
         requiredRoles: ["company_admin", "manager", "super_admin"],
-        comingSoon: true,
       },
       {
         title: "Compliance",

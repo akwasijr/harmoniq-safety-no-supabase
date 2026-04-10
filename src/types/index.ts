@@ -1613,6 +1613,81 @@ export interface ComplianceDocument {
 }
 
 // ============================================
+// PERMITS TO WORK
+// ============================================
+
+export type PermitType = "hot_work" | "confined_space" | "working_at_height" | "electrical_isolation" | "excavation" | "other";
+export type PermitStatus = "draft" | "pending_approval" | "approved" | "active" | "expired" | "cancelled" | "closed";
+
+export interface PermitToWork {
+  id: string;
+  company_id: string;
+  permit_number: string;
+  type: PermitType;
+  title: string;
+  description: string | null;
+  location_id: string | null;
+  asset_id: string | null;
+  requested_by: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  start_time: string;
+  end_time: string;
+  status: PermitStatus;
+  precautions: string[];
+  isolation_refs: string[];
+  workers: string[];
+  notes: string | null;
+  closed_by: string | null;
+  closed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// ENVIRONMENT
+// ============================================
+
+export type WasteCategory = "hazardous" | "non_hazardous" | "recyclable" | "special" | "clinical";
+export type SpillSeverity = "minor" | "moderate" | "major";
+
+export interface WasteLog {
+  id: string;
+  company_id: string;
+  waste_type: string;
+  category: WasteCategory;
+  volume: number;
+  unit: string;
+  disposal_method: string;
+  contractor: string | null;
+  location_id: string | null;
+  date: string;
+  notes: string | null;
+  recorded_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SpillRecord {
+  id: string;
+  company_id: string;
+  material: string;
+  volume: number;
+  unit: string;
+  severity: SpillSeverity;
+  location_id: string | null;
+  location_description: string | null;
+  containment_action: string;
+  incident_id: string | null;
+  date: string;
+  reported_by: string;
+  status: "open" | "contained" | "cleaned" | "closed";
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
 // OFFLINE SYNC
 // ============================================
 
