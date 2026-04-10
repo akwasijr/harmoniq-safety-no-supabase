@@ -395,7 +395,7 @@ export default function EmployeeAppHomePage() {
               className="flex flex-col items-center gap-2 w-[72px] active:scale-95 transition-transform home-section"
               style={{ animationDelay: `${0.15 - Math.min(i * 0.02, 0.12)}s` }}>
               <div className="h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center">
-                <action.icon className="h-6 w-6 text-white" />
+                <action.icon className="h-6 w-6 text-white" strokeWidth={1.5} />
               </div>
               <span className="text-[11px] font-medium text-center text-muted-foreground leading-tight">{t(action.labelKey) || action.fallbackLabel}</span>
             </Link>
