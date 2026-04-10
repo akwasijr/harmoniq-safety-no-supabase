@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 import { loadFromStorage, saveToStorage } from "@/lib/local-storage";
 import { hasSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { subscribeToRealtimeInvalidation } from "@/lib/supabase/realtime-invalidation";
-import { sanitizeText } from "@/lib/validation";
 
 // ── Module-level cache ──────────────────────────────────────────────
 // Persists across Provider re-mounts so tab navigation never re-fetches
@@ -66,13 +65,19 @@ async function syncWithRetry(
   return false;
 }
 
-/** Recursively sanitize all string values in an entity before writing. */
+/**
+ * Recursively strip HTML tags from string values in an entity before writing.
+ * Note: does NOT trim whitespace — that would break text fields where users
+ * type spaces (e.g. "hello world"). Trimming should happen only on final
+ * server-side validation, not on every optimistic client update.
+ */
 function sanitizeEntity<T extends Record<string, unknown>>(entity: T): T {
   const sanitized = { ...entity };
   for (const key of Object.keys(sanitized)) {
     const val = sanitized[key];
     if (typeof val === "string") {
-      (sanitized as Record<string, unknown>)[key] = sanitizeText(val);
+      // Strip HTML tags but preserve all whitespace (including trailing spaces)
+      (sanitized as Record<string, unknown>)[key] = val.replace(/<[^>]*>/g, "");
     } else if (val && typeof val === "object" && !Array.isArray(val) && !(val instanceof Date)) {
       (sanitized as Record<string, unknown>)[key] = sanitizeEntity(val as Record<string, unknown>);
     }

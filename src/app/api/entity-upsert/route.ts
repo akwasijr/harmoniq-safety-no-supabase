@@ -77,18 +77,57 @@ export async function POST(request: NextRequest) {
       console.warn("[Entity Upsert API] Admin client unavailable — falling back to user session (may hit RLS)");
     }
 
-    const { error: upsertError } = await writeClient
-      .from(table)
-      .upsert(validated.rows, { onConflict: "id" });
+    // Determine if this is an update (partial fields on existing row) or insert.
+    // For each row, check if it exists — if yes, UPDATE only the provided fields.
+    // If no, INSERT the full row. This prevents NOT NULL constraint violations
+    // when the client sends partial updates.
+    for (const row of validated.rows) {
+      const rowId = row.id as string | undefined;
 
-    if (upsertError) {
-      const msg = upsertError.message || "Upsert failed";
-      if (msg.includes("permission denied") || msg.includes("row-level security")) {
-        console.warn(`[Entity Upsert API] Permission issue for ${table}:`, msg);
-        return NextResponse.json({ error: "You do not have permission to save this data." }, { status: 403 });
+      if (rowId) {
+        // Check if row exists
+        const { data: existing } = await writeClient
+          .from(table)
+          .select("id")
+          .eq("id", rowId)
+          .maybeSingle();
+
+        if (existing) {
+          // Update only the provided fields (exclude id from the update set)
+          const { id: _id, ...updateFields } = row;
+          void _id;
+          const { error: updateError } = await writeClient
+            .from(table)
+            .update(updateFields)
+            .eq("id", rowId);
+
+          if (updateError) {
+            const msg = updateError.message || "Update failed";
+            if (msg.includes("permission denied") || msg.includes("row-level security")) {
+              console.warn(`[Entity Upsert API] Permission issue for ${table}:`, msg);
+              return NextResponse.json({ error: "You do not have permission to save this data." }, { status: 403 });
+            }
+            console.error(`[Entity Upsert API] Error updating ${table}:`, msg);
+            return NextResponse.json({ error: "Unable to save data. Please try again." }, { status: 500 });
+          }
+          continue;
+        }
       }
-      console.error(`[Entity Upsert API] Error for ${table}:`, msg);
-      return NextResponse.json({ error: "Unable to save data. Please try again." }, { status: 500 });
+
+      // Insert new row
+      const { error: insertError } = await writeClient
+        .from(table)
+        .insert(row);
+
+      if (insertError) {
+        const msg = insertError.message || "Insert failed";
+        if (msg.includes("permission denied") || msg.includes("row-level security")) {
+          console.warn(`[Entity Upsert API] Permission issue for ${table}:`, msg);
+          return NextResponse.json({ error: "You do not have permission to save this data." }, { status: 403 });
+        }
+        console.error(`[Entity Upsert API] Error inserting ${table}:`, msg);
+        return NextResponse.json({ error: "Unable to save data. Please try again." }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ ok: true });
