@@ -377,31 +377,31 @@ export default function EmployeeAppHomePage() {
         </div>
       </div>
 
-      {/* ── Quick Actions (horizontal circles) ── */}
-      <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.2s" }}>
-        <div className="flex items-center justify-evenly">
-          {quickActions.slice(0, 4).map((action, i) => (
-            <Link key={action.href + action.labelKey} href={action.href}
-              className="flex flex-col items-center gap-2 active:scale-95 transition-transform home-section"
-              style={{ animationDelay: `${0.15 - Math.min(i * 0.02, 0.12)}s` }}>
-              <div className="field-app-control h-14 w-14 rounded-full bg-muted/60 flex items-center justify-center">
-                <action.icon className="h-6 w-6 text-foreground/70" />
-              </div>
-              <span className="text-[11px] font-medium text-center text-muted-foreground leading-tight max-w-[72px]">{t(action.labelKey) || action.fallbackLabel}</span>
-            </Link>
-          ))}
-        </div>
-      </div>
-
       {/* ── Tip of the Day (wide banner) ── */}
       {fieldAppSettings.tipOfTheDayEnabled && (
-        <div className="mx-4 mt-5 home-section" style={{ animationDelay: "0.1s" }}>
+        <div className="mx-4 -mt-5 relative z-10 home-section" style={{ animationDelay: "0.3s" }}>
           <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-4">
             <p className="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
             <p className="text-sm text-foreground leading-relaxed">{tipText}</p>
           </div>
         </div>
       )}
+
+      {/* ── Quick Actions (horizontal circles) ── */}
+      <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.2s" }}>
+        <div className="flex justify-evenly">
+          {quickActions.slice(0, 4).map((action, i) => (
+            <Link key={action.href + action.labelKey} href={action.href}
+              className="flex flex-col items-center gap-2 w-[72px] active:scale-95 transition-transform home-section"
+              style={{ animationDelay: `${0.15 - Math.min(i * 0.02, 0.12)}s` }}>
+              <div className="h-14 w-14 rounded-full border border-border/60 bg-muted/40 flex items-center justify-center">
+                <action.icon className="h-6 w-6 text-foreground/70" />
+              </div>
+              <span className="text-[11px] font-medium text-center text-muted-foreground leading-tight">{t(action.labelKey) || action.fallbackLabel}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {/* ── Content Feed ── */}
       <div className="px-4 pt-6 pb-24 space-y-1 home-section" style={{ animationDelay: "0s" }}>
