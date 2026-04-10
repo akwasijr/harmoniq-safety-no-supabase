@@ -94,16 +94,16 @@ const FIELD_APP_DEFAULT_PRESET: FieldAppQuickActionId[] = [
 
 const FIELD_APP_PRESETS: Partial<Record<IndustryCode, FieldAppQuickActionId[]>> = {
   healthcare: ["my_tasks", "report_incident", "checklists", "risk_check", "news", "browse_assets"],
-  manufacturing: ["my_tasks", "scan_asset", "browse_assets", "request_fix", "report_incident", "risk_check"],
-  warehousing: ["my_tasks", "scan_asset", "browse_assets", "request_fix", "report_incident", "checklists"],
-  airports: ["my_tasks", "report_incident", "scan_asset", "checklists", "news", "browse_assets"],
-  transportation: ["my_tasks", "scan_asset", "browse_assets", "report_incident", "checklists", "request_fix"],
-  construction: ["my_tasks", "report_incident", "request_fix", "risk_check", "checklists", "browse_assets"],
-  utilities: ["my_tasks", "request_fix", "scan_asset", "risk_check", "browse_assets", "checklists"],
-  food_beverage: ["my_tasks", "checklists", "report_incident", "risk_check", "news", "browse_assets"],
-  education: ["my_tasks", "checklists", "news", "report_incident", "browse_assets", "request_fix"],
-  mining: ["my_tasks", "report_incident", "request_fix", "scan_asset", "risk_check", "browse_assets"],
-  oil_gas: ["my_tasks", "report_incident", "request_fix", "scan_asset", "risk_check", "browse_assets"],
+  manufacturing: ["report_incident", "my_tasks", "scan_asset", "browse_assets", "request_fix", "risk_check"],
+  warehousing: ["report_incident", "my_tasks", "scan_asset", "browse_assets", "request_fix", "checklists"],
+  airports: ["report_incident", "my_tasks", "scan_asset", "checklists", "news", "browse_assets"],
+  transportation: ["report_incident", "my_tasks", "scan_asset", "browse_assets", "checklists", "request_fix"],
+  construction: ["report_incident", "my_tasks", "request_fix", "risk_check", "checklists", "browse_assets"],
+  utilities: ["report_incident", "my_tasks", "request_fix", "scan_asset", "risk_check", "browse_assets"],
+  food_beverage: ["report_incident", "my_tasks", "checklists", "risk_check", "news", "browse_assets"],
+  education: ["report_incident", "my_tasks", "checklists", "news", "browse_assets", "request_fix"],
+  mining: ["report_incident", "my_tasks", "request_fix", "scan_asset", "risk_check", "browse_assets"],
+  oil_gas: ["report_incident", "my_tasks", "request_fix", "scan_asset", "risk_check", "browse_assets"],
 };
 
 const FIELD_APP_TIPS: FieldTipDefinition[] = [
