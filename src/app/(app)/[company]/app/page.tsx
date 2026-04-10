@@ -79,17 +79,17 @@ function FieldFocus({
 }) {
   const [activeTab, setActiveTab] = React.useState<FocusTab>("urgent");
 
-  const tabs: { id: FocusTab; label: string; color: string; count: number }[] = [
-    { id: "urgent", label: "Urgent", color: "text-red-500 border-red-500", count: urgent.length },
-    { id: "upcoming", label: "Upcoming", color: "text-amber-500 border-amber-500", count: upcoming.length },
-    { id: "good_to_know", label: "Good to Know", color: "text-blue-500 border-blue-500", count: goodToKnow.length },
+  const tabs: { id: FocusTab; label: string; dot: string; count: number }[] = [
+    { id: "urgent", label: "Urgent", dot: "bg-red-500", count: urgent.length },
+    { id: "upcoming", label: "Upcoming", dot: "bg-amber-500", count: upcoming.length },
+    { id: "good_to_know", label: "Good to Know", dot: "bg-blue-500", count: goodToKnow.length },
   ];
 
   const items = activeTab === "urgent" ? urgent : activeTab === "upcoming" ? upcoming : goodToKnow;
 
   return (
     <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-4">
-      <h2 className="text-base font-semibold mb-3">Field Focus</h2>
+      <p className="text-[10px] font-bold text-primary mb-3">Field Focus</p>
       {/* Tabs */}
       <div className="flex gap-1 mb-3">
         {tabs.map((tab) => (
@@ -97,13 +97,13 @@ function FieldFocus({
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex-1 text-xs font-medium py-2 rounded-lg text-center transition-colors",
+              "flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-2 rounded-lg text-center transition-colors",
               activeTab === tab.id
-                ? `${tab.color} bg-current/10 border-b-2`
+                ? "bg-muted text-foreground"
                 : "text-muted-foreground"
             )}
-            style={activeTab === tab.id ? { backgroundColor: `color-mix(in srgb, currentColor 10%, transparent)` } : undefined}
           >
+            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", tab.dot)} />
             {tab.label}
           </button>
         ))}
