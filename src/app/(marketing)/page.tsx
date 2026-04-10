@@ -546,9 +546,9 @@ export default function Home() {
                 <motion.div
                   key={i}
                   variants={i === 0 ? slideFromLeft : slideFromRight}
-                  className={`w-[140px] sm:w-[180px] h-[280px] sm:h-[360px] rounded-[28px] bg-zinc-900 p-2 shadow-xl ${i === 1 ? "mt-8 sm:mt-12" : ""}`}
+                  className={`w-[140px] sm:w-[180px] h-[280px] sm:h-[360px] rounded-[28px] bg-zinc-950 shadow-xl ${i === 1 ? "mt-8 sm:mt-12" : ""}`}
                 >
-                  <div className="w-full h-full rounded-[22px] bg-zinc-950 overflow-hidden flex flex-col">
+                  <div className="w-full h-full rounded-[28px] bg-zinc-950 overflow-hidden flex flex-col">
                     {/* Status bar */}
                     <div className="h-6 px-3 flex items-center justify-between">
                       <span className="text-[8px] text-zinc-500">9:41</span>
@@ -922,7 +922,10 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-zinc-600">{t("footer.copyright", { year: String(new Date().getFullYear()) })}</p>
+            <div className="flex items-center gap-4">
+              <LanguageSelector variant="pill" />
+              <p className="text-sm text-zinc-600">{t("footer.copyright", { year: String(new Date().getFullYear()) })}</p>
+            </div>
             <div className="flex gap-6">
               <Link href="/privacy" className="text-sm text-zinc-600 hover:text-white transition-colors">Privacy</Link>
               <Link href="/terms" className="text-sm text-zinc-600 hover:text-white transition-colors">Disclaimer</Link>
@@ -931,11 +934,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
-      {/* Fixed language selector — bottom-left */}
-      <div className="fixed bottom-6 left-6 z-50">
-        <LanguageSelector variant="pill" />
-      </div>
     </div>
   );
 }
@@ -1138,11 +1136,10 @@ function RiskAssessmentTabs() {
                key={tab.label}
                onClick={() => setActiveTab(i)}
                animate={{
-                 borderColor: i === displayedTabIndex ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.05)",
                  backgroundColor: i === displayedTabIndex ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.3)",
                }}
                transition={{ duration: 0.3 }}
-               className="rounded-xl border p-3.5 text-left transition-colors"
+               className="rounded-xl p-3.5 text-left transition-colors"
              >
                <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 transition-colors ${
                  i === displayedTabIndex ? "text-white" : "text-zinc-500"

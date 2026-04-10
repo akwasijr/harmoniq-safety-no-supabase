@@ -123,14 +123,14 @@ export function LanguageSelector({ variant = "pill", className }: LanguageSelect
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-800/80 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-700/80 transition-colors"
+        className="flex items-center gap-2 rounded-full bg-zinc-800/80 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-700/80 transition-colors"
       >
         <current.Flag />
         <span className="hidden sm:inline">{current.label}</span>
         <ChevronDown className={cn("h-3.5 w-3.5 text-zinc-400 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="absolute left-0 bottom-full mb-2 w-44 rounded-lg border border-zinc-700 bg-zinc-800 p-1 shadow-xl z-[60]">
+        <div className="absolute left-0 bottom-full mb-2 w-44 rounded-lg bg-zinc-800 p-1 shadow-xl z-[60]">
           {LANGUAGE_OPTIONS.map((opt) => (
             <button
               key={opt.code}
