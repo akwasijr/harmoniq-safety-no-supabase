@@ -390,25 +390,16 @@ export default function EmployeeAppHomePage() {
       {/* ── Quick Actions (horizontal circles) ── */}
       <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.2s" }}>
         <div className="flex justify-evenly">
-          {quickActions.slice(0, 4).map((action, i) => {
-            const colors = [
-              "bg-red-500/15 text-red-500",
-              "bg-blue-500/15 text-blue-500",
-              "bg-amber-500/15 text-amber-500",
-              "bg-emerald-500/15 text-emerald-500",
-            ];
-            const color = colors[i % colors.length];
-            return (
+          {quickActions.slice(0, 4).map((action, i) => (
             <Link key={action.href + action.labelKey} href={action.href}
               className="flex flex-col items-center gap-2 w-[72px] active:scale-95 transition-transform home-section"
               style={{ animationDelay: `${0.15 - Math.min(i * 0.02, 0.12)}s` }}>
-              <div className={`h-14 w-14 rounded-full flex items-center justify-center ${color.split(" ")[0]}`}>
-                <action.icon className={`h-6 w-6 ${color.split(" ")[1]}`} />
+              <div className="h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center">
+                <action.icon className="h-6 w-6 text-white" />
               </div>
               <span className="text-[11px] font-medium text-center text-muted-foreground leading-tight">{t(action.labelKey) || action.fallbackLabel}</span>
             </Link>
-            );
-          })}
+          ))}
         </div>
       </div>
 
