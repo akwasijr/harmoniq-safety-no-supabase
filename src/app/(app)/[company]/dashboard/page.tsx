@@ -161,7 +161,7 @@ export default function DashboardPage() {
 
   const { isSuperAdmin, hasSelectedCompany, switchCompany, user } = useAuth();
   const { items: allCompanies } = useCompanyStore();
-  const { incidents, locations, users, assets: allAssets, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, stores } = useCompanyData();
+  const { incidents, locations, users, assets: allAssets, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, complianceObligations, stores } = useCompanyData();
 
   // Track platform entry state to avoid hydration mismatch
   const [isPlatformEntry, setIsPlatformEntry] = React.useState(false);
@@ -495,6 +495,19 @@ export default function DashboardPage() {
     .slice(0, 2).forEach((a) => {
       const worker = users.find((u) => u.id === a.user_id);
       focusUrgent.push({ id: `ta-${a.id}`, title: `${worker?.full_name || "Worker"} — overdue training`, subtitle: a.course_name, type: "Training", href: `/${company}/dashboard/training`, time: daysOverdue(a.due_date) });
+    });
+
+  // Compliance: overdue obligations → urgent
+  const allObligations = complianceObligations;
+  allObligations.filter((o) => o.is_active && o.next_due_date && new Date(o.next_due_date) < focusNow && o.status !== "compliant")
+    .slice(0, 3).forEach((o) => {
+      focusUrgent.push({ id: `co-${o.id}`, title: o.title, subtitle: o.regulation, type: "Compliance", href: `/${company}/dashboard/compliance`, time: daysOverdue(o.next_due_date) });
+    });
+
+  // Compliance: due soon → upcoming
+  allObligations.filter((o) => o.is_active && o.next_due_date && new Date(o.next_due_date) >= focusNow && new Date(o.next_due_date) <= focus7Days)
+    .slice(0, 3).forEach((o) => {
+      focusUpcoming.push({ id: `co-${o.id}`, title: o.title, subtitle: o.regulation, type: "Compliance", href: `/${company}/dashboard/compliance`, time: daysUntil(o.next_due_date) });
     });
 
   const focusTabs = [
