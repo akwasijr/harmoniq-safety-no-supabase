@@ -204,7 +204,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white overflow-x-hidden">
+    <div className="relative flex min-h-screen flex-col bg-black text-white overflow-x-hidden">
       {/* Video background, desktop only */}
       <div className="absolute top-0 left-0 right-0 h-screen z-0 pointer-events-none overflow-hidden hidden md:block">
         <video
@@ -254,21 +254,21 @@ export default function Home() {
       </header>
 
       {/* ── Hero ── */}
-      <section ref={heroRef} className="relative min-h-screen flex items-end z-10">
-        <div className="container mx-auto px-4 lg:px-8 relative z-10 pb-20 lg:pb-28">
+      <section ref={heroRef} className="relative min-h-screen flex items-center md:items-end z-10">
+        <div className="container mx-auto px-4 lg:px-8 relative z-10 pb-8 md:pb-20 lg:pb-28">
           <motion.div
             initial="hidden"
             animate="visible"
             variants={stagger}
-            className="max-w-5xl ml-auto text-right"
+            className="max-w-5xl text-center md:text-right md:ml-auto"
           >
             <motion.h1 variants={fadeUp} className="font-[family-name:var(--font-playfair)] text-4xl sm:text-6xl lg:text-[6.5rem] font-normal tracking-tight leading-[1.0] text-white">
               Safety and asset{"\n"}management, reimagined
             </motion.h1>
-            <motion.p variants={fadeUp} className="mt-8 text-lg lg:text-xl text-zinc-400 max-w-2xl ml-auto leading-relaxed">
+            <motion.p variants={fadeUp} className="mt-8 text-lg lg:text-xl text-zinc-400 max-w-2xl mx-auto md:mx-0 md:ml-auto leading-relaxed">
               {t("hero.description")}
             </motion.p>
-            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-end">
+            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-end">
               <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
                 {t("hero.cta_start")}
                 <ArrowRight className="h-4 w-4" />
