@@ -109,13 +109,23 @@ function FieldFocus({
           </button>
         ))}
       </div>
-      {/* Items */}
-      {items.length === 0 ? (
-        <p className="py-4 text-center text-xs text-muted-foreground">
-          {activeTab === "urgent" ? "No urgent items" : activeTab === "upcoming" ? "Nothing upcoming" : "All clear"}
-        </p>
-      ) : (
-        <div className="space-y-0.5">
+      {/* Items — fixed min height */}
+      <div className="min-h-[180px]">
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-[180px] text-muted-foreground/50">
+            {activeTab === "urgent" ? (
+              <CheckCircle className="h-8 w-8 mb-2" />
+            ) : activeTab === "upcoming" ? (
+              <Clock className="h-8 w-8 mb-2" />
+            ) : (
+              <Info className="h-8 w-8 mb-2" />
+            )}
+            <p className="text-xs">
+              {activeTab === "urgent" ? "No urgent items" : activeTab === "upcoming" ? "Nothing upcoming" : "All clear"}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-0.5">
           {items.slice(0, 5).map((item) => (
             <Link
               key={item.id}
@@ -134,7 +144,8 @@ function FieldFocus({
             </Link>
           ))}
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
