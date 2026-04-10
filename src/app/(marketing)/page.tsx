@@ -204,7 +204,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-black text-white overflow-x-hidden">
+    <div className="marketing-page relative flex min-h-screen flex-col bg-black text-white overflow-x-hidden">
       {/* Video background, desktop only */}
       <div className="absolute top-0 left-0 right-0 h-screen z-0 pointer-events-none overflow-hidden hidden md:block">
         <video
