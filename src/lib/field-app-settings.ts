@@ -88,10 +88,8 @@ export const FIELD_APP_QUICK_ACTION_IDS = FIELD_APP_QUICK_ACTION_DEFINITIONS.map
 const FIELD_APP_DEFAULT_PRESET: FieldAppQuickActionId[] = [
   "report_incident",
   "my_tasks",
-  "browse_assets",
-  "request_fix",
-  "scan_asset",
   "risk_check",
+  "browse_assets",
 ];
 
 const FIELD_APP_PRESETS: Partial<Record<IndustryCode, FieldAppQuickActionId[]>> = {

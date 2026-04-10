@@ -377,39 +377,31 @@ export default function EmployeeAppHomePage() {
         </div>
       </div>
 
-      {/* ── Tip of the Day ── */}
-      {fieldAppSettings.tipOfTheDayEnabled && (
-        <div className="mx-4 -mt-5 relative z-10 home-section" style={{ animationDelay: "0.3s" }}>
-          <div className="field-app-panel field-app-surface bg-card border border-border/50 px-4 py-3.5 flex items-start gap-3">
-            <div className="field-app-control h-8 w-8 bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Zap className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-primary tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{tipText}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Quick Actions ── */}
+      {/* ── Quick Actions (horizontal circles) ── */}
       <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.2s" }}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold">{t("app.quickActions") || "Quick Actions"}</h2>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {quickActions.map((action, i) => (
+        <div className="flex items-center justify-evenly">
+          {quickActions.slice(0, 4).map((action, i) => (
             <Link key={action.href + action.labelKey} href={action.href}
-              className="field-app-panel field-app-surface flex items-center gap-3 bg-card px-4 py-4 border border-border/50 active:scale-[0.98] hover:shadow-sm hover:border-border transition-all home-section"
+              className="flex flex-col items-center gap-2 active:scale-95 transition-transform home-section"
               style={{ animationDelay: `${0.15 - Math.min(i * 0.02, 0.12)}s` }}>
-              <div className="field-app-control h-11 w-11 bg-primary/10 flex items-center justify-center shrink-0">
-                <action.icon className="h-5 w-5 text-primary" />
+              <div className="field-app-control h-14 w-14 rounded-full bg-muted/60 flex items-center justify-center">
+                <action.icon className="h-6 w-6 text-foreground/70" />
               </div>
-              <span className="text-sm font-medium">{t(action.labelKey) || action.fallbackLabel}</span>
+              <span className="text-[11px] font-medium text-center text-muted-foreground leading-tight max-w-[72px]">{t(action.labelKey) || action.fallbackLabel}</span>
             </Link>
           ))}
         </div>
       </div>
+
+      {/* ── Tip of the Day (wide banner) ── */}
+      {fieldAppSettings.tipOfTheDayEnabled && (
+        <div className="mx-4 mt-5 home-section" style={{ animationDelay: "0.1s" }}>
+          <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-4">
+            <p className="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
+            <p className="text-sm text-foreground leading-relaxed">{tipText}</p>
+          </div>
+        </div>
+      )}
 
       {/* ── Content Feed ── */}
       <div className="px-4 pt-6 pb-24 space-y-1 home-section" style={{ animationDelay: "0s" }}>
