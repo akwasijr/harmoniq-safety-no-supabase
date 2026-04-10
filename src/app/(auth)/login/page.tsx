@@ -68,6 +68,9 @@ function LoginForm() {
   const [loginMode, setLoginMode] = React.useState<"password" | "magic">("password");
   const [lockoutRemaining, setLockoutRemaining] = React.useState(0);
   const [failedAttempts, setFailedAttempts] = React.useState(0);
+  const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
+  const turnstileRef = React.useRef<HTMLDivElement>(null);
+  const turnstileLoaded = React.useRef(false);
   const [isMobile, setIsMobile] = React.useState(false);
   const [hasMounted, setHasMounted] = React.useState(false);
   const isPlatformMode = searchParams.get("mode") === "platform";
@@ -102,6 +105,29 @@ function LoginForm() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [isPlatformMode]);
+
+  // Load Turnstile CAPTCHA after suspicious activity (3+ failed attempts)
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || null;
+  const showCaptcha = failedAttempts >= 3 && !!turnstileSiteKey;
+
+  React.useEffect(() => {
+    if (!showCaptcha || turnstileLoaded.current) return;
+    turnstileLoaded.current = true;
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+    script.onload = () => {
+      if (turnstileRef.current && window.turnstile) {
+        window.turnstile.render(turnstileRef.current, {
+          sitekey: turnstileSiteKey!,
+          theme: "dark",
+          callback: (token: string) => setTurnstileToken(token),
+        });
+      }
+    };
+  }, [showCaptcha, turnstileSiteKey]);
 
   React.useEffect(() => {
     const errorParam = searchParams.get("error");
@@ -221,6 +247,13 @@ function LoginForm() {
       setSuccess("");
       setEmailError("");
       setPasswordError("");
+
+      // Block if CAPTCHA required but not completed
+      if (showCaptcha && !turnstileToken) {
+        setError("Please complete the CAPTCHA verification");
+        setIsLoading(false);
+        return;
+      }
 
       // Save/clear remembered email
       if (rememberMe) {
@@ -703,6 +736,16 @@ function LoginForm() {
                 <div className="flex items-center gap-2 rounded-lg bg-zinc-800/40 px-4 py-2.5">
                   <Shield className="h-4 w-4 text-zinc-400" />
                   <span className="text-sm font-medium text-zinc-300">Platform Admin</span>
+                </div>
+              )}
+
+              {/* Turnstile CAPTCHA — shown after 3+ failed attempts */}
+              {showCaptcha && (
+                <div ref={turnstileRef} className="flex justify-center my-2" />
+              )}
+              {failedAttempts >= 3 && !turnstileSiteKey && (
+                <div className="flex items-center gap-2 rounded-lg bg-amber-950/50 border border-amber-800/50 px-3 py-2 text-xs text-amber-300">
+                  <span>Please verify you are human to continue</span>
                 </div>
               )}
 
