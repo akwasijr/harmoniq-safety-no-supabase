@@ -504,12 +504,12 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KPICard
           title="Incidents"
-          value={`${formatNumber(filteredStats.open_incidents)} / ${formatNumber(filteredStats.total_incidents)}`}
+          value={`${formatNumber(filteredStats.open_incidents)} open`}
           icon={AlertTriangle}
           trend={{
-            value: Math.abs(trendPercentage),
+            value: filteredStats.total_incidents,
             direction: trendPercentage <= 0 ? "down" : "up",
-            label: `${filteredStats.open_incidents} open`,
+            label: `of ${filteredStats.total_incidents} total`,
           }}
         />
         <KPICard
