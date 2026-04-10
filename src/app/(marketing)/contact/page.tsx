@@ -60,7 +60,6 @@ function ContactFormWrapper() {
             <Image src="/favicon.svg" alt="Harmoniq" width={28} height={28} className="h-7 w-7" />
           </div>
           <h1 className="text-3xl font-bold">{translations.heading}</h1>
-          <p className="mt-2 text-zinc-400">{translations.subheading}</p>
         </div>
 
         <ContactForm translations={translations} turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || null} />
