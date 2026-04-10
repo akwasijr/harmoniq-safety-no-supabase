@@ -61,9 +61,16 @@ function LoginForm() {
   const [emailError, setEmailError] = React.useState("");
   const [passwordError, setPasswordError] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
+  const [rememberMe, setRememberMe] = React.useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("harmoniq_remember") === "true";
+    return false;
+  });
   const [loginMode, setLoginMode] = React.useState<"password" | "magic">("password");
   const [lockoutRemaining, setLockoutRemaining] = React.useState(0);
   const [failedAttempts, setFailedAttempts] = React.useState(0);
+  const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
+  const turnstileRef = React.useRef<HTMLDivElement>(null);
+  const turnstileLoaded = React.useRef(false);
   const [isMobile, setIsMobile] = React.useState(false);
   const [hasMounted, setHasMounted] = React.useState(false);
   const isPlatformMode = searchParams.get("mode") === "platform";
@@ -84,6 +91,12 @@ function LoginForm() {
     }
     setHasMounted(true);
 
+    // Restore remembered email
+    if (localStorage.getItem("harmoniq_remember") === "true") {
+      const savedEmail = localStorage.getItem("harmoniq_saved_email");
+      if (savedEmail) setEmail(savedEmail);
+    }
+
     const onResize = () => {
       const m = window.innerWidth < 768;
       setIsMobile(m);
@@ -92,6 +105,29 @@ function LoginForm() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [isPlatformMode]);
+
+  // Load Turnstile CAPTCHA after suspicious activity (3+ failed attempts)
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || null;
+  const showCaptcha = failedAttempts >= 3 && !!turnstileSiteKey;
+
+  React.useEffect(() => {
+    if (!showCaptcha || turnstileLoaded.current) return;
+    turnstileLoaded.current = true;
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+    script.onload = () => {
+      if (turnstileRef.current && window.turnstile) {
+        window.turnstile.render(turnstileRef.current, {
+          sitekey: turnstileSiteKey!,
+          theme: "dark",
+          callback: (token: string) => setTurnstileToken(token),
+        });
+      }
+    };
+  }, [showCaptcha, turnstileSiteKey]);
 
   React.useEffect(() => {
     const errorParam = searchParams.get("error");
@@ -211,6 +247,22 @@ function LoginForm() {
       setSuccess("");
       setEmailError("");
       setPasswordError("");
+
+      // Block if CAPTCHA required but not completed
+      if (showCaptcha && !turnstileToken) {
+        setError("Please complete the CAPTCHA verification");
+        setIsLoading(false);
+        return;
+      }
+
+      // Save/clear remembered email
+      if (rememberMe) {
+        localStorage.setItem("harmoniq_remember", "true");
+        localStorage.setItem("harmoniq_saved_email", email);
+      } else {
+        localStorage.removeItem("harmoniq_remember");
+        localStorage.removeItem("harmoniq_saved_email");
+      }
 
       // Mock mode: authenticate against local mock users (password: demo123)
       if (IS_MOCK_MODE) {
@@ -535,8 +587,7 @@ function LoginForm() {
 
         <div className="rounded-xl bg-zinc-900/70 backdrop-blur-xl p-8">
           {/* Header */}
-          <h1 className="text-2xl font-bold tracking-tight text-white">{loginHeading}</h1>
-          <p className="mt-2 mb-6 text-sm text-zinc-400">{loginDescription}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white mb-6">{loginHeading}</h1>
 
           {/* Alerts */}
           {isLockedOut && (
@@ -627,6 +678,29 @@ function LoginForm() {
                 </div>
               </div>
 
+              {/* Remember me */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={rememberMe}
+                  onClick={() => setRememberMe(!rememberMe)}
+                  className={`flex h-4 w-4 items-center justify-center rounded border transition-colors ${rememberMe ? "bg-white border-white" : "border-zinc-600 bg-transparent hover:border-zinc-400"}`}
+                >
+                  {rememberMe && (
+                    <svg viewBox="0 0 12 12" className="h-3 w-3 text-black" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M2 6l3 3 5-5" />
+                    </svg>
+                  )}
+                </button>
+                <label
+                  className="text-xs text-zinc-400 cursor-pointer select-none"
+                  onClick={() => setRememberMe(!rememberMe)}
+                >
+                  {t("auth.rememberMe") || "Remember me"}
+                </label>
+              </div>
+
               {/* App chooser — hidden on mobile (auto-selects Field Worker), Platform only via /admin */}
               {hasMounted && !isMobile && !isPlatformMode && (
                 <div role="radiogroup" aria-label={t("auth.chooseApp") || "Choose app"}>
@@ -662,6 +736,16 @@ function LoginForm() {
                 <div className="flex items-center gap-2 rounded-lg bg-zinc-800/40 px-4 py-2.5">
                   <Shield className="h-4 w-4 text-zinc-400" />
                   <span className="text-sm font-medium text-zinc-300">Platform Admin</span>
+                </div>
+              )}
+
+              {/* Turnstile CAPTCHA — shown after 3+ failed attempts */}
+              {showCaptcha && (
+                <div ref={turnstileRef} className="flex justify-center my-2" />
+              )}
+              {failedAttempts >= 3 && !turnstileSiteKey && (
+                <div className="flex items-center gap-2 rounded-lg bg-amber-950/50 border border-amber-800/50 px-3 py-2 text-xs text-amber-300">
+                  <span>Please verify you are human to continue</span>
                 </div>
               )}
 

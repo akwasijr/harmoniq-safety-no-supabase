@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle, Play, AlertTriangle } from "lucide-react";
+import { CheckCircle, Play, AlertTriangle, Clock, CalendarClock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatStatusLabel } from "@/components/tasks/task-detail-header";
 
@@ -13,6 +13,14 @@ const ACTION_STYLES: Record<string, { icon: typeof Play; className: string }> = 
   approved: {
     icon: CheckCircle,
     className: "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950 dark:text-indigo-300 dark:hover:bg-indigo-900",
+  },
+  waiting_material: {
+    icon: Clock,
+    className: "bg-orange-50 text-orange-700 hover:bg-orange-100 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900",
+  },
+  scheduled: {
+    icon: CalendarClock,
+    className: "bg-cyan-50 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-950 dark:text-cyan-300 dark:hover:bg-cyan-900",
   },
   resolved: {
     icon: CheckCircle,
@@ -42,9 +50,11 @@ export const STATUS_FLOWS: Record<string, Record<string, string[]>> = {
     closed: [],
   },
   "work-order": {
-    requested: ["approved", "cancelled"],
-    approved: ["in_progress", "cancelled"],
-    in_progress: ["completed"],
+    waiting_approval: ["waiting_material", "approved", "cancelled"],
+    waiting_material: ["approved", "cancelled"],
+    approved: ["scheduled", "in_progress", "cancelled"],
+    scheduled: ["in_progress", "cancelled"],
+    in_progress: ["completed", "cancelled"],
     completed: [],
     cancelled: [],
   },

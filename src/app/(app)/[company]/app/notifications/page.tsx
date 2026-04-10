@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  Bell,
   Newspaper,
   ClipboardCheck,
   AlertTriangle,
@@ -78,6 +79,14 @@ export default function NotificationsPage() {
   const { t, formatDate } = useTranslation();
   const [fallbackTimestamp] = React.useState(() => Date.now());
 
+  const [readDerivedIds, setReadDerivedIds] = React.useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = sessionStorage.getItem("harmoniq_read_derived");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
+
   const notifications = React.useMemo<NotificationItem[]>(() => {
     if (!user) return [];
     const items: NotificationItem[] = [];
@@ -104,13 +113,13 @@ export default function NotificationsPage() {
               ? `/${company}/app/incidents/${n.source_id}`
               : n.source === "ticket"
                 ? `/${company}/app/tasks/tickets/${n.source_id}`
-                : n.source === "work_order"
+                : n.source === "work_order" || n.source === "work_orders"
                   ? `/${company}/app/tasks/work-orders/${n.source_id}`
                   : n.source === "corrective_action"
                     ? `/${company}/app/tasks/actions/${n.source_id}`
                     : n.source === "checklist"
                       ? `/${company}/app/checklists/${n.source_id}`
-                      : `/${company}/app/tasks`
+                      : `/${company}/app`
           : `/${company}/app`;
         const sourceTicket = n.source === "ticket" ? tickets.find((ticket) => ticket.id === n.source_id) : null;
         const sourceWorkOrder = n.source === "work_order" ? workOrders.find((workOrder) => workOrder.id === n.source_id) : null;
@@ -170,7 +179,7 @@ export default function NotificationsPage() {
           title: template.name,
           description: `${template.items?.length || 0} items to complete`,
           timestamp: new Date(template.created_at || fallbackTimestamp),
-          read: false,
+          read: readDerivedIds.has(derivedId),
           href: `/${company}/app/checklists/${template.id}`,
           icon: ClipboardCheck,
           iconColor: "text-primary bg-primary/15",
@@ -196,7 +205,7 @@ export default function NotificationsPage() {
           title: ticket.title || "Ticket",
           description: `Priority: ${ticket.priority || "normal"}`,
           timestamp: new Date(ticket.created_at || fallbackTimestamp),
-          read: false,
+          read: readDerivedIds.has(derivedId),
           href: `/${company}/app/tasks/tickets/${ticket.id}`,
           icon: Wrench,
           iconColor: "text-purple-600 bg-purple-100 dark:bg-purple-900/40 dark:text-purple-300",
@@ -222,7 +231,7 @@ export default function NotificationsPage() {
           title: workOrder.title,
           description: `Status: ${workOrder.status.replace(/_/g, " ")}`,
           timestamp: new Date(workOrder.updated_at || workOrder.created_at || fallbackTimestamp),
-          read: false,
+          read: readDerivedIds.has(derivedId),
           href: `/${company}/app/tasks/work-orders/${workOrder.id}`,
           icon: Wrench,
           iconColor: "text-amber-700 bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300",
@@ -247,7 +256,7 @@ export default function NotificationsPage() {
           title: t("tasks.actions") || "Corrective action",
           description: action.description,
           timestamp: new Date(action.updated_at || action.created_at || fallbackTimestamp),
-          read: false,
+          read: readDerivedIds.has(derivedId),
           href: `/${company}/app/tasks/actions/${action.id}`,
           icon: ShieldAlert,
           iconColor: "text-red-700 bg-red-100 dark:bg-red-900/40 dark:text-red-300",
@@ -273,7 +282,7 @@ export default function NotificationsPage() {
           title: assessmentLabelMap[evaluation.form_type] || evaluation.form_type,
           description: isDraft ? "Draft assessment ready to resume" : "Assessment submitted and awaiting review",
           timestamp: new Date(evaluation.reviewed_at || evaluation.submitted_at || evaluation.created_at || fallbackTimestamp),
-          read: false,
+          read: readDerivedIds.has(derivedId),
           href: isDraft
             ? `/${company}/app/risk-assessment/${evaluation.form_type.toLowerCase()}?draft=${evaluation.id}`
             : `/${company}/app/risk-assessment/view/${evaluation.id}`,
@@ -290,21 +299,74 @@ export default function NotificationsPage() {
       return b.timestamp.getTime() - a.timestamp.getTime();
     });
     return items;
-  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, workOrders, correctiveActions, riskEvaluations, company, fallbackTimestamp, t]);
+  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, workOrders, correctiveActions, riskEvaluations, company, fallbackTimestamp, t, readDerivedIds]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleNotificationClick = (notification: NotificationItem) => {
     if (
       !notification.read &&
-      !notification.id.startsWith("task-") &&
-      !notification.id.startsWith("ticket-") &&
-      !notification.id.startsWith("work-order-") &&
-      !notification.id.startsWith("action-") &&
-      !notification.id.startsWith("risk-evaluation-")
+      (notification.id.startsWith("task-") ||
+        notification.id.startsWith("ticket-") ||
+        notification.id.startsWith("work-order-") ||
+        notification.id.startsWith("action-") ||
+        notification.id.startsWith("risk-evaluation-"))
     ) {
+      setReadDerivedIds((prev) => {
+        const next = new Set(prev);
+        next.add(notification.id);
+        sessionStorage.setItem("harmoniq_read_derived", JSON.stringify([...next]));
+        return next;
+      });
+    } else if (!notification.read) {
       updateNotification(notification.id, { read: true } as Partial<import("@/stores/notifications-store").Notification>);
     }
+  };
+
+  const [filter, setFilter] = React.useState<"all" | "unread">("all");
+  const [dismissedIds, setDismissedIds] = React.useState<Set<string>>(new Set());
+  const [swipeState, setSwipeState] = React.useState<Record<string, number>>({});
+  const touchStartX = React.useRef<Record<string, number>>({});
+
+  const filteredNotifications = React.useMemo(() => {
+    let items = notifications.filter((n) => !dismissedIds.has(n.id));
+    if (filter === "unread") items = items.filter((n) => !n.read);
+    return items;
+  }, [notifications, filter, dismissedIds]);
+
+  const unreadCount = notifications.filter((n) => !n.read && !dismissedIds.has(n.id)).length;
+
+  const handleMarkAllRead = () => {
+    notifications.forEach((n) => {
+      if (!n.read) handleNotificationClick(n);
+    });
+  };
+
+  const handleDismiss = (id: string) => {
+    setDismissedIds((prev) => new Set(prev).add(id));
+    const n = notifications.find((item) => item.id === id);
+    if (n && !n.read) handleNotificationClick(n);
+  };
+
+  const handleTouchStart = (id: string, x: number) => {
+    touchStartX.current[id] = x;
+  };
+
+  const handleTouchMove = (id: string, x: number) => {
+    const start = touchStartX.current[id];
+    if (start === undefined) return;
+    const delta = x - start;
+    if (delta < -10) {
+      setSwipeState((prev) => ({ ...prev, [id]: Math.max(delta, -120) }));
+    }
+  };
+
+  const handleTouchEnd = (id: string) => {
+    const offset = swipeState[id] || 0;
+    if (offset < -80) {
+      handleDismiss(id);
+    }
+    setSwipeState((prev) => ({ ...prev, [id]: 0 }));
+    delete touchStartX.current[id];
   };
 
   if (isLoading && dbNotifications.length === 0) {
@@ -314,65 +376,103 @@ export default function NotificationsPage() {
   return (
     <div className="flex flex-col min-h-full pb-20">
       {/* Header */}
-      <div className="sticky top-[60px] z-10 bg-background border-b px-4 pt-4 pb-3">
+      <div className="sticky top-[60px] z-10 bg-background border-b px-4 pt-4 pb-3 space-y-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted transition-colors active:bg-muted/70"
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted transition-colors"
             aria-label={t("common.goBack")}
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold flex-1">{t("notifications.title") || "Notifications"}</h1>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={handleMarkAllRead}
+              className="text-xs font-medium text-primary"
+            >
+              Mark all read
+            </button>
+          )}
+        </div>
+
+        {/* Filter tabs */}
+        <div className="flex gap-1 bg-muted rounded-lg p-1">
+          <button
+            onClick={() => setFilter("all")}
+            className={cn(
+              "flex-1 py-1.5 text-xs font-medium rounded-md transition-colors",
+              filter === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            )}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilter("unread")}
+            className={cn(
+              "flex-1 py-1.5 text-xs font-medium rounded-md transition-colors",
+              filter === "unread" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            )}
+          >
+            Unread {unreadCount > 0 && `(${unreadCount})`}
+          </button>
         </div>
       </div>
 
       {/* Notification list */}
       <div className="flex-1">
-        {notifications.length === 0 ? (
-          <NoDataEmptyState entityName="notifications" />
+        {filteredNotifications.length === 0 ? (
+          <div className="text-center py-16">
+            <Bell className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">
+              {filter === "unread" ? "No unread notifications" : "No notifications yet"}
+            </p>
+          </div>
         ) : (
-          <ul className="divide-y">
-            {notifications.map((notification) => (
-              <li key={notification.id}>
-                <Link
-                  href={notification.href}
-                  onClick={() => handleNotificationClick(notification)}
-                  className={cn(
-                    "flex items-start gap-3.5 px-4 py-4 transition-colors active:bg-muted/50 hover:bg-muted/30",
-                    !notification.read && "bg-primary/5"
+          <ul>
+            {filteredNotifications.map((notification) => {
+              const offset = swipeState[notification.id] || 0;
+              return (
+                <li key={notification.id} className="relative border-b border-border last:border-0 overflow-hidden">
+                  {/* Dismiss background */}
+                  {offset < -10 && (
+                    <div className="absolute inset-y-0 right-0 flex items-center justify-end pr-4 bg-destructive/10 w-full">
+                      <span className="text-xs font-medium text-destructive">Dismiss</span>
+                    </div>
                   )}
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 mt-0.5">
-                    <notification.icon className="h-5 w-5 text-primary" aria-hidden="true" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className={cn("text-sm leading-tight", !notification.read ? "font-semibold" : "font-medium")}>
-                        {notification.title}
-                      </p>
-                      {!notification.read && (
-                        <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" aria-label={t("common.unread")} />
-                      )}
+
+                  <Link
+                    href={notification.href}
+                    onClick={() => handleNotificationClick(notification)}
+                    className={cn(
+                      "flex items-start gap-3 px-4 py-3.5 transition-all relative bg-background",
+                      !notification.read && "bg-primary/5",
+                    )}
+                    style={{ transform: offset ? `translateX(${offset}px)` : undefined }}
+                    onTouchStart={(e) => handleTouchStart(notification.id, e.touches[0].clientX)}
+                    onTouchMove={(e) => handleTouchMove(notification.id, e.touches[0].clientX)}
+                    onTouchEnd={() => handleTouchEnd(notification.id)}
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      <notification.icon className={cn("h-5 w-5", notification.iconColor.split(" ").find(c => c.startsWith("text-")) || "text-muted-foreground")} aria-hidden="true" />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notification.description}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      {notification.audienceLabel && (
-                        <span className="text-[10px] font-medium text-muted-foreground">
-                          {notification.audienceLabel}
-                        </span>
-                      )}
-                      {notification.audienceLabel && (
-                        <span className="text-muted-foreground/40">·</span>
-                      )}
-                      <span className="text-[10px] text-muted-foreground/60">
-                        {formatDate(notification.timestamp)}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={cn("text-sm leading-snug", !notification.read ? "font-semibold" : "font-medium text-muted-foreground")}>
+                          {notification.title}
+                        </p>
+                        {!notification.read && (
+                          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{notification.description}</p>
+                      <p className="text-[10px] text-muted-foreground/50 mt-1">{formatDate(notification.timestamp)}</p>
                     </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

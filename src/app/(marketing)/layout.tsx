@@ -3,6 +3,7 @@ import { getMarketingTranslations, type MarketingLocale } from "@/i18n/marketing
 import { CookieConsentBanner } from "@/components/marketing/cookie-consent";
 import { AnalyticsTracker } from "@/components/marketing/analytics-tracker";
 import { getPublicPlatformPrivacySettings } from "@/lib/platform-privacy-settings-server";
+import { MarketingI18nWrapper } from "@/components/marketing/i18n-wrapper";
 
 export default async function MarketingLayout({
   children,
@@ -14,24 +15,85 @@ export default async function MarketingLayout({
   const t = getMarketingTranslations(locale);
   const privacySettings = await getPublicPlatformPrivacySettings();
 
-  const jsonLd = {
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "Harmoniq Safety",
+      applicationCategory: "BusinessApplication",
+      applicationSubCategory: "Environment, Health & Safety",
+      description: "All-in-one EHS platform: report incidents, run safety inspections, manage assets, and track compliance. OSHA, Arbowet, ISO 45001 ready.",
+      operatingSystem: "Web, iOS, Android",
+      url: "https://harmoniqsafety.com",
+      availableLanguage: ["English", "Dutch", "Swedish"],
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD", availability: "https://schema.org/InStock" },
+      author: { "@type": "Organization", name: "Harmoniq Safety", url: "https://harmoniqsafety.com" },
+      featureList: "Incident Reporting, Safety Inspections, Asset Management, Risk Assessments, Work Orders, Compliance Tracking, Offline Mobile App, Analytics Dashboards",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Harmoniq Safety",
+      url: "https://harmoniqsafety.com",
+      logo: "https://harmoniqsafety.com/logo-black.svg",
+      sameAs: [],
+      contactPoint: { "@type": "ContactPoint", contactType: "customer service", availableLanguage: ["English", "Dutch", "Swedish"] },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Harmoniq Safety",
+      url: "https://harmoniqsafety.com",
+      inLanguage: ["en-US", "nl-NL", "sv-SE"],
+      potentialAction: {
+        "@type": "SearchAction",
+        target: "https://harmoniqsafety.com/?q={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ];
+
+  const faqJsonLd = {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "Harmoniq Safety",
-    applicationCategory: "BusinessApplication",
-    description: "Workplace safety and asset management platform for industrial organizations",
-    operatingSystem: "Web",
-    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-    author: { "@type": "Organization", name: "Harmoniq Safety" },
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: t("faq_section.q1"),
+        acceptedAnswer: { "@type": "Answer", text: t("faq_section.a1") },
+      },
+      {
+        "@type": "Question",
+        name: t("faq_section.q2"),
+        acceptedAnswer: { "@type": "Answer", text: t("faq_section.a2") },
+      },
+      {
+        "@type": "Question",
+        name: t("faq_section.q3"),
+        acceptedAnswer: { "@type": "Answer", text: t("faq_section.a3") },
+      },
+      {
+        "@type": "Question",
+        name: t("faq_section.q4"),
+        acceptedAnswer: { "@type": "Answer", text: t("faq_section.a4") },
+      },
+    ],
   };
 
   return (
     <>
+      <style>{`html { background-color: #000; }`}</style>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {children}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      <MarketingI18nWrapper>
+        {children}
+      </MarketingI18nWrapper>
       <AnalyticsTracker settings={privacySettings} />
       <CookieConsentBanner
         settings={privacySettings}

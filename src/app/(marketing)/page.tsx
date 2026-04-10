@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRef, useEffect, useState, type FormEvent } from "react";
+import { LanguageSelector } from "@/components/ui/language-selector";
 import {
   Shield,
   ArrowRight,
@@ -32,6 +33,8 @@ import {
   Plane,
 } from "lucide-react";
 import { motion, useScroll, useTransform, useInView, animate } from "framer-motion";
+import { useTranslation } from "@/i18n";
+import { getMarketingTranslations, type MarketingLocale } from "@/i18n/marketing";
 
 const EASE_OUT_CUBIC: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
@@ -119,7 +122,7 @@ function FeaturesDropdown() {
       </button>
       {open && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3">
-          <div className="w-[480px] rounded-2xl border border-zinc-700/20 bg-zinc-900/95 backdrop-blur-xl p-5 shadow-2xl">
+          <div className="w-[480px] rounded-2xl bg-zinc-900/95 backdrop-blur-xl p-5 shadow-2xl">
             <div className="grid grid-cols-2 gap-x-8 gap-y-5">
               {[
                 { title: "Incident Management", desc: "Report & Resolve", href: "#feature-details" },
@@ -153,6 +156,17 @@ function FeaturesDropdown() {
 
 export default function Home() {
   const prefersReducedMotion = useReducedMotion();
+  const { locale } = useTranslation();
+  const t = getMarketingTranslations(locale as MarketingLocale);
+
+  const featureCardKeys = ["incident", "asset", "risk", "analytics"];
+  const translatedFaqs = [
+    { q: t("faq_section.q1"), a: t("faq_section.a1") },
+    { q: t("faq_section.q2"), a: t("faq_section.a2") },
+    { q: t("faq_section.q3"), a: t("faq_section.a3") },
+    { q: t("faq_section.q4"), a: t("faq_section.a4") },
+  ];
+
   const ipadRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ipadRef,
@@ -228,39 +242,39 @@ export default function Home() {
           </Link>
           <nav className="hidden md:flex items-center gap-8">
             <FeaturesDropdown />
-            <a href="#industries" className="text-sm text-zinc-400 hover:text-white transition-colors">Industries</a>
-            <a href="#faq" className="text-sm text-zinc-400 hover:text-white transition-colors">FAQ</a>
+            <a href="#industries" className="text-sm text-zinc-400 hover:text-white transition-colors">{t("nav.industries")}</a>
+            <a href="#faq" className="text-sm text-zinc-400 hover:text-white transition-colors">{t("nav.faq")}</a>
           </nav>
           <div className="flex items-center gap-3">
             <Link href="/login" className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors">
-              Get Started
+              {t("nav.get_started")}
             </Link>
           </div>
         </motion.div>
       </header>
 
       {/* ── Hero ── */}
-      <section ref={heroRef} className="relative pt-32 pb-0 lg:pt-44 lg:pb-0 z-10">
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
+      <section ref={heroRef} className="relative min-h-screen flex items-end z-10">
+        <div className="container mx-auto px-4 lg:px-8 relative z-10 pb-20 lg:pb-28">
           <motion.div
             initial="hidden"
             animate="visible"
             variants={stagger}
-            className="max-w-4xl mx-auto text-center"
+            className="max-w-5xl ml-auto text-right"
           >
-            <motion.h1 variants={fadeUp} className="text-3xl sm:text-5xl lg:text-[5.5rem] font-medium tracking-tight leading-[1.05] text-white">
+            <motion.h1 variants={fadeUp} className="font-[family-name:var(--font-playfair)] text-4xl sm:text-6xl lg:text-[6.5rem] font-normal tracking-tight leading-[1.0] text-white">
               Safety and asset{"\n"}management, reimagined
             </motion.h1>
-            <motion.p variants={fadeUp} className="mt-6 text-lg lg:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Report incidents, manage assets, run inspections, and stay compliant. AI-powered insights help your team work smarter across every site.
+            <motion.p variants={fadeUp} className="mt-8 text-lg lg:text-xl text-zinc-400 max-w-2xl ml-auto leading-relaxed">
+              {t("hero.description")}
             </motion.p>
-            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-end">
               <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
-                Join the Waitlist
+                {t("hero.cta_start")}
                 <ArrowRight className="h-4 w-4" />
               </a>
               <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-700 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-600 transition-colors">
-                Contact Sales
+                {t("hero.cta_demo")}
               </Link>
             </motion.div>
           </motion.div>
@@ -309,9 +323,7 @@ export default function Home() {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <p className="text-2xl sm:text-3xl lg:text-5xl font-light leading-snug text-zinc-300">
-              Trusted by <span className="text-white font-semibold">operations teams</span> across industries worldwide.
-              A growing community committed to <span className="text-white font-bold">protecting their people and assets</span> while
-              staying compliant.
+              {t("trust.statement")}
             </p>
           </div>
         </div>
@@ -376,10 +388,10 @@ export default function Home() {
                 variants={fadeUp}
                 className="text-3xl sm:text-4xl lg:text-6xl font-normal leading-tight text-white"
               >
-                More than a management tool
+                {t("features.heading")}
               </motion.h2>
               <motion.p variants={fadeUp} className="mt-6 text-base lg:text-lg text-zinc-400 max-w-lg mx-auto leading-relaxed">
-                Tools to stay organized, manage safety & assets, and hit your compliance goals.
+                {t("features.subheading")}
               </motion.p>
             </motion.div>
 
@@ -466,10 +478,10 @@ export default function Home() {
                   {/* Text side */}
                   <div className={isReversed ? "lg:[direction:ltr]" : ""}>
                     <h3 className="text-2xl sm:text-3xl lg:text-4xl font-medium text-white leading-tight mb-4">
-                      {feature.title}
+                      {t(`feature_cards.${featureCardKeys[index]}_title`)}
                     </h3>
                     <p className="text-base text-zinc-400 leading-relaxed mb-8">
-                      {feature.description}
+                      {t(`feature_cards.${featureCardKeys[index]}_desc`)}
                     </p>
                     <div className="space-y-3">
                       {feature.checks.map((check) => (
@@ -502,17 +514,17 @@ export default function Home() {
           >
             <motion.div variants={slideLeft}>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-6">
-                Safety & assets in your pocket
+                {t("mobile.heading")}
               </h2>
               <p className="text-zinc-400 text-lg leading-relaxed mb-8">
-                Empower workers with a mobile app for instant incident reporting, asset inspections, QR code scanning, and real-time alerts, even offline.
+                {t("mobile.description")}
               </p>
               <div className="space-y-4">
                 {[
-                  { icon: Smartphone, text: "Report incidents & inspect assets anywhere" },
-                  { icon: ClipboardCheck, text: "Complete checklists and audits on-site" },
-                  { icon: Bell, text: "Real-time push notifications" },
-                  { icon: Cloud, text: "Offline-capable, syncs automatically" },
+                  { icon: Smartphone, text: t("mobile.feature_report") },
+                  { icon: ClipboardCheck, text: t("mobile.feature_checklists") },
+                  { icon: Bell, text: t("mobile.feature_notifications") },
+                  { icon: Cloud, text: t("mobile.feature_offline") },
                 ].map(item => (
                   <div key={item.text} className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800">
@@ -534,9 +546,9 @@ export default function Home() {
                 <motion.div
                   key={i}
                   variants={i === 0 ? slideFromLeft : slideFromRight}
-                  className={`w-[140px] sm:w-[180px] h-[280px] sm:h-[360px] rounded-[28px] bg-zinc-900 p-2 shadow-xl ${i === 1 ? "mt-8 sm:mt-12" : ""}`}
+                  className={`w-[140px] sm:w-[180px] h-[280px] sm:h-[360px] rounded-[28px] bg-zinc-950 shadow-xl ${i === 1 ? "mt-8 sm:mt-12" : ""}`}
                 >
-                  <div className="w-full h-full rounded-[22px] bg-zinc-950 overflow-hidden flex flex-col">
+                  <div className="w-full h-full rounded-[28px] bg-zinc-950 overflow-hidden flex flex-col">
                     {/* Status bar */}
                     <div className="h-6 px-3 flex items-center justify-between">
                       <span className="text-[8px] text-zinc-500">9:41</span>
@@ -631,7 +643,7 @@ export default function Home() {
             variants={fadeUp}
             className="text-4xl sm:text-5xl font-bold text-center mb-16"
           >
-            Safety Success
+            {t("success.heading")}
           </motion.h2>
           <motion.div
             initial="hidden"
@@ -641,21 +653,21 @@ export default function Home() {
             className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
           >
             <motion.div variants={scaleUp} className="rounded-3xl bg-zinc-900/40 p-8">
-              <h3 className="text-xl font-bold mb-3">AI-Powered Insights</h3>
+              <h3 className="text-xl font-bold mb-3">{t("success.ai_title")}</h3>
               <p className="text-sm text-zinc-400 leading-relaxed mb-6">
-                Smart insights that predict risks and asset failures before they happen.
+                {t("success.ai_desc")}
               </p>
               <Link href="/login" className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors">
-                Explore
+                {t("success.explore")}
               </Link>
             </motion.div>
             <motion.div variants={scaleUp} className="rounded-3xl bg-zinc-900/40 p-8">
-              <h3 className="text-xl font-bold mb-6">Key Statistics</h3>
+              <h3 className="text-xl font-bold mb-6">{t("success.key_stats")}</h3>
               <div className="space-y-5">
                 {[
-                  { label: "Incident Resolution", pct: 92 },
-                  { label: "Cost Reduction", pct: 40 },
-                  { label: "Compliance Rate", pct: 98 },
+                  { label: t("stats.incidents_reported"), pct: 92 },
+                  { label: t("stats.cost_reduction"), pct: 40 },
+                  { label: t("stats.compliance_rate"), pct: 98 },
                 ].map(stat => (
                   <div key={stat.label}>
                     <div className="flex justify-between text-sm mb-2">
@@ -694,10 +706,10 @@ export default function Home() {
               <h2
                 className="text-3xl sm:text-4xl lg:text-6xl font-normal leading-tight text-white mb-4"
               >
-                Your industry. Your safety.
+                {t("industries.heading")}
               </h2>
               <p className="text-zinc-400 text-lg">
-                Harmoniq adapts to the regulations, hazards, and workflows that matter in your world.
+                {t("industries.subheading")}
               </p>
             </motion.div>
 
@@ -705,67 +717,67 @@ export default function Home() {
               const industries = [
                 {
                   icon: HardHat,
-                  name: "Construction",
+                  name: t("industries.construction"),
                   description: "Every shift begins with a Job Hazard Analysis right on your crew's phones. Fall protection audits, scaffold inspections, toolbox talks: all tracked automatically. When your superintendent walks a new job site, the pre-task checklist is already loaded based on the scope of work. Photos of hazards get GPS-tagged and timestamped. If OSHA visits, your documentation is audit-ready before they finish parking.",
                   features: ["Job Hazard Analysis (JHA)", "Fall protection audits", "Scaffold inspection checklists", "Toolbox talk tracking", "Photo-documented hazard reporting", "OSHA compliance reports"],
                 },
                 {
                   icon: Factory,
-                  name: "Manufacturing",
+                  name: t("industries.manufacturing"),
                   description: "Lockout/tagout compliance becomes part of the machine changeover process, not a separate safety exercise. Ergonomic assessments for repetitive tasks, machine guarding inspections on every press and conveyor, near-miss reporting from the production floor: everything flows into one dashboard. Floor managers track completion rates in real time without leaving the line. When a line goes down for maintenance, the safety protocol follows automatically.",
                   features: ["Lockout/tagout compliance", "Machine guarding inspections", "Ergonomic assessments", "Near-miss reporting", "Production floor dashboards", "Maintenance safety protocols"],
                 },
                 {
                   icon: Droplets,
-                  name: "Oil & Gas",
+                  name: t("industries.oil_gas"),
                   description: "Permit-to-work management, confined space entry, H2S monitoring: digitized for remote well sites where connectivity is unreliable. Your crew completes inspections offline and everything syncs when signal returns. Hot work permits route through the approval chain on mobile. Contractor orientation checklists ensure every person on your lease is trained and documented before they touch a valve.",
                   features: ["Permit-to-work management", "Confined space entry logs", "Offline inspection sync", "Hot work permit approvals", "Contractor orientation checklists", "H2S monitoring records"],
                 },
                 {
                   icon: Stethoscope,
-                  name: "Healthcare",
+                  name: t("industries.healthcare"),
                   description: "Infection control rounds, sharps disposal tracking, patient safety audits: all designed for the pace of clinical work. Nurses complete hand hygiene observations between patient rooms in seconds. OSHA bloodborne pathogen compliance is built into the daily workflow, not a quarterly scramble. Incident reports for needle sticks or patient falls trigger the right notifications to risk management immediately.",
                   features: ["Infection control rounds", "Sharps disposal tracking", "Patient safety audits", "Hand hygiene observations", "Bloodborne pathogen compliance", "Incident auto-notifications"],
                 },
                 {
                   icon: Warehouse,
-                  name: "Warehousing & Logistics",
+                  name: t("industries.warehousing"),
                   description: "Forklift operators scan a QR code to start their pre-shift inspection. Dock safety checks, fire extinguisher rounds, rack integrity audits: all scheduled, all tracked, all completed on mobile. Warehouse managers see which zones have open items before the morning standup. When a rack shows damage, the escalation path from photo to work order to repair confirmation is fully digital.",
                   features: ["QR code asset scanning", "Forklift pre-shift inspections", "Fire extinguisher rounds", "Rack integrity audits", "Zone-based compliance tracking", "Photo-to-work-order escalation"],
                 },
                 {
                   icon: Pickaxe,
-                  name: "Mining",
+                  name: t("industries.mining"),
                   description: "Ground control monitoring, ventilation system checks, blast area safety protocols: built for both underground and surface operations. Each shift starts with a strata assessment on the crew leader's device. PPE compliance is tracked per worker, per shift, per zone. When conditions change mid-shift, updated risk assessments push to every device in the section. Your safety record stays clean because the system catches gaps before regulators do.",
                   features: ["Ground control monitoring", "Ventilation system checks", "Blast area safety protocols", "PPE compliance per worker", "Live risk assessment updates", "Shift-based strata assessments"],
                 },
                 {
                   icon: UtensilsCrossed,
-                  name: "Food & Beverage",
+                  name: t("industries.food_beverage"),
                   description: "HACCP inspections, allergen management, cold chain monitoring with automated escalation. A missed temperature check triggers an alert to the shift supervisor within minutes, not hours. Sanitation audits follow your cleaning schedules automatically. When an allergen protocol changes, every relevant checklist updates across all your facilities. Auditors see a complete digital trail from receiving dock to shipping bay.",
                   features: ["HACCP inspections", "Allergen management", "Cold chain temperature monitoring", "Automated sanitation schedules", "Cross-facility checklist sync", "Full audit trail export"],
                 },
                 {
                   icon: BatteryCharging,
-                  name: "Utilities & Energy",
+                  name: t("industries.utilities"),
                   description: "Arc flash compliance, substation inspections, vegetation management workflows for field crews managing critical infrastructure across dispersed service territories. Line clearance audits follow your reliability standards. When a crew arrives at a transformer, the inspection form loads based on equipment class and last service date. Switching procedures and safety protocols travel with the work order, not in a binder back at the office.",
                   features: ["Arc flash compliance", "Substation inspections", "Vegetation management workflows", "Equipment-based form loading", "Line clearance audits", "Mobile switching procedures"],
                 },
                 {
                   icon: Truck,
-                  name: "Transportation",
+                  name: t("industries.transportation"),
                   description: "Pre-trip vehicle inspections that DOT auditors actually accept. Drivers complete the walk-around on their phone: tires, brakes, lights, cargo securement. Defects route to maintenance automatically. Dispatchers see fleet compliance at a glance before releasing loads. Driver safety scoring aggregates inspection data, incident history, and training records into one profile. CSA scores improve because the documentation is always current.",
                   features: ["Pre-trip vehicle inspections", "DOT-compliant documentation", "Automatic defect routing", "Fleet compliance dashboard", "Driver safety scoring", "Cargo securement checklists"],
                 },
                 {
                   icon: GraduationCap,
-                  name: "Education",
+                  name: t("industries.education"),
                   description: "Playground safety checks before the first bell. Chemistry lab inspections before every class period. Emergency drill tracking with timestamps and headcount verification. Visitor management logs who entered, when, and which areas they accessed. Facilities teams manage building safety, grounds maintenance, and fire code compliance from a single dashboard instead of scattered spreadsheets across departments.",
                   features: ["Playground safety checks", "Lab safety inspections", "Emergency drill tracking", "Visitor management logs", "Fire code compliance", "Facilities maintenance dashboard"],
                 },
                 {
                   icon: Plane,
-                  name: "Airports & Aviation",
+                  name: t("industries.airports"),
                   description: "Terminal operations and airside logistics each carry their own safety demands. Passenger-facing areas need escalator inspections, wet floor tracking, AED station checks, and emergency evacuation drill documentation. Behind the scenes, baggage handling systems require conveyor safety audits, ground support equipment pre-use inspections, and ramp area FOD walks. Fueling operations follow strict fire safety protocols. With hundreds of contractors operating in shared spaces, Harmoniq tracks who completed what training, which zones are cleared, and whether every vehicle on the apron passed its daily check, all from a single dashboard that security, operations, and ground handling teams can access by role.",
                   features: ["GSE pre-use inspections", "Ramp FOD walk checklists", "Terminal safety audits", "Baggage system conveyor checks", "Fueling fire safety protocols", "Multi-contractor compliance tracking"],
                 },
@@ -778,7 +790,7 @@ export default function Home() {
                     <select
                       value={selectedIndustry}
                       onChange={(e) => setSelectedIndustry(Number(e.target.value))}
-                      className="w-full rounded-lg border border-zinc-700/30 bg-zinc-900/80 px-4 py-3 text-sm text-white appearance-none cursor-pointer focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/40"
+                      className="w-full rounded-lg bg-zinc-900/80 px-4 py-3 text-sm text-white appearance-none cursor-pointer focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/40"
                       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 5.646a.5.5 0 0 1 .708 0L8 8.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
                     >
                       {industries.map((industry, i) => (
@@ -845,7 +857,7 @@ export default function Home() {
             variants={fadeUp}
             className="text-3xl sm:text-4xl font-bold text-center mb-12"
           >
-            Frequently Asked Questions
+            {t("faq_section.heading")}
           </motion.h2>
           <motion.div
             initial="hidden"
@@ -854,7 +866,7 @@ export default function Home() {
             variants={stagger}
             className="space-y-4"
           >
-            {faqs.map(faq => (
+            {translatedFaqs.map(faq => (
               <motion.div key={faq.q} variants={fadeUp} className="rounded-2xl bg-zinc-900/40 p-6">
                 <h3 className="text-base font-semibold text-zinc-200">{faq.q}</h3>
                 <p className="mt-2 text-sm text-zinc-400 leading-relaxed">{faq.a}</p>
@@ -884,17 +896,17 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <h4 className="font-semibold text-white text-sm mb-4">Product</h4>
+              <h4 className="font-semibold text-white text-sm mb-4">{t("footer_links.product")}</h4>
               <ul className="space-y-3">
-                {["Features", "Integrations", "Mobile App", "Changelog"].map(item => (
+                {[t("footer_links.features"), t("footer_links.integrations"), t("footer_links.mobile_app"), t("footer_links.changelog")].map(item => (
                   <li key={item}><button type="button" className="text-sm text-zinc-500 hover:text-white transition-colors">{item}</button></li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-white text-sm mb-4">Company</h4>
+              <h4 className="font-semibold text-white text-sm mb-4">{t("footer_links.company")}</h4>
               <ul className="space-y-3">
-                {["About", "Blog", "Careers", "Contact"].map(item => (
+                {[t("footer_links.about"), t("footer_links.blog"), t("footer_links.careers"), t("footer.contact")].map(item => (
                   <li key={item}><button type="button" className="text-sm text-zinc-500 hover:text-white transition-colors">{item}</button></li>
                 ))}
               </ul>
@@ -902,15 +914,18 @@ export default function Home() {
             <div>
               <h4 className="font-semibold text-white text-sm mb-4">Legal</h4>
               <ul className="space-y-3">
-                <li><Link href="/privacy" className="text-sm text-zinc-500 hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="text-sm text-zinc-500 hover:text-white transition-colors">Site Disclaimer</Link></li>
+                <li><Link href="/privacy" className="text-sm text-zinc-500 hover:text-white transition-colors">{t("footer.privacy")}</Link></li>
+                <li><Link href="/terms" className="text-sm text-zinc-500 hover:text-white transition-colors">{t("footer.terms")}</Link></li>
                 <li><Link href="/cookies" className="text-sm text-zinc-500 hover:text-white transition-colors">Cookie Policy</Link></li>
                 <li><Link href="/gdpr" className="text-sm text-zinc-500 hover:text-white transition-colors">GDPR</Link></li>
               </ul>
             </div>
           </div>
           <div className="mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-zinc-600">© {new Date().getFullYear()} Harmoniq. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <LanguageSelector variant="pill" />
+              <p className="text-sm text-zinc-600">{t("footer.copyright", { year: String(new Date().getFullYear()) })}</p>
+            </div>
             <div className="flex gap-6">
               <Link href="/privacy" className="text-sm text-zinc-600 hover:text-white transition-colors">Privacy</Link>
               <Link href="/terms" className="text-sm text-zinc-600 hover:text-white transition-colors">Disclaimer</Link>
@@ -1125,11 +1140,10 @@ function RiskAssessmentTabs() {
                key={tab.label}
                onClick={() => setActiveTab(i)}
                animate={{
-                 borderColor: i === displayedTabIndex ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.05)",
                  backgroundColor: i === displayedTabIndex ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.3)",
                }}
                transition={{ duration: 0.3 }}
-               className="rounded-xl border p-3.5 text-left transition-colors"
+               className="rounded-xl p-3.5 text-left transition-colors"
              >
                <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 transition-colors ${
                  i === displayedTabIndex ? "text-white" : "text-zinc-500"
@@ -1322,6 +1336,8 @@ const pillsRow2 = [
 ];
 
 function WaitlistSection() {
+  const { locale } = useTranslation();
+  const t = getMarketingTranslations(locale as MarketingLocale);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -1385,10 +1401,10 @@ function WaitlistSection() {
           <div className="rounded-3xl bg-zinc-900/40 p-10">
             <Mail className="h-10 w-10 text-zinc-400 mx-auto mb-4" />
             <h2 className="text-4xl sm:text-5xl font-bold leading-tight mb-3">
-              Join the Waitlist
+              {t("cta.heading")}
             </h2>
             <p className="text-lg text-zinc-400 leading-relaxed mb-8">
-              Harmoniq is in private beta. Drop your email and we&apos;ll let you know when it&apos;s your turn.
+              {t("cta.subheading")}
             </p>
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
@@ -1397,14 +1413,14 @@ function WaitlistSection() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@company.com"
-                className="flex-1 rounded-full bg-zinc-800 px-5 py-3 text-base text-white placeholder-zinc-500 border border-zinc-700/30 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/40 focus:outline-none transition-colors"
+                className="flex-1 rounded-full bg-zinc-800 px-5 py-3 text-base text-white placeholder-zinc-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/40 focus:outline-none transition-colors"
               />
               <button
                 type="submit"
                 disabled={status === "loading"}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3 text-base font-semibold text-black hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {status === "loading" ? "Joining\u2026" : "Join Waitlist"}
+                {status === "loading" ? "Joining\u2026" : t("hero.cta_start")}
                 {status !== "loading" && <ArrowRight className="h-4 w-4" />}
               </button>
             </form>

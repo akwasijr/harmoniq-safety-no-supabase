@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ import type { Ticket as TicketType } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
+import { downloadCsv } from "@/lib/csv";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
@@ -158,15 +160,35 @@ export default function TicketsPage() {
   }
 
   return (
-    <RoleGuard requiredPermission="incidents.view_own">
+    <RoleGuard requiredPermission="tickets.view_own">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold truncate">{t("tickets.title")}</h1>
-        <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          {t("tickets.newTicket")}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              downloadCsv("tickets.csv", filteredTickets.map((t_) => ({
+                title: t_.title,
+                status: t_.status,
+                priority: t_.priority,
+                assigned: t_.assigned_to || "Unassigned",
+                due_date: t_.due_date || "",
+                created: t_.created_at,
+              })));
+            }}
+          >
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            {t("tickets.newTicket")}
+          </Button>
+        </div>
       </div>
 
       {/* Status summary - clickable for filtering */}

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Send, CheckCircle, AlertCircle, Shield } from "lucide-react";
 
 interface ContactFormProps {
@@ -55,11 +56,10 @@ function ContactFormWrapper() {
       {/* Form */}
       <div className="mx-auto max-w-3xl px-6 py-16">
         <div className="mb-10 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600/20">
-            <Send className="h-6 w-6 text-violet-400" />
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-800">
+            <Image src="/favicon.svg" alt="Harmoniq" width={28} height={28} className="h-7 w-7" />
           </div>
           <h1 className="text-3xl font-bold">{translations.heading}</h1>
-          <p className="mt-2 text-zinc-400">{translations.subheading}</p>
         </div>
 
         <ContactForm translations={translations} turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || null} />
@@ -74,6 +74,9 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
     name: "",
     email: "",
     company: "",
+    companyWebsite: "",
+    role: "",
+    heardAbout: "",
     message: "",
     website: "",
   });
@@ -126,7 +129,7 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
 
       if (res.ok) {
         setStatus("success");
-        setFormData({ name: "", email: "", company: "", message: "", website: "" });
+        setFormData({ name: "", email: "", company: "", companyWebsite: "", role: "", heardAbout: "", message: "", website: "" });
         startedAtRef.current = Date.now();
       } else {
         setStatus("error");
@@ -214,6 +217,50 @@ function ContactForm({ translations: t, turnstileSiteKey }: ContactFormProps) {
           className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-zinc-500 transition focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
           placeholder="Your Company"
         />
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div>
+          <label htmlFor="contact-company-website" className="mb-2 block text-sm font-medium text-zinc-300">Company Website</label>
+          <input
+            id="contact-company-website"
+            type="url"
+            value={formData.companyWebsite}
+            onChange={(e) => setFormData((f) => ({ ...f, companyWebsite: e.target.value }))}
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-zinc-500 transition focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+            placeholder="https://yourcompany.com"
+          />
+        </div>
+        <div>
+          <label htmlFor="contact-role" className="mb-2 block text-sm font-medium text-zinc-300">Your Role</label>
+          <input
+            id="contact-role"
+            type="text"
+            value={formData.role}
+            onChange={(e) => setFormData((f) => ({ ...f, role: e.target.value }))}
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-zinc-500 transition focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+            placeholder="e.g. Safety Manager, EHS Director"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="contact-heard" className="mb-2 block text-sm font-medium text-zinc-300">How did you hear about us? <span className="text-zinc-500">(optional)</span></label>
+        <select
+          id="contact-heard"
+          value={formData.heardAbout}
+          onChange={(e) => setFormData((f) => ({ ...f, heardAbout: e.target.value }))}
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white transition focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 [&>option]:bg-zinc-900"
+        >
+          <option value="">Select an option</option>
+          <option value="google">Google / Search Engine</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="referral">Colleague / Referral</option>
+          <option value="conference">Conference / Event</option>
+          <option value="social_media">Social Media</option>
+          <option value="blog">Blog / Article</option>
+          <option value="other">Other</option>
+        </select>
       </div>
 
       <div>

@@ -1545,6 +1545,7 @@
     "signUp": "Registreren",
     "signingIn": "Bezig met inloggen…",
     "forgotPassword": "Wachtwoord vergeten?",
+    "rememberMe": "Onthoud mij",
     "forgotPasswordTitle": "Wachtwoord herstellen",
     "forgotPasswordDesc": "Voer uw e-mail in en we sturen u een herstelkoppeling",
     "sendResetLink": "Herstelkoppeling versturen",

@@ -52,7 +52,6 @@ const mockCorrectiveActions: CorrectiveAction[] = [
 ];
 
 const store = createEntityStore<CorrectiveAction>("harmoniq_corrective_actions", mockCorrectiveActions, {
-  stripFields: ["assigned_to_team_id"],
   realtimeSubscribe: true,
 });
 

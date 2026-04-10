@@ -406,7 +406,7 @@ export default function TeamDetailPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="capitalize">{member.role}</Badge>
+                      <Badge variant="outline">{member.role}</Badge>
                       {member.id !== team.leader_id && canManageMembers && (
                         <>
                           <Button
@@ -518,7 +518,7 @@ export default function TeamDetailPage() {
                       <p className="font-medium">{user.full_name}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
-                    <Badge variant="outline" className="capitalize">{user.role}</Badge>
+                    <Badge variant="outline">{user.role}</Badge>
                   </button>
                 ))
               ) : (

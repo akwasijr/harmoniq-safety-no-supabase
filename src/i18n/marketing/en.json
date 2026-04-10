@@ -2,8 +2,8 @@
   "hero": {
     "title": "Harmoniq",
     "subtitle": "Workplace Safety & Asset Management Platform",
-    "description": "Report incidents, manage risks, track assets, and ensure compliance — all in one powerful platform built for modern safety teams.",
-    "cta_start": "Get Started",
+    "description": "One platform for incidents, inspections, assets, and compliance. Built for modern safety teams.",
+    "cta_start": "Login",
     "cta_demo": "Book a Demo"
   },
   "trust": {
@@ -43,5 +43,84 @@
     "terms": "Terms of Service",
     "contact": "Contact Us",
     "copyright": "© {year} Harmoniq Safety. All rights reserved."
-  }
+  },
+  "nav": {
+    "industries": "Industries",
+    "faq": "FAQ",
+    "get_started": "Login"
+  },
+  "stats": {
+    "incidents_reported": "Incidents Reported",
+    "assets_tracked": "Assets Tracked",
+    "inspections_completed": "Inspections Completed",
+    "cost_reduction": "Cost Reduction",
+    "compliance_rate": "Compliance Rate"
+  },
+  "industries": {
+    "heading": "Built for your industry",
+    "subheading": "Harmoniq adapts to the specific safety requirements of your sector",
+    "construction": "Construction",
+    "manufacturing": "Manufacturing",
+    "oil_gas": "Oil & Gas",
+    "healthcare": "Healthcare",
+    "warehousing": "Warehousing & Logistics",
+    "mining": "Mining",
+    "food_beverage": "Food & Beverage",
+    "utilities": "Utilities & Energy",
+    "transportation": "Transportation",
+    "education": "Education",
+    "airports": "Airports & Aviation"
+  },
+  "feature_cards": {
+    "incident_title": "Smart incident reporting",
+    "incident_desc": "Report incidents from any device with automatic severity classification and routing to the right team.",
+    "asset_title": "Complete asset lifecycle tracking",
+    "asset_desc": "Track every asset from acquisition to retirement. QR code scanning, automated inspection schedules, and maintenance history.",
+    "risk_title": "Compliance-ready risk assessments",
+    "risk_desc": "Built-in forms for JHA, JSA, RI&E, Arbowet, and more. Country-specific compliance workflows.",
+    "analytics_title": "Actionable safety analytics",
+    "analytics_desc": "Spot patterns before they become problems. Real-time dashboards, trend analysis, and exportable reports."
+  },
+  "faq_section": {
+    "heading": "Frequently asked questions",
+    "q1": "How can I get access?",
+    "a1": "Sign up for a free account and get started with your first safety inspection in minutes. No credit card required.",
+    "q2": "Which compliance standards do you support?",
+    "a2": "Harmoniq supports OSHA (US), Arbowet/RI&E (Netherlands), AFS/SAM (Sweden), and ISO 45001 with country-specific forms and workflows.",
+    "q3": "Does it work offline?",
+    "a3": "Yes. The mobile app works offline and automatically syncs when connectivity is restored, ensuring field workers can always report and inspect.",
+    "q4": "What languages are supported?",
+    "a4": "Currently available in English, Dutch, and Swedish, with locale-aware dates, numbers, and compliance forms for each region."
+  },
+  "cta": {
+    "heading": "Ready to transform your safety operations?",
+    "subheading": "Join thousands of safety professionals using Harmoniq to protect their teams."
+  },
+  "footer_links": {
+    "product": "Product",
+    "features": "Features",
+    "integrations": "Integrations",
+    "mobile_app": "Mobile App",
+    "changelog": "Changelog",
+    "company": "Company",
+    "about": "About",
+    "blog": "Blog",
+    "careers": "Careers"
+  },
+  "mobile": {
+    "heading": "Safety & assets in your pocket",
+    "description": "Empower workers with a mobile app for instant incident reporting, asset inspections, QR code scanning, and real-time alerts, even offline.",
+    "feature_report": "Report incidents & inspect assets anywhere",
+    "feature_checklists": "Complete checklists and audits on-site",
+    "feature_notifications": "Real-time push notifications",
+    "feature_offline": "Offline-capable, syncs automatically"
+  },
+  "success": {
+    "heading": "Safety Success",
+    "ai_title": "AI-Powered Insights",
+    "ai_desc": "Smart insights that predict risks and asset failures before they happen.",
+    "explore": "Explore",
+    "key_stats": "Key Statistics"
+  },
+  "industry_explore": "Explore"
 }

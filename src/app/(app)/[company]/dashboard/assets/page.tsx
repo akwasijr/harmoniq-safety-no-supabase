@@ -25,6 +25,8 @@ import {
   Wrench,
   ClipboardList,
   Cog,
+  DollarSign,
+  Search,
   Shield,
   Activity,
 } from "lucide-react";
@@ -36,19 +38,264 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useFilterOptions } from "@/components/ui/filter-panel";
+import { NoDataEmptyState } from "@/components/ui/empty-state";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useCompanyData } from "@/hooks/use-company-data";
+import { useAuth } from "@/hooks/use-auth";
 import { LoadingPage } from "@/components/ui/loading";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
-import { cn } from "@/lib/utils";
+import { cn, capitalize } from "@/lib/utils";
+import { WORK_ORDER_STATUS_COLORS } from "@/lib/status-utils";
 import { DetailTabs } from "@/components/ui/detail-tabs";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
+import { downloadCsv, parseCsv, downloadCsvTemplate } from "@/lib/csv";
 
-import type { Asset, Alert } from "@/types";
+import type { Asset, Alert, WorkOrder, CorrectiveAction, Part, Priority, Severity } from "@/types";
+import { WORK_ORDER_TYPES } from "@/types";
+import { formatStatusLabel } from "@/components/tasks/task-detail-header";
+import { getUserFirstLastName, getAssetDisplayName } from "@/lib/status-utils";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
+
+/* ── Asset CSV import helpers ── */
+const ASSET_COLUMN_ALIASES: Record<string, string> = {
+  // Name
+  "asset_name": "name", "asset name": "name", "equipment_name": "name", "equipment name": "name",
+  "machine_name": "name", "machine name": "name", "item_name": "name", "item name": "name",
+  // Tag
+  "asset_tag": "asset_tag", "asset tag": "asset_tag", "tag": "asset_tag", "asset_id": "asset_tag",
+  "asset id": "asset_tag", "equipment_id": "asset_tag", "equipment id": "asset_tag", "barcode": "asset_tag",
+  // Serial
+  "serial_number": "serial_number", "serial number": "serial_number", "serial": "serial_number", "sn": "serial_number",
+  // Category
+  "asset_category": "category", "asset category": "category", "equipment_type": "category",
+  "equipment type": "category", "type": "category",
+  // Status
+  "asset_status": "status", "asset status": "status",
+  // Condition
+  "asset_condition": "condition", "asset condition": "condition",
+  // Manufacturer
+  "make": "manufacturer", "brand": "manufacturer", "oem": "manufacturer",
+  // Department
+  "dept": "department", "dept.": "department", "cost_center": "department", "cost center": "department",
+  // Cost
+  "cost": "purchase_cost", "price": "purchase_cost", "purchase_price": "purchase_cost",
+  "purchase price": "purchase_cost", "acquisition_cost": "purchase_cost",
+  // Location
+  "site": "location", "building": "location", "location_name": "location", "location name": "location",
+  // Dates
+  "purchase_date": "purchase_date", "purchase date": "purchase_date", "acquired_date": "purchase_date",
+  "warranty_expiry": "warranty_expiry", "warranty expiry": "warranty_expiry", "warranty_end": "warranty_expiry",
+  "warranty end": "warranty_expiry", "warranty_date": "warranty_expiry",
+};
+
+const ASSET_CATEGORY_ALIASES: Record<string, string> = {
+  "machine": "machinery", "machines": "machinery",
+  "car": "vehicle", "truck": "vehicle", "fleet": "vehicle", "vehicles": "vehicle",
+  "tools": "tool", "hand tool": "tool", "power tool": "tool",
+  "ppe": "ppe", "safety": "safety_equipment", "safety gear": "safety_equipment",
+  "electric": "electrical", "electronics": "electrical",
+  "hvac": "hvac", "heating": "hvac", "cooling": "hvac", "air conditioning": "hvac",
+  "plumbing": "plumbing", "pipe": "plumbing", "pipes": "plumbing",
+  "fire": "fire_safety", "fire safety": "fire_safety", "fire equipment": "fire_safety",
+  "crane": "lifting_equipment", "hoist": "lifting_equipment", "forklift": "lifting_equipment", "lift": "lifting_equipment",
+  "boiler": "pressure_vessel", "tank": "pressure_vessel", "compressor": "pressure_vessel",
+};
+
+const VALID_ASSET_CATEGORIES = ["machinery", "vehicle", "safety_equipment", "tool", "electrical", "hvac", "plumbing", "fire_safety", "lifting_equipment", "pressure_vessel", "ppe", "other"];
+const VALID_ASSET_STATUSES = ["active", "inactive", "maintenance", "retired"];
+const VALID_ASSET_CONDITIONS = ["excellent", "good", "fair", "poor", "failed"];
+
+function mapAssetImportColumns(data: { headers: string[]; rows: Record<string, string>[] }) {
+  const headerMap: Record<string, string> = {};
+  data.headers.forEach((h) => {
+    const lower = h.toLowerCase().trim();
+    headerMap[h] = ASSET_COLUMN_ALIASES[lower] || lower.replace(/\s+/g, "_");
+  });
+
+  const mappedRows = data.rows.map((row) => {
+    const mapped: Record<string, string> = {};
+    for (const [key, value] of Object.entries(row)) {
+      mapped[headerMap[key] || key] = value;
+    }
+    if (mapped.category) {
+      const lower = mapped.category.toLowerCase().trim();
+      mapped.category = ASSET_CATEGORY_ALIASES[lower] || lower.replace(/\s+/g, "_");
+    }
+    if (mapped.status) mapped.status = mapped.status.toLowerCase().trim();
+    if (mapped.condition) mapped.condition = mapped.condition.toLowerCase().trim();
+    return mapped;
+  });
+
+  return { headers: data.headers.map((h) => headerMap[h]), rows: mappedRows };
+}
+
+function AssetImportPreview({ importData, assets: existing, companyId, addAsset, toast, onBack, onDone }: {
+  importData: { headers: string[]; rows: Record<string, string>[] };
+  assets: Asset[];
+  companyId: string;
+  addAsset: (a: Asset) => void;
+  toast: (msg: string, type?: "success" | "error" | "info") => void;
+  onBack: () => void;
+  onDone: () => void;
+}) {
+  const [rows, setRows] = React.useState(() => importData.rows.map((r) => ({ ...r })));
+  const existingTags = React.useMemo(() => new Set(existing.map((a) => a.asset_tag)), [existing]);
+
+  const updateCell = (idx: number, field: string, value: string) => {
+    setRows((prev) => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
+  };
+  const removeRow = (idx: number) => {
+    setRows((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const validated = rows.map((row, i) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    if (!row.name?.trim()) errors.push("Missing name");
+    if (row.asset_tag && existingTags.has(row.asset_tag.trim())) warnings.push("Duplicate tag");
+    if (row.category && !VALID_ASSET_CATEGORIES.includes(row.category.toLowerCase().trim())) warnings.push("Unknown category");
+    if (row.status && !VALID_ASSET_STATUSES.includes(row.status.toLowerCase().trim())) warnings.push("Unknown status");
+    return { row, index: i, errors, warnings, valid: errors.length === 0 };
+  });
+
+  const validCount = validated.filter((v) => v.valid).length;
+  const errorCount = validated.filter((v) => !v.valid).length;
+
+  const handleImport = () => {
+    const now = new Date();
+    const usedTags = new Set(existingTags);
+    let imported = 0;
+    validated.forEach((v, idx) => {
+      if (!v.valid) return;
+      const row = v.row;
+      const category = (VALID_ASSET_CATEGORIES.includes((row.category || "").toLowerCase()) ? row.category.toLowerCase() : "other") as Asset["category"];
+      const status = (VALID_ASSET_STATUSES.includes((row.status || "").toLowerCase()) ? row.status.toLowerCase() : "active") as Asset["status"];
+      const condition = (VALID_ASSET_CONDITIONS.includes((row.condition || "").toLowerCase()) ? row.condition.toLowerCase() : "good") as Asset["condition"];
+      let tag = row.asset_tag?.trim();
+      if (!tag || usedTags.has(tag)) tag = `AST-${Date.now()}-${idx}`;
+      usedTags.add(tag);
+
+      const asset: Asset = {
+        id: crypto.randomUUID(),
+        company_id: companyId,
+        location_id: null,
+        parent_asset_id: null,
+        is_system: false,
+        name: row.name.trim(),
+        asset_tag: tag,
+        serial_number: row.serial_number || null,
+        qr_code: null,
+        category,
+        sub_category: null,
+        asset_type: (row.asset_type === "movable" ? "movable" : "static") as Asset["asset_type"],
+        criticality: "medium",
+        department: row.department || null,
+        manufacturer: row.manufacturer || null,
+        model: row.model || null,
+        purchase_date: row.purchase_date || null,
+        installation_date: null,
+        warranty_expiry: row.warranty_expiry || null,
+        expected_life_years: null,
+        condition,
+        last_condition_assessment: null,
+        purchase_cost: row.purchase_cost ? parseFloat(row.purchase_cost) : null,
+        current_value: null,
+        depreciation_rate: null,
+        currency: "USD",
+        maintenance_frequency_days: null,
+        last_maintenance_date: null,
+        next_maintenance_date: null,
+        requires_certification: false,
+        safety_instructions: null,
+        status,
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      };
+      addAsset(asset);
+      imported++;
+    });
+    toast(`${imported} assets imported${errorCount > 0 ? `, ${errorCount} skipped` : ""}`);
+    onDone();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 text-sm">
+        <span className="font-medium">{rows.length} rows</span>
+        <Badge variant="success" className="text-[10px]">{validCount} valid</Badge>
+        {errorCount > 0 && <Badge variant="destructive" className="text-[10px]">{errorCount} errors</Badge>}
+      </div>
+      <div className="max-h-72 overflow-auto rounded border text-xs">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-muted sticky top-0 z-10">
+              <th className="px-1.5 py-1 text-left font-medium w-6">#</th>
+              <th className="px-1.5 py-1 text-left font-medium">Name</th>
+              <th className="px-1.5 py-1 text-left font-medium w-28">Category</th>
+              <th className="px-1.5 py-1 text-left font-medium w-20">Status</th>
+              <th className="px-1.5 py-1 text-left font-medium w-16">Result</th>
+              <th className="px-1.5 py-1 w-6"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {validated.map((v) => (
+              <tr key={v.index} className={`border-t ${!v.valid ? "bg-destructive/5" : ""}`}>
+                <td className="px-1.5 py-1 text-muted-foreground">{v.index + 1}</td>
+                <td className="px-1.5 py-1">
+                  <input
+                    className={`w-full bg-transparent border-0 outline-none text-xs ${!v.row.name?.trim() ? "border-b border-destructive" : ""}`}
+                    value={v.row.name || ""}
+                    onChange={(e) => updateCell(v.index, "name", e.target.value)}
+                    placeholder="Required"
+                  />
+                </td>
+                <td className="px-1.5 py-1">
+                  <select
+                    className="w-full bg-transparent border-0 outline-none text-xs"
+                    value={VALID_ASSET_CATEGORIES.includes((v.row.category || "").toLowerCase()) ? v.row.category.toLowerCase() : "other"}
+                    onChange={(e) => updateCell(v.index, "category", e.target.value)}
+                  >
+                    {VALID_ASSET_CATEGORIES.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
+                  </select>
+                </td>
+                <td className="px-1.5 py-1">
+                  <select
+                    className="w-full bg-transparent border-0 outline-none text-xs"
+                    value={VALID_ASSET_STATUSES.includes((v.row.status || "").toLowerCase()) ? v.row.status.toLowerCase() : "active"}
+                    onChange={(e) => updateCell(v.index, "status", e.target.value)}
+                  >
+                    {VALID_ASSET_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </td>
+                <td className="px-1.5 py-1">
+                  {v.valid ? (
+                    <span className="text-green-600 dark:text-green-400">Ready</span>
+                  ) : (
+                    <span className="text-destructive">{v.errors[0]}</span>
+                  )}
+                </td>
+                <td className="px-1.5 py-1">
+                  <button type="button" onClick={() => removeRow(v.index)} className="text-muted-foreground hover:text-destructive">×</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" className="flex-1" onClick={onBack}>Back</Button>
+        <Button className="flex-1" disabled={validCount === 0} onClick={handleImport}>
+          Import {validCount} of {rows.length}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function AssetsPage() {
   const router = useRouter();
@@ -62,6 +309,27 @@ export default function AssetsPage() {
   const [activeTab, setActiveTab] = React.useState<"assets" | "alerts" | "corrective-actions" | "work-orders" | "parts">("assets");
   const [alertSeverityFilter, setAlertSeverityFilter] = React.useState<string>("");
   const [stableNow] = React.useState(() => Date.now());
+
+  // Work Orders tab state
+  const [woSearch, setWoSearch] = React.useState("");
+  const [woStatusFilter, setWoStatusFilter] = React.useState("all");
+  const [woTypeFilter, setWoTypeFilter] = React.useState("all");
+  const [woPage, setWoPage] = React.useState(1);
+  const [showWoCreate, setShowWoCreate] = React.useState(false);
+  const [woForm, setWoForm] = React.useState({ title: "", description: "", asset_id: "", type: "service_request", priority: "medium" as Priority, due_date: "" });
+
+  // Parts tab state
+  const [partsSearch, setPartsSearch] = React.useState("");
+  const [partsPage, setPartsPage] = React.useState(1);
+  const [showPartsCreate, setShowPartsCreate] = React.useState(false);
+  const [partsForm, setPartsForm] = React.useState({ name: "", part_number: "", unit_cost: "", quantity_in_stock: "", minimum_stock: "", supplier: "" });
+
+  // Corrective Actions tab state
+  const [caSearch, setCaSearch] = React.useState("");
+  const [caStatusFilter, setCaStatusFilter] = React.useState("all");
+  const [caPage, setCaPage] = React.useState(1);
+  const [showCaCreate, setShowCaCreate] = React.useState(false);
+  const [caForm, setCaForm] = React.useState({ asset_id: "", description: "", severity: "medium" as Severity, due_date: "" });
 
   // Filters
   const [statusFilter, setStatusFilter] = React.useState("");
@@ -101,8 +369,9 @@ export default function AssetsPage() {
     { id: "compliance", titleKey: "assets.wizard.compliance", descKey: "assets.wizard.complianceDesc", icon: Shield },
   ] as const;
 
-  const { companyId, assets, locations, users, stores } = useCompanyData();
+  const { companyId, assets, locations, users, teams, workOrders, correctiveActions, parts, stores } = useCompanyData();
   const { isLoading, add: addAsset } = stores.assets;
+  const { user } = useAuth();
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
   const filterOptions = useFilterOptions();
@@ -113,85 +382,37 @@ export default function AssetsPage() {
 
   // CSV export
   const handleExportCSV = () => {
-    const headers = ["name","asset_tag","serial_number","category","asset_type","department","status","condition","manufacturer","model","location_id","purchase_date","purchase_cost","warranty_expiry"];
-    const rows = assets.map(a => headers.map(h => {
-      const val = a[h as keyof typeof a];
-      return val !== null && val !== undefined ? `"${String(val).replace(/"/g, '""')}"` : "";
-    }).join(","));
-    const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `assets-export-${new Date().toISOString().split("T")[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`assets-export-${new Date().toISOString().split("T")[0]}.csv`, assets.map((a) => {
+      const loc = a.location_id ? locations.find((l) => l.id === a.location_id) : null;
+      return {
+        name: a.name,
+        asset_tag: a.asset_tag,
+        serial_number: a.serial_number || "",
+        category: a.category,
+        asset_type: a.asset_type,
+        criticality: a.criticality,
+        department: a.department || "",
+        status: a.status,
+        condition: a.condition,
+        manufacturer: a.manufacturer || "",
+        model: a.model || "",
+        location: loc?.name || "",
+        purchase_date: a.purchase_date || "",
+        purchase_cost: a.purchase_cost ?? "",
+        currency: a.currency,
+        warranty_expiry: a.warranty_expiry || "",
+        maintenance_frequency_days: a.maintenance_frequency_days ?? "",
+        last_maintenance_date: a.last_maintenance_date || "",
+        next_maintenance_date: a.next_maintenance_date || "",
+        created_at: a.created_at,
+      };
+    }));
     toast(t("assets.assetsExported"));
   };
 
-  // CSV import
-  const importRef = React.useRef<HTMLInputElement>(null);
-  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = reader.result as string;
-      const lines = text.split("\n").filter(l => l.trim());
-      if (lines.length < 2) { toast("No data rows found in CSV"); return; }
-      const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim());
-      const existingAssetTags = new Set(assets.map((asset) => asset.asset_tag));
-      let imported = 0;
-      for (let i = 1; i < lines.length; i++) {
-        const vals = lines[i].match(/(".*?"|[^,]*)/g)?.map(v => v.replace(/^"|"$/g, "").replace(/""/g, '"').trim()) || [];
-        const row: Record<string, string> = {};
-        headers.forEach((h, idx) => { row[h] = vals[idx] || ""; });
-        if (!row.name) continue;
-        const requestedAssetTag = row.asset_tag?.trim();
-        const assetTag = requestedAssetTag && !existingAssetTags.has(requestedAssetTag)
-          ? requestedAssetTag
-          : `AST-${Date.now()}-${i}`;
-        existingAssetTags.add(assetTag);
-        addAsset({
-          id: crypto.randomUUID(),
-          company_id: companyId || "",
-          location_id: row.location_id || null,
-          parent_asset_id: null,
-          is_system: false,
-          name: row.name,
-          asset_tag: assetTag,
-          serial_number: row.serial_number || null,
-          qr_code: null,
-          category: (row.category as Asset["category"]) || "other",
-          sub_category: null,
-          asset_type: (row.asset_type as Asset["asset_type"]) || "static",
-          criticality: "medium",
-          department: row.department || null,
-          manufacturer: row.manufacturer || null,
-          model: row.model || null,
-          purchase_date: row.purchase_date || null,
-          installation_date: null,
-          warranty_expiry: row.warranty_expiry || null,
-          expected_life_years: null,
-          condition: (row.condition as Asset["condition"]) || "good",
-          last_condition_assessment: null,
-          purchase_cost: row.purchase_cost ? parseFloat(row.purchase_cost) : null,
-          current_value: null, depreciation_rate: null, currency: "USD",
-          maintenance_frequency_days: null, last_maintenance_date: null,
-          next_maintenance_date: null,
-          requires_certification: false,
-          safety_instructions: null,
-          status: (row.status as Asset["status"]) || "active",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-        imported++;
-      }
-      toast(`${imported} assets imported`);
-    };
-    reader.readAsText(file);
-    e.target.value = "";
-  };
+  // CSV import state
+  const [showImport, setShowImport] = React.useState(false);
+  const [importData, setImportData] = React.useState<{ headers: string[]; rows: Record<string, string>[] } | null>(null);
   
   // Compute alerts from asset data
   const computedAlerts = React.useMemo(() => {
@@ -460,18 +681,13 @@ export default function AssetsPage() {
         <div className="flex gap-2">
           {activeTab === "assets" && (
             <>
-              <input ref={importRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
-              <Button size="sm" variant="outline" className="gap-2" onClick={() => importRef.current?.click()}>
+              <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowImport(true)}>
                 <Upload className="h-4 w-4" />
                 {t("assets.buttons.import")}
               </Button>
               <Button size="sm" variant="outline" className="gap-2" onClick={handleExportCSV}>
                 <Download className="h-4 w-4" />
                 {t("assets.buttons.export")}
-              </Button>
-              <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                {t("assets.buttons.newAsset")}
               </Button>
             </>
           )}
@@ -667,39 +883,40 @@ export default function AssetsPage() {
 
       {/* Assets table (List View) */}
       {viewMode === "list" && (
+      <>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{filteredAssets.length} asset{filteredAssets.length !== 1 ? "s" : ""}</p>
+        <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
+          <Plus className="h-4 w-4" aria-hidden="true" /> {t("assets.buttons.newAsset")}
+        </Button>
+      </div>
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">{filteredAssets.length} asset{filteredAssets.length !== 1 ? "s" : ""}</CardTitle>
-            <p className="text-sm text-muted-foreground">Page {currentPage} of {totalPages || 1}</p>
-          </div>
-        </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-3 font-medium">{t("assets.tabs.assets")}</th>
-                  <th className="pb-3 font-medium">{t("assets.labels.category")}</th>
-                  <th className="hidden pb-3 font-medium md:table-cell">{t("assets.labels.location")}</th>
-                  <th className="hidden pb-3 font-medium lg:table-cell">{t("assets.labels.purchaseDate")}</th>
-                  <th className="pb-3 font-medium">{t("assets.labels.status")}</th>
-                  <th className="pb-3 font-medium w-10"></th>
+            <table className="min-w-full divide-y divide-border text-sm">
+              <thead className="bg-muted/40">
+                <tr className="text-left">
+                  <th className="px-4 py-3 font-medium">{t("assets.tabs.assets")}</th>
+                  <th className="px-4 py-3 font-medium">{t("assets.labels.category")}</th>
+                  <th className="hidden px-4 py-3 font-medium md:table-cell">{t("assets.labels.location")}</th>
+                  <th className="hidden px-4 py-3 font-medium lg:table-cell">{t("assets.labels.purchaseDate")}</th>
+                  <th className="px-4 py-3 font-medium">{t("assets.labels.status")}</th>
+                  <th className="px-4 py-3 font-medium w-10"></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border">
                 {paginatedAssets.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">{t("assets.empty.noAssets")}</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("assets.empty.noAssets")}</td>
                   </tr>
                 ) : (
                   paginatedAssets.map((asset) => (
                     <tr 
                       key={asset.id} 
-                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
                       onClick={() => router.push(`/${company}/dashboard/assets/${asset.id}`)}
                     >
-                      <td className="py-3">
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                             <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -710,8 +927,8 @@ export default function AssetsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 capitalize text-xs">{asset.category.replace("_", " ")}</td>
-                      <td className="hidden py-3 md:table-cell">
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{capitalize(asset.category.replace("_", " "))}</td>
+                      <td className="hidden px-4 py-3 md:table-cell">
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           {asset.location_id ? (
                             <>
@@ -723,16 +940,16 @@ export default function AssetsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">
-                        {asset.purchase_date ? formatDate(asset.purchase_date) : "N/A"}
+                      <td className="hidden px-4 py-3 lg:table-cell text-xs text-muted-foreground">
+                        {asset.purchase_date ? formatDate(asset.purchase_date) : "—"}
                       </td>
-                      <td className="py-3">
+                      <td className="px-4 py-3">
                         <Badge variant={asset.status === "active" ? "success" : asset.status === "maintenance" ? "warning" : "destructive"} className="text-xs">
-                          {asset.status.replace("_", " ")}
+                          {capitalize(asset.status.replace("_", " "))}
                         </Badge>
                       </td>
-                      <td className="py-3">
-                        <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <td className="px-4 py-3">
+                        <Eye className="h-4 w-4 text-muted-foreground" />
                       </td>
                     </tr>
                   ))
@@ -780,42 +997,397 @@ export default function AssetsPage() {
           )}
         </CardContent>
       </Card>
-      )}
       </>
       )}
 
-      {/* Work Orders Tab */}
-      {activeTab === "work-orders" && (
-        <div className="text-center py-12">
-          <Wrench className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground mb-4">View and manage work orders for this asset</p>
-          <Link href={`/${company}/dashboard/work-orders`}>
-            <Button>Go to Work Orders</Button>
-          </Link>
-        </div>
+      </>
       )}
 
-      {/* Parts Tab */}
-      {activeTab === "parts" && (
-        <div className="text-center py-12">
-          <Box className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground mb-4">View and manage parts inventory</p>
-          <Link href={`/${company}/dashboard/parts`}>
-            <Button>Go to Parts</Button>
-          </Link>
-        </div>
-      )}
+      {/* Work Orders Tab — Full inline content */}
+      {activeTab === "work-orders" && (() => {
+        const woFiltered = workOrders.filter((o) => {
+          if (woStatusFilter !== "all" && o.status !== woStatusFilter) return false;
+          if (woTypeFilter !== "all" && o.type !== woTypeFilter) return false;
+          if (woSearch) {
+            const q = woSearch.toLowerCase();
+            const asset = o.asset_id ? assets.find((a) => a.id === o.asset_id) : null;
+            return o.title.toLowerCase().includes(q) || o.description.toLowerCase().includes(q) || (asset?.name || "").toLowerCase().includes(q);
+          }
+          return true;
+        });
+        const woOpenCount = workOrders.filter((o) => ["waiting_approval", "waiting_material", "approved"].includes(o.status)).length;
+        const woInProgressCount = workOrders.filter((o) => o.status === "in_progress").length;
+        const woCompletedCount = workOrders.filter((o) => o.status === "completed").length;
+        const woPaginated = woFiltered.slice((woPage - 1) * 10, woPage * 10);
+        const handleWoCreate = () => {
+          if (!woForm.title.trim() || !woForm.description.trim()) return;
+          stores.workOrders.add({
+            id: crypto.randomUUID(), company_id: user?.company_id || "", asset_id: woForm.asset_id || null,
+            title: woForm.title.trim(), description: woForm.description.trim(), type: woForm.type as WorkOrder["type"],
+            priority: woForm.priority, status: "waiting_approval", requested_by: user?.id || "",
+            assigned_to: null, assigned_to_team_id: null, due_date: woForm.due_date || null,
+            estimated_hours: null, actual_hours: null, parts_cost: null, labor_cost: null,
+            corrective_action_id: null, completed_at: null,
+            created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+          } as WorkOrder);
+          toast("Work order created");
+          setShowWoCreate(false);
+          setWoForm({ title: "", description: "", asset_id: "", type: "service_request", priority: "medium", due_date: "" });
+        };
 
-      {/* Corrective Actions Tab */}
-      {activeTab === "corrective-actions" && (
-        <div className="text-center py-12">
-          <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground mb-4">View and manage corrective actions</p>
-          <Link href={`/${company}/dashboard/corrective-actions`}>
-            <Button>Go to Corrective Actions</Button>
-          </Link>
-        </div>
-      )}
+        return (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <KPICard title="Open" value={woOpenCount} icon={ClipboardList} />
+              <KPICard title="In progress" value={woInProgressCount} icon={Clock} />
+              <KPICard title="Completed" value={woCompletedCount} icon={CheckCircle} />
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search work orders..." className="pl-10" value={woSearch} onChange={(e) => { setWoSearch(e.target.value); setWoPage(1); }} />
+              </div>
+              <Select value={woStatusFilter} onValueChange={(v) => { setWoStatusFilter(v); setWoPage(1); }}>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  {["waiting_approval", "waiting_material", "approved", "scheduled", "in_progress", "completed", "cancelled"].map((s) => (
+                    <SelectItem key={s} value={s}>{formatStatusLabel(s)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={woTypeFilter} onValueChange={(v) => { setWoTypeFilter(v); setWoPage(1); }}>
+                <SelectTrigger className="w-[200px]"><SelectValue placeholder="All types" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All types</SelectItem>
+                  {WORK_ORDER_TYPES.map((woType) => (
+                    <SelectItem key={woType} value={woType}>{formatStatusLabel(woType)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {woFiltered.length === 0 ? (
+              <NoDataEmptyState entityName="work orders" onAdd={() => setShowWoCreate(true)} addLabel="New work order" />
+            ) : (
+              <>
+                <div className="flex justify-end">
+                  <Button size="sm" className="gap-2" onClick={() => setShowWoCreate(true)}>
+                    <Plus className="h-4 w-4" /> New work order
+                  </Button>
+                </div>
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-border text-sm">
+                        <thead className="bg-muted/40">
+                          <tr className="text-left">
+                            <th className="px-4 py-3 font-medium">Title</th>
+                            <th className="px-4 py-3 font-medium">Type</th>
+                            <th className="px-4 py-3 font-medium">Asset</th>
+                            <th className="px-4 py-3 font-medium">Priority</th>
+                            <th className="px-4 py-3 font-medium">Status</th>
+                            <th className="px-4 py-3 font-medium">Due date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {woPaginated.map((wo) => {
+                            const asset = wo.asset_id ? assets.find((a) => a.id === wo.asset_id) : null;
+                            return (
+                              <tr key={wo.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => router.push(`/${company}/dashboard/work-orders/${wo.id}`)}>
+                                <td className="px-4 py-3 font-medium">{wo.title}</td>
+                                <td className="px-4 py-3 text-muted-foreground">{capitalize((wo.type || "service_request").replace(/_/g, " "))}</td>
+                                <td className="px-4 py-3 text-muted-foreground">{asset?.name || "—"}</td>
+                                <td className="px-4 py-3"><Badge variant={wo.priority === "critical" || wo.priority === "high" ? "destructive" : wo.priority === "medium" ? "warning" : "secondary"}>{capitalize(wo.priority)}</Badge></td>
+                                <td className="px-4 py-3"><Badge variant={WORK_ORDER_STATUS_COLORS[wo.status] || "secondary"}>{capitalize(wo.status.replace(/_/g, " "))}</Badge></td>
+                                <td className="px-4 py-3 text-muted-foreground">{wo.due_date ? formatDate(wo.due_date) : "—"}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                  {woFiltered.length > 10 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t">
+                      <p className="text-sm text-muted-foreground">Showing {(woPage - 1) * 10 + 1}–{Math.min(woPage * 10, woFiltered.length)} of {woFiltered.length}</p>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" disabled={woPage === 1} onClick={() => setWoPage((p) => p - 1)}>Previous</Button>
+                        <Button size="sm" variant="outline" disabled={woPage * 10 >= woFiltered.length} onClick={() => setWoPage((p) => p + 1)}>Next</Button>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              </>
+            )}
+
+            {showWoCreate && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                <Card className="w-full max-w-lg"><CardHeader className="flex flex-row items-center justify-between"><CardTitle>New work order</CardTitle><Button variant="ghost" size="icon" onClick={() => setShowWoCreate(false)} aria-label="Close"><X className="h-4 w-4" /></Button></CardHeader>
+                  <CardContent className="space-y-4">
+                    <div><Label>Title *</Label><Input className="mt-1" placeholder="Work order title" value={woForm.title} onChange={(e) => setWoForm((p) => ({ ...p, title: e.target.value }))} /></div>
+                    <div><Label>Description *</Label><Textarea className="mt-1" placeholder="Describe the work" value={woForm.description} onChange={(e) => setWoForm((p) => ({ ...p, description: e.target.value }))} /></div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div><Label>Asset</Label><Select value={woForm.asset_id} onValueChange={(v) => setWoForm((p) => ({ ...p, asset_id: v }))}><SelectTrigger className="mt-1"><SelectValue placeholder="Select asset" /></SelectTrigger><SelectContent>{assets.filter((a) => a.status !== "retired").map((a) => (<SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>))}</SelectContent></Select></div>
+                      <div><Label>Type</Label><Select value={woForm.type} onValueChange={(v) => setWoForm((p) => ({ ...p, type: v }))}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{WORK_ORDER_TYPES.map((t) => (<SelectItem key={t} value={t}>{formatStatusLabel(t)}</SelectItem>))}</SelectContent></Select></div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div><Label>Priority</Label><Select value={woForm.priority} onValueChange={(v) => setWoForm((p) => ({ ...p, priority: v as Priority }))}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{(["low", "medium", "high", "critical"] as Priority[]).map((p) => (<SelectItem key={p} value={p}>{capitalize(p)}</SelectItem>))}</SelectContent></Select></div>
+                      <div><Label>Due date</Label><Input type="date" className="mt-1" value={woForm.due_date} onChange={(e) => setWoForm((p) => ({ ...p, due_date: e.target.value }))} /></div>
+                    </div>
+                    <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setShowWoCreate(false)}>Cancel</Button><Button onClick={handleWoCreate} disabled={!woForm.title.trim() || !woForm.description.trim()}>Create</Button></div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </>
+        );
+      })()}
+
+      {/* Parts Tab — Full inline content */}
+      {activeTab === "parts" && (() => {
+        const partsFiltered = parts.filter((p) => {
+          if (!partsSearch) return true;
+          const q = partsSearch.toLowerCase();
+          return p.name.toLowerCase().includes(q) || p.part_number.toLowerCase().includes(q);
+        });
+        const totalValue = parts.reduce((sum, p) => sum + (p.unit_cost || 0) * (p.quantity_in_stock || 0), 0);
+        const lowStockCount = parts.filter((p) => (p.quantity_in_stock || 0) <= (p.minimum_stock || 0)).length;
+        const partsPaginated = partsFiltered.slice((partsPage - 1) * 10, partsPage * 10);
+        const handlePartsCreate = () => {
+          if (!partsForm.name.trim() || !partsForm.part_number.trim()) return;
+          stores.parts.add({
+            id: `part_${Date.now()}`, company_id: user?.company_id || "",
+            name: partsForm.name.trim(), part_number: partsForm.part_number.trim(),
+            unit_cost: parseFloat(partsForm.unit_cost) || 0, quantity_in_stock: parseInt(partsForm.quantity_in_stock) || 0,
+            minimum_stock: parseInt(partsForm.minimum_stock) || 0, supplier: partsForm.supplier.trim() || null,
+            created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+          } as Part);
+          toast("Part added"); setShowPartsCreate(false);
+          setPartsForm({ name: "", part_number: "", unit_cost: "", quantity_in_stock: "", minimum_stock: "", supplier: "" });
+        };
+
+        return (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <KPICard title="Total parts" value={parts.length} icon={Package} />
+              <KPICard title="Inventory value" value={`$${totalValue.toLocaleString()}`} icon={DollarSign} />
+              <KPICard title="Low stock" value={lowStockCount} icon={AlertTriangle} />
+            </div>
+
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input placeholder="Search parts..." className="pl-10" value={partsSearch} onChange={(e) => { setPartsSearch(e.target.value); setPartsPage(1); }} />
+            </div>
+
+            {partsFiltered.length === 0 ? (
+              <NoDataEmptyState entityName="parts" onAdd={() => setShowPartsCreate(true)} addLabel="Add part" />
+            ) : (
+              <>
+                <div className="flex justify-end">
+                  <Button size="sm" className="gap-2" onClick={() => setShowPartsCreate(true)}>
+                    <Plus className="h-4 w-4" /> Add part
+                  </Button>
+                </div>
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-border text-sm">
+                        <thead className="bg-muted/40">
+                          <tr className="text-left">
+                            <th className="px-4 py-3 font-medium">Part</th>
+                            <th className="px-4 py-3 font-medium">Supplier</th>
+                            <th className="px-4 py-3 font-medium">Unit cost</th>
+                            <th className="px-4 py-3 font-medium">In stock</th>
+                            <th className="px-4 py-3 font-medium">Min stock</th>
+                            <th className="px-4 py-3 font-medium">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {partsPaginated.map((part) => {
+                            const isLow = (part.quantity_in_stock || 0) <= (part.minimum_stock || 0);
+                            return (
+                              <tr key={part.id} className="hover:bg-muted/50">
+                                <td className="px-4 py-3"><div className="font-medium">{part.name}</div><div className="font-mono text-xs text-muted-foreground">{part.part_number}</div></td>
+                                <td className="px-4 py-3 text-muted-foreground">{part.supplier || "—"}</td>
+                                <td className="px-4 py-3">${(part.unit_cost || 0).toFixed(2)}</td>
+                                <td className="px-4 py-3">{part.quantity_in_stock || 0}</td>
+                                <td className="px-4 py-3">{part.minimum_stock || 0}</td>
+                                <td className="px-4 py-3"><Badge variant={isLow ? "warning" : "secondary"}>{isLow ? "Low stock" : "In stock"}</Badge></td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                  {partsFiltered.length > 10 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t">
+                      <p className="text-sm text-muted-foreground">Showing {(partsPage - 1) * 10 + 1}–{Math.min(partsPage * 10, partsFiltered.length)} of {partsFiltered.length}</p>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" disabled={partsPage === 1} onClick={() => setPartsPage((p) => p - 1)}>Previous</Button>
+                        <Button size="sm" variant="outline" disabled={partsPage * 10 >= partsFiltered.length} onClick={() => setPartsPage((p) => p + 1)}>Next</Button>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              </>
+            )}
+
+            {showPartsCreate && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                <Card className="w-full max-w-md"><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Add part</CardTitle><Button variant="ghost" size="icon" onClick={() => setShowPartsCreate(false)} aria-label="Close"><X className="h-4 w-4" /></Button></CardHeader>
+                  <CardContent className="space-y-4">
+                    <div><Label>Part name *</Label><Input className="mt-1" value={partsForm.name} onChange={(e) => setPartsForm((p) => ({ ...p, name: e.target.value }))} /></div>
+                    <div><Label>Part number *</Label><Input className="mt-1" value={partsForm.part_number} onChange={(e) => setPartsForm((p) => ({ ...p, part_number: e.target.value }))} /></div>
+                    <div className="grid gap-4 grid-cols-2">
+                      <div><Label>Unit cost</Label><Input type="number" min="0" step="0.01" className="mt-1" value={partsForm.unit_cost} onChange={(e) => setPartsForm((p) => ({ ...p, unit_cost: e.target.value }))} /></div>
+                      <div><Label>Qty in stock</Label><Input type="number" min="0" className="mt-1" value={partsForm.quantity_in_stock} onChange={(e) => setPartsForm((p) => ({ ...p, quantity_in_stock: e.target.value }))} /></div>
+                    </div>
+                    <div className="grid gap-4 grid-cols-2">
+                      <div><Label>Min stock</Label><Input type="number" min="0" className="mt-1" value={partsForm.minimum_stock} onChange={(e) => setPartsForm((p) => ({ ...p, minimum_stock: e.target.value }))} /></div>
+                      <div><Label>Supplier</Label><Input className="mt-1" value={partsForm.supplier} onChange={(e) => setPartsForm((p) => ({ ...p, supplier: e.target.value }))} /></div>
+                    </div>
+                    <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setShowPartsCreate(false)}>Cancel</Button><Button onClick={handlePartsCreate} disabled={!partsForm.name.trim() || !partsForm.part_number.trim()}>Add part</Button></div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </>
+        );
+      })()}
+
+      {/* Corrective Actions Tab — Full inline content */}
+      {activeTab === "corrective-actions" && (() => {
+        const caFiltered = correctiveActions.filter((a) => {
+          if (caStatusFilter !== "all" && a.status !== caStatusFilter) return false;
+          if (caSearch) {
+            const q = caSearch.toLowerCase();
+            const asset = assets.find((as) => as.id === a.asset_id);
+            return a.description.toLowerCase().includes(q) || (asset?.name || "").toLowerCase().includes(q);
+          }
+          return true;
+        });
+        const caOpenCount = correctiveActions.filter((a) => a.status === "open").length;
+        const caInProgressCount = correctiveActions.filter((a) => a.status === "in_progress").length;
+        const caOverdueCount = correctiveActions.filter((a) => a.status !== "completed" && a.due_date && new Date(a.due_date).getTime() < stableNow).length;
+        const caCompletedCount = correctiveActions.filter((a) => a.status === "completed").length;
+        const caPaginated = caFiltered.slice((caPage - 1) * 10, caPage * 10);
+        const handleCaCreate = () => {
+          if (!caForm.asset_id || !caForm.description.trim() || !caForm.due_date) return;
+          stores.correctiveActions.add({
+            id: `ca_${crypto.randomUUID().slice(0, 8)}`, company_id: user?.company_id || "",
+            asset_id: caForm.asset_id, inspection_id: null, description: caForm.description.trim(),
+            severity: caForm.severity, assigned_to: null, assigned_to_team_id: null,
+            due_date: caForm.due_date, status: "open", resolution_notes: null, completed_at: null,
+            created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+          } as CorrectiveAction);
+          toast("Corrective action created"); setShowCaCreate(false);
+          setCaForm({ asset_id: "", description: "", severity: "medium", due_date: "" });
+        };
+
+        return (
+          <>
+            <div className="grid gap-4 sm:grid-cols-4">
+              <KPICard title="Open" value={caOpenCount} icon={ClipboardList} />
+              <KPICard title="In progress" value={caInProgressCount} icon={Clock} />
+              <KPICard title="Overdue" value={caOverdueCount} icon={AlertTriangle} />
+              <KPICard title="Completed" value={caCompletedCount} icon={CheckCircle} />
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search actions..." className="pl-10" value={caSearch} onChange={(e) => { setCaSearch(e.target.value); setCaPage(1); }} />
+              </div>
+              <Select value={caStatusFilter} onValueChange={(v) => { setCaStatusFilter(v); setCaPage(1); }}>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="open">Open</SelectItem>
+                  <SelectItem value="in_progress">In progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {caFiltered.length === 0 ? (
+              <NoDataEmptyState entityName="corrective actions" onAdd={() => setShowCaCreate(true)} addLabel="New action" />
+            ) : (
+              <>
+                <div className="flex justify-end">
+                  <Button size="sm" className="gap-2" onClick={() => setShowCaCreate(true)}>
+                    <Plus className="h-4 w-4" /> New action
+                  </Button>
+                </div>
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-border text-sm">
+                        <thead className="bg-muted/40">
+                          <tr className="text-left">
+                            <th className="px-4 py-3 font-medium">Description</th>
+                            <th className="px-4 py-3 font-medium">Asset</th>
+                            <th className="px-4 py-3 font-medium">Severity</th>
+                            <th className="px-4 py-3 font-medium">Status</th>
+                            <th className="px-4 py-3 font-medium">Due date</th>
+                            <th className="px-4 py-3 font-medium sr-only">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {caPaginated.map((action) => {
+                            const asset = action.asset_id ? assets.find((a) => a.id === action.asset_id) : null;
+                            const isOverdue = action.due_date && action.status !== "completed" && new Date(action.due_date).getTime() < stableNow;
+                            return (
+                              <tr key={action.id} className={cn("hover:bg-muted/50 cursor-pointer", isOverdue && "border-l-2 border-l-destructive")} onClick={() => router.push(`/${company}/dashboard/corrective-actions/${action.id}`)}>
+                                <td className="px-4 py-3 font-medium max-w-xs truncate">{action.description}</td>
+                                <td className="px-4 py-3 text-muted-foreground">{asset?.name || "—"}</td>
+                                <td className="px-4 py-3"><Badge variant={action.severity === "critical" || action.severity === "high" ? "destructive" : action.severity === "medium" ? "warning" : "secondary"}>{capitalize(action.severity)}</Badge></td>
+                                <td className="px-4 py-3"><Badge variant={action.status === "completed" ? "completed" : action.status === "in_progress" ? "in_progress" : "secondary"}>{isOverdue ? "Overdue" : capitalize(action.status.replace(/_/g, " "))}</Badge></td>
+                                <td className="px-4 py-3 text-muted-foreground">{action.due_date ? formatDate(action.due_date) : "—"}</td>
+                                <td className="px-4 py-3">
+                                  {action.status === "open" && <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); stores.correctiveActions.update(action.id, { status: "in_progress", updated_at: new Date().toISOString() }); toast("Started"); }}>Start</Button>}
+                                  {action.status === "in_progress" && <Button size="sm" onClick={(e) => { e.stopPropagation(); stores.correctiveActions.update(action.id, { status: "completed", completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }); toast("Completed"); }}>Complete</Button>}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                  {caFiltered.length > 10 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t">
+                      <p className="text-sm text-muted-foreground">Showing {(caPage - 1) * 10 + 1}–{Math.min(caPage * 10, caFiltered.length)} of {caFiltered.length}</p>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" disabled={caPage === 1} onClick={() => setCaPage((p) => p - 1)}>Previous</Button>
+                        <Button size="sm" variant="outline" disabled={caPage * 10 >= caFiltered.length} onClick={() => setCaPage((p) => p + 1)}>Next</Button>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              </>
+            )}
+
+            {showCaCreate && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                <Card className="w-full max-w-lg"><CardHeader className="flex flex-row items-center justify-between"><CardTitle>New corrective action</CardTitle><Button variant="ghost" size="icon" onClick={() => setShowCaCreate(false)} aria-label="Close"><X className="h-4 w-4" /></Button></CardHeader>
+                  <CardContent className="space-y-4">
+                    <div><Label>Asset *</Label><Select value={caForm.asset_id} onValueChange={(v) => setCaForm((p) => ({ ...p, asset_id: v }))}><SelectTrigger className="mt-1"><SelectValue placeholder="Select asset" /></SelectTrigger><SelectContent>{assets.filter((a) => a.status !== "retired").map((a) => (<SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>))}</SelectContent></Select></div>
+                    <div><Label>Description *</Label><Textarea className="mt-1" placeholder="Describe the corrective action" value={caForm.description} onChange={(e) => setCaForm((p) => ({ ...p, description: e.target.value }))} /></div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div><Label>Severity</Label><Select value={caForm.severity} onValueChange={(v) => setCaForm((p) => ({ ...p, severity: v as Severity }))}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{(["low", "medium", "high", "critical"] as Severity[]).map((s) => (<SelectItem key={s} value={s}>{capitalize(s)}</SelectItem>))}</SelectContent></Select></div>
+                      <div><Label>Due date *</Label><Input type="date" className="mt-1" value={caForm.due_date} onChange={(e) => setCaForm((p) => ({ ...p, due_date: e.target.value }))} /></div>
+                    </div>
+                    <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setShowCaCreate(false)}>Cancel</Button><Button onClick={handleCaCreate} disabled={!caForm.asset_id || !caForm.description.trim() || !caForm.due_date}>Create</Button></div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* Alerts Tab Content */}
       {activeTab === "alerts" && (
@@ -1302,6 +1874,56 @@ export default function AssetsPage() {
                 </Button>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Asset Import modal */}
+      {showImport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowImport(false); setImportData(null); }}>
+          <div className="relative w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto rounded-lg bg-background p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Import assets</h2>
+              <button onClick={() => { setShowImport(false); setImportData(null); }} className="text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {!importData ? (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">Upload a CSV file to bulk-import assets. Download the template first to see the required format.</p>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => downloadCsvTemplate("asset-import-template.csv", ["name", "asset_tag", "serial_number", "category", "asset_type", "department", "manufacturer", "model", "condition", "status", "purchase_date", "purchase_cost", "warranty_expiry"])}>
+                  <Download className="h-4 w-4" /> Download template
+                </Button>
+                <label className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <input type="file" accept=".csv,.txt" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const data = await parseCsv(file);
+                      if (data.rows.length === 0) { toast("File is empty", "error"); return; }
+                      const mapped = mapAssetImportColumns(data);
+                      setImportData(mapped);
+                    } catch {
+                      toast("Failed to parse CSV file", "error");
+                    }
+                    e.target.value = "";
+                  }} />
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Choose CSV file</span>
+                </label>
+              </div>
+            ) : (
+              <AssetImportPreview
+                importData={importData}
+                assets={assets}
+                companyId={companyId || ""}
+                addAsset={addAsset}
+                toast={toast}
+                onBack={() => setImportData(null)}
+                onDone={() => { setShowImport(false); setImportData(null); }}
+              />
+            )}
           </div>
         </div>
       )}

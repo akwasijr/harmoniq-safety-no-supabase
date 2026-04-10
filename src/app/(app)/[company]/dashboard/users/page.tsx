@@ -738,11 +738,9 @@ export default function UsersPage() {
                         <td className="px-4 py-3 text-sm">{leader?.full_name || "—"}</td>
                         <td className="px-4 py-3 text-sm">{formatNumber(team.member_count)}</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            team.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-                          }`}>
+                          <Badge variant={team.status === 'active' ? "active" : "inactive"} className="text-xs">
                             {team.status || 'active'}
-                          </span>
+                          </Badge>
                         </td>
                       </tr>
                     );

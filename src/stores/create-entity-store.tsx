@@ -11,7 +11,7 @@ import { subscribeToRealtimeInvalidation } from "@/lib/supabase/realtime-invalid
 // Persists across Provider re-mounts so tab navigation never re-fetches
 // fresh data from Supabase unless stale.
 const globalLoadedCache = new Map<string, number>();
-const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 function isCacheFresh(key: string): boolean {
   const ts = globalLoadedCache.get(key);
@@ -156,6 +156,17 @@ interface StoreOptions {
   stripFields?: string[];
   /** Subscribe to Supabase realtime invalidation for near-live updates */
   realtimeSubscribe?: boolean;
+  /** Treat a missing Supabase table as an optional empty store */
+  allowMissingTable?: boolean;
+}
+
+function isMissingSupabaseTable(message: string | null | undefined): boolean {
+  if (!message) return false;
+  return (
+    message.includes("Could not find the table") ||
+    message.includes("schema cache") ||
+    (message.includes("relation") && message.includes("does not exist"))
+  );
 }
 
 /**
@@ -243,6 +254,21 @@ export function createEntityStore<T extends IdEntity>(
           clearTimeout(timeout);
 
           if (error) {
+            // AbortError is expected during React strict mode double-mount or navigation — suppress
+            if (error.message?.includes("AbortError") || error.message?.includes("aborted")) {
+              if (isMountedRef.current) setIsLoading(false);
+              isFetchingRef.current = false;
+              return;
+            }
+            if (opts.allowMissingTable && isMissingSupabaseTable(error.message)) {
+              if (isMountedRef.current) {
+                setError(null);
+                const cached = loadFromStorage<T[]>(storageKey, []);
+                setItems(cached);
+                itemsRef.current = cached;
+              }
+              return;
+            }
             console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
             if (isMountedRef.current) setError(error.message);
             // Fallback to localStorage cache only (never mock data in Supabase mode)
@@ -255,14 +281,34 @@ export function createEntityStore<T extends IdEntity>(
               ? raw.map((row) => mapFromSupabase<T>(row, opts.columnMap))
               : (raw as T[]);
             // Merge optimistic items: keep any locally-added items that
-            // aren't yet in the Supabase response (write may be in-flight)
+            // aren't yet in the Supabase response (write may be in-flight).
+            // For items in BOTH local + Supabase, merge local fields into
+            // the Supabase version so local-only data isn't lost.
             const fetchedIds = new Set(fetched.map((item) => item.id));
+            const localById = new Map(itemsRef.current.map((item) => [item.id, item]));
             const optimistic = itemsRef.current.filter(
               (item) => !fetchedIds.has(item.id)
             );
+            const mergedFetched = fetched.map((fetchedItem) => {
+              const localItem = localById.get(fetchedItem.id);
+              if (!localItem) return fetchedItem;
+              // Preserve local-only fields that Supabase doesn't return
+              const combined = { ...localItem, ...fetchedItem };
+              // Restore local fields that were stripped/missing from Supabase
+              for (const key of Object.keys(localItem as Record<string, unknown>)) {
+                const localVal = (localItem as Record<string, unknown>)[key];
+                const fetchedVal = (fetchedItem as Record<string, unknown>)[key];
+                const fetchedEmpty = fetchedVal === undefined || fetchedVal === null || (Array.isArray(fetchedVal) && fetchedVal.length === 0);
+                const localHasData = localVal != null && !(Array.isArray(localVal) && localVal.length === 0);
+                if (localHasData && fetchedEmpty) {
+                  (combined as Record<string, unknown>)[key] = localVal;
+                }
+              }
+              return combined;
+            });
             const merged = optimistic.length > 0
-              ? [...fetched, ...optimistic]
-              : fetched;
+              ? [...mergedFetched, ...optimistic]
+              : mergedFetched;
             setItems(merged);
             itemsRef.current = merged;
             // Cache to localStorage for offline resilience
@@ -270,9 +316,21 @@ export function createEntityStore<T extends IdEntity>(
           }
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
-          console.warn(`[Harmoniq] Fetch ${table} aborted/failed:`, msg);
+          // Suppress AbortError from React strict mode or navigation
+          if (msg.includes("AbortError") || msg.includes("aborted")) {
+            return;
+          }
+          if (opts.allowMissingTable && isMissingSupabaseTable(msg)) {
+            if (isMountedRef.current) {
+              setError(null);
+              const cached = loadFromStorage<T[]>(storageKey, []);
+              setItems(cached);
+              itemsRef.current = cached;
+            }
+            return;
+          }
+          console.warn(`[Harmoniq] Fetch ${table} failed:`, msg);
           if (isMountedRef.current) setError(msg);
-          // Fallback to localStorage cache only (never mock data in Supabase mode)
           const cached = loadFromStorage<T[]>(storageKey, []);
           if (isMountedRef.current && cached.length > 0) setItems(cached);
         } finally {
@@ -522,7 +580,10 @@ export function createEntityStore<T extends IdEntity>(
         // With Supabase, RLS already filters by company, but filter client-side too for safety
         if (!companyId) return [];
         return items.filter(
-          (item) => "company_id" in item && (item as unknown as CompanyEntity).company_id === companyId
+          (item) => "company_id" in item && (
+            (item as unknown as CompanyEntity).company_id === companyId ||
+            (item as unknown as CompanyEntity).company_id === "__built_in__"
+          )
         );
       },
       [items]

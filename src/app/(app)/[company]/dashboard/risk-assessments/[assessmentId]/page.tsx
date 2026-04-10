@@ -417,7 +417,7 @@ export default function RiskAssessmentDetailPage() {
                         <span className="font-medium">{field.label}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs capitalize">{field.type.replace("_", " ")}</Badge>
+                        <Badge variant="outline" className="text-xs">{field.type.replace("_", " ")}</Badge>
                         {field.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
                       </div>
                     </div>

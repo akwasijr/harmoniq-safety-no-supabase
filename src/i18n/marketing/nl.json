@@ -2,8 +2,8 @@
   "hero": {
     "title": "Harmoniq",
     "subtitle": "Platform voor Arbeidsveiligheid & Assetbeheer",
-    "description": "Meld incidenten, beheer risico's, volg assets en zorg voor naleving — alles in één krachtig platform gebouwd voor moderne veiligheidsteams.",
-    "cta_start": "Aan de slag",
+    "description": "Eén platform voor incidenten, inspecties, assets en compliance. Gebouwd voor moderne veiligheidsteams.",
+    "cta_start": "Inloggen",
     "cta_demo": "Boek een Demo"
   },
   "trust": {
@@ -43,5 +43,84 @@
     "terms": "Algemene voorwaarden",
     "contact": "Contact",
     "copyright": "© {year} Harmoniq Safety. Alle rechten voorbehouden."
-  }
+  },
+  "nav": {
+    "industries": "Industrieën",
+    "faq": "FAQ",
+    "get_started": "Inloggen"
+  },
+  "stats": {
+    "incidents_reported": "Incidenten gemeld",
+    "assets_tracked": "Assets gevolgd",
+    "inspections_completed": "Inspecties voltooid",
+    "cost_reduction": "Kostenbesparing",
+    "compliance_rate": "Nalevingspercentage"
+  },
+  "industries": {
+    "heading": "Gebouwd voor uw industrie",
+    "subheading": "Harmoniq past zich aan de specifieke veiligheidseisen van uw sector aan",
+    "construction": "Bouw",
+    "manufacturing": "Productie",
+    "oil_gas": "Olie & Gas",
+    "healthcare": "Gezondheidszorg",
+    "warehousing": "Opslag & Logistiek",
+    "mining": "Mijnbouw",
+    "food_beverage": "Voeding & Dranken",
+    "utilities": "Nutsbedrijven & Energie",
+    "transportation": "Transport",
+    "education": "Onderwijs",
+    "airports": "Luchthavens & Luchtvaart"
+  },
+  "feature_cards": {
+    "incident_title": "Slimme incidentrapportage",
+    "incident_desc": "Meld incidenten vanaf elk apparaat met automatische ernstclassificatie en routing naar het juiste team.",
+    "asset_title": "Volledig assetlevenscyclusbeheer",
+    "asset_desc": "Volg elk asset van aanschaf tot afvoer. QR-code scanning, geautomatiseerde inspectieschema's en onderhoudshistorie.",
+    "risk_title": "Compliance-klare risicobeoordelingen",
+    "risk_desc": "Ingebouwde formulieren voor JHA, JSA, RI&E, Arbowet en meer. Landspecifieke nalevingsworkflows.",
+    "analytics_title": "Bruikbare veiligheidsanalyses",
+    "analytics_desc": "Ontdek patronen voordat ze problemen worden. Realtime dashboards, trendanalyse en exporteerbare rapporten."
+  },
+  "faq_section": {
+    "heading": "Veelgestelde vragen",
+    "q1": "Hoe kan ik toegang krijgen?",
+    "a1": "Maak een gratis account aan en begin binnen enkele minuten met uw eerste veiligheidsinspectie. Geen creditcard vereist.",
+    "q2": "Welke nalevingsnormen ondersteunen jullie?",
+    "a2": "Harmoniq ondersteunt OSHA (VS), Arbowet/RI&E (Nederland), AFS/SAM (Zweden) en ISO 45001 met landspecifieke formulieren en workflows.",
+    "q3": "Werkt het offline?",
+    "a3": "Ja. De mobiele app werkt offline en synchroniseert automatisch wanneer de verbinding wordt hersteld, zodat buitendienstmedewerkers altijd kunnen rapporteren en inspecteren.",
+    "q4": "Welke talen worden ondersteund?",
+    "a4": "Momenteel beschikbaar in het Engels, Nederlands en Zweeds, met locatiespecifieke datums, cijfers en nalevingsformulieren voor elke regio."
+  },
+  "cta": {
+    "heading": "Klaar om uw veiligheidsoperaties te transformeren?",
+    "subheading": "Sluit u aan bij duizenden veiligheidsprofessionals die Harmoniq gebruiken om hun teams te beschermen."
+  },
+  "footer_links": {
+    "product": "Product",
+    "features": "Functies",
+    "integrations": "Integraties",
+    "mobile_app": "Mobiele App",
+    "changelog": "Wijzigingslogboek",
+    "company": "Bedrijf",
+    "about": "Over ons",
+    "blog": "Blog",
+    "careers": "Vacatures"
+  },
+  "mobile": {
+    "heading": "Veiligheid & assets in je zak",
+    "description": "Geef medewerkers een mobiele app voor directe incidentrapportage, asset-inspecties, QR-code scanning en realtime meldingen, zelfs offline.",
+    "feature_report": "Meld incidenten & inspecteer assets overal",
+    "feature_checklists": "Vul checklists en audits ter plaatse in",
+    "feature_notifications": "Realtime pushmeldingen",
+    "feature_offline": "Offline beschikbaar, synchroniseert automatisch"
+  },
+  "success": {
+    "heading": "Veiligheidssucces",
+    "ai_title": "AI-gedreven Inzichten",
+    "ai_desc": "Slimme inzichten die risico's en asset-storingen voorspellen voordat ze optreden.",
+    "explore": "Ontdek",
+    "key_stats": "Belangrijke Statistieken"
+  },
+  "industry_explore": "Ontdek"
 }

@@ -2,8 +2,8 @@
   "hero": {
     "title": "Harmoniq",
     "subtitle": "Plattform för Arbetssäkerhet & Tillgångshantering",
-    "description": "Rapportera incidenter, hantera risker, spåra tillgångar och säkerställ efterlevnad — allt i en kraftfull plattform byggd för moderna säkerhetsteam.",
-    "cta_start": "Kom igång",
+    "description": "En plattform för incidenter, inspektioner, tillgångar och efterlevnad. Byggt för moderna säkerhetsteam.",
+    "cta_start": "Logga in",
     "cta_demo": "Boka en Demo"
   },
   "trust": {
@@ -43,5 +43,84 @@
     "terms": "Användarvillkor",
     "contact": "Kontakta oss",
     "copyright": "© {year} Harmoniq Safety. Alla rättigheter förbehållna."
-  }
+  },
+  "nav": {
+    "industries": "Branscher",
+    "faq": "FAQ",
+    "get_started": "Logga in"
+  },
+  "stats": {
+    "incidents_reported": "Incidenter rapporterade",
+    "assets_tracked": "Tillgångar spårade",
+    "inspections_completed": "Inspektioner slutförda",
+    "cost_reduction": "Kostnadsminskning",
+    "compliance_rate": "Efterlevnadsgrad"
+  },
+  "industries": {
+    "heading": "Byggt för din bransch",
+    "subheading": "Harmoniq anpassar sig till de specifika säkerhetskraven i din sektor",
+    "construction": "Bygg",
+    "manufacturing": "Tillverkning",
+    "oil_gas": "Olja & Gas",
+    "healthcare": "Sjukvård",
+    "warehousing": "Lager & Logistik",
+    "mining": "Gruvdrift",
+    "food_beverage": "Livsmedel & Dryck",
+    "utilities": "Energi & Försörjning",
+    "transportation": "Transport",
+    "education": "Utbildning",
+    "airports": "Flygplatser & Flyg"
+  },
+  "feature_cards": {
+    "incident_title": "Smart incidentrapportering",
+    "incident_desc": "Rapportera incidenter från vilken enhet som helst med automatisk allvarlighetsklassificering och routing till rätt team.",
+    "asset_title": "Komplett livscykelspårning av tillgångar",
+    "asset_desc": "Spåra varje tillgång från förvärv till avveckling. QR-kodskanning, automatiserade inspektionsscheman och underhållshistorik.",
+    "risk_title": "Efterlevnadsklara riskbedömningar",
+    "risk_desc": "Inbyggda formulär för JHA, JSA, RI&E, Arbowet med mera. Landsspecifika efterlevnadsarbetsflöden.",
+    "analytics_title": "Handlingsbara säkerhetsanalyser",
+    "analytics_desc": "Upptäck mönster innan de blir problem. Realtidspaneler, trendanalys och exporterbara rapporter."
+  },
+  "faq_section": {
+    "heading": "Vanliga frågor",
+    "q1": "Hur får jag tillgång?",
+    "a1": "Registrera dig för ett gratis konto och kom igång med din första säkerhetsinspektion på några minuter. Inget kreditkort krävs.",
+    "q2": "Vilka efterlevnadsstandarder stöder ni?",
+    "a2": "Harmoniq stöder OSHA (USA), Arbowet/RI&E (Nederländerna), AFS/SAM (Sverige) och ISO 45001 med landsspecifika formulär och arbetsflöden.",
+    "q3": "Fungerar det offline?",
+    "a3": "Ja. Mobilappen fungerar offline och synkroniserar automatiskt när anslutningen återställs, vilket säkerställer att fältarbetare alltid kan rapportera och inspektera.",
+    "q4": "Vilka språk stöds?",
+    "a4": "Finns för närvarande på engelska, nederländska och svenska, med platsmedvetna datum, siffror och efterlevnadsformulär för varje region."
+  },
+  "cta": {
+    "heading": "Redo att förvandla din säkerhetsverksamhet?",
+    "subheading": "Gå med tusentals säkerhetsproffs som använder Harmoniq för att skydda sina team."
+  },
+  "footer_links": {
+    "product": "Produkt",
+    "features": "Funktioner",
+    "integrations": "Integrationer",
+    "mobile_app": "Mobilapp",
+    "changelog": "Ändringslogg",
+    "company": "Företag",
+    "about": "Om oss",
+    "blog": "Blogg",
+    "careers": "Karriär"
+  },
+  "mobile": {
+    "heading": "Säkerhet & tillgångar i fickan",
+    "description": "Ge arbetare en mobilapp för omedelbar incidentrapportering, tillgångsinspektioner, QR-kodskanning och realtidsvarningar, även offline.",
+    "feature_report": "Rapportera incidenter & inspektera tillgångar var som helst",
+    "feature_checklists": "Fyll i checklistor och revisioner på plats",
+    "feature_notifications": "Realtids push-notiser",
+    "feature_offline": "Fungerar offline, synkroniserar automatiskt"
+  },
+  "success": {
+    "heading": "Säkerhetsframgång",
+    "ai_title": "AI-drivna Insikter",
+    "ai_desc": "Smarta insikter som förutser risker och tillgångsfel innan de inträffar.",
+    "explore": "Utforska",
+    "key_stats": "Nyckelstatistik"
+  },
+  "industry_explore": "Utforska"
 }

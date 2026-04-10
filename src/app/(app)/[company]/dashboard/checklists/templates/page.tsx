@@ -18,8 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 import {
-  getAllTemplates,
-  getTemplatesByIndustry,
+  getAllTemplatesForCountry,
+  getTemplatesForCountry,
   INDUSTRY_METADATA,
   resolveTemplateRegulation,
 } from "@/data/industry-templates";
@@ -61,7 +61,12 @@ import {
   Eye,
   ClipboardCheck,
   Library,
+  Upload,
+  Download,
+  X,
 } from "lucide-react";
+import { parseCsv } from "@/lib/csv";
+import type { ChecklistItem } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Industry icon mapping
@@ -112,6 +117,65 @@ function itemTypeBadge(type: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Template import helpers
+// ---------------------------------------------------------------------------
+type ParsedTemplateImport = {
+  name: string;
+  description: string;
+  category: string;
+  items: { question: string; type: ChecklistItem["type"]; required: boolean }[];
+  errors: string[];
+};
+
+const VALID_ITEM_TYPES: ChecklistItem["type"][] = ["yes_no_na", "pass_fail", "rating", "text", "number", "photo", "date", "signature", "select"];
+
+function parseTemplateJSON(text: string): ParsedTemplateImport[] {
+  const raw = JSON.parse(text);
+  const arr = Array.isArray(raw) ? raw : [raw];
+  return arr.map((t) => {
+    const errors: string[] = [];
+    const name = (t.name || t.title || "").trim();
+    if (!name) errors.push("Missing name");
+    const items: ParsedTemplateImport["items"] = [];
+    const rawItems = t.items || t.questions || t.checklist_items || [];
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      errors.push("No items/questions");
+    } else {
+      rawItems.forEach((item: Record<string, unknown>, idx: number) => {
+        const question = ((item.question || item.text || item.label || item.title || "") as string).trim();
+        if (!question) { errors.push(`Item ${idx + 1}: missing question`); return; }
+        const rawType = ((item.type || item.response_type || "yes_no_na") as string).toLowerCase().trim().replace(/\s+/g, "_");
+        const type = VALID_ITEM_TYPES.includes(rawType as ChecklistItem["type"]) ? rawType as ChecklistItem["type"] : "yes_no_na";
+        const required = item.required !== false;
+        items.push({ question, type, required });
+      });
+    }
+    return { name, description: ((t.description || t.desc || "") as string).trim(), category: ((t.category || t.type || "general") as string).trim(), items, errors };
+  });
+}
+
+function parseTemplateCSV(data: { headers: string[]; rows: Record<string, string>[] }): ParsedTemplateImport[] {
+  const groups = new Map<string, { description: string; category: string; items: { question: string; type: ChecklistItem["type"]; required: boolean }[] }>();
+  for (const row of data.rows) {
+    const name = (row.template_name || row.name || row.template || "").trim();
+    if (!name) continue;
+    if (!groups.has(name)) {
+      groups.set(name, { description: (row.description || row.desc || "").trim(), category: (row.category || "general").trim(), items: [] });
+    }
+    const question = (row.question || row.item || row.text || "").trim();
+    if (!question) continue;
+    const rawType = (row.type || row.item_type || row.response_type || "yes_no_na").toLowerCase().trim().replace(/\s+/g, "_");
+    const type = VALID_ITEM_TYPES.includes(rawType as ChecklistItem["type"]) ? rawType as ChecklistItem["type"] : "yes_no_na";
+    const required = row.required?.toLowerCase().trim() !== "false" && row.required?.toLowerCase().trim() !== "no";
+    groups.get(name)!.items.push({ question, type, required });
+  }
+  return Array.from(groups.entries()).map(([name, g]) => ({
+    name, description: g.description, category: g.category, items: g.items,
+    errors: g.items.length === 0 ? ["No items/questions"] : [],
+  }));
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 export default function TemplateLibraryPage() {
@@ -136,6 +200,8 @@ export default function TemplateLibraryPage() {
     null,
   );
   const [showIndustryDropdown, setShowIndustryDropdown] = React.useState(false);
+  const [showTemplateImport, setShowTemplateImport] = React.useState(false);
+  const [templateImportData, setTemplateImportData] = React.useState<ParsedTemplateImport[] | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Default to company's industry when available
@@ -158,11 +224,13 @@ export default function TemplateLibraryPage() {
   }, []);
 
   // ---- Derived data ---------------------------------------------------------
+  const companyCountry = currentCompany?.country ?? "US";
+
   const filteredTemplates = React.useMemo(() => {
     let templates =
       selectedIndustry === "all"
-        ? getAllTemplates()
-        : getTemplatesByIndustry(selectedIndustry);
+        ? getAllTemplatesForCountry(companyCountry)
+        : getTemplatesForCountry(selectedIndustry, companyCountry);
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -170,13 +238,13 @@ export default function TemplateLibraryPage() {
         (tmpl) =>
           t(tmpl.name_key).toLowerCase().includes(q) ||
           t(tmpl.description_key).toLowerCase().includes(q) ||
-          resolveTemplateRegulation(tmpl, currentCompany?.country ?? "US").toLowerCase().includes(q) ||
+          resolveTemplateRegulation(tmpl, companyCountry).toLowerCase().includes(q) ||
           tmpl.tags.some((tag) => tag.toLowerCase().includes(q)),
       );
     }
 
     return templates;
-  }, [selectedIndustry, searchQuery, t, currentCompany?.country]);
+  }, [selectedIndustry, searchQuery, t, companyCountry]);
 
   const groupedTemplates = React.useMemo(() => {
     const groups: Record<string, IndustryChecklistTemplate[]> = {};
@@ -240,6 +308,10 @@ export default function TemplateLibraryPage() {
         {/* Page Title */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold tracking-tight">Checklist Templates</h1>
+          <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowTemplateImport(true)}>
+            <Upload className="h-4 w-4" />
+            Import Template
+          </Button>
         </div>
 
         {/* Top-level Tabs: My Templates / Template Library */}
@@ -262,6 +334,13 @@ export default function TemplateLibraryPage() {
               {t("industry_templates._ui.templateLibrary")}
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             </button>
+            <Link
+              href={`/${company}/dashboard/checklists/procedures`}
+              className="flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative whitespace-nowrap text-muted-foreground hover:text-foreground"
+            >
+              <FileText className="h-4 w-4 shrink-0" />
+              Procedure Templates
+            </Link>
           </div>
         </div>
 
@@ -421,6 +500,179 @@ export default function TemplateLibraryPage() {
           })}
         </div>
 
+        {/* Template Import Modal */}
+        {showTemplateImport && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowTemplateImport(false); setTemplateImportData(null); }}>
+            <div className="relative w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto rounded-lg bg-background p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Import checklist templates</h2>
+                <button onClick={() => { setShowTemplateImport(false); setTemplateImportData(null); }} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {!templateImportData ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Upload a JSON or CSV file to import checklist templates.
+                  </p>
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">JSON format (recommended):</p>
+                    <pre className="text-[10px] bg-muted p-2 rounded overflow-x-auto">{`[{
+  "name": "Fire Safety Checklist",
+  "description": "Monthly fire check",
+  "category": "safety",
+  "items": [
+    { "question": "Are exits clear?", "type": "yes_no_na", "required": true },
+    { "question": "Extinguishers OK?", "type": "yes_no_na", "required": true }
+  ]
+}]`}</pre>
+                    <p className="text-xs font-medium text-muted-foreground mt-3">CSV format (one row per question):</p>
+                    <pre className="text-[10px] bg-muted p-2 rounded overflow-x-auto">{`template_name,description,category,question,type,required
+Fire Safety,Monthly check,safety,Are exits clear?,yes_no_na,true
+Fire Safety,Monthly check,safety,Extinguishers OK?,yes_no_na,true`}</pre>
+                  </div>
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+                    const sample = JSON.stringify([{
+                      name: "Example Checklist",
+                      description: "Template description",
+                      category: "general",
+                      items: [
+                        { question: "Example question 1", type: "yes_no_na", required: true },
+                        { question: "Example question 2", type: "text", required: false },
+                      ],
+                    }], null, 2);
+                    const blob = new Blob([sample], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url; a.download = "template-example.json"; a.click();
+                    URL.revokeObjectURL(url);
+                  }}>
+                    <Download className="h-4 w-4" /> Download example JSON
+                  </Button>
+                  <label className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 cursor-pointer hover:bg-muted/50 transition-colors">
+                    <input type="file" accept=".json,.csv,.txt" className="hidden" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const text = await file.text();
+                        let templates: ParsedTemplateImport[];
+                        if (file.name.endsWith(".json") || text.trim().startsWith("[") || text.trim().startsWith("{")) {
+                          templates = parseTemplateJSON(text);
+                        } else {
+                          const data = await parseCsv(file);
+                          if (data.rows.length === 0) { toast("File is empty"); return; }
+                          templates = parseTemplateCSV(data);
+                        }
+                        if (templates.length === 0) { toast("No templates found in file"); return; }
+                        setTemplateImportData(templates);
+                      } catch (err) {
+                        toast(`Failed to parse: ${err instanceof Error ? err.message : "unknown error"}`);
+                      }
+                      e.target.value = "";
+                    }} />
+                    <Upload className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Choose JSON or CSV file</span>
+                  </label>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="font-medium">{templateImportData.length} template{templateImportData.length !== 1 ? "s" : ""}</span>
+                    <Badge variant="success" className="text-[10px]">{templateImportData.filter((ti) => ti.errors.length === 0).length} valid</Badge>
+                    {templateImportData.some((ti) => ti.errors.length > 0) && (
+                      <Badge variant="destructive" className="text-[10px]">{templateImportData.filter((ti) => ti.errors.length > 0).length} errors</Badge>
+                    )}
+                  </div>
+                  <div className="max-h-72 overflow-auto rounded border text-xs">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-muted sticky top-0 z-10">
+                          <th className="px-2 py-1 text-left font-medium">Template</th>
+                          <th className="px-2 py-1 text-left font-medium w-16">Items</th>
+                          <th className="px-2 py-1 text-left font-medium w-20">Category</th>
+                          <th className="px-2 py-1 text-left font-medium w-16">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {templateImportData.map((ti, i) => (
+                          <tr key={i} className={`border-t ${ti.errors.length > 0 ? "bg-destructive/5" : ""}`}>
+                            <td className="px-2 py-1.5">
+                              <p className="font-medium">{ti.name || <span className="text-destructive italic">No name</span>}</p>
+                              {ti.description && <p className="text-muted-foreground truncate max-w-[200px]">{ti.description}</p>}
+                            </td>
+                            <td className="px-2 py-1.5">{ti.items.length}</td>
+                            <td className="px-2 py-1.5 capitalize">{ti.category}</td>
+                            <td className="px-2 py-1.5">
+                              {ti.errors.length === 0 ? (
+                                <span className="text-green-600 dark:text-green-400">Ready</span>
+                              ) : (
+                                <span className="text-destructive" title={ti.errors.join(", ")}>{ti.errors[0]}</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {templateImportData.length === 1 && templateImportData[0].items.length > 0 && (
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Preview {templateImportData[0].items.length} items</summary>
+                      <ul className="mt-2 space-y-1 pl-4">
+                        {templateImportData[0].items.map((item, i) => (
+                          <li key={i} className="flex items-center gap-2">
+                            <span className="text-muted-foreground">{i + 1}.</span>
+                            <span>{item.question}</span>
+                            <Badge variant="outline" className="text-[9px] ml-auto">{item.type.replace(/_/g, " ")}</Badge>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1" onClick={() => setTemplateImportData(null)}>Back</Button>
+                    <Button
+                      className="flex-1"
+                      disabled={templateImportData.every((ti) => ti.errors.length > 0)}
+                      onClick={() => {
+                        const now = new Date().toISOString();
+                        let imported = 0;
+                        templateImportData.forEach((ti) => {
+                          if (ti.errors.length > 0) return;
+                          addTemplate({
+                            id: crypto.randomUUID(),
+                            company_id: currentCompany?.id || "",
+                            name: ti.name,
+                            description: ti.description || null,
+                            category: ti.category,
+                            items: ti.items.map((item, idx) => ({
+                              id: crypto.randomUUID(),
+                              question: item.question,
+                              type: item.type,
+                              required: item.required,
+                              order: idx + 1,
+                            })),
+                            is_active: true,
+                            publish_status: "draft",
+                            created_at: now,
+                            updated_at: now,
+                          });
+                          imported++;
+                        });
+                        toast(`${imported} template${imported !== 1 ? "s" : ""} imported as drafts`);
+                        setShowTemplateImport(false);
+                        setTemplateImportData(null);
+                      }}
+                    >
+                      Import {templateImportData.filter((ti) => ti.errors.length === 0).length} template{templateImportData.filter((ti) => ti.errors.length === 0).length !== 1 ? "s" : ""}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
       </div>
     </RoleGuard>
   );
@@ -512,10 +764,10 @@ function TemplateCard({
           <div className="flex items-center justify-between pt-1">
             {alreadyActivated ? (
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+                <Badge variant="active" className="text-xs gap-1">
                   <Check className="h-3 w-3" />
                   {t("industry_templates._ui.alreadyActivated")}
-                </span>
+                </Badge>
               </div>
             ) : (
               <button
@@ -558,10 +810,10 @@ function TemplateCard({
             <div className="border-t pt-3">
               {alreadyActivated ? (
                 <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+                  <Badge variant="active" className="text-xs gap-1">
                   <Check className="h-3 w-3" />
                   Already active
-                </span>
+                </Badge>
                   <div className="flex items-center gap-2">
                     {onCloneFromActive && (
                       <Button

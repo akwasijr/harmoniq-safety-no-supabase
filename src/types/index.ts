@@ -23,7 +23,7 @@ export type IndustryCode =
 
 // User Roles
 export type SuperAdminRole = "super_admin";
-export type CompanyRole = "company_admin" | "manager" | "employee";
+export type CompanyRole = "company_admin" | "manager" | "safety_officer" | "employee" | "viewer";
 export type UserRole = SuperAdminRole | CompanyRole;
 
 // Permission Types
@@ -64,6 +64,20 @@ export type Permission =
   | "settings.view"
   | "settings.edit"
   | "settings.billing"
+  // User (own)
+  | "users.view_own"
+  // Risk Assessments
+  | "risk_assessments.view"
+  | "risk_assessments.create"
+  | "risk_assessments.edit"
+  // Corrective Actions
+  | "corrective_actions.view"
+  | "corrective_actions.create"
+  | "corrective_actions.edit"
+  // Locations
+  | "locations.view"
+  // Assets
+  | "assets.view"
   // Work Orders
   | "work_orders.view"
   | "work_orders.view_all"
@@ -71,7 +85,14 @@ export type Permission =
   | "work_orders.edit"
   | "work_orders.assign"
   | "work_orders.complete"
-  | "work_orders.delete";
+  | "work_orders.delete"
+  // Tickets
+  | "tickets.view"
+  | "tickets.view_own"
+  | "tickets.create"
+  | "tickets.edit"
+  | "tickets.delete"
+  | "tickets.assign";
 
 // Role-based default permissions
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -81,11 +102,56 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "incidents.delete", "incidents.assign", "incidents.investigate",
     "checklists.view", "checklists.complete", "checklists.create_templates", "checklists.manage",
     "reports.view_own", "reports.view_team", "reports.view_all", "reports.export",
-    "users.view", "users.create", "users.edit", "users.delete", "users.manage_roles",
+    "users.view", "users.view_own", "users.create", "users.edit", "users.delete", "users.manage_roles",
     "teams.view", "teams.create", "teams.edit", "teams.delete", "teams.manage_members",
     "settings.view", "settings.edit", "settings.billing",
+    "risk_assessments.view", "risk_assessments.create", "risk_assessments.edit",
+    "corrective_actions.view", "corrective_actions.create", "corrective_actions.edit",
+    "locations.view", "assets.view",
     "work_orders.view", "work_orders.view_all", "work_orders.create", "work_orders.edit",
     "work_orders.assign", "work_orders.complete", "work_orders.delete",
+    "tickets.view", "tickets.view_own", "tickets.create", "tickets.edit", "tickets.delete", "tickets.assign",
+  ],
+  company_admin: [
+    "incidents.view_own", "incidents.view_team", "incidents.view_all",
+    "incidents.create", "incidents.edit_own", "incidents.edit_all",
+    "incidents.delete", "incidents.assign", "incidents.investigate",
+    "checklists.view", "checklists.complete", "checklists.create_templates", "checklists.manage",
+    "reports.view_own", "reports.view_team", "reports.view_all", "reports.export",
+    "users.view", "users.view_own", "users.create", "users.edit", "users.delete", "users.manage_roles",
+    "teams.view", "teams.create", "teams.edit", "teams.delete", "teams.manage_members",
+    "settings.view", "settings.edit", "settings.billing",
+    "risk_assessments.view", "risk_assessments.create", "risk_assessments.edit",
+    "corrective_actions.view", "corrective_actions.create", "corrective_actions.edit",
+    "locations.view", "assets.view",
+    "work_orders.view", "work_orders.view_all", "work_orders.create", "work_orders.edit",
+    "work_orders.assign", "work_orders.complete", "work_orders.delete",
+    "tickets.view", "tickets.view_own", "tickets.create", "tickets.edit", "tickets.delete", "tickets.assign",
+  ],
+  manager: [
+    "incidents.view_own", "incidents.view_team",
+    "incidents.create", "incidents.edit_own", "incidents.edit_all",
+    "incidents.assign", "incidents.investigate",
+    "checklists.view", "checklists.complete", "checklists.create_templates",
+    "reports.view_own", "reports.view_team", "reports.export",
+    "users.view",
+    "teams.view", "teams.manage_members",
+    "risk_assessments.view", "risk_assessments.create", "risk_assessments.edit",
+    "corrective_actions.view", "corrective_actions.create", "corrective_actions.edit",
+    "locations.view", "assets.view",
+    "work_orders.view", "work_orders.view_all", "work_orders.create", "work_orders.edit",
+    "work_orders.assign", "work_orders.complete",
+    "tickets.view", "tickets.view_own", "tickets.create", "tickets.edit", "tickets.assign",
+  ],
+  safety_officer: [
+    "incidents.view_own", "incidents.create", "incidents.edit_own",
+    "risk_assessments.view", "risk_assessments.create", "risk_assessments.edit",
+    "corrective_actions.view", "corrective_actions.create", "corrective_actions.edit",
+    "checklists.view",
+    "locations.view",
+    "assets.view",
+    "users.view_own",
+    "tickets.view_own", "tickets.create",
   ],
   employee: [
     "incidents.view_own",
@@ -97,69 +163,15 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "work_orders.view",
     "work_orders.create",
     "work_orders.complete",
+    "tickets.view_own", "tickets.create",
   ],
-  manager: [
+  viewer: [
     "incidents.view_own",
-    "incidents.view_team",
-    "incidents.create",
-    "incidents.edit_own",
-    "incidents.edit_all",
-    "incidents.assign",
-    "incidents.investigate",
+    "assets.view",
+    "locations.view",
     "checklists.view",
-    "checklists.complete",
-    "checklists.create_templates",
-    "reports.view_own",
-    "reports.view_team",
-    "reports.export",
-    "users.view",
-    "teams.view",
-    "teams.manage_members",
-    "work_orders.view",
-    "work_orders.view_all",
-    "work_orders.create",
-    "work_orders.edit",
-    "work_orders.assign",
-    "work_orders.complete",
-  ],
-  company_admin: [
-    "incidents.view_own",
-    "incidents.view_team",
-    "incidents.view_all",
-    "incidents.create",
-    "incidents.edit_own",
-    "incidents.edit_all",
-    "incidents.delete",
-    "incidents.assign",
-    "incidents.investigate",
-    "checklists.view",
-    "checklists.complete",
-    "checklists.create_templates",
-    "checklists.manage",
-    "reports.view_own",
-    "reports.view_team",
-    "reports.view_all",
-    "reports.export",
-    "users.view",
-    "users.create",
-    "users.edit",
-    "users.delete",
-    "users.manage_roles",
-    "teams.view",
-    "teams.create",
-    "teams.edit",
-    "teams.delete",
-    "teams.manage_members",
-    "settings.view",
-    "settings.edit",
-    "settings.billing",
-    "work_orders.view",
-    "work_orders.view_all",
-    "work_orders.create",
-    "work_orders.edit",
-    "work_orders.assign",
-    "work_orders.complete",
-    "work_orders.delete",
+    "users.view_own",
+    "tickets.view_own",
   ],
 };
 
@@ -233,6 +245,25 @@ export interface Company {
   created_at: string;
   updated_at: string;
   trial_ends_at: string | null;
+
+  // Incident configuration
+  custom_incident_types?: {
+    id: string;
+    name: string;
+    icon?: string;
+    color?: string;
+    is_active: boolean;
+  }[];
+  custom_incident_fields?: {
+    id: string;
+    label: string;
+    type: "text" | "number" | "select" | "date" | "toggle";
+    options?: string[];
+    required: boolean;
+    applies_to?: string[];
+    order: number;
+  }[];
+  allow_anonymous_reporting?: boolean;
 }
 
 // User Types and Account Types
@@ -437,9 +468,26 @@ export interface Incident {
   // Media
   media_urls: string[];
 
+  // Injury body map (only for type === "injury")
+  injury_locations?: {
+    id: string;
+    body_part: string;
+    view: "front" | "back";
+    x: number;
+    y: number;
+    description?: string;
+  }[];
+
   // Status
   status: IncidentStatus;
   flagged: boolean;
+
+  // Escalation
+  escalated?: boolean;
+  escalated_at?: string | null;
+
+  // Custom fields (company-specific)
+  custom_fields?: Record<string, string | number | boolean | null>;
 
   // Resolution
   resolved_at: string | null;
@@ -921,6 +969,9 @@ export interface ChecklistTemplate {
   recurrence?: "daily" | "weekly" | "monthly" | "once";
   items: ChecklistItem[];
 
+  // Work order type association — when set, this template appears only for that WO type
+  work_order_type?: WorkOrderType | null;
+
   // Industry template tracking
   source_template_id?: string; // Links to the industry template it was activated from
   regulation?: string; // Regulatory reference (e.g. "OSHA 29 CFR 1926")
@@ -1229,8 +1280,52 @@ export interface CorrectiveAction {
 }
 
 // Work Orders
-export type WorkOrderStatus = "requested" | "approved" | "in_progress" | "completed" | "cancelled";
+export type WorkOrderStatus =
+  | "waiting_approval"
+  | "waiting_material"
+  | "approved"
+  | "scheduled"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
+
+export type WorkOrderType =
+  | "preventive_maintenance"
+  | "corrective_maintenance"
+  | "emergency"
+  | "inspection"
+  | "service_request";
+
 export type WorkOrderPriority = Priority;
+
+export const WORK_ORDER_STATUSES: WorkOrderStatus[] = [
+  "waiting_approval",
+  "waiting_material",
+  "approved",
+  "scheduled",
+  "in_progress",
+  "completed",
+  "cancelled",
+];
+
+export const WORK_ORDER_TYPES: WorkOrderType[] = [
+  "preventive_maintenance",
+  "corrective_maintenance",
+  "emergency",
+  "inspection",
+  "service_request",
+];
+
+/** Valid next statuses from each work order status */
+export const WORK_ORDER_STATUS_TRANSITIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
+  waiting_approval: ["waiting_material", "approved", "cancelled"],
+  waiting_material: ["approved", "cancelled"],
+  approved: ["scheduled", "in_progress", "cancelled"],
+  scheduled: ["in_progress", "cancelled"],
+  in_progress: ["completed", "cancelled"],
+  completed: [],
+  cancelled: [],
+};
 
 export interface WorkOrderPartUsage {
   part_id: string;
@@ -1241,8 +1336,12 @@ export interface WorkOrder {
   id: string;
   company_id: string;
   asset_id: string | null;
+  location_id?: string | null;
   title: string;
   description: string;
+  type: WorkOrderType;
+  checklist_template_id?: string | null;
+  checklist_submission_id?: string | null;
   priority: WorkOrderPriority;
   status: WorkOrderStatus;
   requested_by: string;
@@ -1256,15 +1355,30 @@ export interface WorkOrder {
   corrective_action_id: string | null;
   completed_at: string | null;
 
+  // Rejection / unable to complete
+  declined_reason?: string | null;
+  declined_at?: string | null;
+  declined_by?: string | null;
+
   // GPS
   location_lat?: number | null;
   location_lng?: number | null;
 
   created_at: string;
   updated_at: string;
-  
+
   // Parts tracking (persisted)
   parts_used?: WorkOrderPartUsage[];
+}
+
+export interface WorkOrderStatusLogEntry {
+  id: string;
+  work_order_id: string;
+  from_status: WorkOrderStatus | null;
+  to_status: WorkOrderStatus;
+  comment: string;
+  changed_by: string;
+  changed_at: string;
 }
 
 // Meter Readings

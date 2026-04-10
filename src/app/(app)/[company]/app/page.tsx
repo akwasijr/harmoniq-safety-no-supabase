@@ -14,7 +14,7 @@ import {
   Search,
   ScanLine,
   ShieldCheck,
-  Lightbulb,
+  Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
@@ -282,6 +282,13 @@ export default function EmployeeAppHomePage() {
   // Use state for time-dependent values to prevent hydration mismatch
   const [mounted, setMounted] = React.useState(false);
   const [stableNow] = React.useState(() => Date.now());
+  const [shouldAnimate] = React.useState(() => {
+    if (typeof window === "undefined") return false;
+    const key = "harmoniq_home_animated";
+    if (sessionStorage.getItem(key)) return false;
+    sessionStorage.setItem(key, "1");
+    return true;
+  });
   React.useEffect(() => {
     setMounted(true);
   }, []);
@@ -345,25 +352,25 @@ export default function EmployeeAppHomePage() {
 
   // ── Always show full feed (no early return for empty state) ──
   return (
-    <div className="flex flex-col min-h-full">
-      {/* ── Hero Section ── */}
+    <div className="flex flex-col min-h-full" data-animate={shouldAnimate ? "true" : "false"}>
+      {/* ── Hero Section — no animation, visible immediately to avoid white flash ── */}
       <div className="bg-brand-solid px-5 pt-8 pb-10">
-        <p className="text-brand-solid-foreground/60 text-sm">{greeting}</p>
-        <h1 className="text-2xl font-bold text-brand-solid-foreground mt-1">
+        <p className="text-brand-solid-foreground/60 text-sm home-section" style={{ animationDelay: "0.55s" }}>{greeting}</p>
+        <h1 className="text-2xl font-bold text-brand-solid-foreground mt-1 home-section" style={{ animationDelay: "0.5s" }}>
           {user?.first_name || t("app.welcome")}
         </h1>
 
         {/* Stats row - white/glass cards */}
         <div className="grid grid-cols-3 gap-2.5 mt-6">
-          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center">
+          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center home-section" style={{ animationDelay: "0.45s" }}>
             <p className="text-2xl font-bold text-brand-solid-foreground">{safeDays}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.safeDays")}</p>
           </div>
-          <Link href={`/${company}/app/checklists?tab=checklists`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center hover:bg-white/20 transition-colors">
+          <Link href={`/${company}/app/checklists?tab=checklists`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center hover:bg-white/20 transition-colors home-section" style={{ animationDelay: "0.4s" }}>
             <p className="text-2xl font-bold text-brand-solid-foreground">{pendingTaskCount}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
           </Link>
-          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center">
+          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center home-section" style={{ animationDelay: "0.35s" }}>
             <p className="text-2xl font-bold text-brand-solid-foreground">{completedThisWeek}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.completedWeek") || "This Week"}</p>
           </div>
@@ -372,10 +379,10 @@ export default function EmployeeAppHomePage() {
 
       {/* ── Tip of the Day ── */}
       {fieldAppSettings.tipOfTheDayEnabled && (
-        <div className="mx-4 -mt-5 relative z-10">
+        <div className="mx-4 -mt-5 relative z-10 home-section" style={{ animationDelay: "0.3s" }}>
           <div className="field-app-panel field-app-surface bg-card border border-border/50 px-4 py-3.5 flex items-start gap-3">
             <div className="field-app-control h-8 w-8 bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Lightbulb className="h-4 w-4 text-primary" />
+              <Zap className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold text-primary tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
@@ -386,14 +393,15 @@ export default function EmployeeAppHomePage() {
       )}
 
       {/* ── Quick Actions ── */}
-      <div className="px-4 mt-6">
+      <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.2s" }}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold">{t("app.quickActions") || "Quick Actions"}</h2>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {quickActions.map((action) => (
+          {quickActions.map((action, i) => (
             <Link key={action.href + action.labelKey} href={action.href}
-              className="field-app-panel field-app-surface flex items-center gap-3 bg-card px-4 py-4 border border-border/50 active:scale-[0.98] hover:shadow-sm hover:border-border transition-all">
+              className="field-app-panel field-app-surface flex items-center gap-3 bg-card px-4 py-4 border border-border/50 active:scale-[0.98] hover:shadow-sm hover:border-border transition-all home-section"
+              style={{ animationDelay: `${0.15 - Math.min(i * 0.02, 0.12)}s` }}>
               <div className="field-app-control h-11 w-11 bg-primary/10 flex items-center justify-center shrink-0">
                 <action.icon className="h-5 w-5 text-primary" />
               </div>
@@ -404,7 +412,7 @@ export default function EmployeeAppHomePage() {
       </div>
 
       {/* ── Content Feed ── */}
-      <div className="px-4 pt-6 pb-24 space-y-1">
+      <div className="px-4 pt-6 pb-24 space-y-1 home-section" style={{ animationDelay: "0s" }}>
 
         {/* Featured News Carousel */}
         {fieldAppSettings.newsEnabled && (
@@ -412,6 +420,18 @@ export default function EmployeeAppHomePage() {
         )}
 
       </div>
+
+      <style>{`
+        [data-animate="true"] .home-section {
+          opacity: 0;
+          transform: translateY(40px);
+          animation: home-ease-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes home-ease-in {
+          from { opacity: 0; transform: translateY(40px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

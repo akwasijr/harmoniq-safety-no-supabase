@@ -9,6 +9,7 @@ const store = createEntityStore<WorkOrder>("harmoniq_work_orders", [], {
     parts_cost: "estimated_cost",
     labor_cost: "actual_cost",
   },
+  stripFields: ["parts_used", "declined_reason", "declined_at", "declined_by", "injury_locations"],
   realtimeSubscribe: true,
 });
 

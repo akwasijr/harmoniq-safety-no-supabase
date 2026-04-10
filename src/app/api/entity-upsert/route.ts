@@ -6,10 +6,54 @@ import {
   getAssetScopedRowIds,
   validateEntityUpsertRequest,
 } from "@/lib/entity-upsert";
+import type { AllowedEntityUpsertTable, EntityUpsertRow } from "@/lib/entity-upsert";
 
 // 120 upsert requests per IP per minute (allows bulk operations like
 // creating a building with multiple floors/zones/rooms in one action)
 const upsertLimiter = createRateLimiter({ limit: 120, windowMs: 60_000, prefix: "entity-upsert" });
+
+type UpsertClient = NonNullable<ReturnType<typeof createAdminClient>> | Awaited<ReturnType<typeof createClient>>;
+
+function getMissingSchemaColumn(message: string | null | undefined): string | null {
+  if (!message) return null;
+  const match = message.match(/Could not find the '([^']+)' column of '([^']+)' in the schema cache/);
+  return match?.[1] ?? null;
+}
+
+/**
+ * Run a write operation with retry on missing schema columns.
+ * If the database rejects an unknown column, drop it and retry.
+ * Currently scoped to work_orders since that's the only table with
+ * known schema drift.
+ */
+async function runWithSchemaFallback(
+  table: AllowedEntityUpsertTable,
+  row: EntityUpsertRow,
+  operation: (cleanedRow: EntityUpsertRow) => Promise<{ error: { message?: string } | null }>,
+): Promise<{ error: { message?: string } | null }> {
+  let nextRow: EntityUpsertRow = { ...row };
+  const strippedColumns = new Set<string>();
+
+  while (true) {
+    const { error } = await operation(nextRow);
+    if (!error) return { error: null };
+
+    const missingColumn = table === "work_orders" ? getMissingSchemaColumn(error.message) : null;
+    if (
+      missingColumn &&
+      !strippedColumns.has(missingColumn) &&
+      Object.prototype.hasOwnProperty.call(nextRow, missingColumn)
+    ) {
+      strippedColumns.add(missingColumn);
+      nextRow = { ...nextRow };
+      delete nextRow[missingColumn];
+      console.warn(`[Entity Upsert API] Retrying ${table} write without unsupported column: ${missingColumn}`);
+      continue;
+    }
+
+    return { error };
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,7 +115,7 @@ export async function POST(request: NextRequest) {
     // Use admin client (service_role) to bypass RLS since we already
     // validated auth + company ownership above. Falls back to user client.
     const adminClient = createAdminClient();
-    const writeClient = adminClient ?? supabase;
+    const writeClient: UpsertClient = adminClient ?? supabase;
 
     if (!adminClient) {
       console.warn("[Entity Upsert API] Admin client unavailable — falling back to user session (may hit RLS)");
@@ -96,10 +140,17 @@ export async function POST(request: NextRequest) {
           // Update only the provided fields (exclude id from the update set)
           const { id: _id, ...updateFields } = row;
           void _id;
-          const { error: updateError } = await writeClient
-            .from(table)
-            .update(updateFields)
-            .eq("id", rowId);
+          const { error: updateError } = await runWithSchemaFallback(
+            table,
+            updateFields as EntityUpsertRow,
+            async (cleanedRow) => {
+              const { error } = await writeClient
+                .from(table)
+                .update(cleanedRow)
+                .eq("id", rowId);
+              return { error };
+            },
+          );
 
           if (updateError) {
             const msg = updateError.message || "Update failed";
@@ -114,10 +165,15 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Insert new row
-      const { error: insertError } = await writeClient
-        .from(table)
-        .insert(row);
+      // Insert new row (with schema fallback)
+      const { error: insertError } = await runWithSchemaFallback(
+        table,
+        row,
+        async (cleanedRow) => {
+          const { error } = await writeClient.from(table).insert(cleanedRow);
+          return { error };
+        },
+      );
 
       if (insertError) {
         const msg = insertError.message || "Insert failed";

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Ticket, Calendar, UserIcon, AlertTriangle, Clock, FileText, LinkIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { TaskDetailHeader, PRIORITY_CONFIG } from "@/components/tasks/task-detail-header";
 import { TaskInfoCard } from "@/components/tasks/task-info-card";
 import { TaskStatusActions } from "@/components/tasks/task-status-actions";
-import { TaskDetailTabs } from "@/components/tasks/task-detail-tabs";
+import { SubTabs } from "@/components/ui/sub-tabs";
 import { TaskComments, loadComments } from "@/components/tasks/task-comments";
 import { TaskDocuments } from "@/components/tasks/task-documents";
 import { TicketSubtasks } from "@/components/tasks/ticket-subtasks";
@@ -110,7 +110,7 @@ export default function TicketDetailPage() {
         </div>
       )}
 
-      <TaskDetailTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <SubTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} size="sm" className="px-4 pt-3" />
 
       <div className="flex-1 px-4 py-4 space-y-4">
         {activeTab === "details" && (
@@ -124,7 +124,7 @@ export default function TicketDetailPage() {
                 <h2 className="text-lg font-semibold leading-tight pt-1">{ticket.title}</h2>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                {priorityConf && <Badge className={priorityConf.color}>{priorityConf.label}</Badge>}
+                {priorityConf && <Badge variant={priorityConf.variant as BadgeProps["variant"]}>{priorityConf.label}</Badge>}
               </div>
             </div>
 

@@ -96,10 +96,13 @@ function getWorkOrderStatusVariant(status: WorkOrderStatus): UnifiedTask["status
     case "in_progress":
       return "info";
     case "approved":
+    case "scheduled":
       return "warning";
+    case "waiting_approval":
+    case "waiting_material":
+      return "secondary";
     case "cancelled":
       return "destructive";
-    case "requested":
     default:
       return "secondary";
   }

@@ -2,31 +2,20 @@
 
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
 import {
-  MapPin,
+  ArrowLeft,
   Building,
   Building2,
+  DoorOpen,
   Layers,
   LayoutGrid,
-  DoorOpen,
-  AlertTriangle,
-  FileText,
-  Wrench,
-  Phone,
-  Info,
-  ChevronRight,
-  Clock,
-  Users,
-  Shield,
-  ArrowLeft,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocationsStore } from "@/stores/locations-store";
-import { useIncidentsStore } from "@/stores/incidents-store";
 import { useAuth } from "@/hooks/use-auth";
-import { LocationType, LocationEmergencyContact, LocationSafetyNotice } from "@/types";
+import { LocationType } from "@/types";
 import { useTranslation } from "@/i18n";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -42,14 +31,12 @@ const LOCATION_TYPE_ICONS: Record<LocationType, React.ComponentType<{ className?
 export default function LocationLandingPage() {
   const router = useRouter();
   const routeParams = useParams();
-  const rawCompany = routeParams.company;
-  const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
   const rawLocationId = routeParams.locationId;
-  const locationId = typeof rawLocationId === "string" ? rawLocationId : Array.isArray(rawLocationId) ? rawLocationId[0] : "";
+  const locationId =
+    typeof rawLocationId === "string" ? rawLocationId : Array.isArray(rawLocationId) ? rawLocationId[0] : "";
 
   const { user } = useAuth();
   const { items: locations, isLoading } = useLocationsStore();
-  const { items: incidents } = useIncidentsStore();
   const { t } = useTranslation();
 
   const locationTypeLabels: Record<string, string> = {
@@ -60,8 +47,28 @@ export default function LocationLandingPage() {
     room: t("locations.types.room"),
   };
 
-  const matchedLocation = locations.find((l) => l.id === locationId);
-  const location = matchedLocation && user?.company_id && matchedLocation.company_id !== user.company_id ? undefined : matchedLocation;
+  const matchedLocation = locations.find((item) => item.id === locationId);
+  const location =
+    matchedLocation && user?.company_id && matchedLocation.company_id !== user.company_id
+      ? undefined
+      : matchedLocation;
+
+  const hierarchy = React.useMemo(() => {
+    if (!location) return [];
+
+    const chain: (typeof locations)[number][] = [];
+    const seen = new Set<string>();
+    let current: (typeof locations)[number] | null = location;
+
+    while (current && !seen.has(current.id)) {
+      chain.unshift(current);
+      seen.add(current.id);
+      const parentId: string | null = current.parent_id;
+      current = parentId ? (locations.find((item) => item.id === parentId) ?? null) : null;
+    }
+
+    return chain;
+  }, [location, locations]);
 
   if (isLoading && locations.length === 0) {
     return <LoadingPage />;
@@ -75,285 +82,66 @@ export default function LocationLandingPage() {
         description="This location may have been removed or you don't have access."
         action={
           <Button variant="outline" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Go Back
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Go back
           </Button>
         }
       />
     );
   }
 
-  // Get parent location if exists
-  const parentLocation = location?.parent_id 
-    ? locations.find((l) => l.id === location.parent_id) 
-    : null;
-
-  // Get emergency contacts from location JSONB data (inherit from parents if needed)
-  const getEmergencyContacts = (): LocationEmergencyContact[] => {
-    const locContacts = (location?.emergency_contacts || []) as LocationEmergencyContact[];
-    if (locContacts.length > 0) return locContacts;
-
-    // Inherit from parent
-    if (parentLocation) {
-      const parentContacts = (parentLocation.emergency_contacts || []) as LocationEmergencyContact[];
-      if (parentContacts.length > 0) return parentContacts;
-
-      // Try grandparent
-      if (parentLocation.parent_id) {
-        const grandparent = locations.find(l => l.id === parentLocation.parent_id);
-        const gpContacts = (grandparent?.emergency_contacts || []) as LocationEmergencyContact[];
-        if (gpContacts.length > 0) return gpContacts;
-      }
-    }
-
-    // Default fallback
-    return [
-      { id: "default_1", location_id: locationId, name: t("locations.emergency.services") || "Emergency Services", role: t("locations.emergency.role") || "Emergency", phone: "911", is_primary: true },
-    ];
-  };
-
-  const emergencyContacts = getEmergencyContacts();
-
-  // Get safety notices from location JSONB data (aggregate from parents)
-  const getSafetyNotices = (): LocationSafetyNotice[] => {
-    const locNotices = ((location?.safety_notices || []) as LocationSafetyNotice[]).filter(n => n.is_active);
-    let notices = [...locNotices];
-
-    if (parentLocation) {
-      const parentNotices = ((parentLocation.safety_notices || []) as LocationSafetyNotice[]).filter(n => n.is_active);
-      notices = [...notices, ...parentNotices];
-
-      if (parentLocation.parent_id) {
-        const grandparent = locations.find(l => l.id === parentLocation.parent_id);
-        const gpNotices = ((grandparent?.safety_notices || []) as LocationSafetyNotice[]).filter(n => n.is_active);
-        notices = [...notices, ...gpNotices];
-      }
-    }
-
-    // Deduplicate by id
-    return notices.filter((n, i, arr) => arr.findIndex(x => x.id === n.id) === i);
-  };
-
-  const safetyNotices = getSafetyNotices();
-  
-  // Calculate days without incident for this location
-  const calculateDaysWithoutIncident = (): number => {
-    // Get all descendant location IDs
-    const getAllDescendantIds = (id: string): string[] => {
-      const children = locations.filter(l => l.parent_id === id);
-      const childIds = children.map(c => c.id);
-      const descendantIds = children.flatMap(c => getAllDescendantIds(c.id));
-      return [id, ...childIds, ...descendantIds];
-    };
-    
-    const locationIds = getAllDescendantIds(locationId);
-    
-    // Find the most recent incident at any of these locations
-    const recentIncident = incidents
-      .filter(inc => locationIds.includes(inc.location_id || ""))
-      .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())[0];
-    
-    if (!recentIncident) {
-      // No incidents, calculate from location creation date
-      if (location) {
-        const createdDate = new Date(location.created_at);
-        const today = new Date();
-        return Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-      }
-      return 365;
-    }
-    
-    const incidentDate = new Date(recentIncident.incident_date);
-    const today = new Date();
-    return Math.floor((today.getTime() - incidentDate.getTime()) / (1000 * 60 * 60 * 24));
-  };
-  
-  const daysWithoutIncident = calculateDaysWithoutIncident();
-
-  // Quick actions for this location
-  const quickActions = [
-    {
-      id: "report",
-      title: t("locations.reportIncident"),
-      description: t("locations.reportIncidentDesc"),
-      icon: AlertTriangle,
-      color: "text-orange-500",
-      bgColor: "bg-orange-500/10",
-      href: `/${company}/app/report?location=${locationId}`,
-    },
-    {
-      id: "checklist",
-      title: t("locations.completeChecklist"),
-      description: t("locations.completeChecklistDesc"),
-      icon: FileText,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10",
-      href: `/${company}/app/checklists?location=${locationId}`,
-    },
-    {
-      id: "inspection",
-      title: t("locations.assetInspection"),
-      description: t("locations.assetInspectionDesc"),
-      icon: Wrench,
-      color: "text-green-500",
-      bgColor: "bg-green-500/10",
-      href: `/${company}/app/inspection?location=${locationId}`,
-    },
-  ];
+  const LocationIcon = LOCATION_TYPE_ICONS[location.type] || Building;
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/30">
-      {/* Header */}
-      <header className="sticky top-[60px] z-50 bg-background border-b">
-        <div className="flex items-center justify-between p-4">
-          <Button variant="ghost" size="sm" onClick={() => router.push(`/${company}/app`)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {t("locations.home")}
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-[60px] z-10 border-b bg-background">
+        <div className="mx-auto flex h-14 max-w-lg items-center gap-3 px-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            {t("locations.scannedLocation")}
-          </span>
+          <h1 className="truncate font-semibold">Location details</h1>
         </div>
-      </header>
+      </div>
 
-      {/* Location Info */}
-      <div className="p-4">
+      <div className="mx-auto max-w-lg p-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
-              <div className="rounded-full bg-primary/10 p-3">
-                {React.createElement(LOCATION_TYPE_ICONS[location.type] || Building, { className: "h-8 w-8 text-primary" })}
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                <LocationIcon className="h-7 w-7 text-primary" />
               </div>
-              <div className="flex-1">
-                <h1 className="text-xl font-semibold">{location.name}</h1>
-                {parentLocation && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                    <MapPin className="h-3 w-3" />
-                    {parentLocation.name}
-                  </p>
-                )}
-                {location.address && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {location.address}
-                  </p>
-                )}
-                <div className="flex gap-2 mt-3">
-                  <span className="text-xs text-muted-foreground">
-                    {locationTypeLabels[location.type] || location.type}
-                  </span>
-                </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-semibold">{location.name}</h2>
+                <p className="mt-1 text-sm capitalize text-muted-foreground">
+                  {locationTypeLabels[location.type] || location.type}
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Safety Notices */}
-      {safetyNotices.length > 0 && (
-        <div className="px-4 pb-4">
-          <div className="space-y-2">
-            {safetyNotices.map((notice) => (
-              <div
-                key={notice.id}
-                className={`flex items-start gap-3 rounded-lg p-3 ${
-                  notice.type === "warning"
-                    ? "bg-yellow-500/10 border border-yellow-500/20"
-                    : "bg-blue-500/10 border border-blue-500/20"
-                }`}
-              >
-                {notice.type === "warning" ? (
-                  <Shield className="h-5 w-5 text-yellow-600 mt-0.5" />
-                ) : (
-                  <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-                )}
-                <p className="text-sm font-medium">{notice.message}</p>
+            <div className="mt-6 space-y-3">
+              {hierarchy.map((item, index) => (
+                <div key={item.id} className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                    {index + 1}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{item.name}</p>
+                    <p className="text-xs capitalize text-muted-foreground">
+                      {locationTypeLabels[item.type] || item.type}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {location.address && (
+              <div className="mt-6 border-t pt-4">
+                <p className="text-xs font-medium text-muted-foreground">Address</p>
+                <p className="mt-1 text-sm text-foreground">{location.address}</p>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div className="px-4 pb-4">
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">
-          {t("locations.quickActions")}
-        </h2>
-        <div className="space-y-3">
-          {quickActions.map((action) => (
-            <Link key={action.id} href={action.href}>
-              <Card className="cursor-pointer transition-all hover:border-primary/50">
-                <CardContent className="flex items-center gap-4 py-4">
-                  <div className={`rounded-full ${action.bgColor} p-3`}>
-                    <action.icon className={`h-6 w-6 ${action.color}`} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{action.title}</p>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Emergency Contacts */}
-      <div className="px-4 pb-4">
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">
-          {t("locations.emergencyContacts")}
-        </h2>
-        <Card>
-          <CardContent className="divide-y p-0">
-            {emergencyContacts.map((contact, i) => (
-              <a
-                key={i}
-                href={`tel:${contact.phone}`}
-                className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors"
-              >
-                <div className="rounded-full bg-red-500/10 p-2">
-                  <Phone className="h-4 w-4 text-red-500" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium">{contact.name}</p>
-                  <p className="text-sm text-muted-foreground">{contact.role}</p>
-                </div>
-                <span className="text-sm font-medium text-primary">{contact.phone}</span>
-              </a>
-            ))}
+            )}
           </CardContent>
         </Card>
-      </div>
-
-      {/* Location Stats */}
-      <div className="px-4 pb-6">
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">
-          {t("locations.locationInfo")}
-        </h2>
-        <div className="grid grid-cols-3 gap-3">
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <Clock className="h-5 w-5 mx-auto text-green-500 mb-2" />
-              <p className="text-2xl font-bold">{daysWithoutIncident}</p>
-              <p className="text-xs text-muted-foreground">{t("locations.daysSafe")}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <Users className="h-5 w-5 mx-auto text-muted-foreground mb-2" />
-              <p className="text-2xl font-bold">{location?.employee_count || 0}</p>
-              <p className="text-xs text-muted-foreground">{t("locations.workers")}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <Wrench className="h-5 w-5 mx-auto text-muted-foreground mb-2" />
-              <p className="text-2xl font-bold">{location?.asset_count || 0}</p>
-              <p className="text-xs text-muted-foreground">{t("locations.assets")}</p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );

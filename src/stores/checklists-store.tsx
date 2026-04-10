@@ -2,16 +2,25 @@
 
 import { createEntityStore } from "@/stores/create-entity-store";
 import type { ChecklistTemplate, ChecklistSubmission } from "@/types";
+import { mockChecklistTemplates, mockChecklistSubmissions } from "@/mocks/data";
+import { WORK_ORDER_PROCEDURE_TEMPLATES } from "@/data/work-order-procedure-templates";
+
+const builtInAndMock = [
+  ...WORK_ORDER_PROCEDURE_TEMPLATES,
+  ...mockChecklistTemplates.filter(
+    (t) => !WORK_ORDER_PROCEDURE_TEMPLATES.some((b) => b.id === t.id),
+  ),
+];
 
 const templatesStore = createEntityStore<ChecklistTemplate>(
   "harmoniq_checklist_templates",
-  [],
-  { stripFields: ["creator", "assignment", "recurrence", "source_template_id", "regulation", "tags", "publish_status", "is_active"] }
+  builtInAndMock,
+  { stripFields: ["creator", "work_order_type"] }
 );
 const submissionsStore = createEntityStore<ChecklistSubmission>(
   "harmoniq_checklist_submissions",
-  [],
-  { stripFields: ["template", "submitter", "location", "general_comments"] }
+  mockChecklistSubmissions,
+  { stripFields: ["template", "submitter", "location"], columnMap: { general_comments: "notes" } }
 );
 
 export const ChecklistTemplatesProvider = templatesStore.Provider;

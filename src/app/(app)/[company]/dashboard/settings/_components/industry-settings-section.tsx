@@ -28,10 +28,10 @@ import {
 import { Label } from "@/components/ui/label";
 import {
   INDUSTRY_METADATA,
-  getTemplatesByIndustry,
+  getTemplatesForCountry,
 } from "@/data/industry-templates";
 import { cn } from "@/lib/utils";
-import type { IndustryCode } from "@/types";
+import type { Country, IndustryCode } from "@/types";
 
 import type { SettingsCopyProps, SettingsState, UpdateSettingProps } from "./settings-types";
 
@@ -51,11 +51,13 @@ const INDUSTRY_ICON_MAP: Record<string, LucideIcon> = {
 
 interface IndustrySettingsSectionProps extends SettingsCopyProps, UpdateSettingProps {
   companySlug: string;
+  companyCountry: Country;
   settings: SettingsState;
 }
 
 export function IndustrySettingsSection({
   companySlug,
+  companyCountry,
   settings,
   t,
   updateSetting,
@@ -76,7 +78,7 @@ export function IndustrySettingsSection({
             {(Object.keys(INDUSTRY_METADATA) as IndustryCode[]).map((code) => {
               const meta = INDUSTRY_METADATA[code];
               const isSelected = settings.selectedIndustry === code;
-              const templateCount = getTemplatesByIndustry(code).length;
+              const templateCount = getTemplatesForCountry(code, companyCountry).length;
               const IconComponent = INDUSTRY_ICON_MAP[meta.icon] || Factory;
 
               return (
@@ -122,8 +124,9 @@ export function IndustrySettingsSection({
                 <p className="text-sm font-medium">Recommended Templates</p>
                 <p className="text-xs text-muted-foreground">
                   {
-                    getTemplatesByIndustry(
+                    getTemplatesForCountry(
                       settings.selectedIndustry as IndustryCode,
+                      companyCountry,
                     ).length
                   }{" "}
                   templates available for your industry

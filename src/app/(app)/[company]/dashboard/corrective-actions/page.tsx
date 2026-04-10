@@ -43,6 +43,8 @@ export default function CorrectiveActionsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [showCreate, setShowCreate] = React.useState(false);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const ITEMS_PER_PAGE = 10;
   const [form, setForm] = React.useState({
     asset_id: "",
     description: "",
@@ -115,7 +117,8 @@ export default function CorrectiveActionsPage() {
       title: `WO for: ${action.description.slice(0, 60)}`,
       description: action.description,
       priority: action.severity === "critical" ? "critical" : action.severity === "high" ? "high" : action.severity === "medium" ? "medium" : "low",
-      status: "requested",
+      type: "corrective_maintenance",
+      status: "waiting_approval",
       requested_by: user?.id || "",
       assigned_to: action.assigned_to,
       assigned_to_team_id: action.assigned_to_team_id,
@@ -144,12 +147,7 @@ export default function CorrectiveActionsPage() {
   return (
     <RoleGuard requiredPermission="incidents.view_all">
     <div className="space-y-6">
-      <div className="flex items-center justify-end">
-        <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4" />
-          {t("correctiveActions.newAction")}
-        </Button>
-      </div>
+      <h1 className="text-2xl font-semibold">Corrective Actions</h1>
 
       <div className="grid gap-4 sm:grid-cols-4">
         <KPICard title={t("correctiveActions.statuses.open")} value={openCount} icon={AlertTriangle} />
@@ -158,18 +156,22 @@ export default function CorrectiveActionsPage() {
         <KPICard title={t("correctiveActions.statuses.completed")} value={completedCount} icon={CheckCircle} />
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder={t("correctiveActions.placeholders.searchActions")} className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          <Input placeholder={t("correctiveActions.placeholders.searchActions")} className="pl-10" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
         </div>
-        <div className="flex gap-2">
-          {["all", "open", "in_progress", "completed"].map((s) => (
-            <Button key={s} size="sm" variant={statusFilter === s ? "default" : "outline"} onClick={() => setStatusFilter(s)}>
-              {s === "all" ? "All" : capitalize(s.replace("_", " "))}
-            </Button>
-          ))}
-        </div>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="open">Open</SelectItem>
+            <SelectItem value="in_progress">In progress</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {filtered.length === 0 ? (
@@ -179,62 +181,98 @@ export default function CorrectiveActionsPage() {
           addLabel={t("correctiveActions.newAction")}
         />
       ) : (
-        <div className="space-y-3">
-          {filtered.map((action) => {
-            const isOverdue = action.status !== "completed" && new Date(action.due_date) < stableNow;
-            return (
-              <Card key={action.id} className={isOverdue ? "border-destructive/50" : ""}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Link href={`/${company}/dashboard/assets/${action.asset_id}`} className="font-medium text-primary hover:underline">
-                          {getAssetName(action.asset_id)}
-                        </Link>
-                        <Badge variant={action.severity === "critical" || action.severity === "high" ? "destructive" : action.severity === "medium" ? "warning" : "secondary"} className="capitalize">
-                          {action.severity}
-                        </Badge>
-                        <Badge variant={action.status === "completed" ? "success" : action.status === "in_progress" ? "warning" : isOverdue ? "destructive" : "secondary"} className="capitalize">
-                          {isOverdue && action.status !== "completed" ? "Overdue" : action.status.replace("_", " ")}
-                        </Badge>
-                      </div>
-                      <Link href={`/${company}/dashboard/corrective-actions/${action.id}`} className="text-sm mt-1 hover:underline block">
-                        {action.description}
-                      </Link>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span>Assigned: {getUserName(action.assigned_to) !== "Unassigned" ? getUserName(action.assigned_to) : getTeamName(action.assigned_to_team_id) || "Unassigned"}</span>
-                        <span>Due: {formatDate(action.due_date)}</span>
-                        <span>Created: {formatDate(action.created_at)}</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {action.status !== "completed" && (
-                        <Button size="sm" variant="outline" className="gap-1" onClick={() => handleCreateWorkOrder(action)}>
-                          <ClipboardList className="h-4 w-4" />
-                          {t("correctiveActions.buttons.createWo")}
-                        </Button>
-                      )}
-                      {action.status === "open" && (
-                        <Button size="sm" variant="outline" onClick={() => handleStatusChange(action.id, "in_progress")}>
-                          {t("correctiveActions.buttons.start")}
-                        </Button>
-                      )}
-                      {action.status === "in_progress" && (
-                        <Button size="sm" onClick={() => handleStatusChange(action.id, "completed")}>
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          {t("correctiveActions.buttons.complete")}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <>
+        <div className="flex justify-end">
+          <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4" /> {t("correctiveActions.newAction")}
+          </Button>
         </div>
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted/40">
+                  <tr className="text-left">
+                    <th className="px-4 py-3 font-medium">Description</th>
+                    <th className="px-4 py-3 font-medium">Asset</th>
+                    <th className="px-4 py-3 font-medium">Severity</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">Assigned</th>
+                    <th className="px-4 py-3 font-medium">Due date</th>
+                    <th className="px-4 py-3 font-medium sr-only">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((action) => {
+                    const isOverdue = action.status !== "completed" && new Date(action.due_date) < stableNow;
+                    return (
+                      <tr key={action.id} className={isOverdue ? "hover:bg-muted/50 border-l-2 border-l-destructive" : "hover:bg-muted/50"}>
+                        <td className="px-4 py-3 font-medium max-w-xs">
+                          <Link href={`/${company}/dashboard/corrective-actions/${action.id}`} className="hover:underline">
+                            {action.description}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          <Link href={`/${company}/dashboard/assets/${action.asset_id}`} className="text-primary hover:underline">
+                            {getAssetName(action.asset_id)}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={action.severity === "critical" || action.severity === "high" ? "destructive" : action.severity === "medium" ? "warning" : "secondary"}>
+                            {action.severity}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={action.status === "completed" ? "success" : action.status === "in_progress" ? "warning" : isOverdue ? "destructive" : "secondary"}>
+                            {isOverdue && action.status !== "completed" ? "Overdue" : action.status.replace(/_/g, " ")}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {getUserName(action.assigned_to) !== "Unassigned" ? getUserName(action.assigned_to) : getTeamName(action.assigned_to_team_id) || "Unassigned"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(action.due_date)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            {action.status !== "completed" && (
+                              <Button size="sm" variant="outline" className="gap-1" onClick={() => handleCreateWorkOrder(action)}>
+                                <ClipboardList className="h-4 w-4" />
+                                {t("correctiveActions.buttons.createWo")}
+                              </Button>
+                            )}
+                            {action.status === "open" && (
+                              <Button size="sm" variant="outline" onClick={() => handleStatusChange(action.id, "in_progress")}>
+                                {t("correctiveActions.buttons.start")}
+                              </Button>
+                            )}
+                            {action.status === "in_progress" && (
+                              <Button size="sm" onClick={() => handleStatusChange(action.id, "completed")}>
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                {t("correctiveActions.buttons.complete")}
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+          {filtered.length > ITEMS_PER_PAGE && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</Button>
+                <Button size="sm" variant="outline" disabled={currentPage * ITEMS_PER_PAGE >= filtered.length} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
+              </div>
+            </div>
+          )}
+        </Card>
+        </>
       )}
-
-      {/* Create Modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <Card className="w-full max-w-lg">

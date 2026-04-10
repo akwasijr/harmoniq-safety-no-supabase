@@ -75,46 +75,75 @@ const workSans = Work_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Harmoniq Safety: Workplace Safety & Asset Management Platform",
+    default: "Harmoniq Safety — Workplace Safety & Asset Management Platform",
     template: "%s | Harmoniq Safety",
   },
   description:
-    "Report incidents, manage risks, track assets, and ensure compliance. All-in-one safety and asset management platform for industrial organizations.",
+    "All-in-one EHS platform: report incidents, run safety inspections, manage assets, track compliance. Built for construction, manufacturing, oil & gas, and more. OSHA, Arbowet, ISO 45001 ready.",
   keywords: [
     "workplace safety platform",
-    "incident reporting software",
-    "asset management",
-    "safety compliance",
-    "risk management",
-    "OSHA compliance",
-    "safety inspection",
-    "maintenance management",
     "EHS software",
+    "incident reporting software",
+    "safety inspection app",
+    "asset management system",
+    "safety compliance software",
+    "risk assessment tool",
+    "OSHA compliance software",
+    "Arbowet compliance",
+    "ISO 45001 software",
+    "maintenance management",
     "asset tracking",
+    "safety checklist app",
+    "construction safety software",
+    "manufacturing safety",
+    "oil gas safety management",
+    "warehouse safety inspection",
+    "mobile safety app",
+    "offline safety inspection",
+    "work order management",
+    "CMMS software",
+    "veiligheid software",
+    "arbetsmiljö programvara",
   ],
   authors: [{ name: "Harmoniq Safety" }],
   creator: "Harmoniq Safety",
   publisher: "Harmoniq Safety",
   metadataBase: new URL(getSiteUrl()),
+  category: "Business Software",
+  classification: "Environment, Health & Safety Software",
   openGraph: {
     type: "website",
     locale: "en_US",
+    alternateLocale: ["nl_NL", "sv_SE"],
     siteName: "Harmoniq Safety",
-    title: "Harmoniq Safety: Workplace Safety & Asset Management Platform",
-    description: "Report incidents, manage risks, track assets, and ensure compliance, all in one platform.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Harmoniq Safety Platform" }],
+    title: "Harmoniq Safety — Workplace Safety & Asset Management Platform",
+    description: "Report incidents, run inspections, track assets, and ensure compliance. All-in-one EHS platform for industrial organizations.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Harmoniq Safety — Workplace Safety & Asset Management Platform" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Harmoniq Safety",
-    description: "All-in-one workplace safety and asset management platform.",
+    title: "Harmoniq Safety — All-in-one EHS Platform",
+    description: "Report incidents, run safety inspections, track assets & ensure compliance. OSHA, Arbowet, ISO 45001 ready.",
     images: ["/og-image.png"],
   },
   alternates: {
+    canonical: "/",
     languages: {
-      en: "/",
-      sv: "/?lang=sv",
-      nl: "/?lang=nl",
+      "en-US": "/",
+      "nl-NL": "/?lang=nl",
+      "sv-SE": "/?lang=sv",
+      "x-default": "/",
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
   manifest: "/manifest.json",
@@ -131,6 +160,11 @@ export const metadata: Metadata = {
     apple: [
       { url: "/favicon.svg" },
     ],
+  },
+  verification: {
+    // Add your verification codes when available:
+    // google: "your-google-verification-code",
+    // yandex: "your-yandex-verification-code",
   },
 };
 
@@ -155,7 +189,7 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="dark"
           enableSystem={false}
           disableTransitionOnChange
         >

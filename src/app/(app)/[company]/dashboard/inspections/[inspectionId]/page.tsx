@@ -311,7 +311,7 @@ export default function InspectionDetailPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">{t("inspections.labels.assetStatus")}</span>
-                      <Badge variant={asset.status === "active" ? "success" : "secondary"} className="capitalize">{asset.status}</Badge>
+                      <Badge variant={asset.status === "active" ? "success" : "secondary"}>{asset.status}</Badge>
                     </div>
                   </>
                 ) : (

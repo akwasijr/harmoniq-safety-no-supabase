@@ -127,10 +127,12 @@ describe("isValidUUID", () => {
 
 describe("isValidRole", () => {
   it("accepts default roles", () => {
-    expect(isValidRole("worker")).toBe(true);
-    expect(isValidRole("supervisor")).toBe(true);
-    expect(isValidRole("company_admin")).toBe(true);
     expect(isValidRole("super_admin")).toBe(true);
+    expect(isValidRole("company_admin")).toBe(true);
+    expect(isValidRole("manager")).toBe(true);
+    expect(isValidRole("safety_officer")).toBe(true);
+    expect(isValidRole("employee")).toBe(true);
+    expect(isValidRole("viewer")).toBe(true);
   });
   it("rejects unknown roles", () => {
     expect(isValidRole("hacker")).toBe(false);

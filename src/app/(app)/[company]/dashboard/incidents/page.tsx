@@ -21,6 +21,8 @@ import {
   Eye,
   Ticket,
   User,
+  MapPin as MapPinIcon,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,23 +31,42 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
+const ChartCard = dynamic(() => import("@/components/charts").then((m) => ({ default: m.ChartCard })));
+const BarChart = dynamic(() => import("@/components/charts").then((m) => ({ default: m.BarChart })), { ssr: false });
+const DonutChart = dynamic(() => import("@/components/charts").then((m) => ({ default: m.DonutChart })), { ssr: false });
+import { SortableTh, sortData, type SortDirection } from "@/components/ui/sortable-th";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useFilterOptions } from "@/components/ui/filter-panel";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { LoadingPage } from "@/components/ui/loading";
 import { useNotificationsStore } from "@/stores/notifications-store";
-import { notifyCriticalIncident } from "@/stores/notification-triggers";
+import { notifyCriticalIncident, notifyIncidentEscalated } from "@/stores/notification-triggers";
 import { useToast } from "@/components/ui/toast";
-import { cn } from "@/lib/utils";
+import { cn, capitalize } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
-import { downloadCsv } from "@/lib/csv";
+import { downloadCsv, parseCsv, downloadCsvTemplate } from "@/lib/csv";
 import { useAuth } from "@/hooks/use-auth";
 import type { Incident } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
+import { getEscalationCandidates } from "@/lib/escalation";
+import { useTheme } from "next-themes";
+import dynamic from "next/dynamic";
 
-type SubTabType = "incidents" | "tickets";
+const IncidentMapLazy = dynamic(
+  () => import("@/components/incidents/incident-map").then((m) => ({ default: m.IncidentMap })),
+  { ssr: false, loading: () => <div className="h-[600px] bg-muted rounded-lg animate-pulse" /> },
+);
+
+const SEVERITY_LEGEND: Record<string, string> = {
+  critical: "#dc2626",
+  high: "#ea580c",
+  medium: "#b45309",
+  low: "#059669",
+};
+
+type SubTabType = "incidents" | "tickets" | "map";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
@@ -73,12 +94,252 @@ const statusOptions = [
   { value: "resolved", label: "Resolved" },
 ];
 
+// Column alias mapping for imports from SafetyCulture, Intelex, Cority, etc.
+const COLUMN_ALIASES: Record<string, string> = {
+  // Title
+  "incident_title": "title", "incident title": "title", "event title": "title", "name": "title",
+  // Type  
+  "incident_type": "type", "incident type": "type", "event type": "type", "category": "type", "injury type": "type",
+  // Severity
+  "severity_level": "severity", "severity level": "severity",
+  // Description
+  "incident_description": "description", "incident description": "description", "event description": "description",
+  // Date
+  "date_of_incident": "incident_date", "date of incident": "incident_date", "event date": "incident_date", "date": "incident_date",
+  // Time
+  "time_of_incident": "incident_time", "time of incident": "incident_time", "event time": "incident_time", "time": "incident_time",
+  // Location
+  "location_name": "building", "location name": "building", "site": "building", "department": "zone", "area": "zone",
+  // Lost time
+  "lost_time_days": "lost_time", "days_lost": "lost_time", "days lost": "lost_time", "days away": "lost_time",
+  // Reporter
+  "reporter_name": "reporter", "reported_by": "reporter", "reported by": "reporter",
+};
+
+const TYPE_ALIASES: Record<string, string> = {
+  "near miss": "near_miss", "nearmiss": "near_miss",
+  "equipment failure": "equipment_failure", "equipment": "equipment_failure",
+  "property damage": "property_damage", "damage": "property_damage",
+  "slip": "injury", "fall": "injury", "slip/fall": "injury", "cut": "injury", "burn": "injury",
+  "chemical": "environmental", "spill": "spill",
+  "theft": "security", "break-in": "security", "trespass": "security",
+};
+
+function mapImportColumns(data: { headers: string[]; rows: Record<string, string>[] }) {
+  const headerMap: Record<string, string> = {};
+  data.headers.forEach((h) => {
+    const lower = h.toLowerCase().trim();
+    headerMap[h] = COLUMN_ALIASES[lower] || lower.replace(/\s+/g, "_");
+  });
+
+  const mappedHeaders = data.headers.map((h) => headerMap[h]);
+  const mappedRows = data.rows.map((row) => {
+    const mapped: Record<string, string> = {};
+    for (const [key, value] of Object.entries(row)) {
+      mapped[headerMap[key] || key] = value;
+    }
+    // Normalize type aliases
+    if (mapped.type) {
+      const lower = mapped.type.toLowerCase().trim();
+      mapped.type = TYPE_ALIASES[lower] || lower;
+    }
+    // Normalize severity
+    if (mapped.severity) mapped.severity = mapped.severity.toLowerCase().trim();
+    // Handle "days lost" as lost_time
+    if (mapped.lost_time && /^\d+$/.test(mapped.lost_time.trim())) {
+      mapped.lost_time = "yes"; // numeric days → yes
+    }
+    return mapped;
+  });
+
+  return { headers: mappedHeaders, rows: mappedRows };
+}
+
+const VALID_TYPES = ["injury", "near_miss", "equipment_failure", "environmental", "fire", "security", "spill", "hazard", "property_damage", "other"];
+const VALID_SEVERITIES = ["low", "medium", "high", "critical"];
+
+function ImportPreview({ importData, incidents, user, addIncident, addTicket, toast, onBack, onDone }: {
+  importData: { headers: string[]; rows: Record<string, string>[] };
+  incidents: Incident[];
+  user: { id: string; company_id: string } | null;
+  addIncident: (i: Incident) => void;
+  addTicket: (t: import("@/types").Ticket) => void;
+  toast: (msg: string, type?: "success" | "error" | "info") => void;
+  onBack: () => void;
+  onDone: () => void;
+}) {
+  const [rows, setRows] = React.useState(() => importData.rows.map((r) => ({ ...r })));
+
+  const updateCell = (idx: number, field: string, value: string) => {
+    setRows((prev) => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
+  };
+
+  const removeRow = (idx: number) => {
+    setRows((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const validated = rows.map((row, i) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    if (!row.title?.trim()) errors.push("Missing title");
+    if (row.type && !VALID_TYPES.includes(row.type.toLowerCase().trim())) warnings.push("Unknown type");
+    if (row.severity && !VALID_SEVERITIES.includes(row.severity.toLowerCase().trim())) warnings.push("Unknown severity");
+    return { row, index: i, errors, warnings, valid: errors.length === 0 };
+  });
+
+  const validCount = validated.filter((v) => v.valid).length;
+  const errorCount = validated.filter((v) => !v.valid).length;
+
+  const handleImport = () => {
+    const now = new Date();
+    let imported = 0;
+    validated.forEach((v) => {
+      if (!v.valid) return;
+      const row = v.row;
+      const type = (VALID_TYPES.includes((row.type || "").toLowerCase()) ? row.type.toLowerCase() : "other") as Incident["type"];
+      const severity = (VALID_SEVERITIES.includes((row.severity || "").toLowerCase()) ? row.severity.toLowerCase() : "medium") as Incident["severity"];
+      const incident: Incident = {
+        id: crypto.randomUUID(),
+        company_id: user?.company_id || "",
+        reference_number: `INC-${now.getFullYear()}-${String(incidents.length + imported + 1).padStart(4, "0")}`,
+        reporter_id: user?.id || "",
+        type,
+        type_other: null,
+        severity,
+        priority: severity === "critical" || severity === "high" ? "high" : severity as Incident["priority"],
+        title: row.title.trim(),
+        description: row.description || "",
+        incident_date: row.incident_date || now.toISOString().split("T")[0],
+        incident_time: row.incident_time || "00:00",
+        lost_time: row.lost_time?.toLowerCase().trim() === "yes",
+        lost_time_amount: null,
+        active_hazard: row.active_hazard?.toLowerCase().trim() === "yes",
+        location_id: null,
+        building: row.building || null,
+        floor: row.floor || null,
+        zone: row.zone || null,
+        room: row.room || null,
+        gps_lat: null,
+        gps_lng: null,
+        location_description: row.location_description || null,
+        asset_id: null,
+        media_urls: [],
+        status: "new",
+        flagged: false,
+        resolved_at: null,
+        resolved_by: null,
+        resolution_notes: null,
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      };
+      addIncident(incident);
+      if (severity === "critical" || severity === "high") {
+        addTicket({
+          id: crypto.randomUUID(),
+          company_id: incident.company_id,
+          title: `Investigate: ${incident.title}`,
+          description: `Auto-created for imported ${severity} incident ${incident.reference_number}`,
+          priority: severity === "critical" ? "critical" : "high",
+          status: "new",
+          due_date: null,
+          assigned_to: null,
+          assigned_groups: [],
+          incident_ids: [incident.id],
+          created_by: user?.id || "",
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
+        });
+      }
+      imported++;
+    });
+    toast(`${imported} imported${errorCount > 0 ? `, ${errorCount} skipped` : ""}`);
+    onDone();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 text-sm">
+        <span className="font-medium">{rows.length} rows</span>
+        <Badge variant="success" className="text-[10px]">{validCount} valid</Badge>
+        {errorCount > 0 && <Badge variant="destructive" className="text-[10px]">{errorCount} errors</Badge>}
+      </div>
+
+      <div className="max-h-72 overflow-auto rounded border text-xs">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-muted sticky top-0 z-10">
+              <th className="px-1.5 py-1 text-left font-medium w-6">#</th>
+              <th className="px-1.5 py-1 text-left font-medium">Title</th>
+              <th className="px-1.5 py-1 text-left font-medium w-28">Type</th>
+              <th className="px-1.5 py-1 text-left font-medium w-20">Severity</th>
+              <th className="px-1.5 py-1 text-left font-medium w-16">Status</th>
+              <th className="px-1.5 py-1 w-6"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {validated.map((v) => (
+              <tr key={v.index} className={`border-t ${!v.valid ? "bg-destructive/5" : ""}`}>
+                <td className="px-1.5 py-1 text-muted-foreground">{v.index + 1}</td>
+                <td className="px-1.5 py-1">
+                  <input
+                    className={`w-full bg-transparent border-0 outline-none text-xs ${!v.row.title?.trim() ? "border-b border-destructive" : ""}`}
+                    value={v.row.title || ""}
+                    onChange={(e) => updateCell(v.index, "title", e.target.value)}
+                    placeholder="Required"
+                  />
+                </td>
+                <td className="px-1.5 py-1">
+                  <select
+                    className="w-full bg-transparent border-0 outline-none text-xs"
+                    value={VALID_TYPES.includes((v.row.type || "").toLowerCase()) ? v.row.type.toLowerCase() : "other"}
+                    onChange={(e) => updateCell(v.index, "type", e.target.value)}
+                  >
+                    {VALID_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
+                  </select>
+                </td>
+                <td className="px-1.5 py-1">
+                  <select
+                    className="w-full bg-transparent border-0 outline-none text-xs"
+                    value={VALID_SEVERITIES.includes((v.row.severity || "").toLowerCase()) ? v.row.severity.toLowerCase() : "medium"}
+                    onChange={(e) => updateCell(v.index, "severity", e.target.value)}
+                  >
+                    {VALID_SEVERITIES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </td>
+                <td className="px-1.5 py-1">
+                  {v.valid ? (
+                    <span className="text-green-600 dark:text-green-400">Ready</span>
+                  ) : (
+                    <span className="text-destructive">{v.errors[0]}</span>
+                  )}
+                </td>
+                <td className="px-1.5 py-1">
+                  <button type="button" onClick={() => removeRow(v.index)} className="text-muted-foreground hover:text-destructive">×</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex gap-2">
+        <Button variant="outline" className="flex-1" onClick={onBack}>Back</Button>
+        <Button className="flex-1" disabled={validCount === 0} onClick={handleImport}>
+          Import {validCount} of {rows.length}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function IncidentsPage() {
   const router = useRouter();
   const company = useCompanyParam();
   const [activeSubTab, setActiveSubTab] = React.useState<SubTabType>("incidents");
   const [currentPage, setCurrentPage] = React.useState(1);
   const [showAddModal, setShowAddModal] = React.useState(false);
+  const [showImport, setShowImport] = React.useState(false);
+  const [importData, setImportData] = React.useState<{ headers: string[]; rows: Record<string, string>[] } | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [dateRange, setDateRange] = React.useState("all_time");
   
@@ -88,6 +349,9 @@ export default function IncidentsPage() {
   const [typeFilter, setTypeFilter] = React.useState("");
   const [ticketStatusFilter, setTicketStatusFilter] = React.useState("");
   const [ticketPriorityFilter, setTicketPriorityFilter] = React.useState("");
+  const [sortKey, setSortKey] = React.useState<string | null>(null);
+  const [sortDir, setSortDir] = React.useState<SortDirection>(null);
+  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
 
   // New incident form
   const [newIncident, setNewIncident] = React.useState({
@@ -99,13 +363,44 @@ export default function IncidentsPage() {
     location_description: "",
   });
 
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { t, formatDate } = useTranslation();
   const filterOptions = useFilterOptions();
   const { toast } = useToast();
+  const { theme } = useTheme();
+  const isDarkMode = theme === "dark";
   const { incidents, tickets, locations, users, stores } = useCompanyData();
-  const { isLoading, add: addIncident } = stores.incidents;
+  const { isLoading, add: addIncident, update: updateIncident } = stores.incidents;
+  const { add: addTicket } = stores.tickets;
   const { add: addNotif } = useNotificationsStore();
+
+  const incidentsWithGps = React.useMemo(
+    () => incidents.filter((i) => i.gps_lat != null && i.gps_lng != null),
+    [incidents],
+  );
+
+  // Auto-escalation check
+  const escalationCheckRan = React.useRef(false);
+  React.useEffect(() => {
+    if (escalationCheckRan.current || isLoading) return;
+    escalationCheckRan.current = true;
+    const candidates = getEscalationCandidates(incidents);
+    candidates.forEach((id) => {
+      updateIncident(id, { escalated: true, escalated_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+      const inc = incidents.find((i) => i.id === id);
+      if (inc) {
+        notifyIncidentEscalated(addNotif, {
+          companyId: inc.company_id,
+          incidentTitle: inc.title,
+          incidentId: inc.id,
+          severity: inc.severity,
+        });
+      }
+    });
+    if (candidates.length > 0) {
+      toast(`${candidates.length} incident${candidates.length > 1 ? "s" : ""} auto-escalated`);
+    }
+  }, [isLoading, incidents, updateIncident, toast]);
 
   // Filter incidents
   const filteredIncidents = incidents.filter((incident) => {
@@ -122,9 +417,10 @@ export default function IncidentsPage() {
     return matchesSearch && matchesStatus && matchesSeverity && matchesType && matchesDate;
   });
 
-  // Pagination
-  const totalPages = Math.ceil(filteredIncidents.length / ITEMS_PER_PAGE);
-  const paginatedIncidents = filteredIncidents.slice(
+  // Sort + Pagination
+  const sortedIncidents = sortData(filteredIncidents, sortKey, sortDir);
+  const totalPages = Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE);
+  const paginatedIncidents = sortedIncidents.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
@@ -181,7 +477,7 @@ export default function IncidentsPage() {
     const incident: Incident = {
       id: crypto.randomUUID(),
       company_id: user?.company_id || "",
-      reference_number: `INC-${now.getTime().toString().slice(-6)}`,
+      reference_number: `INC-${now.getFullYear()}-${String(incidents.length + 1).padStart(4, "0")}`,
       reporter_id: user?.id || "",
       type: newIncident.type as Incident["type"],
       type_other: newIncident.type === "other" ? "Other" : null,
@@ -213,6 +509,24 @@ export default function IncidentsPage() {
       updated_at: now.toISOString(),
     };
     addIncident(incident);
+    // Auto-create investigation ticket for critical/high incidents
+    if (incident.severity === "critical" || incident.severity === "high") {
+      addTicket({
+        id: crypto.randomUUID(),
+        company_id: incident.company_id,
+        title: `Investigate: ${incident.title}`,
+        description: `Investigation ticket auto-created for ${incident.severity} severity incident ${incident.reference_number}`,
+        priority: incident.severity === "critical" ? "critical" : "high",
+        status: "new",
+        due_date: null,
+        assigned_to: null,
+        assigned_groups: [],
+        incident_ids: [incident.id],
+        created_by: user?.id || "",
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      });
+    }
     if (incident.severity === "critical") {
       notifyCriticalIncident(addNotif, {
         companyId: incident.company_id,
@@ -305,20 +619,42 @@ export default function IncidentsPage() {
             onClick={() => {
               const rows =
                 activeSubTab === "incidents"
-                  ? filteredIncidents.map((i) => ({
-                      reference: i.reference_number,
-                      title: i.title,
-                      status: i.status,
-                      severity: i.severity,
-                      type: i.type,
-                      date: i.incident_date,
-                    }))
-                  : filteredTickets.map((t) => ({
-                      id: t.id,
-                      title: t.title,
-                      status: t.status,
-                      priority: t.priority,
-                      assignee: getAssigneeName(t.assigned_to),
+                  ? filteredIncidents.map((i) => {
+                      const rep = users.find((u) => u.id === i.reporter_id);
+                      const loc = locations.find((l) => l.id === i.location_id);
+                      return {
+                        reference: i.reference_number,
+                        title: i.title,
+                        type: i.type,
+                        severity: i.severity,
+                        priority: i.priority,
+                        status: i.status,
+                        date: i.incident_date,
+                        time: i.incident_time || "",
+                        description: i.description,
+                        reporter: rep?.full_name || (i.reporter_id === "__anonymous__" ? "Anonymous" : "Unknown"),
+                        location: loc?.name || i.location_description || "",
+                        building: i.building || "",
+                        floor: i.floor || "",
+                        zone: i.zone || "",
+                        room: i.room || "",
+                        gps: i.gps_lat && i.gps_lng ? `${i.gps_lat},${i.gps_lng}` : "",
+                        lost_time: i.lost_time ? "Yes" : "No",
+                        lost_time_hours: i.lost_time_amount ?? "",
+                        active_hazard: i.active_hazard ? "Yes" : "No",
+                        escalated: i.escalated ? "Yes" : "No",
+                        resolved_at: i.resolved_at || "",
+                        created_at: i.created_at,
+                      };
+                    })
+                  : filteredTickets.map((t_) => ({
+                      title: t_.title,
+                      description: t_.description,
+                      status: t_.status,
+                      priority: t_.priority,
+                      assignee: getAssigneeName(t_.assigned_to),
+                      due_date: t_.due_date || "",
+                      created_at: t_.created_at,
                     }));
               downloadCsv(
                 activeSubTab === "incidents" ? "incidents.csv" : "tickets.csv",
@@ -331,10 +667,16 @@ export default function IncidentsPage() {
             {t("incidents.buttons.export")}
           </Button>
           {activeSubTab === "incidents" && (
+            <>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowImport(true)}>
+              <Upload className="h-4 w-4" aria-hidden="true" />
+              Import
+            </Button>
             <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
               <Plus className="h-4 w-4" aria-hidden="true" />
               {t("incidents.newIncident")}
             </Button>
+            </>
           )}
         </div>
       </div>
@@ -369,6 +711,21 @@ export default function IncidentsPage() {
             <Ticket className="h-4 w-4" aria-hidden="true" />
             <span>{t("tickets.title")}</span>
             {activeSubTab === "tickets" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveSubTab("map")}
+            className={cn(
+              "flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative",
+              activeSubTab === "map" 
+                ? "text-primary" 
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <MapPinIcon className="h-4 w-4" aria-hidden="true" />
+            <span>Map</span>
+            {activeSubTab === "map" && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>
@@ -410,6 +767,38 @@ export default function IncidentsPage() {
         />
       </div>
 
+      {/* Analytics charts */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ChartCard title="By type">
+          <BarChart
+            data={(() => {
+              const typeCounts: Record<string, number> = {};
+              incidents.forEach((i) => {
+                const label = capitalize(i.type.replace(/_/g, " "));
+                typeCounts[label] = (typeCounts[label] || 0) + 1;
+              });
+              return Object.entries(typeCounts)
+                .map(([name, value]) => ({ name, value }))
+                .sort((a, b) => b.value - a.value);
+            })()}
+            dataKey="value"
+            xAxisKey="name"
+            height={200}
+          />
+        </ChartCard>
+        <ChartCard title="By severity">
+          <DonutChart
+            data={[
+              { name: "Low", value: incidents.filter((i) => i.severity === "low").length },
+              { name: "Medium", value: incidents.filter((i) => i.severity === "medium").length },
+              { name: "High", value: incidents.filter((i) => i.severity === "high").length },
+              { name: "Critical", value: incidents.filter((i) => i.severity === "critical").length },
+            ].filter((d) => d.value > 0)}
+            height={200}
+          />
+        </ChartCard>
+      </div>
+
       {/* Search and filters */}
       <SearchFilterBar
         searchQuery={searchQuery}
@@ -438,32 +827,60 @@ export default function IncidentsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-3 font-medium">Reference</th>
-                  <th className="pb-3 font-medium">Title</th>
-                  <th className="pb-3 font-medium">Type</th>
-                  <th className="pb-3 font-medium">Severity</th>
-                  <th className="hidden pb-3 font-medium md:table-cell">Location</th>
-                  <th className="hidden pb-3 font-medium lg:table-cell">Date</th>
-                  <th className="pb-3 font-medium">Status</th>
+                  <SortableTh sortKey="reference_number" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }}>Reference</SortableTh>
+                  <SortableTh sortKey="title" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }}>Title</SortableTh>
+                  <SortableTh sortKey="type" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }}>Type</SortableTh>
+                  <SortableTh sortKey="severity" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }}>Severity</SortableTh>
+                  <SortableTh sortKey="building" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }} className="hidden md:table-cell">Location</SortableTh>
+                  <SortableTh sortKey="incident_date" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }} className="hidden lg:table-cell">Date</SortableTh>
+                  <SortableTh sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }}>Status</SortableTh>
+                  <th className="pb-3 font-medium w-10"></th>
                   <th className="pb-3 font-medium w-10"></th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedIncidents.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={9} className="py-8 text-center text-muted-foreground">
                       {t("incidents.empty.noIncidents")}
                     </td>
                   </tr>
                 ) : (
-                  paginatedIncidents.map((incident) => (
+                  paginatedIncidents.map((incident) => {
+                    const linkedTickets = tickets.filter((t) => t.incident_ids?.includes(incident.id));
+                    return (
+                    <React.Fragment key={incident.id}>
                     <tr
-                      key={incident.id}
                       onClick={() => router.push(`/${company}/dashboard/incidents/${incident.id}`)}
                       className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
                     >
                       <td className="py-3">
-                        <span className="font-medium font-mono text-xs">{incident.reference_number}</span>
+                        <div className="flex items-center gap-1.5">
+                          {linkedTickets.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedRows((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(incident.id)) next.delete(incident.id);
+                                  else next.add(incident.id);
+                                  return next;
+                                });
+                              }}
+                              className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-[10px] font-bold text-muted-foreground hover:bg-muted transition-colors"
+                            >
+                              {expandedRows.has(incident.id) ? "−" : "+"}
+                            </button>
+                          )}
+                          <span className="font-medium font-mono text-xs">{incident.reference_number}</span>
+                          {incident.escalated && (
+                            <Badge variant="destructive" className="ml-1 text-[9px] px-1.5 py-0">Escalated</Badge>
+                          )}
+                          {linkedTickets.length > 0 && !expandedRows.has(incident.id) && (
+                            <span className="text-[10px] text-muted-foreground">{linkedTickets.length} ticket{linkedTickets.length > 1 ? "s" : ""}</span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 max-w-[200px] truncate">{incident.title}</td>
                       <td className="py-3 capitalize text-xs">{t(`incidents.types.${incident.type === "near_miss" ? "nearMiss" : incident.type === "equipment_failure" ? "equipmentFailure" : incident.type === "property_damage" ? "propertyDamage" : incident.type}`)}</td>
@@ -471,7 +888,7 @@ export default function IncidentsPage() {
                         <Badge variant={incident.severity} className="text-xs">{incident.severity}</Badge>
                       </td>
                       <td className="hidden py-3 md:table-cell text-muted-foreground text-xs">
-                        {incident.building || "—"}
+                        {incident.building || incident.location_description || (incident.location_id ? locations.find((l) => l.id === incident.location_id)?.name : null) || "—"}
                       </td>
                       <td className="hidden py-3 lg:table-cell text-muted-foreground text-xs">
                         {formatDate(new Date(incident.incident_date))}
@@ -484,8 +901,79 @@ export default function IncidentsPage() {
                       <td className="py-3">
                         <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </td>
+                      <td className="py-3">
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const { IncidentReportPDF, downloadPDF } = await import("@/lib/pdf-export");
+                              const reporterUser = users.find((u) => u.id === incident.reporter_id);
+                              const loc = locations.find((l) => l.id === incident.location_id);
+                              const doc = <IncidentReportPDF
+                                companyName={currentCompany?.name || company}
+                                incident={{
+                                  title: incident.title,
+                                  type: incident.type,
+                                  severity: incident.severity,
+                                  priority: incident.priority,
+                                  status: incident.status,
+                                  incident_date: incident.incident_date,
+                                  incident_time: incident.incident_time,
+                                  location: loc?.name,
+                                  location_description: incident.location_description,
+                                  building: incident.building,
+                                  floor: incident.floor,
+                                  zone: incident.zone,
+                                  room: incident.room,
+                                  description: incident.description,
+                                  reference_number: incident.reference_number,
+                                  reporter_name: reporterUser?.full_name || "Unknown",
+                                  corrective_actions: incident.actions?.map((a) => ({ title: a.title, status: a.status, dueDate: a.dueDate })),
+                                  media_urls: incident.media_urls,
+                                  active_hazard: incident.active_hazard,
+                                  lost_time: incident.lost_time,
+                                  lost_time_amount: incident.lost_time_amount,
+                                  created_at: incident.created_at,
+                                }}
+                              />;
+                              await downloadPDF(doc, `incident-${incident.reference_number || incident.id.slice(0, 8)}.pdf`);
+                            } catch {
+                              // silently fail
+                            }
+                          }}
+                          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          aria-label="Export PDF"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                      </td>
                     </tr>
-                  ))
+                    {expandedRows.has(incident.id) && linkedTickets.map((ticket) => (
+                      <tr
+                        key={`ticket-${ticket.id}`}
+                        onClick={(e) => { e.stopPropagation(); router.push(`/${company}/dashboard/tickets/${ticket.id}`); }}
+                        className="cursor-pointer hover:bg-muted/30 transition-colors"
+                      >
+                        <td className="py-2 pl-8" colSpan={2}>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="h-px w-3 bg-border" />
+                            <Ticket className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{ticket.title}</span>
+                          </div>
+                        </td>
+                        <td className="py-2" colSpan={3}></td>
+                        <td className="hidden py-2 lg:table-cell"></td>
+                        <td className="py-2">
+                          <Badge variant={ticket.status === "resolved" || ticket.status === "closed" ? "completed" : ticket.status === "in_progress" ? "in_progress" : "secondary"} className="text-[10px]">
+                            {ticket.status.replace(/_/g, " ")}
+                          </Badge>
+                        </td>
+                        <td className="py-2" colSpan={2}></td>
+                      </tr>
+                    ))}
+                    </React.Fragment>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -713,6 +1201,41 @@ export default function IncidentsPage() {
         </>
       )}
 
+      {/* Incident Map Tab */}
+      {activeSubTab === "map" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {incidentsWithGps.length} of {incidents.length} incidents have GPS coordinates
+            </p>
+            <div className="flex gap-2 text-xs">
+              {Object.entries(SEVERITY_LEGEND).map(([sev, color]) => (
+                <span key={sev} className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                  {sev}
+                </span>
+              ))}
+            </div>
+          </div>
+          <IncidentMapLazy
+            markers={incidentsWithGps.map((i) => ({
+              id: i.id,
+              title: i.title,
+              severity: i.severity,
+              status: i.status,
+              type: i.type,
+              lat: i.gps_lat!,
+              lng: i.gps_lng!,
+              date: i.incident_date,
+              reference: i.reference_number,
+            }))}
+            height="600px"
+            darkMode={isDarkMode}
+            onMarkerClick={(id) => router.push(`/${company}/dashboard/incidents/${id}`)}
+          />
+        </div>
+      )}
+
       {/* Add Incident Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowAddModal(false)}>
@@ -832,6 +1355,42 @@ export default function IncidentsPage() {
               </div>
             </div>
 
+            {/* Custom fields */}
+            {currentCompany?.custom_incident_fields && currentCompany.custom_incident_fields.length > 0 && (
+              <div className="space-y-3 pt-3 border-t">
+                {currentCompany.custom_incident_fields
+                  .filter((f) => !f.applies_to || f.applies_to.length === 0 || f.applies_to.includes(newIncident.type))
+                  .map((field) => (
+                    <div key={field.id}>
+                      <label className="text-sm font-medium">{field.label}{field.required && " *"}</label>
+                      {field.type === "text" && (
+                        <Input className="mt-1" placeholder={field.label} />
+                      )}
+                      {field.type === "number" && (
+                        <Input type="number" className="mt-1" placeholder={field.label} />
+                      )}
+                      {field.type === "date" && (
+                        <Input type="date" className="mt-1" />
+                      )}
+                      {field.type === "toggle" && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <input type="checkbox" className="h-4 w-4 rounded border-input" />
+                          <span className="text-sm text-muted-foreground">{field.label}</span>
+                        </div>
+                      )}
+                      {field.type === "select" && field.options && (
+                        <select className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                          <option value="">Select...</option>
+                          {field.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            )}
+
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
               <Button variant="outline" onClick={() => setShowAddModal(false)}>
                 {t("common.cancel")}
@@ -843,6 +1402,58 @@ export default function IncidentsPage() {
                 {t("incidents.reportIncident")}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import modal */}
+      {showImport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowImport(false); setImportData(null); }}>
+          <div className="relative w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto rounded-lg bg-background p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Import incidents</h2>
+              <button onClick={() => { setShowImport(false); setImportData(null); }} className="text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {!importData ? (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">Upload a CSV file to bulk-import incidents. Download the template first to see the required format.</p>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => downloadCsvTemplate("incident-import-template.csv", ["title", "type", "severity", "description", "incident_date", "incident_time", "building", "floor", "zone", "room", "location_description", "lost_time", "active_hazard"])}>
+                  <Download className="h-4 w-4" /> Download template
+                </Button>
+                <label className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <input type="file" accept=".csv,.txt" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const data = await parseCsv(file);
+                      if (data.rows.length === 0) { toast("File is empty", "error"); return; }
+                      // Auto-map column aliases from popular tools
+                      const mapped = mapImportColumns(data);
+                      setImportData(mapped);
+                    } catch {
+                      toast("Failed to parse CSV file", "error");
+                    }
+                    e.target.value = "";
+                  }} />
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Choose CSV file</span>
+                </label>
+              </div>
+            ) : (
+              <ImportPreview
+                importData={importData}
+                incidents={incidents}
+                user={user}
+                addIncident={addIncident}
+                addTicket={addTicket}
+                toast={toast}
+                onBack={() => setImportData(null)}
+                onDone={() => { setShowImport(false); setImportData(null); }}
+              />
+            )}
           </div>
         </div>
       )}

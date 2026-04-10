@@ -811,7 +811,7 @@ function LocationsPageContent() {
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-sm truncate">{child.name}</p>
                             </div>
-                            <Badge variant="outline" className="text-xs capitalize">{child.type}</Badge>
+                            <Badge variant="outline" className="text-xs">{child.type}</Badge>
                           </button>
                         ))}
                         {selectedLocationChildren.length > 4 && (
@@ -872,7 +872,7 @@ function LocationsPageContent() {
                               <p className="font-medium text-sm truncate">{asset.name}</p>
                               <p className="text-xs text-muted-foreground truncate">{asset.asset_tag}</p>
                             </div>
-                            <Badge variant="outline" className="text-xs capitalize">{asset.condition}</Badge>
+                            <Badge variant="outline" className="text-xs">{asset.condition}</Badge>
                           </div>
                         ))}
                         {assignedAssets.length > 3 && (

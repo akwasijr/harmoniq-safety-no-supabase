@@ -180,7 +180,7 @@ export default function InspectionRoutesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={route.status === "active" ? "success" : "secondary"} className="capitalize">
+                      <Badge variant={route.status === "active" ? "success" : "secondary"}>
                         {route.status}
                       </Badge>
                       {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}

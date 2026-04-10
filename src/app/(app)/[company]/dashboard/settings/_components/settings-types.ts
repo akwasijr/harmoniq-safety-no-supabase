@@ -9,6 +9,7 @@ export type SettingsTabType =
   | "branding"
   | "fieldApp"
   | "industry"
+  | "incidents"
   | "notifications"
   | "security"
   | "billing";

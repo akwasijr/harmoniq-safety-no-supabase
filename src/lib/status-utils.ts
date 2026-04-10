@@ -100,8 +100,13 @@ export function getStatusVariant(
     case "active":
       return "active";
     case "in_progress":
-    case "approved":
+    case "scheduled":
       return "warning";
+    case "approved":
+      return "info";
+    case "waiting_approval":
+    case "waiting_material":
+      return "pending";
     case "cancelled":
       return "cancelled";
     case "closed":
@@ -123,9 +128,11 @@ export function getStatusVariant(
  * Work-order-specific status → variant map (constant lookup).
  */
 export const WORK_ORDER_STATUS_COLORS: Record<string, BadgeVariant> = {
-  requested: "secondary",
-  approved: "warning",
-  in_progress: "warning",
+  waiting_approval: "secondary",
+  waiting_material: "info",
+  approved: "info",
+  scheduled: "in_progress",
+  in_progress: "in_progress",
   completed: "completed",
   cancelled: "cancelled",
 };

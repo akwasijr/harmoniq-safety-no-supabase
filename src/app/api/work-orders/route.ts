@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("work_orders")
-      .select("id, company_id, asset_id, title, description, priority, status, requested_by, assigned_to, due_date, estimated_hours, actual_hours, parts_cost, labor_cost, corrective_action_id, completed_at, created_at, updated_at")
+      .select("id, company_id, asset_id, title, description, type, priority, status, requested_by, assigned_to, due_date, estimated_hours, actual_hours, parts_cost, labor_cost, corrective_action_id, completed_at, created_at, updated_at")
       .order("created_at", { ascending: false })
       .limit(100);
 
@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
     const title = sanitizeText(body.title, 200);
     const description = sanitizeText(body.description, 5000);
     const priority = sanitizeText(body.priority, 20);
+    const type = sanitizeText(body.type, 30);
 
     if (!title || !description) {
       return NextResponse.json(
@@ -90,6 +91,11 @@ export async function POST(request: NextRequest) {
     const validPriorities = ["low", "medium", "high", "critical"];
     if (priority && !validPriorities.includes(priority)) {
       return NextResponse.json({ error: "Invalid priority" }, { status: 400 });
+    }
+
+    const validTypes = ["preventive_maintenance", "corrective_maintenance", "emergency", "inspection", "service_request"];
+    if (type && !validTypes.includes(type)) {
+      return NextResponse.json({ error: "Invalid work order type" }, { status: 400 });
     }
 
     const asset_id = body.asset_id && isValidUUID(body.asset_id) ? body.asset_id : null;
@@ -124,8 +130,9 @@ export async function POST(request: NextRequest) {
         requested_by: profile.id,
         title,
         description,
+        type: type || "service_request",
         priority: priority || "medium",
-        status: "requested",
+        status: "waiting_approval",
         asset_id,
         assigned_to,
         due_date: body.due_date ? sanitizeText(body.due_date, 10) || null : null,

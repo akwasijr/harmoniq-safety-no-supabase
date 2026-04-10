@@ -1545,6 +1545,7 @@
     "signUp": "Sign up",
     "signingIn": "Signing in…",
     "forgotPassword": "Forgot password?",
+    "rememberMe": "Remember me",
     "forgotPasswordTitle": "Reset your password",
     "forgotPasswordDesc": "Enter your email and we'll send you a reset link",
     "sendResetLink": "Send reset link",
