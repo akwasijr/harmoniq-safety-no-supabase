@@ -113,16 +113,21 @@ export function RoleGuard({
   return <>{children}</>;
 }
 
-// Default access denied component
+// Default access denied component — locked empty state card
 function AccessDenied({ message }: { message: string }) {
   return (
-    <div className="flex min-h-[300px] flex-col items-center justify-center gap-4 text-center">
-      <div className="rounded-full bg-destructive/10 p-4">
-        <ShieldAlert className="h-8 w-8 text-destructive" />
-      </div>
-      <div>
-        <h2 className="text-lg font-semibold">Access Denied</h2>
-        <p className="text-sm text-muted-foreground">{message}</p>
+    <div className="flex min-h-[300px] flex-col items-center justify-center gap-4 text-center px-6">
+      <div className="rounded-2xl border border-border/50 bg-card p-8 shadow-sm max-w-sm w-full flex flex-col items-center gap-4">
+        <div className="rounded-full bg-muted p-4">
+          <ShieldAlert className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold">Access Restricted</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">{message}</p>
+        </div>
+        <p className="text-xs text-muted-foreground/60">
+          Contact your administrator if you need access.
+        </p>
       </div>
     </div>
   );

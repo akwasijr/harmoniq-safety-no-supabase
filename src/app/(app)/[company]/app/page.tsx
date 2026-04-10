@@ -78,7 +78,8 @@ function FieldFocus({
   goodToKnow: FocusItem[];
   t: (key: string) => string;
 }) {
-  const [activeTab, setActiveTab] = React.useState<FocusTab>("urgent");
+  const defaultTab: FocusTab = urgent.length === 0 && upcoming.length === 0 ? "good_to_know" : "urgent";
+  const [activeTab, setActiveTab] = React.useState<FocusTab>(defaultTab);
 
   const tabs: { id: FocusTab; label: string; dot: string; count: number }[] = [
     { id: "urgent", label: "Urgent", dot: "bg-red-500", count: urgent.length },
@@ -451,9 +452,27 @@ export default function EmployeeAppHomePage() {
     };
   });
 
+  // Filter quick actions by role
+  const roleAllowedActions: Record<string, FieldAppQuickActionId[]> = {
+    super_admin: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
+    company_admin: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
+    manager: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
+    safety_officer: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
+    employee: ["report_incident", "my_tasks"],
+    viewer: ["my_tasks", "browse_assets"],
+  };
+  const allowedIds = roleAllowedActions[user.role] || roleAllowedActions.employee;
+  const filteredQuickActions = quickActions.filter((a) =>
+    allowedIds.includes(a.id as FieldAppQuickActionId)
+  );
+
   // ── Field Focus data ──
   const now = new Date(stableNow);
   const sevenDaysFromNow = new Date(stableNow + 7 * 24 * 60 * 60 * 1000);
+
+  // Only show critical incidents in focus for manager roles
+  const canManageIncidents = ["super_admin", "company_admin", "manager", "safety_officer"].includes(user.role);
+  const isViewerRole = user.role === "viewer";
 
   const overdueSince = (date: string) => {
     const diff = now.getTime() - new Date(date).getTime();
@@ -467,20 +486,22 @@ export default function EmployeeAppHomePage() {
   const focusUpcoming: FocusItem[] = [];
   const focusGoodToKnow: FocusItem[] = [];
 
-  // Critical/high incidents still open
-  incidents
-    .filter((inc) => (inc.severity === "critical" || inc.severity === "high") && inc.status !== "resolved" && inc.status !== "archived")
-    .slice(0, 5)
-    .forEach((inc) => {
-      focusUrgent.push({
-        id: `inc-${inc.id}`,
-        title: inc.title,
-        subtitle: `${inc.severity} incident · ${inc.status}`,
-        href: `/${company}/app/incidents/${inc.id}`,
-        icon: AlertCircle,
-        time: overdueSince(inc.incident_date),
+  // Critical/high incidents still open (only for roles that manage incidents)
+  if (canManageIncidents) {
+    incidents
+      .filter((inc) => (inc.severity === "critical" || inc.severity === "high") && inc.status !== "resolved" && inc.status !== "archived")
+      .slice(0, 5)
+      .forEach((inc) => {
+        focusUrgent.push({
+          id: `inc-${inc.id}`,
+          title: inc.title,
+          subtitle: `${inc.severity} incident · ${inc.status}`,
+          href: `/${company}/app/incidents/${inc.id}`,
+          icon: AlertCircle,
+          time: overdueSince(inc.incident_date),
+        });
       });
-    });
+  }
 
   // Overdue tickets
   userTickets
@@ -658,7 +679,7 @@ export default function EmployeeAppHomePage() {
       {/* ── Quick Actions (horizontal circles) ── */}
       <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.2s" }}>
         <div className="flex justify-evenly">
-          {quickActions.slice(0, 4).map((action, i) => (
+          {filteredQuickActions.slice(0, 4).map((action, i) => (
             <Link key={action.href + action.labelKey} href={action.href}
               className="flex flex-col items-center gap-2 w-[72px] active:scale-95 transition-transform home-section"
               style={{ animationDelay: `${0.15 - Math.min(i * 0.02, 0.12)}s` }}>
@@ -673,7 +694,12 @@ export default function EmployeeAppHomePage() {
 
       {/* ── Field Focus ── */}
       <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.1s" }}>
-        <FieldFocus urgent={focusUrgent} upcoming={focusUpcoming} goodToKnow={focusGoodToKnow} t={t} />
+        <FieldFocus
+          urgent={isViewerRole ? [] : focusUrgent}
+          upcoming={isViewerRole ? [] : focusUpcoming}
+          goodToKnow={focusGoodToKnow}
+          t={t}
+        />
       </div>
 
       {/* ── Content Feed ── */}
