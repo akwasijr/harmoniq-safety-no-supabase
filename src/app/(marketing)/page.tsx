@@ -269,12 +269,9 @@ export default function Home() {
               {t("hero.description")}
             </motion.p>
             <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-end">
-              <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
-                {t("hero.cta_start")}
-                <ArrowRight className="h-4 w-4" />
-              </a>
-              <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-700 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-600 transition-colors">
+              <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
                 {t("hero.cta_demo")}
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </motion.div>
           </motion.div>
