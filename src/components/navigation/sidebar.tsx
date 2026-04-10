@@ -248,7 +248,7 @@ function SidebarGroup({ label, isCollapsed, children }: { label: string; isColla
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 hover:text-sidebar-foreground/60 transition-colors"
+        className="flex w-full items-center justify-between px-3 py-1.5 text-[12px] font-medium text-sidebar-foreground/50 hover:text-sidebar-foreground/70 transition-colors"
       >
         <span>{label}</span>
         <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
