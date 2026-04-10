@@ -381,7 +381,7 @@ export default function EmployeeAppHomePage() {
       {fieldAppSettings.tipOfTheDayEnabled && (
         <div className="mx-4 -mt-5 relative z-10 home-section" style={{ animationDelay: "0.3s" }}>
           <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-4">
-            <p className="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
+            <p className="text-[10px] font-bold text-primary mb-1">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
             <p className="text-sm text-foreground leading-relaxed">{tipText}</p>
           </div>
         </div>
