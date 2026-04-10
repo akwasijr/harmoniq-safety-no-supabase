@@ -56,6 +56,7 @@ interface NavItem {
   exactMatch?: boolean;
   additionalPaths?: string[];
   requiredRoles?: string[];
+  comingSoon?: boolean;
 }
 
 type NavGroup = {
@@ -74,15 +75,8 @@ const companyNavGroups: NavGroup[] = [
         icon: LayoutDashboard,
         exactMatch: true,
       },
-      {
-        title: "Live Feed",
-        href: "/dashboard/live-feed",
-        icon: Radio,
-        requiredRoles: ["company_admin", "manager", "super_admin"],
-      },
     ],
   },
-  // OPERATIONS
   {
     label: "Operations",
     items: [
@@ -105,16 +99,10 @@ const companyNavGroups: NavGroup[] = [
         href: "/dashboard/permits",
         icon: FileKey,
         requiredRoles: ["company_admin", "manager", "super_admin"],
-      },
-      {
-        title: "Toolbox Talks",
-        href: "/dashboard/toolbox-talks",
-        icon: MessageSquare,
-        requiredRoles: ["company_admin", "manager", "super_admin", "safety_officer"],
+        comingSoon: true,
       },
     ],
   },
-  // MANAGEMENT
   {
     label: "Management",
     items: [
@@ -123,28 +111,31 @@ const companyNavGroups: NavGroup[] = [
         href: "/dashboard/risk-register",
         icon: ShieldCheck,
         requiredRoles: ["company_admin", "manager", "super_admin"],
+        comingSoon: true,
       },
       {
         title: "Training",
         href: "/dashboard/training",
         icon: GraduationCap,
         requiredRoles: ["company_admin", "manager", "super_admin"],
+        comingSoon: true,
       },
       {
         title: "Environment",
         href: "/dashboard/environment",
         icon: Leaf,
         requiredRoles: ["company_admin", "manager", "super_admin"],
+        comingSoon: true,
       },
       {
         title: "Compliance",
         href: "/dashboard/compliance",
         icon: ClipboardList,
         requiredRoles: ["company_admin", "manager", "super_admin", "viewer"],
+        comingSoon: true,
       },
     ],
   },
-  // REPORTING
   {
     label: "Reporting",
     items: [
@@ -163,7 +154,6 @@ const companyNavGroups: NavGroup[] = [
       },
     ],
   },
-  // ADMIN
   {
     label: "Admin",
     items: [
@@ -482,7 +472,25 @@ export function Sidebar({
                 >
                   {visibleItems.map((item) => {
                     const href = `/${company}${item.href}`;
-                    const isActive = isNavItemActive(item);
+                    const isActive = !item.comingSoon && isNavItemActive(item);
+
+                    if (item.comingSoon) {
+                      return (
+                        <li key={item.href}>
+                          <span
+                            className={cn(
+                              "flex items-center gap-2.5 rounded-md py-1.5 text-[13px] cursor-default opacity-40",
+                              isCollapsed ? "justify-center px-2" : "pl-7 pr-3",
+                            )}
+                            title={isCollapsed ? `${getTitle(item)} (Coming Soon)` : "Coming Soon"}
+                          >
+                            <item.icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            {!isCollapsed && <span>{getTitle(item)}</span>}
+                          </span>
+                        </li>
+                      );
+                    }
+
                     return (
                       <li key={item.href}>
                         <Link
