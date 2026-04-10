@@ -205,8 +205,8 @@ export default function Home() {
 
   return (
     <div className="marketing-page relative flex min-h-screen flex-col bg-black text-white overflow-x-hidden">
-      {/* Video background, desktop only */}
-      <div className="absolute top-0 left-0 right-0 h-screen z-0 pointer-events-none overflow-hidden hidden md:block">
+      {/* Video background */}
+      <div className="absolute top-0 left-0 right-0 h-screen z-0 pointer-events-none overflow-hidden">
         <video
           autoPlay
           loop
@@ -216,11 +216,8 @@ export default function Home() {
         >
           <source src="/bg-loop.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-black/70" />
+        <div className="absolute inset-0 bg-black/60" />
       </div>
-
-      {/* Lightweight mobile background */}
-      <div className="absolute inset-0 z-0 pointer-events-none bg-black md:hidden" />
 
 
 
