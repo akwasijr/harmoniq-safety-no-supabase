@@ -122,7 +122,7 @@ function FieldFocus({
               className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 active:bg-muted/50 transition-colors"
             >
               <item.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <p className="flex-1 text-sm truncate">{item.title}</p>
+              <p className="flex-1 text-sm font-normal truncate">{item.title}</p>
               <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
             </Link>
           ))}
