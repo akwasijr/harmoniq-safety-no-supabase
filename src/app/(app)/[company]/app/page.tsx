@@ -80,18 +80,16 @@ function FieldFocus({
   const [activeTab, setActiveTab] = React.useState<FocusTab>("urgent");
 
   const tabs: { id: FocusTab; label: string; color: string; count: number }[] = [
-    { id: "urgent", label: t("app.focusUrgent") || "Urgent", color: "text-red-500 border-red-500", count: urgent.length },
-    { id: "upcoming", label: t("app.focusUpcoming") || "Upcoming", color: "text-amber-500 border-amber-500", count: upcoming.length },
-    { id: "good_to_know", label: t("app.focusGoodToKnow") || "Good to Know", color: "text-blue-500 border-blue-500", count: goodToKnow.length },
+    { id: "urgent", label: "Urgent", color: "text-red-500 border-red-500", count: urgent.length },
+    { id: "upcoming", label: "Upcoming", color: "text-amber-500 border-amber-500", count: upcoming.length },
+    { id: "good_to_know", label: "Good to Know", color: "text-blue-500 border-blue-500", count: goodToKnow.length },
   ];
 
   const items = activeTab === "urgent" ? urgent : activeTab === "upcoming" ? upcoming : goodToKnow;
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold">{t("app.fieldFocus") || "Field Focus"}</h2>
-      </div>
+      <h2 className="text-base font-semibold mb-3">Field Focus</h2>
       {/* Tabs */}
       <div className="flex gap-1 mb-3">
         {tabs.map((tab) => (
@@ -115,23 +113,20 @@ function FieldFocus({
       </div>
       {/* Items */}
       {items.length === 0 ? (
-        <div className="py-6 text-center text-sm text-muted-foreground">
+        <p className="py-4 text-center text-xs text-muted-foreground">
           {activeTab === "urgent" ? "No urgent items" : activeTab === "upcoming" ? "Nothing upcoming" : "All clear"}
-        </div>
+        </p>
       ) : (
-        <div className="space-y-1.5">
+        <div className="space-y-0.5">
           {items.slice(0, 5).map((item) => (
             <Link
               key={item.id}
               href={item.href}
-              className="flex items-center gap-3 rounded-xl bg-card px-3.5 py-3 active:bg-muted/50 transition-colors"
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 active:bg-muted/50 transition-colors"
             >
               <item.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium leading-tight truncate">{item.title}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{item.subtitle}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+              <p className="flex-1 text-sm truncate">{item.title}</p>
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
             </Link>
           ))}
         </div>
