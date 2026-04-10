@@ -166,12 +166,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "tickets.view_own", "tickets.create",
   ],
   viewer: [
-    "incidents.view_own",
+    "incidents.view_own", "incidents.view_team", "incidents.view_all",
+    "incidents.create", "incidents.edit_own",
     "assets.view",
     "locations.view",
     "checklists.view",
+    "reports.view_own", "reports.view_team", "reports.view_all", "reports.export",
     "users.view_own",
-    "tickets.view_own",
+    "tickets.view_own", "tickets.create",
+    "risk_assessments.view",
+    "corrective_actions.view",
+    "work_orders.view",
   ],
 };
 

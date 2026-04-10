@@ -11,6 +11,9 @@ import {
   ArrowRight,
   Building2,
   Clock,
+  ChevronRight,
+  CheckCircle,
+  Info,
 } from "lucide-react";
 import { KPICard } from "@/components/ui/kpi-card";
 import { FilterPanel, useFilterOptions } from "@/components/ui/filter-panel";
@@ -24,6 +27,7 @@ import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { cn } from "@/lib/utils";
 
 const PLATFORM_SLUGS =
   (process.env.NEXT_PUBLIC_PLATFORM_SLUGS || "platform,admin,superadmin")
@@ -72,6 +76,71 @@ function getDateRangeFilter(dateRange: string): { start: Date; end: Date } {
   return { start, end };
 }
 
+// ── Dashboard Focus Strip ──
+function DashboardFocusStrip({ tabs, company }: {
+  tabs: { id: string; label: string; dot: string; items: { id: string; title: string; href: string; time?: string }[] }[];
+  company: string;
+}) {
+  const [activeTab, setActiveTab] = React.useState(tabs[0]?.id || "urgent");
+  const active = tabs.find((t) => t.id === activeTab) || tabs[0];
+  const totalItems = tabs.reduce((sum, t) => sum + t.items.length, 0);
+
+  if (totalItems === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Focus Strip</CardTitle>
+          <div className="flex gap-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                  activeTab === tab.id ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <span className={cn("h-1.5 w-1.5 rounded-full", tab.dot)} />
+                {tab.label}
+                {tab.items.length > 0 && <span className="text-[10px] opacity-60">({tab.items.length})</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {active.items.length === 0 ? (
+          <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+            {activeTab === "urgent" ? <CheckCircle className="h-4 w-4" /> : activeTab === "upcoming" ? <Clock className="h-4 w-4" /> : <Info className="h-4 w-4" />}
+            {activeTab === "urgent" ? "No urgent items" : activeTab === "upcoming" ? "Nothing upcoming" : "All clear"}
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {active.items.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted/50 transition-colors group"
+              >
+                <p className="flex-1 text-sm truncate">{item.title}</p>
+                {item.time && (
+                  <span className={cn(
+                    "shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full",
+                    activeTab === "urgent" ? "text-red-500 bg-red-500/10" : "text-amber-500 bg-amber-500/10"
+                  )}>{item.time}</span>
+                )}
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
   const company = useCompanyParam();
   const { t, formatDate, formatNumber } = useTranslation();
@@ -84,9 +153,9 @@ export default function DashboardPage() {
   const [severityFilter, setSeverityFilter] = React.useState("");
   const [departmentFilter, setDepartmentFilter] = React.useState("");
 
-  const { isSuperAdmin, hasSelectedCompany, switchCompany } = useAuth();
+  const { isSuperAdmin, hasSelectedCompany, switchCompany, user } = useAuth();
   const { items: allCompanies } = useCompanyStore();
-  const { incidents, locations, users, assets: allAssets } = useCompanyData();
+  const { incidents, locations, users, assets: allAssets, tickets, workOrders, correctiveActions, stores } = useCompanyData();
 
   // Track platform entry state to avoid hydration mismatch
   const [isPlatformEntry, setIsPlatformEntry] = React.useState(false);
@@ -334,8 +403,63 @@ export default function DashboardPage() {
 
   const recentFilteredIncidents = filteredIncidents.slice(0, 5);
 
+  // ── Focus Strip data ──
+  const focusNow = new Date();
+  const focus7Days = new Date(focusNow.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const isManager = ["company_admin", "manager", "super_admin"].includes(user?.role || "");
+  const isDirector = user?.role === "viewer";
+
+  const focusUrgent: { id: string; title: string; href: string; time: string }[] = [];
+  const focusUpcoming: { id: string; title: string; href: string; time: string }[] = [];
+  const focusGoodToKnow: { id: string; title: string; href: string }[] = [];
+
+  const daysOverdue = (date: string) => {
+    const d = Math.floor((focusNow.getTime() - new Date(date).getTime()) / 86400000);
+    return d === 0 ? "Today" : `${d}d overdue`;
+  };
+  const daysUntil = (date: string) => {
+    const d = Math.ceil((new Date(date).getTime() - focusNow.getTime()) / 86400000);
+    return d === 0 ? "Today" : d === 1 ? "Tomorrow" : `In ${d}d`;
+  };
+
+  // Manager sees: all critical incidents, overdue items across the board
+  if (isManager) {
+    incidents.filter((i) => (i.severity === "critical" || i.severity === "high") && i.status !== "resolved" && i.status !== "archived")
+      .slice(0, 3).forEach((i) => focusUrgent.push({ id: `inc-${i.id}`, title: i.title, href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) }));
+    tickets.filter((t_) => t_.status !== "resolved" && t_.status !== "closed" && t_.due_date && new Date(t_.due_date) < focusNow)
+      .slice(0, 3).forEach((t_) => focusUrgent.push({ id: `tk-${t_.id}`, title: t_.title, href: `/${company}/dashboard/tickets/${t_.id}`, time: daysOverdue(t_.due_date!) }));
+    workOrders.filter((w) => w.status !== "completed" && w.status !== "cancelled" && w.due_date && new Date(w.due_date) < focusNow)
+      .slice(0, 3).forEach((w) => focusUrgent.push({ id: `wo-${w.id}`, title: w.title, href: `/${company}/dashboard/work-orders/${w.id}`, time: daysOverdue(w.due_date!) }));
+    correctiveActions.filter((c) => c.status !== "completed" && c.due_date && new Date(c.due_date) < focusNow)
+      .slice(0, 2).forEach((c) => focusUrgent.push({ id: `ca-${c.id}`, title: c.description?.slice(0, 50) || "Corrective action", href: `/${company}/dashboard/corrective-actions/${c.id}`, time: daysOverdue(c.due_date!) }));
+
+    // Upcoming
+    tickets.filter((t_) => t_.status !== "resolved" && t_.status !== "closed" && t_.due_date && new Date(t_.due_date) >= focusNow && new Date(t_.due_date) <= focus7Days)
+      .slice(0, 3).forEach((t_) => focusUpcoming.push({ id: `tk-${t_.id}`, title: t_.title, href: `/${company}/dashboard/tickets/${t_.id}`, time: daysUntil(t_.due_date!) }));
+    workOrders.filter((w) => w.status !== "completed" && w.status !== "cancelled" && w.due_date && new Date(w.due_date) >= focusNow && new Date(w.due_date) <= focus7Days)
+      .slice(0, 3).forEach((w) => focusUpcoming.push({ id: `wo-${w.id}`, title: w.title, href: `/${company}/dashboard/work-orders/${w.id}`, time: daysUntil(w.due_date!) }));
+  }
+
+  // Director sees: high-level status items
+  if (isDirector) {
+    incidents.filter((i) => i.severity === "critical" && i.status !== "resolved" && i.status !== "archived")
+      .slice(0, 3).forEach((i) => focusUrgent.push({ id: `inc-${i.id}`, title: i.title, href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) }));
+  }
+
+  // Good to Know for both
+  const weekAgo = new Date(focusNow.getTime() - 7 * 86400000);
+  const resolvedThisWeek = incidents.filter((i) => i.status === "resolved" && i.resolved_at && new Date(i.resolved_at) > weekAgo).length;
+  if (resolvedThisWeek > 0) focusGoodToKnow.push({ id: "resolved-week", title: `${resolvedThisWeek} incidents resolved this week`, href: `/${company}/dashboard/incidents` });
+  if (expiryAlerts.length === 0) focusGoodToKnow.push({ id: "no-expiry", title: "No upcoming asset expiries", href: `/${company}/dashboard/assets` });
+
+  const focusTabs = [
+    { id: "urgent" as const, label: "Urgent", dot: "bg-red-500", items: focusUrgent },
+    { id: "upcoming" as const, label: "Upcoming", dot: "bg-amber-500", items: focusUpcoming },
+    { id: "good_to_know" as const, label: "Good to Know", dot: "bg-blue-500", items: focusGoodToKnow },
+  ];
+
   return (
-    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin"]}>
+    <RoleGuard allowedRoles={["manager", "company_admin", "super_admin", "viewer"]}>
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -352,6 +476,11 @@ export default function DashboardPage() {
 
       {/* Onboarding Checklist */}
       <OnboardingChecklist />
+
+      {/* Focus Strip */}
+      {(isManager || isDirector) && (
+        <DashboardFocusStrip tabs={focusTabs} company={company} />
+      )}
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
