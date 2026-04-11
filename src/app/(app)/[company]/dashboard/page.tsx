@@ -161,7 +161,7 @@ export default function DashboardPage() {
 
   const { isSuperAdmin, hasSelectedCompany, switchCompany, user } = useAuth();
   const { items: allCompanies } = useCompanyStore();
-  const { incidents, locations, users, assets: allAssets, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, complianceObligations, stores } = useCompanyData();
+  const { incidents, locations, users, assets: allAssets, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, complianceObligations, checklistSubmissions, checklistTemplates, stores } = useCompanyData();
 
   // Track platform entry state to avoid hydration mismatch
   const [isPlatformEntry, setIsPlatformEntry] = React.useState(false);
@@ -510,6 +510,33 @@ export default function DashboardPage() {
     .slice(0, 3).forEach((o) => {
       focusUpcoming.push({ id: `co-${o.id}`, title: o.title, subtitle: o.regulation, type: "Compliance", href: `/${company}/dashboard/compliance`, time: daysUntil(o.next_due_date) });
     });
+
+  // Checklist: failed items without linked work orders → upcoming suggestions
+  if (isManager) {
+    const recentSubmissions = checklistSubmissions
+      .filter((s) => s.status === "submitted" && new Date(s.created_at) > weekAgo);
+
+    for (const sub of recentSubmissions) {
+      const failedItems = sub.responses.filter((r) => r.value === false);
+      if (failedItems.length === 0) continue;
+
+      const template = checklistTemplates.find((t) => t.id === sub.template_id);
+      const templateName = template?.name || "Checklist";
+
+      // Check if a work order already exists for this submission
+      const hasLinkedWO = workOrders.some((wo) => wo.checklist_submission_id === sub.id);
+      if (hasLinkedWO) continue;
+
+      focusUpcoming.push({
+        id: `cl-fail-${sub.id}`,
+        title: `${failedItems.length} failed item${failedItems.length > 1 ? "s" : ""} in ${templateName}`,
+        subtitle: "Create work order?",
+        type: "Inspection",
+        href: `/${company}/dashboard/checklists/${sub.template_id}`,
+        time: daysOverdue(sub.created_at),
+      });
+    }
+  }
 
   // Lost time: remind managers to update incidents without return dates
   if (isManager) {
