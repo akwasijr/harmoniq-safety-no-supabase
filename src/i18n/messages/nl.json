@@ -39,7 +39,11 @@
     "dismiss": "Sluiten",
     "noPermission": "U heeft geen toestemming om deze actie uit te voeren",
     "noEditPermission": "U heeft geen toestemming om instellingen te bewerken. Neem contact op met uw beheerder voor toegang.",
-    "readMore": "Lees meer"
+    "readMore": "Lees meer",
+    "date": "Datum",
+    "done": "Klaar",
+    "error": "Er is een fout opgetreden. Probeer het opnieuw.",
+    "submitting": "Bezig met indienen..."
   },
   "nav": {
     "home": "Startpagina",
@@ -953,7 +957,18 @@
       "inProgress": "In behandeling",
       "completed": "Voltooid",
       "completedToday": "Vandaag voltooid",
-      "items": "Items"
+      "items": "Items",
+      "addComment": "Opmerking toevoegen",
+      "comment": "Opmerking",
+      "draftSaved": "Concept opgeslagen",
+      "generalComments": "Algemene opmerkingen",
+      "location": "Locatie",
+      "photoNotAvailable": "Foto uploaden beschikbaar in mobiele app",
+      "progress": "Voortgang",
+      "readyToSubmit": "Alle verplichte items beantwoord. Klaar om in te dienen.",
+      "requiredRemaining": "verplicht(e) item(s) resterend",
+      "selectLocation": "Selecteer locatie (optioneel)",
+      "signatureNotAvailable": "Handtekeningregistratie beschikbaar in mobiele app"
     },
     "buttons": {
       "newAssessment": "Nieuwe beoordeling",
@@ -1000,13 +1015,34 @@
     "nextItem": "Volgende Item",
     "enterResponse": "Voer uw antwoord in...",
     "placeholders": {
-      "checklistName": "Dagelijkse heftruckinspectie"
+      "checklistName": "Dagelijkse heftruckinspectie",
+      "comment": "Voeg een opmerking toe...",
+      "generalComments": "Voeg eventuele algemene opmerkingen toe...",
+      "select": "Selecteer een optie...",
+      "text": "Voer uw antwoord in..."
     },
     "approve": "Goedkeuren",
     "reject": "Afwijzen",
     "approved": "Goedgekeurd",
     "rejected": "Afgewezen",
-    "submittedBy": "Ingediend door"
+    "submittedBy": "Ingediend door",
+    "actions": {
+      "submit": "Checklist indienen",
+      "uploadPhoto": "Foto uploaden"
+    },
+    "options": {
+      "fail": "Niet geslaagd",
+      "na": "N.v.t.",
+      "no": "Nee",
+      "pass": "Geslaagd",
+      "yes": "Ja"
+    },
+    "success": {
+      "submitted": "Checklist succesvol ingediend!"
+    },
+    "validation": {
+      "requiredFields": "Beantwoord alle verplichte vragen voordat u indient."
+    }
   },
   "content": {
     "title": "Inhoud",

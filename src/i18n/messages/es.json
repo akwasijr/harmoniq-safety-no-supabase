@@ -39,7 +39,11 @@
     "dismiss": "Descartar",
     "noPermission": "You don't have permission to perform this action",
     "noEditPermission": "You don't have permission to edit settings. Contact your administrator for access.",
-    "readMore": "Leer más"
+    "readMore": "Leer más",
+    "date": "Fecha",
+    "done": "Hecho",
+    "error": "Ocurrió un error. Por favor, inténtelo de nuevo.",
+    "submitting": "Enviando..."
   },
   "nav": {
     "home": "Inicio",
@@ -953,7 +957,18 @@
       "inProgress": "En progreso",
       "completed": "Completado",
       "completedToday": "Completado hoy",
-      "items": "Elementos"
+      "items": "Elementos",
+      "addComment": "Agregar comentario",
+      "comment": "Comentario",
+      "draftSaved": "Borrador guardado",
+      "generalComments": "Comentarios generales",
+      "location": "Ubicación",
+      "photoNotAvailable": "Carga de fotos disponible en la aplicación móvil",
+      "progress": "Progreso",
+      "readyToSubmit": "Todas las preguntas obligatorias respondidas. Listo para enviar.",
+      "requiredRemaining": "pregunta(s) obligatoria(s) restante(s)",
+      "selectLocation": "Seleccionar ubicación (opcional)",
+      "signatureNotAvailable": "Captura de firma disponible en la aplicación móvil"
     },
     "buttons": {
       "newAssessment": "Nueva evaluación",
@@ -1000,13 +1015,34 @@
     "nextItem": "Next Item",
     "enterResponse": "Enter your response...",
     "placeholders": {
-      "checklistName": "Daily forklift inspection"
+      "checklistName": "Inspección diaria de montacargas",
+      "comment": "Agregar una nota...",
+      "generalComments": "Agregar comentarios generales...",
+      "select": "Seleccionar una opción...",
+      "text": "Ingrese su respuesta..."
     },
     "approve": "Aprobar",
     "reject": "Rechazar",
     "approved": "Aprobado",
     "rejected": "Rejected",
-    "submittedBy": "Submitted by"
+    "submittedBy": "Enviado por",
+    "actions": {
+      "submit": "Enviar lista de verificación",
+      "uploadPhoto": "Subir foto"
+    },
+    "options": {
+      "fail": "Reprobado",
+      "na": "N/A",
+      "no": "No",
+      "pass": "Aprobado",
+      "yes": "Sí"
+    },
+    "success": {
+      "submitted": "¡Lista de verificación enviada con éxito!"
+    },
+    "validation": {
+      "requiredFields": "Por favor, responda todas las preguntas obligatorias antes de enviar."
+    }
   },
   "content": {
     "title": "Contenido",

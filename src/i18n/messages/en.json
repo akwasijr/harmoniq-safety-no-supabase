@@ -39,7 +39,11 @@
     "dismiss": "Dismiss",
     "noPermission": "You don't have permission to perform this action",
     "noEditPermission": "You don't have permission to edit settings. Contact your administrator for access.",
-    "readMore": "Read more"
+    "readMore": "Read more",
+    "date": "Date",
+    "done": "Done",
+    "error": "An error occurred. Please try again.",
+    "submitting": "Submitting..."
   },
   "nav": {
     "home": "Home",
@@ -953,7 +957,18 @@
       "inProgress": "In Progress",
       "completed": "Completed",
       "completedToday": "Completed Today",
-      "items": "Items"
+      "items": "Items",
+      "addComment": "Add comment",
+      "comment": "Comment",
+      "draftSaved": "Draft saved",
+      "generalComments": "General Comments",
+      "location": "Location",
+      "photoNotAvailable": "Photo upload available in mobile app",
+      "progress": "Progress",
+      "readyToSubmit": "All required items answered. Ready to submit.",
+      "requiredRemaining": "required item(s) remaining",
+      "selectLocation": "Select location (optional)",
+      "signatureNotAvailable": "Signature capture available in mobile app"
     },
     "buttons": {
       "newAssessment": "New Assessment",
@@ -1000,13 +1015,34 @@
     "nextItem": "Next Item",
     "enterResponse": "Enter your response...",
     "placeholders": {
-      "checklistName": "Daily forklift inspection"
+      "checklistName": "Daily forklift inspection",
+      "comment": "Add a note...",
+      "generalComments": "Add any overall comments...",
+      "select": "Select an option...",
+      "text": "Enter your response..."
     },
     "approve": "Approve",
     "reject": "Reject",
     "approved": "Approved",
     "rejected": "Rejected",
-    "submittedBy": "Submitted by"
+    "submittedBy": "Submitted by",
+    "actions": {
+      "submit": "Submit Checklist",
+      "uploadPhoto": "Upload Photo"
+    },
+    "options": {
+      "fail": "Fail",
+      "na": "N/A",
+      "no": "No",
+      "pass": "Pass",
+      "yes": "Yes"
+    },
+    "success": {
+      "submitted": "Checklist submitted successfully!"
+    },
+    "validation": {
+      "requiredFields": "Please answer all required questions before submitting."
+    }
   },
   "content": {
     "title": "Content",

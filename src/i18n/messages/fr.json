@@ -39,7 +39,11 @@
     "dismiss": "Ignorer",
     "noPermission": "You don't have permission to perform this action",
     "noEditPermission": "You don't have permission to edit settings. Contact your administrator for access.",
-    "readMore": "Lire la suite"
+    "readMore": "Lire la suite",
+    "date": "Date",
+    "done": "Terminé",
+    "error": "Une erreur est survenue. Veuillez réessayer.",
+    "submitting": "Envoi en cours..."
   },
   "nav": {
     "home": "Accueil",
@@ -953,7 +957,18 @@
       "inProgress": "En cours",
       "completed": "Terminé",
       "completedToday": "Terminé aujourd'hui",
-      "items": "Éléments"
+      "items": "Éléments",
+      "addComment": "Ajouter un commentaire",
+      "comment": "Commentaire",
+      "draftSaved": "Brouillon enregistré",
+      "generalComments": "Commentaires généraux",
+      "location": "Emplacement",
+      "photoNotAvailable": "Téléchargement de photo disponible dans l'application mobile",
+      "progress": "Progression",
+      "readyToSubmit": "Toutes les questions obligatoires ont été répondues. Prêt à soumettre.",
+      "requiredRemaining": "question(s) obligatoire(s) restante(s)",
+      "selectLocation": "Sélectionner un emplacement (facultatif)",
+      "signatureNotAvailable": "Capture de signature disponible dans l'application mobile"
     },
     "buttons": {
       "newAssessment": "Nouvelle évaluation",
@@ -1000,13 +1015,34 @@
     "nextItem": "Next Item",
     "enterResponse": "Enter your response...",
     "placeholders": {
-      "checklistName": "Daily forklift inspection"
+      "checklistName": "Inspection quotidienne du chariot élévateur",
+      "comment": "Ajouter une note...",
+      "generalComments": "Ajouter des commentaires généraux...",
+      "select": "Sélectionner une option...",
+      "text": "Entrez votre réponse..."
     },
     "approve": "Approuver",
     "reject": "Rejeter",
     "approved": "Approuvé",
     "rejected": "Rejected",
-    "submittedBy": "Submitted by"
+    "submittedBy": "Soumis par",
+    "actions": {
+      "submit": "Soumettre la liste de contrôle",
+      "uploadPhoto": "Télécharger une photo"
+    },
+    "options": {
+      "fail": "Échoué",
+      "na": "N/A",
+      "no": "Non",
+      "pass": "Réussi",
+      "yes": "Oui"
+    },
+    "success": {
+      "submitted": "Liste de contrôle soumise avec succès !"
+    },
+    "validation": {
+      "requiredFields": "Veuillez répondre à toutes les questions obligatoires avant de soumettre."
+    }
   },
   "content": {
     "title": "Contenu",

@@ -39,7 +39,11 @@
     "dismiss": "Stäng",
     "noPermission": "Du har inte behörighet att utföra denna åtgärd",
     "noEditPermission": "Du har inte behörighet att redigera inställningar. Kontakta din administratör för åtkomst.",
-    "readMore": "Läs mer"
+    "readMore": "Läs mer",
+    "date": "Datum",
+    "done": "Klar",
+    "error": "Ett fel uppstod. Försök igen.",
+    "submitting": "Skickar..."
   },
   "nav": {
     "home": "Hem",
@@ -953,7 +957,18 @@
       "inProgress": "Pågående",
       "completed": "Slutförd",
       "completedToday": "Slutförda idag",
-      "items": "Objekt"
+      "items": "Objekt",
+      "addComment": "Lägg till kommentar",
+      "comment": "Kommentar",
+      "draftSaved": "Utkast sparat",
+      "generalComments": "Allmänna kommentarer",
+      "location": "Plats",
+      "photoNotAvailable": "Fotouppladdning tillgänglig i mobilappen",
+      "progress": "Framsteg",
+      "readyToSubmit": "Alla obligatoriska frågor besvarade. Redo att skicka in.",
+      "requiredRemaining": "obligatoriska frågor kvar",
+      "selectLocation": "Välj plats (valfritt)",
+      "signatureNotAvailable": "Signaturinsamling tillgänglig i mobilappen"
     },
     "buttons": {
       "newAssessment": "Ny bedömning",
@@ -1000,13 +1015,34 @@
     "nextItem": "Nästa Item",
     "enterResponse": "Ange ditt svar...",
     "placeholders": {
-      "checklistName": "Daglig gaffeltruckinspektion"
+      "checklistName": "Daglig gaffeltruckinspektion",
+      "comment": "Lägg till en anteckning...",
+      "generalComments": "Lägg till eventuella övergripande kommentarer...",
+      "select": "Välj ett alternativ...",
+      "text": "Ange ditt svar..."
     },
     "approve": "Godkänn",
     "reject": "Avvisa",
     "approved": "Godkänd",
     "rejected": "Avvisad",
-    "submittedBy": "Inskickad av"
+    "submittedBy": "Inskickad av",
+    "actions": {
+      "submit": "Skicka in checklista",
+      "uploadPhoto": "Ladda upp foto"
+    },
+    "options": {
+      "fail": "Underkänd",
+      "na": "Ej tillämpligt",
+      "no": "Nej",
+      "pass": "Godkänd",
+      "yes": "Ja"
+    },
+    "success": {
+      "submitted": "Checklistan har skickats in!"
+    },
+    "validation": {
+      "requiredFields": "Besvara alla obligatoriska frågor innan du skickar in."
+    }
   },
   "content": {
     "title": "Innehåll",

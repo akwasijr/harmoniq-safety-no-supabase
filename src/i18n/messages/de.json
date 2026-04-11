@@ -39,7 +39,11 @@
     "dismiss": "Verwerfen",
     "noPermission": "You don't have permission to perform this action",
     "noEditPermission": "You don't have permission to edit settings. Contact your administrator for access.",
-    "readMore": "Mehr lesen"
+    "readMore": "Mehr lesen",
+    "date": "Datum",
+    "done": "Fertig",
+    "error": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "submitting": "Wird gesendet..."
   },
   "nav": {
     "home": "Startseite",
@@ -953,7 +957,18 @@
       "inProgress": "In Bearbeitung",
       "completed": "Abgeschlossen",
       "completedToday": "Heute abgeschlossen",
-      "items": "Elemente"
+      "items": "Elemente",
+      "addComment": "Kommentar hinzufügen",
+      "comment": "Kommentar",
+      "draftSaved": "Entwurf gespeichert",
+      "generalComments": "Allgemeine Kommentare",
+      "location": "Standort",
+      "photoNotAvailable": "Foto-Upload in der mobilen App verfügbar",
+      "progress": "Fortschritt",
+      "readyToSubmit": "Alle erforderlichen Punkte beantwortet. Bereit zum Absenden.",
+      "requiredRemaining": "erforderliche(r) Punkt(e) verbleibend",
+      "selectLocation": "Standort auswählen (optional)",
+      "signatureNotAvailable": "Unterschriftenerfassung in der mobilen App verfügbar"
     },
     "buttons": {
       "newAssessment": "Neue Bewertung",
@@ -1000,13 +1015,34 @@
     "nextItem": "Next Item",
     "enterResponse": "Enter your response...",
     "placeholders": {
-      "checklistName": "Daily forklift inspection"
+      "checklistName": "Tägliche Gabelstaplerinspektion",
+      "comment": "Notiz hinzufügen...",
+      "generalComments": "Allgemeine Kommentare hinzufügen...",
+      "select": "Option auswählen...",
+      "text": "Geben Sie Ihre Antwort ein..."
     },
     "approve": "Genehmigen",
     "reject": "Ablehnen",
     "approved": "Genehmigt",
     "rejected": "Rejected",
-    "submittedBy": "Submitted by"
+    "submittedBy": "Eingereicht von",
+    "actions": {
+      "submit": "Checkliste absenden",
+      "uploadPhoto": "Foto hochladen"
+    },
+    "options": {
+      "fail": "Nicht bestanden",
+      "na": "Nicht zutreffend",
+      "no": "Nein",
+      "pass": "Bestanden",
+      "yes": "Ja"
+    },
+    "success": {
+      "submitted": "Checkliste erfolgreich eingereicht!"
+    },
+    "validation": {
+      "requiredFields": "Bitte beantworten Sie alle erforderlichen Fragen vor dem Absenden."
+    }
   },
   "content": {
     "title": "Inhalte",
