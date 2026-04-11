@@ -35,11 +35,9 @@ export default function DashboardRootLayout({
 
   const { resolvedTheme } = useTheme();
 
-  // Apply saved branding on mount, and re-apply when theme/company changes.
-  // Prefer user's locally-saved settings (which survive even when the DB
-  // can't be updated) over the company record from Supabase.
-  React.useEffect(() => {
-    if (!currentCompany || !resolvedTheme) return;
+  // Apply branding synchronously before paint to avoid FOUC
+  React.useLayoutEffect(() => {
+    if (!currentCompany) return;
 
     let primaryColor = currentCompany.primary_color;
     let secondaryColor = currentCompany.secondary_color;
@@ -64,7 +62,7 @@ export default function DashboardRootLayout({
         fontFamily: currentCompany.font_family,
         uiStyle: currentCompany.ui_style,
       },
-      resolvedTheme
+      resolvedTheme || "light"
     );
     return () => resetBranding();
   }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany]);

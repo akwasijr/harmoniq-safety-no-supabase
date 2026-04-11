@@ -116,7 +116,8 @@ export default function EmployeeAppRootLayout({
 
   const { resolvedTheme } = useTheme();
 
-  React.useEffect(() => {
+  // Apply branding synchronously before paint to avoid FOUC
+  React.useLayoutEffect(() => {
     if (!currentCompany) return;
 
     let primaryColor = currentCompany.primary_color;
