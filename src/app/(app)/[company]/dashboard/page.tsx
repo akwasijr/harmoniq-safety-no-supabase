@@ -420,138 +420,142 @@ export default function DashboardPage() {
 
   const recentFilteredIncidents = filteredIncidents.slice(0, 5);
 
-  // ── Focus Strip data ──
-  const focusNow = new Date();
-  const focus7Days = new Date(focusNow.getTime() + 7 * 24 * 60 * 60 * 1000);
+  // ── Focus Strip data (memoized) ──
+  type FocusStripItem = { id: string; title: string; subtitle?: string; type?: string; href: string; time?: string };
+
   const isManager = ["company_admin", "manager", "super_admin"].includes(user?.role || "");
   const isDirector = user?.role === "viewer";
 
-  type FocusStripItem = { id: string; title: string; subtitle?: string; type?: string; href: string; time?: string };
-  const focusUrgent: FocusStripItem[] = [];
-  const focusUpcoming: FocusStripItem[] = [];
-  const focusGoodToKnow: FocusStripItem[] = [];
+  const focusTabs = React.useMemo(() => {
+    const focusNow = new Date();
+    const focus7Days = new Date(focusNow.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const daysOverdue = (date: string) => {
-    const d = Math.floor((focusNow.getTime() - new Date(date).getTime()) / 86400000);
-    return d === 0 ? "Today" : `${d}d overdue`;
-  };
-  const daysUntil = (date: string) => {
-    const d = Math.ceil((new Date(date).getTime() - focusNow.getTime()) / 86400000);
-    return d === 0 ? "Today" : d === 1 ? "Tomorrow" : `In ${d}d`;
-  };
+    const focusUrgent: FocusStripItem[] = [];
+    const focusUpcoming: FocusStripItem[] = [];
+    const focusGoodToKnow: FocusStripItem[] = [];
 
-  // Manager sees: all critical incidents, overdue items across the board
-  if (isManager) {
-    incidents.filter((i) => (i.severity === "critical" || i.severity === "high") && i.status !== "resolved" && i.status !== "archived")
-      .slice(0, 3).forEach((i) => {
-        const loc = locations.find((l) => l.id === i.location_id);
-        focusUrgent.push({ id: `inc-${i.id}`, title: i.title, subtitle: `${i.reference_number || ""} · ${loc?.name || i.building || "Unknown location"}`, type: i.severity, href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) });
-      });
-    tickets.filter((t_) => t_.status !== "resolved" && t_.status !== "closed" && t_.due_date && new Date(t_.due_date) < focusNow)
-      .slice(0, 3).forEach((t_) => focusUrgent.push({ id: `tk-${t_.id}`, title: t_.title, subtitle: `Ticket · ${t_.priority} priority`, type: "Ticket", href: `/${company}/dashboard/tickets/${t_.id}`, time: daysOverdue(t_.due_date!) }));
-    workOrders.filter((w) => w.status !== "completed" && w.status !== "cancelled" && w.due_date && new Date(w.due_date) < focusNow)
-      .slice(0, 3).forEach((w) => focusUrgent.push({ id: `wo-${w.id}`, title: w.title, subtitle: `Work order · ${w.type.replace(/_/g, " ")}`, type: "WO", href: `/${company}/dashboard/work-orders/${w.id}`, time: daysOverdue(w.due_date!) }));
-    correctiveActions.filter((c) => c.status !== "completed" && c.due_date && new Date(c.due_date) < focusNow)
-      .slice(0, 2).forEach((c) => focusUrgent.push({ id: `ca-${c.id}`, title: c.description?.slice(0, 60) || "Corrective action", subtitle: `${c.severity} severity`, type: "Action", href: `/${company}/dashboard/corrective-actions/${c.id}`, time: daysOverdue(c.due_date!) }));
+    const daysOverdue = (date: string) => {
+      const d = Math.floor((focusNow.getTime() - new Date(date).getTime()) / 86400000);
+      return d === 0 ? "Today" : `${d}d overdue`;
+    };
+    const daysUntil = (date: string) => {
+      const d = Math.ceil((new Date(date).getTime() - focusNow.getTime()) / 86400000);
+      return d === 0 ? "Today" : d === 1 ? "Tomorrow" : `In ${d}d`;
+    };
 
-    // Upcoming
-    tickets.filter((t_) => t_.status !== "resolved" && t_.status !== "closed" && t_.due_date && new Date(t_.due_date) >= focusNow && new Date(t_.due_date) <= focus7Days)
-      .slice(0, 3).forEach((t_) => focusUpcoming.push({ id: `tk-${t_.id}`, title: t_.title, subtitle: `Ticket · ${t_.priority} priority`, type: "Ticket", href: `/${company}/dashboard/tickets/${t_.id}`, time: daysUntil(t_.due_date!) }));
-    workOrders.filter((w) => w.status !== "completed" && w.status !== "cancelled" && w.due_date && new Date(w.due_date) >= focusNow && new Date(w.due_date) <= focus7Days)
-      .slice(0, 3).forEach((w) => focusUpcoming.push({ id: `wo-${w.id}`, title: w.title, subtitle: `Work order · ${w.type.replace(/_/g, " ")}`, type: "WO", href: `/${company}/dashboard/work-orders/${w.id}`, time: daysUntil(w.due_date!) }));
-  }
+    // Manager sees: all critical incidents, overdue items across the board
+    if (isManager) {
+      incidents.filter((i) => (i.severity === "critical" || i.severity === "high") && i.status !== "resolved" && i.status !== "archived")
+        .slice(0, 3).forEach((i) => {
+          const loc = locations.find((l) => l.id === i.location_id);
+          focusUrgent.push({ id: `inc-${i.id}`, title: i.title, subtitle: `${i.reference_number || ""} · ${loc?.name || i.building || "Unknown location"}`, type: i.severity, href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) });
+        });
+      tickets.filter((t_) => t_.status !== "resolved" && t_.status !== "closed" && t_.due_date && new Date(t_.due_date) < focusNow)
+        .slice(0, 3).forEach((t_) => focusUrgent.push({ id: `tk-${t_.id}`, title: t_.title, subtitle: `Ticket · ${t_.priority} priority`, type: "Ticket", href: `/${company}/dashboard/tickets/${t_.id}`, time: daysOverdue(t_.due_date!) }));
+      workOrders.filter((w) => w.status !== "completed" && w.status !== "cancelled" && w.due_date && new Date(w.due_date) < focusNow)
+        .slice(0, 3).forEach((w) => focusUrgent.push({ id: `wo-${w.id}`, title: w.title, subtitle: `Work order · ${w.type.replace(/_/g, " ")}`, type: "WO", href: `/${company}/dashboard/work-orders/${w.id}`, time: daysOverdue(w.due_date!) }));
+      correctiveActions.filter((c) => c.status !== "completed" && c.due_date && new Date(c.due_date) < focusNow)
+        .slice(0, 2).forEach((c) => focusUrgent.push({ id: `ca-${c.id}`, title: c.description?.slice(0, 60) || "Corrective action", subtitle: `${c.severity} severity`, type: "Action", href: `/${company}/dashboard/corrective-actions/${c.id}`, time: daysOverdue(c.due_date!) }));
 
-  // Director sees: high-level status items
-  if (isDirector) {
-    incidents.filter((i) => i.severity === "critical" && i.status !== "resolved" && i.status !== "archived")
-      .slice(0, 3).forEach((i) => {
-        const loc = locations.find((l) => l.id === i.location_id);
-        focusUrgent.push({ id: `inc-${i.id}`, title: i.title, subtitle: `${i.reference_number || ""} · ${loc?.name || ""}`, type: i.severity, href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) });
-      });
-  }
-
-  // Good to Know for both
-  const weekAgo = new Date(focusNow.getTime() - 7 * 86400000);
-  const resolvedThisWeek = incidents.filter((i) => i.status === "resolved" && i.resolved_at && new Date(i.resolved_at) > weekAgo).length;
-  if (resolvedThisWeek > 0) focusGoodToKnow.push({ id: "resolved-week", title: `${resolvedThisWeek} incidents resolved this week`, subtitle: "Team is making progress", href: `/${company}/dashboard/incidents` });
-  if (expiryAlerts.length === 0) focusGoodToKnow.push({ id: "no-expiry", title: "No upcoming asset expiries", subtitle: "All assets within compliance window", href: `/${company}/dashboard/assets` });
-
-  // Training: expired certifications → urgent
-  const expiredCerts = workerCertifications.filter((c) => c.expiry_date && new Date(c.expiry_date) < focusNow && c.status !== "revoked");
-  expiredCerts.slice(0, 3).forEach((c) => {
-    const worker = users.find((u) => u.id === c.user_id);
-    focusUrgent.push({ id: `cert-${c.id}`, title: `${worker?.full_name || "Worker"} — expired certification`, subtitle: c.issuer || "", type: "Training", href: `/${company}/dashboard/training`, time: daysOverdue(c.expiry_date!) });
-  });
-
-  // Training: expiring certs within 30 days → upcoming
-  const thirtyDays = new Date(focusNow.getTime() + 30 * 86400000);
-  const expiringCerts = workerCertifications.filter((c) => c.expiry_date && new Date(c.expiry_date) >= focusNow && new Date(c.expiry_date) <= thirtyDays);
-  expiringCerts.slice(0, 3).forEach((c) => {
-    const worker = users.find((u) => u.id === c.user_id);
-    focusUpcoming.push({ id: `cert-${c.id}`, title: `${worker?.full_name || "Worker"} — cert expiring`, subtitle: c.issuer || "", type: "Training", href: `/${company}/dashboard/training`, time: daysUntil(c.expiry_date!) });
-  });
-
-  // Training: overdue assignments → urgent
-  trainingAssignments.filter((a) => a.status !== "completed" && new Date(a.due_date) < focusNow)
-    .slice(0, 2).forEach((a) => {
-      const worker = users.find((u) => u.id === a.user_id);
-      focusUrgent.push({ id: `ta-${a.id}`, title: `${worker?.full_name || "Worker"} — overdue training`, subtitle: a.course_name, type: "Training", href: `/${company}/dashboard/training`, time: daysOverdue(a.due_date) });
-    });
-
-  // Compliance: overdue obligations → urgent
-  const allObligations = complianceObligations;
-  allObligations.filter((o) => o.is_active && o.next_due_date && new Date(o.next_due_date) < focusNow && o.status !== "compliant")
-    .slice(0, 3).forEach((o) => {
-      focusUrgent.push({ id: `co-${o.id}`, title: o.title, subtitle: o.regulation, type: "Compliance", href: `/${company}/dashboard/compliance`, time: daysOverdue(o.next_due_date) });
-    });
-
-  // Compliance: due soon → upcoming
-  allObligations.filter((o) => o.is_active && o.next_due_date && new Date(o.next_due_date) >= focusNow && new Date(o.next_due_date) <= focus7Days)
-    .slice(0, 3).forEach((o) => {
-      focusUpcoming.push({ id: `co-${o.id}`, title: o.title, subtitle: o.regulation, type: "Compliance", href: `/${company}/dashboard/compliance`, time: daysUntil(o.next_due_date) });
-    });
-
-  // Checklist: failed items without linked work orders → upcoming suggestions
-  if (isManager) {
-    const recentSubmissions = checklistSubmissions
-      .filter((s) => s.status === "submitted" && new Date(s.created_at) > weekAgo);
-
-    for (const sub of recentSubmissions) {
-      const failedItems = sub.responses.filter((r) => r.value === false);
-      if (failedItems.length === 0) continue;
-
-      const template = checklistTemplates.find((t) => t.id === sub.template_id);
-      const templateName = template?.name || "Checklist";
-
-      // Check if a work order already exists for this submission
-      const hasLinkedWO = workOrders.some((wo) => wo.checklist_submission_id === sub.id);
-      if (hasLinkedWO) continue;
-
-      focusUpcoming.push({
-        id: `cl-fail-${sub.id}`,
-        title: `${failedItems.length} failed item${failedItems.length > 1 ? "s" : ""} in ${templateName}`,
-        subtitle: "Create work order?",
-        type: "Inspection",
-        href: `/${company}/dashboard/checklists/${sub.template_id}`,
-        time: daysOverdue(sub.created_at),
-      });
+      // Upcoming
+      tickets.filter((t_) => t_.status !== "resolved" && t_.status !== "closed" && t_.due_date && new Date(t_.due_date) >= focusNow && new Date(t_.due_date) <= focus7Days)
+        .slice(0, 3).forEach((t_) => focusUpcoming.push({ id: `tk-${t_.id}`, title: t_.title, subtitle: `Ticket · ${t_.priority} priority`, type: "Ticket", href: `/${company}/dashboard/tickets/${t_.id}`, time: daysUntil(t_.due_date!) }));
+      workOrders.filter((w) => w.status !== "completed" && w.status !== "cancelled" && w.due_date && new Date(w.due_date) >= focusNow && new Date(w.due_date) <= focus7Days)
+        .slice(0, 3).forEach((w) => focusUpcoming.push({ id: `wo-${w.id}`, title: w.title, subtitle: `Work order · ${w.type.replace(/_/g, " ")}`, type: "WO", href: `/${company}/dashboard/work-orders/${w.id}`, time: daysUntil(w.due_date!) }));
     }
-  }
 
-  // Lost time: remind managers to update incidents without return dates
-  if (isManager) {
-    const sevenDaysAgo = new Date(focusNow.getTime() - 7 * 86400000);
-    incidents.filter((i) => i.lost_time && !i.lost_time_return_date && new Date(i.incident_date) < sevenDaysAgo && i.status !== "resolved" && i.status !== "archived")
-      .slice(0, 2).forEach((i) => {
-        focusUpcoming.push({ id: `lt-${i.id}`, title: `Update lost time: ${i.title}`, subtitle: "Return date not recorded", type: "Lost Time", href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) });
+    // Director sees: high-level status items
+    if (isDirector) {
+      incidents.filter((i) => i.severity === "critical" && i.status !== "resolved" && i.status !== "archived")
+        .slice(0, 3).forEach((i) => {
+          const loc = locations.find((l) => l.id === i.location_id);
+          focusUrgent.push({ id: `inc-${i.id}`, title: i.title, subtitle: `${i.reference_number || ""} · ${loc?.name || ""}`, type: i.severity, href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) });
+        });
+    }
+
+    // Good to Know for both
+    const weekAgo = new Date(focusNow.getTime() - 7 * 86400000);
+    const resolvedThisWeek = incidents.filter((i) => i.status === "resolved" && i.resolved_at && new Date(i.resolved_at) > weekAgo).length;
+    if (resolvedThisWeek > 0) focusGoodToKnow.push({ id: "resolved-week", title: `${resolvedThisWeek} incidents resolved this week`, subtitle: "Team is making progress", href: `/${company}/dashboard/incidents` });
+    if (expiryAlerts.length === 0) focusGoodToKnow.push({ id: "no-expiry", title: "No upcoming asset expiries", subtitle: "All assets within compliance window", href: `/${company}/dashboard/assets` });
+
+    // Training: expired certifications → urgent
+    const expiredCerts = workerCertifications.filter((c) => c.expiry_date && new Date(c.expiry_date) < focusNow && c.status !== "revoked");
+    expiredCerts.slice(0, 3).forEach((c) => {
+      const worker = users.find((u) => u.id === c.user_id);
+      focusUrgent.push({ id: `cert-${c.id}`, title: `${worker?.full_name || "Worker"} — expired certification`, subtitle: c.issuer || "", type: "Training", href: `/${company}/dashboard/training`, time: daysOverdue(c.expiry_date!) });
+    });
+
+    // Training: expiring certs within 30 days → upcoming
+    const thirtyDays = new Date(focusNow.getTime() + 30 * 86400000);
+    const expiringCerts = workerCertifications.filter((c) => c.expiry_date && new Date(c.expiry_date) >= focusNow && new Date(c.expiry_date) <= thirtyDays);
+    expiringCerts.slice(0, 3).forEach((c) => {
+      const worker = users.find((u) => u.id === c.user_id);
+      focusUpcoming.push({ id: `cert-${c.id}`, title: `${worker?.full_name || "Worker"} — cert expiring`, subtitle: c.issuer || "", type: "Training", href: `/${company}/dashboard/training`, time: daysUntil(c.expiry_date!) });
+    });
+
+    // Training: overdue assignments → urgent
+    trainingAssignments.filter((a) => a.status !== "completed" && new Date(a.due_date) < focusNow)
+      .slice(0, 2).forEach((a) => {
+        const worker = users.find((u) => u.id === a.user_id);
+        focusUrgent.push({ id: `ta-${a.id}`, title: `${worker?.full_name || "Worker"} — overdue training`, subtitle: a.course_name, type: "Training", href: `/${company}/dashboard/training`, time: daysOverdue(a.due_date) });
       });
-  }
 
-  const focusTabs = [
-    { id: "urgent" as const, label: "Urgent", dot: "bg-red-500", items: focusUrgent },
-    { id: "upcoming" as const, label: "Upcoming", dot: "bg-amber-500", items: focusUpcoming },
-    { id: "good_to_know" as const, label: "Good to Know", dot: "bg-blue-500", items: focusGoodToKnow },
-  ];
+    // Compliance: overdue obligations → urgent
+    const allObligations = complianceObligations;
+    allObligations.filter((o) => o.is_active && o.next_due_date && new Date(o.next_due_date) < focusNow && o.status !== "compliant")
+      .slice(0, 3).forEach((o) => {
+        focusUrgent.push({ id: `co-${o.id}`, title: o.title, subtitle: o.regulation, type: "Compliance", href: `/${company}/dashboard/compliance`, time: daysOverdue(o.next_due_date) });
+      });
+
+    // Compliance: due soon → upcoming
+    allObligations.filter((o) => o.is_active && o.next_due_date && new Date(o.next_due_date) >= focusNow && new Date(o.next_due_date) <= focus7Days)
+      .slice(0, 3).forEach((o) => {
+        focusUpcoming.push({ id: `co-${o.id}`, title: o.title, subtitle: o.regulation, type: "Compliance", href: `/${company}/dashboard/compliance`, time: daysUntil(o.next_due_date) });
+      });
+
+    // Checklist: failed items without linked work orders → upcoming suggestions
+    if (isManager) {
+      const recentSubmissions = checklistSubmissions
+        .filter((s) => s.status === "submitted" && new Date(s.created_at) > weekAgo);
+
+      for (const sub of recentSubmissions) {
+        const failedItems = sub.responses.filter((r) => r.value === false);
+        if (failedItems.length === 0) continue;
+
+        const template = checklistTemplates.find((t) => t.id === sub.template_id);
+        const templateName = template?.name || "Checklist";
+
+        // Check if a work order already exists for this submission
+        const hasLinkedWO = workOrders.some((wo) => wo.checklist_submission_id === sub.id);
+        if (hasLinkedWO) continue;
+
+        focusUpcoming.push({
+          id: `cl-fail-${sub.id}`,
+          title: `${failedItems.length} failed item${failedItems.length > 1 ? "s" : ""} in ${templateName}`,
+          subtitle: "Create work order?",
+          type: "Inspection",
+          href: `/${company}/dashboard/checklists/${sub.template_id}`,
+          time: daysOverdue(sub.created_at),
+        });
+      }
+    }
+
+    // Lost time: remind managers to update incidents without return dates
+    if (isManager) {
+      const sevenDaysAgo = new Date(focusNow.getTime() - 7 * 86400000);
+      incidents.filter((i) => i.lost_time && !i.lost_time_return_date && new Date(i.incident_date) < sevenDaysAgo && i.status !== "resolved" && i.status !== "archived")
+        .slice(0, 2).forEach((i) => {
+          focusUpcoming.push({ id: `lt-${i.id}`, title: `Update lost time: ${i.title}`, subtitle: "Return date not recorded", type: "Lost Time", href: `/${company}/dashboard/incidents/${i.id}`, time: daysOverdue(i.incident_date) });
+        });
+    }
+
+    return [
+      { id: "urgent" as const, label: "Urgent", dot: "bg-red-500", items: focusUrgent },
+      { id: "upcoming" as const, label: "Upcoming", dot: "bg-amber-500", items: focusUpcoming },
+      { id: "good_to_know" as const, label: "Good to Know", dot: "bg-blue-500", items: focusGoodToKnow },
+    ];
+  }, [incidents, locations, users, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, complianceObligations, checklistSubmissions, checklistTemplates, expiryAlerts, isManager, isDirector, company]);
 
   return (
     <RoleGuard allowedRoles={["manager", "company_admin", "super_admin", "viewer"]}>
