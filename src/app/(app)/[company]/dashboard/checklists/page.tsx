@@ -21,6 +21,7 @@ import {
   Trash2,
   Upload,
   Play,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,7 @@ import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
 import { downloadCsv, parseCsv } from "@/lib/csv";
+import { getDraftsForType, deleteDraft as removeDraft, type Draft } from "@/lib/draft-store";
 
 const mockRiskTemplates: { id: string; name: string; description: string; type: string; status: string; sections: number; submissions: number; lastUpdated?: string; locked: boolean }[] = [];
 const mockRiskAssessments: { id: string; template: string; templateId: string; type: string; location: string; date: string; status: string; by: string; riskLevel: string; riskScore: number }[] = [];
@@ -122,6 +124,20 @@ function getFormTypeName(formType: string): string {
   return names[formType.toLowerCase()] || formType;
 }
 
+function getRelativeTime(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const seconds = Math.floor((now - then) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "yesterday";
+  return `${days}d ago`;
+}
+
 function ChecklistsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -136,6 +152,14 @@ function ChecklistsPageContent() {
   const [showTemplatePickerModal, setShowTemplatePickerModal] = React.useState(false);
   const [showImportModal, setShowImportModal] = React.useState(false);
   const [templateImportData, setTemplateImportData] = React.useState<ParsedTemplateImport[] | null>(null);
+  const [checklistDrafts, setChecklistDrafts] = React.useState<Draft[]>([]);
+
+  // Load drafts on mount + refresh periodically
+  React.useEffect(() => {
+    setChecklistDrafts(getDraftsForType("checklist"));
+    const interval = setInterval(() => setChecklistDrafts(getDraftsForType("checklist")), 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Read tab from URL query params on mount
   React.useEffect(() => {
@@ -493,7 +517,7 @@ function ChecklistsPageContent() {
 
   const handleStartNew = () => {
     if (activeTab === "risk-assessment") {
-      setShowNewAssessmentModal(true);
+      router.push(`/${company}/dashboard/risk-assessments/new`);
     } else {
       setShowTemplatePickerModal(true);
     }
@@ -594,7 +618,7 @@ function ChecklistsPageContent() {
                       key={template.id}
                       onClick={() => {
                         setShowTemplatePickerModal(false);
-                        router.push(`/${company}/dashboard/checklists/${template.id}?mode=new`);
+                        router.push(`/${company}/dashboard/checklists/fill/${template.id}`);
                       }}
                       className="flex items-start gap-3 p-4 rounded-lg border hover:bg-muted/50 text-left transition-colors"
                     >
@@ -897,6 +921,61 @@ Fire Safety,Monthly check,safety,Extinguishers OK?,yes_no_na,true`}</pre>
         onDateRangeChange={(value) => { setDateRange(value); setCurrentPage(1); }}
         showDateRange={subTab === "submissions"}
       />
+
+      {/* Drafts Section */}
+      {activeTab === "checklists" && subTab === "submissions" && checklistDrafts.length > 0 && (
+        <Card className="border-dashed">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <span className="text-sm font-medium">
+                {checklistDrafts.length} {checklistDrafts.length === 1 ? "Draft" : "Drafts"}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {checklistDrafts.map((draft) => (
+                <div
+                  key={draft.id}
+                  className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{draft.template_name}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary"
+                          style={{ width: `${draft.progress}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {draft.progress}% — {getRelativeTime(draft.updated_at)}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/${company}/dashboard/checklists/fill/${draft.template_id}`)}
+                  >
+                    Resume
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removeDraft(draft.id);
+                      setChecklistDrafts(getDraftsForType("checklist"));
+                    }}
+                    className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors"
+                    title="Delete draft"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Table */}
       <Card>
