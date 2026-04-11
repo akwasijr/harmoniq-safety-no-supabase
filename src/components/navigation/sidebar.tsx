@@ -92,7 +92,14 @@ const companyNavGroups: NavGroup[] = [
         href: "/dashboard/checklists",
         icon: ClipboardCheck,
         exactMatch: true,
-        additionalPaths: ["/dashboard/risk-assessments", "/dashboard/inspections", "/dashboard/checklists/my-templates", "/dashboard/checklists/templates"],
+        additionalPaths: ["/dashboard/risk-assessments", "/dashboard/inspections"],
+      },
+      {
+        title: "Templates",
+        href: "/dashboard/checklists/my-templates",
+        icon: LibraryBig,
+        additionalPaths: ["/dashboard/checklists/templates", "/dashboard/checklists/procedures"],
+        requiredRoles: ["company_admin", "manager", "super_admin"],
       },
       {
         title: "Permits",
