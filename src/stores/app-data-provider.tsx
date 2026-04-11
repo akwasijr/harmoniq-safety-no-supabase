@@ -28,6 +28,8 @@ import { ComplianceDocumentsProvider } from "@/stores/compliance-documents-store
 import { PermitsProvider } from "@/stores/permits-store";
 import { WasteLogsProvider } from "@/stores/waste-logs-store";
 import { SpillRecordsProvider } from "@/stores/spill-records-store";
+import { ProcedureTemplatesProvider } from "@/stores/procedure-templates-store";
+import { ProcedureSubmissionsProvider } from "@/stores/procedure-submissions-store";
 import { NotificationsStoreProvider } from "@/stores/notifications-store";
 
 type DataProvider = React.ComponentType<{ children: React.ReactNode }>;
@@ -61,6 +63,8 @@ const APP_DATA_PROVIDERS: DataProvider[] = [
   PermitsProvider,
   WasteLogsProvider,
   SpillRecordsProvider,
+  ProcedureTemplatesProvider,
+  ProcedureSubmissionsProvider,
   NotificationsStoreProvider,
 ];
 

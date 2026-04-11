@@ -1692,6 +1692,56 @@ export interface SpillRecord {
 }
 
 // ============================================
+// PROCEDURES
+// ============================================
+
+export type ProcedureRecurrence = "per_event" | "daily" | "weekly" | "monthly" | "quarterly" | "annual";
+
+export interface ProcedureStep {
+  id: string;
+  order: number;
+  type: "checklist" | "risk_assessment";
+  template_id: string;
+  template_name: string;
+  required: boolean;
+}
+
+export interface ProcedureTemplate {
+  id: string;
+  company_id: string;
+  name: string;
+  description: string | null;
+  industry: string | null;
+  steps: ProcedureStep[];
+  recurrence: ProcedureRecurrence;
+  is_builtin: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcedureSubmission {
+  id: string;
+  company_id: string;
+  procedure_template_id: string;
+  submitter_id: string;
+  location_id: string | null;
+  status: "in_progress" | "completed" | "cancelled";
+  current_step: number;
+  step_submissions: {
+    step_id: string;
+    submission_id: string | null;
+    status: "pending" | "in_progress" | "completed" | "skipped";
+    completed_at: string | null;
+  }[];
+  started_at: string;
+  completed_at: string | null;
+  next_due_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
 // OFFLINE SYNC
 // ============================================
 

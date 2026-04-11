@@ -17,6 +17,7 @@ import {
   Play,
   FileText,
   Eye,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,6 @@ import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import { getTemplatePublishStatus } from "@/lib/template-activation";
-import type { ChecklistTemplate } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
@@ -37,7 +37,7 @@ import { getDraftsForType, deleteDraft as removeDraft, type Draft } from "@/lib/
 
 const mockRiskAssessments: { id: string; template: string; templateId: string; type: string; location: string; date: string; status: string; by: string; riskLevel: string; riskScore: number }[] = [];
 
-type MainTabType = "checklists" | "risk-assessment";
+type MainTabType = "checklists" | "risk-assessment" | "procedures";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
@@ -78,6 +78,7 @@ function ChecklistsPageContent() {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [statusFilter, setStatusFilter] = React.useState("");
   const [showTemplatePickerModal, setShowTemplatePickerModal] = React.useState(false);
+  const [showProcedurePickerModal, setShowProcedurePickerModal] = React.useState(false);
   const [checklistDrafts, setChecklistDrafts] = React.useState<Draft[]>([]);
 
   // Load drafts on mount + refresh periodically
@@ -90,7 +91,7 @@ function ChecklistsPageContent() {
   // Read tab from URL query params on mount
   React.useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam === "risk-assessment" || tabParam === "checklists") {
+    if (tabParam === "risk-assessment" || tabParam === "checklists" || tabParam === "procedures") {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -104,6 +105,8 @@ function ChecklistsPageContent() {
     correctiveActions,
     users,
     locations,
+    procedureTemplates,
+    procedureSubmissions,
     stores,
   } = useCompanyData();
   const { isLoading } = stores.checklistTemplates;
@@ -180,6 +183,7 @@ function ChecklistsPageContent() {
   const mainTabs = [
     { id: "checklists" as MainTabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
     { id: "risk-assessment" as MainTabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
+    { id: "procedures" as MainTabType, label: "Procedures", icon: Layers },
   ];
 
   const getFilters = () => {
@@ -269,11 +273,6 @@ function ChecklistsPageContent() {
     );
   }, [checklistTemplatesStore]);
 
-  const tableLength = activeTab === "checklists" ? checklistSubmissions.length : riskSubmissions.length;
-  const totalPages = Math.ceil(tableLength / ITEMS_PER_PAGE);
-
-  const paginatedChecklistSubmissions = checklistSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const paginatedRiskSubmissions = riskSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   // Reset filters when main tab changes
   React.useEffect(() => {
@@ -324,16 +323,108 @@ function ChecklistsPageContent() {
         </div>
       );
     }
+    if (activeTab === "procedures") {
+      const inProgress = procedureSubmissionRows.filter((s) => s.status === "in_progress").length;
+      const completed = procedureSubmissionRows.filter((s) => s.status === "completed").length;
+      const cancelled = procedureSubmissionRows.filter((s) => s.status === "cancelled").length;
+      return (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KPICard title="Total Procedures" value={procedureSubmissionRows.length} icon={Layers} />
+          <KPICard title={t("checklists.labels.inProgress")} value={inProgress} icon={Clock} />
+          <KPICard title={t("checklists.labels.completed")} value={completed} icon={CheckCircle} />
+          <KPICard title="Cancelled" value={cancelled} icon={AlertTriangle} />
+        </div>
+      );
+    }
     return null;
   };
 
   const handleStartNew = () => {
     if (activeTab === "risk-assessment") {
       router.push(`/${company}/dashboard/risk-assessments/new`);
+    } else if (activeTab === "procedures") {
+      setShowProcedurePickerModal(true);
     } else {
       setShowTemplatePickerModal(true);
     }
   };
+
+  // Active procedure templates for "Start Procedure" picker
+  const activeProcedureTemplates = React.useMemo(() => {
+    return procedureTemplates.filter((tpl) => tpl.is_active);
+  }, [procedureTemplates]);
+
+  // Procedure submissions with display data
+  const procedureSubmissionRows = React.useMemo(() => {
+    return procedureSubmissions.map((sub) => {
+      const tpl = procedureTemplates.find((t) => t.id === sub.procedure_template_id);
+      const submitter = users.find((u) => u.id === sub.submitter_id);
+      return {
+        id: sub.id,
+        name: tpl?.name || "Unknown Procedure",
+        progress: `Step ${sub.current_step} of ${sub.step_submissions.length}`,
+        status: sub.status,
+        startedAt: sub.started_at,
+        recurrence: tpl?.recurrence || "per_event",
+        submitter: submitter?.full_name || "Unknown",
+      };
+    });
+  }, [procedureSubmissions, procedureTemplates, users]);
+
+  const filteredProcedureSubmissions = React.useMemo(() => {
+    let data = procedureSubmissionRows;
+    if (statusFilter) {
+      data = data.filter((s) => s.status === statusFilter);
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      data = data.filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          s.submitter.toLowerCase().includes(q)
+      );
+    }
+    return data;
+  }, [procedureSubmissionRows, statusFilter, searchQuery]);
+
+  const handleStartProcedure = (templateId: string) => {
+    const tpl = procedureTemplates.find((t) => t.id === templateId);
+    if (!tpl) return;
+    const now = new Date().toISOString();
+    const submission = {
+      id: `proc_sub_${Date.now()}`,
+      company_id: stores.procedureSubmissions.items[0]?.company_id || "",
+      procedure_template_id: templateId,
+      submitter_id: "",
+      location_id: null,
+      status: "in_progress" as const,
+      current_step: 1,
+      step_submissions: tpl.steps.map((step) => ({
+        step_id: step.id,
+        submission_id: null,
+        status: "pending" as const,
+        completed_at: null,
+      })),
+      started_at: now,
+      completed_at: null,
+      next_due_date: null,
+      created_at: now,
+      updated_at: now,
+    };
+    stores.procedureSubmissions.add(submission);
+    setShowProcedurePickerModal(false);
+  };
+
+  const tableLength = activeTab === "checklists"
+    ? checklistSubmissions.length
+    : activeTab === "procedures"
+    ? filteredProcedureSubmissions.length
+    : riskSubmissions.length;
+  const totalPages = Math.ceil(tableLength / ITEMS_PER_PAGE);
+
+  const paginatedChecklistSubmissions = checklistSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const paginatedRiskSubmissions = riskSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const paginatedProcedureSubmissions = filteredProcedureSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const handleExportCSV = () => {
     if (activeTab === "checklists") {
@@ -442,6 +533,57 @@ function ChecklistsPageContent() {
                   My Templates
                 </button>.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Procedure Picker Modal (Start Procedure) */}
+      {showProcedurePickerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowProcedurePickerModal(false)}>
+          <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b p-4">
+              <h2 className="text-lg font-semibold">Start a procedure</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowProcedurePickerModal(false)} aria-label="Close">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              <p className="text-sm text-muted-foreground mb-4">
+                Select an active procedure template to begin.
+              </p>
+              {activeProcedureTemplates.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <Layers className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">No active procedure templates available.</p>
+                  <p className="text-xs mt-1">Create or activate a procedure template first.</p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {activeProcedureTemplates.map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      onClick={() => handleStartProcedure(tpl.id)}
+                      className="flex items-start gap-3 p-4 rounded-lg border hover:bg-muted/50 text-left transition-colors"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                        <Layers className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium">{tpl.name}</p>
+                        {tpl.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2">{tpl.description}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-muted-foreground">{tpl.steps.length} steps</span>
+                          <span className="text-xs text-muted-foreground">·</span>
+                          <span className="text-xs text-muted-foreground capitalize">{tpl.recurrence.replace(/_/g, " ")}</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -679,6 +821,73 @@ function ChecklistsPageContent() {
                         </td>
                         <td className="py-3">
                           <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            )}
+
+            {/* Procedure Submissions Table */}
+            {activeTab === "procedures" && (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-3 font-medium">Procedure</th>
+                    <th className="pb-3 font-medium">Progress</th>
+                    <th className="hidden pb-3 font-medium md:table-cell">Started By</th>
+                    <th className="hidden pb-3 font-medium lg:table-cell">Started</th>
+                    <th className="pb-3 font-medium">Recurrence</th>
+                    <th className="pb-3 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedProcedureSubmissions.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                        <Layers className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                        <p>No procedure submissions yet.</p>
+                        <p className="text-xs mt-1">Start a procedure to begin tracking progress.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedProcedureSubmissions.map((sub) => (
+                      <tr
+                        key={sub.id}
+                        className="border-b last:border-0 hover:bg-muted/50 transition-colors"
+                      >
+                        <td className="py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                              <Layers className="h-4 w-4 text-primary" />
+                            </div>
+                            <p className="font-medium">{sub.name}</p>
+                          </div>
+                        </td>
+                        <td className="py-3 text-xs">{sub.progress}</td>
+                        <td className="hidden py-3 md:table-cell text-xs text-muted-foreground">{sub.submitter}</td>
+                        <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">
+                          {new Date(sub.startedAt).toLocaleDateString()}
+                        </td>
+                        <td className="py-3">
+                          <Badge variant="secondary" className="text-xs capitalize">
+                            {sub.recurrence.replace(/_/g, " ")}
+                          </Badge>
+                        </td>
+                        <td className="py-3">
+                          <Badge
+                            variant={
+                              sub.status === "completed"
+                                ? "success"
+                                : sub.status === "cancelled"
+                                ? "cancelled"
+                                : "in_progress"
+                            }
+                            className="text-xs"
+                          >
+                            {sub.status.replace(/_/g, " ")}
+                          </Badge>
                         </td>
                       </tr>
                     ))

@@ -27,6 +27,8 @@ import { useComplianceDocumentsStore } from "@/stores/compliance-documents-store
 import { usePermitsStore } from "@/stores/permits-store";
 import { useWasteLogsStore } from "@/stores/waste-logs-store";
 import { useSpillRecordsStore } from "@/stores/spill-records-store";
+import { useProcedureTemplatesStore } from "@/stores/procedure-templates-store";
+import { useProcedureSubmissionsStore } from "@/stores/procedure-submissions-store";
 
 /**
  * Returns all entity stores with items pre-filtered by the current user's company.
@@ -65,6 +67,8 @@ export function useCompanyData() {
   const permitsStore = usePermitsStore();
   const wasteLogsStore = useWasteLogsStore();
   const spillRecordsStore = useSpillRecordsStore();
+  const procedureTemplatesStore = useProcedureTemplatesStore();
+  const procedureSubmissionsStore = useProcedureSubmissionsStore();
 
   const incidents = useMemo(() => incidentsStore.itemsForCompany(companyId), [incidentsStore, companyId]);
   const assets = useMemo(() => assetsStore.itemsForCompany(companyId), [assetsStore, companyId]);
@@ -92,6 +96,8 @@ export function useCompanyData() {
   const permits = useMemo(() => permitsStore.itemsForCompany(companyId), [permitsStore, companyId]);
   const wasteLogs = useMemo(() => wasteLogsStore.itemsForCompany(companyId), [wasteLogsStore, companyId]);
   const spillRecords = useMemo(() => spillRecordsStore.itemsForCompany(companyId), [spillRecordsStore, companyId]);
+  const procedureTemplates = useMemo(() => procedureTemplatesStore.itemsForCompany(companyId), [procedureTemplatesStore, companyId]);
+  const procedureSubmissions = useMemo(() => procedureSubmissionsStore.itemsForCompany(companyId), [procedureSubmissionsStore, companyId]);
 
   return {
     incidents,
@@ -120,6 +126,8 @@ export function useCompanyData() {
     permits,
     wasteLogs,
     spillRecords,
+    procedureTemplates,
+    procedureSubmissions,
     // Expose raw stores for mutations (add/update/remove don't need filtering)
     stores: {
       incidents: incidentsStore,
@@ -148,6 +156,8 @@ export function useCompanyData() {
       permits: permitsStore,
       wasteLogs: wasteLogsStore,
       spillRecords: spillRecordsStore,
+      procedureTemplates: procedureTemplatesStore,
+      procedureSubmissions: procedureSubmissionsStore,
     },
     companyId,
   };
