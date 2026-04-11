@@ -95,7 +95,7 @@ const companyNavGroups: NavGroup[] = [
         additionalPaths: ["/dashboard/risk-assessments", "/dashboard/inspections"],
       },
       {
-        title: "Templates",
+        title: "Template Library",
         href: "/dashboard/checklists/my-templates",
         icon: LibraryBig,
         additionalPaths: ["/dashboard/checklists/templates", "/dashboard/checklists/procedures"],

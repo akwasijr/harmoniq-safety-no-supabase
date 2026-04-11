@@ -28,6 +28,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useTranslation } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
+import { useCompanyStore } from "@/stores/company-store";
 import { RoleGuard } from "@/components/auth/role-guard";
 import type { ChecklistTemplate } from "@/types";
 import { cloneChecklistTemplate, getTemplatePublishStatus } from "@/lib/template-activation";
@@ -38,6 +40,8 @@ function MyTemplatesContent() {
   const router = useRouter();
   const company = useCompanyParam();
   const { t } = useTranslation();
+  const { currentCompany } = useAuth();
+  const { update: updateCompany } = useCompanyStore();
   const { checklistTemplates: templates, checklistSubmissions: submissions, stores } = useCompanyData();
   const { add: addItem, update: updateItem, remove: removeItem } = stores.checklistTemplates;
 
@@ -45,6 +49,7 @@ function MyTemplatesContent() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [menuOpenId, setMenuOpenId] = React.useState<string | null>(null);
+  const [contentTab, setContentTab] = React.useState<"checklists" | "risk">("checklists");
 
   // Only show company templates (not the raw industry templates)
   const companyTemplates = templates;
@@ -214,7 +219,27 @@ function MyTemplatesContent() {
         </div>
       </div>
 
+      {/* Content sub-tabs: Checklists / Risk Assessments */}
+      <div className="flex gap-2">
+        <Button
+          variant={contentTab === "checklists" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setContentTab("checklists")}
+        >
+          Checklists
+        </Button>
+        <Button
+          variant={contentTab === "risk" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setContentTab("risk")}
+        >
+          Risk Assessments
+        </Button>
+      </div>
+
       {/* Status Sub-tabs */}
+      {contentTab === "checklists" && (
+      <>
       <div className="flex items-center gap-2">
         {statusTabs.map((tab) => (
           <button
@@ -415,6 +440,62 @@ function MyTemplatesContent() {
           )}
         </CardContent>
       </Card>
+      </>
+      )}
+
+      {/* Risk Assessments Tab */}
+      {contentTab === "risk" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Risk Assessment Forms</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Risk assessment forms are country-specific. Activate the ones your team needs. Workers will see activated forms when starting a new risk assessment.
+            </p>
+            <div className="space-y-2">
+              {[
+                { id: "jha", name: "Job Hazard Analysis (JHA)", region: "US", regulation: "OSHA" },
+                { id: "jsa", name: "Job Safety Analysis (JSA)", region: "US", regulation: "OSHA" },
+                { id: "rie", name: "RI&E Assessment", region: "NL", regulation: "Arbowet Art. 5" },
+                { id: "arbowet", name: "Arbowet Compliance Audit", region: "NL", regulation: "Arbowet" },
+                { id: "sam", name: "SAM Assessment", region: "SE", regulation: "AFS 2001:1" },
+                { id: "osa", name: "OSA Assessment", region: "SE", regulation: "AFS" },
+              ].map((form) => {
+                const isHidden = (currentCompany?.hidden_assessment_types || []).includes(form.id);
+                return (
+                  <div key={form.id} className="flex items-center justify-between rounded-lg border px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium">{form.name}</p>
+                      <p className="text-xs text-muted-foreground">{form.region} · {form.regulation}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!currentCompany) return;
+                        const hidden = currentCompany.hidden_assessment_types || [];
+                        const updated = isHidden
+                          ? hidden.filter((id) => id !== form.id)
+                          : [...hidden, form.id];
+                        updateCompany(currentCompany.id, { hidden_assessment_types: updated });
+                      }}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                        !isHidden ? "bg-primary" : "bg-muted"
+                      )}
+                    >
+                      <span className={cn(
+                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                        !isHidden ? "translate-x-6" : "translate-x-1"
+                      )} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
