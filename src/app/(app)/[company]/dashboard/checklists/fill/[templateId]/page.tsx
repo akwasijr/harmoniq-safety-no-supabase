@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useCompanyData } from "@/hooks/use-company-data";
+import { useChecklistTemplatesStore } from "@/stores/checklists-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
@@ -46,13 +47,12 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { checklistTemplates, locations, stores, companyId } = useCompanyData();
-  const { isLoading, items: allTemplates } = stores.checklistTemplates;
-
-  // Look up template from multiple sources to handle all cases:
-  // 1. Raw store items (includes built-in + company)
-  // 2. Company-filtered items (useCompanyData)
-  // 3. Hardcoded built-in templates (in case store was overwritten)
-  const template = allTemplates.find((tpl) => tpl.id === templateId)
+  
+  // Use the store hook DIRECTLY to bypass any potential filtering
+  const directStore = useChecklistTemplatesStore();
+  
+  // Look up template from multiple sources:
+  const template = directStore.items.find((tpl) => tpl.id === templateId)
     || checklistTemplates.find((tpl) => tpl.id === templateId)
     || WORK_ORDER_PROCEDURE_TEMPLATES.find((tpl) => tpl.id === templateId);
 
@@ -114,8 +114,8 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
     return () => clearInterval(interval);
   }, [template, templateId, responses, generalComments, locationId]);
 
-  // If store is loading but we already found the template, proceed
-  if (isLoading && !template) {
+  // If store is loading AND template not yet found from any source, show loading
+  if (directStore.isLoading && !template) {
     return <LoadingPage />;
   }
 
