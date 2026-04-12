@@ -307,9 +307,12 @@ export default function NewChecklistPage() {
                             </select>
                             <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
                           </div>
-                          <button onClick={() => updateItem(item.id, "required", !item.required)} className={cn("text-xs px-2 py-1 rounded border transition-colors", item.required ? "bg-primary/10 border-primary/30 text-primary" : "text-muted-foreground border-muted")}>
-                            {item.required ? "Required" : "Optional"}
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">{item.required ? "Required" : "Optional"}</span>
+                            <button type="button" onClick={() => updateItem(item.id, "required", !item.required)} className={cn("relative inline-flex h-5 w-9 items-center rounded-full transition-colors", item.required ? "bg-primary" : "bg-muted")}>
+                              <span className={cn("inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform", item.required ? "translate-x-4.5" : "translate-x-0.5")} style={{ transform: item.required ? "translateX(18px)" : "translateX(2px)" }} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                       <div className="flex flex-col gap-1 shrink-0">

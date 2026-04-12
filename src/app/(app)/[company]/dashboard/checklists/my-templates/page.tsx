@@ -204,7 +204,7 @@ const ActiveTemplateCard = React.memo(function ActiveTemplateCard({
                   Disable
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={() => { if (confirm("Remove this template permanently? It will disappear from the field app.")) onRemove(); }} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
+              <Button variant="outline" size="sm" onClick={() => { onRemove(); }} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
                 <Trash2 className="h-4 w-4" />Remove
               </Button>
             </div>
@@ -444,7 +444,7 @@ const ProcedureCard = React.memo(function ProcedureCard({
                     )
                   )}
                   {onRemove && (
-                    <Button variant="outline" size="sm" onClick={() => { if (confirm("Remove this procedure permanently?")) onRemove(); }} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
+                    <Button variant="outline" size="sm" onClick={() => { if (onRemove) onRemove(); }} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
                       <Trash2 className="h-4 w-4" />Remove
                     </Button>
                   )}
@@ -457,6 +457,31 @@ const ProcedureCard = React.memo(function ProcedureCard({
     </Card>
   );
 });
+
+// ---------------------------------------------------------------------------
+// Delete Confirmation Modal
+// ---------------------------------------------------------------------------
+function DeleteModal({ title, message, onConfirm, onClose }: { title: string; message: string; onConfirm: () => void; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div className="w-full max-w-sm mx-4 rounded-lg bg-background p-6 shadow-xl space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+            <Trash2 className="h-5 w-5 text-destructive" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold">{title}</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">{message}</p>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+          <Button variant="destructive" size="sm" onClick={() => { onConfirm(); onClose(); }}>Remove</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Import Modal
@@ -616,6 +641,7 @@ function MyTemplatesContent() {
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
   const [selectedIndustry, setSelectedIndustry] = React.useState<IndustryCode | "all">("all");
   const [showIndustryDropdown, setShowIndustryDropdown] = React.useState(false);
+  const [deleteModal, setDeleteModal] = React.useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => { setSubTab("all"); setSearchQuery(""); setSelectedIndustry("all"); setExpandedId(null); }, [mainTab]);
@@ -885,7 +911,7 @@ function MyTemplatesContent() {
                   onToggleExpand={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
                   isDisabled={!tpl.is_active}
                   onToggleDisable={() => toggleFieldAppActive(tpl)}
-                  onRemove={() => removeTemplate(tpl.id)}
+                  onRemove={() => setDeleteModal({ title: "Remove Template", message: "This will permanently remove the template from the field app.", onConfirm: () => removeTemplate(tpl.id) })}
                   companySlug={company}
                 />
               ))}
@@ -918,7 +944,7 @@ function MyTemplatesContent() {
                   onToggleExpand={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
                   isDisabled={!tpl.is_active}
                   onToggleDisable={() => toggleFieldAppActive(tpl)}
-                  onRemove={() => removeTemplate(tpl.id)}
+                  onRemove={() => setDeleteModal({ title: "Remove Template", message: "This will permanently remove the template from the field app.", onConfirm: () => removeTemplate(tpl.id) })}
                   companySlug={company}
                 />
               ))}
@@ -941,7 +967,7 @@ function MyTemplatesContent() {
                   isActive={p.is_active}
                   onToggleActive={() => updateProcedure(p.id, { is_active: !p.is_active })}
                   onDisable={() => updateProcedure(p.id, { is_active: !p.is_active })}
-                  onRemove={() => { if (confirm("Remove this procedure permanently?")) stores.procedureTemplates.remove(p.id); }}
+                  onRemove={() => setDeleteModal({ title: "Remove Procedure", message: "This will permanently remove the procedure from the field app.", onConfirm: () => stores.procedureTemplates.remove(p.id) })}
                   mode="active"
                 />
               ))}
@@ -964,7 +990,7 @@ function MyTemplatesContent() {
                 <div className="flex items-center gap-2">
                   <Badge variant="warning" className="text-[10px]">Draft</Badge>
                   <Button size="sm" variant="outline" onClick={() => togglePublish(tpl)}>Activate</Button>
-                  <button onClick={() => { if (confirm("Delete?")) removeTemplate(tpl.id); }} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                  <button onClick={() => setDeleteModal({ title: "Delete Draft", message: "This draft template will be permanently deleted.", onConfirm: () => removeTemplate(tpl.id) })} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
             ))}
@@ -997,6 +1023,7 @@ function MyTemplatesContent() {
       )}
 
       {showImport && <ImportModal onClose={() => setShowImport(false)} onImport={handleImport} />}
+      {deleteModal && <DeleteModal title={deleteModal.title} message={deleteModal.message} onConfirm={deleteModal.onConfirm} onClose={() => setDeleteModal(null)} />}
     </div>
   );
 }
