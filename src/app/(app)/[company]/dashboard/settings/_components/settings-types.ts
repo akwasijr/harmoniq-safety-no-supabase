@@ -7,10 +7,8 @@ import type { Currency } from "@/types";
 export type SettingsTabType =
   | "general"
   | "modules"
-  | "sidebar"
   | "branding"
   | "fieldApp"
-  | "industry"
   | "incidents"
   | "notifications"
   | "security"

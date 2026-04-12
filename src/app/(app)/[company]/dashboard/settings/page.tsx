@@ -7,13 +7,11 @@ import {
   Building,
   Check,
   CreditCard,
-  Factory,
   Palette,
   Save,
   Shield,
   Smartphone,
   ToggleLeft,
-  PanelLeft,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -51,7 +49,6 @@ import type { Company, Country, IndustryCode, Language } from "@/types";
 import { BrandingSettingsSection } from "./_components/branding-settings-section";
 import { FieldAppSettingsSection } from "./_components/field-app-settings-section";
 import { GeneralSettingsSection } from "./_components/general-settings-section";
-import { IndustrySettingsSection } from "./_components/industry-settings-section";
 import { IncidentSettingsSection } from "./_components/incident-settings-section";
 import { ModulesSettingsSection } from "./_components/modules-settings-section";
 import { SidebarPreferencesSection } from "./_components/sidebar-preferences-section";
@@ -156,11 +153,9 @@ export default function SettingsPage() {
   const settingsTabs = React.useMemo<SettingsTabConfig[]>(
     () => [
       { value: "general", label: t("settings.tabs.general"), icon: Building },
-      { value: "modules", label: "Modules", icon: ToggleLeft },
-      { value: "sidebar", label: "My Sidebar", icon: PanelLeft },
+      { value: "modules", label: "Modules & Sidebar", icon: ToggleLeft },
       { value: "branding", label: t("settings.tabs.branding"), icon: Palette },
       { value: "fieldApp", label: "Field App", icon: Smartphone },
-      { value: "industry", label: "Industry", icon: Factory },
       { value: "incidents", label: "Incidents", icon: AlertTriangle },
       {
         value: "notifications",
@@ -492,19 +487,20 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "modules" && (
-            <ModulesSettingsSection
-              hiddenModules={currentCompany?.hidden_modules || []}
-              onChange={(modules) => {
-                if (currentCompany) {
-                  updateCompany(currentCompany.id, { hidden_modules: modules });
-                  toast("Module settings updated");
-                }
-              }}
-            />
-          )}
-
-          {activeTab === "sidebar" && (
-            <SidebarPreferencesSection />
+            <div className="space-y-8">
+              <ModulesSettingsSection
+                hiddenModules={currentCompany?.hidden_modules || []}
+                onChange={(modules) => {
+                  if (currentCompany) {
+                    updateCompany(currentCompany.id, { hidden_modules: modules });
+                    toast("Module settings updated");
+                  }
+                }}
+              />
+              <div className="border-t pt-6">
+                <SidebarPreferencesSection />
+              </div>
+            </div>
           )}
 
           {activeTab === "branding" && (
@@ -528,16 +524,6 @@ export default function SettingsPage() {
               settings={settings}
               toggleFieldQuickAction={toggleFieldQuickAction}
               updateFieldAppSettings={updateFieldAppSettings}
-            />
-          )}
-
-          {activeTab === "industry" && (
-            <IndustrySettingsSection
-              companySlug={company}
-              companyCountry={activeCompany.country}
-              settings={settings}
-              t={t}
-              updateSetting={updateSetting}
             />
           )}
 
