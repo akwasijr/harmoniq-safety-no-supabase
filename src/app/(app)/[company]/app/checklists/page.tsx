@@ -976,6 +976,39 @@ function RiskAssessmentTabContent({
   );
 }
 
+// Simple inline incident history (no sub-tabs)
+function ReportHistoryInline({ company, incidents, user, formatDate }: {
+  company: string; incidents: Incident[]; user: User | null;
+  formatDate: (date: string | Date) => string;
+}) {
+  const myIncidents = React.useMemo(() => {
+    if (!user) return incidents.slice(0, 20);
+    return incidents.filter((i) => i.reporter_id === user.id).slice(0, 20);
+  }, [incidents, user]);
+
+  if (myIncidents.length === 0) {
+    return <div className="py-6 text-center text-muted-foreground"><p className="text-xs">No incident reports yet.</p></div>;
+  }
+
+  return (
+    <div className="space-y-2 mt-3">
+      <p className="text-xs text-muted-foreground font-medium">Recent reports</p>
+      {myIncidents.map((inc) => (
+        <Link key={inc.id} href={`/${company}/app/incidents/${inc.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+          <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", inc.severity === "critical" || inc.severity === "high" ? "bg-red-500/10" : "bg-amber-500/10")}>
+            <AlertTriangle className={cn("h-4 w-4", inc.severity === "critical" || inc.severity === "high" ? "text-red-500" : "text-amber-500")} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{inc.title}</p>
+            <p className="text-[10px] text-muted-foreground">{formatDate(new Date(inc.incident_date))} · {inc.severity}</p>
+          </div>
+          <Badge variant={inc.status === "resolved" ? "success" : inc.status === "in_progress" ? "warning" : "secondary"} className="text-[9px] shrink-0 capitalize">{inc.status.replace(/_/g, " ")}</Badge>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 function EmployeeChecklistsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -1236,29 +1269,26 @@ function EmployeeChecklistsPageContent() {
                 <p className="text-xs text-muted-foreground">Tap to start a new incident report</p>
               </div>
             </Link>
-            <ReportsTabContent
-              company={company}
-              incidents={incidents}
-              user={user}
-              t={t}
-              formatDate={formatDate}
-            />
+            <ReportHistoryInline company={company} incidents={incidents} user={user} formatDate={formatDate} />
           </div>
         )}
 
         {/* CHECKLISTS TAB */}
         {activeTab === "checklists" && subTab === "assigned" && (
-          <ChecklistsTabContent
-            company={company}
-            companyName={currentCompany?.name || company}
-            templates={templates}
-            pendingTemplates={pendingTemplates}
-            userSubmissions={userSubmissions}
-            completedToday={completedToday}
-            user={user}
-            t={t}
-            formatDate={formatDate}
-          />
+          <div className="space-y-2">
+            {pendingTemplates.filter((t) => t.category !== "risk_assessment").length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground"><CheckCircle className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">All checklists completed. Great work!</p></div>
+            ) : pendingTemplates.filter((t) => t.category !== "risk_assessment").map((tpl) => (
+              <Link key={tpl.id} href={`/${company}/app/checklists/${tpl.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><ClipboardCheck className="h-4 w-4 text-primary" /></div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{tpl.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{tpl.recurrence || "Daily"} · {tpl.items.length} items</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </Link>
+            ))}
+          </div>
         )}
         {activeTab === "checklists" && subTab === "available" && (
           <div className="space-y-2">
@@ -1301,22 +1331,20 @@ function EmployeeChecklistsPageContent() {
 
         {/* RISK ASSESSMENT TAB */}
         {activeTab === "risk-assessment" && subTab === "assigned" && (
-          <RiskAssessmentTabContent
-            company={company}
-            companyName={currentCompany?.name || company}
-            availableForms={availableAssessmentForms}
-            customRaTemplates={templates.filter((t) => t.category === "risk_assessment")}
-            inProgressAssessments={inProgressAssessments}
-            awaitingReviewAssessments={awaitingReviewAssessments}
-            reviewedAssessments={reviewedAssessments}
-            assessmentTypeConf={assessmentTypeConf}
-            riskEvaluations={riskEvaluations}
-            users={users}
-            locations={locations}
-            user={user}
-            t={t}
-            formatDate={formatDate}
-          />
+          <div className="space-y-2">
+            {inProgressAssessments.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground"><ShieldAlert className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">No assessments assigned to you.</p></div>
+            ) : inProgressAssessments.map((item) => (
+              <Link key={item.id} href={`/${company}/app/risk-assessment/${item.formId}?draft=${item.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0"><Play className="h-4 w-4 text-blue-500" /></div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{item.name}</p>
+                  <p className="text-[10px] text-muted-foreground">In progress · {item.location}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </Link>
+            ))}
+          </div>
         )}
         {activeTab === "risk-assessment" && subTab === "available" && (
           <div className="space-y-2">
