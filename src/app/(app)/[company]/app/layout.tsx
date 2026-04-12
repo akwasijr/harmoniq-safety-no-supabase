@@ -157,14 +157,8 @@ export default function EmployeeAppRootLayout({
       resolvedTheme || "light"
     );
 
-    // Set html background to primary color so scroll bounce matches the header
-    if (primaryColor) {
-      document.documentElement.style.backgroundColor = primaryColor;
-    }
-
     return () => {
       resetBranding();
-      document.documentElement.style.backgroundColor = "";
     };
   }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany]);
 
