@@ -86,7 +86,7 @@ const companyNavGroups: NavGroup[] = [
         additionalPaths: ["/dashboard/tickets"],
       },
       {
-        title: "Assessments & Checklists",
+        title: "Safety Tasks",
         href: "/dashboard/checklists",
         icon: ClipboardCheck,
         exactMatch: true,

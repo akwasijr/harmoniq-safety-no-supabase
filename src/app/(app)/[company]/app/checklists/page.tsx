@@ -25,6 +25,7 @@ import {
   HardHat,
   Scale,
   Download,
+  Layers,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
@@ -33,6 +34,9 @@ import { useLocationsStore } from "@/stores/locations-store";
 import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useUsersStore } from "@/stores/users-store";
+import { useProcedureTemplatesStore } from "@/stores/procedure-templates-store";
+import { useProcedureSubmissionsStore } from "@/stores/procedure-submissions-store";
+import { getBuiltInProcedureTemplates } from "@/data/procedure-templates";
 import { cn } from "@/lib/utils";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
@@ -42,11 +46,12 @@ import {
   type RiskAssessmentCatalogCountry,
 } from "@/lib/country-config";
 import { TasksSkeleton } from "@/components/ui/loading";
+import { useToast } from "@/components/ui/toast";
 import { isVisibleToFieldApp } from "@/lib/template-activation";
 import { getChecklistDueInfo, getFrequencyLabel, getDueChecklists } from "@/lib/checklist-due";
 import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User, Incident } from "@/types";
 
-type TabType = "checklists" | "risk-assessment" | "reports";
+type TabType = "checklists" | "risk-assessment" | "procedures" | "reports";
 
 // Country-specific risk assessment forms
 const riskAssessmentForms = {
@@ -982,6 +987,7 @@ function EmployeeChecklistsPageContent() {
   const getInitialTab = (): TabType => {
     if (tabParam === "risk-assessment") return "risk-assessment";
     if (tabParam === "checklists") return "checklists";
+    if (tabParam === "procedures") return "procedures";
     if (tabParam === "reports") return "reports";
     return "reports";
   };
@@ -995,7 +1001,17 @@ function EmployeeChecklistsPageContent() {
   const { items: riskEvaluations } = useRiskEvaluationsStore();
   const { items: incidents } = useIncidentsStore();
   const { items: users } = useUsersStore();
+  const { items: procedureTemplateItems } = useProcedureTemplatesStore();
+  const { items: procedureSubmissionItems, add: addProcedureSubmission } = useProcedureSubmissionsStore();
   const { currentCompany, user } = useAuth();
+  const { toast } = useToast();
+
+  // Active procedures for the field app (built-in + company, filtered by industry)
+  const activeProcedures = React.useMemo(() => {
+    const builtIn = getBuiltInProcedureTemplates().filter((p) => !p.industry || p.industry === currentCompany?.industry);
+    const company = procedureTemplateItems.filter((p) => p.is_active);
+    return [...company, ...builtIn.filter((b) => !company.some((c) => c.id === b.id))].filter((p) => p.is_active);
+  }, [procedureTemplateItems, currentCompany?.industry]);
   
   const selectedLocation = locationParam 
     ? locations.find(l => l.id === locationParam) 
@@ -1038,9 +1054,10 @@ function EmployeeChecklistsPageContent() {
   const activeAssets = assets.filter((a) => a.status === "active");
 
   const tabs = [
-    { id: "reports" as TabType, label: t("checklists.tabs.reports"), icon: AlertTriangle },
-    { id: "risk-assessment" as TabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
     { id: "checklists" as TabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
+    { id: "risk-assessment" as TabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
+    { id: "procedures" as TabType, label: t("checklists.tabs.procedures"), icon: Layers },
+    { id: "reports" as TabType, label: t("checklists.tabs.reports"), icon: AlertTriangle },
   ];
 
   const userSubmissions = user
@@ -1214,6 +1231,65 @@ function EmployeeChecklistsPageContent() {
             t={t}
             formatDate={formatDate}
           />
+        )}
+
+        {/* PROCEDURES TAB */}
+        {activeTab === "procedures" && (
+          <div className="space-y-3">
+            {activeProcedures.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground">
+                <Layers className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                <p className="text-sm font-medium">No active procedures</p>
+                <p className="text-xs mt-1">Procedures combine risk assessments and checklists into multi-step workflows.</p>
+              </div>
+            ) : activeProcedures.map((proc) => (
+              <div key={proc.id} className="rounded-xl border bg-card p-4 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold">{proc.name}</p>
+                    {proc.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{proc.description}</p>}
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] shrink-0">{proc.steps.length} steps</Badge>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {proc.steps.map((step, idx) => (
+                    <Badge key={step.id} variant="outline" className="text-[10px] gap-1">
+                      <span className="font-semibold">{idx + 1}.</span>
+                      <span className="truncate max-w-[120px]">{step.template_name}</span>
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-muted-foreground capitalize">{proc.recurrence.replace(/_/g, " ")}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const now = new Date().toISOString();
+                      addProcedureSubmission({
+                        id: `proc_sub_${Date.now()}`,
+                        company_id: user?.company_id || "",
+                        procedure_template_id: proc.id,
+                        submitter_id: user?.id || "",
+                        location_id: null,
+                        status: "in_progress",
+                        current_step: 1,
+                        step_submissions: proc.steps.map((s) => ({ step_id: s.id, submission_id: null, status: "pending" as const, completed_at: null })),
+                        started_at: now,
+                        completed_at: null,
+                        next_due_date: null,
+                        created_at: now,
+                        updated_at: now,
+                      });
+                      toast("Procedure started");
+                    }}
+                    className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground active:scale-95 transition-transform"
+                  >
+                    <Play className="h-3 w-3" />Start
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
       </div>

@@ -183,7 +183,7 @@ function buildDashboardBreadcrumbs(pathname: string | null, company: string): Br
       break;
     case "checklists":
       if (!segments[1]) {
-        push("Assessments & Checklists", `${base}/checklists`);
+        push("Safety Tasks", `${base}/checklists`);
       } else if (segments[1] === "my-templates") {
         push("Template Library", `${base}/checklists/my-templates`);
       } else if (segments[1] === "templates") {
@@ -199,7 +199,7 @@ function buildDashboardBreadcrumbs(pathname: string | null, company: string): Br
         push("Template Library", `${base}/checklists/my-templates`);
         push("New Procedure", `${base}/checklists/new-procedure`);
       } else if (segments[1] === "fill") {
-        push("Assessments & Checklists", `${base}/checklists`);
+        push("Safety Tasks", `${base}/checklists`);
         push("Fill Checklist", normalizedPath);
       } else if (segments[1] === "procedures") {
         push("Template Library", `${base}/checklists/my-templates`);
