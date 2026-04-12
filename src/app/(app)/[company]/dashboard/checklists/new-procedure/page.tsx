@@ -68,6 +68,7 @@ function ProcedureEditorContent() {
     existingProcedure?.steps.map((s) => ({ id: s.id, type: s.type, template_id: s.template_id, template_name: s.template_name, required: s.required })) || [],
   );
   const [showStepPicker, setShowStepPicker] = React.useState(false);
+  const [stepPickerTab, setStepPickerTab] = React.useState<"risk_assessment" | "checklist">("risk_assessment");
   const [stepPickerSearch, setStepPickerSearch] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -261,56 +262,123 @@ function ProcedureEditorContent() {
         </>
       )}
 
-      {/* Step Picker Modal */}
+      {/* Step Picker Modal — tabbed RA / Checklist with clear separation */}
       {showStepPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowStepPicker(false)}>
-          <div className="relative w-full max-w-lg mx-4 max-h-[75vh] flex flex-col rounded-lg bg-background shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 pb-3 space-y-3">
-              <h2 className="text-lg font-semibold">Add Step to Procedure</h2>
-              <p className="text-sm text-muted-foreground">Select a risk assessment or checklist to add as the next step.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowStepPicker(false)}>
+          <div className="relative w-full max-w-xl mx-4 max-h-[80vh] flex flex-col rounded-xl bg-background border shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="p-6 pb-0 space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold">Add Step to Procedure</h2>
+                <p className="text-sm text-muted-foreground mt-1">Choose which type of step to add, then select a template.</p>
+              </div>
+
+              {/* Type tabs — clear visual distinction */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setStepPickerTab("risk_assessment"); setStepPickerSearch(""); }}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium transition-all border-2",
+                    stepPickerTab === "risk_assessment"
+                      ? "bg-orange-50 border-orange-300 text-orange-700 dark:bg-orange-950/40 dark:border-orange-700 dark:text-orange-400"
+                      : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  <ShieldAlert className="h-4 w-4" />
+                  Risk Assessments
+                  <Badge variant="secondary" className="text-xs">{assessmentOptions.length}</Badge>
+                </button>
+                <button
+                  onClick={() => { setStepPickerTab("checklist"); setStepPickerSearch(""); }}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium transition-all border-2",
+                    stepPickerTab === "checklist"
+                      ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/40 dark:border-blue-700 dark:text-blue-400"
+                      : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  <ClipboardCheck className="h-4 w-4" />
+                  Checklists
+                  <Badge variant="secondary" className="text-xs">{checklistOptions.length}</Badge>
+                </button>
+              </div>
+
+              {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search templates..." value={stepPickerSearch} onChange={(e) => setStepPickerSearch(e.target.value)} className="pl-9" autoFocus />
+                <Input
+                  placeholder={stepPickerTab === "risk_assessment" ? "Search risk assessments..." : "Search checklists..."}
+                  value={stepPickerSearch}
+                  onChange={(e) => setStepPickerSearch(e.target.value)}
+                  className="pl-9"
+                  autoFocus
+                />
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-4">
-              {filteredRA.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2"><ShieldAlert className="h-3.5 w-3.5 text-orange-500" />Risk Assessments ({filteredRA.length})</p>
-                  <div className="space-y-1">
-                    {filteredRA.map((tpl) => (
-                      <button key={tpl.id} onClick={() => addStep(tpl.id, tpl.name, "risk_assessment")} className="w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm hover:bg-muted text-left transition-colors">
-                        <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-orange-100 dark:bg-orange-900/30"><ShieldAlert className="h-3.5 w-3.5 text-orange-500" /></span>
-                        <div className="flex-1 min-w-0"><p className="font-medium truncate">{tpl.name}</p><p className="text-xs text-muted-foreground">{tpl.items.length} items</p></div>
-                        <Badge variant="outline" className="text-xs text-orange-600 border-orange-300 dark:text-orange-400 shrink-0">RA</Badge>
-                      </button>
-                    ))}
-                  </div>
+
+            {/* Template list */}
+            <div className="flex-1 overflow-y-auto p-6 pt-3">
+              {stepPickerTab === "risk_assessment" && (
+                <div className="space-y-1">
+                  {filteredRA.length === 0 ? (
+                    <div className="text-center py-10">
+                      <ShieldAlert className="h-8 w-8 text-muted-foreground/30 mx-auto" />
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {stepPickerSearch ? `No risk assessments match "${stepPickerSearch}"` : "No risk assessment templates available. Create one from the Template Library first."}
+                      </p>
+                    </div>
+                  ) : filteredRA.map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      onClick={() => addStep(tpl.id, tpl.name, "risk_assessment")}
+                      className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-sm hover:bg-orange-50 dark:hover:bg-orange-950/20 text-left transition-colors border border-transparent hover:border-orange-200 dark:hover:border-orange-800"
+                    >
+                      <span className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-orange-100 dark:bg-orange-900/30">
+                        <ShieldAlert className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium">{tpl.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{tpl.items.length} items {tpl.regulation ? `· ${tpl.regulation}` : ""}</p>
+                      </div>
+                      <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
                 </div>
               )}
-              {filteredCL.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2"><ClipboardCheck className="h-3.5 w-3.5 text-blue-500" />Checklists ({filteredCL.length})</p>
-                  <div className="space-y-1">
-                    {filteredCL.map((tpl) => (
-                      <button key={tpl.id} onClick={() => addStep(tpl.id, tpl.name, "checklist")} className="w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm hover:bg-muted text-left transition-colors">
-                        <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/30"><ClipboardCheck className="h-3.5 w-3.5 text-blue-500" /></span>
-                        <div className="flex-1 min-w-0"><p className="font-medium truncate">{tpl.name}</p><p className="text-xs text-muted-foreground">{tpl.items.length} items</p></div>
-                        <Badge variant="outline" className="text-xs text-blue-600 border-blue-300 dark:text-blue-400 shrink-0">CL</Badge>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {filteredRA.length === 0 && filteredCL.length === 0 && (
-                <div className="text-center py-10">
-                  {stepPickerSearch ? <p className="text-sm text-muted-foreground">No templates match &ldquo;{stepPickerSearch}&rdquo;</p> : (
-                    <><Layers className="h-8 w-8 text-muted-foreground/40 mx-auto" /><p className="mt-2 text-sm text-muted-foreground">No templates available. Create checklist or risk assessment templates first.</p></>
-                  )}
+
+              {stepPickerTab === "checklist" && (
+                <div className="space-y-1">
+                  {filteredCL.length === 0 ? (
+                    <div className="text-center py-10">
+                      <ClipboardCheck className="h-8 w-8 text-muted-foreground/30 mx-auto" />
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {stepPickerSearch ? `No checklists match "${stepPickerSearch}"` : "No checklist templates available. Create one from the Template Library first."}
+                      </p>
+                    </div>
+                  ) : filteredCL.map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      onClick={() => addStep(tpl.id, tpl.name, "checklist")}
+                      className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-sm hover:bg-blue-50 dark:hover:bg-blue-950/20 text-left transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                    >
+                      <span className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
+                        <ClipboardCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium">{tpl.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{tpl.items.length} items</p>
+                      </div>
+                      <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
-            <div className="border-t p-4 flex justify-end"><Button variant="outline" onClick={() => setShowStepPicker(false)}>Cancel</Button></div>
+
+            {/* Footer */}
+            <div className="border-t p-4 flex justify-end">
+              <Button variant="outline" onClick={() => setShowStepPicker(false)}>Cancel</Button>
+            </div>
           </div>
         </div>
       )}

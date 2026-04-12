@@ -463,8 +463,8 @@ const ProcedureCard = React.memo(function ProcedureCard({
 // ---------------------------------------------------------------------------
 function DeleteModal({ title, message, onConfirm, onClose }: { title: string; message: string; onConfirm: () => void; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="w-full max-w-sm mx-4 rounded-lg bg-background p-6 shadow-xl space-y-4" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-sm mx-4 rounded-xl bg-background border p-6 shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3">
           <div className="shrink-0 w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
             <Trash2 className="h-5 w-5 text-destructive" />
@@ -490,8 +490,8 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (t:
   const [importData, setImportData] = React.useState<ParsedTemplateImport[] | null>(null);
   const { toast } = useToast();
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="relative w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto rounded-lg bg-background p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto rounded-xl bg-background border p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Import Templates</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
