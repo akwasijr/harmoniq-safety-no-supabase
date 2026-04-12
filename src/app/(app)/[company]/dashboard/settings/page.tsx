@@ -13,6 +13,7 @@ import {
   Shield,
   Smartphone,
   ToggleLeft,
+  PanelLeft,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -53,6 +54,7 @@ import { GeneralSettingsSection } from "./_components/general-settings-section";
 import { IndustrySettingsSection } from "./_components/industry-settings-section";
 import { IncidentSettingsSection } from "./_components/incident-settings-section";
 import { ModulesSettingsSection } from "./_components/modules-settings-section";
+import { SidebarPreferencesSection } from "./_components/sidebar-preferences-section";
 import {
   BillingSettingsSection,
   NotificationsSettingsSection,
@@ -155,6 +157,7 @@ export default function SettingsPage() {
     () => [
       { value: "general", label: t("settings.tabs.general"), icon: Building },
       { value: "modules", label: "Modules", icon: ToggleLeft },
+      { value: "sidebar", label: "My Sidebar", icon: PanelLeft },
       { value: "branding", label: t("settings.tabs.branding"), icon: Palette },
       { value: "fieldApp", label: "Field App", icon: Smartphone },
       { value: "industry", label: "Industry", icon: Factory },
@@ -498,6 +501,10 @@ export default function SettingsPage() {
                 }
               }}
             />
+          )}
+
+          {activeTab === "sidebar" && (
+            <SidebarPreferencesSection />
           )}
 
           {activeTab === "branding" && (

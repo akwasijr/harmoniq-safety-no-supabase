@@ -36,6 +36,7 @@ import { useTheme } from "next-themes";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
+import { getSidebarPreferences } from "@/lib/sidebar-preferences";
 
 interface SidebarProps {
   company: string;
@@ -459,18 +460,46 @@ export function Sidebar({
         {/* Company nav items — collapsible groups */}
         {(!showPlatformNav || hasSelectedCompany) && (
           <div className="space-y-1">
-            {companyNavGroups.map((group, groupIdx) => {
-              // Filter by role + company hidden modules + user hidden modules
+            {(() => {
+              const prefs = user?.id ? getSidebarPreferences(user.id) : null;
               const companyHidden = currentCompany?.hidden_modules || [];
-              const userHidden = user?.hidden_modules || [];
+              const userHidden = prefs?.hiddenModules || [];
               const allHidden = [...companyHidden, ...userHidden];
 
-              const visibleItems = group.items.filter((item) => {
-                if (item.requiredRoles && !item.requiredRoles.includes(actualRole)) return false;
-                if (item.moduleId && allHidden.includes(item.moduleId)) return false;
-                return true;
-              });
-              if (visibleItems.length === 0) return null;
+              // Apply group ordering from preferences
+              let orderedGroups = [...companyNavGroups];
+              if (prefs?.groupOrder?.length) {
+                orderedGroups.sort((a, b) => {
+                  const ai = prefs.groupOrder.indexOf(a.groupId || "");
+                  const bi = prefs.groupOrder.indexOf(b.groupId || "");
+                  if (ai === -1 && bi === -1) return 0;
+                  if (ai === -1) return 1;
+                  if (bi === -1) return -1;
+                  return ai - bi;
+                });
+              }
+
+              return orderedGroups.map((group, groupIdx) => {
+                let visibleItems = group.items.filter((item) => {
+                  if (item.requiredRoles && !item.requiredRoles.includes(actualRole)) return false;
+                  if (item.moduleId && allHidden.includes(item.moduleId)) return false;
+                  return true;
+                });
+
+                // Apply item ordering within group
+                const itemOrder = prefs?.itemOrder?.[group.groupId || ""];
+                if (itemOrder?.length) {
+                  visibleItems.sort((a, b) => {
+                    const ai = itemOrder.indexOf(a.href);
+                    const bi = itemOrder.indexOf(b.href);
+                    if (ai === -1 && bi === -1) return 0;
+                    if (ai === -1) return 1;
+                    if (bi === -1) return -1;
+                    return ai - bi;
+                  });
+                }
+
+                if (visibleItems.length === 0) return null;
               return (
                 <SidebarGroup
                   key={groupIdx}
@@ -526,7 +555,8 @@ export function Sidebar({
                   })}
                 </SidebarGroup>
               );
-            })}
+            });
+            })()}
           </div>
         )}
       </nav>
