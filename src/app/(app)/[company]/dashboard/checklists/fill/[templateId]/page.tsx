@@ -114,7 +114,8 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
     return () => clearInterval(interval);
   }, [template, templateId, responses, generalComments, locationId]);
 
-  if (isLoading) {
+  // If store is loading but we already found the template, proceed
+  if (isLoading && !template) {
     return <LoadingPage />;
   }
 
