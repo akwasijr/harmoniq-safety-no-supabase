@@ -151,8 +151,8 @@ export default function SettingsPage() {
   const settingsTabs = React.useMemo<SettingsTabConfig[]>(
     () => [
       { value: "general", label: t("settings.tabs.general"), icon: Building },
-      { value: "modules", label: "Modules & Sidebar", icon: ToggleLeft },
       { value: "branding", label: t("settings.tabs.branding"), icon: Palette },
+      { value: "modules", label: "Modules & Sidebar", icon: ToggleLeft },
       { value: "fieldApp", label: "Field App", icon: Smartphone },
       {
         value: "notifications",

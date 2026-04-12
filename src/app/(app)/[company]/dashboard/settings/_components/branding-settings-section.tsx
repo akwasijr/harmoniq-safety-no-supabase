@@ -206,50 +206,65 @@ export function BrandingSettingsSection({
         </Card>
       </div>
 
-      {/* Right column: sticky previews — phone + compact dashboard */}
-      <div className="hidden xl:block sticky top-24 space-y-4">
-        <p className="text-xs font-medium text-muted-foreground font-medium text-center">Live Preview</p>
-
-        {/* Phone preview — true to size */}
-        <div className="mx-auto w-full max-w-[280px] rounded-[2.5rem] border-2 bg-muted p-3">
-          <div className="overflow-hidden rounded-[2rem] border bg-background" style={{ fontFamily: fontMap[font] || "inherit" }}>
-            <div className="px-4 py-3" style={{ backgroundColor: settings.primaryColor }}>
-              <p className="text-[9px] text-white/70">Good morning</p>
-              <p className="text-base font-semibold text-white">{settings.companyName}</p>
+      {/* Right column: sticky previews */}
+      <div className="hidden xl:block sticky top-24 space-y-5">
+        {/* Phone preview — matches actual field app structure */}
+        <div className="mx-auto w-full max-w-[280px] rounded-[2.5rem] border-2 border-foreground/10 bg-foreground/5 p-3">
+          <div className="overflow-hidden rounded-[2rem] bg-background" style={{ fontFamily: fontMap[font] || "inherit" }}>
+            {/* Header bar */}
+            <div className="flex items-center justify-between px-3 py-2" style={{ backgroundColor: settings.primaryColor }}>
+              <div className="flex items-center gap-1.5">
+                <div className="h-4 w-4 rounded bg-white/20" />
+                <span className="text-[10px] font-semibold text-white">{settings.companyName}</span>
+              </div>
+              <div className="h-4 w-4 rounded-full bg-white/20" />
             </div>
-            <div className="p-3 space-y-3">
-              <div className="flex gap-2 -mt-4">
-                {[
-                  { v: "14", l: "Safe Days", c: settings.primaryColor },
-                  { v: "5", l: "Pending", c: settings.primaryColor },
-                  { v: "8", l: "This Week", c: settings.primaryColor },
-                ].map((s) => (
-                  <div key={s.l} className="flex-1 border bg-card p-2 text-center" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
-                    <p className="text-lg font-bold" style={{ color: s.c }}>{s.v}</p>
-                    <p className="text-[8px] text-muted-foreground">{s.l}</p>
+            {/* Hero section with glass KPIs */}
+            <div className="px-3 pt-4 pb-8" style={{ backgroundColor: settings.primaryColor }}>
+              <p className="text-[9px] text-white/60">Good afternoon</p>
+              <p className="text-base font-bold text-white mt-0.5">Demo</p>
+              <div className="grid grid-cols-3 gap-2 mt-4">
+                {["14", "5", "8"].map((v, i) => (
+                  <div key={i} className="rounded-lg bg-white/10 backdrop-blur-sm px-2 py-2 text-center" style={{ borderRadius: radiusMap[shape] }}>
+                    <p className="text-lg font-bold text-white">{v}</p>
+                    <p className="text-[8px] text-white/60">{["Safe Days", "Pending", "This Week"][i]}</p>
                   </div>
                 ))}
               </div>
-              <div className="flex justify-around px-2">
+            </div>
+            {/* Content area */}
+            <div className="bg-muted px-3 space-y-3 pb-3">
+              {/* Tip card (overlapping) */}
+              <div className="-mt-5 relative z-10 bg-card rounded-xl px-3 py-3" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
+                <p className="text-[8px] font-bold" style={{ color: settings.primaryColor }}>Tip of the day</p>
+                <p className="text-[8px] text-muted-foreground mt-0.5 leading-relaxed">Always wear appropriate PPE in designated work areas.</p>
+              </div>
+              {/* Quick actions — circles */}
+              <div className="flex justify-evenly pt-1">
                 {["Report", "Tasks", "Assess", "Assets"].map((a) => (
                   <div key={a} className="flex flex-col items-center gap-1.5">
                     <div className="h-11 w-11 rounded-full flex items-center justify-center" style={{ backgroundColor: settings.primaryColor + "15" }}>
-                      <div className="h-5 w-5 rounded" style={{ backgroundColor: settings.primaryColor, borderRadius: radiusMap[shape] }} />
+                      <div className="h-4 w-4 rounded-full bg-white" style={{ opacity: 0.7 }} />
                     </div>
-                    <span className="text-[8px] font-medium">{a}</span>
+                    <span className="text-[8px] font-medium text-muted-foreground">{a}</span>
                   </div>
                 ))}
               </div>
-              <div className="border bg-card p-2.5" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
-                <p className="text-[9px] font-semibold" style={{ color: settings.primaryColor }}>Tip of the day</p>
-                <p className="text-[8px] text-muted-foreground mt-0.5">Always wear appropriate PPE in designated work areas.</p>
+              {/* Focus strip */}
+              <div className="bg-card rounded-xl px-3 py-2.5" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
+                <p className="text-[8px] font-bold" style={{ color: settings.primaryColor }}>Field Focus</p>
+                <div className="flex gap-2 mt-1.5">
+                  <span className="text-[7px] font-medium flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-red-500" />Urgent</span>
+                  <span className="text-[7px] text-muted-foreground flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />Upcoming</span>
+                </div>
               </div>
             </div>
-            <div className="border-t bg-card px-3 py-2 flex justify-around">
-              {["Home", "Tasks", "Report", "Profile"].map((tab) => (
+            {/* Bottom nav */}
+            <div className="bg-card border-t px-3 py-2 flex justify-around">
+              {["Home", "Tasks", "Report", "Profile"].map((tab, i) => (
                 <div key={tab} className="flex flex-col items-center gap-0.5">
-                  <div className="h-4 w-4 rounded-sm bg-muted" />
-                  <span className="text-[7px] text-muted-foreground">{tab}</span>
+                  <div className={cn("h-4 w-4 rounded-sm", i === 0 ? "bg-foreground/60" : "bg-muted")} />
+                  <span className={cn("text-[7px]", i === 0 ? "text-foreground font-medium" : "text-muted-foreground")}>{tab}</span>
                 </div>
               ))}
             </div>
@@ -258,28 +273,27 @@ export function BrandingSettingsSection({
 
         {/* Compact dashboard preview */}
         <div className="mx-auto max-w-[280px]">
-          <p className="text-[10px] font-medium text-muted-foreground font-medium text-center mb-2">Dashboard</p>
-          <div className="rounded-lg border p-2.5 space-y-2" style={{ fontFamily: fontMap[font] || "inherit", borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
+          <p className="text-[10px] font-medium text-muted-foreground text-center mb-2">Dashboard</p>
+          <div className="rounded-lg border p-2.5 space-y-2" style={{ fontFamily: fontMap[font] || "inherit", borderRadius: radiusMap[shape] }}>
+            {/* Sidebar + header hint */}
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold text-white" style={{ backgroundColor: settings.primaryColor, borderRadius: radiusMap[shape] }}>
                 {settings.logoUrl ? <img src={settings.logoUrl} alt="" className="h-5 w-5 object-contain" /> : settings.companyName.charAt(0)}
               </div>
               <span className="text-xs font-semibold">{settings.companyName}</span>
             </div>
+            {/* Button styles */}
             <div className="flex gap-1.5">
               <span className="rounded px-2.5 py-1 text-[9px] font-medium text-white" style={{ backgroundColor: settings.primaryColor, borderRadius: radiusMap[shape] }}>Filled</span>
               <span className="rounded px-2.5 py-1 text-[9px] font-medium border" style={{ color: settings.secondaryColor, borderColor: settings.secondaryColor, borderRadius: radiusMap[shape] }}>Outline</span>
               <span className="rounded px-2.5 py-1 text-[9px] font-medium" style={{ color: settings.tertiaryColor, backgroundColor: settings.tertiaryColor + "18", borderRadius: radiusMap[shape] }}>Subtle</span>
             </div>
-            <div className="grid grid-cols-3 gap-1">
-              {[
-                { l: "Open", c: settings.primaryColor },
-                { l: "Overdue", c: settings.primaryColor },
-                { l: "Done", c: settings.primaryColor },
-              ].map((card) => (
-                <div key={card.l} className="border p-1 text-center text-[8px]" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
-                  <p className="font-bold text-[10px]" style={{ color: card.c }}>12</p>
-                  <p className="text-muted-foreground">{card.l}</p>
+            {/* KPI cards */}
+            <div className="grid grid-cols-4 gap-1">
+              {["Incidents", "TRIR", "LTIFR", "Resolution"].map((l) => (
+                <div key={l} className="border p-1 text-center" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
+                  <p className="text-[9px] font-bold" style={{ color: settings.primaryColor }}>12</p>
+                  <p className="text-[6px] text-muted-foreground">{l}</p>
                 </div>
               ))}
             </div>
