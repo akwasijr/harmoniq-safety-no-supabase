@@ -79,6 +79,9 @@ export default function ChecklistDetailPage() {
   const [isEditing, setIsEditing] = React.useState(false);
   const [stableNow] = React.useState(() => Date.now());
 
+  // Auto-enter edit mode for draft templates (newly created)
+  const hasAutoEdited = React.useRef(false);
+
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
   const { checklistTemplates: templates, checklistSubmissions: submissions, users, locations, stores } = useCompanyData();
@@ -117,6 +120,11 @@ export default function ChecklistDetailPage() {
       setItemsDraft(template.items);
       setAssignment(template.assignment || "all");
       setRecurrence(template.recurrence || "daily");
+      // Auto-enter edit mode for draft templates
+      if (!hasAutoEdited.current && getTemplatePublishStatus(template) === "draft") {
+        setIsEditing(true);
+        hasAutoEdited.current = true;
+      }
     }
   }, [template?.id]);
 
