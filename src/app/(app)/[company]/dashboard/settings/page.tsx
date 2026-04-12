@@ -232,9 +232,11 @@ export default function SettingsPage() {
         app_name: settings.appName || settings.companyName,
         primary_color: settings.primaryColor,
         secondary_color: settings.secondaryColor,
+        tertiary_color: settings.tertiaryColor,
         logo_url: settings.logoUrl,
         language: settings.language as Language,
         country: settings.selectedCountry as Country,
+        industry: settings.selectedIndustry as Company["industry"],
         currency: settings.currency,
       };
       const nextCompanies = companies.map((item) =>
@@ -262,6 +264,7 @@ export default function SettingsPage() {
             currency: settings.currency,
             primaryColor: settings.primaryColor,
             secondaryColor: settings.secondaryColor,
+            tertiaryColor: settings.tertiaryColor,
             logoUrl: settings.logoUrl,
           }),
         });

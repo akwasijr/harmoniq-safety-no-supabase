@@ -252,10 +252,10 @@ export default function IncidentDetailPage() {
   const isAnonymous = incident?.reporter_id === "__anonymous__";
   const reporter = isAnonymous ? null : users.find((u) => u.id === incident?.reporter_id);
   const reporterName = isAnonymous ? "Anonymous" : (reporter?.full_name || "Unknown");
-  const relatedTickets = tickets.filter((t) => t.incident_ids?.includes(incidentId));
-  const correctiveIncidentActions = actions.filter((action) => action.actionType === "corrective");
-  const openCorrectiveActionCount = correctiveIncidentActions.filter((action) => action.status !== "completed").length;
-  const openTicketCount = relatedTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length;
+  const relatedTickets = React.useMemo(() => tickets.filter((t) => t.incident_ids?.includes(incidentId)), [tickets, incidentId]);
+  const correctiveIncidentActions = React.useMemo(() => actions.filter((action) => action.actionType === "corrective"), [actions]);
+  const openCorrectiveActionCount = React.useMemo(() => correctiveIncidentActions.filter((action) => action.status !== "completed").length, [correctiveIncidentActions]);
+  const openTicketCount = React.useMemo(() => relatedTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length, [relatedTickets]);
   const canResolveIncident = openCorrectiveActionCount === 0 && openTicketCount === 0;
   const [statusValue, setStatusValue] = React.useState("new");
   const [investigatorIdValue, setInvestigatorIdValue] = React.useState("");
@@ -266,9 +266,8 @@ export default function IncidentDetailPage() {
     setInvestigatorIdValue(incident.resolved_by || "");
   }, [incident?.id, incident?.status, incident?.resolved_by]);
 
-  // Calculate if incident can be closed
-  const allActionsComplete = actions.length > 0 && actions.every((a) => a.status === "completed");
-  const completedActions = actions.filter((a) => a.status === "completed").length;
+  const completedActions = React.useMemo(() => actions.filter((a) => a.status === "completed").length, [actions]);
+  const allActionsComplete = actions.length > 0 && completedActions === actions.length;
   const totalActions = actions.length;
 
   if (isLoading && incidents.length === 0) {

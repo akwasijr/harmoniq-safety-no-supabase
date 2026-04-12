@@ -16,6 +16,10 @@ const ALLOWED_COUNTRIES = new Set(["NL", "SE", "US", "GB", "DE", "FR", "ES"]);
 const ALLOWED_LANGUAGES = new Set(["en", "nl", "sv", "de", "fr", "es"]);
 const ALLOWED_CURRENCIES = new Set(["USD", "EUR", "SEK", "GBP"]);
 const ALLOWED_UI_STYLES = new Set(["rounded", "square"]);
+const ALLOWED_INDUSTRIES = new Set([
+  "construction", "manufacturing", "oil_gas", "healthcare", "warehousing",
+  "mining", "food_beverage", "utilities", "transportation", "education", "airports",
+]);
 function withNoStore(response: NextResponse) {
   response.headers.set("Cache-Control", "no-store");
   return response;
@@ -104,18 +108,30 @@ export async function POST(request: NextRequest) {
         body.secondaryColor,
         DEFAULT_BRAND_SECONDARY_COLOR,
       ),
+      tertiary_color: normalizeColor(
+        body.tertiaryColor,
+        "#10B981",
+      ),
+      industry: ALLOWED_INDUSTRIES.has(String(body.selectedIndustry ?? ""))
+        ? String(body.selectedIndustry)
+        : undefined,
       ui_style: ALLOWED_UI_STYLES.has(String(body.uiStyle ?? ""))
         ? String(body.uiStyle)
         : "rounded",
       updated_at: new Date().toISOString(),
     };
 
+    // Remove undefined fields (Supabase would fail on them)
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([, v]) => v !== undefined),
+    );
+
     const adminClient = createAdminClient();
     const writeClient = adminClient ?? supabase;
 
     const { data: company, error } = await writeClient
       .from("companies")
-      .update(updates)
+      .update(cleanUpdates)
       .eq("id", requestedCompanyId)
       .select("*")
       .single();

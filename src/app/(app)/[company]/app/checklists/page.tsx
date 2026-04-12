@@ -126,8 +126,8 @@ function ChecklistsTabContent({
   formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
 }) {
   const [subTab, setSubTab] = React.useState<ChecklistSubTab>("assigned");
-  const completedSubmissions = userSubmissions.filter(s => s.status === "submitted");
-  const draftSubmissions = userSubmissions.filter(s => s.status === "draft");
+  const completedSubmissions = React.useMemo(() => userSubmissions.filter(s => s.status === "submitted"), [userSubmissions]);
+  const draftSubmissions = React.useMemo(() => userSubmissions.filter(s => s.status === "draft"), [userSubmissions]);
   const [exportingId, setExportingId] = React.useState<string | null>(null);
 
   const handleExportChecklist = async (submission: ChecklistSubmission, e: React.MouseEvent) => {
