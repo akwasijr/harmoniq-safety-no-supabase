@@ -652,9 +652,9 @@ function getTimeAgo(dateStr: string): string {
 export default function ChecklistFillPage({
   params,
 }: {
-  params: { templateId: string; company: string };
+  params: Promise<{ templateId: string; company: string }>;
 }) {
-  const templateId = params.templateId;
+  const { templateId } = React.use(params);
   return (
     <RoleGuard requiredPermission="checklists.complete">
       <React.Suspense fallback={<LoadingPage />}>
