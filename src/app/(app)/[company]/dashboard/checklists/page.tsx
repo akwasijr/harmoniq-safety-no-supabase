@@ -25,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useCompanyData } from "@/hooks/use-company-data";
+import { useAuth } from "@/hooks/use-auth";
 import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
@@ -34,6 +35,7 @@ import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
 import { downloadCsv } from "@/lib/csv";
 import { getDraftsForType, deleteDraft as removeDraft, type Draft } from "@/lib/draft-store";
+import { getBuiltInProcedureTemplates } from "@/data/procedure-templates";
 
 const mockRiskAssessments: { id: string; template: string; templateId: string; type: string; location: string; date: string; status: string; by: string; riskLevel: string; riskScore: number }[] = [];
 
@@ -108,8 +110,10 @@ function ChecklistsPageContent() {
     procedureTemplates,
     procedureSubmissions,
     stores,
+    companyId,
   } = useCompanyData();
   const { isLoading } = stores.checklistTemplates;
+  const { user } = useAuth();
   const { t, formatDate } = useTranslation();
 
   // Map store risk evaluations to the display format
@@ -395,14 +399,15 @@ function ChecklistsPageContent() {
   }, [procedureSubmissionRows, statusFilter, searchQuery]);
 
   const handleStartProcedure = (templateId: string) => {
-    const tpl = procedureTemplates.find((t) => t.id === templateId);
+    const tpl = procedureTemplates.find((t) => t.id === templateId)
+      || getBuiltInProcedureTemplates().find((t) => t.id === templateId);
     if (!tpl) return;
     const now = new Date().toISOString();
     const submission = {
       id: `proc_sub_${Date.now()}`,
-      company_id: stores.procedureSubmissions.items[0]?.company_id || "",
+      company_id: stores.procedureSubmissions.items[0]?.company_id || companyId || "",
       procedure_template_id: templateId,
-      submitter_id: "",
+      submitter_id: user?.id || "",
       location_id: null,
       status: "in_progress" as const,
       current_step: 1,
@@ -420,6 +425,11 @@ function ChecklistsPageContent() {
     };
     stores.procedureSubmissions.add(submission);
     setShowProcedurePickerModal(false);
+    // Navigate to fill the first step
+    const firstStep = tpl.steps[0];
+    if (firstStep) {
+      router.push(`/${company}/dashboard/checklists/fill/${firstStep.template_id}`);
+    }
   };
 
   const tableLength = activeTab === "checklists"

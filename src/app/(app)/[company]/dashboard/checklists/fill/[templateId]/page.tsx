@@ -31,6 +31,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { getDraft, saveDraft, deleteDraft } from "@/lib/draft-store";
 import { generateId } from "@/lib/uuid";
+import { WORK_ORDER_PROCEDURE_TEMPLATES } from "@/data/work-order-procedure-templates";
 import type { ChecklistItem, ChecklistResponse } from "@/types";
 
 interface ItemResponse {
@@ -47,10 +48,13 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
   const { checklistTemplates, locations, stores, companyId } = useCompanyData();
   const { isLoading, items: allTemplates } = stores.checklistTemplates;
 
-  // Look up template from ALL store items (not company-filtered) to avoid
-  // hydration timing issues where companyId hasn't resolved yet
+  // Look up template from multiple sources to handle all cases:
+  // 1. Raw store items (includes built-in + company)
+  // 2. Company-filtered items (useCompanyData)
+  // 3. Hardcoded built-in templates (in case store was overwritten)
   const template = allTemplates.find((tpl) => tpl.id === templateId)
-    || checklistTemplates.find((tpl) => tpl.id === templateId);
+    || checklistTemplates.find((tpl) => tpl.id === templateId)
+    || WORK_ORDER_PROCEDURE_TEMPLATES.find((tpl) => tpl.id === templateId);
 
   const [responses, setResponses] = React.useState<Record<string, ItemResponse>>({});
   const [generalComments, setGeneralComments] = React.useState("");

@@ -1405,10 +1405,16 @@ function EmployeeChecklistsPageContent() {
                     // Navigate to the first step's template
                     const firstStep = proc.steps[0];
                     if (firstStep) {
-                      const fillUrl = firstStep.type === "risk_assessment"
-                        ? `/${company}/app/risk-assessment/${firstStep.template_id}`
-                        : `/${company}/app/checklists/${firstStep.template_id}`;
-                      router.push(fillUrl);
+                      // For RA steps, try to extract known form ID (jha, jsa, rie, etc.)
+                      const knownRAForms = ["jha", "jsa", "rie", "arbowet", "sam", "osa"];
+                      const formIdMatch = knownRAForms.find((f) => firstStep.template_id.includes(f));
+                      
+                      if (firstStep.type === "risk_assessment" && formIdMatch) {
+                        router.push(`/${company}/app/risk-assessment/${formIdMatch}`);
+                      } else {
+                        // Route to checklist fill page (handles all template sources)
+                        router.push(`/${company}/app/checklists/${firstStep.template_id}`);
+                      }
                     }
                   }} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground active:scale-95 transition-transform">
                     <Play className="h-3 w-3" />Start
@@ -1432,11 +1438,18 @@ function EmployeeChecklistsPageContent() {
                     <Badge variant="secondary" className="text-[10px]">Step {sub.current_step} of {sub.step_submissions.length}</Badge>
                     {currentStep && <span className="text-[10px] text-muted-foreground truncate">{currentStep.template_name}</span>}
                   </div>
-                  {currentStep && (
-                    <Link href={currentStep.type === "risk_assessment" ? `/${company}/app/risk-assessment/${currentStep.template_id}` : `/${company}/app/checklists/${currentStep.template_id}`} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground active:scale-95 transition-transform w-fit">
-                      <Play className="h-3 w-3" />Continue Step {sub.current_step}
-                    </Link>
-                  )}
+                  {currentStep && (() => {
+                    const knownForms = ["jha", "jsa", "rie", "arbowet", "sam", "osa"];
+                    const formMatch = knownForms.find((f) => currentStep.template_id.includes(f));
+                    const stepUrl = (currentStep.type === "risk_assessment" && formMatch)
+                      ? `/${company}/app/risk-assessment/${formMatch}`
+                      : `/${company}/app/checklists/${currentStep.template_id}`;
+                    return (
+                      <Link href={stepUrl} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground active:scale-95 transition-transform w-fit">
+                        <Play className="h-3 w-3" />Continue Step {sub.current_step}
+                      </Link>
+                    );
+                  })()}
                 </div>
               );
             })}
