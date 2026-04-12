@@ -5,15 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
-  ClipboardCheck, Plus, Trash2, GripVertical, ArrowUp, ArrowDown,
-  ChevronDown, Save, Send,
+  ClipboardCheck, Plus, Trash2, ArrowUp, ArrowDown, ArrowRight, ArrowLeft,
+  ChevronDown, Save, Send, Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useChecklistTemplatesStore } from "@/stores/checklists-store";
 import { useToast } from "@/components/ui/toast";
@@ -70,10 +69,11 @@ export default function NewChecklistPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { items: companies } = useCompanyStore();
-  const { add: addTemplate } = useChecklistTemplatesStore();
+  const { add: addTemplate, update: updateTemplate } = useChecklistTemplatesStore();
 
   const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || user?.company_id || "";
 
+  const [step, setStep] = React.useState<1 | 2>(1);
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [category, setCategory] = React.useState("general");
@@ -82,6 +82,56 @@ export default function NewChecklistPage() {
     { id: crypto.randomUUID(), question: "", type: "yes_no_na", required: true },
   ]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // Auto-save: once user proceeds to step 2, save draft and keep updating
+  const draftIdRef = React.useRef<string | null>(null);
+
+  const saveDraftToStore = React.useCallback(() => {
+    const now = new Date().toISOString();
+    const validItems = items.filter((i) => i.question.trim());
+    const templateItems = (validItems.length > 0 ? validItems : [{ id: crypto.randomUUID(), question: "Item 1", type: "yes_no_na" as const, required: true }])
+      .map((item, idx) => ({ id: item.id, question: item.question.trim() || `Item ${idx + 1}`, type: item.type, required: item.required, order: idx + 1 }));
+
+    if (!draftIdRef.current) {
+      draftIdRef.current = crypto.randomUUID();
+      addTemplate({
+        id: draftIdRef.current,
+        company_id: companyId,
+        name: name.trim() || "Untitled Checklist",
+        description: description.trim() || null,
+        category,
+        assignment: "all",
+        recurrence: recurrence as ChecklistTemplate["recurrence"],
+        publish_status: "draft",
+        is_active: false,
+        items: templateItems,
+        created_at: now,
+        updated_at: now,
+      });
+    } else {
+      updateTemplate(draftIdRef.current, {
+        name: name.trim() || "Untitled Checklist",
+        description: description.trim() || null,
+        category,
+        recurrence: recurrence as ChecklistTemplate["recurrence"],
+        items: templateItems,
+        updated_at: now,
+      });
+    }
+  }, [name, description, category, recurrence, items, companyId, addTemplate, updateTemplate]);
+
+  // Auto-save every 10s on step 2
+  React.useEffect(() => {
+    if (step !== 2) return;
+    const interval = setInterval(saveDraftToStore, 10_000);
+    return () => clearInterval(interval);
+  }, [step, saveDraftToStore]);
+
+  const goToStep2 = () => {
+    if (!name.trim()) { toast("Please enter a checklist name"); return; }
+    saveDraftToStore();
+    setStep(2);
+  };
 
   const addItem = () => {
     setItems((prev) => [...prev, { id: crypto.randomUUID(), question: "", type: "yes_no_na", required: true }]);
@@ -107,41 +157,52 @@ export default function NewChecklistPage() {
   };
 
   const handleSave = (activate: boolean) => {
-    if (!name.trim()) { toast("Please enter a checklist name"); return; }
     const validItems = items.filter((i) => i.question.trim());
     if (validItems.length === 0) { toast("Add at least one checklist item"); return; }
 
     setIsSubmitting(true);
     const now = new Date().toISOString();
-    const template: ChecklistTemplate = {
-      id: crypto.randomUUID(),
-      company_id: companyId,
-      name: name.trim(),
-      description: description.trim() || null,
-      category,
-      assignment: "all",
-      recurrence: recurrence as ChecklistTemplate["recurrence"],
-      publish_status: activate ? "published" : "draft",
-      is_active: activate,
-      items: validItems.map((item, idx) => ({
-        id: item.id,
-        question: item.question.trim(),
-        type: item.type,
-        required: item.required,
-        order: idx + 1,
-      })),
-      created_at: now,
-      updated_at: now,
-    };
-    addTemplate(template);
+    const id = draftIdRef.current || crypto.randomUUID();
+
+    if (draftIdRef.current) {
+      updateTemplate(draftIdRef.current, {
+        name: name.trim(),
+        description: description.trim() || null,
+        category,
+        recurrence: recurrence as ChecklistTemplate["recurrence"],
+        publish_status: activate ? "published" : "draft",
+        is_active: activate,
+        items: validItems.map((item, idx) => ({ id: item.id, question: item.question.trim(), type: item.type, required: item.required, order: idx + 1 })),
+        updated_at: now,
+      });
+    } else {
+      addTemplate({
+        id,
+        company_id: companyId,
+        name: name.trim(),
+        description: description.trim() || null,
+        category,
+        assignment: "all",
+        recurrence: recurrence as ChecklistTemplate["recurrence"],
+        publish_status: activate ? "published" : "draft",
+        is_active: activate,
+        items: validItems.map((item, idx) => ({ id: item.id, question: item.question.trim(), type: item.type, required: item.required, order: idx + 1 })),
+        created_at: now,
+        updated_at: now,
+      });
+    }
+
     toast(activate ? "Checklist created and pushed to field app" : "Checklist saved as draft", "success");
-    router.push(`/${company}/dashboard/checklists/${template.id}`);
+    router.push(`/${company}/dashboard/checklists/${id}`);
     setIsSubmitting(false);
   };
+
+  const step1Valid = name.trim().length > 0;
 
   return (
     <RoleGuard requiredPermission="checklists.create_templates">
       <div className="space-y-6 max-w-3xl mx-auto">
+        {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold">Create Checklist Template</h1>
@@ -152,110 +213,134 @@ export default function NewChecklistPage() {
           </Link>
         </div>
 
-        {/* Details */}
-        <Card>
-          <CardHeader><CardTitle>Checklist Details</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="cl-name">Checklist Name *</Label>
-              <Input id="cl-name" placeholder="e.g. Daily Fire Safety Walkthrough" value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cl-desc">Description</Label>
-              <Textarea id="cl-desc" placeholder="What does this checklist cover? When should it be used?" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="cl-category">Category</Label>
-                <div className="relative">
-                  <select id="cl-category" value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm appearance-none pr-8">
-                    {CATEGORY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cl-recurrence">Frequency</Label>
-                <div className="relative">
-                  <select id="cl-recurrence" value={recurrence} onChange={(e) => setRecurrence(e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm appearance-none pr-8">
-                    {RECURRENCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Stepper */}
+        <div className="flex items-center gap-3">
+          <button onClick={() => setStep(1)} className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 1 ? "bg-primary text-primary-foreground" : step > 1 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground")}>
+            {step > 1 ? <Check className="h-4 w-4" /> : <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">1</span>}
+            Checklist Details
+          </button>
+          <div className="h-px w-8 bg-border" />
+          <div className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+            <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">2</span>
+            Checklist Items ({items.filter((i) => i.question.trim()).length})
+          </div>
+          {step === 2 && draftIdRef.current && (
+            <span className="ml-auto text-xs text-muted-foreground">Auto-saving draft...</span>
+          )}
+        </div>
 
-        {/* Items */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Checklist Items ({items.length})</CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">Each item is a question or checkpoint that workers answer in the field.</p>
-              </div>
-              <Button size="sm" variant="outline" className="gap-2" onClick={addItem}>
-                <Plus className="h-4 w-4" />Add Item
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {items.map((item, idx) => (
-              <div key={item.id} className="rounded-lg border p-4 space-y-3">
-                <div className="flex items-start gap-3">
-                  <span className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 mt-1">{idx + 1}</span>
-                  <div className="flex-1 space-y-3">
-                    <Input
-                      placeholder="Enter question or instruction..."
-                      value={item.question}
-                      onChange={(e) => updateItem(item.id, "question", e.target.value)}
-                    />
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <div className="relative">
-                        <select
-                          value={item.type}
-                          onChange={(e) => updateItem(item.id, "type", e.target.value)}
-                          className="rounded-md border bg-background px-2.5 py-1.5 text-xs appearance-none pr-7"
-                        >
-                          {ITEM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-                      </div>
-                      <button
-                        onClick={() => updateItem(item.id, "required", !item.required)}
-                        className={cn("text-xs px-2 py-1 rounded border transition-colors", item.required ? "bg-primary/10 border-primary/30 text-primary" : "text-muted-foreground border-muted")}
-                      >
-                        {item.required ? "Required" : "Optional"}
-                      </button>
+        {/* ═══════════ STEP 1: Details ═══════════ */}
+        {step === 1 && (
+          <>
+            <Card>
+              <CardHeader><CardTitle>Checklist Details</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cl-name">Checklist Name *</Label>
+                  <Input id="cl-name" placeholder="e.g. Daily Fire Safety Walkthrough" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cl-desc">Description</Label>
+                  <Textarea id="cl-desc" placeholder="What does this checklist cover? When should it be used?" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="cl-category">Category</Label>
+                    <div className="relative">
+                      <select id="cl-category" value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm appearance-none pr-8">
+                        {CATEGORY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
-                  <div className="flex flex-col gap-1 shrink-0">
-                    <button onClick={() => moveItem(idx, -1)} disabled={idx === 0} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
-                    <button onClick={() => moveItem(idx, 1)} disabled={idx === items.length - 1} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
-                    <button onClick={() => removeItem(item.id)} disabled={items.length <= 1} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive disabled:opacity-30"><Trash2 className="h-3.5 w-3.5" /></button>
+                  <div className="space-y-2">
+                    <Label htmlFor="cl-recurrence">Frequency</Label>
+                    <div className="relative">
+                      <select id="cl-recurrence" value={recurrence} onChange={(e) => setRecurrence(e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm appearance-none pr-8">
+                        {RECURRENCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            <Button variant="ghost" className="w-full gap-2 border-2 border-dashed text-muted-foreground hover:text-foreground" onClick={addItem}>
-              <Plus className="h-4 w-4" />Add Another Item
-            </Button>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+            <div className="flex justify-end">
+              <Button className="gap-2" onClick={goToStep2} disabled={!step1Valid}>
+                Next: Add Items <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </>
+        )}
 
-        {/* Actions */}
-        <div className="flex justify-end gap-3">
-          <Link href={`/${company}/dashboard/checklists/my-templates`}>
-            <Button variant="outline">{t("common.cancel")}</Button>
-          </Link>
-          <Button variant="outline" className="gap-2" onClick={() => handleSave(false)} disabled={isSubmitting}>
-            <Save className="h-4 w-4" />Save as Draft
-          </Button>
-          <Button className="gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleSave(true)} disabled={isSubmitting}>
-            <Send className="h-4 w-4" />Save & Push to Field App
-          </Button>
-        </div>
+        {/* ═══════════ STEP 2: Items ═══════════ */}
+        {step === 2 && (
+          <>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Checklist Items ({items.length})</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">Each item is a question or checkpoint that workers answer in the field.</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="gap-2" onClick={addItem}>
+                    <Plus className="h-4 w-4" />Add Item
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {items.map((item, idx) => (
+                  <div key={item.id} className="rounded-lg border p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <span className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 mt-1">{idx + 1}</span>
+                      <div className="flex-1 space-y-3">
+                        <Input
+                          placeholder="Enter question or instruction..."
+                          value={item.question}
+                          onChange={(e) => updateItem(item.id, "question", e.target.value)}
+                          autoFocus={idx === 0 && items.length === 1}
+                        />
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="relative">
+                            <select value={item.type} onChange={(e) => updateItem(item.id, "type", e.target.value)} className="rounded-md border bg-background px-2.5 py-1.5 text-xs appearance-none pr-7">
+                              {ITEM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                          </div>
+                          <button onClick={() => updateItem(item.id, "required", !item.required)} className={cn("text-xs px-2 py-1 rounded border transition-colors", item.required ? "bg-primary/10 border-primary/30 text-primary" : "text-muted-foreground border-muted")}>
+                            {item.required ? "Required" : "Optional"}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1 shrink-0">
+                        <button onClick={() => moveItem(idx, -1)} disabled={idx === 0} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => moveItem(idx, 1)} disabled={idx === items.length - 1} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => removeItem(item.id)} disabled={items.length <= 1} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive disabled:opacity-30"><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <Button variant="ghost" className="w-full gap-2 border-2 border-dashed text-muted-foreground hover:text-foreground" onClick={addItem}>
+                  <Plus className="h-4 w-4" />Add Another Item
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              <Button variant="outline" className="gap-2" onClick={() => setStep(1)}>
+                <ArrowLeft className="h-4 w-4" />Back to Details
+              </Button>
+              <div className="flex-1" />
+              <Button variant="outline" className="gap-2" onClick={() => handleSave(false)} disabled={isSubmitting}>
+                <Save className="h-4 w-4" />Save as Draft
+              </Button>
+              <Button className="gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleSave(true)} disabled={isSubmitting}>
+                <Send className="h-4 w-4" />Save & Push to Field App
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </RoleGuard>
   );
