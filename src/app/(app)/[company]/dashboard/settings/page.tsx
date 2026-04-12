@@ -27,6 +27,13 @@ import {
   DEFAULT_BRAND_PRIMARY_COLOR,
   DEFAULT_BRAND_SECONDARY_COLOR,
 } from "@/lib/brand-defaults";
+
+const FONT_MAP: Record<string, string> = {
+  geist: "Geist Sans", inter: "Inter", ibm_plex_sans: "IBM Plex Sans",
+  manrope: "Manrope", plus_jakarta_sans: "Plus Jakarta Sans",
+  public_sans: "Public Sans", source_sans_3: "Source Sans 3", work_sans: "Work Sans",
+};
+
 import {
   buildRegionalDefaults,
   getCompanySettingsKey,
@@ -203,6 +210,10 @@ export default function SettingsPage() {
       {
         primaryColor: nextSettings.primaryColor,
         secondaryColor: nextSettings.secondaryColor,
+        tertiaryColor: nextSettings.tertiaryColor,
+        fontFamily: nextSettings.fieldApp?.fontId ? FONT_MAP[nextSettings.fieldApp.fontId] : undefined,
+        shape: nextSettings.fieldApp?.shape,
+        shadow: nextSettings.fieldApp?.shadow,
       },
       resolvedTheme || "light",
     );
@@ -219,6 +230,10 @@ export default function SettingsPage() {
         {
           primaryColor: settings.primaryColor,
           secondaryColor: settings.secondaryColor,
+          tertiaryColor: settings.tertiaryColor,
+          fontFamily: settings.fieldApp?.fontId ? FONT_MAP[settings.fieldApp.fontId] : undefined,
+          shape: settings.fieldApp?.shape,
+          shadow: settings.fieldApp?.shadow,
         },
         resolvedTheme || "light",
       );
