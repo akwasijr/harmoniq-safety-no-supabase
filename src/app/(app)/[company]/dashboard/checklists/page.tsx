@@ -263,12 +263,16 @@ function ChecklistsPageContent() {
     return data;
   }, [combinedRiskAssessments, statusFilter, searchQuery]);
 
-  // Published templates for the "Start New" picker
+  // Templates visible in field app (published + active)
   const publishedTemplates = React.useMemo(() => {
     return checklistTemplatesStore.filter(
-      (t) => getTemplatePublishStatus(t) === "published"
+      (t) => getTemplatePublishStatus(t) === "published" && t.is_active !== false
     );
   }, [checklistTemplatesStore]);
+
+  // Split by type for context-aware pickers
+  const activeChecklistTemplates = React.useMemo(() => publishedTemplates.filter((t) => t.category !== "risk_assessment"), [publishedTemplates]);
+  const activeAssessmentTemplates = React.useMemo(() => publishedTemplates.filter((t) => t.category === "risk_assessment"), [publishedTemplates]);
 
 
   // Reset filters when main tab changes
@@ -363,13 +367,15 @@ function ChecklistsPageContent() {
 
   const handleStartNew = () => {
     if (activeTab === "risk-assessment") {
-      router.push(`/${company}/dashboard/risk-assessments/new`);
+      setShowTemplatePickerModal(true);
     } else if (activeTab === "procedures") {
       setShowProcedurePickerModal(true);
     } else {
       setShowTemplatePickerModal(true);
     }
   };
+
+  const startNewLabel = activeTab === "risk-assessment" ? "Start Assessment" : activeTab === "procedures" ? "Start Procedure" : "Start Checklist";
 
 
   const filteredProcedureSubmissions = React.useMemo(() => {
@@ -469,60 +475,67 @@ function ChecklistsPageContent() {
           </Button>
           <Button size="sm" className="gap-2" onClick={handleStartNew}>
             <Play className="h-4 w-4" aria-hidden="true" />
-            Start New
+            {startNewLabel}
           </Button>
         </div>
       </div>
 
-      {/* Template Picker Modal (Start New for Checklists) */}
+      {/* Template Picker Modal (context-aware: Checklists or Assessments) */}
       {showTemplatePickerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowTemplatePickerModal(false)}>
-          <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowTemplatePickerModal(false)}>
+          <div className="bg-background rounded-xl border shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b p-4">
-              <h2 className="text-lg font-semibold">Start a new checklist</h2>
+              <h2 className="text-lg font-semibold">
+                {activeTab === "risk-assessment" ? "Start a new risk assessment" : "Start a new checklist"}
+              </h2>
               <Button variant="ghost" size="icon" onClick={() => setShowTemplatePickerModal(false)} aria-label="Close">
                 <X className="h-4 w-4" />
               </Button>
             </div>
             <div className="p-4 overflow-y-auto max-h-[60vh]">
               <p className="text-sm text-muted-foreground mb-4">
-                Select a published template to fill out.
+                Select an active template to fill out.
               </p>
-              {publishedTemplates.length === 0 ? (
-                <div className="py-8 text-center text-muted-foreground">
-                  <ClipboardCheck className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">No published templates available.</p>
-                  <p className="text-xs mt-1">Publish a template first to start a new checklist.</p>
-                </div>
-              ) : (
-                <div className="grid gap-3">
-                  {publishedTemplates.map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => {
-                        setShowTemplatePickerModal(false);
-                        router.push(`/${company}/dashboard/checklists/fill/${template.id}`);
-                      }}
-                      className="flex items-start gap-3 p-4 rounded-lg border hover:bg-muted/50 text-left transition-colors"
-                    >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                        <ClipboardCheck className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium">{template.name}</p>
-                        {template.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2">{template.description}</p>
-                        )}
-                      </div>
-                      <span className="text-sm text-muted-foreground shrink-0">{template.items.length} items</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              {(() => {
+                const templateList = activeTab === "risk-assessment" ? activeAssessmentTemplates : activeChecklistTemplates;
+                const IconComp = activeTab === "risk-assessment" ? ShieldAlert : ClipboardCheck;
+                return templateList.length === 0 ? (
+                  <div className="py-8 text-center text-muted-foreground">
+                    <IconComp className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No active templates available.</p>
+                    <p className="text-xs mt-1">Push templates to the field app from the Template Library first.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    {templateList.map((template) => (
+                      <button
+                        type="button"
+                        key={template.id}
+                        onClick={() => {
+                          setShowTemplatePickerModal(false);
+                          router.push(`/${company}/dashboard/checklists/fill/${template.id}`);
+                        }}
+                        className="flex items-start gap-3 p-4 rounded-lg border hover:bg-muted/50 text-left transition-colors"
+                      >
+                        <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg shrink-0", activeTab === "risk-assessment" ? "bg-orange-500/10" : "bg-primary/10")}>
+                          <IconComp className={cn("h-5 w-5", activeTab === "risk-assessment" ? "text-orange-500" : "text-primary")} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium">{template.name}</p>
+                          {template.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">{template.description}</p>
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground shrink-0">{template.items.length} items</span>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
             <div className="border-t p-4 bg-muted/30">
               <p className="text-xs text-muted-foreground text-center">
-                Only published templates are shown here. Manage templates in{" "}
+                Only active templates are shown. Manage templates in{" "}
                 <button
                   type="button"
                   className="underline hover:text-foreground"
@@ -531,7 +544,7 @@ function ChecklistsPageContent() {
                     router.push(`/${company}/dashboard/checklists/my-templates`);
                   }}
                 >
-                  My Templates
+                  Template Library
                 </button>.
               </p>
             </div>
@@ -541,7 +554,7 @@ function ChecklistsPageContent() {
 
       {/* Procedure Picker Modal (Start Procedure) */}
       {showProcedurePickerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowProcedurePickerModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowProcedurePickerModal(false)}>
           <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b p-4">
               <h2 className="text-lg font-semibold">Start a procedure</h2>

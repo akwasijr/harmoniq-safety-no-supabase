@@ -1,6 +1,7 @@
 "use client";
 
 import { Clock } from "lucide-react";
+import { useTranslation } from "@/i18n";
 
 export default function ComingSoonPage() {
   return (

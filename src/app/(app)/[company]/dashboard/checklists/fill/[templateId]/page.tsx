@@ -45,6 +45,7 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { checklistTemplates, locations, stores, companyId } = useCompanyData();
+  const { isLoading } = stores.checklistTemplates;
 
   const template = checklistTemplates.find((tpl) => tpl.id === templateId);
 
@@ -105,6 +106,10 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
     }, 10000);
     return () => clearInterval(interval);
   }, [template, templateId, responses, generalComments, locationId]);
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   if (!template) {
     return (

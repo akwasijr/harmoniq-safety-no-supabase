@@ -571,14 +571,24 @@ export function getAllRiskAssessmentTemplates(): IndustryChecklistTemplate[] {
 }
 
 export function getAllRiskAssessmentTemplatesForCountry(country: Country): IndustryChecklistTemplate[] {
-  return ALL_RA_TEMPLATES;
+  // Filter templates by country — US-centric regulations only show for US,
+  // other countries get their own regulation overrides
+  return ALL_RA_TEMPLATES.map((t) => ({
+    ...t,
+    regulation: resolveRARegulation(t, country),
+  }));
 }
 
 export function getRiskAssessmentTemplatesByIndustry(
   industry: IndustryCode,
   country: Country,
 ): IndustryChecklistTemplate[] {
-  return ALL_RA_TEMPLATES.filter((t) => t.industry === industry);
+  return ALL_RA_TEMPLATES
+    .filter((t) => t.industry === industry)
+    .map((t) => ({
+      ...t,
+      regulation: resolveRARegulation(t, country),
+    }));
 }
 
 export function getRiskAssessmentTemplateById(id: string): IndustryChecklistTemplate | undefined {
