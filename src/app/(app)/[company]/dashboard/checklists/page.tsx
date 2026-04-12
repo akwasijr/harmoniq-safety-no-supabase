@@ -427,9 +427,22 @@ function ChecklistsPageContent() {
     };
     stores.procedureSubmissions.add(submission);
     setShowProcedurePickerModal(false);
-    // Switch to procedures tab to show the in-progress submission
+
+    // Navigate to fill the first step — find activated template by source_template_id
+    const firstStep = tpl.steps[0];
+    if (firstStep) {
+      const allTpls = stores.checklistTemplates.items;
+      // Find the activated checklist template matching this step's industry template ID
+      const activated = allTpls.find((t) => t.source_template_id === firstStep.template_id)
+        || allTpls.find((t) => t.id === firstStep.template_id);
+      if (activated) {
+        router.push(`/${company}/dashboard/checklists/fill/${activated.id}`);
+        return;
+      }
+    }
+    // Fallback: stay on procedures tab
     setActiveTab("procedures");
-    toast("Procedure started — see your in-progress procedures below");
+    toast("Procedure started — complete each step from the procedures list");
   };
 
   const tableLength = activeTab === "checklists"

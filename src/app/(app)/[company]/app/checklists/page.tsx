@@ -493,21 +493,26 @@ function EmployeeChecklistsPageContent() {
                     const now = new Date().toISOString();
                     const subId = `proc_sub_${Date.now()}`;
                     addProcedureSubmission({ id: subId, company_id: user?.company_id || "", procedure_template_id: proc.id, submitter_id: user?.id || "", location_id: null, status: "in_progress", current_step: 1, step_submissions: proc.steps.map((s) => ({ step_id: s.id, submission_id: null, status: "pending" as const, completed_at: null })), started_at: now, completed_at: null, next_due_date: null, created_at: now, updated_at: now });
-                    toast("Procedure started — complete the first step");
-                    // Navigate to the first step's template
+                    // Navigate to fill the first step — find activated template
                     const firstStep = proc.steps[0];
                     if (firstStep) {
-                      // For RA steps, try to extract known form ID (jha, jsa, rie, etc.)
+                      const allTpls = checklistTemplates;
+                      // Find activated template by source_template_id
+                      const activated = allTpls.find((t) => t.source_template_id === firstStep.template_id)
+                        || allTpls.find((t) => t.id === firstStep.template_id);
+                      if (activated) {
+                        router.push(`/${company}/app/checklists/${activated.id}`);
+                        return;
+                      }
+                      // Fallback: try known RA form IDs
                       const knownRAForms = ["jha", "jsa", "rie", "arbowet", "sam", "osa"];
                       const formIdMatch = knownRAForms.find((f) => firstStep.template_id.includes(f));
-                      
                       if (firstStep.type === "risk_assessment" && formIdMatch) {
                         router.push(`/${company}/app/risk-assessment/${formIdMatch}`);
-                      } else {
-                        // Route to checklist fill page (handles all template sources)
-                        router.push(`/${company}/app/checklists/${firstStep.template_id}`);
+                        return;
                       }
                     }
+                    toast("Procedure started — activate the step templates first");
                   }} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground active:scale-95 transition-transform">
                     <Play className="h-3 w-3" />Start
                   </button>
