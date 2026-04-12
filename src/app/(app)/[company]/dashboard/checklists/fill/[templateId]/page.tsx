@@ -45,9 +45,12 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { checklistTemplates, locations, stores, companyId } = useCompanyData();
-  const { isLoading } = stores.checklistTemplates;
+  const { isLoading, items: allTemplates } = stores.checklistTemplates;
 
-  const template = checklistTemplates.find((tpl) => tpl.id === templateId);
+  // Look up template from ALL store items (not company-filtered) to avoid
+  // hydration timing issues where companyId hasn't resolved yet
+  const template = allTemplates.find((tpl) => tpl.id === templateId)
+    || checklistTemplates.find((tpl) => tpl.id === templateId);
 
   const [responses, setResponses] = React.useState<Record<string, ItemResponse>>({});
   const [generalComments, setGeneralComments] = React.useState("");
