@@ -93,6 +93,7 @@ function MyTemplatesContent() {
           {mainTab === "checklists" && (
             <>
               <Link href={`/${company}/dashboard/checklists/new`}><Button size="sm" className="gap-2"><Plus className="h-4 w-4" />New Template</Button></Link>
+              <Link href={`/${company}/dashboard/checklists/templates`}><Button size="sm" variant="outline" className="gap-2"><Upload className="h-4 w-4" />Import</Button></Link>
               <Link href={`/${company}/dashboard/checklists/templates`}><Button size="sm" variant="outline" className="gap-2"><Library className="h-4 w-4" />Industry Library</Button></Link>
             </>
           )}
