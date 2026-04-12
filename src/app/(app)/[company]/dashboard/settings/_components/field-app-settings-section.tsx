@@ -168,7 +168,7 @@ export function FieldAppSettingsSection({
 
       {/* Sticky phone preview */}
       <div className="hidden xl:block sticky top-24">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3 text-center">Live Preview</p>
+        <p className="text-xs font-medium text-muted-foreground font-medium mb-3 text-center">Live Preview</p>
         <FieldAppHomePreview
           settings={settings.fieldApp}
           quickActionLabels={quickActionLabels}

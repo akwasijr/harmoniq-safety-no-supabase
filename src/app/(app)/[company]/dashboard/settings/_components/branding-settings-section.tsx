@@ -208,7 +208,7 @@ export function BrandingSettingsSection({
 
       {/* Right column: sticky previews — phone + compact dashboard */}
       <div className="hidden xl:block sticky top-24 space-y-4">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide text-center">Live Preview</p>
+        <p className="text-xs font-medium text-muted-foreground font-medium text-center">Live Preview</p>
 
         {/* Phone preview — true to size */}
         <div className="mx-auto w-full max-w-[280px] rounded-[2.5rem] border-2 bg-muted p-3">
@@ -220,8 +220,8 @@ export function BrandingSettingsSection({
             <div className="p-3 space-y-3">
               <div className="flex gap-2 -mt-4">
                 {[
-                  { v: "14", l: "Safe Days", c: settings.tertiaryColor },
-                  { v: "5", l: "Pending", c: settings.secondaryColor },
+                  { v: "14", l: "Safe Days", c: settings.primaryColor },
+                  { v: "5", l: "Pending", c: settings.primaryColor },
                   { v: "8", l: "This Week", c: settings.primaryColor },
                 ].map((s) => (
                   <div key={s.l} className="flex-1 border bg-card p-2 text-center" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
@@ -258,7 +258,7 @@ export function BrandingSettingsSection({
 
         {/* Compact dashboard preview */}
         <div className="mx-auto max-w-[280px]">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide text-center mb-2">Dashboard</p>
+          <p className="text-[10px] font-medium text-muted-foreground font-medium text-center mb-2">Dashboard</p>
           <div className="rounded-lg border p-2.5 space-y-2" style={{ fontFamily: fontMap[font] || "inherit", borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold text-white" style={{ backgroundColor: settings.primaryColor, borderRadius: radiusMap[shape] }}>
@@ -274,8 +274,8 @@ export function BrandingSettingsSection({
             <div className="grid grid-cols-3 gap-1">
               {[
                 { l: "Open", c: settings.primaryColor },
-                { l: "Overdue", c: settings.secondaryColor },
-                { l: "Done", c: settings.tertiaryColor },
+                { l: "Overdue", c: settings.primaryColor },
+                { l: "Done", c: settings.primaryColor },
               ].map((card) => (
                 <div key={card.l} className="border p-1 text-center text-[8px]" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
                   <p className="font-bold text-[10px]" style={{ color: card.c }}>12</p>

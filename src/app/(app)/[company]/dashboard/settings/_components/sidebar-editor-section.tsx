@@ -203,7 +203,7 @@ export function SidebarEditorSection() {
                   <div key={group.groupId} className="py-1">
                     {/* Group header */}
                     <div className="flex items-center gap-2 px-2 py-1">
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex-1">{group.label}</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground font-mediumr flex-1">{group.label}</span>
                       {isEditing && (
                         <div className="flex items-center gap-0.5">
                           <button type="button" onClick={() => moveGroup(groupIdx, -1)} disabled={groupIdx === 0} className="p-0.5 rounded hover:bg-muted disabled:opacity-20"><ArrowUp className="h-3 w-3" /></button>
