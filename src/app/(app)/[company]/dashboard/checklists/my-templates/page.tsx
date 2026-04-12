@@ -669,6 +669,23 @@ function MyTemplatesContent() {
     router.push(`/${company}/dashboard/checklists/${cloned.id}`);
   }, [addTemplate, toast, router, company]);
 
+  const handleCloneProcedure = React.useCallback((procedure: ProcedureTemplate) => {
+    const now = new Date().toISOString();
+    const cloned: ProcedureTemplate = {
+      ...procedure,
+      id: crypto.randomUUID(),
+      company_id: resolvedCompany?.id || "",
+      name: `${procedure.name} (Copy)`,
+      is_builtin: false,
+      is_active: false,
+      steps: procedure.steps.map((s) => ({ ...s, id: crypto.randomUUID() })),
+      created_at: now,
+      updated_at: now,
+    };
+    stores.procedureTemplates.add(cloned);
+    toast("Procedure cloned as draft", "success");
+  }, [resolvedCompany?.id, stores.procedureTemplates, toast]);
+
   const handleImport = React.useCallback((valid: ParsedTemplateImport[]) => {
     const now = new Date().toISOString();
     valid.forEach((ti) => {
@@ -810,6 +827,7 @@ function MyTemplatesContent() {
                 onToggleExpand={() => setExpandedId(expandedId === p.id ? null : p.id)}
                 isActive={p.is_active}
                 onToggleActive={() => updateProcedure(p.id, { is_active: !p.is_active })}
+                onClone={() => handleCloneProcedure(p)}
                 onPush={!p.is_active ? () => updateProcedure(p.id, { is_active: true }) : undefined}
                 mode="library"
               />
