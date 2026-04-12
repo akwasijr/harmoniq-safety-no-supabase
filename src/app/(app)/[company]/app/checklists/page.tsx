@@ -1159,9 +1159,8 @@ function EmployeeChecklistsPageContent() {
           )}
         </div>
 
-        <div className="flex gap-1 bg-muted rounded-lg p-1 overflow-x-auto" role="tablist">
+        <div className="flex gap-0.5 bg-muted rounded-lg p-1 overflow-x-auto no-scrollbar" role="tablist">
           {tabs.map((tab) => {
-            const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
@@ -1170,14 +1169,13 @@ function EmployeeChecklistsPageContent() {
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium rounded-md transition-all active:opacity-80 whitespace-nowrap",
+                  "flex-1 py-2 px-2 text-[11px] font-medium rounded-md transition-all active:opacity-80 whitespace-nowrap text-center min-w-0",
                   isActive 
                     ? "bg-background text-foreground shadow-sm" 
                     : "text-muted-foreground"
                 )}
               >
-                <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span className="truncate">{tab.label}</span>
+                {tab.label}
               </button>
             );
           })}
