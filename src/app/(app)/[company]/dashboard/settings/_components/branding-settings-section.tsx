@@ -105,12 +105,12 @@ export function BrandingSettingsSection({
             </div>
             {/* Show selected template details */}
             {activeTpl && (
-              <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+              <div className="rounded-lg bg-muted/30 p-3 space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="flex gap-1.5">
-                    <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: activeTpl.primaryColor }} />
-                    <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: activeTpl.secondaryColor }} />
-                    <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: activeTpl.tertiaryColor }} />
+                    <div className="h-5 w-5 rounded-full" style={{ backgroundColor: activeTpl.primaryColor }} />
+                    <div className="h-5 w-5 rounded-full" style={{ backgroundColor: activeTpl.secondaryColor }} />
+                    <div className="h-5 w-5 rounded-full" style={{ backgroundColor: activeTpl.tertiaryColor }} />
                   </div>
                   <span className="text-sm font-medium">{activeTpl.name}</span>
                 </div>
@@ -266,10 +266,10 @@ export function BrandingSettingsSection({
               </div>
               <span className="text-xs font-semibold">{settings.companyName}</span>
             </div>
-            <div className="flex gap-1">
-              <span className="rounded px-2 py-0.5 text-[9px] font-medium text-white" style={{ backgroundColor: settings.primaryColor, borderRadius: radiusMap[shape] }}>Primary</span>
-              <span className="rounded px-2 py-0.5 text-[9px] font-medium text-white" style={{ backgroundColor: settings.secondaryColor, borderRadius: radiusMap[shape] }}>Secondary</span>
-              <span className="rounded px-2 py-0.5 text-[9px] font-medium text-white" style={{ backgroundColor: settings.tertiaryColor, borderRadius: radiusMap[shape] }}>Tertiary</span>
+            <div className="flex gap-1.5">
+              <span className="rounded px-2.5 py-1 text-[9px] font-medium text-white" style={{ backgroundColor: settings.primaryColor, borderRadius: radiusMap[shape] }}>Filled</span>
+              <span className="rounded px-2.5 py-1 text-[9px] font-medium border" style={{ color: settings.secondaryColor, borderColor: settings.secondaryColor, borderRadius: radiusMap[shape] }}>Outline</span>
+              <span className="rounded px-2.5 py-1 text-[9px] font-medium" style={{ color: settings.tertiaryColor, backgroundColor: settings.tertiaryColor + "18", borderRadius: radiusMap[shape] }}>Subtle</span>
             </div>
             <div className="grid grid-cols-3 gap-1">
               {[
