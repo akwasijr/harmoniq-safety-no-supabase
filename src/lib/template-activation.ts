@@ -128,5 +128,6 @@ export function getTemplatePublishStatus(
  * Only explicitly published templates, or legacy active templates, should surface.
  */
 export function isVisibleToFieldApp(template: ChecklistTemplate): boolean {
+  if (template.is_active === false) return false;
   return getTemplatePublishStatus(template) === "published";
 }

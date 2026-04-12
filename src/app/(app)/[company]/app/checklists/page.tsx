@@ -668,6 +668,7 @@ function RiskAssessmentTabContent({
   company,
   companyName,
   availableForms,
+  customRaTemplates,
   inProgressAssessments,
   awaitingReviewAssessments,
   reviewedAssessments,
@@ -682,6 +683,7 @@ function RiskAssessmentTabContent({
   company: string;
   companyName: string;
   availableForms: Array<{ id: string; name: string; fullName: string; icon: typeof FileCheck }>;
+  customRaTemplates: import("@/types").ChecklistTemplate[];
   inProgressAssessments: Array<{ id: string; formId: string; name: string; location: string; progress: number }>;
   awaitingReviewAssessments: Array<{ id: string; formType: string; name: string; location: string; date: string }>;
   reviewedAssessments: Array<{ id: string; formType: string; name: string; location: string; date: string; reviewerName: string }>;
@@ -813,6 +815,29 @@ function RiskAssessmentTabContent({
                   </Link>
                 );
               })}
+            </section>
+          )}
+
+          {/* Custom risk assessment templates (pushed from dashboard) */}
+          {customRaTemplates.length > 0 && (
+            <section className="space-y-2 mb-3">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Custom Assessments</h2>
+              {customRaTemplates.map((tpl) => (
+                <Link
+                  key={tpl.id}
+                  href={`/${company}/app/checklists/${tpl.id}`}
+                  className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors active:bg-muted/50 hover:bg-muted/30"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
+                    <ShieldAlert className="h-4 w-4 text-orange-500" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm leading-tight">{tpl.name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{tpl.items.length} items · Tap to start</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                </Link>
+              ))}
             </section>
           )}
 
@@ -1177,6 +1202,7 @@ function EmployeeChecklistsPageContent() {
             company={company}
             companyName={currentCompany?.name || company}
             availableForms={availableAssessmentForms}
+            customRaTemplates={templates.filter((t) => t.category === "risk_assessment")}
             inProgressAssessments={inProgressAssessments}
             awaitingReviewAssessments={awaitingReviewAssessments}
             reviewedAssessments={reviewedAssessments}
