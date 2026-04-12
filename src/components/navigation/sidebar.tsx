@@ -56,16 +56,19 @@ interface NavItem {
   additionalPaths?: string[];
   requiredRoles?: string[];
   comingSoon?: boolean;
+  moduleId?: string; // For hide/show toggle: "permits", "training", "environment", "compliance"
 }
 
 type NavGroup = {
   label: string;
+  groupId?: string; // For reordering
   items: NavItem[];
 };
 
 const companyNavGroups: NavGroup[] = [
   {
-    label: "Overview",
+    label: "Operations",
+    groupId: "operations",
     items: [
       {
         title: "Dashboard",
@@ -74,11 +77,6 @@ const companyNavGroups: NavGroup[] = [
         icon: LayoutDashboard,
         exactMatch: true,
       },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
       {
         title: "Incidents",
         titleKey: "nav.incidents",
@@ -101,15 +99,17 @@ const companyNavGroups: NavGroup[] = [
         requiredRoles: ["company_admin", "manager", "super_admin"],
       },
       {
-        title: "Permits",
+        title: "Permits to Work",
         href: "/dashboard/permits",
         icon: FileKey,
         requiredRoles: ["company_admin", "manager", "super_admin"],
+        moduleId: "permits",
       },
     ],
   },
   {
     label: "Reporting",
+    groupId: "reporting",
     items: [
       {
         title: "Analytics",
@@ -128,29 +128,34 @@ const companyNavGroups: NavGroup[] = [
   },
   {
     label: "Management",
+    groupId: "management",
     items: [
       {
-        title: "Training",
+        title: "Training & Competency",
         href: "/dashboard/training",
         icon: GraduationCap,
         requiredRoles: ["company_admin", "manager", "super_admin"],
+        moduleId: "training",
       },
       {
         title: "Environment",
         href: "/dashboard/environment",
         icon: Leaf,
         requiredRoles: ["company_admin", "manager", "super_admin"],
+        moduleId: "environment",
       },
       {
         title: "Compliance",
         href: "/dashboard/compliance",
         icon: ClipboardList,
         requiredRoles: ["company_admin", "manager", "super_admin", "viewer"],
+        moduleId: "compliance",
       },
     ],
   },
   {
     label: "Admin",
+    groupId: "admin",
     items: [
       {
         title: "Asset Management",
@@ -455,9 +460,16 @@ export function Sidebar({
         {(!showPlatformNav || hasSelectedCompany) && (
           <div className="space-y-1">
             {companyNavGroups.map((group, groupIdx) => {
-              const visibleItems = group.items.filter((item) =>
-                !item.requiredRoles || item.requiredRoles.includes(actualRole)
-              );
+              // Filter by role + company hidden modules + user hidden modules
+              const companyHidden = currentCompany?.hidden_modules || [];
+              const userHidden = user?.hidden_modules || [];
+              const allHidden = [...companyHidden, ...userHidden];
+
+              const visibleItems = group.items.filter((item) => {
+                if (item.requiredRoles && !item.requiredRoles.includes(actualRole)) return false;
+                if (item.moduleId && allHidden.includes(item.moduleId)) return false;
+                return true;
+              });
               if (visibleItems.length === 0) return null;
               return (
                 <SidebarGroup

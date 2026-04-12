@@ -241,6 +241,9 @@ export interface Company {
   // Assessment visibility (admin can hide specific form types)
   hidden_assessment_types?: string[]; // e.g. ["osa", "arbowet"]
 
+  // Module visibility — company-wide (admin controls which modules are active)
+  hidden_modules?: string[]; // e.g. ["permits", "training", "environment", "compliance"]
+
   // Subscription
   tier: SubscriptionTier;
   seat_limit: number;
@@ -332,6 +335,10 @@ export interface User {
   
   // Custom permissions (in addition to role-based defaults)
   custom_permissions?: Permission[];
+
+  // Sidebar preferences — user-level customization
+  hidden_modules?: string[]; // modules this user has hidden
+  sidebar_order?: { group: string; items: string[] }[]; // custom tab/item ordering
 }
 
 // Team/Group for organizing users

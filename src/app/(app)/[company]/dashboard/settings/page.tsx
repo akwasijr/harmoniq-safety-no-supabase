@@ -12,6 +12,7 @@ import {
   Save,
   Shield,
   Smartphone,
+  ToggleLeft,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -51,6 +52,7 @@ import { FieldAppSettingsSection } from "./_components/field-app-settings-sectio
 import { GeneralSettingsSection } from "./_components/general-settings-section";
 import { IndustrySettingsSection } from "./_components/industry-settings-section";
 import { IncidentSettingsSection } from "./_components/incident-settings-section";
+import { ModulesSettingsSection } from "./_components/modules-settings-section";
 import {
   BillingSettingsSection,
   NotificationsSettingsSection,
@@ -127,7 +129,7 @@ export default function SettingsPage() {
     hasPermission: currentUserCan,
   } = useAuth();
   const canEditSettings = currentUserCan("settings.edit");
-  const { items: companies, setItems: setCompanies } = useCompanyStore();
+  const { items: companies, setItems: setCompanies, update: updateCompany } = useCompanyStore();
   const { resolvedTheme } = useTheme();
   const fallbackCompany = React.useMemo(
     () => companies.find((item) => item.slug === company) ?? null,
@@ -152,6 +154,7 @@ export default function SettingsPage() {
   const settingsTabs = React.useMemo<SettingsTabConfig[]>(
     () => [
       { value: "general", label: t("settings.tabs.general"), icon: Building },
+      { value: "modules", label: "Modules", icon: ToggleLeft },
       { value: "branding", label: t("settings.tabs.branding"), icon: Palette },
       { value: "fieldApp", label: "Field App", icon: Smartphone },
       { value: "industry", label: "Industry", icon: Factory },
@@ -482,6 +485,18 @@ export default function SettingsPage() {
               onCountryChange={handleCountryChange}
               t={t}
               updateSetting={updateSetting}
+            />
+          )}
+
+          {activeTab === "modules" && (
+            <ModulesSettingsSection
+              hiddenModules={currentCompany?.hidden_modules || []}
+              onChange={(modules) => {
+                if (currentCompany) {
+                  updateCompany(currentCompany.id, { hidden_modules: modules });
+                  toast("Module settings updated");
+                }
+              }}
             />
           )}
 

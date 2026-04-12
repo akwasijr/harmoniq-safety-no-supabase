@@ -6,6 +6,7 @@ import type { Currency } from "@/types";
 
 export type SettingsTabType =
   | "general"
+  | "modules"
   | "branding"
   | "fieldApp"
   | "industry"
