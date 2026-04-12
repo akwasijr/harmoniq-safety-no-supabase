@@ -26,6 +26,7 @@ import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/components/ui/toast";
 import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
@@ -114,6 +115,7 @@ function ChecklistsPageContent() {
   } = useCompanyData();
   const { isLoading } = stores.checklistTemplates;
   const { user } = useAuth();
+  const { toast } = useToast();
   const { t, formatDate } = useTranslation();
 
   // Map store risk evaluations to the display format
@@ -425,11 +427,9 @@ function ChecklistsPageContent() {
     };
     stores.procedureSubmissions.add(submission);
     setShowProcedurePickerModal(false);
-    // Navigate to fill the first step
-    const firstStep = tpl.steps[0];
-    if (firstStep) {
-      router.push(`/${company}/dashboard/checklists/fill/${firstStep.template_id}`);
-    }
+    // Switch to procedures tab to show the in-progress submission
+    setActiveTab("procedures");
+    toast("Procedure started — see your in-progress procedures below");
   };
 
   const tableLength = activeTab === "checklists"
