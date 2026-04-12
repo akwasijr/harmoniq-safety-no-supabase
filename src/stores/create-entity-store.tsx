@@ -270,7 +270,13 @@ export function createEntityStore<T extends IdEntity>(
               }
               return;
             }
-            console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
+            // Table might not exist in Supabase yet — downgrade to warning (not error)
+            const isTableMissing = error.message?.includes("schema cache") || error.message?.includes("404");
+            if (isTableMissing) {
+              console.warn(`[Harmoniq] Table "${table}" not found in Supabase — using localStorage only`);
+            } else {
+              console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
+            }
             if (isMountedRef.current) setError(error.message);
             // Fallback to localStorage cache only (never mock data in Supabase mode)
             const cached = loadFromStorage<T[]>(storageKey, []);
