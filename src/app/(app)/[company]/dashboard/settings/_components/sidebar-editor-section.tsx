@@ -162,7 +162,7 @@ export function SidebarEditorSection() {
       });
     }
     return sorted;
-  }, [prefs.groupOrder]);
+  }, [prefs.groupOrder, prefs.itemOrder]);
 
   const { isCompanyAdmin, isSuperAdmin } = useAuth();
   const canEditCompany = isCompanyAdmin || isSuperAdmin;
