@@ -51,7 +51,8 @@ import { isVisibleToFieldApp } from "@/lib/template-activation";
 import { getChecklistDueInfo, getFrequencyLabel, getDueChecklists } from "@/lib/checklist-due";
 import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User, Incident } from "@/types";
 
-type TabType = "checklists" | "risk-assessment" | "procedures" | "reports";
+type TabType = "incidents" | "checklists" | "risk-assessment" | "procedures";
+type SubTabType = "assigned" | "available" | "history";
 
 // Country-specific risk assessment forms
 const riskAssessmentForms = {
@@ -977,6 +978,7 @@ function RiskAssessmentTabContent({
 
 function EmployeeChecklistsPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const tabParam = searchParams.get("tab");
   const locationParam = searchParams.get("location");
   
@@ -985,14 +987,15 @@ function EmployeeChecklistsPageContent() {
   const { t, locale, formatDate } = useTranslation();
 
   const getInitialTab = (): TabType => {
+    if (tabParam === "incidents") return "incidents";
     if (tabParam === "risk-assessment") return "risk-assessment";
     if (tabParam === "checklists") return "checklists";
     if (tabParam === "procedures") return "procedures";
-    if (tabParam === "reports") return "reports";
-    return "reports";
+    return "incidents";
   };
   
   const [activeTab, setActiveTab] = React.useState<TabType>(getInitialTab());
+  const [subTab, setSubTab] = React.useState<SubTabType>("assigned");
 
   const { items: checklistTemplates, isLoading: isTemplatesLoading } = useChecklistTemplatesStore();
   const { items: checklistSubmissions, isLoading: isSubmissionsLoading } = useChecklistSubmissionsStore();
@@ -1054,11 +1057,20 @@ function EmployeeChecklistsPageContent() {
   const activeAssets = assets.filter((a) => a.status === "active");
 
   const tabs = [
+    { id: "incidents" as TabType, label: t("checklists.tabs.incidents"), icon: AlertTriangle },
     { id: "checklists" as TabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
     { id: "risk-assessment" as TabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
     { id: "procedures" as TabType, label: t("checklists.tabs.procedures"), icon: Layers },
-    { id: "reports" as TabType, label: t("checklists.tabs.reports"), icon: AlertTriangle },
   ];
+
+  // Reset sub-tab when main tab changes
+  React.useEffect(() => { setSubTab("assigned"); }, [activeTab]);
+
+  // Draft counts for notification pills
+  const checklistDraftCount = React.useMemo(() => 
+    checklistSubmissions.filter((s) => s.status === "draft" && s.submitter_id === user?.id).length,
+    [checklistSubmissions, user?.id],
+  );
 
   const userSubmissions = user
     ? checklistSubmissions.filter((submission) => submission.submitter_id === user.id)
@@ -1182,11 +1194,60 @@ function EmployeeChecklistsPageContent() {
         </div>
       </div>
 
+      {/* Sub-tabs for non-incident tabs */}
+      {activeTab !== "incidents" && (
+        <div className="px-4 pt-2">
+          <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
+            {(["assigned", "available", "history"] as SubTabType[]).map((st) => (
+              <button
+                key={st}
+                type="button"
+                onClick={() => setSubTab(st)}
+                className={cn(
+                  "flex-1 py-1.5 text-[10px] font-medium rounded-md text-center transition-all relative",
+                  subTab === st ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                {st === "assigned" ? t("checklists.tabs.assigned") : st === "available" ? t("checklists.tabs.available") : t("checklists.tabs.history")}
+                {st === "history" && checklistDraftCount > 0 && activeTab === "checklists" && (
+                  <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-amber-500 text-[8px] text-white flex items-center justify-center font-bold">{checklistDraftCount}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div className="flex-1 px-4 pt-3 pb-20 space-y-1">
 
+        {/* INCIDENTS TAB — start report + history */}
+        {activeTab === "incidents" && (
+          <div className="space-y-3">
+            <Link
+              href={`/${company}/app/report`}
+              className="flex items-center gap-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 active:bg-primary/10 transition-colors"
+            >
+              <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center">
+                <AlertTriangle className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Report an Incident</p>
+                <p className="text-xs text-muted-foreground">Tap to start a new incident report</p>
+              </div>
+            </Link>
+            <ReportsTabContent
+              company={company}
+              incidents={incidents}
+              user={user}
+              t={t}
+              formatDate={formatDate}
+            />
+          </div>
+        )}
+
         {/* CHECKLISTS TAB */}
-        {activeTab === "checklists" && (
+        {activeTab === "checklists" && subTab === "assigned" && (
           <ChecklistsTabContent
             company={company}
             companyName={currentCompany?.name || company}
@@ -1199,20 +1260,47 @@ function EmployeeChecklistsPageContent() {
             formatDate={formatDate}
           />
         )}
-
-        {/* REPORTS TAB */}
-        {activeTab === "reports" && (
-          <ReportsTabContent
-            company={company}
-            incidents={incidents}
-            user={user}
-            t={t}
-            formatDate={formatDate}
-          />
+        {activeTab === "checklists" && subTab === "available" && (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground mb-2">Templates available to start</p>
+            {templates.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground"><ClipboardCheck className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">No checklist templates available.</p></div>
+            ) : templates.filter((t) => t.category !== "risk_assessment").map((tpl) => (
+              <Link key={tpl.id} href={`/${company}/app/checklists/${tpl.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><ClipboardCheck className="h-4 w-4 text-primary" /></div>
+                <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{tpl.name}</p><p className="text-[10px] text-muted-foreground">{tpl.items.length} items</p></div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </Link>
+            ))}
+          </div>
+        )}
+        {activeTab === "checklists" && subTab === "history" && (
+          <div className="space-y-2">
+            {checklistDraftCount > 0 && (
+              <div className="flex items-center gap-2 mb-2"><Badge variant="warning" className="text-[10px]">{checklistDraftCount} draft{checklistDraftCount > 1 ? "s" : ""}</Badge><span className="text-xs text-muted-foreground">Complete your drafts to submit</span></div>
+            )}
+            {userSubmissions.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground"><History className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">No checklist history yet.</p></div>
+            ) : userSubmissions.slice(0, 20).map((sub) => {
+              const tpl = checklistTemplates.find((t) => t.id === sub.template_id);
+              return (
+                <div key={sub.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
+                  <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", sub.status === "draft" ? "bg-amber-500/10" : "bg-green-500/10")}>
+                    {sub.status === "draft" ? <Clock className="h-4 w-4 text-amber-500" /> : <CheckCircle className="h-4 w-4 text-green-500" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{tpl?.name || "Checklist"}</p>
+                    <p className="text-[10px] text-muted-foreground">{sub.status === "draft" ? "Draft" : formatDate(new Date(sub.submitted_at || sub.created_at))}</p>
+                  </div>
+                  <Badge variant={sub.status === "draft" ? "warning" : "success"} className="text-[9px] shrink-0">{sub.status === "draft" ? "Draft" : "Submitted"}</Badge>
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {/* RISK ASSESSMENT TAB */}
-        {activeTab === "risk-assessment" && (
+        {activeTab === "risk-assessment" && subTab === "assigned" && (
           <RiskAssessmentTabContent
             company={company}
             companyName={currentCompany?.name || company}
@@ -1230,63 +1318,118 @@ function EmployeeChecklistsPageContent() {
             formatDate={formatDate}
           />
         )}
+        {activeTab === "risk-assessment" && subTab === "available" && (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground mb-2">Assessment forms available</p>
+            {availableAssessmentForms.map((form) => (
+              <Link key={form.id} href={`/${company}/app/risk-assessment/${form.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0"><ShieldAlert className="h-4 w-4 text-orange-500" /></div>
+                <div className="flex-1 min-w-0"><p className="text-sm font-medium">{form.fullName}</p><p className="text-[10px] text-muted-foreground">{form.name}</p></div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </Link>
+            ))}
+            {templates.filter((t) => t.category === "risk_assessment").map((tpl) => (
+              <Link key={tpl.id} href={`/${company}/app/checklists/${tpl.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0"><ShieldAlert className="h-4 w-4 text-orange-500" /></div>
+                <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{tpl.name}</p><p className="text-[10px] text-muted-foreground">{tpl.items.length} items · Custom</p></div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </Link>
+            ))}
+          </div>
+        )}
+        {activeTab === "risk-assessment" && subTab === "history" && (
+          <div className="space-y-2">
+            {riskEvaluations.filter((e) => e.submitter_id === user?.id).length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground"><History className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">No assessment history yet.</p></div>
+            ) : riskEvaluations.filter((e) => e.submitter_id === user?.id).slice(0, 20).map((ev) => (
+              <Link key={ev.id} href={`/${company}/app/risk-assessment/view/${ev.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", ev.status === "draft" ? "bg-amber-500/10" : ev.status === "reviewed" ? "bg-green-500/10" : "bg-blue-500/10")}>
+                  {ev.status === "draft" ? <Clock className="h-4 w-4 text-amber-500" /> : <CheckCircle className="h-4 w-4 text-green-500" />}
+                </div>
+                <div className="flex-1 min-w-0"><p className="text-sm font-medium">{ev.form_type}</p><p className="text-[10px] text-muted-foreground">{formatDate(new Date(ev.submitted_at))}</p></div>
+                <Badge variant={ev.status === "draft" ? "warning" : ev.status === "reviewed" ? "success" : "secondary"} className="text-[9px] shrink-0">{ev.status}</Badge>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* PROCEDURES TAB */}
-        {activeTab === "procedures" && (
+        {activeTab === "procedures" && subTab === "available" && (
           <div className="space-y-3">
             {activeProcedures.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">
-                <Layers className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                <p className="text-sm font-medium">No active procedures</p>
-                <p className="text-xs mt-1">Procedures combine risk assessments and checklists into multi-step workflows.</p>
-              </div>
+              <div className="py-12 text-center text-muted-foreground"><Layers className="h-8 w-8 mx-auto mb-2 opacity-40" /><p className="text-sm font-medium">No active procedures</p></div>
             ) : activeProcedures.map((proc) => (
               <div key={proc.id} className="rounded-xl border bg-card p-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-semibold">{proc.name}</p>
-                    {proc.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{proc.description}</p>}
-                  </div>
+                  <div><p className="text-sm font-semibold">{proc.name}</p>{proc.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{proc.description}</p>}</div>
                   <Badge variant="secondary" className="text-[10px] shrink-0">{proc.steps.length} steps</Badge>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {proc.steps.map((step, idx) => (
-                    <Badge key={step.id} variant="outline" className="text-[10px] gap-1">
-                      <span className="font-semibold">{idx + 1}.</span>
-                      <span className="truncate max-w-[120px]">{step.template_name}</span>
-                    </Badge>
-                  ))}
+                  {proc.steps.map((step, idx) => (<Badge key={step.id} variant="outline" className="text-[10px] gap-1"><span className="font-semibold">{idx + 1}.</span><span className="truncate max-w-[120px]">{step.template_name}</span></Badge>))}
                 </div>
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[10px] text-muted-foreground capitalize">{proc.recurrence.replace(/_/g, " ")}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const now = new Date().toISOString();
-                      addProcedureSubmission({
-                        id: `proc_sub_${Date.now()}`,
-                        company_id: user?.company_id || "",
-                        procedure_template_id: proc.id,
-                        submitter_id: user?.id || "",
-                        location_id: null,
-                        status: "in_progress",
-                        current_step: 1,
-                        step_submissions: proc.steps.map((s) => ({ step_id: s.id, submission_id: null, status: "pending" as const, completed_at: null })),
-                        started_at: now,
-                        completed_at: null,
-                        next_due_date: null,
-                        created_at: now,
-                        updated_at: now,
-                      });
-                      toast("Procedure started");
-                    }}
-                    className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground active:scale-95 transition-transform"
-                  >
+                  <button type="button" onClick={() => {
+                    const now = new Date().toISOString();
+                    const subId = `proc_sub_${Date.now()}`;
+                    addProcedureSubmission({ id: subId, company_id: user?.company_id || "", procedure_template_id: proc.id, submitter_id: user?.id || "", location_id: null, status: "in_progress", current_step: 1, step_submissions: proc.steps.map((s) => ({ step_id: s.id, submission_id: null, status: "pending" as const, completed_at: null })), started_at: now, completed_at: null, next_due_date: null, created_at: now, updated_at: now });
+                    toast("Procedure started — complete the first step");
+                    // Navigate to the first step's template
+                    const firstStep = proc.steps[0];
+                    if (firstStep) {
+                      const fillUrl = firstStep.type === "risk_assessment"
+                        ? `/${company}/app/risk-assessment/${firstStep.template_id}`
+                        : `/${company}/app/checklists/${firstStep.template_id}`;
+                      router.push(fillUrl);
+                    }
+                  }} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground active:scale-95 transition-transform">
                     <Play className="h-3 w-3" />Start
                   </button>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        {activeTab === "procedures" && subTab === "assigned" && (
+          <div className="space-y-2">
+            {procedureSubmissionItems.filter((s) => s.submitter_id === user?.id && s.status === "in_progress").length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground"><Layers className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">No procedures assigned to you.</p></div>
+            ) : procedureSubmissionItems.filter((s) => s.submitter_id === user?.id && s.status === "in_progress").map((sub) => {
+              const proc = activeProcedures.find((p) => p.id === sub.procedure_template_id);
+              const currentStep = proc?.steps[sub.current_step - 1];
+              return (
+                <div key={sub.id} className="rounded-xl border bg-card p-3 space-y-2">
+                  <p className="text-sm font-semibold">{proc?.name || "Procedure"}</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-[10px]">Step {sub.current_step} of {sub.step_submissions.length}</Badge>
+                    {currentStep && <span className="text-[10px] text-muted-foreground truncate">{currentStep.template_name}</span>}
+                  </div>
+                  {currentStep && (
+                    <Link href={currentStep.type === "risk_assessment" ? `/${company}/app/risk-assessment/${currentStep.template_id}` : `/${company}/app/checklists/${currentStep.template_id}`} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground active:scale-95 transition-transform w-fit">
+                      <Play className="h-3 w-3" />Continue Step {sub.current_step}
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {activeTab === "procedures" && subTab === "history" && (
+          <div className="space-y-2">
+            {procedureSubmissionItems.filter((s) => s.submitter_id === user?.id && s.status !== "in_progress").length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground"><History className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">No procedure history yet.</p></div>
+            ) : procedureSubmissionItems.filter((s) => s.submitter_id === user?.id && s.status !== "in_progress").slice(0, 20).map((sub) => {
+              const proc = activeProcedures.find((p) => p.id === sub.procedure_template_id);
+              return (
+                <div key={sub.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
+                  <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", sub.status === "completed" ? "bg-green-500/10" : "bg-muted")}>
+                    {sub.status === "completed" ? <CheckCircle className="h-4 w-4 text-green-500" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
+                  </div>
+                  <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{proc?.name || "Procedure"}</p><p className="text-[10px] text-muted-foreground">{formatDate(new Date(sub.completed_at || sub.started_at))}</p></div>
+                  <Badge variant={sub.status === "completed" ? "success" : "secondary"} className="text-[9px] shrink-0 capitalize">{sub.status}</Badge>
+                </div>
+              );
+            })}
           </div>
         )}
 

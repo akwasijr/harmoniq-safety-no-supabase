@@ -951,7 +951,11 @@
       "procedures": "Procedures",
       "inspections": "Inspections",
       "reports": "Reports",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "incidents": "Incidents",
+      "assigned": "Assigned",
+      "available": "Available",
+      "history": "History"
     },
     "labels": {
       "pending": "Pending",
