@@ -683,8 +683,9 @@ function MyTemplatesContent() {
       updated_at: now,
     };
     stores.procedureTemplates.add(cloned);
-    toast("Procedure cloned as draft", "success");
-  }, [resolvedCompany?.id, stores.procedureTemplates, toast]);
+    toast("Procedure cloned — opening editor", "success");
+    router.push(`/${company}/dashboard/checklists/new-procedure?edit=${cloned.id}`);
+  }, [resolvedCompany?.id, stores.procedureTemplates, toast, router, company]);
 
   const handleImport = React.useCallback((valid: ParsedTemplateImport[]) => {
     const now = new Date().toISOString();
