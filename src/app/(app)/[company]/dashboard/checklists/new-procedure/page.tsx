@@ -347,7 +347,7 @@ function ProcedureEditorContent() {
 
               {/* Type tabs — subtle active state, no aggressive colors */}
               <div className="flex gap-2">
-                <button
+                <button type="button"
                   onClick={() => { setStepPickerTab("risk_assessment"); setStepPickerSearch(""); }}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium transition-all border",
@@ -360,7 +360,7 @@ function ProcedureEditorContent() {
                   Risk Assessments
                   <Badge variant="secondary" className="text-xs">{assessmentOptions.length}</Badge>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => { setStepPickerTab("checklist"); setStepPickerSearch(""); }}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium transition-all border",
@@ -400,7 +400,7 @@ function ProcedureEditorContent() {
                       </p>
                     </div>
                   ) : filteredRA.map((tpl) => (
-                    <button
+                    <button type="button"
                       key={tpl.id}
                       onClick={() => addStep(tpl.id, tpl.name, "risk_assessment")}
                       className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-sm hover:bg-accent text-left transition-colors border border-transparent hover:border-border"
@@ -431,7 +431,7 @@ function ProcedureEditorContent() {
                       </p>
                     </div>
                   ) : filteredCL.map((tpl) => (
-                    <button
+                    <button type="button"
                       key={tpl.id}
                       onClick={() => addStep(tpl.id, tpl.name, "checklist")}
                       className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-sm hover:bg-accent text-left transition-colors border border-transparent hover:border-border"

@@ -81,10 +81,10 @@ export default function NewAssessmentPage() {
   const [description, setDescription] = React.useState("");
   const [regulation, setRegulation] = React.useState("");
   const [frequency, setFrequency] = React.useState("daily");
-  const [useStandardFields, setUseStandardFields] = React.useState(true);
-  const [items, setItems] = React.useState<DraftItem[]>(
-    RA_FIELD_ANATOMY.map((f) => ({ id: crypto.randomUUID(), question: f.question, type: f.type, required: f.required, group: f.group })),
-  );
+  const [useStandardFields, setUseStandardFields] = React.useState(false);
+  const [items, setItems] = React.useState<DraftItem[]>([
+    { id: crypto.randomUUID(), question: "", type: "text", required: true },
+  ]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const draftIdRef = React.useRef<string | null>(null);
@@ -134,10 +134,18 @@ export default function NewAssessmentPage() {
     setUseStandardFields(false);
   };
 
-  const addItem = () => setItems((prev) => [...prev, { id: crypto.randomUUID(), question: "", type: "text", required: true }]);
+  const addItem = (group?: string) => setItems((prev) => [...prev, { id: crypto.randomUUID(), question: "", type: "text", required: true, group }]);
+
+  const addSectionHeader = () => {
+    setItems((prev) => [...prev, { id: crypto.randomUUID(), question: "", type: "text", required: true, group: "New Section" }]);
+  };
 
   const updateItem = (id: string, field: keyof DraftItem, value: string | boolean) => {
     setItems((prev) => prev.map((item) => item.id === id ? { ...item, [field]: value } : item));
+  };
+
+  const updateSectionName = (oldName: string, newName: string) => {
+    setItems((prev) => prev.map((item) => item.group === oldName ? { ...item, group: newName } : item));
   };
 
   const removeItem = (id: string) => { if (items.length > 1) setItems((prev) => prev.filter((item) => item.id !== id)); };
@@ -182,9 +190,10 @@ export default function NewAssessmentPage() {
 
   // Group headers for standard fields
   const getGroupLabel = (idx: number): string | null => {
-    if (!useStandardFields || idx >= RA_FIELD_ANATOMY.length) return null;
-    if (idx === 0) return RA_FIELD_ANATOMY[0].group;
-    if (RA_FIELD_ANATOMY[idx].group !== RA_FIELD_ANATOMY[idx - 1].group) return RA_FIELD_ANATOMY[idx].group;
+    const item = items[idx];
+    if (!item?.group) return null;
+    if (idx === 0) return item.group;
+    if (item.group !== items[idx - 1]?.group) return item.group;
     return null;
   };
 
@@ -264,13 +273,13 @@ export default function NewAssessmentPage() {
         {/* STEP 2 */}
         {step === 2 && (
           <>
-            {/* Template selector */}
+            {/* Template selector — blank first */}
             <div className="flex items-center gap-3">
-              <Button size="sm" variant={useStandardFields ? "default" : "outline"} onClick={loadStandardFields}>
-                Standard RA Fields ({RA_FIELD_ANATOMY.length})
-              </Button>
               <Button size="sm" variant={!useStandardFields ? "default" : "outline"} onClick={startBlank}>
                 Start from Blank
+              </Button>
+              <Button size="sm" variant={useStandardFields ? "default" : "outline"} onClick={loadStandardFields}>
+                Load Standard RA Fields ({RA_FIELD_ANATOMY.length})
               </Button>
             </div>
 
@@ -280,10 +289,17 @@ export default function NewAssessmentPage() {
                   <div>
                     <CardTitle>Assessment Fields ({items.length})</CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {useStandardFields ? "Standard fields: Hazard Identification → Risk Evaluation → Controls → Sign-off" : "Custom fields for your assessment."}
+                      {useStandardFields ? "Standard fields: Hazard Identification → Risk Evaluation → Controls → Sign-off. Edit section names and fields as needed." : "Add fields and section headers to organize your assessment."}
                     </p>
                   </div>
-                  <Button size="sm" variant="outline" className="gap-2" onClick={addItem}><Plus className="h-4 w-4" />Add Field</Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="gap-2" onClick={addSectionHeader}>
+                      <Plus className="h-4 w-4" />Add Section
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-2" onClick={() => addItem()}>
+                      <Plus className="h-4 w-4" />Add Field
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -292,9 +308,15 @@ export default function NewAssessmentPage() {
                   return (
                     <React.Fragment key={item.id}>
                       {groupLabel && (
-                        <div className="flex items-center gap-2 pt-3 pb-1">
+                        <div className="flex items-center gap-2 pt-4 pb-1">
                           <div className="h-px flex-1 bg-border" />
-                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{groupLabel}</span>
+                          <input
+                            type="text"
+                            value={groupLabel}
+                            onChange={(e) => updateSectionName(groupLabel, e.target.value)}
+                            className="text-sm font-semibold text-muted-foreground bg-transparent border-none text-center outline-none focus:text-foreground min-w-[80px] max-w-[200px]"
+                            placeholder="Section name"
+                          />
                           <div className="h-px flex-1 bg-border" />
                         </div>
                       )}
@@ -308,7 +330,7 @@ export default function NewAssessmentPage() {
                                 <span className="text-xs text-muted-foreground">Expected response:</span>
                                 <div className="relative">
                                   <select value={item.type} onChange={(e) => updateItem(item.id, "type", e.target.value)} className="rounded-md border bg-background px-2.5 py-1.5 text-xs appearance-none pr-7">
-                                    {ITEM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                    {ITEM_TYPES.map((tp) => <option key={tp.value} value={tp.value}>{tp.label}</option>)}
                                   </select>
                                   <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
                                 </div>
@@ -320,7 +342,7 @@ export default function NewAssessmentPage() {
                                   role="switch"
                                   aria-checked={item.required}
                                   onClick={() => updateItem(item.id, "required", !item.required)}
-                                  className={cn("relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", item.required ? "bg-primary" : "bg-input")}
+                                  className={cn("relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors", item.required ? "bg-primary" : "bg-input")}
                                 >
                                   <span className={cn("pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform", item.required ? "translate-x-5" : "translate-x-0.5")} />
                                 </button>
@@ -328,16 +350,16 @@ export default function NewAssessmentPage() {
                             </div>
                           </div>
                           <div className="flex flex-col gap-1 shrink-0">
-                            <button onClick={() => moveItem(idx, -1)} disabled={idx === 0} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
-                            <button onClick={() => moveItem(idx, 1)} disabled={idx === items.length - 1} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
-                            <button onClick={() => removeItem(item.id)} disabled={items.length <= 1} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive disabled:opacity-30"><Trash2 className="h-3.5 w-3.5" /></button>
+                            <button type="button" onClick={() => moveItem(idx, -1)} disabled={idx === 0} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
+                            <button type="button" onClick={() => moveItem(idx, 1)} disabled={idx === items.length - 1} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
+                            <button type="button" onClick={() => removeItem(item.id)} disabled={items.length <= 1} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive disabled:opacity-30"><Trash2 className="h-3.5 w-3.5" /></button>
                           </div>
                         </div>
                       </div>
                     </React.Fragment>
                   );
                 })}
-                <Button variant="ghost" className="w-full gap-2 border-2 border-dashed text-muted-foreground hover:text-foreground" onClick={addItem}>
+                <Button variant="ghost" className="w-full gap-2 border-2 border-dashed text-muted-foreground hover:text-foreground" onClick={() => addItem()}>
                   <Plus className="h-4 w-4" />Add Another Field
                 </Button>
               </CardContent>
