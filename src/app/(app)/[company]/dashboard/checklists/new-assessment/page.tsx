@@ -297,19 +297,28 @@ export default function NewAssessmentPage() {
                           <span className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 mt-1">{idx + 1}</span>
                           <div className="flex-1 space-y-2">
                             <Input placeholder="Enter question or instruction..." value={item.question} onChange={(e) => updateItem(item.id, "question", e.target.value)} />
-                            <div className="flex items-center gap-3 flex-wrap">
-                              <div className="relative">
-                                <select value={item.type} onChange={(e) => updateItem(item.id, "type", e.target.value)} className="rounded-md border bg-background px-2.5 py-1.5 text-xs appearance-none pr-7">
-                                  {ITEM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                                </select>
-                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                            <div className="flex items-center gap-4 flex-wrap">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs text-muted-foreground">Expected response:</span>
+                                <div className="relative">
+                                  <select value={item.type} onChange={(e) => updateItem(item.id, "type", e.target.value)} className="rounded-md border bg-background px-2.5 py-1.5 text-xs appearance-none pr-7">
+                                    {ITEM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                  </select>
+                                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">{item.required ? "Required" : "Optional"}</span>
-                                <button type="button" onClick={() => updateItem(item.id, "required", !item.required)} className={cn("relative inline-flex h-5 w-9 items-center rounded-full transition-colors", item.required ? "bg-primary" : "bg-muted")}>
-                                  <span className={cn("inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform")} style={{ transform: item.required ? "translateX(18px)" : "translateX(2px)" }} />
+                              <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <span className="text-xs text-muted-foreground">Required field?</span>
+                                <button
+                                  type="button"
+                                  role="switch"
+                                  aria-checked={item.required}
+                                  onClick={() => updateItem(item.id, "required", !item.required)}
+                                  className={cn("relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", item.required ? "bg-primary" : "bg-input")}
+                                >
+                                  <span className={cn("pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform", item.required ? "translate-x-5" : "translate-x-0.5")} />
                                 </button>
-                              </div>
+                              </label>
                             </div>
                           </div>
                           <div className="flex flex-col gap-1 shrink-0">
