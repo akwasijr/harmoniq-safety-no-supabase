@@ -137,6 +137,74 @@ function Toggle({ active, onChange }: { active: boolean; onChange: () => void })
 }
 
 // ---------------------------------------------------------------------------
+// Active Template Card — expandable preview with Disable / Remove actions
+// ---------------------------------------------------------------------------
+const ActiveTemplateCard = React.memo(function ActiveTemplateCard({
+  template, expanded, onToggleExpand, onDisable, onRemove, companySlug,
+}: {
+  template: ChecklistTemplate; expanded: boolean; onToggleExpand: () => void;
+  onDisable: () => void; onRemove: () => void; companySlug: string;
+}) {
+  return (
+    <Card className={cn("transition-all hover:bg-muted/30", expanded && "ring-1 ring-border")}>
+      <CardContent className="p-5 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <button onClick={onToggleExpand} className="text-left w-full group">
+              <h3 className="text-base font-bold leading-snug group-hover:text-primary transition-colors">{template.name}</h3>
+            </button>
+            {template.description && <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">{template.description}</p>}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge variant="active" className="text-xs gap-1"><Check className="h-3 w-3" />Active</Badge>
+            <button onClick={onToggleExpand} className="p-1.5 rounded-md hover:bg-muted transition-colors" aria-label={expanded ? "Collapse" : "Expand"}>
+              {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {template.regulation && <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1"><Shield className="h-3 w-3" />{template.regulation}</Badge>}
+          <span className="text-sm text-muted-foreground">{template.items.length} items</span>
+          {template.source_template_id && <Badge variant="outline" className="text-xs">Industry</Badge>}
+        </div>
+        {!expanded && (
+          <button onClick={onToggleExpand} className="text-sm text-primary hover:underline flex items-center gap-1.5 font-medium pt-1">
+            <Eye className="h-3.5 w-3.5" />Preview Items
+          </button>
+        )}
+        {expanded && (
+          <div className="border-t pt-4 mt-2 space-y-4">
+            <p className="text-sm font-medium text-muted-foreground">Preview Items</p>
+            <ol className="space-y-2">
+              {template.items.map((item, idx) => (
+                <li key={item.id} className="flex items-start gap-3 text-sm">
+                  <span className="shrink-0 w-6 text-right text-muted-foreground tabular-nums">{idx + 1}.</span>
+                  <span className="flex-1 text-foreground">{item.question}</span>
+                  <Badge variant="outline" className="shrink-0 text-xs px-2 py-0.5">{itemTypeBadge(item.type)}</Badge>
+                </li>
+              ))}
+            </ol>
+            <div className="border-t pt-4 flex items-center gap-3">
+              <Button variant="outline" size="sm" onClick={onToggleExpand}>Close</Button>
+              <div className="flex-1" />
+              <Link href={`/${companySlug}/dashboard/checklists/${template.id}`}>
+                <Button variant="outline" size="sm" className="gap-2"><Eye className="h-4 w-4" />Edit Template</Button>
+              </Link>
+              <Button variant="outline" size="sm" onClick={onDisable} className="gap-2 text-amber-600 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950">
+                Disable
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { if (confirm("Remove this template permanently?")) onRemove(); }} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
+                <Trash2 className="h-4 w-4" />Remove
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+});
+
+// ---------------------------------------------------------------------------
 // Industry Template Card — matches screenshot design exactly
 // ---------------------------------------------------------------------------
 const IndustryTemplateCard = React.memo(function IndustryTemplateCard({
@@ -234,7 +302,7 @@ const IndustryTemplateCard = React.memo(function IndustryTemplateCard({
                     <FileText className="h-4 w-4" />Clone &amp; Edit
                   </Button>
                   <Button size="sm" onClick={() => onActivate("push")} className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white">
-                    <Send className="h-4 w-4" />Push as-is
+                    <Send className="h-4 w-4" />Push to Field App
                   </Button>
                 </>
               )}
@@ -250,11 +318,13 @@ const IndustryTemplateCard = React.memo(function IndustryTemplateCard({
 // Procedure Card — expandable with step preview, recurrence, and actions
 // ---------------------------------------------------------------------------
 const ProcedureCard = React.memo(function ProcedureCard({
-  procedure, expanded, onToggleExpand, isActive, onToggleActive, onClone,
+  procedure, expanded, onToggleExpand, isActive, onToggleActive, onClone, onPush, onDisable, onRemove, mode = "library",
 }: {
   procedure: ProcedureTemplate; expanded: boolean; onToggleExpand: () => void;
   isActive: boolean; onToggleActive: () => void;
-  onClone?: () => void;
+  onClone?: () => void; onPush?: () => void;
+  onDisable?: () => void; onRemove?: () => void;
+  mode?: "library" | "active";
 }) {
   const raCount = procedure.steps.filter((s) => s.type === "risk_assessment").length;
   const clCount = procedure.steps.filter((s) => s.type === "checklist").length;
@@ -332,16 +402,35 @@ const ProcedureCard = React.memo(function ProcedureCard({
             </ol>
             <div className="border-t pt-4 flex items-center gap-3">
               <Button variant="outline" size="sm" onClick={onToggleExpand}>Close</Button>
-              <div className="flex-1" />
-              {onClone && (
-                <Button variant="outline" size="sm" onClick={onClone} className="gap-2">
-                  <FileText className="h-4 w-4" />Clone &amp; Edit
-                </Button>
+              {mode === "library" ? (
+                <>
+                  {onClone && (
+                    <Button variant="outline" size="sm" onClick={onClone} className="flex-1 gap-2">
+                      <FileText className="h-4 w-4" />Clone &amp; Edit
+                    </Button>
+                  )}
+                  {onPush && !isActive && (
+                    <Button size="sm" onClick={onPush} className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white">
+                      <Send className="h-4 w-4" />Push to Field App
+                    </Button>
+                  )}
+                  {isActive && <Badge variant="active" className="text-xs gap-1 ml-auto"><Check className="h-3 w-3" />Already active</Badge>}
+                </>
+              ) : (
+                <>
+                  <div className="flex-1" />
+                  {onDisable && (
+                    <Button variant="outline" size="sm" onClick={onDisable} className="gap-2 text-amber-600 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950">
+                      Disable
+                    </Button>
+                  )}
+                  {onRemove && (
+                    <Button variant="outline" size="sm" onClick={onRemove} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
+                      <Trash2 className="h-4 w-4" />Remove
+                    </Button>
+                  )}
+                </>
               )}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{isActive ? "Active" : "Inactive"}</span>
-                <Toggle active={isActive} onChange={onToggleActive} />
-              </div>
             </div>
           </div>
         )}
@@ -707,7 +796,8 @@ function MyTemplatesContent() {
                 onToggleExpand={() => setExpandedId(expandedId === p.id ? null : p.id)}
                 isActive={p.is_active}
                 onToggleActive={() => updateProcedure(p.id, { is_active: !p.is_active })}
-                onClone={p.is_builtin ? undefined : undefined}
+                onPush={!p.is_active ? () => updateProcedure(p.id, { is_active: true }) : undefined}
+                mode="library"
               />
             ))}
           </div>
@@ -722,65 +812,78 @@ function MyTemplatesContent() {
 
       {/* ═══════════ ACTIVE FOR FIELD APP ═══════════ */}
       {subTab === "active" && mainTab === "checklists" && (
-        <Card>
-          <CardContent className="pt-6 space-y-2">
-            {activeChecklists.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">No checklists active for the field app. Browse &ldquo;All Templates&rdquo; and push templates to activate.</p>
-            ) : activeChecklists.map((tpl) => (
-              <div key={tpl.id} className="flex items-center justify-between py-2 px-1">
-                <Link href={`/${company}/dashboard/checklists/${tpl.id}`} className="hover:underline flex-1">
-                  <p className="text-sm font-medium">{tpl.name}</p>
-                  <p className="text-xs text-muted-foreground">{tpl.items.length} items</p>
-                </Link>
-                <Toggle active onChange={() => togglePublish(tpl)} />
-              </div>
-            ))}
-            {WORK_ORDER_PROCEDURE_TEMPLATES.length > 0 && (
-              <>
-                <div className="border-t pt-3 mt-3"><p className="text-xs font-medium text-muted-foreground mb-2">Work Order Procedures (auto-assigned)</p></div>
-                {WORK_ORDER_PROCEDURE_TEMPLATES.map((tpl) => (
-                  <div key={tpl.id} className="flex items-center justify-between py-2 px-1">
-                    <div><p className="text-sm font-medium">{tpl.name}</p><p className="text-xs text-muted-foreground">{tpl.items.length} steps</p></div>
-                    <Badge variant="success" className="text-[10px]">Auto</Badge>
-                  </div>
-                ))}
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          {activeChecklists.filter((t) => t.category !== "risk_assessment").length === 0 ? (
+            <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground py-6 text-center">No checklists active for the field app. Browse &ldquo;All Templates&rdquo; and push templates to activate.</p></CardContent></Card>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {activeChecklists.filter((t) => t.category !== "risk_assessment").map((tpl) => (
+                <ActiveTemplateCard
+                  key={tpl.id} template={tpl}
+                  expanded={expandedId === tpl.id}
+                  onToggleExpand={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
+                  onDisable={() => togglePublish(tpl)}
+                  onRemove={() => removeTemplate(tpl.id)}
+                  companySlug={company}
+                />
+              ))}
+            </div>
+          )}
+          {WORK_ORDER_PROCEDURE_TEMPLATES.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <p className="text-xs font-medium text-muted-foreground">Work Order Procedures (auto-assigned)</p>
+              {WORK_ORDER_PROCEDURE_TEMPLATES.map((tpl) => (
+                <div key={tpl.id} className="flex items-center justify-between py-2 px-3 rounded-lg border">
+                  <div><p className="text-sm font-medium">{tpl.name}</p><p className="text-xs text-muted-foreground">{tpl.items.length} steps</p></div>
+                  <Badge variant="success" className="text-[10px]">Auto</Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {subTab === "active" && mainTab === "assessments" && (
-        <Card>
-          <CardContent className="pt-6 space-y-2">
-            {activeChecklists.filter((t) => t.category === "risk_assessment").length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">No risk assessments active for the field app. Browse &ldquo;All Templates&rdquo; and push templates to activate.</p>
-            ) : activeChecklists.filter((t) => t.category === "risk_assessment").map((tpl) => (
-              <div key={tpl.id} className="flex items-center justify-between py-2 px-1">
-                <Link href={`/${company}/dashboard/checklists/${tpl.id}`} className="hover:underline flex-1">
-                  <p className="text-sm font-medium">{tpl.name}</p>
-                  <p className="text-xs text-muted-foreground">{tpl.items.length} items</p>
-                </Link>
-                <Toggle active onChange={() => togglePublish(tpl)} />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          {activeChecklists.filter((t) => t.category === "risk_assessment").length === 0 ? (
+            <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground py-6 text-center">No risk assessments active for the field app. Browse &ldquo;All Templates&rdquo; and push templates to activate.</p></CardContent></Card>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {activeChecklists.filter((t) => t.category === "risk_assessment").map((tpl) => (
+                <ActiveTemplateCard
+                  key={tpl.id} template={tpl}
+                  expanded={expandedId === tpl.id}
+                  onToggleExpand={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
+                  onDisable={() => togglePublish(tpl)}
+                  onRemove={() => removeTemplate(tpl.id)}
+                  companySlug={company}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {subTab === "active" && mainTab === "procedures" && (
-        <Card>
-          <CardContent className="pt-6 space-y-2">
-            {activeProcedures.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">No procedures active for the field app.</p>
-            ) : activeProcedures.map((p) => (
-              <div key={p.id} className="flex items-center justify-between py-2 px-1">
-                <div><p className="text-sm font-medium">{p.name}</p><p className="text-xs text-muted-foreground">{p.steps.length} steps &middot; {p.recurrence.replace(/_/g, " ")}</p></div>
-                <Toggle active onChange={() => updateProcedure(p.id, { is_active: false })} />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          {activeProcedures.length === 0 ? (
+            <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground py-6 text-center">No procedures active for the field app.</p></CardContent></Card>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {activeProcedures.map((p) => (
+                <ProcedureCard
+                  key={p.id} procedure={p}
+                  expanded={expandedId === p.id}
+                  onToggleExpand={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                  isActive
+                  onToggleActive={() => updateProcedure(p.id, { is_active: false })}
+                  onDisable={() => updateProcedure(p.id, { is_active: false })}
+                  mode="active"
+                />
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* ═══════════ DRAFTS ═══════════ */}
