@@ -134,9 +134,26 @@ export function SidebarEditorSection() {
     save({ groupOrder: order });
   };
 
-  // Apply ordering
+  const moveItem = (groupId: string, items: PreviewItem[], idx: number, dir: -1 | 1) => {
+    const target = idx + dir;
+    if (target < 0 || target >= items.length) return;
+    const ordered = items.map((i) => i.href);
+    [ordered[idx], ordered[target]] = [ordered[target], ordered[idx]];
+    save({ itemOrder: { ...prefs.itemOrder, [groupId]: ordered } });
+  };
+
+  // Apply ordering for groups and items within groups
   const orderedGroups = React.useMemo(() => {
-    const sorted = [...SIDEBAR_GROUPS];
+    const sorted = SIDEBAR_GROUPS.map((g) => {
+      const itemOrder = prefs.itemOrder?.[g.groupId];
+      if (!itemOrder?.length) return g;
+      const orderedItems = [...g.items].sort((a, b) => {
+        const ai = itemOrder.indexOf(a.href);
+        const bi = itemOrder.indexOf(b.href);
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+      });
+      return { ...g, items: orderedItems };
+    });
     if (prefs.groupOrder.length) {
       sorted.sort((a, b) => {
         const ai = prefs.groupOrder.indexOf(a.groupId);
@@ -197,9 +214,10 @@ export function SidebarEditorSection() {
                     </div>
 
                     {/* Items */}
-                    {(isEditing ? group.items : visibleItems).map((item) => {
+                    {(isEditing ? group.items : visibleItems).map((item, itemIdx) => {
                       const hidden = item.moduleId ? isModuleHidden(item.moduleId) : false;
                       const companyLevel = item.moduleId ? isCompanyDisabled(item.moduleId) : false;
+                      const itemList = isEditing ? group.items : visibleItems;
 
                       return (
                         <div
@@ -211,21 +229,29 @@ export function SidebarEditorSection() {
                         >
                           <item.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                           <span className={cn("flex-1 truncate", hidden && "line-through")}>{item.title}</span>
-                          {isEditing && item.moduleId && (
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              {companyLevel && canEditCompany && (
-                                <Badge variant="outline" className="text-[8px] px-1 py-0 cursor-pointer hover:bg-muted" onClick={() => toggleCompanyModule(item.moduleId!)}>
-                                  All users
-                                </Badge>
+                          {isEditing && (
+                            <div className="flex items-center gap-1 shrink-0">
+                              {/* Item reorder */}
+                              <button type="button" onClick={() => moveItem(group.groupId, itemList, itemIdx, -1)} disabled={itemIdx === 0} className="p-0.5 rounded hover:bg-muted disabled:opacity-20"><ArrowUp className="h-2.5 w-2.5" /></button>
+                              <button type="button" onClick={() => moveItem(group.groupId, itemList, itemIdx, 1)} disabled={itemIdx === itemList.length - 1} className="p-0.5 rounded hover:bg-muted disabled:opacity-20"><ArrowDown className="h-2.5 w-2.5" /></button>
+                              {/* Module toggle */}
+                              {item.moduleId && (
+                                <>
+                                  {companyLevel && canEditCompany && (
+                                    <Badge variant="outline" className="text-[8px] px-1 py-0 cursor-pointer hover:bg-muted ml-1" onClick={() => toggleCompanyModule(item.moduleId!)}>
+                                      All users
+                                    </Badge>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => item.moduleId && toggleModule(item.moduleId)}
+                                    className={cn("p-1 rounded transition-colors", hidden ? "text-muted-foreground hover:text-foreground" : "text-foreground hover:text-muted-foreground")}
+                                    title={hidden ? "Show" : "Hide"}
+                                  >
+                                    {hidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                  </button>
+                                </>
                               )}
-                              <button
-                                type="button"
-                                onClick={() => item.moduleId && toggleModule(item.moduleId)}
-                                className={cn("p-1 rounded transition-colors", hidden ? "text-muted-foreground hover:text-foreground" : "text-foreground hover:text-muted-foreground")}
-                                title={hidden ? "Show" : "Hide"}
-                              >
-                                {hidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                              </button>
                             </div>
                           )}
                         </div>
