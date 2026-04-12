@@ -24,7 +24,6 @@ import {
   LibraryBig,
   Layers,
   Radio,
-  ShieldCheck,
   FileKey,
   MessageSquare,
   GraduationCap,
@@ -130,13 +129,6 @@ const companyNavGroups: NavGroup[] = [
   {
     label: "Management",
     items: [
-      {
-        title: "Risk Register",
-        href: "/dashboard/risk-register",
-        icon: ShieldCheck,
-        requiredRoles: ["company_admin", "manager", "super_admin"],
-        comingSoon: true,
-      },
       {
         title: "Training",
         href: "/dashboard/training",
