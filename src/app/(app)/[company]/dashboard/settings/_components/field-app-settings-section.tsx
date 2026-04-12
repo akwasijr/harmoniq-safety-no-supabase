@@ -1,10 +1,12 @@
 "use client";
 
-import { ArrowDown, ArrowUp } from "lucide-react";
+import * as React from "react";
+import { ArrowDown, ArrowUp, GripVertical, Smartphone, ShieldOff, Lightbulb, Newspaper } from "lucide-react";
 import { FieldAppHomePreview } from "@/components/settings/field-app-home-preview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   FIELD_APP_MIN_QUICK_ACTIONS,
   FIELD_APP_QUICK_ACTION_DEFINITIONS,
@@ -38,107 +40,133 @@ export function FieldAppSettingsSection({
   const companyName = settings.companyName || settings.appName || "Company";
   const isAnonymousEnabled = currentCompany?.allow_anonymous_reporting ?? false;
 
+  const enabledActions = settings.fieldApp.quickActions;
+  const enabledCount = enabledActions.length;
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_340px] xl:items-start">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-start">
       <div className="space-y-6">
-        {/* Home content */}
+        {/* Home screen features */}
         <Card>
-          <CardHeader>
-            <CardTitle>Field App Layout</CardTitle>
-            <CardDescription>Control what appears on the field app home screen.</CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <CardTitle>Home Screen</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">Toggle sections visible on the field app home screen.</p>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                  <p className="font-medium">Tip of the Day</p>
-                  <p className="text-sm text-muted-foreground">Show a daily safety tip on the home screen.</p>
-                </div>
-                <SettingsToggle
-                  checked={settings.fieldApp.tipOfTheDayEnabled}
-                  onChange={(checked) => updateFieldAppSettings((prev) => ({ ...prev, tipOfTheDayEnabled: checked }))}
-                  label="Toggle tip of the day"
-                />
+          <CardContent className="space-y-2">
+            {/* Tip of the Day */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                <Lightbulb className="h-4 w-4 text-amber-500" />
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Tip of the Day</p>
+                <p className="text-[11px] text-muted-foreground">Daily safety tips on the home screen.</p>
+              </div>
+              <SettingsToggle
+                checked={settings.fieldApp.tipOfTheDayEnabled}
+                onChange={(checked) => updateFieldAppSettings((prev) => ({ ...prev, tipOfTheDayEnabled: checked }))}
+                label="Toggle tip of the day"
+              />
+            </div>
 
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                  <p className="font-medium">News</p>
-                  <p className="text-sm text-muted-foreground">Show news and updates section in the field app.</p>
-                </div>
-                <SettingsToggle
-                  checked={settings.fieldApp.newsEnabled}
-                  onChange={(checked) => updateFieldAppSettings((prev) => ({ ...prev, newsEnabled: checked }))}
-                  label="Toggle news"
-                />
+            {/* News */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                <Newspaper className="h-4 w-4 text-blue-500" />
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">News & Updates</p>
+                <p className="text-[11px] text-muted-foreground">Show company news feed and announcements.</p>
+              </div>
+              <SettingsToggle
+                checked={settings.fieldApp.newsEnabled}
+                onChange={(checked) => updateFieldAppSettings((prev) => ({ ...prev, newsEnabled: checked }))}
+                label="Toggle news"
+              />
+            </div>
 
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                  <p className="font-medium">Anonymous Incident Reporting</p>
-                  <p className="text-sm text-muted-foreground">Allow field workers to report incidents without identifying themselves.</p>
-                </div>
-                <SettingsToggle
-                  checked={isAnonymousEnabled}
-                  onChange={(checked) => {
-                    if (currentCompany) {
-                      updateCompany(currentCompany.id, { allow_anonymous_reporting: checked });
-                      toast(checked ? "Anonymous reporting enabled" : "Anonymous reporting disabled");
-                    }
-                  }}
-                  label="Toggle anonymous reporting"
-                />
+            {/* Anonymous reporting */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
+                <ShieldOff className="h-4 w-4 text-orange-500" />
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Anonymous Reporting</p>
+                <p className="text-[11px] text-muted-foreground">Workers can report incidents anonymously.</p>
+              </div>
+              <SettingsToggle
+                checked={isAnonymousEnabled}
+                onChange={(checked) => {
+                  if (currentCompany) {
+                    updateCompany(currentCompany.id, { allow_anonymous_reporting: checked });
+                    toast(checked ? "Anonymous reporting enabled" : "Anonymous reporting disabled");
+                  }
+                }}
+                label="Toggle anonymous reporting"
+              />
             </div>
           </CardContent>
         </Card>
 
         {/* Quick actions */}
         <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
-              Choose and reorder quick action buttons. Minimum {FIELD_APP_MIN_QUICK_ACTIONS} required.
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Quick Actions</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Reorder and toggle the home screen shortcut buttons ({enabledCount} active, min {FIELD_APP_MIN_QUICK_ACTIONS}).
+                </p>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {FIELD_APP_QUICK_ACTION_DEFINITIONS.map((action) => {
-              const isEnabled = settings.fieldApp.quickActions.includes(action.id);
-              const idx = settings.fieldApp.quickActions.indexOf(action.id);
-              const enabledCount = settings.fieldApp.quickActions.length;
-
+          <CardContent className="space-y-1.5">
+            {/* Enabled actions first, ordered */}
+            {enabledActions.map((actionId, idx) => {
+              const action = FIELD_APP_QUICK_ACTION_DEFINITIONS.find((a) => a.id === actionId);
+              if (!action) return null;
               return (
-                <div key={action.id} className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/30">
-                  <SettingsToggle
-                    checked={isEnabled}
-                    onChange={() => toggleFieldQuickAction(action.id)}
-                    label={`Toggle ${quickActionLabels[action.id]}`}
-                    disabled={isEnabled && enabledCount <= FIELD_APP_MIN_QUICK_ACTIONS}
-                  />
-                  <span className="flex-1 text-sm font-medium">
-                    {quickActionLabels[action.id] || action.fallbackLabel}
-                  </span>
-                  {isEnabled && (
-                    <>
-                      <Badge variant="secondary" className="text-xs">{idx + 1}</Badge>
-                      <div className="flex gap-0.5">
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" disabled={idx <= 0} onClick={() => moveFieldQuickAction(action.id, "up")}>
-                          <ArrowUp className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" disabled={idx >= enabledCount - 1} onClick={() => moveFieldQuickAction(action.id, "down")}>
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                <div key={action.id} className="flex items-center gap-2 rounded-lg border p-2.5 bg-card hover:bg-muted/30 transition-colors">
+                  <GripVertical className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <Badge variant="secondary" className="text-[10px] w-5 h-5 flex items-center justify-center p-0 shrink-0">{idx + 1}</Badge>
+                  <span className="flex-1 text-sm font-medium truncate">{quickActionLabels[actionId] || action.fallbackLabel}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button type="button" disabled={idx <= 0} onClick={() => moveFieldQuickAction(actionId, "up")} className="p-1 rounded hover:bg-muted disabled:opacity-20"><ArrowUp className="h-3 w-3" /></button>
+                    <button type="button" disabled={idx >= enabledCount - 1} onClick={() => moveFieldQuickAction(actionId, "down")} className="p-1 rounded hover:bg-muted disabled:opacity-20"><ArrowDown className="h-3 w-3" /></button>
+                    <SettingsToggle
+                      checked
+                      onChange={() => toggleFieldQuickAction(actionId)}
+                      label={`Disable ${action.fallbackLabel}`}
+                      disabled={enabledCount <= FIELD_APP_MIN_QUICK_ACTIONS}
+                    />
+                  </div>
                 </div>
               );
             })}
+
+            {/* Disabled actions */}
+            {FIELD_APP_QUICK_ACTION_DEFINITIONS.filter((a) => !enabledActions.includes(a.id)).map((action) => (
+              <div key={action.id} className="flex items-center gap-2 rounded-lg border border-dashed p-2.5 opacity-50 hover:opacity-80 transition-opacity">
+                <div className="w-3.5" />
+                <div className="w-5" />
+                <span className="flex-1 text-sm truncate">{quickActionLabels[action.id] || action.fallbackLabel}</span>
+                <SettingsToggle
+                  checked={false}
+                  onChange={() => toggleFieldQuickAction(action.id)}
+                  label={`Enable ${action.fallbackLabel}`}
+                />
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Phone preview */}
+      {/* Sticky phone preview */}
       <div className="hidden xl:block sticky top-24">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3 text-center">Live Preview</p>
         <FieldAppHomePreview
