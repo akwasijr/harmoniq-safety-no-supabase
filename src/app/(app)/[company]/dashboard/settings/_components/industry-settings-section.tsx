@@ -132,7 +132,7 @@ export function IndustrySettingsSection({
                   templates available for your industry
                 </p>
               </div>
-              <Link href={`/${companySlug}/dashboard/checklists/templates`}>
+              <Link href={`/${companySlug}/dashboard/checklists/my-templates`}>
                 <Button variant="outline" size="sm">
                   Browse Template Library
                 </Button>

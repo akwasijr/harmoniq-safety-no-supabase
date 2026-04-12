@@ -944,10 +944,11 @@
   },
   "checklists": {
     "title": "Checklists",
-    "safetyTasks": "Safety Tasks",
+    "safetyTasks": "Assessments & Checklists",
     "tabs": {
       "checklists": "Checklists",
       "assessments": "Assessments",
+      "procedures": "Procedures",
       "inspections": "Inspections",
       "reports": "Reports",
       "tasks": "Tasks"
@@ -956,7 +957,14 @@
       "pending": "Pending",
       "inProgress": "In Progress",
       "completed": "Completed",
+      "completedThisWeek": "Completed This Week",
       "completedToday": "Completed Today",
+      "overdue": "Overdue",
+      "passRate": "Pass Rate",
+      "totalAssessments": "Total Assessments",
+      "highRiskItems": "High Risk Items",
+      "totalProcedures": "Total Procedures",
+      "cancelled": "Cancelled",
       "items": "Items",
       "addComment": "Add comment",
       "comment": "Comment",

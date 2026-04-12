@@ -183,18 +183,24 @@ function buildDashboardBreadcrumbs(pathname: string | null, company: string): Br
       break;
     case "checklists":
       if (!segments[1]) {
-        push("Safety Tasks", `${base}/checklists`);
+        push("Assessments & Checklists", `${base}/checklists`);
       } else if (segments[1] === "my-templates") {
-        push("Task Templates", `${base}/checklists/my-templates`);
+        push("Template Library", `${base}/checklists/my-templates`);
       } else if (segments[1] === "templates") {
-        push("Task Templates", `${base}/checklists/my-templates`);
-        push("Template Library", `${base}/checklists/templates`);
+        push("Template Library", `${base}/checklists/my-templates`);
+        push("Industry Library", `${base}/checklists/templates`);
       } else if (segments[1] === "new") {
-        push("Task Templates", `${base}/checklists/my-templates`);
-        push("New template", `${base}/checklists/new`);
+        push("Template Library", `${base}/checklists/my-templates`);
+        push("New Template", `${base}/checklists/new`);
+      } else if (segments[1] === "fill") {
+        push("Assessments & Checklists", `${base}/checklists`);
+        push("Fill Checklist", normalizedPath);
+      } else if (segments[1] === "procedures") {
+        push("Template Library", `${base}/checklists/my-templates`);
+        push("Procedures", normalizedPath);
       } else {
-        push("Task Templates", `${base}/checklists/my-templates`);
-        push("Template details", normalizedPath);
+        push("Template Library", `${base}/checklists/my-templates`);
+        push("Template Details", normalizedPath);
       }
       break;
     case "risk-assessments":

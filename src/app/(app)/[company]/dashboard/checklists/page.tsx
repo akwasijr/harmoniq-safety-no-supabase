@@ -183,7 +183,7 @@ function ChecklistsPageContent() {
   const mainTabs = [
     { id: "checklists" as MainTabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
     { id: "risk-assessment" as MainTabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
-    { id: "procedures" as MainTabType, label: "Procedures", icon: Layers },
+    { id: "procedures" as MainTabType, label: t("checklists.tabs.procedures"), icon: Layers },
   ];
 
   const getFilters = () => {
@@ -201,7 +201,7 @@ function ChecklistsPageContent() {
     ];
   };
 
-  const getChecklistSubmissions = () => {
+  const checklistSubmissions = React.useMemo(() => {
     let checklistData = checklistSubmissionsStore
       .filter((submission) =>
         isWithinDateRange(submission.submitted_at || submission.created_at, dateRange as DateRangeValue)
@@ -246,9 +246,9 @@ function ChecklistsPageContent() {
       );
     }
     return data;
-  };
+  }, [checklistSubmissionsStore, checklistTemplatesStore, locations, users, dateRange, statusFilter, searchQuery, inspectionAsSubmissions, formatDate]);
 
-  const getRiskSubmissions = () => {
+  const riskSubmissions = React.useMemo(() => {
     let data = [...combinedRiskAssessments];
     if (statusFilter) {
       data = data.filter((item) => item.status === statusFilter);
@@ -261,10 +261,7 @@ function ChecklistsPageContent() {
       );
     }
     return data;
-  };
-
-  const checklistSubmissions = getChecklistSubmissions();
-  const riskSubmissions = getRiskSubmissions();
+  }, [combinedRiskAssessments, statusFilter, searchQuery]);
 
   // Published templates for the "Start New" picker
   const publishedTemplates = React.useMemo(() => {
@@ -280,74 +277,6 @@ function ChecklistsPageContent() {
     setSearchQuery("");
     setStatusFilter("");
   }, [activeTab]);
-
-  const getKPIs = () => {
-    if (activeTab === "checklists") {
-      const allSubmissions = checklistSubmissionsStore;
-      const completedThisWeek = allSubmissions.filter(
-        (submission) =>
-          submission.status === "submitted" &&
-          isWithinDateRange(submission.submitted_at || submission.created_at, "last_7_days")
-      ).length;
-      const pending = allSubmissions.filter((submission) => submission.status === "draft").length;
-      const overdue = allSubmissions.filter(
-        (submission) =>
-          submission.status === "draft" &&
-          !isWithinDateRange(submission.created_at, "last_30_days")
-      ).length;
-      const booleanResponses = allSubmissions.flatMap((submission) =>
-        submission.responses.filter((response) => typeof response.value === "boolean")
-      );
-      const passCount = booleanResponses.filter((response) => response.value === true).length;
-      const passRate = booleanResponses.length
-        ? `${Math.round((passCount / booleanResponses.length) * 100)}%`
-        : "\u2014";
-      return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard title={t("checklists.labels.completedToday")} value={completedThisWeek} icon={CheckCircle} />
-          <KPICard title={t("checklists.labels.pending")} value={pending} icon={Clock} />
-          <KPICard title="Overdue" value={overdue} icon={AlertTriangle} />
-          <KPICard title="Pass Rate" value={passRate} icon={ClipboardCheck} />
-        </div>
-      );
-    }
-    if (activeTab === "risk-assessment") {
-      const highRisk = combinedRiskAssessments.filter(a => a.riskLevel === "high").length;
-      const completed = combinedRiskAssessments.filter(a => a.status === "completed").length;
-      return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard title="Total Assessments" value={combinedRiskAssessments.length} icon={ShieldAlert} />
-          <KPICard title="High Risk Items" value={highRisk} icon={AlertTriangle} />
-          <KPICard title={t("checklists.labels.inProgress")} value={combinedRiskAssessments.length - completed} icon={Clock} />
-          <KPICard title={t("checklists.labels.completed")} value={completed} icon={CheckCircle} />
-        </div>
-      );
-    }
-    if (activeTab === "procedures") {
-      const inProgress = procedureSubmissionRows.filter((s) => s.status === "in_progress").length;
-      const completed = procedureSubmissionRows.filter((s) => s.status === "completed").length;
-      const cancelled = procedureSubmissionRows.filter((s) => s.status === "cancelled").length;
-      return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard title="Total Procedures" value={procedureSubmissionRows.length} icon={Layers} />
-          <KPICard title={t("checklists.labels.inProgress")} value={inProgress} icon={Clock} />
-          <KPICard title={t("checklists.labels.completed")} value={completed} icon={CheckCircle} />
-          <KPICard title="Cancelled" value={cancelled} icon={AlertTriangle} />
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const handleStartNew = () => {
-    if (activeTab === "risk-assessment") {
-      router.push(`/${company}/dashboard/risk-assessments/new`);
-    } else if (activeTab === "procedures") {
-      setShowProcedurePickerModal(true);
-    } else {
-      setShowTemplatePickerModal(true);
-    }
-  };
 
   // Active procedure templates for "Start Procedure" picker
   const activeProcedureTemplates = React.useMemo(() => {
@@ -370,6 +299,78 @@ function ChecklistsPageContent() {
       };
     });
   }, [procedureSubmissions, procedureTemplates, users]);
+
+  // Pre-compute KPI values once — avoid refiltering every render
+  const kpiData = React.useMemo(() => {
+    // Checklist KPIs
+    const allSubs = checklistSubmissionsStore;
+    const completedThisWeek = allSubs.filter(
+      (s) => s.status === "submitted" && isWithinDateRange(s.submitted_at || s.created_at, "last_7_days")
+    ).length;
+    const pending = allSubs.filter((s) => s.status === "draft").length;
+    const overdue = allSubs.filter(
+      (s) => s.status === "draft" && !isWithinDateRange(s.created_at, "last_30_days")
+    ).length;
+    const booleanResponses = allSubs.flatMap((s) => s.responses.filter((r) => typeof r.value === "boolean"));
+    const passCount = booleanResponses.filter((r) => r.value === true).length;
+    const passRate = booleanResponses.length ? `${Math.round((passCount / booleanResponses.length) * 100)}%` : "\u2014";
+
+    // Risk KPIs
+    const highRisk = combinedRiskAssessments.filter((a) => a.riskLevel === "high").length;
+    const riskCompleted = combinedRiskAssessments.filter((a) => a.status === "completed").length;
+
+    // Procedure KPIs
+    const procInProgress = procedureSubmissionRows.filter((s) => s.status === "in_progress").length;
+    const procCompleted = procedureSubmissionRows.filter((s) => s.status === "completed").length;
+    const procCancelled = procedureSubmissionRows.filter((s) => s.status === "cancelled").length;
+
+    return { completedThisWeek, pending, overdue, passRate, highRisk, riskCompleted, procInProgress, procCompleted, procCancelled };
+  }, [checklistSubmissionsStore, combinedRiskAssessments, procedureSubmissionRows]);
+
+  const getKPIs = () => {
+    if (activeTab === "checklists") {
+      return (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KPICard title={t("checklists.labels.completedThisWeek")} value={kpiData.completedThisWeek} icon={CheckCircle} />
+          <KPICard title={t("checklists.labels.pending")} value={kpiData.pending} icon={Clock} />
+          <KPICard title={t("checklists.labels.overdue")} value={kpiData.overdue} icon={AlertTriangle} />
+          <KPICard title={t("checklists.labels.passRate")} value={kpiData.passRate} icon={ClipboardCheck} />
+        </div>
+      );
+    }
+    if (activeTab === "risk-assessment") {
+      return (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KPICard title={t("checklists.labels.totalAssessments")} value={combinedRiskAssessments.length} icon={ShieldAlert} />
+          <KPICard title={t("checklists.labels.highRiskItems")} value={kpiData.highRisk} icon={AlertTriangle} />
+          <KPICard title={t("checklists.labels.inProgress")} value={combinedRiskAssessments.length - kpiData.riskCompleted} icon={Clock} />
+          <KPICard title={t("checklists.labels.completed")} value={kpiData.riskCompleted} icon={CheckCircle} />
+        </div>
+      );
+    }
+    if (activeTab === "procedures") {
+      return (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KPICard title={t("checklists.labels.totalProcedures")} value={procedureSubmissionRows.length} icon={Layers} />
+          <KPICard title={t("checklists.labels.inProgress")} value={kpiData.procInProgress} icon={Clock} />
+          <KPICard title={t("checklists.labels.completed")} value={kpiData.procCompleted} icon={CheckCircle} />
+          <KPICard title={t("checklists.labels.cancelled")} value={kpiData.procCancelled} icon={AlertTriangle} />
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const handleStartNew = () => {
+    if (activeTab === "risk-assessment") {
+      router.push(`/${company}/dashboard/risk-assessments/new`);
+    } else if (activeTab === "procedures") {
+      setShowProcedurePickerModal(true);
+    } else {
+      setShowTemplatePickerModal(true);
+    }
+  };
+
 
   const filteredProcedureSubmissions = React.useMemo(() => {
     let data = procedureSubmissionRows;
