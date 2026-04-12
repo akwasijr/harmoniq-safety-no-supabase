@@ -191,7 +191,13 @@ function buildDashboardBreadcrumbs(pathname: string | null, company: string): Br
         push("Industry Library", `${base}/checklists/templates`);
       } else if (segments[1] === "new") {
         push("Template Library", `${base}/checklists/my-templates`);
-        push("New Template", `${base}/checklists/new`);
+        push("New Checklist", `${base}/checklists/new`);
+      } else if (segments[1] === "new-assessment") {
+        push("Template Library", `${base}/checklists/my-templates`);
+        push("New Assessment", `${base}/checklists/new-assessment`);
+      } else if (segments[1] === "new-procedure") {
+        push("Template Library", `${base}/checklists/my-templates`);
+        push("New Procedure", `${base}/checklists/new-procedure`);
       } else if (segments[1] === "fill") {
         push("Assessments & Checklists", `${base}/checklists`);
         push("Fill Checklist", normalizedPath);

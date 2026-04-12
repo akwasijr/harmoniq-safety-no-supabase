@@ -701,7 +701,21 @@ function MyTemplatesContent() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Template Library</h1>
         <div className="flex gap-2">
-          <Link href={`/${company}/dashboard/checklists/new`}><Button size="sm" className="gap-2"><Plus className="h-4 w-4" />New Template</Button></Link>
+          {mainTab === "checklists" && (
+            <Link href={`/${company}/dashboard/checklists/new`}>
+              <Button size="sm" className="gap-2"><Plus className="h-4 w-4" /><ClipboardCheck className="h-3.5 w-3.5" />New Checklist</Button>
+            </Link>
+          )}
+          {mainTab === "assessments" && (
+            <Link href={`/${company}/dashboard/checklists/new-assessment`}>
+              <Button size="sm" className="gap-2"><Plus className="h-4 w-4" /><ShieldAlert className="h-3.5 w-3.5" />New Assessment</Button>
+            </Link>
+          )}
+          {mainTab === "procedures" && (
+            <Link href={`/${company}/dashboard/checklists/new-procedure`}>
+              <Button size="sm" className="gap-2"><Plus className="h-4 w-4" /><Layers className="h-3.5 w-3.5" />New Procedure</Button>
+            </Link>
+          )}
           <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowImport(true)}><Upload className="h-4 w-4" />Import</Button>
         </div>
       </div>
