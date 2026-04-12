@@ -34,6 +34,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { getBuiltInProcedureTemplates } from "@/data/procedure-templates";
+import { WORK_ORDER_PROCEDURE_TEMPLATES } from "@/data/work-order-procedure-templates";
+import { capitalize } from "@/lib/utils";
 import type { ProcedureTemplate, ProcedureStep, ProcedureRecurrence } from "@/types";
 
 const RECURRENCE_LABELS: Record<ProcedureRecurrence, string> = {
@@ -212,6 +214,41 @@ function ProcedureTemplatesContent() {
           </button>
         </div>
       </div>
+
+      {/* Work Order Procedure Checklists */}
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Built-in procedure checklists are automatically assigned to work orders based on the selected work order type. Field workers complete them as part of the work order flow.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {WORK_ORDER_PROCEDURE_TEMPLATES.map((tpl) => (
+            <Card key={tpl.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold">{tpl.name}</h3>
+                  <Badge variant="success" className="text-xs shrink-0">Active</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">{tpl.description}</p>
+                <p className="text-xs font-medium mb-2">
+                  {capitalize((tpl.work_order_type || "general").replace(/_/g, " "))} · {tpl.items.length} steps
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {tpl.items.slice(0, 3).map((item) => (
+                    <span key={item.id} className="text-[11px] rounded-md bg-muted px-2 py-0.5 truncate max-w-[200px]">
+                      {item.question}
+                    </span>
+                  ))}
+                  {tpl.items.length > 3 && (
+                    <span className="text-[11px] rounded-md bg-muted px-2 py-0.5">+{tpl.items.length - 3} more</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-border" />
 
       {/* Search */}
       <div className="relative max-w-sm">
