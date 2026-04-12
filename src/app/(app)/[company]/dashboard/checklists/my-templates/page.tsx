@@ -140,23 +140,28 @@ function Toggle({ active, onChange }: { active: boolean; onChange: () => void })
 // Active Template Card — expandable preview with Disable / Remove actions
 // ---------------------------------------------------------------------------
 const ActiveTemplateCard = React.memo(function ActiveTemplateCard({
-  template, expanded, onToggleExpand, onDisable, onRemove, companySlug,
+  template, expanded, onToggleExpand, onToggleDisable, onRemove, companySlug, isDisabled,
 }: {
   template: ChecklistTemplate; expanded: boolean; onToggleExpand: () => void;
-  onDisable: () => void; onRemove: () => void; companySlug: string;
+  onToggleDisable: () => void; onRemove: () => void; companySlug: string;
+  isDisabled: boolean;
 }) {
   return (
-    <Card className={cn("transition-all hover:bg-muted/30", expanded && "ring-1 ring-border")}>
+    <Card className={cn("transition-all hover:bg-muted/30", expanded && "ring-1 ring-border", isDisabled && "opacity-70")}>
       <CardContent className="p-5 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <button onClick={onToggleExpand} className="text-left w-full group">
-              <h3 className="text-base font-bold leading-snug group-hover:text-primary transition-colors">{template.name}</h3>
+              <h3 className={cn("text-base font-bold leading-snug group-hover:text-primary transition-colors", isDisabled && "line-through decoration-1")}>{template.name}</h3>
             </button>
             {template.description && <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">{template.description}</p>}
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Badge variant="active" className="text-xs gap-1"><Check className="h-3 w-3" />Active</Badge>
+            {isDisabled ? (
+              <Badge variant="secondary" className="text-xs gap-1 text-amber-600 dark:text-amber-400">Disabled</Badge>
+            ) : (
+              <Badge variant="active" className="text-xs gap-1"><Check className="h-3 w-3" />Active</Badge>
+            )}
             <button onClick={onToggleExpand} className="p-1.5 rounded-md hover:bg-muted transition-colors" aria-label={expanded ? "Collapse" : "Expand"}>
               {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
             </button>
@@ -190,10 +195,16 @@ const ActiveTemplateCard = React.memo(function ActiveTemplateCard({
               <Link href={`/${companySlug}/dashboard/checklists/${template.id}`}>
                 <Button variant="outline" size="sm" className="gap-2"><Eye className="h-4 w-4" />Edit Template</Button>
               </Link>
-              <Button variant="outline" size="sm" onClick={onDisable} className="gap-2 text-amber-600 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950">
-                Disable
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => { if (confirm("Remove this template permanently?")) onRemove(); }} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
+              {isDisabled ? (
+                <Button size="sm" onClick={onToggleDisable} className="gap-2 bg-green-600 hover:bg-green-700 text-white">
+                  Enable
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={onToggleDisable} className="gap-2 text-amber-600 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950">
+                  Disable
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => { if (confirm("Remove this template permanently? It will disappear from the field app.")) onRemove(); }} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
                 <Trash2 className="h-4 w-4" />Remove
               </Button>
             </div>
@@ -366,7 +377,9 @@ const ProcedureCard = React.memo(function ProcedureCard({
         {/* Collapsed: Preview link or Active badge */}
         {!expanded && (
           <div className="flex items-center justify-between pt-1">
-            {isActive ? (
+            {mode === "active" && !isActive ? (
+              <Badge variant="secondary" className="text-xs gap-1 text-amber-600 dark:text-amber-400">Disabled</Badge>
+            ) : isActive ? (
               <Badge variant="active" className="text-xs gap-1"><Check className="h-3 w-3" />Active</Badge>
             ) : (
               <button onClick={onToggleExpand} className="text-sm text-primary hover:underline flex items-center gap-1.5 font-medium">
@@ -420,12 +433,18 @@ const ProcedureCard = React.memo(function ProcedureCard({
                 <>
                   <div className="flex-1" />
                   {onDisable && (
-                    <Button variant="outline" size="sm" onClick={onDisable} className="gap-2 text-amber-600 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950">
-                      Disable
-                    </Button>
+                    isActive ? (
+                      <Button variant="outline" size="sm" onClick={onDisable} className="gap-2 text-amber-600 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950">
+                        Disable
+                      </Button>
+                    ) : (
+                      <Button size="sm" onClick={onDisable} className="gap-2 bg-green-600 hover:bg-green-700 text-white">
+                        Enable
+                      </Button>
+                    )
                   )}
                   {onRemove && (
-                    <Button variant="outline" size="sm" onClick={onRemove} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
+                    <Button variant="outline" size="sm" onClick={() => { if (confirm("Remove this procedure permanently?")) onRemove(); }} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
                       <Trash2 className="h-4 w-4" />Remove
                     </Button>
                   )}
@@ -640,6 +659,13 @@ function MyTemplatesContent() {
   const activeChecklists = React.useMemo(() => templates.filter(isPublished), [templates]);
   const draftChecklists = React.useMemo(() => templates.filter(isDraft), [templates]);
 
+  // Published templates for "Active for Field App" tab — includes disabled (is_active=false but published)
+  const fieldAppChecklists = React.useMemo(() => templates.filter((t) => t.publish_status === "published"), [templates]);
+
+  const toggleFieldAppActive = React.useCallback((tpl: ChecklistTemplate) => {
+    updateTemplate(tpl.id, { is_active: !tpl.is_active });
+  }, [updateTemplate]);
+
   const industryOptions = React.useMemo(() => {
     const codes = Object.keys(INDUSTRY_METADATA) as IndustryCode[];
     return codes.sort((a, b) => { if (a === companyIndustry) return -1; if (b === companyIndustry) return 1; return t(INDUSTRY_METADATA[a].label_key).localeCompare(t(INDUSTRY_METADATA[b].label_key)); });
@@ -648,6 +674,8 @@ function MyTemplatesContent() {
   const builtInProcs = React.useMemo(() => getBuiltInProcedureTemplates().filter((p) => !p.industry || p.industry === currentCompany?.industry), [currentCompany?.industry]);
   const allProcedures = React.useMemo(() => [...procedureTemplates, ...builtInProcs.filter((b) => !procedureTemplates.some((p) => p.id === b.id))], [procedureTemplates, builtInProcs]);
   const activeProcedures = React.useMemo(() => allProcedures.filter((p) => p.is_active), [allProcedures]);
+  // All procedures that have been pushed (active or disabled) — for field app tab
+  const fieldAppProcedures = React.useMemo(() => allProcedures.filter((p) => p.is_active || (!p.is_builtin && p.company_id === resolvedCompany?.id)), [allProcedures, resolvedCompany?.id]);
 
   const handleActivateIndustry = React.useCallback((tmpl: IndustryChecklistTemplate, mode: "edit" | "push") => {
     if (!resolvedCompany) return;
@@ -846,16 +874,17 @@ function MyTemplatesContent() {
       {/* ═══════════ ACTIVE FOR FIELD APP ═══════════ */}
       {subTab === "active" && mainTab === "checklists" && (
         <div className="space-y-4">
-          {activeChecklists.filter((t) => t.category !== "risk_assessment").length === 0 ? (
-            <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground py-6 text-center">No checklists active for the field app. Browse &ldquo;All Templates&rdquo; and push templates to activate.</p></CardContent></Card>
+          {fieldAppChecklists.filter((t) => t.category !== "risk_assessment").length === 0 ? (
+            <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground py-6 text-center">No checklists pushed to the field app yet. Browse &ldquo;All Templates&rdquo; and push templates to activate.</p></CardContent></Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
-              {activeChecklists.filter((t) => t.category !== "risk_assessment").map((tpl) => (
+              {fieldAppChecklists.filter((t) => t.category !== "risk_assessment").map((tpl) => (
                 <ActiveTemplateCard
                   key={tpl.id} template={tpl}
                   expanded={expandedId === tpl.id}
                   onToggleExpand={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
-                  onDisable={() => togglePublish(tpl)}
+                  isDisabled={!tpl.is_active}
+                  onToggleDisable={() => toggleFieldAppActive(tpl)}
                   onRemove={() => removeTemplate(tpl.id)}
                   companySlug={company}
                 />
@@ -878,16 +907,17 @@ function MyTemplatesContent() {
 
       {subTab === "active" && mainTab === "assessments" && (
         <div className="space-y-4">
-          {activeChecklists.filter((t) => t.category === "risk_assessment").length === 0 ? (
-            <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground py-6 text-center">No risk assessments active for the field app. Browse &ldquo;All Templates&rdquo; and push templates to activate.</p></CardContent></Card>
+          {fieldAppChecklists.filter((t) => t.category === "risk_assessment").length === 0 ? (
+            <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground py-6 text-center">No risk assessments pushed to the field app yet. Browse &ldquo;All Templates&rdquo; and push templates to activate.</p></CardContent></Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
-              {activeChecklists.filter((t) => t.category === "risk_assessment").map((tpl) => (
+              {fieldAppChecklists.filter((t) => t.category === "risk_assessment").map((tpl) => (
                 <ActiveTemplateCard
                   key={tpl.id} template={tpl}
                   expanded={expandedId === tpl.id}
                   onToggleExpand={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
-                  onDisable={() => togglePublish(tpl)}
+                  isDisabled={!tpl.is_active}
+                  onToggleDisable={() => toggleFieldAppActive(tpl)}
                   onRemove={() => removeTemplate(tpl.id)}
                   companySlug={company}
                 />
@@ -899,18 +929,19 @@ function MyTemplatesContent() {
 
       {subTab === "active" && mainTab === "procedures" && (
         <div className="space-y-4">
-          {activeProcedures.length === 0 ? (
-            <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground py-6 text-center">No procedures active for the field app.</p></CardContent></Card>
+          {fieldAppProcedures.length === 0 ? (
+            <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground py-6 text-center">No procedures pushed to the field app yet.</p></CardContent></Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
-              {activeProcedures.map((p) => (
+              {fieldAppProcedures.map((p) => (
                 <ProcedureCard
                   key={p.id} procedure={p}
                   expanded={expandedId === p.id}
                   onToggleExpand={() => setExpandedId(expandedId === p.id ? null : p.id)}
-                  isActive
-                  onToggleActive={() => updateProcedure(p.id, { is_active: false })}
-                  onDisable={() => updateProcedure(p.id, { is_active: false })}
+                  isActive={p.is_active}
+                  onToggleActive={() => updateProcedure(p.id, { is_active: !p.is_active })}
+                  onDisable={() => updateProcedure(p.id, { is_active: !p.is_active })}
+                  onRemove={() => { if (confirm("Remove this procedure permanently?")) stores.procedureTemplates.remove(p.id); }}
                   mode="active"
                 />
               ))}
