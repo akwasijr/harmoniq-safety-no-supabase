@@ -235,6 +235,7 @@ export interface Company {
   hero_image_url: string | null;
   primary_color: string;
   secondary_color: string;
+  tertiary_color?: string;
   font_family: string;
   ui_style: UIStyle;
 

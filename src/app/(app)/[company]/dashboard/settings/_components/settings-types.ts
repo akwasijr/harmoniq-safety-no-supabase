@@ -25,6 +25,7 @@ export interface SettingsState {
   measurementSystem: MeasurementSystem;
   primaryColor: string;
   secondaryColor: string;
+  tertiaryColor: string;
   logoUrl: string | null;
   notifCriticalAlerts: boolean;
   notifDailyDigest: boolean;

@@ -16,20 +16,20 @@ import {
 
 import type { SettingsCopyProps, SettingsState, UpdateSettingProps } from "./settings-types";
 
-// Richer design templates with full visual variety
+// Complementary 3-color palettes — primary, secondary (accent), tertiary (highlight)
 const DESIGN_TEMPLATES = [
-  { id: "default", name: "Default", primaryColor: "#3B82F6", secondaryColor: "#6366F1", font: "geist", shape: "medium", shadow: "subtle", desc: "Clean blue with balanced corners" },
-  { id: "ocean", name: "Ocean Blue", primaryColor: "#0284C7", secondaryColor: "#0EA5E9", font: "plus_jakarta_sans", shape: "large", shadow: "subtle", desc: "Cool blue, rounded, soft shadows" },
-  { id: "forest", name: "Forest Green", primaryColor: "#16A34A", secondaryColor: "#15803D", font: "work_sans", shape: "medium", shadow: "subtle", desc: "Natural green, medium radius" },
-  { id: "sunset", name: "Sunset Orange", primaryColor: "#EA580C", secondaryColor: "#DC2626", font: "manrope", shape: "small", shadow: "strong", desc: "Bold orange, sharp edges, deep shadows" },
-  { id: "midnight", name: "Midnight", primaryColor: "#4F46E5", secondaryColor: "#7C3AED", font: "inter", shape: "medium", shadow: "none", desc: "Rich indigo, no shadows, clean" },
-  { id: "coral", name: "Coral Rose", primaryColor: "#E11D48", secondaryColor: "#F43F5E", font: "ibm_plex_sans", shape: "large", shadow: "subtle", desc: "Vibrant pink, large radius, airy" },
-  { id: "slate", name: "Slate Pro", primaryColor: "#475569", secondaryColor: "#64748B", font: "source_sans_3", shape: "small", shadow: "none", desc: "Neutral gray, sharp, flat design" },
-  { id: "teal", name: "Teal Modern", primaryColor: "#0D9488", secondaryColor: "#14B8A6", font: "public_sans", shape: "medium", shadow: "subtle", desc: "Fresh teal, balanced and modern" },
-  { id: "amber", name: "Amber Warm", primaryColor: "#D97706", secondaryColor: "#B45309", font: "work_sans", shape: "large", shadow: "strong", desc: "Warm amber, rounded, bold shadows" },
-  { id: "violet", name: "Violet Dream", primaryColor: "#7C3AED", secondaryColor: "#A855F7", font: "manrope", shape: "medium", shadow: "subtle", desc: "Purple gradient feel, soft radius" },
-  { id: "military", name: "Military", primaryColor: "#365314", secondaryColor: "#4D7C0F", font: "ibm_plex_sans", shape: "small", shadow: "none", desc: "Dark olive, sharp, no frills" },
-  { id: "arctic", name: "Arctic", primaryColor: "#0369A1", secondaryColor: "#38BDF8", font: "plus_jakarta_sans", shape: "large", shadow: "subtle", desc: "Ice blue contrast, smooth and rounded" },
+  { id: "default", name: "Default", primaryColor: "#3B82F6", secondaryColor: "#8B5CF6", tertiaryColor: "#10B981", font: "geist", shape: "medium", shadow: "subtle", desc: "Blue + violet accent + emerald highlight" },
+  { id: "ocean", name: "Ocean Breeze", primaryColor: "#0284C7", secondaryColor: "#06B6D4", tertiaryColor: "#F59E0B", font: "plus_jakarta_sans", shape: "large", shadow: "subtle", desc: "Sky blue + cyan + warm amber accent" },
+  { id: "forest", name: "Forest Trail", primaryColor: "#16A34A", secondaryColor: "#854D0E", tertiaryColor: "#0EA5E9", font: "work_sans", shape: "medium", shadow: "subtle", desc: "Green + earth brown + sky blue" },
+  { id: "sunset", name: "Sunset Glow", primaryColor: "#EA580C", secondaryColor: "#7C3AED", tertiaryColor: "#FACC15", font: "manrope", shape: "small", shadow: "strong", desc: "Orange + violet + gold, bold shadows" },
+  { id: "midnight", name: "Midnight", primaryColor: "#4F46E5", secondaryColor: "#EC4899", tertiaryColor: "#14B8A6", font: "inter", shape: "medium", shadow: "none", desc: "Indigo + pink + teal, flat design" },
+  { id: "coral", name: "Coral Reef", primaryColor: "#E11D48", secondaryColor: "#0891B2", tertiaryColor: "#A3E635", font: "ibm_plex_sans", shape: "large", shadow: "subtle", desc: "Rose + ocean teal + lime accent" },
+  { id: "slate", name: "Slate Pro", primaryColor: "#475569", secondaryColor: "#0284C7", tertiaryColor: "#F97316", font: "source_sans_3", shape: "small", shadow: "none", desc: "Gray + blue + orange, professional" },
+  { id: "teal", name: "Teal Garden", primaryColor: "#0D9488", secondaryColor: "#D946EF", tertiaryColor: "#F59E0B", font: "public_sans", shape: "medium", shadow: "subtle", desc: "Teal + fuchsia + amber" },
+  { id: "amber", name: "Amber Spice", primaryColor: "#D97706", secondaryColor: "#4F46E5", tertiaryColor: "#059669", font: "work_sans", shape: "large", shadow: "strong", desc: "Amber + indigo + emerald, bold" },
+  { id: "violet", name: "Violet Aurora", primaryColor: "#7C3AED", secondaryColor: "#06B6D4", tertiaryColor: "#F43F5E", font: "manrope", shape: "medium", shadow: "subtle", desc: "Purple + cyan + rose" },
+  { id: "military", name: "Military", primaryColor: "#365314", secondaryColor: "#78716C", tertiaryColor: "#CA8A04", font: "ibm_plex_sans", shape: "small", shadow: "none", desc: "Olive + stone + gold, utilitarian" },
+  { id: "arctic", name: "Arctic Ice", primaryColor: "#0369A1", secondaryColor: "#6366F1", tertiaryColor: "#2DD4BF", font: "plus_jakarta_sans", shape: "large", shadow: "subtle", desc: "Deep blue + indigo + aqua" },
 ];
 
 const radiusMap: Record<string, string> = { square: "0px", small: "4px", medium: "8px", large: "12px" };
@@ -63,6 +63,7 @@ export function BrandingSettingsSection({
   const applyTemplate = (tpl: typeof DESIGN_TEMPLATES[0]) => {
     updateSetting("primaryColor", tpl.primaryColor);
     updateSetting("secondaryColor", tpl.secondaryColor);
+    updateSetting("tertiaryColor", tpl.tertiaryColor);
     updateSetting("fieldApp", {
       ...settings.fieldApp,
       fontId: tpl.font as FieldAppSettings["fontId"],
@@ -109,6 +110,7 @@ export function BrandingSettingsSection({
                   <div className="flex gap-1.5">
                     <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: activeTpl.primaryColor }} />
                     <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: activeTpl.secondaryColor }} />
+                    <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: activeTpl.tertiaryColor }} />
                   </div>
                   <span className="text-sm font-medium">{activeTpl.name}</span>
                 </div>
@@ -146,7 +148,7 @@ export function BrandingSettingsSection({
             </div>
 
             {/* Colors */}
-            <div className="grid gap-3 grid-cols-2">
+            <div className="grid gap-3 grid-cols-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">{t("settings.primaryColor")}</Label>
                 <div className="flex gap-1.5">
@@ -159,6 +161,13 @@ export function BrandingSettingsSection({
                 <div className="flex gap-1.5">
                   <Input value={settings.secondaryColor} onChange={(e) => { updateSetting("secondaryColor", e.target.value); setSelectedTemplate("custom"); }} className="flex-1 h-9 text-xs" />
                   <input type="color" value={settings.secondaryColor} onChange={(e) => { updateSetting("secondaryColor", e.target.value); setSelectedTemplate("custom"); }} className="h-9 w-10 cursor-pointer rounded border p-0.5" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Tertiary</Label>
+                <div className="flex gap-1.5">
+                  <Input value={settings.tertiaryColor} onChange={(e) => { updateSetting("tertiaryColor", e.target.value); setSelectedTemplate("custom"); }} className="flex-1 h-9 text-xs" />
+                  <input type="color" value={settings.tertiaryColor} onChange={(e) => { updateSetting("tertiaryColor", e.target.value); setSelectedTemplate("custom"); }} className="h-9 w-10 cursor-pointer rounded border p-0.5" />
                 </div>
               </div>
             </div>
@@ -210,12 +219,17 @@ export function BrandingSettingsSection({
               <div className="flex gap-1.5">
                 <button className="rounded px-3 py-1 text-xs font-medium text-white" style={{ backgroundColor: settings.primaryColor, borderRadius: radiusMap[shape] }}>Primary</button>
                 <button className="rounded px-3 py-1 text-xs font-medium text-white" style={{ backgroundColor: settings.secondaryColor, borderRadius: radiusMap[shape] }}>Secondary</button>
+                <button className="rounded px-3 py-1 text-xs font-medium text-white" style={{ backgroundColor: settings.tertiaryColor, borderRadius: radiusMap[shape] }}>Tertiary</button>
               </div>
               <div className="grid grid-cols-3 gap-1.5">
-                {["Card A", "Card B", "Card C"].map((l) => (
-                  <div key={l} className="border p-1.5 text-center text-[10px]" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
-                    <p className="font-bold" style={{ color: settings.primaryColor }}>12</p>
-                    <p className="text-muted-foreground">{l}</p>
+                {[
+                  { l: "Incidents", c: settings.primaryColor },
+                  { l: "Overdue", c: settings.secondaryColor },
+                  { l: "Completed", c: settings.tertiaryColor },
+                ].map((card) => (
+                  <div key={card.l} className="border p-1.5 text-center text-[10px]" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
+                    <p className="font-bold" style={{ color: card.c }}>12</p>
+                    <p className="text-muted-foreground">{card.l}</p>
                   </div>
                 ))}
               </div>

@@ -103,6 +103,7 @@ const buildSettingsFromCompany = (
     primaryColor: currentCompany.primary_color || DEFAULT_BRAND_PRIMARY_COLOR,
     secondaryColor:
       currentCompany.secondary_color || DEFAULT_BRAND_SECONDARY_COLOR,
+    tertiaryColor: currentCompany.tertiary_color || "#10B981",
     logoUrl: currentCompany.logo_url,
     notifCriticalAlerts: true,
     notifDailyDigest: true,
