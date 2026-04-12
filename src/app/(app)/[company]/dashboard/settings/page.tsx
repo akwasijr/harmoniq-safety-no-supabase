@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  AlertTriangle,
   Bell,
   Building,
   Check,
@@ -49,9 +48,7 @@ import type { Company, Country, IndustryCode, Language } from "@/types";
 import { BrandingSettingsSection } from "./_components/branding-settings-section";
 import { FieldAppSettingsSection } from "./_components/field-app-settings-section";
 import { GeneralSettingsSection } from "./_components/general-settings-section";
-import { IncidentSettingsSection } from "./_components/incident-settings-section";
-import { ModulesSettingsSection } from "./_components/modules-settings-section";
-import { SidebarPreferencesSection } from "./_components/sidebar-preferences-section";
+import { SidebarEditorSection } from "./_components/sidebar-editor-section";
 import {
   BillingSettingsSection,
   NotificationsSettingsSection,
@@ -156,7 +153,6 @@ export default function SettingsPage() {
       { value: "modules", label: "Modules & Sidebar", icon: ToggleLeft },
       { value: "branding", label: t("settings.tabs.branding"), icon: Palette },
       { value: "fieldApp", label: "Field App", icon: Smartphone },
-      { value: "incidents", label: "Incidents", icon: AlertTriangle },
       {
         value: "notifications",
         label: t("settings.tabs.notifications"),
@@ -487,20 +483,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "modules" && (
-            <div className="space-y-8">
-              <ModulesSettingsSection
-                hiddenModules={currentCompany?.hidden_modules || []}
-                onChange={(modules) => {
-                  if (currentCompany) {
-                    updateCompany(currentCompany.id, { hidden_modules: modules });
-                    toast("Module settings updated");
-                  }
-                }}
-              />
-              <div className="border-t pt-6">
-                <SidebarPreferencesSection />
-              </div>
-            </div>
+            <SidebarEditorSection />
           )}
 
           {activeTab === "branding" && (
@@ -525,10 +508,6 @@ export default function SettingsPage() {
               toggleFieldQuickAction={toggleFieldQuickAction}
               updateFieldAppSettings={updateFieldAppSettings}
             />
-          )}
-
-          {activeTab === "incidents" && (
-            <IncidentSettingsSection />
           )}
 
           {activeTab === "notifications" && (
