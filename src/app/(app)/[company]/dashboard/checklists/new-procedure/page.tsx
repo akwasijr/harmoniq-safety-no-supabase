@@ -22,7 +22,9 @@ import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { getBuiltInProcedureTemplates } from "@/data/procedure-templates";
-import type { ProcedureStep, ProcedureRecurrence, ProcedureTemplate } from "@/types";
+import { getAllTemplatesForCountry } from "@/data/industry-templates";
+import { getAllRiskAssessmentTemplatesForCountry } from "@/data/risk-assessment-templates";
+import type { ProcedureStep, ProcedureRecurrence, ProcedureTemplate, Country } from "@/types";
 
 const RECURRENCE_OPTIONS: { value: ProcedureRecurrence; label: string }[] = [
   { value: "per_event", label: "Per event (triggered manually)" },
@@ -72,8 +74,23 @@ function ProcedureEditorContent() {
   const [stepPickerSearch, setStepPickerSearch] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const checklistOptions = React.useMemo(() => checklistTemplates.filter((t) => t.category !== "risk_assessment"), [checklistTemplates]);
-  const assessmentOptions = React.useMemo(() => checklistTemplates.filter((t) => t.category === "risk_assessment"), [checklistTemplates]);
+  const companyCountry: Country = (companies.find((c) => c.slug === company) || companies[0])?.country ?? "US";
+
+  // Merge company templates + industry built-in templates for the step picker
+  const industryChecklists = React.useMemo(() => getAllTemplatesForCountry(companyCountry).map((tmpl) => ({ id: tmpl.id, name: tmpl.name_key, items: tmpl.items, regulation: tmpl.regulation })), [companyCountry]);
+  const industryRAs = React.useMemo(() => getAllRiskAssessmentTemplatesForCountry(companyCountry).map((tmpl) => ({ id: tmpl.id, name: tmpl.name_key, items: tmpl.items, regulation: tmpl.regulation })), [companyCountry]);
+
+  const checklistOptions = React.useMemo(() => {
+    const co = checklistTemplates.filter((tmpl) => tmpl.category !== "risk_assessment").map((tmpl) => ({ id: tmpl.id, name: tmpl.name, itemCount: tmpl.items.length, regulation: tmpl.regulation, source: "company" as const }));
+    const ind = industryChecklists.map((tmpl) => ({ id: tmpl.id, name: t(tmpl.name), itemCount: tmpl.items.length, regulation: tmpl.regulation, source: "industry" as const }));
+    return [...co, ...ind];
+  }, [checklistTemplates, industryChecklists, t]);
+
+  const assessmentOptions = React.useMemo(() => {
+    const co = checklistTemplates.filter((tmpl) => tmpl.category === "risk_assessment").map((tmpl) => ({ id: tmpl.id, name: tmpl.name, itemCount: tmpl.items.length, regulation: tmpl.regulation, source: "company" as const }));
+    const ind = industryRAs.map((tmpl) => ({ id: tmpl.id, name: t(tmpl.name), itemCount: tmpl.items.length, regulation: tmpl.regulation, source: "industry" as const }));
+    return [...co, ...ind];
+  }, [checklistTemplates, industryRAs, t]);
 
   const addStep = (templateId: string, templateName: string, type: "checklist" | "risk_assessment") => {
     setSteps((prev) => [...prev, { id: crypto.randomUUID(), type, template_id: templateId, template_name: templateName, required: true }]);
@@ -273,15 +290,15 @@ function ProcedureEditorContent() {
                 <p className="text-sm text-muted-foreground mt-1">Choose which type of step to add, then select a template.</p>
               </div>
 
-              {/* Type tabs — clear visual distinction */}
+              {/* Type tabs — subtle active state, no aggressive colors */}
               <div className="flex gap-2">
                 <button
                   onClick={() => { setStepPickerTab("risk_assessment"); setStepPickerSearch(""); }}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium transition-all border-2",
+                    "flex-1 flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium transition-all border",
                     stepPickerTab === "risk_assessment"
-                      ? "bg-orange-50 border-orange-300 text-orange-700 dark:bg-orange-950/40 dark:border-orange-700 dark:text-orange-400"
-                      : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                      ? "bg-accent border-foreground/20 text-foreground shadow-sm"
+                      : "bg-transparent border-transparent text-muted-foreground hover:bg-muted",
                   )}
                 >
                   <ShieldAlert className="h-4 w-4" />
@@ -291,10 +308,10 @@ function ProcedureEditorContent() {
                 <button
                   onClick={() => { setStepPickerTab("checklist"); setStepPickerSearch(""); }}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium transition-all border-2",
+                    "flex-1 flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium transition-all border",
                     stepPickerTab === "checklist"
-                      ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/40 dark:border-blue-700 dark:text-blue-400"
-                      : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                      ? "bg-accent border-foreground/20 text-foreground shadow-sm"
+                      : "bg-transparent border-transparent text-muted-foreground hover:bg-muted",
                   )}
                 >
                   <ClipboardCheck className="h-4 w-4" />
@@ -331,14 +348,17 @@ function ProcedureEditorContent() {
                     <button
                       key={tpl.id}
                       onClick={() => addStep(tpl.id, tpl.name, "risk_assessment")}
-                      className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-sm hover:bg-orange-50 dark:hover:bg-orange-950/20 text-left transition-colors border border-transparent hover:border-orange-200 dark:hover:border-orange-800"
+                      className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-sm hover:bg-accent text-left transition-colors border border-transparent hover:border-border"
                     >
-                      <span className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-orange-100 dark:bg-orange-900/30">
-                        <ShieldAlert className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                      <span className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-muted">
+                        <ShieldAlert className="h-4 w-4 text-foreground/70" />
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium">{tpl.name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{tpl.items.length} items {tpl.regulation ? `· ${tpl.regulation}` : ""}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{tpl.name}</p>
+                          {tpl.source === "industry" && <Badge variant="secondary" className="text-[10px]">Industry</Badge>}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">{tpl.itemCount} items{tpl.regulation ? ` · ${tpl.regulation}` : ""}</p>
                       </div>
                       <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
                     </button>
@@ -359,14 +379,17 @@ function ProcedureEditorContent() {
                     <button
                       key={tpl.id}
                       onClick={() => addStep(tpl.id, tpl.name, "checklist")}
-                      className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-sm hover:bg-blue-50 dark:hover:bg-blue-950/20 text-left transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                      className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-sm hover:bg-accent text-left transition-colors border border-transparent hover:border-border"
                     >
-                      <span className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
-                        <ClipboardCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <span className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-muted">
+                        <ClipboardCheck className="h-4 w-4 text-foreground/70" />
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium">{tpl.name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{tpl.items.length} items</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{tpl.name}</p>
+                          {tpl.source === "industry" && <Badge variant="secondary" className="text-[10px]">Industry</Badge>}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">{tpl.itemCount} items{tpl.regulation ? ` · ${tpl.regulation}` : ""}</p>
                       </div>
                       <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
                     </button>
