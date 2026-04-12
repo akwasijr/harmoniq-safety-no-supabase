@@ -247,42 +247,104 @@ const IndustryTemplateCard = React.memo(function IndustryTemplateCard({
 });
 
 // ---------------------------------------------------------------------------
-// Procedure Card — shows steps as preview pills (screenshot 2 style)
+// Procedure Card — expandable with step preview, recurrence, and actions
 // ---------------------------------------------------------------------------
 const ProcedureCard = React.memo(function ProcedureCard({
-  procedure, isActive, onToggleActive,
+  procedure, expanded, onToggleExpand, isActive, onToggleActive, onClone,
 }: {
-  procedure: ProcedureTemplate; isActive: boolean;
-  onToggleActive: () => void;
+  procedure: ProcedureTemplate; expanded: boolean; onToggleExpand: () => void;
+  isActive: boolean; onToggleActive: () => void;
+  onClone?: () => void;
 }) {
-  const MAX_PILLS = 3;
-  const visibleSteps = procedure.steps.slice(0, MAX_PILLS);
-  const remaining = procedure.steps.length - MAX_PILLS;
+  const raCount = procedure.steps.filter((s) => s.type === "risk_assessment").length;
+  const clCount = procedure.steps.filter((s) => s.type === "checklist").length;
   return (
-    <Card className="hover:bg-muted/30 transition-colors">
+    <Card className={cn("transition-all hover:bg-muted/30", expanded && "ring-1 ring-border")}>
       <CardContent className="p-5 space-y-3">
+        {/* Title row */}
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-base font-bold leading-snug">{procedure.name}</h3>
-          {isActive && <Badge variant="active" className="text-xs shrink-0">Active</Badge>}
+          <div className="flex-1 min-w-0">
+            <button onClick={onToggleExpand} className="text-left w-full group">
+              <h3 className="text-base font-bold leading-snug group-hover:text-primary transition-colors">
+                {procedure.name}
+              </h3>
+            </button>
+            {procedure.description && (
+              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">{procedure.description}</p>
+            )}
+          </div>
+          <button onClick={onToggleExpand} className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors mt-0.5" aria-label={expanded ? "Collapse" : "Expand"}>
+            {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+          </button>
         </div>
-        {procedure.description && <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">{procedure.description}</p>}
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-medium">{procedure.industry ? procedure.industry.replace(/_/g, " ") : "General"}</span>
-          <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">{procedure.steps.length} steps</span>
-        </div>
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {visibleSteps.map((step) => (
-            <Badge key={step.id} variant="outline" className="text-xs px-2 py-1 max-w-[200px] truncate">
-              {step.template_name}
+
+        {/* Badges row */}
+        <div className="flex flex-wrap items-center gap-2">
+          {procedure.industry && (
+            <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 capitalize">
+              {procedure.industry.replace(/_/g, " ")}
             </Badge>
-          ))}
-          {remaining > 0 && <Badge variant="secondary" className="text-xs px-2 py-1">+{remaining} more</Badge>}
+          )}
+          <Badge variant="secondary" className="text-xs gap-1.5 px-2.5 py-1">
+            <Clock className="h-3 w-3" />{FREQUENCY_LABELS[procedure.recurrence] || procedure.recurrence}
+          </Badge>
+          <span className="text-sm text-muted-foreground">{procedure.steps.length} steps</span>
+          {raCount > 0 && <Badge variant="outline" className="text-xs px-2 py-0.5 text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-700">{raCount} Risk Assessment{raCount > 1 ? "s" : ""}</Badge>}
+          {clCount > 0 && <Badge variant="outline" className="text-xs px-2 py-0.5 text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-700">{clCount} Checklist{clCount > 1 ? "s" : ""}</Badge>}
         </div>
-        <div className="pt-2 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">{FREQUENCY_LABELS[procedure.recurrence] || procedure.recurrence}</span>
-          <Toggle active={isActive} onChange={onToggleActive} />
-        </div>
+
+        {/* Collapsed: Preview link or Active badge */}
+        {!expanded && (
+          <div className="flex items-center justify-between pt-1">
+            {isActive ? (
+              <Badge variant="active" className="text-xs gap-1"><Check className="h-3 w-3" />Active</Badge>
+            ) : (
+              <button onClick={onToggleExpand} className="text-sm text-primary hover:underline flex items-center gap-1.5 font-medium">
+                <Eye className="h-3.5 w-3.5" />Preview Steps
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Expanded: step list + actions */}
+        {expanded && (
+          <div className="border-t pt-4 mt-2 space-y-4">
+            <p className="text-sm font-medium text-muted-foreground">Procedure Steps</p>
+            <ol className="space-y-2">
+              {procedure.steps.map((s, idx) => (
+                <li key={s.id} className="flex items-center gap-3 text-sm">
+                  <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium tabular-nums bg-muted text-muted-foreground">{idx + 1}</span>
+                  <span className="flex-1 text-foreground font-medium">{s.template_name}</span>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "shrink-0 text-xs px-2 py-0.5",
+                      s.type === "risk_assessment"
+                        ? "text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-700"
+                        : "text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-700",
+                    )}
+                  >
+                    {s.type === "risk_assessment" ? "Risk Assessment" : "Checklist"}
+                  </Badge>
+                  {!s.required && <span className="text-xs text-muted-foreground italic">Optional</span>}
+                </li>
+              ))}
+            </ol>
+            <div className="border-t pt-4 flex items-center gap-3">
+              <Button variant="outline" size="sm" onClick={onToggleExpand}>Close</Button>
+              <div className="flex-1" />
+              {onClone && (
+                <Button variant="outline" size="sm" onClick={onClone} className="gap-2">
+                  <FileText className="h-4 w-4" />Clone &amp; Edit
+                </Button>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{isActive ? "Active" : "Inactive"}</span>
+                <Toggle active={isActive} onChange={onToggleActive} />
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -637,11 +699,24 @@ function MyTemplatesContent() {
             <Input placeholder="Search procedures..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
           </div>
           <p className="text-sm text-muted-foreground">{allProcedures.length} procedures available</p>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {allProcedures.filter((p) => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase())).map((p) => (
-              <ProcedureCard key={p.id} procedure={p} isActive={p.is_active} onToggleActive={() => updateProcedure(p.id, { is_active: !p.is_active })} />
+              <ProcedureCard
+                key={p.id} procedure={p}
+                expanded={expandedId === p.id}
+                onToggleExpand={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                isActive={p.is_active}
+                onToggleActive={() => updateProcedure(p.id, { is_active: !p.is_active })}
+                onClone={p.is_builtin ? undefined : undefined}
+              />
             ))}
           </div>
+          {allProcedures.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Layers className="h-10 w-10 text-muted-foreground/40" />
+              <p className="mt-3 text-sm text-muted-foreground">No procedure templates available. Procedures combine risk assessments and checklists into multi-step workflows.</p>
+            </div>
+          )}
         </div>
       )}
 
