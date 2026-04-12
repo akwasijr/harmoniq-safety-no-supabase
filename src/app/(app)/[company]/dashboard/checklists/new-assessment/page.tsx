@@ -6,13 +6,14 @@ import { useRouter } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
   ShieldAlert, Plus, Trash2, ArrowUp, ArrowDown, ArrowRight, ArrowLeft,
-  ChevronDown, Save, Send, Check,
+  ChevronDown, Save, Send, Check, Clock, Shield,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useChecklistTemplatesStore } from "@/stores/checklists-store";
 import { useToast } from "@/components/ui/toast";
@@ -75,7 +76,7 @@ export default function NewAssessmentPage() {
 
   const companyId = (companies.find((c) => c.slug === company) || companies[0])?.id || user?.company_id || "";
 
-  const [step, setStep] = React.useState<1 | 2>(1);
+  const [step, setStep] = React.useState<1 | 2 | 3>(1);
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [regulation, setRegulation] = React.useState("");
@@ -203,17 +204,22 @@ export default function NewAssessmentPage() {
         </div>
 
         {/* Stepper */}
-        <div className="flex items-center gap-3">
-          <button onClick={() => setStep(1)} className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 1 ? "bg-primary text-primary-foreground" : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400")}>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button onClick={() => setStep(1)} className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 1 ? "bg-primary text-primary-foreground" : step > 1 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground")}>
             {step > 1 ? <Check className="h-4 w-4" /> : <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">1</span>}
-            Assessment Details
+            Details
           </button>
-          <div className="h-px w-8 bg-border" />
-          <div className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-            <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">2</span>
-            Assessment Fields ({items.filter((i) => i.question.trim()).length})
+          <div className="h-px w-6 bg-border" />
+          <button onClick={() => step > 1 ? setStep(2) : undefined} className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 2 ? "bg-primary text-primary-foreground" : step > 2 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground")}>
+            {step > 2 ? <Check className="h-4 w-4" /> : <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">2</span>}
+            Fields ({items.filter((i) => i.question.trim()).length})
+          </button>
+          <div className="h-px w-6 bg-border" />
+          <div className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+            <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">3</span>
+            Preview
           </div>
-          {step === 2 && draftIdRef.current && <span className="ml-auto text-xs text-muted-foreground">Auto-saving draft...</span>}
+          {step >= 2 && draftIdRef.current && <span className="ml-auto text-xs text-muted-foreground">Auto-saving draft...</span>}
         </div>
 
         {/* STEP 1 */}
@@ -340,6 +346,54 @@ export default function NewAssessmentPage() {
             <div className="flex items-center gap-3">
               <Button variant="outline" className="gap-2" onClick={() => setStep(1)}>
                 <ArrowLeft className="h-4 w-4" />Back to Details
+              </Button>
+              <div className="flex-1" />
+              <Button className="gap-2" onClick={() => { saveDraftToStore(); setStep(3); }} disabled={items.filter((i) => i.question.trim()).length === 0}>
+                Next: Preview <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* STEP 3: Preview */}
+        {step === 3 && (
+          <>
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold">{name || "Untitled Assessment"}</h2>
+                  <Badge variant="outline" className="text-xs">Risk Assessment</Badge>
+                </div>
+                {description && <p className="text-sm text-muted-foreground">{description}</p>}
+                <div className="flex items-center gap-3 text-sm">
+                  {regulation && <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1"><Shield className="h-3 w-3" />{regulation}</Badge>}
+                  <Badge variant="secondary" className="text-xs gap-1.5 px-2.5 py-1"><Clock className="h-3 w-3" />{FREQUENCY_OPTIONS.find((o) => o.value === frequency)?.label || frequency}</Badge>
+                  <span className="text-muted-foreground">{items.filter((i) => i.question.trim()).length} fields</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Assessment Fields</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {items.filter((i) => i.question.trim()).map((item, idx) => (
+                  <div key={item.id} className="flex items-start gap-3 text-sm py-2">
+                    <span className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">{idx + 1}</span>
+                    <div className="flex-1">
+                      <p className="font-medium">{item.question}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs">{ITEM_TYPES.find((t) => t.value === item.type)?.label || item.type}</Badge>
+                        {item.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <div className="flex items-center gap-3">
+              <Button variant="outline" className="gap-2" onClick={() => setStep(2)}>
+                <ArrowLeft className="h-4 w-4" />Back to Fields
               </Button>
               <div className="flex-1" />
               <Button variant="outline" className="gap-2" onClick={() => handleSave(false)} disabled={isSubmitting}>

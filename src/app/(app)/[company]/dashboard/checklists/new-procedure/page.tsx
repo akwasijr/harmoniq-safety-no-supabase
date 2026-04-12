@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
   Layers, Plus, Trash2, GripVertical, ShieldAlert, ClipboardCheck,
-  ChevronDown, ArrowUp, ArrowDown, Search, Save, Send, ArrowRight, ArrowLeft, Check,
+  ChevronDown, ArrowUp, ArrowDown, Search, Save, Send, ArrowRight, ArrowLeft, Check, Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -61,7 +61,7 @@ function ProcedureEditorContent() {
   const existingProcedure = editId ? procedureTemplates.find((p) => p.id === editId) || builtInProcs.find((p) => p.id === editId) : null;
   const isEditing = !!existingProcedure;
 
-  const [step, setStep] = React.useState<1 | 2>(isEditing ? 2 : 1);
+  const [step, setStep] = React.useState<1 | 2 | 3>(isEditing ? 2 : 1);
   const [name, setName] = React.useState(existingProcedure?.name || "");
   const [description, setDescription] = React.useState(existingProcedure?.description || "");
   const [recurrence, setRecurrence] = React.useState<ProcedureRecurrence>(existingProcedure?.recurrence || "per_event");
@@ -143,15 +143,20 @@ function ProcedureEditorContent() {
       </div>
 
       {/* Stepper */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => setStep(1)} className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 1 ? "bg-primary text-primary-foreground" : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400")}>
+      <div className="flex items-center gap-3 flex-wrap">
+        <button onClick={() => setStep(1)} className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 1 ? "bg-primary text-primary-foreground" : step > 1 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground")}>
           {step > 1 ? <Check className="h-4 w-4" /> : <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">1</span>}
-          Procedure Details
+          Details
         </button>
-        <div className="h-px w-8 bg-border" />
-        <div className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-          <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">2</span>
-          Procedure Steps ({steps.length})
+        <div className="h-px w-6 bg-border" />
+        <button onClick={() => step > 1 ? setStep(2) : undefined} className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 2 ? "bg-primary text-primary-foreground" : step > 2 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground")}>
+          {step > 2 ? <Check className="h-4 w-4" /> : <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">2</span>}
+          Steps ({steps.length})
+        </button>
+        <div className="h-px w-6 bg-border" />
+        <div className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors", step === 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+          <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">3</span>
+          Preview
         </div>
       </div>
 
@@ -269,10 +274,60 @@ function ProcedureEditorContent() {
           <div className="flex items-center gap-3">
             <Button variant="outline" className="gap-2" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4" />Back to Details</Button>
             <div className="flex-1" />
-            <Button variant="outline" className="gap-2" onClick={() => handleSave(false)} disabled={!steps.length || isSubmitting}>
+            <Button className="gap-2" onClick={() => setStep(3)} disabled={!steps.length}>
+              Next: Preview <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </>
+      )}
+
+      {/* ═══════════ STEP 3: Preview ═══════════ */}
+      {step === 3 && (
+        <>
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold">{name || "Untitled Procedure"}</h2>
+                {industry && <Badge variant="outline" className="text-xs capitalize">{industry.replace(/_/g, " ")}</Badge>}
+              </div>
+              {description && <p className="text-sm text-muted-foreground">{description}</p>}
+              <div className="flex items-center gap-3 text-sm">
+                <Badge variant="secondary" className="text-xs gap-1.5 px-2.5 py-1"><Clock className="h-3 w-3" />{RECURRENCE_OPTIONS.find((o) => o.value === recurrence)?.label || recurrence}</Badge>
+                <span className="text-muted-foreground">{steps.length} steps</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="text-muted-foreground">{steps.filter((s) => s.type === "risk_assessment").length} RA + {steps.filter((s) => s.type === "checklist").length} CL</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>Procedure Steps</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {steps.map((s, idx) => (
+                <div key={s.id} className="flex items-center gap-3 text-sm py-2">
+                  <span className={cn("shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold", s.type === "risk_assessment" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400")}>{idx + 1}</span>
+                  <div className="flex-1">
+                    <p className="font-medium">{s.template_name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">{s.type === "risk_assessment" ? "Risk Assessment" : "Checklist"}</Badge>
+                      {s.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
+                      {!s.required && <span className="text-xs text-muted-foreground italic">Optional</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <div className="flex items-center gap-3">
+            <Button variant="outline" className="gap-2" onClick={() => setStep(2)}>
+              <ArrowLeft className="h-4 w-4" />Back to Steps
+            </Button>
+            <div className="flex-1" />
+            <Button variant="outline" className="gap-2" onClick={() => handleSave(false)} disabled={isSubmitting}>
               <Save className="h-4 w-4" />{isEditing ? "Save Changes" : "Save as Draft"}
             </Button>
-            <Button className="gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleSave(true)} disabled={!steps.length || isSubmitting}>
+            <Button className="gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleSave(true)} disabled={isSubmitting}>
               <Send className="h-4 w-4" />{isEditing ? "Save & Activate" : "Save & Push to Field App"}
             </Button>
           </div>
