@@ -14,13 +14,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
+import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import type { Country, RiskEvaluation } from "@/types";
 import { useTranslation } from "@/i18n";
+import { LoadingPage } from "@/components/ui/loading";
+import { RoleGuard } from "@/components/auth/role-guard";
+import { LocationPicker, type LocationPickerValue } from "@/components/ui/location-picker";
 
-// Form configurations by type
 const formConfigs: Record<string, { title: string; description: string; sections: Array<{ title: string; questions: Array<{ id: string; question: string; type: "yesno" | "rating" | "text" | "select"; options?: string[] }> }> }> = {
   jha: {
     title: "Job Hazard Analysis (JHA)",
@@ -170,50 +172,38 @@ const formConfigs: Record<string, { title: string; description: string; sections
       },
     ],
   },
-  afs: {
-    title: "AFS Risk Evaluation",
-    description: "Arbetsmiljöverket regulations compliance including psychosocial factors",
+  osa: {
+    title: "OSA Assessment",
+    description: "Organisatorisk och Social Arbetsmiljö assessment",
     sections: [
       {
-        title: "Grundinformation",
+        title: "Assessment Details",
         questions: [
-          { id: "company", question: "Företag", type: "text" },
-          { id: "workplace", question: "Arbetsplats", type: "text" },
-          { id: "date", question: "Datum", type: "text" },
-          { id: "assessor", question: "Utförare", type: "text" },
+          { id: "workplace", question: "Workplace", type: "text" },
+          { id: "date", question: "Date", type: "text" },
+          { id: "assessor", question: "Assessor", type: "text" },
         ],
       },
       {
-        title: "Organisatorisk Arbetsmiljö (AFS 2015:4)",
+        title: "Organizational Factors",
         questions: [
-          { id: "workload", question: "Är arbetsbelastningen rimlig?", type: "yesno" },
-          { id: "work_hours", question: "Är arbetstiderna hälsosamma?", type: "yesno" },
-          { id: "balance", question: "Finns balans mellan krav och resurser?", type: "yesno" },
-          { id: "recovery", question: "Finns möjlighet till återhämtning?", type: "yesno" },
+          { id: "workload", question: "Is the workload manageable?", type: "yesno" },
+          { id: "work_hours", question: "Are working hours reasonable?", type: "yesno" },
+          { id: "resources", question: "Are adequate resources available?", type: "yesno" },
         ],
       },
       {
-        title: "Social Arbetsmiljö",
+        title: "Social Factors",
         questions: [
-          { id: "colleague_support", question: "Socialt stöd från kollegor (1-5)", type: "rating" },
-          { id: "manager_support", question: "Socialt stöd från chef (1-5)", type: "rating" },
-          { id: "harassment", question: "Förekommer kränkande särbehandling?", type: "yesno" },
-          { id: "conflicts", question: "Finns konflikter på arbetsplatsen?", type: "yesno" },
-        ],
-      },
-      {
-        title: "Åtgärdsplan",
-        questions: [
-          { id: "actions", question: "Planerade åtgärder", type: "text" },
-          { id: "responsible", question: "Ansvarig", type: "text" },
-          { id: "deadline", question: "Deadline", type: "text" },
+          { id: "support", question: "Is social support available?", type: "yesno" },
+          { id: "harassment", question: "Any harassment concerns?", type: "yesno" },
+          { id: "actions", question: "Recommended actions", type: "text" },
         ],
       },
     ],
   },
 };
 
-// Default config for unknown forms
 const defaultConfig = {
   title: "Risk Assessment",
   description: "General risk assessment form",
@@ -229,7 +219,7 @@ const defaultConfig = {
   ],
 };
 
-export default function RiskAssessmentFormPage() {
+function DashboardRiskAssessmentFormContent() {
   const router = useRouter();
   const routeParams = useParams();
   const company = routeParams.company as string;
@@ -238,9 +228,16 @@ export default function RiskAssessmentFormPage() {
   const [answers, setAnswers] = React.useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showErrors, setShowErrors] = React.useState(false);
-  const { add: addEvaluation } = useRiskEvaluationsStore();
+  const [selectedLocationValue, setSelectedLocationValue] = React.useState<LocationPickerValue>({
+    locationId: "",
+    manualText: "",
+    gpsLat: null,
+    gpsLng: null,
+  });
+  const { stores, locations } = useCompanyData();
   const { user, currentCompany } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const countryMap: Record<string, Country> = {
     jha: "US",
@@ -254,9 +251,43 @@ export default function RiskAssessmentFormPage() {
   const country = countryMap[formId] || "US";
   const formType = formId.toUpperCase();
 
-  const { t } = useTranslation();
+  // Pre-populate answers with known company/user data on mount
+  const hasPreFilled = React.useRef(false);
+  React.useEffect(() => {
+    if (hasPreFilled.current) return;
+    hasPreFilled.current = true;
+    const prefill: Record<string, string> = {};
+    const today = new Date().toISOString().split("T")[0];
 
-  // Validate that formId is a known form type to prevent arbitrary ID lookups
+    // Map known field IDs to available data
+    if (user?.full_name) {
+      prefill.analyst = user.full_name;
+      prefill.assessor = user.full_name;
+      prefill.inspector = user.full_name;
+      prefill.supervisor = user.full_name;
+    }
+    if (user?.department) {
+      prefill.department = user.department;
+    }
+    if (currentCompany?.name) {
+      prefill.company = currentCompany.name;
+    }
+    if (currentCompany?.address) {
+      prefill.location = currentCompany.address;
+      prefill.workplace = currentCompany.address;
+    }
+    prefill.date = today;
+
+    setAnswers((prev) => {
+      const merged = { ...prefill };
+      // Don't overwrite anything the user already typed
+      for (const [k, v] of Object.entries(prev)) {
+        if (v) merged[k] = v;
+      }
+      return merged;
+    });
+  }, [user, currentCompany]);
+
   const knownFormIds = Object.keys(formConfigs);
   if (!knownFormIds.includes(formId)) {
     return (
@@ -265,26 +296,25 @@ export default function RiskAssessmentFormPage() {
         title="Assessment not found"
         description="This risk assessment form does not exist."
         action={
-          <Button variant="outline" size="sm" onClick={() => router.push(`/${company}/app/risk-assessment`)}>
+          <Button variant="outline" size="sm" onClick={() => router.push(`/${company}/dashboard/checklists?tab=risk-assessment`)}>
             Back to Risk Assessments
           </Button>
         }
       />
     );
   }
+
   const config = formConfigs[formId];
-  // Note: This page uses static form configs (not DB entities), so company_id is
-  // enforced at submission via user.company_id on the RiskEvaluation record.
   const currentSectionData = config.sections[currentSection];
   const isLastSection = currentSection === config.sections.length - 1;
+  const progress = Math.round(((currentSection + 1) / config.sections.length) * 100);
 
   const handleAnswer = (questionId: string, value: string) => {
     setAnswers({ ...answers, [questionId]: value });
   };
 
   const canProceed = (): boolean => {
-    const questions = currentSectionData.questions;
-    return questions.every(q => !!answers[q.id]?.trim());
+    return currentSectionData.questions.every(q => !!answers[q.id]?.trim());
   };
 
   const handleNext = () => {
@@ -312,15 +342,20 @@ export default function RiskAssessmentFormPage() {
       setIsSubmitting(false);
       return;
     }
+    const resolvedCompanyId = user.company_id || currentCompany?.id;
+    if (!resolvedCompanyId) {
+      toast("Unable to submit — company not configured. Contact your admin.", "error");
+      setIsSubmitting(false);
+      return;
+    }
     const now = new Date();
-    const refNumber = `RA-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const evaluation: RiskEvaluation = {
       id: crypto.randomUUID(),
-      company_id: user.company_id || currentCompany?.id || "",
+      company_id: resolvedCompanyId,
       submitter_id: user.id,
       country,
       form_type: formType,
-      location_id: null,
+      location_id: selectedLocationValue.locationId || null,
       responses: answers,
       status: "submitted",
       reviewed_by: null,
@@ -328,114 +363,157 @@ export default function RiskAssessmentFormPage() {
       submitted_at: now.toISOString(),
       created_at: now.toISOString(),
     };
-    addEvaluation(evaluation);
-    toast("Assessment submitted");
-    router.push(`/${company}/app/report/success?ref=${refNumber}&type=assessment&id=${evaluation.id}`);
+    stores.riskEvaluations.add(evaluation);
+    toast("Assessment submitted successfully");
+    router.push(`/${company}/dashboard/checklists?tab=risk-assessment`);
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
-        <div className="flex h-14 items-center gap-4 px-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => currentSection > 0 ? setCurrentSection(currentSection - 1) : router.back()}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="font-semibold text-sm">{config.title}</h1>
-            <p className="text-xs text-muted-foreground">
-              {t("riskAssessment.section", { current: String(currentSection + 1), total: String(config.sections.length) })}
-            </p>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-4 gap-2"
+          onClick={() =>
+            currentSection > 0
+              ? setCurrentSection(currentSection - 1)
+              : router.push(`/${company}/dashboard/risk-assessments/new`)
+          }
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          {currentSection > 0 ? "Previous section" : "Back"}
+        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <FileCheck className="h-5 w-5 text-primary" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold">{config.title}</h1>
+            <p className="text-sm text-muted-foreground">{config.description}</p>
           </div>
         </div>
-        {/* Progress bar */}
-        <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentSection + 1) / config.sections.length) * 100)}>
+      </div>
+
+      {/* Progress */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">
+            Section {currentSection + 1} of {config.sections.length}
+          </span>
+          <span className="font-medium">{progress}%</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${((currentSection + 1) / config.sections.length) * 100}%` }}
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: `${progress}%` }}
           />
         </div>
-      </header>
+      </div>
 
-      {/* Content */}
-      <div className="flex-1 p-5 pb-40">
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-              <FileCheck className="h-5 w-5 text-primary" />
-            </div>
-            <h2 className="text-lg font-bold">{currentSectionData.title}</h2>
-          </div>
+      {/* Location selector */}
+      {currentSection === 0 && (
+        <div className="rounded-xl border bg-card p-6 space-y-4">
+          <LocationPicker
+            locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address }))}
+            value={selectedLocationValue}
+            onChange={(val) => {
+              setSelectedLocationValue(val);
+              const loc = locations.find((l) => l.id === val.locationId);
+              if (loc) {
+                setAnswers((prev) => ({
+                  ...prev,
+                  location: loc.address || loc.name,
+                  workplace: loc.address || loc.name,
+                }));
+              } else if (val.manualText) {
+                setAnswers((prev) => ({
+                  ...prev,
+                  location: val.manualText,
+                  workplace: val.manualText,
+                }));
+              } else if (val.gpsLat && val.gpsLng) {
+                const gpsText = `GPS: ${val.gpsLat.toFixed(6)}, ${val.gpsLng.toFixed(6)}`;
+                setAnswers((prev) => ({
+                  ...prev,
+                  location: gpsText,
+                  workplace: gpsText,
+                }));
+              }
+            }}
+            label="Location"
+          />
         </div>
+      )}
 
+      {/* Section content */}
+      <div className="rounded-xl border bg-card p-6">
+        <h2 className="mb-6 text-lg font-semibold">{currentSectionData.title}</h2>
         <div className="space-y-6">
           {currentSectionData.questions.map((q) => (
-            <div key={q.id} className="space-y-3">
-              <Label className="text-base">{q.question}</Label>
-              
+            <div key={q.id} className="space-y-2">
+              <Label className="text-sm font-medium">{q.question}</Label>
+
               {q.type === "text" && (
                 <>
-                <Input
-                  value={answers[q.id] || ""}
-                  onChange={(e) => handleAnswer(q.id, e.target.value)}
-                  placeholder={t("riskAssessment.enterAnswer")}
-                  className="h-12"
-                />
-                {showErrors && !answers[q.id]?.trim() && (
-                  <p className="text-xs text-red-500 mt-1">This field is required</p>
-                )}
+                  <Input
+                    value={answers[q.id] || ""}
+                    onChange={(e) => handleAnswer(q.id, e.target.value)}
+                    placeholder="Enter your answer"
+                  />
+                  {showErrors && !answers[q.id]?.trim() && (
+                    <p className="text-xs text-destructive">This field is required</p>
+                  )}
                 </>
               )}
 
               {q.type === "yesno" && (
                 <>
-                <div className="flex gap-3">
-                  {["Yes", "No", "N/A"].map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handleAnswer(q.id, option.toLowerCase())}
-                      className={cn(
-                        "flex-1 rounded-xl border-2 py-3 px-4 font-medium transition-all",
-                        answers[q.id] === option.toLowerCase()
-                          ? "border-primary bg-primary text-white"
-                          : "border-border hover:border-primary/50"
-                      )}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-                {showErrors && !answers[q.id]?.trim() && (
-                  <p className="text-xs text-red-500 mt-1">This field is required</p>
-                )}
+                  <div className="flex gap-2">
+                    {["Yes", "No", "N/A"].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => handleAnswer(q.id, option.toLowerCase())}
+                        className={cn(
+                          "flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors",
+                          answers[q.id] === option.toLowerCase()
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border hover:bg-muted/50"
+                        )}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                  {showErrors && !answers[q.id]?.trim() && (
+                    <p className="text-xs text-destructive">This field is required</p>
+                  )}
                 </>
               )}
 
               {q.type === "rating" && (
                 <>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <button
-                      key={rating}
-                      onClick={() => handleAnswer(q.id, String(rating))}
-                      className={cn(
-                        "flex-1 rounded-xl border-2 py-3 font-medium transition-all",
-                        answers[q.id] === String(rating)
-                          ? "border-primary bg-primary text-white"
-                          : "border-border hover:border-primary/50"
-                      )}
-                    >
-                      {rating}
-                    </button>
-                  ))}
-                </div>
-                {showErrors && !answers[q.id]?.trim() && (
-                  <p className="text-xs text-red-500 mt-1">This field is required</p>
-                )}
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => handleAnswer(q.id, String(rating))}
+                        className={cn(
+                          "flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors",
+                          answers[q.id] === String(rating)
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border hover:bg-muted/50"
+                        )}
+                      >
+                        {rating}
+                      </button>
+                    ))}
+                  </div>
+                  {showErrors && !answers[q.id]?.trim() && (
+                    <p className="text-xs text-destructive">This field is required</p>
+                  )}
                 </>
               )}
             </div>
@@ -443,28 +521,46 @@ export default function RiskAssessmentFormPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4 pb-6 z-20 safe-area-inset-bottom">
+      {/* Actions */}
+      <div className="flex items-center justify-between">
         <Button
-          onClick={handleNext}
+          variant="outline"
+          onClick={() =>
+            currentSection > 0
+              ? setCurrentSection(currentSection - 1)
+              : router.push(`/${company}/dashboard/risk-assessments/new`)
+          }
           disabled={isSubmitting}
-          className="h-14 w-full gap-2 text-base"
         >
+          <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+          {currentSection > 0 ? "Previous" : "Cancel"}
+        </Button>
+        <Button onClick={handleNext} disabled={isSubmitting} className="gap-2">
           {isSubmitting ? (
-            t("riskAssessment.submitting")
+            "Submitting…"
           ) : isLastSection ? (
             <>
-              <CheckCircle className="h-5 w-5" />
-              {t("riskAssessment.submitAssessment")}
+              <CheckCircle className="h-4 w-4" aria-hidden="true" />
+              Submit Assessment
             </>
           ) : (
             <>
-              {t("riskAssessment.continue")}
-              <ArrowRight className="h-5 w-5" />
+              Continue
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </>
           )}
         </Button>
       </div>
     </div>
+  );
+}
+
+export default function DashboardRiskAssessmentFormPage() {
+  return (
+    <RoleGuard requiredPermission="checklists.view">
+      <React.Suspense fallback={<LoadingPage />}>
+        <DashboardRiskAssessmentFormContent />
+      </React.Suspense>
+    </RoleGuard>
   );
 }

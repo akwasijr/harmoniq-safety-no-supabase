@@ -43,36 +43,42 @@ const COUNTRY_RA_REGULATION_OVERRIDES: Record<
   Record<IndustryCode, string>
 > = {
   NL: {
+    generic: "Best practice",
     construction: "Arbowet / RI&E", manufacturing: "Arbowet / NEN 3140", oil_gas: "Arbowet / BRZO",
     healthcare: "Arbowet / Wkkgz", warehousing: "Arbowet / RI&E", mining: "Mijnbouwwet / Arbowet",
     food_beverage: "HACCP / NVWA", utilities: "Arbowet / NEN 3140", transportation: "Arbowet / ILT",
     education: "Arbowet / BHV", airports: "Arbowet / ILT / EASA",
   },
   SE: {
+    generic: "Best practice",
     construction: "AFS / SAM", manufacturing: "AFS / SAM", oil_gas: "AFS / SAM",
     healthcare: "AFS / SAM", warehousing: "AFS / SAM", mining: "AFS / SAM",
     food_beverage: "AFS / Livsmedelsverket", utilities: "AFS / SAM", transportation: "AFS / SAM",
     education: "AFS / SAM", airports: "AFS / Transportstyrelsen",
   },
   GB: {
+    generic: "Best practice",
     construction: "HSE CDM 2015", manufacturing: "HSE PUWER / COSHH", oil_gas: "HSE COMAH",
     healthcare: "HSE / CQC", warehousing: "HSE LOLER / PUWER", mining: "HSE Mines Regulations",
     food_beverage: "FSA / HACCP", utilities: "HSE Electricity at Work", transportation: "HSE / DVSA",
     education: "HSE / DfE", airports: "HSE / CAA",
   },
   DE: {
+    generic: "Best practice",
     construction: "ArbSchG / BaustellV", manufacturing: "ArbSchG / BetrSichV", oil_gas: "ArbSchG / GefStoffV",
     healthcare: "ArbSchG / BioStoffV", warehousing: "ArbSchG / BetrSichV", mining: "BBergG / ABBergV",
     food_beverage: "LMHV / HACCP", utilities: "ArbSchG / DGUV", transportation: "ArbSchG / StVO",
     education: "ArbSchG / DGUV", airports: "ArbSchG / LuftSiG",
   },
   FR: {
+    generic: "Best practice",
     construction: "Code du travail / R4532", manufacturing: "Code du travail / DUER", oil_gas: "Code du travail / Seveso",
     healthcare: "Code du travail / ARS", warehousing: "Code du travail / DUER", mining: "Code minier / DUER",
     food_beverage: "HACCP / DGCCRF", utilities: "Code du travail / DUER", transportation: "Code du travail / DUER",
     education: "Code du travail / DUER", airports: "Code du travail / DGAC",
   },
   ES: {
+    generic: "Best practice",
     construction: "LPRL / RD 1627/1997", manufacturing: "LPRL / RD 486/1997", oil_gas: "LPRL / RD 840/2015",
     healthcare: "LPRL / RD 664/1997", warehousing: "LPRL / RD 486/1997", mining: "LPRL / RD 863/1985",
     food_beverage: "HACCP / AESAN", utilities: "LPRL / RD 614/2001", transportation: "LPRL / RD 1215/1997",
@@ -555,9 +561,89 @@ const airportsRA: IndustryChecklistTemplate[] = [
 ];
 
 // ==========================================
+// GENERIC RISK ASSESSMENTS
+// ==========================================
+const genericRA: IndustryChecklistTemplate[] = [
+  {
+    id: "ra_generic_5step_hse", industry: "generic",
+    name_key: k("generic", "5step_hse", "name"), description_key: k("generic", "5step_hse", "description"),
+    category: "hazard_analysis", regulation: "HSE INDG163 / ISO 45001", frequency: "per_event",
+    tags: ["hse", "5-step", "iso45001", "workplace", "general"],
+    items: [
+      item("generic", "5step_hse", "identify_hazards", "yes_no_na", 1),
+      item("generic", "5step_hse", "who_might_be_harmed", "yes_no_na", 2),
+      item("generic", "5step_hse", "evaluate_risks", "yes_no_na", 3),
+      item("generic", "5step_hse", "record_findings", "yes_no_na", 4),
+      item("generic", "5step_hse", "review_assessment", "yes_no_na", 5),
+    ],
+  },
+  {
+    id: "ra_generic_jha_universal", industry: "generic",
+    name_key: k("generic", "jha_universal", "name"), description_key: k("generic", "jha_universal", "description"),
+    category: "hazard_analysis", regulation: "OSHA 3071 / ISO 45001", frequency: "per_event",
+    tags: ["jha", "osha", "task_analysis", "universal"],
+    items: [
+      item("generic", "jha_universal", "task_defined", "yes_no_na", 1),
+      item("generic", "jha_universal", "steps_broken_down", "yes_no_na", 2),
+      item("generic", "jha_universal", "hazards_per_step", "yes_no_na", 3),
+      item("generic", "jha_universal", "controls_identified", "yes_no_na", 4),
+      item("generic", "jha_universal", "ppe_determined", "yes_no_na", 5),
+      item("generic", "jha_universal", "residual_risk_acceptable", "yes_no_na", 6),
+      item("generic", "jha_universal", "workers_briefed", "yes_no_na", 7),
+    ],
+  },
+  {
+    id: "ra_generic_coshh", industry: "generic",
+    name_key: k("generic", "coshh", "name"), description_key: k("generic", "coshh", "description"),
+    category: "chemical_safety", regulation: "GHS / COSHH / REACH", frequency: "per_event",
+    tags: ["coshh", "chemical", "ghs", "hazardous_substances"],
+    items: [
+      item("generic", "coshh", "substances_identified", "yes_no_na", 1),
+      item("generic", "coshh", "sds_available", "yes_no_na", 2),
+      item("generic", "coshh", "exposure_routes_assessed", "yes_no_na", 3),
+      item("generic", "coshh", "controls_adequate", "yes_no_na", 4),
+      item("generic", "coshh", "ppe_specified", "yes_no_na", 5),
+      item("generic", "coshh", "emergency_procedures", "yes_no_na", 6),
+      item("generic", "coshh", "health_surveillance", "yes_no_na", 7),
+    ],
+  },
+  {
+    id: "ra_generic_manual_handling", industry: "generic",
+    name_key: k("generic", "manual_handling", "name"), description_key: k("generic", "manual_handling", "description"),
+    category: "ergonomic", regulation: "EU Directive 90/269/EEC / NIOSH", frequency: "per_event",
+    tags: ["manual_handling", "ergonomic", "lifting", "musculoskeletal"],
+    items: [
+      item("generic", "manual_handling", "task_assessed", "yes_no_na", 1),
+      item("generic", "manual_handling", "load_weight_acceptable", "yes_no_na", 2),
+      item("generic", "manual_handling", "posture_risk", "yes_no_na", 3),
+      item("generic", "manual_handling", "frequency_assessed", "yes_no_na", 4),
+      item("generic", "manual_handling", "environment_factors", "yes_no_na", 5),
+      item("generic", "manual_handling", "controls_in_place", "yes_no_na", 6),
+      item("generic", "manual_handling", "training_provided", "yes_no_na", 7),
+    ],
+  },
+  {
+    id: "ra_generic_workplace_inspection", industry: "generic",
+    name_key: k("generic", "workplace_inspection", "name"), description_key: k("generic", "workplace_inspection", "description"),
+    category: "site_inspection", regulation: "EU Framework Directive 89/391/EEC / OSHA General Duty", frequency: "per_event",
+    tags: ["workplace", "general", "eu_directive", "osha"],
+    items: [
+      item("generic", "workplace_inspection", "work_area_inspected", "yes_no_na", 1),
+      item("generic", "workplace_inspection", "hazards_documented", "yes_no_na", 2),
+      item("generic", "workplace_inspection", "risk_levels_assigned", "yes_no_na", 3),
+      item("generic", "workplace_inspection", "controls_documented", "yes_no_na", 4),
+      item("generic", "workplace_inspection", "emergency_routes_clear", "yes_no_na", 5),
+      item("generic", "workplace_inspection", "first_aid_adequate", "yes_no_na", 6),
+      item("generic", "workplace_inspection", "review_date_set", "yes_no_na", 7),
+    ],
+  },
+];
+
+// ==========================================
 // ALL TEMPLATES
 // ==========================================
 const ALL_RA_TEMPLATES: IndustryChecklistTemplate[] = [
+  ...genericRA,
   ...constructionRA, ...manufacturingRA, ...oilGasRA, ...healthcareRA,
   ...warehousingRA, ...miningRA, ...foodBeverageRA, ...utilitiesRA,
   ...transportationRA, ...educationRA, ...airportsRA,

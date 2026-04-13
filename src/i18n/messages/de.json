@@ -1027,7 +1027,8 @@
       "comment": "Notiz hinzufügen...",
       "generalComments": "Allgemeine Kommentare hinzufügen...",
       "select": "Option auswählen...",
-      "text": "Geben Sie Ihre Antwort ein..."
+      "text": "Geben Sie Ihre Antwort ein...",
+      "signature": "Geben Sie Ihren vollständigen Namen als Unterschrift ein"
     },
     "approve": "Genehmigen",
     "reject": "Ablehnen",
@@ -1264,6 +1265,8 @@
     "basicInfo": "Basic information about your organization",
     "companyName": "Firmenname",
     "urlSlug": "URL-Kennung",
+    "appDisplayName": "Anzeigename",
+    "appDisplayNameHint": "Benutzerdefinierter Name, der Mitarbeitern im Feld-App-Header angezeigt wird.",
     "countryAndRegulations": "Land & Vorschriften",
     "countryDesc": "Wählen Sie Ihr Einsatzland, um Sicherheitsvorschriften und empfohlene Vorlagen auszurichten",
     "selected": "Selected",
@@ -1574,7 +1577,10 @@
     "riskLabel": "Risiko",
     "standard": "Standard",
     "workerHubHint": "Entwürfe fortsetzen, ausstehende Bewertungen verfolgen und geprüfte Nachweise aufbewahren.",
-    "completedHint": "Geprüfte Bewertungen erscheinen hier mit Prüfer und Datum als Nachweis."
+    "completedHint": "Geprüfte Bewertungen erscheinen hier mit Prüfer und Datum als Nachweis.",
+    "startNew": "Neue Risikobewertung starten",
+    "selectType": "Wählen Sie einen Risikobewertungstyp für Ihre Region.",
+    "basedOnRegulations": "Bewertungstypen basieren auf den gesetzlichen Anforderungen Ihres Landes."
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
@@ -2954,6 +2960,87 @@
           "corrective_actions": "Abschlussquoten von Korrekturmaßnahmen werden nachverfolgt"
         }
       }
+    },
+    "generic": {
+      "name": "Allgemein",
+      "description": "Gemeinsame Vorlagen, die branchenübergreifend verwendet werden können.",
+      "workplace_safety": {
+        "name": "Arbeitsplatz-Sicherheitsinspektion",
+        "description": "Tägliche oder wöchentliche Sicherheitsbegehung zur Erkennung und Behebung häufiger Gefahren",
+        "items": {
+          "housekeeping": "Arbeitsbereiche sind sauber, aufgeräumt und frei von unnötigem Material",
+          "emergency_exits_clear": "Notausgänge sind frei zugänglich und deutlich gekennzeichnet",
+          "fire_extinguishers_accessible": "Feuerlöscher sind zugänglich und nicht blockiert",
+          "first_aid_kit_stocked": "Erste-Hilfe-Kasten ist vollständig bestückt und innerhalb des Haltbarkeitsdatums",
+          "lighting_adequate": "Beleuchtung ist in allen Arbeitsbereichen und Verkehrswegen ausreichend",
+          "slip_trip_hazards": "Keine Rutsch-, Stolper- oder Sturzgefahren auf Böden und Verkehrswegen",
+          "electrical_cords_condition": "Elektrische Kabel und Stecker sind in einwandfreiem Zustand ohne Beschädigung",
+          "ventilation_adequate": "Belüftung und Luftqualität sind in allen Arbeitsbereichen ausreichend"
+        }
+      },
+      "ppe_check": {
+        "name": "PSA-Kontrolle",
+        "description": "Überprüfung der Persönlichen Schutzausrüstung um sicherzustellen, dass alle erforderlichen PSA verfügbar und in gutem Zustand sind",
+        "items": {
+          "hard_hat_condition": "Schutzhelm ist unbeschädigt und sitzt sicher",
+          "safety_glasses": "Schutzbrille ist sauber und unbeschädigt",
+          "high_vis_vest": "Warnweste wird getragen und ist in gutem Zustand",
+          "safety_boots": "Sicherheitsschuhe werden getragen und sind in gutem Zustand",
+          "gloves_appropriate": "Handschuhe sind für die Tätigkeit geeignet und in gutem Zustand",
+          "hearing_protection": "Gehörschutz ist verfügbar und wird getragen, wo erforderlich",
+          "respiratory_protection": "Atemschutz ist verfügbar und wird getragen, wo erforderlich (falls zutreffend)"
+        }
+      },
+      "fire_safety": {
+        "name": "Brandschutz-Checkliste",
+        "description": "Checkliste für Brandschutz und Brandbereitschaft zur Überprüfung der Brandschutzmaßnahmen",
+        "items": {
+          "extinguishers_inspected": "Feuerlöscher wurden inspiziert und sind innerhalb des Prüfdatums",
+          "emergency_exits_marked": "Notausgänge sind deutlich mit beleuchteter Beschilderung gekennzeichnet",
+          "evacuation_plan_posted": "Flucht- und Rettungsplan ist ausgehängt und in allen Bereichen sichtbar",
+          "fire_alarm_tested": "Brandmeldeanlage wurde getestet und ist betriebsbereit",
+          "flammable_materials_stored": "Brennbare Materialien sind ordnungsgemäß in vorgesehenen Bereichen gelagert",
+          "fire_blankets_available": "Löschdecken sind vorhanden und zugänglich",
+          "assembly_point_marked": "Sammelplatz ist deutlich markiert und allen Mitarbeitern bekannt"
+        }
+      },
+      "first_aid": {
+        "name": "Erste Hilfe & Notfallbereitschaft",
+        "description": "Überprüfung der Notfallbereitschaft um sicherzustellen, dass Erste-Hilfe-Material und Notfallausrüstung einsatzbereit sind",
+        "items": {
+          "first_aid_kit_complete": "Erste-Hilfe-Kasten ist vollständig mit allen erforderlichen Materialien",
+          "aed_accessible": "AED (Defibrillator) ist zugänglich und voll aufgeladen",
+          "emergency_contacts_posted": "Notrufnummern sind ausgehängt und aktuell",
+          "trained_first_aiders": "Ausgebildete Ersthelfer sind vor Ort anwesend",
+          "emergency_procedures_known": "Mitarbeiter kennen die Notfallverfahren und Protokolle",
+          "spill_kit_available": "Auffangmaterial für Verschüttungen ist verfügbar und vollständig bestückt"
+        }
+      },
+      "safety_induction": {
+        "name": "Sicherheitsunterweisung Neuer Mitarbeiter",
+        "description": "Einarbeitungs-Checkliste für Arbeitssicherheit um sicherzustellen, dass neue Mitarbeiter wesentliche Sicherheitsinformationen erhalten",
+        "items": {
+          "emergency_procedures_explained": "Notfallverfahren wurden dem neuen Mitarbeiter erklärt",
+          "ppe_issued": "Erforderliche PSA wurde ausgegeben und die richtige Verwendung demonstriert",
+          "hazard_areas_identified": "Gefahrenbereiche wurden identifiziert und erläutert",
+          "reporting_procedures_explained": "Melde- und Berichtsverfahren für Vorfälle wurden erklärt",
+          "fire_exits_shown": "Notausgänge und Flucht­wege wurden gezeigt",
+          "first_aid_locations_shown": "Erste-Hilfe-Stationen und Ausrüstungsstandorte wurden gezeigt",
+          "safety_rules_acknowledged": "Mitarbeiter hat die Sicherheitsregeln bestätigt und unterschrieben"
+        }
+      },
+      "toolbox_talk": {
+        "name": "Sicherheitskurzgespräch Protokoll",
+        "description": "Dokumentation der Sicherheitsunterweisung vor Arbeitsbeginn zur Erfassung besprochener Themen und Anwesenheit",
+        "items": {
+          "topic_discussed": "Sicherheitsthema, das in der Unterweisung besprochen wurde",
+          "hazards_identified": "Relevante Gefahren wurden identifiziert und erläutert",
+          "controls_communicated": "Schutzmaßnahmen wurden allen Teilnehmern mitgeteilt",
+          "ppe_requirements_confirmed": "PSA-Anforderungen für die Tätigkeit wurden bestätigt",
+          "questions_addressed": "Fragen der Teilnehmer wurden beantwortet",
+          "attendees_signed": "Alle Teilnehmer haben die Anwesenheitsliste unterschrieben"
+        }
+      }
     }
   },
   "inspections": {
@@ -4077,6 +4164,71 @@
           "risk_acceptable": "Is the hazmat cargo risk acceptable?",
           "additional_controls": "What additional hazmat controls are needed?",
           "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      }
+    },
+    "generic": {
+      "5step_hse": {
+        "name": "5-Schritte-Gefährdungsbeurteilung (HSE-Methode)",
+        "description": "Systematische 5-Schritte-Gefährdungsbeurteilung basierend auf dem britischen HSE-Rahmenwerk (INDG163) und ISO 45001, anwendbar auf alle Arbeitsplatzaktivitäten.",
+        "items": {
+          "identify_hazards": "Wurden alle wesentlichen Gefährdungen für diese Tätigkeit identifiziert?",
+          "who_might_be_harmed": "Wurde ermittelt, wer gefährdet sein könnte und auf welche Weise?",
+          "evaluate_risks": "Wurden die Risiken bewertet und bestehende Schutzmaßnahmen beurteilt?",
+          "record_findings": "Wurden die wesentlichen Ergebnisse ordnungsgemäß dokumentiert?",
+          "review_assessment": "Wurde ein Überprüfungsdatum festgelegt und wird die Beurteilung aktuell gehalten?"
+        }
+      },
+      "jha_universal": {
+        "name": "Tätigkeitsbezogene Gefährdungsanalyse (Universal)",
+        "description": "International anerkannte tätigkeitsbezogene Gefährdungsanalyse gemäß OSHA 3071 und ISO 45001, bei der Arbeitsaufgaben in Schritte aufgegliedert werden, um Gefährdungen zu erkennen und zu beherrschen.",
+        "items": {
+          "task_defined": "Wurde die Aufgabe oder Tätigkeit klar definiert und abgegrenzt?",
+          "steps_broken_down": "Wurde die Tätigkeit in einzelne Arbeitsschritte aufgegliedert?",
+          "hazards_per_step": "Wurden Gefährdungen für jeden Arbeitsschritt identifiziert?",
+          "controls_identified": "Wurden geeignete Schutzmaßnahmen für jede Gefährdung festgelegt?",
+          "ppe_determined": "Wurde die erforderliche PSA festgelegt und bereitgestellt?",
+          "residual_risk_acceptable": "Ist das Restrisiko nach Umsetzung der Schutzmaßnahmen akzeptabel?",
+          "workers_briefed": "Wurden alle Beschäftigten über die Gefährdungen und Schutzmaßnahmen unterwiesen?"
+        }
+      },
+      "coshh": {
+        "name": "Gefährdungsbeurteilung Gefahrstoffe (COSHH/GHS)",
+        "description": "Gefährdungsbeurteilung für Tätigkeiten mit Gefahrstoffen in Übereinstimmung mit GHS-Einstufung, COSHH-Vorschriften und REACH-Anforderungen.",
+        "items": {
+          "substances_identified": "Wurden alle verwendeten Gefahrstoffe identifiziert?",
+          "sds_available": "Sind aktuelle Sicherheitsdatenblätter (SDB) für alle Stoffe verfügbar?",
+          "exposure_routes_assessed": "Wurden alle Expositionswege (Einatmen, Hautkontakt, Verschlucken) beurteilt?",
+          "controls_adequate": "Sind die bestehenden Schutzmaßnahmen ausreichend, um eine Exposition zu verhindern?",
+          "ppe_specified": "Wurde geeignete PSA festgelegt und bereitgestellt?",
+          "emergency_procedures": "Sind Notfall- und Leckageverfahren vorhanden?",
+          "health_surveillance": "Wurde die Notwendigkeit einer arbeitsmedizinischen Vorsorge geprüft?"
+        }
+      },
+      "manual_handling": {
+        "name": "Gefährdungsbeurteilung Lastenhandhabung",
+        "description": "Ergonomische Gefährdungsbeurteilung für manuelle Lastenhandhabung gemäß EU-Richtlinie 90/269/EWG und NIOSH-Hebe-Richtlinien.",
+        "items": {
+          "task_assessed": "Wurde die Lastenhandhabung vollständig beurteilt (TILE: Tätigkeit, Individuum, Last, Umgebung)?",
+          "load_weight_acceptable": "Liegt das Gewicht der Last innerhalb akzeptabler Grenzen für diese Tätigkeit?",
+          "posture_risk": "Wurden Haltungsrisiken (Drehen, Bücken, Strecken) bewertet?",
+          "frequency_assessed": "Wurden Häufigkeit und Dauer der Handhabung beurteilt?",
+          "environment_factors": "Wurden Umgebungsfaktoren (Platz, Boden, Temperatur) berücksichtigt?",
+          "controls_in_place": "Sind Schutzmaßnahmen zur Reduzierung von Hebe-Risiken vorhanden (mechanische Hilfsmittel, Tätigkeitswechsel)?",
+          "training_provided": "Haben die Beschäftigten eine Unterweisung zur manuellen Lastenhandhabung erhalten?"
+        }
+      },
+      "workplace_inspection": {
+        "name": "Allgemeine Arbeitsplatz-Gefährdungsbeurteilung",
+        "description": "Umfassende Gefährdungsidentifikation und Risikobewertung am Arbeitsplatz gemäß EU-Rahmenrichtlinie 89/391/EWG und der allgemeinen OSHA-Fürsorgepflicht.",
+        "items": {
+          "work_area_inspected": "Wurde der Arbeitsbereich physisch auf Gefährdungen inspiziert?",
+          "hazards_documented": "Wurden alle identifizierten Gefährdungen dokumentiert?",
+          "risk_levels_assigned": "Wurden Risikostufen für jede identifizierte Gefährdung zugewiesen?",
+          "controls_documented": "Wurden bestehende und geplante Schutzmaßnahmen dokumentiert?",
+          "emergency_routes_clear": "Sind Flucht- und Rettungswege frei und gekennzeichnet?",
+          "first_aid_adequate": "Ist die Erste-Hilfe-Ausstattung für den Arbeitsplatz ausreichend?",
+          "review_date_set": "Wurde ein Überprüfungsdatum für diese Beurteilung festgelegt?"
         }
       }
     }

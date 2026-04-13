@@ -23,6 +23,8 @@ import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useAuth } from "@/hooks/use-auth";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
+import { CameraInput } from "@/components/ui/camera-input";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
 import { LoadingPage } from "@/components/ui/loading";
@@ -48,7 +50,8 @@ export default function WorkOrderProcedurePage() {
   const { items: workOrders, update: updateWorkOrder } = useWorkOrdersStore();
   const { items: assets } = useAssetsStore();
   const { items: locations } = useLocationsStore();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
+  const { settings: fieldAppSettings } = useFieldAppSettings();
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -201,7 +204,7 @@ export default function WorkOrderProcedurePage() {
     const submissionId = existingSubmission?.id || crypto.randomUUID();
     const submissionPayload = {
       id: submissionId,
-      company_id: user.company_id || "",
+      company_id: user.company_id || currentCompany?.id || "",
       created_at: existingSubmission?.created_at || now.toISOString(),
       ...getSubmissionData(),
     };
@@ -311,7 +314,7 @@ export default function WorkOrderProcedurePage() {
           </div>
         )}
 
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" aria-label={t("common.uploadPhoto")} />
+        <CameraInput ref={fileInputRef} cameraOnly={fieldAppSettings.cameraOnly} onChange={handlePhotoUpload} className="hidden" aria-label={t("common.uploadPhoto")} />
 
         {photos[currentQuestion.id]?.length > 0 && (
           <div className="mt-4 flex gap-2">

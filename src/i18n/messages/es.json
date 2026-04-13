@@ -1027,7 +1027,8 @@
       "comment": "Agregar una nota...",
       "generalComments": "Agregar comentarios generales...",
       "select": "Seleccionar una opción...",
-      "text": "Ingrese su respuesta..."
+      "text": "Ingrese su respuesta...",
+      "signature": "Escriba su nombre completo como firma"
     },
     "approve": "Aprobar",
     "reject": "Rechazar",
@@ -1264,6 +1265,8 @@
     "basicInfo": "Basic information about your organization",
     "companyName": "Nombre de la empresa",
     "urlSlug": "URL",
+    "appDisplayName": "Nombre para mostrar",
+    "appDisplayNameHint": "Nombre personalizado que se muestra a los empleados en el encabezado de la aplicación de campo.",
     "countryAndRegulations": "País y regulaciones",
     "countryDesc": "Seleccione su país de operación para alinear la normativa de seguridad y las plantillas recomendadas",
     "selected": "Selected",
@@ -1574,7 +1577,10 @@
     "riskLabel": "Riesgo",
     "standard": "Estándar",
     "workerHubHint": "Reanuda borradores, rastrea evaluaciones pendientes de revisión y conserva pruebas revisadas.",
-    "completedHint": "Las evaluaciones revisadas aparecerán aquí con el revisor y la fecha como prueba."
+    "completedHint": "Las evaluaciones revisadas aparecerán aquí con el revisor y la fecha como prueba.",
+    "startNew": "Iniciar nueva evaluación de riesgos",
+    "selectType": "Seleccione un tipo de evaluación de riesgos para su región.",
+    "basedOnRegulations": "Los tipos de evaluación se basan en los requisitos normativos de su país."
   },
   "auth": {
     "welcomeBack": "Bienvenido de nuevo",
@@ -2954,6 +2960,87 @@
           "corrective_actions": "Se realiza seguimiento a las tasas de cierre de acciones correctivas"
         }
       }
+    },
+    "generic": {
+      "name": "Genérico",
+      "description": "Plantillas compartidas que pueden utilizarse en varios sectores.",
+      "workplace_safety": {
+        "name": "Inspección de Seguridad del Lugar de Trabajo",
+        "description": "Inspección de seguridad diaria o semanal para identificar y corregir peligros comunes",
+        "items": {
+          "housekeeping": "Las áreas de trabajo están limpias, ordenadas y libres de desorden innecesario",
+          "emergency_exits_clear": "Las salidas de emergencia están despejadas y claramente señalizadas",
+          "fire_extinguishers_accessible": "Los extintores están accesibles y no están bloqueados",
+          "first_aid_kit_stocked": "El botiquín de primeros auxilios está completo y dentro de las fechas de caducidad",
+          "lighting_adequate": "La iluminación es adecuada en todas las áreas de trabajo y pasillos",
+          "slip_trip_hazards": "No hay riesgos de resbalones, tropiezos o caídas en suelos y pasillos",
+          "electrical_cords_condition": "Los cables y enchufes eléctricos están en buen estado sin daños",
+          "ventilation_adequate": "La ventilación y la calidad del aire son adecuadas en todas las áreas de trabajo"
+        }
+      },
+      "ppe_check": {
+        "name": "Control de Cumplimiento de EPP",
+        "description": "Verificación del Equipo de Protección Personal para asegurar que todos los EPP requeridos están disponibles y en buen estado",
+        "items": {
+          "hard_hat_condition": "El casco de seguridad está sin daños y ajustado correctamente",
+          "safety_glasses": "Las gafas de seguridad están limpias y sin daños",
+          "high_vis_vest": "El chaleco de alta visibilidad se lleva puesto y está en buen estado",
+          "safety_boots": "Las botas de seguridad se llevan puestas y están en buen estado",
+          "gloves_appropriate": "Los guantes son apropiados para la tarea y están en buen estado",
+          "hearing_protection": "La protección auditiva está disponible y se usa donde es requerida",
+          "respiratory_protection": "La protección respiratoria está disponible y se usa donde es requerida (si aplica)"
+        }
+      },
+      "fire_safety": {
+        "name": "Lista de Verificación de Seguridad contra Incendios",
+        "description": "Lista de verificación de prevención y preparación contra incendios para comprobar que las medidas de seguridad están implementadas",
+        "items": {
+          "extinguishers_inspected": "Los extintores han sido inspeccionados y están dentro de la fecha de revisión",
+          "emergency_exits_marked": "Las salidas de emergencia están claramente señalizadas con iluminación",
+          "evacuation_plan_posted": "El plan de evacuación está publicado y visible en todas las áreas",
+          "fire_alarm_tested": "El sistema de alarma contra incendios ha sido probado y está operativo",
+          "flammable_materials_stored": "Los materiales inflamables están almacenados correctamente en áreas designadas",
+          "fire_blankets_available": "Las mantas ignífugas están disponibles y accesibles",
+          "assembly_point_marked": "El punto de reunión está claramente señalizado y es conocido por todo el personal"
+        }
+      },
+      "first_aid": {
+        "name": "Primeros Auxilios y Preparación para Emergencias",
+        "description": "Verificación de preparación para emergencias para asegurar que los suministros de primeros auxilios y el equipo de emergencia están listos",
+        "items": {
+          "first_aid_kit_complete": "El botiquín de primeros auxilios está completo con todos los suministros requeridos",
+          "aed_accessible": "El DEA (desfibrilador) está accesible y completamente cargado",
+          "emergency_contacts_posted": "Los números de contacto de emergencia están publicados y actualizados",
+          "trained_first_aiders": "Hay socorristas capacitados presentes en el lugar",
+          "emergency_procedures_known": "El personal conoce los procedimientos y protocolos de emergencia",
+          "spill_kit_available": "El kit para derrames está disponible y completamente equipado"
+        }
+      },
+      "safety_induction": {
+        "name": "Inducción de Seguridad para Nuevo Empleado",
+        "description": "Lista de verificación de inducción de seguridad para asegurar que los nuevos empleados reciban información esencial de seguridad",
+        "items": {
+          "emergency_procedures_explained": "Los procedimientos de emergencia han sido explicados al nuevo empleado",
+          "ppe_issued": "Se han entregado los EPP requeridos y se ha demostrado su uso correcto",
+          "hazard_areas_identified": "Las áreas peligrosas han sido identificadas y explicadas",
+          "reporting_procedures_explained": "Los procedimientos de notificación de incidentes y peligros han sido explicados",
+          "fire_exits_shown": "Las salidas de emergencia y rutas de evacuación han sido mostradas",
+          "first_aid_locations_shown": "Las estaciones de primeros auxilios y ubicaciones de equipos han sido mostradas",
+          "safety_rules_acknowledged": "El empleado ha confirmado y firmado las normas de seguridad"
+        }
+      },
+      "toolbox_talk": {
+        "name": "Registro de Charla de Seguridad",
+        "description": "Documentación de la charla de seguridad previa al trabajo para registrar los temas discutidos y la asistencia",
+        "items": {
+          "topic_discussed": "Tema de seguridad discutido durante la charla",
+          "hazards_identified": "Los peligros relevantes han sido identificados y explicados",
+          "controls_communicated": "Las medidas de control han sido comunicadas a todos los asistentes",
+          "ppe_requirements_confirmed": "Los requisitos de EPP para la tarea han sido confirmados",
+          "questions_addressed": "Las preguntas de los asistentes han sido respondidas",
+          "attendees_signed": "Todos los asistentes han firmado el registro de asistencia"
+        }
+      }
     }
   },
   "inspections": {
@@ -4077,6 +4164,71 @@
           "risk_acceptable": "Is the hazmat cargo risk acceptable?",
           "additional_controls": "What additional hazmat controls are needed?",
           "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      }
+    },
+    "generic": {
+      "5step_hse": {
+        "name": "Evaluación de riesgos en 5 pasos (método HSE)",
+        "description": "Evaluación sistemática de riesgos en 5 pasos basada en el marco HSE del Reino Unido (INDG163) e ISO 45001, aplicable a cualquier actividad laboral.",
+        "items": {
+          "identify_hazards": "¿Se han identificado todos los peligros significativos para esta actividad?",
+          "who_might_be_harmed": "¿Se ha determinado quién podría resultar afectado y de qué manera?",
+          "evaluate_risks": "¿Se han evaluado los riesgos y las medidas preventivas existentes?",
+          "record_findings": "¿Se han registrado correctamente los hallazgos significativos?",
+          "review_assessment": "¿Se ha establecido una fecha de revisión y se mantiene actualizada la evaluación?"
+        }
+      },
+      "jha_universal": {
+        "name": "Análisis de peligros del trabajo (Universal)",
+        "description": "Metodología de análisis de peligros del trabajo reconocida internacionalmente según OSHA 3071 e ISO 45001, descomponiendo tareas en pasos para identificar y controlar los peligros.",
+        "items": {
+          "task_defined": "¿Se ha definido y delimitado claramente la tarea o trabajo?",
+          "steps_broken_down": "¿Se ha descompuesto la tarea en pasos individuales?",
+          "hazards_per_step": "¿Se han identificado los peligros para cada paso?",
+          "controls_identified": "¿Se han identificado medidas de control apropiadas para cada peligro?",
+          "ppe_determined": "¿Se han determinado los EPP necesarios y se han puesto a disposición?",
+          "residual_risk_acceptable": "¿Es aceptable el riesgo residual tras aplicar las medidas de control?",
+          "workers_briefed": "¿Se ha informado a todos los trabajadores sobre los peligros y las medidas de control?"
+        }
+      },
+      "coshh": {
+        "name": "Evaluación de riesgos por sustancias peligrosas (COSHH/SGA)",
+        "description": "Evaluación de riesgos para trabajos con sustancias peligrosas, conforme a la clasificación SGA, las regulaciones COSHH y los requisitos REACH.",
+        "items": {
+          "substances_identified": "¿Se han identificado todas las sustancias peligrosas en uso?",
+          "sds_available": "¿Están disponibles las fichas de datos de seguridad (FDS) actualizadas para todas las sustancias?",
+          "exposure_routes_assessed": "¿Se han evaluado todas las vías de exposición (inhalación, cutánea, ingestión)?",
+          "controls_adequate": "¿Son adecuadas las medidas de control existentes para prevenir la exposición?",
+          "ppe_specified": "¿Se han especificado y proporcionado los EPP apropiados?",
+          "emergency_procedures": "¿Existen procedimientos de emergencia y derrame establecidos?",
+          "health_surveillance": "¿Se ha evaluado la necesidad de vigilancia de la salud?"
+        }
+      },
+      "manual_handling": {
+        "name": "Evaluación de riesgos por manipulación manual de cargas",
+        "description": "Evaluación ergonómica de riesgos para operaciones de manipulación manual de cargas según la Directiva europea 90/269/CEE y las directrices NIOSH.",
+        "items": {
+          "task_assessed": "¿Se ha evaluado completamente la tarea de manipulación manual (TILE: Tarea, Individuo, Carga, Entorno)?",
+          "load_weight_acceptable": "¿Está el peso de la carga dentro de los límites aceptables para esta tarea?",
+          "posture_risk": "¿Se han evaluado los riesgos posturales (giros, flexiones, alcances)?",
+          "frequency_assessed": "¿Se han evaluado la frecuencia y duración de la manipulación?",
+          "environment_factors": "¿Se han considerado los factores ambientales (espacio, suelo, temperatura)?",
+          "controls_in_place": "¿Existen medidas de control para reducir los riesgos de manipulación (ayudas mecánicas, rotación de tareas)?",
+          "training_provided": "¿Han recibido los trabajadores formación en manipulación manual de cargas?"
+        }
+      },
+      "workplace_inspection": {
+        "name": "Evaluación general de riesgos laborales",
+        "description": "Identificación integral de peligros y evaluación de riesgos en el lugar de trabajo conforme a la Directiva marco europea 89/391/CEE y el deber general de la OSHA.",
+        "items": {
+          "work_area_inspected": "¿Se ha inspeccionado físicamente el área de trabajo en busca de peligros?",
+          "hazards_documented": "¿Se han documentado todos los peligros identificados?",
+          "risk_levels_assigned": "¿Se han asignado niveles de riesgo a cada peligro identificado?",
+          "controls_documented": "¿Se han documentado las medidas de control existentes y planificadas?",
+          "emergency_routes_clear": "¿Están las rutas de evacuación y salidas de emergencia despejadas y señalizadas?",
+          "first_aid_adequate": "¿Son adecuados los medios de primeros auxilios para el lugar de trabajo?",
+          "review_date_set": "¿Se ha establecido una fecha de revisión para esta evaluación?"
         }
       }
     }

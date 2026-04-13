@@ -54,7 +54,7 @@ function ChecklistFormPageContent() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { items: templates, isLoading: isTemplatesLoading } = useChecklistTemplatesStore();
   const { items: submissions, add: addSubmission } = useChecklistSubmissionsStore();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { toast } = useToast();
 
   const { t } = useTranslation();
@@ -268,7 +268,7 @@ function ChecklistFormPageContent() {
     try {
       await addSubmission({
         id: crypto.randomUUID(),
-        company_id: user.company_id || "",
+        company_id: user.company_id || currentCompany?.id || "",
         created_at: now.toISOString(),
         ...submission,
       });

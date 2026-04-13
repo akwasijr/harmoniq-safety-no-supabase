@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { getTemplatePublishStatus, isVisibleToFieldApp } from "@/lib/template-activation";
-import type { ChecklistTemplate } from "@/types";
+import { activateIndustryTemplate, getTemplatePublishStatus, isVisibleToFieldApp } from "@/lib/template-activation";
+import { getBuiltInProcedureTemplates } from "@/data/procedure-templates";
+import { getTemplateById } from "@/data/industry-templates";
+import { getRiskAssessmentTemplateById, getRiskAssessmentTemplatesByIndustry } from "@/data/risk-assessment-templates";
+import { completeProcedureStep, resolveProcedureStepTemplateId } from "@/lib/procedure-flow";
+import type { ChecklistTemplate, ProcedureSubmission } from "@/types";
 
 const makeTemplate = (overrides: Partial<ChecklistTemplate> = {}): ChecklistTemplate => ({
   id: "tpl-1",
@@ -99,6 +103,85 @@ describe("Template activation and visibility", () => {
       const assessmentsOnly = published.filter((t) => t.category === "risk_assessment");
       expect(assessmentsOnly.length).toBe(1);
       expect(assessmentsOnly[0].id).toBe("ra-1");
+    });
+
+    it("can materialize built-in checklist and risk assessment templates for the shared dashboard fill page", () => {
+      const checklistTemplate = activateIndustryTemplate(
+        getTemplateById("construction_jha")!,
+        "company-1",
+        "US",
+        (key) => key,
+      );
+      const assessmentTemplate = activateIndustryTemplate(
+        getRiskAssessmentTemplateById("ra_construction_confined_space")!,
+        "company-1",
+        "US",
+        (key) => key,
+      );
+
+      expect(checklistTemplate.id).toBe("activated:company-1:construction_jha");
+      expect(checklistTemplate.source_template_id).toBe("construction_jha");
+      expect(checklistTemplate.items[0]?.id).toBe("construction_jha:task_description");
+      expect(assessmentTemplate.id).toBe("activated:company-1:ra_construction_confined_space");
+      expect(assessmentTemplate.source_template_id).toBe("ra_construction_confined_space");
+      expect(assessmentTemplate.category).toBe("confined_space");
+      expect(assessmentTemplate.items[0]?.id).toBe("ra_construction_confined_space:hazard_description");
+    });
+
+    it("exposes generic risk assessment templates under the generic group", () => {
+      const templates = getRiskAssessmentTemplatesByIndustry("generic", "US");
+
+      expect(templates.length).toBeGreaterThan(0);
+      expect(templates.map((template) => template.id)).toContain("ra_generic_5step_hse");
+      expect(templates.every((template) => template.industry === "generic")).toBe(true);
+    });
+
+    it("ships built-in procedures whose first step points at a real template", () => {
+      const steps = getBuiltInProcedureTemplates().flatMap((procedure) => procedure.steps);
+
+      expect(steps.length).toBeGreaterThan(0);
+      for (const step of steps) {
+        const resolvedId = resolveProcedureStepTemplateId(step.template_id);
+        const resolvedTemplate = getTemplateById(resolvedId) || getRiskAssessmentTemplateById(resolvedId);
+        expect(resolvedTemplate, `${step.template_name} should resolve ${resolvedId}`).toBeDefined();
+      }
+    });
+
+    it("completes a procedure step and advances to the next step", () => {
+      const submission: ProcedureSubmission = {
+        id: "proc-sub-1",
+        company_id: "company-1",
+        procedure_template_id: "proc-1",
+        submitter_id: "user-1",
+        location_id: null,
+        status: "in_progress",
+        current_step: 1,
+        step_submissions: [
+          { step_id: "step-1", submission_id: null, status: "in_progress", completed_at: null },
+          { step_id: "step-2", submission_id: null, status: "pending", completed_at: null },
+        ],
+        started_at: "2026-04-12T00:00:00.000Z",
+        completed_at: null,
+        next_due_date: null,
+        created_at: "2026-04-12T00:00:00.000Z",
+        updated_at: "2026-04-12T00:00:00.000Z",
+      };
+
+      const updated = completeProcedureStep(
+        submission,
+        "step-1",
+        "checklist-sub-1",
+        "2026-04-12T00:05:00.000Z",
+      );
+
+      expect(updated.current_step).toBe(2);
+      expect(updated.status).toBe("in_progress");
+      expect(updated.step_submissions[0]).toMatchObject({
+        submission_id: "checklist-sub-1",
+        status: "completed",
+        completed_at: "2026-04-12T00:05:00.000Z",
+      });
+      expect(updated.step_submissions[1].status).toBe("in_progress");
     });
   });
 });

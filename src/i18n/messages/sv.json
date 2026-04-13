@@ -1027,7 +1027,8 @@
       "comment": "Lägg till en anteckning...",
       "generalComments": "Lägg till eventuella övergripande kommentarer...",
       "select": "Välj ett alternativ...",
-      "text": "Ange ditt svar..."
+      "text": "Ange ditt svar...",
+      "signature": "Skriv ditt fullständiga namn som signatur"
     },
     "approve": "Godkänn",
     "reject": "Avvisa",
@@ -1264,6 +1265,8 @@
     "basicInfo": "Grundläggande information om din organisation",
     "companyName": "Företagsnamn",
     "urlSlug": "URL-slug",
+    "appDisplayName": "Visningsnamn",
+    "appDisplayNameHint": "Anpassat namn som visas för anställda i fältappens sidhuvud.",
     "countryAndRegulations": "Land och föreskrifter",
     "countryDesc": "Välj verksamhetsland för att anpassa säkerhetsregler och rekommenderade mallar",
     "selected": "Vald",
@@ -1574,7 +1577,10 @@
     "riskLabel": "Risk",
     "standard": "Standard",
     "workerHubHint": "Återuppta utkast, följ bedömningar som väntar på granskning och ha granskade bevis nära till hands.",
-    "completedHint": "Granskade bedömningar visas här med granskare och datum som bevis."
+    "completedHint": "Granskade bedömningar visas här med granskare och datum som bevis.",
+    "startNew": "Starta ny riskbedömning",
+    "selectType": "Välj en riskbedömningstyp för din region.",
+    "basedOnRegulations": "Bedömningstyper baseras på ditt lands lagstiftningskrav."
   },
   "auth": {
     "welcomeBack": "Välkommen tillbaka",
@@ -2994,6 +3000,87 @@
           "corrective_actions": "Andel slutförda korrigerande åtgärder följs upp"
         }
       }
+    },
+    "generic": {
+      "name": "Generellt",
+      "description": "Delade mallar som kan användas i flera branscher.",
+      "workplace_safety": {
+        "name": "Arbetsplatsskyddsrond",
+        "description": "Daglig eller veckovis skyddsrond för att identifiera och åtgärda vanliga risker",
+        "items": {
+          "housekeeping": "Arbetsplatsen är ren, städad och fri från onödigt skräp",
+          "emergency_exits_clear": "Nödutgångar är fria och tydligt markerade",
+          "fire_extinguishers_accessible": "Brandsläckare är tillgängliga och inte blockerade",
+          "first_aid_kit_stocked": "Första hjälpen-lådan är fullt utrustad och inom utgångsdatum",
+          "lighting_adequate": "Belysningen är tillräcklig i alla arbetsområden och gångvägar",
+          "slip_trip_hazards": "Inga halka-, snubbel- eller fallrisker på golv och gångvägar",
+          "electrical_cords_condition": "Elektriska kablar och kontakter är i gott skick utan skador",
+          "ventilation_adequate": "Ventilation och luftkvalitet är tillräckliga i alla arbetsområden"
+        }
+      },
+      "ppe_check": {
+        "name": "Kontroll av Personlig Skyddsutrustning",
+        "description": "Kontroll av personlig skyddsutrustning för att säkerställa att all erforderlig utrustning finns och är i gott skick",
+        "items": {
+          "hard_hat_condition": "Skyddshjälm är oskadad och sitter säkert",
+          "safety_glasses": "Skyddsglasögon är rena och oskadade",
+          "high_vis_vest": "Reflexväst bärs och är i gott skick",
+          "safety_boots": "Skyddsskor bärs och är i gott skick",
+          "gloves_appropriate": "Handskar är lämpliga för uppgiften och i gott skick",
+          "hearing_protection": "Hörselskydd finns tillgängligt och bärs där det krävs",
+          "respiratory_protection": "Andningsskydd finns tillgängligt och bärs där det krävs (om tillämpligt)"
+        }
+      },
+      "fire_safety": {
+        "name": "Brandskyddschecklista",
+        "description": "Checklista för brandförebyggande och beredskap för att kontrollera att brandskyddsåtgärder finns på plats",
+        "items": {
+          "extinguishers_inspected": "Brandsläckare har inspekterats och är inom servicedatum",
+          "emergency_exits_marked": "Nödutgångar är tydligt markerade med belysta skyltar",
+          "evacuation_plan_posted": "Utrymningsplan är uppsatt och synlig i alla områden",
+          "fire_alarm_tested": "Brandlarmsystemet har testats och är i drift",
+          "flammable_materials_stored": "Brandfarliga material förvaras korrekt i avsedda utrymmen",
+          "fire_blankets_available": "Brandfiltar finns tillgängliga och är åtkomliga",
+          "assembly_point_marked": "Samlingsplats är tydligt markerad och känd av all personal"
+        }
+      },
+      "first_aid": {
+        "name": "Första Hjälpen & Nödberedskap",
+        "description": "Kontroll av nödberedskap för att säkerställa att första hjälpen-utrustning och nödutrustning är redo",
+        "items": {
+          "first_aid_kit_complete": "Första hjälpen-lådan är komplett med alla nödvändiga förnödenheter",
+          "aed_accessible": "Hjärtstartare (AED) är tillgänglig och fulladdad",
+          "emergency_contacts_posted": "Nödkontaktnummer är uppsatta och aktuella",
+          "trained_first_aiders": "Utbildade förstahjälpare finns på plats",
+          "emergency_procedures_known": "Personalen känner till nödrutiner och protokoll",
+          "spill_kit_available": "Spillkit finns tillgängligt och är fullt utrustat"
+        }
+      },
+      "safety_induction": {
+        "name": "Säkerhetsintroduktion Nyanställd",
+        "description": "Checklista för säkerhetsintroduktion för att säkerställa att nyanställda får grundläggande säkerhetsinformation",
+        "items": {
+          "emergency_procedures_explained": "Nödrutiner har förklarats för den nyanställde",
+          "ppe_issued": "Erforderlig skyddsutrustning har utdelats och korrekt användning visats",
+          "hazard_areas_identified": "Riskområden har identifierats och förklarats",
+          "reporting_procedures_explained": "Rutiner för incident- och riskrapportering har förklarats",
+          "fire_exits_shown": "Nödutgångar och utrymningsvägar har visats",
+          "first_aid_locations_shown": "Första hjälpen-stationer och utrustningsplatser har visats",
+          "safety_rules_acknowledged": "Medarbetaren har bekräftat och undertecknat säkerhetsreglerna"
+        }
+      },
+      "toolbox_talk": {
+        "name": "Verktygslådemöte Protokoll",
+        "description": "Dokumentation av säkerhetsgenomgång inför arbetet för att registrera diskuterade ämnen och närvaro",
+        "items": {
+          "topic_discussed": "Säkerhetsämne som diskuterats under genomgången",
+          "hazards_identified": "Relevanta risker har identifierats och förklarats",
+          "controls_communicated": "Skyddsåtgärder har kommunicerats till alla deltagare",
+          "ppe_requirements_confirmed": "Krav på skyddsutrustning för uppgiften har bekräftats",
+          "questions_addressed": "Frågor från deltagare har besvarats",
+          "attendees_signed": "Alla deltagare har undertecknat närvarolistan"
+        }
+      }
     }
   },
   "dateRange": {
@@ -4077,6 +4164,71 @@
           "risk_acceptable": "Is the hazmat cargo risk acceptable?",
           "additional_controls": "What additional hazmat controls are needed?",
           "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      }
+    },
+    "generic": {
+      "5step_hse": {
+        "name": "5-stegs riskbedömning (HSE-metoden)",
+        "description": "Systematisk 5-stegs riskbedömning baserad på brittiska HSE-ramverket (INDG163) och ISO 45001, tillämpbar på alla arbetsplatsaktiviteter.",
+        "items": {
+          "identify_hazards": "Har alla väsentliga riskkällor identifierats för denna aktivitet?",
+          "who_might_be_harmed": "Har det fastställts vilka som kan skadas och på vilket sätt?",
+          "evaluate_risks": "Har riskerna utvärderats och befintliga skyddsåtgärder bedömts?",
+          "record_findings": "Har de väsentliga resultaten dokumenterats korrekt?",
+          "review_assessment": "Har ett datum för översyn fastställts och hålls bedömningen aktuell?"
+        }
+      },
+      "jha_universal": {
+        "name": "Jobbsäkerhetsanalys (Universell)",
+        "description": "Internationellt erkänd jobbsäkerhetsanalys enligt OSHA 3071 och ISO 45001, där arbetsuppgifter bryts ned i steg för att identifiera och hantera risker.",
+        "items": {
+          "task_defined": "Har arbetsuppgiften tydligt definierats och avgränsats?",
+          "steps_broken_down": "Har uppgiften brutits ned i enskilda steg?",
+          "hazards_per_step": "Har riskkällor identifierats för varje steg?",
+          "controls_identified": "Har lämpliga skyddsåtgärder identifierats för varje riskkälla?",
+          "ppe_determined": "Har nödvändig personlig skyddsutrustning fastställts och tillhandahållits?",
+          "residual_risk_acceptable": "Är kvarstående risk acceptabel efter att skyddsåtgärder tillämpats?",
+          "workers_briefed": "Har alla arbetstagare informerats om riskkällor och skyddsåtgärder?"
+        }
+      },
+      "coshh": {
+        "name": "Riskbedömning för farliga ämnen (COSHH/GHS)",
+        "description": "Riskbedömning för arbete med farliga ämnen i enlighet med GHS-klassificering, COSHH-föreskrifter och REACH-krav.",
+        "items": {
+          "substances_identified": "Har alla farliga ämnen som används identifierats?",
+          "sds_available": "Finns aktuella säkerhetsdatablad (SDB) tillgängliga för alla ämnen?",
+          "exposure_routes_assessed": "Har alla exponeringsvägar (inandning, hud, förtäring) bedömts?",
+          "controls_adequate": "Är befintliga skyddsåtgärder tillräckliga för att förhindra exponering?",
+          "ppe_specified": "Har lämplig personlig skyddsutrustning specificerats och tillhandahållits?",
+          "emergency_procedures": "Finns nöd- och spillhanteringsrutiner på plats?",
+          "health_surveillance": "Har behovet av hälsoövervakning bedömts?"
+        }
+      },
+      "manual_handling": {
+        "name": "Riskbedömning manuell hantering",
+        "description": "Ergonomisk riskbedömning för manuell hantering enligt EU-direktiv 90/269/EEG och NIOSH riktlinjer för lyft.",
+        "items": {
+          "task_assessed": "Har den manuella hanteringsuppgiften bedömts fullständigt (TILE: Uppgift, Individ, Last, Omgivning)?",
+          "load_weight_acceptable": "Ligger lastens vikt inom acceptabla gränser för uppgiften?",
+          "posture_risk": "Har hållningsrisker (vridning, böjning, räckning) utvärderats?",
+          "frequency_assessed": "Har frekvens och varaktighet av hanteringen bedömts?",
+          "environment_factors": "Har omgivningsfaktorer (utrymme, golv, temperatur) beaktats?",
+          "controls_in_place": "Finns skyddsåtgärder för att minska risker vid manuell hantering (mekaniska hjälpmedel, arbetsrotation)?",
+          "training_provided": "Har arbetstagarna fått utbildning i manuell hantering?"
+        }
+      },
+      "workplace_inspection": {
+        "name": "Allmän arbetsplatsriskbedömning",
+        "description": "Omfattande identifiering av arbetsplatsrisker och riskbedömning enligt EU:s ramdirektiv 89/391/EEG och OSHA:s allmänna omsorgsplikt.",
+        "items": {
+          "work_area_inspected": "Har arbetsområdet fysiskt inspekterats avseende riskkällor?",
+          "hazards_documented": "Har alla identifierade riskkällor dokumenterats?",
+          "risk_levels_assigned": "Har risknivåer tilldelats varje identifierad riskkälla?",
+          "controls_documented": "Har befintliga och planerade skyddsåtgärder dokumenterats?",
+          "emergency_routes_clear": "Är utrymningsvägar och nödutgångar fria och markerade?",
+          "first_aid_adequate": "Är första hjälpen-utrustningen tillräcklig för arbetsplatsen?",
+          "review_date_set": "Har ett datum för översyn av denna bedömning fastställts?"
         }
       }
     }

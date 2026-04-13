@@ -1027,7 +1027,8 @@
       "comment": "Voeg een opmerking toe...",
       "generalComments": "Voeg eventuele algemene opmerkingen toe...",
       "select": "Selecteer een optie...",
-      "text": "Voer uw antwoord in..."
+      "text": "Voer uw antwoord in...",
+      "signature": "Typ uw volledige naam als handtekening"
     },
     "approve": "Goedkeuren",
     "reject": "Afwijzen",
@@ -1264,6 +1265,8 @@
     "basicInfo": "Basisinformatie over uw organisatie",
     "companyName": "Bedrijfsnaam",
     "urlSlug": "URL-slug",
+    "appDisplayName": "Weergavenaam",
+    "appDisplayNameHint": "Aangepaste naam die medewerkers zien in de veldapp-header.",
     "countryAndRegulations": "Land en regelgeving",
     "countryDesc": "Selecteer uw land om veiligheidsvoorschriften en aanbevolen sjablonen af te stemmen",
     "selected": "Geselecteerd",
@@ -1574,7 +1577,10 @@
     "riskLabel": "Risico",
     "standard": "Standaard",
     "workerHubHint": "Hervat concepten, volg beoordelingen die wachten op review en bewaar beoordeeld bewijs.",
-    "completedHint": "Beoordeelde risicobeoordelingen verschijnen hier met de reviewer en datum als bewijs."
+    "completedHint": "Beoordeelde risicobeoordelingen verschijnen hier met de reviewer en datum als bewijs.",
+    "startNew": "Nieuwe risicobeoordeling starten",
+    "selectType": "Selecteer een type risicobeoordeling voor uw regio.",
+    "basedOnRegulations": "Beoordelingstypen zijn gebaseerd op de wettelijke vereisten van uw land."
   },
   "auth": {
     "welcomeBack": "Welkom terug",
@@ -2994,6 +3000,87 @@
           "corrective_actions": "Afrondingspercentages van corrigerende maatregelen worden gevolgd"
         }
       }
+    },
+    "generic": {
+      "name": "Algemeen",
+      "description": "Gedeelde sjablonen die in meerdere branches toepasbaar zijn.",
+      "workplace_safety": {
+        "name": "Werkplekinspectie",
+        "description": "Dagelijkse of wekelijkse veiligheidsinspectie om veelvoorkomende gevaren te identificeren en te verhelpen",
+        "items": {
+          "housekeeping": "Werkruimtes zijn schoon, opgeruimd en vrij van onnodige rommel",
+          "emergency_exits_clear": "Nooduitgangen zijn vrij en duidelijk gemarkeerd",
+          "fire_extinguishers_accessible": "Brandblussers zijn bereikbaar en niet geblokkeerd",
+          "first_aid_kit_stocked": "EHBO-koffer is volledig gevuld en binnen houdbaarheidsdatum",
+          "lighting_adequate": "Verlichting is voldoende in alle werkruimtes en looppaden",
+          "slip_trip_hazards": "Geen uitglijdings-, struikel- of valgevaren op vloeren en looppaden",
+          "electrical_cords_condition": "Elektrische kabels en stekkers zijn in goede staat zonder schade",
+          "ventilation_adequate": "Ventilatie en luchtkwaliteit zijn voldoende in alle werkruimtes"
+        }
+      },
+      "ppe_check": {
+        "name": "PBM-controle",
+        "description": "Controle van Persoonlijke Beschermingsmiddelen om te waarborgen dat alle vereiste PBM beschikbaar en in goede staat zijn",
+        "items": {
+          "hard_hat_condition": "Veiligheidshelm is onbeschadigd en zit stevig",
+          "safety_glasses": "Veiligheidsbril is schoon en onbeschadigd",
+          "high_vis_vest": "Reflecterend hesje wordt gedragen en is in goede staat",
+          "safety_boots": "Veiligheidsschoenen worden gedragen en zijn in goede staat",
+          "gloves_appropriate": "Handschoenen zijn geschikt voor de taak en in goede staat",
+          "hearing_protection": "Gehoorbescherming is beschikbaar en wordt gedragen waar vereist",
+          "respiratory_protection": "Ademhalingsbescherming is beschikbaar en wordt gedragen waar vereist (indien van toepassing)"
+        }
+      },
+      "fire_safety": {
+        "name": "Brandveiligheidschecklist",
+        "description": "Checklist voor brandpreventie en -paraatheid om te controleren of brandveiligheidsmaatregelen aanwezig zijn",
+        "items": {
+          "extinguishers_inspected": "Brandblussers zijn geïnspecteerd en binnen keuringsdatum",
+          "emergency_exits_marked": "Nooduitgangen zijn duidelijk gemarkeerd met verlichte bewegwijzering",
+          "evacuation_plan_posted": "Ontruimingsplan is opgehangen en zichtbaar in alle ruimtes",
+          "fire_alarm_tested": "Brandalarmsysteem is getest en operationeel",
+          "flammable_materials_stored": "Brandbare materialen zijn correct opgeslagen in aangewezen ruimtes",
+          "fire_blankets_available": "Blusdekens zijn beschikbaar en bereikbaar",
+          "assembly_point_marked": "Verzamelplaats is duidelijk gemarkeerd en bekend bij alle medewerkers"
+        }
+      },
+      "first_aid": {
+        "name": "EHBO & Noodparaatheid",
+        "description": "Controle van noodparaatheid om te waarborgen dat EHBO-benodigdheden en noodapparatuur gereed zijn",
+        "items": {
+          "first_aid_kit_complete": "EHBO-koffer is compleet met alle benodigde middelen",
+          "aed_accessible": "AED (defibrillator) is bereikbaar en volledig opgeladen",
+          "emergency_contacts_posted": "Noodnummers zijn opgehangen en actueel",
+          "trained_first_aiders": "Opgeleide EHBO'ers zijn aanwezig op locatie",
+          "emergency_procedures_known": "Medewerkers zijn op de hoogte van noodprocedures en protocollen",
+          "spill_kit_available": "Morskit is beschikbaar en volledig gevuld"
+        }
+      },
+      "safety_induction": {
+        "name": "Veiligheidsinstructie Nieuwe Medewerker",
+        "description": "Inwerklijst veiligheid om te waarborgen dat nieuwe medewerkers essentiële veiligheidsinformatie ontvangen",
+        "items": {
+          "emergency_procedures_explained": "Noodprocedures zijn uitgelegd aan de nieuwe medewerker",
+          "ppe_issued": "Vereiste PBM zijn uitgereikt en correct gebruik is gedemonstreerd",
+          "hazard_areas_identified": "Gevaarlijke gebieden zijn aangewezen en uitgelegd",
+          "reporting_procedures_explained": "Meld- en rapportageprocedures voor incidenten zijn uitgelegd",
+          "fire_exits_shown": "Nooduitgangen en vluchtroutes zijn getoond",
+          "first_aid_locations_shown": "EHBO-posten en apparatuurlocaties zijn getoond",
+          "safety_rules_acknowledged": "Medewerker heeft de veiligheidsregels bevestigd en ondertekend"
+        }
+      },
+      "toolbox_talk": {
+        "name": "Toolboxmeeting Verslag",
+        "description": "Documentatie van het werkoverleg veiligheid om besproken onderwerpen en aanwezigheid vast te leggen",
+        "items": {
+          "topic_discussed": "Veiligheidsonderwerp besproken tijdens het overleg",
+          "hazards_identified": "Relevante gevaren zijn geïdentificeerd en uitgelegd",
+          "controls_communicated": "Beheersmaatregelen zijn gecommuniceerd aan alle aanwezigen",
+          "ppe_requirements_confirmed": "PBM-vereisten voor de taak zijn bevestigd",
+          "questions_addressed": "Vragen van aanwezigen zijn beantwoord",
+          "attendees_signed": "Alle aanwezigen hebben de presentielijst ondertekend"
+        }
+      }
     }
   },
   "dateRange": {
@@ -4077,6 +4164,71 @@
           "risk_acceptable": "Is the hazmat cargo risk acceptable?",
           "additional_controls": "What additional hazmat controls are needed?",
           "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      }
+    },
+    "generic": {
+      "5step_hse": {
+        "name": "5-Stappen Risicobeoordeling (HSE-methode)",
+        "description": "Systematische 5-stappen risicobeoordeling op basis van het Britse HSE-raamwerk (INDG163) en ISO 45001, toepasbaar op elke werkactiviteit.",
+        "items": {
+          "identify_hazards": "Zijn alle significante gevaren voor deze activiteit geïdentificeerd?",
+          "who_might_be_harmed": "Is vastgesteld wie er schade kan ondervinden en op welke manier?",
+          "evaluate_risks": "Zijn de risico's beoordeeld en de bestaande voorzorgsmaatregelen geëvalueerd?",
+          "record_findings": "Zijn de significante bevindingen correct vastgelegd?",
+          "review_assessment": "Is er een herzieningsdatum vastgesteld en wordt de beoordeling actueel gehouden?"
+        }
+      },
+      "jha_universal": {
+        "name": "Taakgevaaranalyse (Universeel)",
+        "description": "Internationaal erkende taakgevaaranalyse conform OSHA 3071 en ISO 45001, waarbij taken worden opgesplitst in stappen om gevaren te identificeren en beheersen.",
+        "items": {
+          "task_defined": "Is de taak of opdracht duidelijk gedefinieerd en afgebakend?",
+          "steps_broken_down": "Is de taak opgesplitst in afzonderlijke stappen?",
+          "hazards_per_step": "Zijn de gevaren per stap geïdentificeerd?",
+          "controls_identified": "Zijn passende beheersmaatregelen per gevaar vastgesteld?",
+          "ppe_determined": "Zijn de benodigde PBM vastgesteld en beschikbaar gesteld?",
+          "residual_risk_acceptable": "Is het restrisico aanvaardbaar na toepassing van de beheersmaatregelen?",
+          "workers_briefed": "Zijn alle medewerkers geïnformeerd over de gevaren en beheersmaatregelen?"
+        }
+      },
+      "coshh": {
+        "name": "Gevaarlijke Stoffen Risicobeoordeling (COSHH/GHS)",
+        "description": "Risicobeoordeling voor werkzaamheden met gevaarlijke stoffen, in lijn met GHS-classificatie, COSHH-voorschriften en REACH-vereisten.",
+        "items": {
+          "substances_identified": "Zijn alle in gebruik zijnde gevaarlijke stoffen geïdentificeerd?",
+          "sds_available": "Zijn actuele Veiligheidsinformatiebladen (VIB/SDS) beschikbaar voor alle stoffen?",
+          "exposure_routes_assessed": "Zijn alle blootstellingsroutes (inademing, huid, ingestie) beoordeeld?",
+          "controls_adequate": "Zijn de bestaande beheersmaatregelen toereikend om blootstelling te voorkomen?",
+          "ppe_specified": "Zijn geschikte PBM gespecificeerd en beschikbaar gesteld?",
+          "emergency_procedures": "Zijn nood- en morsprocedures vastgesteld?",
+          "health_surveillance": "Is de noodzaak van gezondheidsmonitoring beoordeeld?"
+        }
+      },
+      "manual_handling": {
+        "name": "Risicobeoordeling Manueel Hanteren",
+        "description": "Ergonomische risicobeoordeling voor manueel hanteren conform EU-richtlijn 90/269/EEG en NIOSH-tilrichtlijnen.",
+        "items": {
+          "task_assessed": "Is de manuele hanteertaak volledig beoordeeld (TILE: Taak, Individu, Last, Omgeving)?",
+          "load_weight_acceptable": "Valt het gewicht van de last binnen aanvaardbare grenzen voor deze taak?",
+          "posture_risk": "Zijn houdingsrisico's (draaien, bukken, reiken) geëvalueerd?",
+          "frequency_assessed": "Zijn de frequentie en duur van het hanteren beoordeeld?",
+          "environment_factors": "Zijn omgevingsfactoren (ruimte, vloer, temperatuur) meegenomen?",
+          "controls_in_place": "Zijn beheersmaatregelen getroffen om tilrisico's te verminderen (mechanische hulpmiddelen, taakroulatie)?",
+          "training_provided": "Hebben medewerkers training ontvangen in manueel hanteren?"
+        }
+      },
+      "workplace_inspection": {
+        "name": "Algemene Werkplek Risicobeoordeling",
+        "description": "Uitgebreide werkplekgevarenidentificatie en risicobeoordeling conform EU-kaderrichtlijn 89/391/EEG en de OSHA-zorgplicht.",
+        "items": {
+          "work_area_inspected": "Is het werkgebied fysiek geïnspecteerd op gevaren?",
+          "hazards_documented": "Zijn alle geïdentificeerde gevaren gedocumenteerd?",
+          "risk_levels_assigned": "Zijn risiconiveaus toegewezen aan elk geïdentificeerd gevaar?",
+          "controls_documented": "Zijn bestaande en geplande beheersmaatregelen gedocumenteerd?",
+          "emergency_routes_clear": "Zijn nooduitgangen en vluchtroutes vrij en gemarkeerd?",
+          "first_aid_adequate": "Zijn de EHBO-voorzieningen toereikend voor de werkplek?",
+          "review_date_set": "Is er een herzieningsdatum vastgesteld voor deze beoordeling?"
         }
       }
     }

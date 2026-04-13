@@ -7,15 +7,19 @@ import {
   Clock,
   Target,
   Download,
+  ShieldAlert,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { KPICard } from "@/components/ui/kpi-card";
 import { FilterPanel, useFilterOptions } from "@/components/ui/filter-panel";
 import { ChartCard, AreaChart, DonutChart, LineChart, COLORS } from "@/components/charts";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useCompanyData } from "@/hooks/use-company-data";
+import { useAuth } from "@/hooks/use-auth";
 import { LoadingPage } from "@/components/ui/loading";
 import { downloadCsv } from "@/lib/csv";
 import { capitalize } from "@/lib/utils";
@@ -38,6 +42,7 @@ export default function AnalyticsPage() {
   );
 
   const [dateRange, setDateRange] = React.useState("last_6_months");
+  const [hoursOverride, setHoursOverride] = React.useState<string>("");
   
   // Filter states
   const [locationFilter, setLocationFilter] = React.useState("");
@@ -45,6 +50,8 @@ export default function AnalyticsPage() {
   const [severityFilter, setSeverityFilter] = React.useState("");
 
   const { incidents, locations, stores } = useCompanyData();
+  const { currentCompany, hasPermission } = useAuth();
+  const canExport = hasPermission("reports.export");
   const { isLoading } = stores.incidents;
 
   const filteredIncidents = React.useMemo(
@@ -181,6 +188,10 @@ export default function AnalyticsPage() {
   const kpis = React.useMemo(() => {
     const totalIncidents = filteredIncidents.length;
     const lostTimeIncidents = filteredIncidents.filter((inc) => inc.lost_time).length;
+    const totalLostDays = filteredIncidents
+      .filter((inc) => inc.lost_time && inc.lost_time_amount)
+      .reduce((acc, inc) => acc + (inc.lost_time_amount || 0), 0);
+
     const resolvedIncidents = filteredIncidents.filter(
       (inc) => inc.status === "resolved" && inc.resolved_at
     );
@@ -192,14 +203,77 @@ export default function AnalyticsPage() {
     const avgResolutionHours = resolvedIncidents.length
       ? Math.round(resolutionHoursTotal / resolvedIncidents.length)
       : 0;
-    const ltir = totalIncidents ? (lostTimeIncidents / totalIncidents * 100).toFixed(1) : "0.0";
-    const trir = totalIncidents ? (totalIncidents / Math.max(locations.length, 1)).toFixed(1) : "0.0";
+
+    // Calculate total hours worked for the selected period
+    const totalEmployees = currentCompany?.total_employees || 0;
+    const avgHoursPerWeek = currentCompany?.average_hours_per_week || 40;
+    const dateRangeResult = getDateRangeFromValue(dateRange as DateRangeValue);
+    const rangeStart = dateRangeResult.start;
+    const rangeEnd = dateRangeResult.end;
+    let weeksInPeriod: number;
+    if (rangeStart && rangeEnd) {
+      weeksInPeriod = Math.max(1, Math.round((rangeEnd.getTime() - rangeStart.getTime()) / (7 * 24 * 36e5)));
+    } else if (filteredIncidents.length > 0) {
+      const earliest = Math.min(...filteredIncidents.map((inc) => new Date(inc.incident_date).getTime()));
+      weeksInPeriod = Math.max(1, Math.round((Date.now() - earliest) / (7 * 24 * 36e5)));
+    } else {
+      weeksInPeriod = 52;
+    }
+    const autoHoursWorked = totalEmployees * avgHoursPerWeek * weeksInPeriod;
+    const totalHoursWorked = hoursOverride ? Number(hoursOverride) : autoHoursWorked;
+
+    // Country-aware multiplier: US = 200k (OSHA), international = 1M (LTIFR)
+    const isUS = currentCompany?.country === "US";
+    const multiplier = isUS ? 200_000 : 1_000_000;
+    const rateLabel = isUS ? "per 200k hrs" : "per 1M hrs";
+
+    // LTIR/LTIFR: (Lost Time Incidents × multiplier) / Total Hours Worked
+    const ltir = totalHoursWorked > 0
+      ? ((lostTimeIncidents * multiplier) / totalHoursWorked).toFixed(2)
+      : "—";
+
+    // TRIR: (All Recordable Incidents × multiplier) / Total Hours Worked
+    const trir = totalHoursWorked > 0
+      ? ((totalIncidents * multiplier) / totalHoursWorked).toFixed(2)
+      : "—";
+
+    // Severity Rate: (Lost Days × multiplier) / Total Hours Worked
+    const severityRate = totalHoursWorked > 0
+      ? ((totalLostDays * multiplier) / totalHoursWorked).toFixed(2)
+      : "—";
+
+    // DART cases = incidents with days away OR restricted/transferred duty
+    const dartCases = filteredIncidents.filter((inc) =>
+      inc.lost_time || (inc.lost_time_restricted_days && inc.lost_time_restricted_days > 0)
+    ).length;
+
+    // DART Rate: (DART cases × multiplier) / Total Hours Worked
+    const dart = totalHoursWorked > 0
+      ? ((dartCases * multiplier) / totalHoursWorked).toFixed(2)
+      : "—";
+
     const complianceRate = totalIncidents
       ? Math.round((resolvedIncidents.length / totalIncidents) * 100)
       : 0;
 
-    return { totalIncidents, avgResolutionHours, ltir, trir, complianceRate };
-  }, [filteredIncidents, locations.length]);
+    return {
+      totalIncidents,
+      lostTimeIncidents,
+      totalLostDays,
+      avgResolutionHours,
+      ltir,
+      trir,
+      severityRate,
+      dart,
+      dartCases,
+      complianceRate,
+      totalHoursWorked,
+      totalEmployees,
+      avgHoursPerWeek,
+      rateLabel,
+      isConfigured: totalEmployees > 0,
+    };
+  }, [filteredIncidents, locations.length, currentCompany, dateRange, hoursOverride]);
 
   const filters = [
     {
@@ -242,54 +316,138 @@ export default function AnalyticsPage() {
             onDateRangeChange={(value) => setDateRange(value)}
             showDateRange={true}
           >
+            {canExport && (
             <Button
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => {
-                const exportRows = filteredIncidents.map((incident) => ({
-                  Reference: incident.reference_number,
-                  Title: incident.title,
-                  Type: incident.type,
-                  Severity: incident.severity,
-                  Status: incident.status,
-                  Location:
-                    locations.find((loc) => loc.id === incident.location_id)?.name || "Unassigned",
-                  Date: incident.incident_date,
-                }));
-                downloadCsv("incidents-analytics.csv", exportRows);
+              onClick={async () => {
+                try {
+                  const { AnalyticsReportPDF, downloadPDF } = await import("@/lib/pdf-export");
+                  const doc = <AnalyticsReportPDF
+                    companyName={currentCompany?.name || "Company"}
+                    dateRange={dateRange}
+                    kpis={{
+                      ltir: kpis.ltir,
+                      trir: kpis.trir,
+                      severityRate: kpis.severityRate,
+                      avgResolutionHours: kpis.avgResolutionHours,
+                      complianceRate: kpis.complianceRate,
+                      totalIncidents: kpis.totalIncidents,
+                      lostTimeIncidents: kpis.lostTimeIncidents,
+                      totalLostDays: kpis.totalLostDays,
+                      totalHoursWorked: Math.round(kpis.totalHoursWorked),
+                      rateLabel: kpis.rateLabel,
+                    }}
+                    incidents={filteredIncidents.map((inc) => ({
+                      reference: inc.reference_number,
+                      title: inc.title,
+                      type: inc.type,
+                      severity: inc.severity,
+                      status: inc.status,
+                      date: inc.incident_date,
+                      lostTime: inc.lost_time,
+                      lostHours: inc.lost_time_amount || 0,
+                      location: locations.find((l) => l.id === inc.location_id)?.name || "Unassigned",
+                    }))}
+                    incidentsByType={incidentsByTypeData}
+                  />;
+                  await downloadPDF(doc, `safety-analytics-${dateRange}-${new Date().toISOString().split("T")[0]}.pdf`);
+                } catch {
+                  // silently fail
+                }
               }}
             >
               <Download className="h-4 w-4" />
-              Export
+              Export PDF
             </Button>
+            )}
           </FilterPanel>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <KPICard
-          title={t("analytics.metrics.ltir")}
+          title="LTIR / LTIFR"
           value={kpis.ltir}
+          subtitle={kpis.isConfigured ? kpis.rateLabel : "Set workforce in Settings"}
+          tooltip="Lost Time Injury Frequency Rate — measures how many incidents caused workers to miss time, normalized per hours worked. Formula: (Lost Time Incidents × 200,000 or 1,000,000) ÷ Total Hours Worked. A lower number is better. Industry benchmarks vary: manufacturing typically targets below 3.0, construction below 5.0."
           icon={Target}
         />
         <KPICard
-          title={t("analytics.metrics.trir")}
+          title="TRIR"
           value={kpis.trir}
+          subtitle={kpis.isConfigured ? kpis.rateLabel : "Set workforce in Settings"}
+          tooltip="Total Recordable Incident Rate — counts ALL recordable safety incidents (not just lost time), normalized per hours worked. Formula: (Total Incidents × 200,000 or 1,000,000) ÷ Total Hours Worked. This is OSHA's primary benchmark. A lower number is better."
           icon={AlertTriangle}
+        />
+        <KPICard
+          title="Severity Rate"
+          value={kpis.severityRate}
+          subtitle={kpis.totalLostDays > 0 ? `${kpis.totalLostDays} lost day(s)` : "No lost days"}
+          tooltip="Measures the seriousness of incidents by tracking total lost working days, normalized per hours worked. Formula: (Total Lost Days × 200,000 or 1,000,000) ÷ Total Hours Worked. A high severity rate with low LTIR means fewer but more serious incidents."
+          icon={ShieldAlert}
+        />
+        <KPICard
+          title="DART"
+          value={kpis.dart}
+          subtitle={kpis.isConfigured ? kpis.rateLabel : "Set workforce in Settings"}
+          tooltip="Days Away, Restricted, or Transferred rate (OSHA). Counts incidents where workers missed work OR were placed on restricted duty. Formula: (DART cases × multiplier) ÷ Total Hours Worked."
+          icon={Target}
         />
         <KPICard
           title={t("analytics.metrics.avgResolution")}
           value={kpis.avgResolutionHours ? `${kpis.avgResolutionHours}h` : "—"}
+          tooltip="Average time from when an incident is reported to when it is marked as resolved. Shorter resolution times indicate a more responsive safety management system. Target: under 48 hours for most incidents."
           icon={Clock}
         />
         <KPICard
           title={t("analytics.metrics.complianceRate")}
           value={`${kpis.complianceRate}%`}
+          tooltip="Percentage of reported incidents that have been resolved. Measures how effectively your team closes out safety issues. Target: above 90% for the selected time period."
           icon={Users}
         />
       </div>
+
+      {/* Hours Worked Configuration */}
+      <Card>
+        <CardContent className="py-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Total Hours Worked (period)</p>
+              <p className="text-xs text-muted-foreground">
+                {kpis.isConfigured
+                  ? `Auto: ${kpis.totalEmployees} employees × ${kpis.avgHoursPerWeek}h/week × period = ${Math.round(kpis.totalHoursWorked).toLocaleString()}h`
+                  : "Set employee count and average hours in Company Settings to auto-calculate."}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="hours-override" className="text-xs text-muted-foreground whitespace-nowrap">
+                Override:
+              </Label>
+              <Input
+                id="hours-override"
+                type="number"
+                min="0"
+                placeholder={kpis.totalHoursWorked > 0 ? String(Math.round(kpis.totalHoursWorked)) : "Enter hours"}
+                value={hoursOverride}
+                onChange={(e) => setHoursOverride(e.target.value)}
+                className="w-40 h-8 text-sm"
+              />
+              {hoursOverride && (
+                <button
+                  type="button"
+                  onClick={() => setHoursOverride("")}
+                  className="text-xs text-muted-foreground hover:text-foreground underline"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Charts Row 1 */}
       <div className="grid gap-6 lg:grid-cols-2">

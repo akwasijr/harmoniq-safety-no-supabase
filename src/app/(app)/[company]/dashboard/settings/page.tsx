@@ -9,6 +9,7 @@ import {
   Palette,
   Save,
   Shield,
+  ShieldCheck,
   Smartphone,
   ToggleLeft,
 } from "lucide-react";
@@ -56,6 +57,7 @@ import { BrandingSettingsSection } from "./_components/branding-settings-section
 import { FieldAppSettingsSection } from "./_components/field-app-settings-section";
 import { GeneralSettingsSection } from "./_components/general-settings-section";
 import { SidebarEditorSection } from "./_components/sidebar-editor-section";
+import { AccessControlSection } from "./_components/access-control-section";
 import {
   BillingSettingsSection,
   NotificationsSettingsSection,
@@ -156,20 +158,27 @@ export default function SettingsPage() {
   const { t, setLocale } = useTranslation();
 
   const settingsTabs = React.useMemo<SettingsTabConfig[]>(
-    () => [
-      { value: "general", label: t("settings.tabs.general"), icon: Building },
-      { value: "branding", label: t("settings.tabs.branding"), icon: Palette },
-      { value: "modules", label: "Modules & Sidebar", icon: ToggleLeft },
-      { value: "fieldApp", label: "Field App", icon: Smartphone },
-      {
-        value: "notifications",
-        label: t("settings.tabs.notifications"),
-        icon: Bell,
-      },
-      { value: "security", label: t("settings.tabs.security"), icon: Shield },
-      { value: "billing", label: t("settings.tabs.billing"), icon: CreditCard },
-    ],
-    [t],
+    () => {
+      const tabs: SettingsTabConfig[] = [
+        { value: "general", label: t("settings.tabs.general"), icon: Building },
+        { value: "branding", label: t("settings.tabs.branding"), icon: Palette },
+        { value: "modules", label: "Modules & Sidebar", icon: ToggleLeft },
+        { value: "fieldApp", label: "Field App", icon: Smartphone },
+        { value: "accessControl", label: "Access Control", icon: ShieldCheck },
+        {
+          value: "notifications",
+          label: t("settings.tabs.notifications"),
+          icon: Bell,
+        },
+        { value: "security", label: t("settings.tabs.security"), icon: Shield },
+        { value: "billing", label: t("settings.tabs.billing"), icon: CreditCard },
+      ];
+      if (!canEditSettings) {
+        return tabs.filter((tab) => tab.value !== "billing");
+      }
+      return tabs;
+    },
+    [t, canEditSettings],
   );
 
   React.useEffect(() => {
@@ -463,6 +472,7 @@ export default function SettingsPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold">{t("settings.title")}</h1>
+          {activeTab !== "accessControl" && (
           <Button
             onClick={handleSave}
             disabled={saving || !canEditSettings}
@@ -476,6 +486,7 @@ export default function SettingsPage() {
             )}
             {saved ? t("settings.saved") : t("settings.saveChanges")}
           </Button>
+          )}
         </div>
 
         {!canEditSettings && (
@@ -535,6 +546,10 @@ export default function SettingsPage() {
               t={t}
               updateSetting={updateSetting}
             />
+          )}
+
+          {activeTab === "accessControl" && (
+            <AccessControlSection t={t} />
           )}
 
           {activeTab === "security" && (

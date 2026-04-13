@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
@@ -26,7 +27,6 @@ import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/components/ui/toast";
 import { LoadingPage } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
@@ -37,6 +37,11 @@ import { PAGINATION } from "@/lib/constants";
 import { downloadCsv } from "@/lib/csv";
 import { getDraftsForType, deleteDraft as removeDraft, type Draft } from "@/lib/draft-store";
 import { getBuiltInProcedureTemplates } from "@/data/procedure-templates";
+import { buildProcedureStepFillHref, buildProcedureSubmissionHref, createProcedureSubmissionId } from "@/lib/procedure-flow";
+import { getTemplatesByIndustry } from "@/data/industry-templates";
+import { getRiskAssessmentTemplatesByIndustry } from "@/data/risk-assessment-templates";
+import { activateIndustryTemplate } from "@/lib/template-activation";
+import type { Country } from "@/types";
 
 const mockRiskAssessments: { id: string; template: string; templateId: string; type: string; location: string; date: string; status: string; by: string; riskLevel: string; riskScore: number }[] = [];
 
@@ -114,8 +119,7 @@ function ChecklistsPageContent() {
     companyId,
   } = useCompanyData();
   const { isLoading } = stores.checklistTemplates;
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const { user, currentCompany } = useAuth();
   const { t, formatDate } = useTranslation();
 
   // Map store risk evaluations to the display format
@@ -142,7 +146,7 @@ function ChecklistsPageContent() {
         type: re.form_type.toUpperCase(),
         location: location?.name || "Unknown",
         date: re.submitted_at.split("T")[0],
-        status: re.status === "reviewed" ? "completed" : re.status === "submitted" ? "in_progress" : "draft",
+        status: re.status === "reviewed" ? "completed" : re.status === "submitted" ? "completed" : "draft",
         by: submitter?.full_name || "Unknown",
         riskLevel,
         riskScore,
@@ -208,7 +212,7 @@ function ChecklistsPageContent() {
   };
 
   const checklistSubmissions = React.useMemo(() => {
-    let checklistData = checklistSubmissionsStore
+    const checklistData = checklistSubmissionsStore
       .filter((submission) =>
         isWithinDateRange(submission.submitted_at || submission.created_at, dateRange as DateRangeValue)
       )
@@ -235,7 +239,7 @@ function ChecklistsPageContent() {
         };
       });
 
-    let inspectionData = inspectionAsSubmissions.filter((ins) =>
+    const inspectionData = inspectionAsSubmissions.filter((ins) =>
       isWithinDateRange(ins.date, dateRange as DateRangeValue)
     );
 
@@ -280,6 +284,39 @@ function ChecklistsPageContent() {
   const activeChecklistTemplates = React.useMemo(() => publishedTemplates.filter((t) => t.category !== "risk_assessment"), [publishedTemplates]);
   const activeAssessmentTemplates = React.useMemo(() => publishedTemplates.filter((t) => t.category === "risk_assessment"), [publishedTemplates]);
 
+  // Fallback: if no published checklist templates exist, show built-in industry templates
+  const companyCountry = (currentCompany?.country as Country | undefined) || "US";
+  const fallbackChecklistTemplates = React.useMemo(() => {
+    if (activeChecklistTemplates.length > 0) return activeChecklistTemplates;
+    const industry = currentCompany?.industry;
+    const builtIns = industry
+      ? getTemplatesByIndustry(industry as Parameters<typeof getTemplatesByIndustry>[0])
+      : [];
+    // Also include generic templates
+    const genericTemplates = getTemplatesByIndustry("generic");
+    const all = [...builtIns, ...genericTemplates];
+    return all
+      .filter((tpl) => tpl.category !== "risk_assessment" && tpl.category !== "hazard_analysis")
+      .map((tpl) =>
+        activateIndustryTemplate(tpl, companyId || "__built_in__", companyCountry, t),
+      );
+  }, [activeChecklistTemplates, currentCompany?.industry, companyId, companyCountry, t]);
+
+  // Fallback: if no published risk assessment templates exist, show built-in RA templates
+  const fallbackAssessmentTemplates = React.useMemo(() => {
+    if (activeAssessmentTemplates.length > 0) return activeAssessmentTemplates;
+    const industry = currentCompany?.industry;
+    const builtIns = industry
+      ? getRiskAssessmentTemplatesByIndustry(industry as Parameters<typeof getRiskAssessmentTemplatesByIndustry>[0], companyCountry)
+      : [];
+    const genericTemplates = getRiskAssessmentTemplatesByIndustry("generic", companyCountry);
+    const all = [...builtIns, ...genericTemplates];
+    return all
+      .map((tpl) =>
+        activateIndustryTemplate(tpl, companyId || "__built_in__", companyCountry, t),
+      );
+  }, [activeAssessmentTemplates, currentCompany?.industry, companyId, companyCountry, t]);
+
 
   // Reset filters when main tab changes
   React.useEffect(() => {
@@ -288,15 +325,29 @@ function ChecklistsPageContent() {
     setStatusFilter("");
   }, [activeTab]);
 
+  const allProcedureTemplates = React.useMemo(() => {
+    const builtInTemplates = getBuiltInProcedureTemplates().filter(
+      (template) => !template.industry || template.industry === currentCompany?.industry,
+    );
+
+    return [
+      ...procedureTemplates,
+      ...builtInTemplates.filter(
+        (builtInTemplate) => !procedureTemplates.some((template) => template.id === builtInTemplate.id),
+      ),
+    ];
+  }, [procedureTemplates, currentCompany?.industry]);
+
   // Active procedure templates for "Start Procedure" picker
   const activeProcedureTemplates = React.useMemo(() => {
-    return procedureTemplates.filter((tpl) => tpl.is_active);
-  }, [procedureTemplates]);
+    return allProcedureTemplates.filter((tpl) => tpl.is_active);
+  }, [allProcedureTemplates]);
 
   // Procedure submissions with display data
   const procedureSubmissionRows = React.useMemo(() => {
     return procedureSubmissions.map((sub) => {
-      const tpl = procedureTemplates.find((t) => t.id === sub.procedure_template_id);
+      const tpl = allProcedureTemplates.find((t) => t.id === sub.procedure_template_id);
+      const currentStep = tpl?.steps[sub.current_step - 1];
       const submitter = users.find((u) => u.id === sub.submitter_id);
       return {
         id: sub.id,
@@ -306,9 +357,15 @@ function ChecklistsPageContent() {
         startedAt: sub.started_at,
         recurrence: tpl?.recurrence || "per_event",
         submitter: submitter?.full_name || "Unknown",
+        currentStepHref: buildProcedureStepFillHref({
+          company,
+          step: currentStep,
+          procedureSubmissionId: sub.id,
+        }),
+        submissionHref: buildProcedureSubmissionHref(company, sub.id),
       };
     });
-  }, [procedureSubmissions, procedureTemplates, users]);
+  }, [procedureSubmissions, allProcedureTemplates, users, company]);
 
   // Pre-compute KPI values once — avoid refiltering every render
   const kpiData = React.useMemo(() => {
@@ -401,22 +458,24 @@ function ChecklistsPageContent() {
   }, [procedureSubmissionRows, statusFilter, searchQuery]);
 
   const handleStartProcedure = (templateId: string) => {
-    const tpl = procedureTemplates.find((t) => t.id === templateId)
-      || getBuiltInProcedureTemplates().find((t) => t.id === templateId);
+    const tpl = allProcedureTemplates.find((t) => t.id === templateId);
     if (!tpl) return;
+    const resolvedCompanyId = companyId || currentCompany?.id || user?.company_id || "";
+    if (!resolvedCompanyId) return;
     const now = new Date().toISOString();
+    const submissionId = createProcedureSubmissionId();
     const submission = {
-      id: `proc_sub_${Date.now()}`,
-      company_id: stores.procedureSubmissions.items[0]?.company_id || companyId || "",
+      id: submissionId,
+      company_id: resolvedCompanyId,
       procedure_template_id: templateId,
       submitter_id: user?.id || "",
       location_id: null,
       status: "in_progress" as const,
       current_step: 1,
-      step_submissions: tpl.steps.map((step) => ({
+      step_submissions: tpl.steps.map((step, index) => ({
         step_id: step.id,
         submission_id: null,
-        status: "pending" as const,
+        status: index === 0 ? "in_progress" as const : "pending" as const,
         completed_at: null,
       })),
       started_at: now,
@@ -425,24 +484,14 @@ function ChecklistsPageContent() {
       created_at: now,
       updated_at: now,
     };
-    stores.procedureSubmissions.add(submission);
+    // flushSync ensures the store state update is committed synchronously
+    // so the overview page sees the new submission immediately after navigation
+    flushSync(() => {
+      stores.procedureSubmissions.add(submission);
+    });
     setShowProcedurePickerModal(false);
 
-    // Navigate to fill the first step — find activated template by source_template_id
-    const firstStep = tpl.steps[0];
-    if (firstStep) {
-      const allTpls = stores.checklistTemplates.items;
-      // Find the activated checklist template matching this step's industry template ID
-      const activated = allTpls.find((t) => t.source_template_id === firstStep.template_id)
-        || allTpls.find((t) => t.id === firstStep.template_id);
-      if (activated) {
-        router.push(`/${company}/dashboard/checklists/fill/${activated.id}`);
-        return;
-      }
-    }
-    // Fallback: stay on procedures tab
-    setActiveTab("procedures");
-    toast("Procedure started — complete each step from the procedures list");
+    router.push(buildProcedureSubmissionHref(company, submissionId));
   };
 
   const tableLength = activeTab === "checklists"
@@ -520,7 +569,10 @@ function ChecklistsPageContent() {
                 Select an active template to fill out.
               </p>
               {(() => {
-                const templateList = activeTab === "risk-assessment" ? activeAssessmentTemplates : activeChecklistTemplates;
+                const templateList = activeTab === "risk-assessment" ? fallbackAssessmentTemplates : fallbackChecklistTemplates;
+                const isFallback = (activeTab === "risk-assessment"
+                  ? activeAssessmentTemplates.length === 0 && fallbackAssessmentTemplates.length > 0
+                  : activeChecklistTemplates.length === 0 && fallbackChecklistTemplates.length > 0);
                 const IconComp = activeTab === "risk-assessment" ? ShieldAlert : ClipboardCheck;
                 return templateList.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
@@ -530,13 +582,21 @@ function ChecklistsPageContent() {
                   </div>
                 ) : (
                   <div className="grid gap-3">
-                    {templateList.map((template) => (
+                    {isFallback && (
+                      <p className="text-xs text-muted-foreground">
+                        Showing built-in templates. Publish your own templates from the Template Library.
+                      </p>
+                    )}
+                    {templateList.map((template) => {
+                      // For built-in fallback templates, use source_template_id so the fill page can resolve them
+                      const fillId = template.source_template_id || template.id;
+                      return (
                       <button
                         type="button"
                         key={template.id}
                         onClick={() => {
                           setShowTemplatePickerModal(false);
-                          router.push(`/${company}/dashboard/checklists/fill/${template.id}`);
+                          router.push(`/${company}/dashboard/checklists/fill/${fillId}`);
                         }}
                         className="flex items-start gap-3 p-4 rounded-lg border hover:bg-muted/50 text-left transition-colors"
                       >
@@ -551,7 +611,8 @@ function ChecklistsPageContent() {
                         </div>
                         <span className="text-sm text-muted-foreground shrink-0">{template.items.length} items</span>
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               })()}
@@ -892,16 +953,45 @@ function ChecklistsPageContent() {
                     paginatedProcedureSubmissions.map((sub) => (
                       <tr
                         key={sub.id}
-                        className="border-b last:border-0 hover:bg-muted/50 transition-colors"
+                        className="border-b last:border-0 transition-colors hover:bg-muted/50 cursor-pointer"
+                        onClick={() => router.push(sub.submissionHref)}
                       >
-                        <td className="py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                              <Layers className="h-4 w-4 text-primary" />
+                         <td className="py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                                <Layers className="h-4 w-4 text-primary" />
+                             </div>
+                             <div className="space-y-1">
+                               <p className="font-medium">{sub.name}</p>
+                                {sub.currentStepHref && sub.status === "in_progress" && (
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="h-auto p-0 text-xs"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      router.push(sub.submissionHref);
+                                    }}
+                                  >
+                                    Open overview
+                                  </Button>
+                                )}
+                                {sub.status === "completed" && (
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="h-auto p-0 text-xs"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      router.push(sub.submissionHref);
+                                    }}
+                                  >
+                                    View completed procedure
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                            <p className="font-medium">{sub.name}</p>
-                          </div>
-                        </td>
+                          </td>
                         <td className="py-3 text-xs">{sub.progress}</td>
                         <td className="hidden py-3 md:table-cell text-xs text-muted-foreground">{sub.submitter}</td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">

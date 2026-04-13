@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowDown, ArrowUp, GripVertical, Smartphone, ShieldOff, Lightbulb, Newspaper } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Smartphone, ShieldOff, Lightbulb, Newspaper, Camera } from "lucide-react";
 import { FieldAppHomePreview } from "@/components/settings/field-app-home-preview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,6 +108,22 @@ export function FieldAppSettingsSection({
                   }
                 }}
                 label="Toggle anonymous reporting"
+              />
+            </div>
+
+            {/* Camera only mode */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500/10">
+                <Camera className="h-4 w-4 text-purple-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Camera Only (No Gallery)</p>
+                <p className="text-[11px] text-muted-foreground">Photos must be taken live — workers cannot upload from camera roll. Ensures authenticity of evidence.</p>
+              </div>
+              <SettingsToggle
+                checked={settings.fieldApp.cameraOnly}
+                onChange={(checked) => updateFieldAppSettings((prev) => ({ ...prev, cameraOnly: checked }))}
+                label="Toggle camera only mode"
               />
             </div>
           </CardContent>

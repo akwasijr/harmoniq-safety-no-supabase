@@ -25,6 +25,7 @@ import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useFilterOptions } from "@/components/ui/filter-panel";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useCompanyData } from "@/hooks/use-company-data";
+import { useAuth } from "@/hooks/use-auth";
 import { LoadingPage } from "@/components/ui/loading";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -122,7 +123,7 @@ export default function UsersPage() {
   const { t, formatDate, formatNumber } = useTranslation();
   const router = useRouter();
   const company = useCompanyParam();
-  const [activeTab, setActiveTab] = React.useState<TabType>("users");
+  const [activeTab, setActiveTab] = React.useState<TabType>("teams");
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [showAddTeamModal, setShowAddTeamModal] = React.useState(false);
   const [isInviting, setIsInviting] = React.useState(false);
@@ -162,6 +163,9 @@ export default function UsersPage() {
   });
 
   const { toast } = useToast();
+  const { hasPermission } = useAuth();
+  const canCreateTeam = hasPermission("teams.create");
+  const canManageMembers = hasPermission("teams.manage_members");
   const filterOptions = useFilterOptions();
   const { companyId, users, teams, locations, stores } = useCompanyData();
   const { isLoading, add: addUser } = stores.users;
@@ -405,6 +409,7 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">{t("users.title")}</h1>
+        {((activeTab === "teams" && canCreateTeam) || (activeTab !== "teams" && canManageMembers)) && (
         <Button 
           size="sm" 
           className="gap-2" 
@@ -416,11 +421,27 @@ export default function UsersPage() {
           <Plus className="h-4 w-4" aria-hidden="true" />
           {activeTab === "teams" ? t("users.buttons.createTeam") : t("users.buttons.addUser")}
         </Button>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="border-b overflow-x-auto">
         <div className="flex gap-4 min-w-max">
+          <button
+            onClick={() => { setActiveTab("teams"); setCurrentPage(1); setSearchQuery(""); setStatusFilter(""); }}
+            className={cn(
+              "flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative whitespace-nowrap",
+              activeTab === "teams"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <UsersRound className="h-4 w-4 shrink-0" />
+            <span className="truncate">Teams / Groups</span>
+            {activeTab === "teams" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
           <button
             onClick={() => { setActiveTab("users"); setCurrentPage(1); setSearchQuery(""); setStatusFilter(""); }}
             className={cn(
@@ -451,21 +472,6 @@ export default function UsersPage() {
               <span className="ml-1 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">{pendingInvitations.length}</span>
             )}
             {activeTab === "invitations" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
-          </button>
-          <button
-            onClick={() => { setActiveTab("teams"); setCurrentPage(1); setSearchQuery(""); setStatusFilter(""); }}
-            className={cn(
-              "flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative whitespace-nowrap",
-              activeTab === "teams"
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <UsersRound className="h-4 w-4 shrink-0" />
-            <span className="truncate">{t("users.tabs.teams")}</span>
-            {activeTab === "teams" && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>

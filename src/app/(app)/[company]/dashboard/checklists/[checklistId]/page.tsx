@@ -51,7 +51,10 @@ import { useAuth } from "@/hooks/use-auth";
 import type { ChecklistItem } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
-import { getTemplatePublishStatus } from "@/lib/template-activation";
+import { activateIndustryTemplate, getTemplatePublishStatus } from "@/lib/template-activation";
+import { getTemplateById } from "@/data/industry-templates";
+import { getRiskAssessmentTemplateById } from "@/data/risk-assessment-templates";
+import type { Country } from "@/types";
 
 const baseTabs: Tab[] = [
   { id: "items", label: "Checklist Items", icon: ListChecks },
@@ -64,11 +67,7 @@ const publishedTabs: Tab[] = [
   { id: "settings", label: "Settings", icon: Settings, variant: "danger" },
 ];
 
-// Tabs for submission view
-const submissionTabs: Tab[] = [
-  { id: "overview", label: "Overview", icon: Info },
-  { id: "responses", label: "Responses", icon: ListChecks },
-];
+// Tabs for submission view (no longer used — single page)
 
 export default function ChecklistDetailPage() {
   const router = useRouter();
@@ -87,13 +86,30 @@ export default function ChecklistDetailPage() {
   const { checklistTemplates: templates, checklistSubmissions: submissions, users, locations, stores } = useCompanyData();
   const { isLoading, add: addTemplate, update: updateTemplate, remove: removeTemplate } = stores.checklistTemplates;
   const { update: updateSubmission } = stores.checklistSubmissions;
-  const { isSuperAdmin, isCompanyAdmin, isManager, currentCompany } = useAuth();
-  const canApprove = isSuperAdmin || isCompanyAdmin || isManager;
+  const { isSuperAdmin, isCompanyAdmin, isManager, currentCompany, hasPermission } = useAuth();
+  const canApprove = hasPermission("checklists.manage");
+  const companyCountry = (currentCompany?.country as Country | undefined) || "US";
 
   const submission = submissions.find((item) => item.id === checklistId);
   const isSubmission = Boolean(submission);
+  const builtInSubmissionTemplate = React.useMemo(() => {
+    if (!submission) return null;
+    const sourceTemplateId = submission.template_id;
+    const sourceTemplate = getTemplateById(sourceTemplateId) || getRiskAssessmentTemplateById(sourceTemplateId);
+
+    if (!sourceTemplate) return null;
+
+    return activateIndustryTemplate(
+      sourceTemplate,
+      submission.company_id || currentCompany?.id || "__built_in__",
+      companyCountry,
+      t,
+    );
+  }, [submission, currentCompany?.id, companyCountry, t]);
   const template = isSubmission
     ? templates.find((item) => item.id === submission?.template_id)
+      || templates.find((item) => item.source_template_id === submission?.template_id)
+      || builtInSubmissionTemplate
     : templates.find((item) => item.id === checklistId);
 
   const templateStatus = template ? getTemplatePublishStatus(template) : "draft";
@@ -423,8 +439,9 @@ export default function ChecklistDetailPage() {
       ? `${Math.round((passCount / booleanResponses.length) * 100)}%`
       : "—";
     const statusLabel = submission.status === "submitted" ? "completed" : "in_progress";
-    const responseItems = submission.responses.map((response) => {
-      const item = template?.items.find((templateItem) => templateItem.id === response.item_id);
+    const responseItems = submission.responses.map((response, index) => {
+      const item = template?.items.find((templateItem) => templateItem.id === response.item_id)
+        || template?.items[index];
       const responseLabel =
         typeof response.value === "boolean"
           ? response.value
@@ -541,11 +558,10 @@ export default function ChecklistDetailPage() {
         </div>
 
         {/* Tabs */}
-        <DetailTabs tabs={submissionTabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* Single-page view: overview + responses combined */}
 
-        {/* Overview Tab */}
-        {activeTab === "overview" && (
-          <div className="grid gap-6 md:grid-cols-2">
+        {/* Overview section */}
+        <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Submission Details</CardTitle>
@@ -608,11 +624,9 @@ export default function ChecklistDetailPage() {
               </CardContent>
             </Card>
           </div>
-        )}
 
-        {/* Responses Tab */}
-        {activeTab === "responses" && (
-          <Card>
+        {/* Responses section */}
+        <Card>
             <CardHeader>
               <CardTitle>All Responses</CardTitle>
             </CardHeader>
@@ -652,7 +666,6 @@ export default function ChecklistDetailPage() {
               </div>
             </CardContent>
           </Card>
-        )}
       </div>
     );
   }

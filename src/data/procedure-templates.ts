@@ -44,7 +44,7 @@ const confinedSpaceEntry: ProcedureTemplate = {
   is_builtin: true,
   is_active: true,
   steps: [
-    step("step_confined_ra", 1, "risk_assessment", "construction_confined_ra", "Risk Assessment"),
+    step("step_confined_ra", 1, "risk_assessment", "ra_construction_confined_space", "Risk Assessment"),
     step("step_confined_gas", 2, "checklist", "construction_gas_testing", "Gas Testing Checklist"),
     step("step_confined_rescue", 3, "checklist", "construction_rescue_plan", "Rescue Plan Checklist"),
     step("step_confined_permit", 4, "checklist", "construction_entry_permit", "Entry Permit Checklist"),
@@ -65,7 +65,7 @@ const machineChangeoverLOTO: ProcedureTemplate = {
   is_builtin: true,
   is_active: true,
   steps: [
-    step("step_loto_ra", 1, "risk_assessment", "manufacturing_loto_ra", "LOTO Risk Assessment"),
+    step("step_loto_ra", 1, "risk_assessment", "ra_manufacturing_loto", "LOTO Risk Assessment"),
     step("step_loto_isolation", 2, "checklist", "manufacturing_isolation", "Isolation Checklist"),
     step("step_loto_energy", 3, "checklist", "manufacturing_energy_verification", "Energy Verification"),
     step("step_loto_guards", 4, "checklist", "manufacturing_safety_guards", "Safety Guard Check"),
@@ -84,7 +84,7 @@ const monthlySafetyInspection: ProcedureTemplate = {
   is_builtin: true,
   is_active: true,
   steps: [
-    step("step_monthly_fire", 1, "checklist", "manufacturing_fire_safety", "Fire Safety Checklist"),
+    step("step_monthly_fire", 1, "risk_assessment", "ra_manufacturing_fire", "Fire Safety Checklist"),
     step("step_monthly_emergency", 2, "checklist", "manufacturing_emergency_equipment", "Emergency Equipment Check"),
     step("step_monthly_ppe", 3, "checklist", "manufacturing_ppe_compliance", "PPE Compliance Audit"),
     step("step_monthly_housekeeping", 4, "checklist", "manufacturing_housekeeping", "Housekeeping Inspection"),
@@ -105,7 +105,7 @@ const wellIntervention: ProcedureTemplate = {
   is_builtin: true,
   is_active: true,
   steps: [
-    step("step_well_ra", 1, "risk_assessment", "oil_gas_well_ra", "Risk Assessment"),
+    step("step_well_ra", 1, "risk_assessment", "ra_oil_gas_well_control", "Risk Assessment"),
     step("step_well_ptw", 2, "checklist", "oil_gas_ptw", "PTW Checklist"),
     step("step_well_loto", 3, "checklist", "oil_gas_loto", "LOTO Checklist"),
     step("step_well_pressure", 4, "checklist", "oil_gas_pressure_test", "Pressure Test Checklist"),
@@ -126,7 +126,7 @@ const rackingInstallation: ProcedureTemplate = {
   is_builtin: true,
   is_active: true,
   steps: [
-    step("step_racking_ra", 1, "risk_assessment", "warehousing_racking_ra", "Risk Assessment"),
+    step("step_racking_ra", 1, "risk_assessment", "ra_warehousing_racking", "Risk Assessment"),
     step("step_racking_structural", 2, "checklist", "warehousing_structural", "Structural Checklist"),
     step("step_racking_load", 3, "checklist", "warehousing_load_capacity", "Load Capacity Check"),
     step("step_racking_signage", 4, "checklist", "warehousing_signage", "Signage Verification"),
@@ -145,7 +145,7 @@ const dailyOpeningProcedure: ProcedureTemplate = {
   is_builtin: true,
   is_active: true,
   steps: [
-    step("step_opening_fire", 1, "checklist", "warehousing_fire_exit", "Fire Exit Check"),
+    step("step_opening_fire", 1, "checklist", "warehousing_fire_extinguisher", "Fire Exit Check"),
     step("step_opening_forklift", 2, "checklist", "warehousing_forklift", "Forklift Inspection"),
     step("step_opening_firstaid", 3, "checklist", "warehousing_first_aid", "First Aid Kit Check"),
   ],
@@ -165,7 +165,7 @@ const vesselDockingProcedure: ProcedureTemplate = {
   is_builtin: true,
   is_active: true,
   steps: [
-    step("step_docking_berth", 1, "risk_assessment", "marine_berth_hazard", "Berth Hazard Analysis"),
+    step("step_docking_berth", 1, "risk_assessment", "construction_shipyard", "Berth Hazard Analysis"),
     step("step_docking_mooring", 2, "checklist", "marine_mooring_equipment", "Mooring Equipment Inspection"),
     step("step_docking_safety", 3, "checklist", "marine_safety_equipment", "Safety Equipment Check"),
     step("step_docking_comms", 4, "checklist", "marine_comms_check", "Communication Systems Check"),

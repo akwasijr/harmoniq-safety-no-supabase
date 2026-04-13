@@ -124,7 +124,7 @@ function RiskAssessmentNewContent() {
               key={form.id}
               className="cursor-pointer transition-colors hover:bg-muted/50"
               onClick={() => {
-                router.push(`/${company}/app/risk-assessment/${form.id}`);
+                router.push(`/${company}/dashboard/risk-assessments/form/${form.id}`);
               }}
             >
               <CardContent className="flex items-start gap-4 p-5">

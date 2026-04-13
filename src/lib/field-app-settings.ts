@@ -27,6 +27,7 @@ export interface FieldAppSettings {
   quickActions: FieldAppQuickActionId[];
   newsEnabled: boolean;
   tipOfTheDayEnabled: boolean;
+  cameraOnly: boolean;
   fontId: FieldAppFontId;
   shape: FieldAppShape;
   shadow: FieldAppShadow;
@@ -270,6 +271,7 @@ export function buildDefaultFieldAppSettings(industry?: IndustryCode | null): Fi
     quickActions: [...preset],
     newsEnabled: true,
     tipOfTheDayEnabled: true,
+    cameraOnly: false,
     fontId: "geist",
     shape: "medium",
     shadow: "none",

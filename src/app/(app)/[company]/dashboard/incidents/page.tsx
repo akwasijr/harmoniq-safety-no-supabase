@@ -367,7 +367,8 @@ export default function IncidentsPage() {
     location_description: "",
   });
 
-  const { user, currentCompany } = useAuth();
+  const { user, currentCompany, hasPermission } = useAuth();
+  const canCreate = hasPermission("incidents.create");
   const { t, formatDate } = useTranslation();
   const filterOptions = useFilterOptions();
   const { toast } = useToast();
@@ -674,13 +675,13 @@ export default function IncidentsPage() {
             <Download className="h-4 w-4" aria-hidden="true" />
             {t("incidents.buttons.export")}
           </Button>
-          {activeSubTab === "incidents" && (
+          {activeSubTab === "incidents" && canCreate && (
             <>
             <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowImport(true)}>
               <Upload className="h-4 w-4" aria-hidden="true" />
               Import
             </Button>
-            <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
+            <Button size="sm" className="gap-2" onClick={() => router.push(`/${company}/dashboard/incidents/new`)}>
               <Plus className="h-4 w-4" aria-hidden="true" />
               {t("incidents.newIncident")}
             </Button>

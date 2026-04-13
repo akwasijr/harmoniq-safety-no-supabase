@@ -264,7 +264,8 @@ import { getProcedureTemplateIdForType, getProcedureTemplateForType } from "@/da
 export default function WorkOrdersPage() {
   const { t, formatDate, formatNumber } = useTranslation();
   const company = useCompanyParam();
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
+  const canCreate = hasPermission("work_orders.create");
   const { toast } = useToast();
   const filterOptions = useFilterOptions();
   const { workOrders: orders, teams, assets, locations, users, parts, checklistTemplates, stores } = useCompanyData();
@@ -530,10 +531,12 @@ export default function WorkOrdersPage() {
             <Download className="h-4 w-4" />
             Export
           </Button>
+          {canCreate && (
           <Button size="sm" className="gap-2" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             {t("workOrders.newWorkOrder")}
           </Button>
+          )}
         </div>
       </div>
 

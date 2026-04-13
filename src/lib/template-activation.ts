@@ -21,10 +21,11 @@ export function activateIndustryTemplate(
   t: (key: string) => string,
 ): ChecklistTemplate {
   const now = new Date().toISOString();
+  const activatedTemplateId = `activated:${companyId}:${industryTemplate.id}`;
 
   const items: ChecklistItem[] = industryTemplate.items.map(
     (item: IndustryChecklistItem) => ({
-      id: crypto.randomUUID(),
+      id: `${industryTemplate.id}:${item.key}`,
       question: t(item.question_key),
       type: item.type as ChecklistItem["type"],
       required: item.required,
@@ -44,7 +45,7 @@ export function activateIndustryTemplate(
   };
 
   return {
-    id: crypto.randomUUID(),
+    id: activatedTemplateId,
     company_id: companyId,
     name: t(industryTemplate.name_key),
     description: t(industryTemplate.description_key),

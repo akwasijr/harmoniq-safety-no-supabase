@@ -31,6 +31,8 @@ import { useIncidentsStore } from "@/stores/incidents-store";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useUsersStore } from "@/stores/users-store";
 import { useAuth } from "@/hooks/use-auth";
+import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
+import { CameraInput } from "@/components/ui/camera-input";
 import { useTranslation } from "@/i18n";
 import { useToast } from "@/components/ui/toast";
 import { capitalize } from "@/lib/utils";
@@ -70,6 +72,7 @@ export default function EmployeeIncidentDetailPage() {
   const rawCompany = params.company;
   const company = typeof rawCompany === "string" ? rawCompany : Array.isArray(rawCompany) ? rawCompany[0] : "";
   const { user, currentCompany } = useAuth();
+  const { settings: fieldAppSettings } = useFieldAppSettings();
   const { t, formatDate } = useTranslation();
 
   const { items: incidents, isLoading, update: updateIncident } = useIncidentsStore();
@@ -535,7 +538,7 @@ export default function EmployeeIncidentDetailPage() {
         {incident.status !== "resolved" && incident.status !== "archived" && (
           <div className="flex gap-2">
             <label className="flex-1 cursor-pointer">
-              <input type="file" className="hidden" accept="image/*" multiple onChange={handleAddPhoto} />
+              <CameraInput className="hidden" cameraOnly={fieldAppSettings.cameraOnly} multiple onChange={handleAddPhoto} />
               <span className="flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted transition-colors w-full">
                 <Camera className="h-4 w-4" />
                 Add photo

@@ -1031,7 +1031,8 @@
       "comment": "Add a note...",
       "generalComments": "Add any overall comments...",
       "select": "Select an option...",
-      "text": "Enter your response..."
+      "text": "Enter your response...",
+      "signature": "Type your full name as signature"
     },
     "approve": "Approve",
     "reject": "Reject",
@@ -1268,6 +1269,8 @@
     "basicInfo": "Basic information about your organization",
     "companyName": "Company name",
     "urlSlug": "URL slug",
+    "appDisplayName": "Display Name",
+    "appDisplayNameHint": "Custom name shown to employees in the field app header.",
     "countryAndRegulations": "Country & Regulations",
     "countryDesc": "Select your operating country to align safety regulations and recommended templates",
     "selected": "Selected",
@@ -1578,7 +1581,10 @@
     "riskLabel": "Risk",
     "standard": "Standard",
     "workerHubHint": "Resume drafts, track assessments awaiting review, and keep reviewed proof close at hand.",
-    "completedHint": "Reviewed assessments will appear here with the reviewer and date for proof."
+    "completedHint": "Reviewed assessments will appear here with the reviewer and date for proof.",
+    "startNew": "Start New Risk Assessment",
+    "selectType": "Select a risk assessment type for your region.",
+    "basedOnRegulations": "Assessment types are based on your country's regulatory requirements."
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -2958,6 +2964,87 @@
           "corrective_actions": "Corrective action closure rates are tracked"
         }
       }
+    },
+    "generic": {
+      "name": "Generic",
+      "description": "Shared templates that apply across industries.",
+      "workplace_safety": {
+        "name": "Workplace Safety Inspection",
+        "description": "Daily or weekly general workplace safety walk to identify and correct common hazards",
+        "items": {
+          "housekeeping": "Work areas are clean, tidy and free of unnecessary clutter",
+          "emergency_exits_clear": "Emergency exits are unobstructed and clearly marked",
+          "fire_extinguishers_accessible": "Fire extinguishers are accessible and not blocked",
+          "first_aid_kit_stocked": "First aid kit is fully stocked and within expiry dates",
+          "lighting_adequate": "Lighting is adequate in all work areas and walkways",
+          "slip_trip_hazards": "No slip, trip or fall hazards present on floors and walkways",
+          "electrical_cords_condition": "Electrical cords and plugs are in good condition with no damage",
+          "ventilation_adequate": "Ventilation and air quality are adequate in all work areas"
+        }
+      },
+      "ppe_check": {
+        "name": "PPE Compliance Check",
+        "description": "Personal Protective Equipment verification to ensure all required PPE is available and in good condition",
+        "items": {
+          "hard_hat_condition": "Hard hat is undamaged and fits securely",
+          "safety_glasses": "Safety glasses or goggles are clean and undamaged",
+          "high_vis_vest": "High-visibility vest is worn and in good condition",
+          "safety_boots": "Safety boots are worn and in good condition",
+          "gloves_appropriate": "Gloves are appropriate for the task and in good condition",
+          "hearing_protection": "Hearing protection is available and worn where required",
+          "respiratory_protection": "Respiratory protection is available and worn where required (if applicable)"
+        }
+      },
+      "fire_safety": {
+        "name": "Fire Safety Checklist",
+        "description": "Fire prevention and readiness checklist to verify fire safety measures are in place",
+        "items": {
+          "extinguishers_inspected": "Fire extinguishers have been inspected and are within service date",
+          "emergency_exits_marked": "Emergency exits are clearly marked with illuminated signage",
+          "evacuation_plan_posted": "Evacuation plan is posted and visible in all areas",
+          "fire_alarm_tested": "Fire alarm system has been tested and is operational",
+          "flammable_materials_stored": "Flammable materials are stored correctly in designated areas",
+          "fire_blankets_available": "Fire blankets are available and accessible",
+          "assembly_point_marked": "Assembly point is clearly marked and known to all staff"
+        }
+      },
+      "first_aid": {
+        "name": "First Aid & Emergency Readiness",
+        "description": "Emergency preparedness check to ensure first aid supplies and emergency equipment are ready",
+        "items": {
+          "first_aid_kit_complete": "First aid kit is complete with all required supplies",
+          "aed_accessible": "AED (defibrillator) is accessible and fully charged",
+          "emergency_contacts_posted": "Emergency contact numbers are posted and up to date",
+          "trained_first_aiders": "Trained first aiders are present on site",
+          "emergency_procedures_known": "Staff are aware of emergency procedures and protocols",
+          "spill_kit_available": "Spill kit is available and fully stocked"
+        }
+      },
+      "safety_induction": {
+        "name": "New Employee Safety Induction",
+        "description": "Onboarding safety checklist to ensure new employees receive essential safety information",
+        "items": {
+          "emergency_procedures_explained": "Emergency procedures have been explained to the new employee",
+          "ppe_issued": "Required PPE has been issued and proper use demonstrated",
+          "hazard_areas_identified": "Hazardous areas have been identified and explained",
+          "reporting_procedures_explained": "Incident and hazard reporting procedures have been explained",
+          "fire_exits_shown": "Fire exits and escape routes have been shown",
+          "first_aid_locations_shown": "First aid stations and equipment locations have been shown",
+          "safety_rules_acknowledged": "Employee has acknowledged and signed the safety rules"
+        }
+      },
+      "toolbox_talk": {
+        "name": "Toolbox Talk Record",
+        "description": "Pre-work safety briefing documentation to record topics discussed and attendance",
+        "items": {
+          "topic_discussed": "Safety topic discussed during the briefing",
+          "hazards_identified": "Relevant hazards have been identified and explained",
+          "controls_communicated": "Control measures have been communicated to all attendees",
+          "ppe_requirements_confirmed": "PPE requirements for the task have been confirmed",
+          "questions_addressed": "Questions from attendees have been addressed",
+          "attendees_signed": "All attendees have signed the attendance register"
+        }
+      }
     }
   },
   "inspections": {
@@ -4081,6 +4168,71 @@
           "risk_acceptable": "Is the hazmat cargo risk acceptable?",
           "additional_controls": "What additional hazmat controls are needed?",
           "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      }
+    },
+    "generic": {
+      "5step_hse": {
+        "name": "5-Step Risk Assessment (HSE Method)",
+        "description": "Systematic 5-step risk assessment based on the UK HSE framework (INDG163) and ISO 45001, applicable to any workplace activity.",
+        "items": {
+          "identify_hazards": "Have all significant hazards been identified for this activity?",
+          "who_might_be_harmed": "Has it been determined who might be harmed and how?",
+          "evaluate_risks": "Have the risks been evaluated and existing precautions assessed?",
+          "record_findings": "Have the significant findings been properly recorded?",
+          "review_assessment": "Has a review date been set and the assessment kept up to date?"
+        }
+      },
+      "jha_universal": {
+        "name": "Job Hazard Analysis (Universal)",
+        "description": "Globally recognized Job Hazard Analysis methodology per OSHA 3071 and ISO 45001, breaking tasks into steps to identify and control hazards.",
+        "items": {
+          "task_defined": "Has the job or task been clearly defined and scoped?",
+          "steps_broken_down": "Has the task been broken down into individual steps?",
+          "hazards_per_step": "Have hazards been identified for each step?",
+          "controls_identified": "Have appropriate controls been identified for each hazard?",
+          "ppe_determined": "Has the required PPE been determined and made available?",
+          "residual_risk_acceptable": "Is the residual risk acceptable after controls are applied?",
+          "workers_briefed": "Have all workers been briefed on the hazards and controls?"
+        }
+      },
+      "coshh": {
+        "name": "COSHH / Hazardous Substances Assessment",
+        "description": "Risk assessment for work involving hazardous substances, aligned with GHS classification, COSHH Regulations, and REACH requirements.",
+        "items": {
+          "substances_identified": "Have all hazardous substances in use been identified?",
+          "sds_available": "Are current Safety Data Sheets (SDS) available for all substances?",
+          "exposure_routes_assessed": "Have all exposure routes (inhalation, skin, ingestion) been assessed?",
+          "controls_adequate": "Are the existing control measures adequate to prevent exposure?",
+          "ppe_specified": "Has appropriate PPE been specified and provided?",
+          "emergency_procedures": "Are emergency and spill response procedures in place?",
+          "health_surveillance": "Has the need for health surveillance been assessed?"
+        }
+      },
+      "manual_handling": {
+        "name": "Manual Handling Risk Assessment",
+        "description": "Ergonomic risk assessment for manual handling operations per EU Directive 90/269/EEC and NIOSH lifting guidelines.",
+        "items": {
+          "task_assessed": "Has the manual handling task been fully assessed (TILE: Task, Individual, Load, Environment)?",
+          "load_weight_acceptable": "Is the load weight within acceptable limits for the task?",
+          "posture_risk": "Have posture risks (twisting, bending, reaching) been evaluated?",
+          "frequency_assessed": "Has the frequency and duration of handling been assessed?",
+          "environment_factors": "Have environmental factors (space, flooring, temperature) been considered?",
+          "controls_in_place": "Are controls in place to reduce manual handling risks (mechanical aids, job rotation)?",
+          "training_provided": "Have workers received manual handling training?"
+        }
+      },
+      "workplace_inspection": {
+        "name": "General Workplace Risk Assessment",
+        "description": "Comprehensive workplace hazard identification and risk assessment per EU Framework Directive 89/391/EEC and OSHA General Duty Clause.",
+        "items": {
+          "work_area_inspected": "Has the work area been physically inspected for hazards?",
+          "hazards_documented": "Have all identified hazards been documented?",
+          "risk_levels_assigned": "Have risk levels been assigned to each identified hazard?",
+          "controls_documented": "Have existing and planned control measures been documented?",
+          "emergency_routes_clear": "Are emergency escape routes and exits clear and marked?",
+          "first_aid_adequate": "Are first aid provisions adequate for the workplace?",
+          "review_date_set": "Has a review date been set for this assessment?"
         }
       }
     }

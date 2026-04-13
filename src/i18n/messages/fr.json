@@ -1027,7 +1027,8 @@
       "comment": "Ajouter une note...",
       "generalComments": "Ajouter des commentaires généraux...",
       "select": "Sélectionner une option...",
-      "text": "Entrez votre réponse..."
+      "text": "Entrez votre réponse...",
+      "signature": "Saisissez votre nom complet comme signature"
     },
     "approve": "Approuver",
     "reject": "Rejeter",
@@ -1264,6 +1265,8 @@
     "basicInfo": "Basic information about your organization",
     "companyName": "Nom de l'entreprise",
     "urlSlug": "URL",
+    "appDisplayName": "Nom d'affichage",
+    "appDisplayNameHint": "Nom personnalisé affiché aux employés dans l'en-tête de l'application terrain.",
     "countryAndRegulations": "Pays & Réglementations",
     "countryDesc": "Sélectionnez votre pays d'exploitation pour aligner les réglementations de sécurité et les modèles recommandés",
     "selected": "Selected",
@@ -1574,7 +1577,10 @@
     "riskLabel": "Risque",
     "standard": "Standard",
     "workerHubHint": "Reprendre les brouillons, suivre les évaluations en attente de révision et conserver les preuves examinées.",
-    "completedHint": "Les évaluations examinées apparaîtront ici avec le réviseur et la date comme preuve."
+    "completedHint": "Les évaluations examinées apparaîtront ici avec le réviseur et la date comme preuve.",
+    "startNew": "Démarrer une nouvelle évaluation des risques",
+    "selectType": "Sélectionnez un type d'évaluation des risques pour votre région.",
+    "basedOnRegulations": "Les types d'évaluation sont basés sur les exigences réglementaires de votre pays."
   },
   "auth": {
     "welcomeBack": "Bon retour",
@@ -2954,6 +2960,87 @@
           "corrective_actions": "Le taux de clôture des actions correctives est suivi"
         }
       }
+    },
+    "generic": {
+      "name": "Général",
+      "description": "Modèles partagés pouvant être utilisés dans plusieurs secteurs.",
+      "workplace_safety": {
+        "name": "Inspection Sécurité du Lieu de Travail",
+        "description": "Inspection de sécurité quotidienne ou hebdomadaire pour identifier et corriger les dangers courants",
+        "items": {
+          "housekeeping": "Les zones de travail sont propres, rangées et libres d'encombrement inutile",
+          "emergency_exits_clear": "Les sorties de secours sont dégagées et clairement signalées",
+          "fire_extinguishers_accessible": "Les extincteurs sont accessibles et non obstrués",
+          "first_aid_kit_stocked": "La trousse de premiers secours est complète et dans les dates de validité",
+          "lighting_adequate": "L'éclairage est suffisant dans toutes les zones de travail et les allées",
+          "slip_trip_hazards": "Aucun risque de glissade, de trébuchement ou de chute sur les sols et les allées",
+          "electrical_cords_condition": "Les câbles et prises électriques sont en bon état sans dommage",
+          "ventilation_adequate": "La ventilation et la qualité de l'air sont suffisantes dans toutes les zones de travail"
+        }
+      },
+      "ppe_check": {
+        "name": "Contrôle des EPI",
+        "description": "Vérification des Équipements de Protection Individuelle pour s'assurer que tous les EPI requis sont disponibles et en bon état",
+        "items": {
+          "hard_hat_condition": "Le casque de sécurité est intact et bien ajusté",
+          "safety_glasses": "Les lunettes de sécurité sont propres et en bon état",
+          "high_vis_vest": "Le gilet haute visibilité est porté et en bon état",
+          "safety_boots": "Les chaussures de sécurité sont portées et en bon état",
+          "gloves_appropriate": "Les gants sont adaptés à la tâche et en bon état",
+          "hearing_protection": "La protection auditive est disponible et portée là où c'est requis",
+          "respiratory_protection": "La protection respiratoire est disponible et portée là où c'est requis (le cas échéant)"
+        }
+      },
+      "fire_safety": {
+        "name": "Liste de Contrôle Sécurité Incendie",
+        "description": "Liste de contrôle de prévention et de préparation incendie pour vérifier que les mesures de sécurité incendie sont en place",
+        "items": {
+          "extinguishers_inspected": "Les extincteurs ont été inspectés et sont dans les dates de contrôle",
+          "emergency_exits_marked": "Les sorties de secours sont clairement signalées avec un éclairage de sécurité",
+          "evacuation_plan_posted": "Le plan d'évacuation est affiché et visible dans tous les secteurs",
+          "fire_alarm_tested": "Le système d'alarme incendie a été testé et est opérationnel",
+          "flammable_materials_stored": "Les matières inflammables sont correctement stockées dans les zones prévues",
+          "fire_blankets_available": "Les couvertures anti-feu sont disponibles et accessibles",
+          "assembly_point_marked": "Le point de rassemblement est clairement signalé et connu de tout le personnel"
+        }
+      },
+      "first_aid": {
+        "name": "Premiers Secours & Préparation aux Urgences",
+        "description": "Vérification de la préparation aux urgences pour s'assurer que les fournitures de premiers secours et l'équipement d'urgence sont prêts",
+        "items": {
+          "first_aid_kit_complete": "La trousse de premiers secours est complète avec toutes les fournitures requises",
+          "aed_accessible": "Le DAE (défibrillateur) est accessible et entièrement chargé",
+          "emergency_contacts_posted": "Les numéros d'urgence sont affichés et à jour",
+          "trained_first_aiders": "Des secouristes formés sont présents sur le site",
+          "emergency_procedures_known": "Le personnel connaît les procédures et protocoles d'urgence",
+          "spill_kit_available": "Le kit anti-déversement est disponible et entièrement équipé"
+        }
+      },
+      "safety_induction": {
+        "name": "Intégration Sécurité Nouvel Employé",
+        "description": "Liste de contrôle d'intégration sécurité pour s'assurer que les nouveaux employés reçoivent les informations essentielles de sécurité",
+        "items": {
+          "emergency_procedures_explained": "Les procédures d'urgence ont été expliquées au nouvel employé",
+          "ppe_issued": "Les EPI requis ont été remis et l'utilisation correcte a été démontrée",
+          "hazard_areas_identified": "Les zones dangereuses ont été identifiées et expliquées",
+          "reporting_procedures_explained": "Les procédures de signalement des incidents et dangers ont été expliquées",
+          "fire_exits_shown": "Les sorties de secours et les voies d'évacuation ont été montrées",
+          "first_aid_locations_shown": "Les postes de premiers secours et emplacements des équipements ont été montrés",
+          "safety_rules_acknowledged": "L'employé a pris connaissance et signé les règles de sécurité"
+        }
+      },
+      "toolbox_talk": {
+        "name": "Compte-Rendu Causerie Sécurité",
+        "description": "Documentation de la causerie sécurité avant les travaux pour consigner les sujets abordés et la présence",
+        "items": {
+          "topic_discussed": "Sujet de sécurité abordé pendant la causerie",
+          "hazards_identified": "Les dangers pertinents ont été identifiés et expliqués",
+          "controls_communicated": "Les mesures de prévention ont été communiquées à tous les participants",
+          "ppe_requirements_confirmed": "Les exigences en EPI pour la tâche ont été confirmées",
+          "questions_addressed": "Les questions des participants ont été traitées",
+          "attendees_signed": "Tous les participants ont signé la feuille de présence"
+        }
+      }
     }
   },
   "inspections": {
@@ -4077,6 +4164,71 @@
           "risk_acceptable": "Is the hazmat cargo risk acceptable?",
           "additional_controls": "What additional hazmat controls are needed?",
           "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      }
+    },
+    "generic": {
+      "5step_hse": {
+        "name": "Évaluation des risques en 5 étapes (méthode HSE)",
+        "description": "Évaluation systématique des risques en 5 étapes basée sur le cadre HSE britannique (INDG163) et ISO 45001, applicable à toute activité professionnelle.",
+        "items": {
+          "identify_hazards": "Tous les dangers significatifs ont-ils été identifiés pour cette activité ?",
+          "who_might_be_harmed": "A-t-on déterminé qui pourrait être affecté et de quelle manière ?",
+          "evaluate_risks": "Les risques ont-ils été évalués et les mesures de prévention existantes examinées ?",
+          "record_findings": "Les résultats significatifs ont-ils été correctement enregistrés ?",
+          "review_assessment": "Une date de révision a-t-elle été fixée et l'évaluation est-elle tenue à jour ?"
+        }
+      },
+      "jha_universal": {
+        "name": "Analyse des dangers liés au poste (Universelle)",
+        "description": "Méthodologie d'analyse des dangers liés au poste reconnue internationalement selon OSHA 3071 et ISO 45001, décomposant les tâches en étapes pour identifier et maîtriser les dangers.",
+        "items": {
+          "task_defined": "La tâche ou le travail a-t-il été clairement défini et délimité ?",
+          "steps_broken_down": "La tâche a-t-elle été décomposée en étapes individuelles ?",
+          "hazards_per_step": "Les dangers ont-ils été identifiés pour chaque étape ?",
+          "controls_identified": "Des mesures de maîtrise appropriées ont-elles été identifiées pour chaque danger ?",
+          "ppe_determined": "Les EPI nécessaires ont-ils été déterminés et mis à disposition ?",
+          "residual_risk_acceptable": "Le risque résiduel est-il acceptable après application des mesures de maîtrise ?",
+          "workers_briefed": "Tous les travailleurs ont-ils été informés des dangers et des mesures de maîtrise ?"
+        }
+      },
+      "coshh": {
+        "name": "Évaluation des risques substances dangereuses (COSHH/SGH)",
+        "description": "Évaluation des risques pour les travaux impliquant des substances dangereuses, conforme à la classification SGH, aux réglementations COSHH et aux exigences REACH.",
+        "items": {
+          "substances_identified": "Toutes les substances dangereuses utilisées ont-elles été identifiées ?",
+          "sds_available": "Les fiches de données de sécurité (FDS) à jour sont-elles disponibles pour toutes les substances ?",
+          "exposure_routes_assessed": "Toutes les voies d'exposition (inhalation, cutanée, ingestion) ont-elles été évaluées ?",
+          "controls_adequate": "Les mesures de maîtrise existantes sont-elles suffisantes pour prévenir l'exposition ?",
+          "ppe_specified": "Les EPI appropriés ont-ils été spécifiés et fournis ?",
+          "emergency_procedures": "Des procédures d'urgence et de déversement sont-elles en place ?",
+          "health_surveillance": "La nécessité d'une surveillance médicale a-t-elle été évaluée ?"
+        }
+      },
+      "manual_handling": {
+        "name": "Évaluation des risques manutention manuelle",
+        "description": "Évaluation ergonomique des risques liés à la manutention manuelle conformément à la directive européenne 90/269/CEE et aux lignes directrices NIOSH.",
+        "items": {
+          "task_assessed": "La tâche de manutention manuelle a-t-elle été entièrement évaluée (TILE : Tâche, Individu, Charge, Environnement) ?",
+          "load_weight_acceptable": "Le poids de la charge est-il dans les limites acceptables pour cette tâche ?",
+          "posture_risk": "Les risques posturaux (torsion, flexion, extension) ont-ils été évalués ?",
+          "frequency_assessed": "La fréquence et la durée de la manutention ont-elles été évaluées ?",
+          "environment_factors": "Les facteurs environnementaux (espace, sol, température) ont-ils été pris en compte ?",
+          "controls_in_place": "Des mesures de maîtrise sont-elles en place pour réduire les risques de manutention (aides mécaniques, rotation des postes) ?",
+          "training_provided": "Les travailleurs ont-ils reçu une formation à la manutention manuelle ?"
+        }
+      },
+      "workplace_inspection": {
+        "name": "Évaluation générale des risques professionnels",
+        "description": "Identification complète des dangers et évaluation des risques sur le lieu de travail conformément à la directive-cadre européenne 89/391/CEE et à l'obligation générale de sécurité OSHA.",
+        "items": {
+          "work_area_inspected": "La zone de travail a-t-elle été physiquement inspectée pour identifier les dangers ?",
+          "hazards_documented": "Tous les dangers identifiés ont-ils été documentés ?",
+          "risk_levels_assigned": "Des niveaux de risque ont-ils été attribués à chaque danger identifié ?",
+          "controls_documented": "Les mesures de maîtrise existantes et prévues ont-elles été documentées ?",
+          "emergency_routes_clear": "Les voies d'évacuation et sorties de secours sont-elles dégagées et signalées ?",
+          "first_aid_adequate": "Les moyens de premiers secours sont-ils adaptés au lieu de travail ?",
+          "review_date_set": "Une date de révision a-t-elle été fixée pour cette évaluation ?"
         }
       }
     }

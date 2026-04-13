@@ -9,6 +9,7 @@ export type Currency = "USD" | "EUR" | "SEK" | "GBP";
 
 // Industry Types
 export type IndustryCode =
+  | "generic"
   | "construction"
   | "manufacturing"
   | "oil_gas"
@@ -255,6 +256,16 @@ export interface Company {
   updated_at: string;
   trial_ends_at: string | null;
 
+  // Workforce data (used for LTIR/LTIFR calculations)
+  total_employees?: number | null;
+  average_hours_per_week?: number | null;
+
+  // Company details (used to pre-fill forms)
+  address?: string | null;
+  phone?: string | null;
+  contact_person?: string | null;
+  registration_number?: string | null;
+
   // Incident configuration
   custom_incident_types?: {
     id: string;
@@ -467,7 +478,7 @@ export interface Incident {
   incident_date: string;
   incident_time: string;
   lost_time: boolean;
-  lost_time_amount: number | null;       // Total days away from work
+  lost_time_amount: number | null;       // Total calendar days away from work (OSHA standard)
   lost_time_restricted_days: number | null; // Days on restricted/modified duty
   lost_time_return_date: string | null;  // Date worker returned to full duty
   lost_time_updated_at: string | null;   // Last time lost time data was updated

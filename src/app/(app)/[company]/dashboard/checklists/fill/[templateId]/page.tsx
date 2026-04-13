@@ -1,15 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { flushSync } from "react-dom";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Check,
-  X,
-  Minus,
   Save,
-  Star,
-  Calendar,
   FileText,
   Upload,
   ChevronDown,
@@ -32,8 +29,13 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { getDraft, saveDraft, deleteDraft } from "@/lib/draft-store";
 import { generateId } from "@/lib/uuid";
+import { LocationPicker, type LocationPickerValue } from "@/components/ui/location-picker";
 import { WORK_ORDER_PROCEDURE_TEMPLATES } from "@/data/work-order-procedure-templates";
-import type { ChecklistItem, ChecklistResponse } from "@/types";
+import { getTemplateById } from "@/data/industry-templates";
+import { getRiskAssessmentTemplateById } from "@/data/risk-assessment-templates";
+import { buildProcedureSubmissionHref, completeProcedureStep } from "@/lib/procedure-flow";
+import { activateIndustryTemplate } from "@/lib/template-activation";
+import type { ChecklistItem, ChecklistResponse, Country } from "@/types";
 
 interface ItemResponse {
   value: string | number | boolean | null;
@@ -42,26 +44,73 @@ interface ItemResponse {
 
 function ChecklistFillContent({ templateId }: { templateId: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const company = useCompanyParam();
-  const { user } = useAuth();
+  const { user, currentCompany, hasPermission } = useAuth();
+  const canComplete = hasPermission("checklists.complete");
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { checklistTemplates, locations, stores, companyId } = useCompanyData();
+  const { checklistTemplates, procedureSubmissions, locations, stores, companyId } = useCompanyData();
   
   // Use the store hook DIRECTLY to bypass any potential filtering
   const directStore = useChecklistTemplatesStore();
   
+  const companyCountry = (currentCompany?.country as Country | undefined) || "US";
+  const activatedTemplate = React.useMemo(
+    () =>
+      directStore.items.find((tpl) => tpl.source_template_id === templateId)
+      || checklistTemplates.find((tpl) => tpl.source_template_id === templateId),
+    [directStore.items, checklistTemplates, templateId],
+  );
+
+  const builtInTemplate = React.useMemo(() => {
+    const industryTemplate = getTemplateById(templateId) || getRiskAssessmentTemplateById(templateId);
+
+    if (!industryTemplate) return null;
+
+    return activateIndustryTemplate(
+      industryTemplate,
+      companyId || user?.company_id || "__built_in__",
+      companyCountry,
+      t,
+    );
+  }, [templateId, companyId, user?.company_id, companyCountry, t]);
+
+  React.useEffect(() => {
+    if (!builtInTemplate || activatedTemplate) return;
+    stores.checklistTemplates.add(builtInTemplate);
+  }, [activatedTemplate, builtInTemplate, stores.checklistTemplates]);
+
   // Look up template from multiple sources:
   const template = directStore.items.find((tpl) => tpl.id === templateId)
     || checklistTemplates.find((tpl) => tpl.id === templateId)
-    || WORK_ORDER_PROCEDURE_TEMPLATES.find((tpl) => tpl.id === templateId);
+    || activatedTemplate
+    || WORK_ORDER_PROCEDURE_TEMPLATES.find((tpl) => tpl.id === templateId)
+    || builtInTemplate;
 
   const [responses, setResponses] = React.useState<Record<string, ItemResponse>>({});
   const [generalComments, setGeneralComments] = React.useState("");
-  const [locationId, setLocationId] = React.useState<string>("");
+  const [locationValue, setLocationValue] = React.useState<LocationPickerValue>({
+    locationId: "",
+    manualText: "",
+    gpsLat: null,
+    gpsLng: null,
+  });
   const [draftSavedAt, setDraftSavedAt] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const draftInitialized = React.useRef(false);
+  const locationPreFilled = React.useRef(false);
+  const procedureSubmissionId = searchParams.get("procedureSubmissionId");
+  const procedureStepId = searchParams.get("procedureStepId");
+
+  // Pre-fill location from user's assigned location (if no draft restores it)
+  React.useEffect(() => {
+    if (locationPreFilled.current || locationValue.locationId) return;
+    locationPreFilled.current = true;
+    if (user?.location_id && locations.some((l) => l.id === user.location_id)) {
+      setLocationValue((prev) => ({ ...prev, locationId: user.location_id! }));
+    }
+  }, [user?.location_id, locations, locationValue.locationId]);
 
   // Restore draft on mount
   React.useEffect(() => {
@@ -80,7 +129,7 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
       setResponses(restored);
       const meta = saved.__meta as unknown as { generalComments?: string; locationId?: string } | undefined;
       if (meta?.generalComments) setGeneralComments(meta.generalComments);
-      if (meta?.locationId) setLocationId(meta.locationId);
+      if (meta?.locationId) setLocationValue((prev) => ({ ...prev, locationId: meta.locationId! }));
       setDraftSavedAt(draft.updated_at);
     }
   }, [template, templateId]);
@@ -103,7 +152,7 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
         template_name: template.name,
         responses: {
           ...responses,
-          __meta: { generalComments, locationId },
+          __meta: { generalComments, locationId: locationValue.locationId },
         } as Record<string, unknown>,
         progress,
         updated_at: new Date().toISOString(),
@@ -112,7 +161,7 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
       setDraftSavedAt(new Date().toISOString());
     }, 10000);
     return () => clearInterval(interval);
-  }, [template, templateId, responses, generalComments, locationId]);
+  }, [template, templateId, responses, generalComments, locationValue]);
 
   // If store is loading AND template not yet found from any source, show loading
   if (directStore.isLoading && !template) {
@@ -190,20 +239,66 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
           photo_urls: [],
         }));
 
-      stores.checklistSubmissions.add({
-        id: generateId(),
-        company_id: companyId || "",
-        template_id: templateId,
-        submitter_id: user?.id || "",
-        location_id: locationId || null,
-        responses: checklistResponses,
-        general_comments: generalComments || null,
-        status: "submitted",
-        submitted_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
+      const checklistSubmissionId = generateId();
+      const submittedAt = new Date().toISOString();
+      const resolvedCompanyId = companyId || currentCompany?.id || user?.company_id;
+      if (!resolvedCompanyId) {
+        toast("Unable to submit — company not configured. Contact your admin.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Build general_comments with GPS/manual location info
+      const locationExtras: string[] = [];
+      if (locationValue.gpsLat && locationValue.gpsLng) {
+        locationExtras.push(`GPS: ${locationValue.gpsLat.toFixed(6)}, ${locationValue.gpsLng.toFixed(6)}`);
+      }
+      if (locationValue.manualText) {
+        locationExtras.push(`Location: ${locationValue.manualText}`);
+      }
+      const mergedComments = [generalComments, ...locationExtras].filter(Boolean).join("\n").trim() || null;
+
+      // flushSync ensures store updates are committed before any navigation
+      flushSync(() => {
+        stores.checklistSubmissions.add({
+          id: checklistSubmissionId,
+          company_id: resolvedCompanyId,
+          template_id: template.id,
+          submitter_id: user?.id || "",
+          location_id: locationValue.locationId || null,
+          responses: checklistResponses,
+          general_comments: mergedComments,
+          status: "submitted",
+          submitted_at: submittedAt,
+          created_at: submittedAt,
+        });
       });
 
       deleteDraft(templateId);
+
+      if (procedureSubmissionId && procedureStepId) {
+        const procedureSubmission = procedureSubmissions.find((submission) => submission.id === procedureSubmissionId);
+        const updatedProcedureSubmission = procedureSubmission
+          ? completeProcedureStep(procedureSubmission, procedureStepId, checklistSubmissionId, submittedAt)
+          : null;
+
+        if (updatedProcedureSubmission) {
+          flushSync(() => {
+            stores.procedureSubmissions.update(updatedProcedureSubmission.id, updatedProcedureSubmission);
+          });
+
+          if (updatedProcedureSubmission.status === "completed") {
+            toast("Procedure completed successfully!", "success");
+            router.push(buildProcedureSubmissionHref(company, updatedProcedureSubmission.id));
+            return;
+          }
+
+          toast("Step completed. Review the next procedure step.", "success");
+          router.push(buildProcedureSubmissionHref(company, updatedProcedureSubmission.id));
+          return;
+        }
+      }
+
       toast(t("checklists.success.submitted") || "Checklist submitted successfully!");
       router.push(`/${company}/dashboard/checklists`);
     } catch {
@@ -267,26 +362,41 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
         </div>
       </div>
 
-      {/* Location selector */}
-      {locations.length > 0 && (
-        <div className="space-y-1.5">
-          <Label htmlFor="location-select">{t("checklists.labels.location") || "Location"}</Label>
-          <div className="relative">
-            <select
-              id="location-select"
-              value={locationId}
-              onChange={(e) => setLocationId(e.target.value)}
-              className="w-full appearance-none rounded-md border bg-background px-3 py-2 pr-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="">{t("checklists.labels.selectLocation") || "Select location (optional)"}</option>
-              {locations.map((loc) => (
-                <option key={loc.id} value={loc.id}>{loc.name}</option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+      {/* Pre-filled context */}
+      <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span className="text-xs text-muted-foreground">Submitted by</span>
+            <p className="font-medium">{user?.full_name || "—"}</p>
           </div>
+          <div>
+            <span className="text-xs text-muted-foreground">Date</span>
+            <p className="font-medium">{new Date().toLocaleDateString()}</p>
+          </div>
+          {currentCompany?.name && (
+            <div>
+              <span className="text-xs text-muted-foreground">Company</span>
+              <p className="font-medium">{currentCompany.name}</p>
+            </div>
+          )}
+          {user?.department && (
+            <div>
+              <span className="text-xs text-muted-foreground">Department</span>
+              <p className="font-medium">{user.department}</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
+      {/* Location selector */}
+      <div className="space-y-1.5">
+        <LocationPicker
+          locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address }))}
+          value={locationValue}
+          onChange={setLocationValue}
+          label={t("checklists.labels.location") || "Location"}
+        />
+      </div>
 
       {/* Checklist items */}
       <div className="space-y-4">
@@ -318,13 +428,15 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
       {/* Submit */}
       <div className="flex items-center justify-between gap-4 border-t pt-6 pb-8">
         <p className="text-sm text-muted-foreground">
-          {allRequiredDone
+          {!canComplete
+            ? (t("common.noPermission") || "You do not have permission to submit checklists.")
+            : allRequiredDone
             ? (t("checklists.labels.readyToSubmit") || "All required items answered. Ready to submit.")
             : `${requiredItems.length - requiredAnswered} ${t("checklists.labels.requiredRemaining") || "required item(s) remaining"}`}
         </p>
         <Button
           size="lg"
-          disabled={!allRequiredDone || isSubmitting}
+          disabled={!canComplete || !allRequiredDone || isSubmitting}
           onClick={handleSubmit}
         >
           {isSubmitting
@@ -575,13 +687,12 @@ function ItemInput({
 
     case "signature":
       return (
-        <div className="flex items-center gap-2">
-          <div className="h-16 w-48 rounded-md border border-dashed flex items-center justify-center">
-            <span className="text-xs text-muted-foreground">
-              {t("checklists.labels.signatureNotAvailable") || "Signature capture available in mobile app"}
-            </span>
-          </div>
-        </div>
+        <Input
+          value={typeof value === "string" ? value : ""}
+          onChange={(e) => onChange(e.target.value || null)}
+          placeholder={t("checklists.placeholders.signature") || "Type your full name as signature"}
+          className="max-w-sm"
+        />
       );
 
     default:

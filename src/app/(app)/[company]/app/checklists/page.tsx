@@ -21,8 +21,11 @@ import {
   Scale,
   Download,
   Layers,
+  Search,
+  ArrowUpDown,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useLocationsStore } from "@/stores/locations-store";
@@ -121,6 +124,9 @@ function EmployeeChecklistsPageContent() {
   
   const [activeTab, setActiveTab] = React.useState<TabType>(getInitialTab());
   const [subTab, setSubTab] = React.useState<SubTabType>("assigned");
+  const [historySearch, setHistorySearch] = React.useState("");
+  const [historyStatus, setHistoryStatus] = React.useState<string>("all");
+  const [historySort, setHistorySort] = React.useState<"newest" | "oldest">("newest");
 
   const { items: checklistTemplates, isLoading: isTemplatesLoading } = useChecklistTemplatesStore();
   const { items: checklistSubmissions, isLoading: isSubmissionsLoading } = useChecklistSubmissionsStore();
@@ -134,12 +140,14 @@ function EmployeeChecklistsPageContent() {
   const { currentCompany, user } = useAuth();
   const { toast } = useToast();
 
-  // Active procedures for the field app (built-in + company, filtered by industry)
+  // Active procedures for the field app — only company-activated ones
   const activeProcedures = React.useMemo(() => {
-    const builtIn = getBuiltInProcedureTemplates().filter((p) => !p.industry || p.industry === currentCompany?.industry);
-    const company = procedureTemplateItems.filter((p) => p.is_active);
-    return [...company, ...builtIn.filter((b) => !company.some((c) => c.id === b.id))].filter((p) => p.is_active);
-  }, [procedureTemplateItems, currentCompany?.industry]);
+    // Only show procedure templates that the company has explicitly activated
+    // (company-owned copies in the store, not raw built-ins)
+    return procedureTemplateItems.filter(
+      (p) => p.is_active && p.company_id === user?.company_id,
+    );
+  }, [procedureTemplateItems, user?.company_id]);
   
   const selectedLocation = locationParam 
     ? locations.find(l => l.id === locationParam) 
@@ -188,8 +196,8 @@ function EmployeeChecklistsPageContent() {
     { id: "procedures" as TabType, label: t("checklists.tabs.procedures"), icon: Layers },
   ];
 
-  // Reset sub-tab when main tab changes
-  React.useEffect(() => { setSubTab("assigned"); }, [activeTab]);
+  // Reset sub-tab and history filters when main tab changes
+  React.useEffect(() => { setSubTab("assigned"); setHistorySearch(""); setHistoryStatus("all"); }, [activeTab]);
 
   // Draft counts for notification pills
   const checklistDraftCount = React.useMemo(() => 
@@ -279,6 +287,47 @@ function EmployeeChecklistsPageContent() {
     return <TasksSkeleton />;
   }
 
+  // Inline search/filter bar for history tabs
+  const historySearchBar = (
+    <div className="space-y-2 mb-3">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+        <Input
+          value={historySearch}
+          onChange={(e) => setHistorySearch(e.target.value)}
+          placeholder="Search history..."
+          className="h-8 pl-8 text-sm"
+        />
+        {historySearch && (
+          <button type="button" onClick={() => setHistorySearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <select
+          value={historyStatus}
+          onChange={(e) => setHistoryStatus(e.target.value)}
+          className="h-7 rounded-md border bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <option value="all">All statuses</option>
+          <option value="submitted">Submitted</option>
+          <option value="draft">Draft</option>
+          <option value="reviewed">Reviewed</option>
+          <option value="completed">Completed</option>
+        </select>
+        <button
+          type="button"
+          onClick={() => setHistorySort((s) => s === "newest" ? "oldest" : "newest")}
+          className="flex items-center gap-1 rounded-md border bg-background px-2 h-7 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <ArrowUpDown className="h-3 w-3" />
+          {historySort === "newest" ? "Newest" : "Oldest"}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col min-h-full">
       {/* Header + Tabs */}
@@ -361,7 +410,46 @@ function EmployeeChecklistsPageContent() {
                 <p className="text-xs text-muted-foreground">Tap to start a new incident report</p>
               </div>
             </Link>
-            <ReportHistoryInline company={company} incidents={incidents} user={user} formatDate={formatDate} />
+            {historySearchBar}
+            {(() => {
+              const q = historySearch.toLowerCase();
+              const myIncidents = (user ? incidents.filter((i) => i.reporter_id === user.id) : incidents);
+              const filtered = myIncidents
+                .filter((inc) => {
+                  if (historyStatus !== "all") {
+                    if (historyStatus === "submitted" && inc.status !== "new") return false;
+                    if (historyStatus === "reviewed" && inc.status !== "resolved") return false;
+                    if (historyStatus === "draft" && inc.status !== "new") return false;
+                    if (historyStatus === "completed" && inc.status !== "resolved" && inc.status !== "archived") return false;
+                  }
+                  if (q && !inc.title.toLowerCase().includes(q) && !inc.severity.toLowerCase().includes(q) && !inc.status.toLowerCase().includes(q)) return false;
+                  return true;
+                })
+                .sort((a, b) => {
+                  const dateA = new Date(a.incident_date).getTime();
+                  const dateB = new Date(b.incident_date).getTime();
+                  return historySort === "newest" ? dateB - dateA : dateA - dateB;
+                });
+              return filtered.length === 0 ? (
+                <div className="py-6 text-center text-muted-foreground"><History className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">{historySearch ? "No matching results." : "No incident reports yet."}</p></div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground font-medium">Recent reports</p>
+                  {filtered.map((inc) => (
+                    <Link key={inc.id} href={`/${company}/app/incidents/${inc.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                      <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", inc.severity === "critical" || inc.severity === "high" ? "bg-red-500/10" : "bg-amber-500/10")}>
+                        <AlertTriangle className={cn("h-4 w-4", inc.severity === "critical" || inc.severity === "high" ? "text-red-500" : "text-amber-500")} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{inc.title}</p>
+                        <p className="text-[10px] text-muted-foreground">{formatDate(new Date(inc.incident_date))} · {inc.severity}</p>
+                      </div>
+                      <Badge variant={inc.status === "resolved" ? "success" : inc.status === "in_progress" ? "warning" : "secondary"} className="text-[9px] shrink-0 capitalize">{inc.status.replace(/_/g, " ")}</Badge>
+                    </Link>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -398,26 +486,48 @@ function EmployeeChecklistsPageContent() {
         )}
         {activeTab === "checklists" && subTab === "history" && (
           <div className="space-y-2">
+            {historySearchBar}
             {checklistDraftCount > 0 && (
               <div className="flex items-center gap-2 mb-2"><Badge variant="warning" className="text-[10px]">{checklistDraftCount} draft{checklistDraftCount > 1 ? "s" : ""}</Badge><span className="text-xs text-muted-foreground">Complete your drafts to submit</span></div>
             )}
-            {userSubmissions.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground"><History className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">No checklist history yet.</p></div>
-            ) : userSubmissions.slice(0, 20).map((sub) => {
-              const tpl = checklistTemplates.find((t) => t.id === sub.template_id);
-              return (
-                <div key={sub.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
-                  <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", sub.status === "draft" ? "bg-amber-500/10" : "bg-green-500/10")}>
-                    {sub.status === "draft" ? <Clock className="h-4 w-4 text-amber-500" /> : <CheckCircle className="h-4 w-4 text-green-500" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{tpl?.name || "Checklist"}</p>
-                    <p className="text-[10px] text-muted-foreground">{sub.status === "draft" ? "Draft" : formatDate(new Date(sub.submitted_at || sub.created_at))}</p>
-                  </div>
-                  <Badge variant={sub.status === "draft" ? "warning" : "success"} className="text-[9px] shrink-0">{sub.status === "draft" ? "Draft" : "Submitted"}</Badge>
-                </div>
-              );
-            })}
+            {(() => {
+              const q = historySearch.toLowerCase();
+              const filtered = userSubmissions
+                .filter((sub) => {
+                  if (historyStatus !== "all" && sub.status !== historyStatus) return false;
+                  if (q) {
+                    const tpl = checklistTemplates.find((t) => t.id === sub.template_id);
+                    const name = tpl?.name?.toLowerCase() || "";
+                    if (!name.includes(q) && !sub.status.includes(q)) return false;
+                  }
+                  return true;
+                })
+                .sort((a, b) => {
+                  const dateA = new Date(a.submitted_at || a.created_at).getTime();
+                  const dateB = new Date(b.submitted_at || b.created_at).getTime();
+                  return historySort === "newest" ? dateB - dateA : dateA - dateB;
+                });
+              return filtered.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground"><History className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">{historySearch ? "No matching results." : "No checklist history yet."}</p></div>
+              ) : filtered.map((sub) => {
+                const tpl = checklistTemplates.find((t) => t.id === sub.template_id);
+                const href = sub.status === "draft"
+                  ? `/${company}/app/checklists/${sub.template_id}?draft=${sub.id}`
+                  : `/${company}/app/checklists/submission/${sub.id}`;
+                return (
+                  <Link key={sub.id} href={href} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                    <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", sub.status === "draft" ? "bg-amber-500/10" : "bg-green-500/10")}>
+                      {sub.status === "draft" ? <Clock className="h-4 w-4 text-amber-500" /> : <CheckCircle className="h-4 w-4 text-green-500" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{tpl?.name || "Checklist"}</p>
+                      <p className="text-[10px] text-muted-foreground">{sub.status === "draft" ? "Draft" : formatDate(new Date(sub.submitted_at || sub.created_at))}</p>
+                    </div>
+                    <Badge variant={sub.status === "draft" ? "warning" : "success"} className="text-[9px] shrink-0">{sub.status === "draft" ? "Draft" : "Submitted"}</Badge>
+                  </Link>
+                );
+              });
+            })()}
           </div>
         )}
 
@@ -440,36 +550,61 @@ function EmployeeChecklistsPageContent() {
         )}
         {activeTab === "risk-assessment" && subTab === "available" && (
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground mb-2">Assessment forms available</p>
-            {availableAssessmentForms.map((form) => (
-              <Link key={form.id} href={`/${company}/app/risk-assessment/${form.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
-                <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0"><ShieldAlert className="h-4 w-4 text-orange-500" /></div>
-                <div className="flex-1 min-w-0"><p className="text-sm font-medium">{form.fullName}</p><p className="text-[10px] text-muted-foreground">{form.name}</p></div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              </Link>
-            ))}
-            {templates.filter((t) => t.category === "risk_assessment").map((tpl) => (
-              <Link key={tpl.id} href={`/${company}/app/checklists/${tpl.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
-                <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0"><ShieldAlert className="h-4 w-4 text-orange-500" /></div>
-                <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{tpl.name}</p><p className="text-[10px] text-muted-foreground">{tpl.items.length} items · Custom</p></div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              </Link>
-            ))}
+            {(() => {
+              const fieldAppRA = templates.filter((t) => t.category === "risk_assessment" || t.category === "hazard_analysis");
+              return fieldAppRA.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <ShieldAlert className="h-7 w-7 mx-auto mb-2 opacity-30" />
+                  <p className="text-xs">No risk assessment templates activated.</p>
+                  <p className="text-[10px] mt-1">Ask your admin to publish risk assessment templates for the field app.</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground mb-2">Active risk assessment templates</p>
+                  {fieldAppRA.map((tpl) => (
+                    <Link key={tpl.id} href={`/${company}/app/checklists/${tpl.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                      <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0"><ShieldAlert className="h-4 w-4 text-orange-500" /></div>
+                      <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{tpl.name}</p><p className="text-[10px] text-muted-foreground">{tpl.items.length} items</p></div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </Link>
+                  ))}
+                </>
+              );
+            })()}
           </div>
         )}
         {activeTab === "risk-assessment" && subTab === "history" && (
           <div className="space-y-2">
-            {riskEvaluations.filter((e) => e.submitter_id === user?.id).length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground"><History className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">No assessment history yet.</p></div>
-            ) : riskEvaluations.filter((e) => e.submitter_id === user?.id).slice(0, 20).map((ev) => (
-              <Link key={ev.id} href={`/${company}/app/risk-assessment/view/${ev.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
-                <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", ev.status === "draft" ? "bg-amber-500/10" : ev.status === "reviewed" ? "bg-green-500/10" : "bg-blue-500/10")}>
-                  {ev.status === "draft" ? <Clock className="h-4 w-4 text-amber-500" /> : <CheckCircle className="h-4 w-4 text-green-500" />}
-                </div>
-                <div className="flex-1 min-w-0"><p className="text-sm font-medium">{ev.form_type}</p><p className="text-[10px] text-muted-foreground">{formatDate(new Date(ev.submitted_at))}</p></div>
-                <Badge variant={ev.status === "draft" ? "warning" : ev.status === "reviewed" ? "success" : "secondary"} className="text-[9px] shrink-0">{ev.status}</Badge>
-              </Link>
-            ))}
+            {historySearchBar}
+            {(() => {
+              const q = historySearch.toLowerCase();
+              const filtered = riskEvaluations
+                .filter((e) => e.submitter_id === user?.id)
+                .filter((ev) => {
+                  if (historyStatus !== "all" && ev.status !== historyStatus) return false;
+                  if (q) {
+                    const name = (assessmentLabelMap[ev.form_type] || ev.form_type).toLowerCase();
+                    if (!name.includes(q) && !ev.status.includes(q)) return false;
+                  }
+                  return true;
+                })
+                .sort((a, b) => {
+                  const dateA = new Date(a.submitted_at).getTime();
+                  const dateB = new Date(b.submitted_at).getTime();
+                  return historySort === "newest" ? dateB - dateA : dateA - dateB;
+                });
+              return filtered.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground"><History className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">{historySearch ? "No matching results." : "No assessment history yet."}</p></div>
+              ) : filtered.map((ev) => (
+                <Link key={ev.id} href={`/${company}/app/risk-assessment/view/${ev.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                  <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", ev.status === "draft" ? "bg-amber-500/10" : ev.status === "reviewed" ? "bg-green-500/10" : "bg-blue-500/10")}>
+                    {ev.status === "draft" ? <Clock className="h-4 w-4 text-amber-500" /> : <CheckCircle className="h-4 w-4 text-green-500" />}
+                  </div>
+                  <div className="flex-1 min-w-0"><p className="text-sm font-medium">{assessmentLabelMap[ev.form_type] || ev.form_type}</p><p className="text-[10px] text-muted-foreground">{formatDate(new Date(ev.submitted_at))}</p></div>
+                  <Badge variant={ev.status === "draft" ? "warning" : ev.status === "reviewed" ? "success" : "secondary"} className="text-[9px] shrink-0">{ev.status}</Badge>
+                </Link>
+              ));
+            })()}
           </div>
         )}
 
@@ -490,9 +625,11 @@ function EmployeeChecklistsPageContent() {
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[10px] text-muted-foreground capitalize">{proc.recurrence.replace(/_/g, " ")}</span>
                   <button type="button" onClick={() => {
+                    const resolvedCid = user?.company_id || currentCompany?.id;
+                    if (!resolvedCid) { toast("Company not configured. Contact admin.", "error"); return; }
                     const now = new Date().toISOString();
-                    const subId = `proc_sub_${Date.now()}`;
-                    addProcedureSubmission({ id: subId, company_id: user?.company_id || "", procedure_template_id: proc.id, submitter_id: user?.id || "", location_id: null, status: "in_progress", current_step: 1, step_submissions: proc.steps.map((s) => ({ step_id: s.id, submission_id: null, status: "pending" as const, completed_at: null })), started_at: now, completed_at: null, next_due_date: null, created_at: now, updated_at: now });
+                    const subId = `proc_sub_${crypto.randomUUID()}`;
+                    addProcedureSubmission({ id: subId, company_id: resolvedCid, procedure_template_id: proc.id, submitter_id: user?.id || "", location_id: null, status: "in_progress", current_step: 1, step_submissions: proc.steps.map((s) => ({ step_id: s.id, submission_id: null, status: "pending" as const, completed_at: null })), started_at: now, completed_at: null, next_due_date: null, created_at: now, updated_at: now });
                     // Navigate to fill the first step — find activated template
                     const firstStep = proc.steps[0];
                     if (firstStep) {
@@ -554,20 +691,43 @@ function EmployeeChecklistsPageContent() {
         )}
         {activeTab === "procedures" && subTab === "history" && (
           <div className="space-y-2">
-            {procedureSubmissionItems.filter((s) => s.submitter_id === user?.id && s.status !== "in_progress").length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground"><History className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">No procedure history yet.</p></div>
-            ) : procedureSubmissionItems.filter((s) => s.submitter_id === user?.id && s.status !== "in_progress").slice(0, 20).map((sub) => {
-              const proc = activeProcedures.find((p) => p.id === sub.procedure_template_id);
-              return (
-                <div key={sub.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
-                  <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", sub.status === "completed" ? "bg-green-500/10" : "bg-muted")}>
-                    {sub.status === "completed" ? <CheckCircle className="h-4 w-4 text-green-500" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
-                  </div>
-                  <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{proc?.name || "Procedure"}</p><p className="text-[10px] text-muted-foreground">{formatDate(new Date(sub.completed_at || sub.started_at))}</p></div>
-                  <Badge variant={sub.status === "completed" ? "success" : "secondary"} className="text-[9px] shrink-0 capitalize">{sub.status}</Badge>
-                </div>
-              );
-            })}
+            {historySearchBar}
+            {(() => {
+              const q = historySearch.toLowerCase();
+              const allProcs = getBuiltInProcedureTemplates();
+              const filtered = procedureSubmissionItems
+                .filter((s) => s.submitter_id === user?.id && s.status !== "in_progress")
+                .filter((sub) => {
+                  if (historyStatus !== "all" && sub.status !== historyStatus) return false;
+                  if (q) {
+                    const proc = activeProcedures.find((p) => p.id === sub.procedure_template_id)
+                      || allProcs.find((p) => p.id === sub.procedure_template_id);
+                    const name = proc?.name?.toLowerCase() || "";
+                    if (!name.includes(q) && !sub.status.includes(q)) return false;
+                  }
+                  return true;
+                })
+                .sort((a, b) => {
+                  const dateA = new Date(a.completed_at || a.started_at).getTime();
+                  const dateB = new Date(b.completed_at || b.started_at).getTime();
+                  return historySort === "newest" ? dateB - dateA : dateA - dateB;
+                });
+              return filtered.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground"><History className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">{historySearch ? "No matching results." : "No procedure history yet."}</p></div>
+              ) : filtered.map((sub) => {
+                const proc = activeProcedures.find((p) => p.id === sub.procedure_template_id)
+                  || allProcs.find((p) => p.id === sub.procedure_template_id);
+                return (
+                  <Link key={sub.id} href={`/${company}/app/checklists/procedures/${sub.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
+                    <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", sub.status === "completed" ? "bg-green-500/10" : "bg-muted")}>
+                      {sub.status === "completed" ? <CheckCircle className="h-4 w-4 text-green-500" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
+                    </div>
+                    <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{proc?.name || "Procedure"}</p><p className="text-[10px] text-muted-foreground">{formatDate(new Date(sub.completed_at || sub.started_at))}</p></div>
+                    <Badge variant={sub.status === "completed" ? "success" : "secondary"} className="text-[9px] shrink-0 capitalize">{sub.status}</Badge>
+                  </Link>
+                );
+              });
+            })()}
           </div>
         )}
 

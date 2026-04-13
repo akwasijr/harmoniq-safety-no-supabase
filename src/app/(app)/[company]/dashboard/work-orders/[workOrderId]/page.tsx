@@ -90,6 +90,7 @@ export default function WorkOrderDetailPage() {
   const canEdit = hasPermission("work_orders.edit");
   const canAssign = hasPermission("work_orders.assign");
   const canComplete = hasPermission("work_orders.complete");
+  const canDelete = hasPermission("work_orders.delete");
   const { items: statusLogItems, add: addStatusLog } = useWorkOrderStatusLogStore();
 
   const order = orders.find((o) => o.id === workOrderId);

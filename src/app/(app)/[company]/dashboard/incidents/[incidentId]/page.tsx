@@ -128,7 +128,10 @@ export default function IncidentDetailPage() {
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
-  const { user: authUser } = useAuth();
+  const { user: authUser, hasPermission } = useAuth();
+  const canEdit = hasPermission("incidents.edit_own") || hasPermission("incidents.edit_all");
+  const canDelete = hasPermission("incidents.delete");
+  const canAssign = hasPermission("incidents.assign");
   const { items: companiesList } = useCompanyStore();
   const currentCompany = companiesList.find((c) => c.slug === company);
   const { incidents, tickets, correctiveActions, users, teams, locations, stores } = useCompanyData();
@@ -868,7 +871,7 @@ export default function IncidentDetailPage() {
                             <p className="text-sm text-muted-foreground capitalize">{assignedUser.role.replace("_", " ")}</p>
                           </div>
                         </div>
-                        {!isLocked && (
+                        {!isLocked && canAssign && (
                           <div className="relative">
                             <Button
                               size="sm"
@@ -928,7 +931,7 @@ export default function IncidentDetailPage() {
                             <p className="text-sm text-muted-foreground">Team assignment</p>
                           </div>
                         </div>
-                        {!isLocked && (
+                        {!isLocked && canAssign && (
                           <div className="relative">
                             <Button
                               size="sm"
@@ -977,7 +980,7 @@ export default function IncidentDetailPage() {
                   return (
                     <div className="space-y-3">
                       <p className="text-sm text-muted-foreground">Unassigned</p>
-                      {!isLocked && (
+                      {!isLocked && canAssign && (
                         <div className="relative">
                           <Button
                             size="sm"
@@ -2080,7 +2083,7 @@ export default function IncidentDetailPage() {
         <ComplianceTab incident={incident} companyCountry={currentCompany?.country || "US"} reporter={reporter} />
       )}
 
-      {activeTab === "settings" && !isLocked && (
+      {activeTab === "settings" && !isLocked && canEdit && (
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -2118,7 +2121,7 @@ export default function IncidentDetailPage() {
                   <option value="new">New</option>
                   <option value="in_progress">In Progress</option>
                   <option value="in_review">In Review</option>
-                  <option value="resolved">Resolved</option>
+                  <option value="resolved" disabled={!canResolveIncident}>Resolved{!canResolveIncident ? " (blocked)" : ""}</option>
                 </select>
                 {!canResolveIncident && (
                   <p className="mt-2 text-sm text-destructive">
@@ -2179,6 +2182,7 @@ export default function IncidentDetailPage() {
                   Archive
                 </Button>
               </div>
+              {canDelete && (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Delete Incident</p>
@@ -2192,6 +2196,7 @@ export default function IncidentDetailPage() {
                   <Trash2 className="h-4 w-4" /> Delete
                 </Button>
               </div>
+              )}
             </CardContent>
           </Card>
         </div>

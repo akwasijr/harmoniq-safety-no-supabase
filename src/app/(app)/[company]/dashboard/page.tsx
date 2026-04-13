@@ -159,7 +159,7 @@ export default function DashboardPage() {
   const [severityFilter, setSeverityFilter] = React.useState("");
   const [departmentFilter, setDepartmentFilter] = React.useState("");
 
-  const { isSuperAdmin, hasSelectedCompany, switchCompany, user } = useAuth();
+  const { isSuperAdmin, hasSelectedCompany, switchCompany, user, currentCompany } = useAuth();
   const { items: allCompanies } = useCompanyStore();
   const { incidents, locations, users, assets: allAssets, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, complianceObligations, checklistSubmissions, checklistTemplates, stores } = useCompanyData();
 
@@ -344,16 +344,20 @@ export default function DashboardPage() {
   };
 
   // TRIR = (Total Recordable Incidents × 200,000) / Total Hours Worked
-  // Using headcount × 2000 annual hours as proxy
-  const headcount = Math.max(users.length, 1);
-  const hoursWorked = headcount * 2000;
+  // Use company workforce data if set, otherwise estimate from user count
+  const headcount = currentCompany?.total_employees || Math.max(users.length, 1);
+  const avgWeeklyHours = currentCompany?.average_hours_per_week || 40;
+  const hoursWorked = headcount * avgWeeklyHours * 52;
+  // Use country-aware multiplier: US = 200k (OSHA), international = 1M
+  const isUS = currentCompany?.country === "US";
+  const trirMultiplier = isUS ? 200_000 : 1_000_000;
   const recordableIncidents = incidents.filter((i) => i.type === "injury" || i.severity === "critical" || i.severity === "high").length;
-  const trir = hoursWorked > 0 ? Math.round((recordableIncidents * 200000 / hoursWorked) * 100) / 100 : 0;
+  const trir = hoursWorked > 0 ? Math.round((recordableIncidents * trirMultiplier / hoursWorked) * 100) / 100 : 0;
 
-  // LTIFR = (Lost Time Injuries × 1,000,000) / Total Hours Worked
+  // LTIFR = (Lost Time Injuries × multiplier) / Total Hours Worked
   const lostTimeIncidents = incidents.filter((i) => i.lost_time === true);
   const totalLostDays = lostTimeIncidents.reduce((sum, i) => sum + (i.lost_time_amount || 0) + (i.lost_time_restricted_days || 0), 0);
-  const ltifr = hoursWorked > 0 ? Math.round((lostTimeIncidents.length * 1000000 / hoursWorked) * 100) / 100 : 0;
+  const ltifr = hoursWorked > 0 ? Math.round((lostTimeIncidents.length * trirMultiplier / hoursWorked) * 100) / 100 : 0;
   const recentIncidents = incidents.slice(0, 5);
 
   // Compute asset expiry alerts (warranty, calibration, maintenance)
@@ -582,6 +586,7 @@ export default function DashboardPage() {
           title={t("nav.incidents")}
           value={`${formatNumber(filteredStats.open_incidents)} open`}
           icon={AlertTriangle}
+          tooltip="Number of incidents currently open (new or in progress). A lower count means faster resolution."
           trend={{
             value: filteredStats.total_incidents,
             direction: trendPercentage <= 0 ? "down" : "up",
@@ -590,8 +595,9 @@ export default function DashboardPage() {
         />
         <KPICard
           title="TRIR"
-          value={String(trir)}
+          value={trir.toFixed(2)}
           icon={TrendingUp}
+          tooltip="Total Recordable Incident Rate — (Recordable Incidents × 200,000) ÷ Total Hours Worked. Industry average is around 3.0."
           trend={{
             value: recordableIncidents,
             direction: trir > 2 ? "up" : "down",
@@ -600,8 +606,9 @@ export default function DashboardPage() {
         />
         <KPICard
           title="LTIFR"
-          value={String(ltifr)}
+          value={ltifr.toFixed(2)}
           icon={Clock}
+          tooltip="Lost Time Injury Frequency Rate — (Lost Time Injuries × 1,000,000) ÷ Total Hours Worked. Lower is better."
           trend={{
             value: totalLostDays,
             direction: ltifr > 0 ? "up" : "down",
@@ -612,6 +619,7 @@ export default function DashboardPage() {
           title={t("dashboard.avgResolutionTime")}
           value={`${stats.avg_resolution_time_hours}h`}
           icon={TrendingUp}
+          tooltip="Average time in hours to resolve incidents from creation to resolution."
           trend={{
             value: 0,
             direction: "down",

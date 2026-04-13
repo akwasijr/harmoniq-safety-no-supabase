@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Disable scroll bounce / overscroll on all platforms */
+html, body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+}
+
 /* ============================================
    NPROGRESS — Route transition progress bar
    ============================================ */
