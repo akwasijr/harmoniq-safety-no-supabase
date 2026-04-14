@@ -324,7 +324,7 @@ export default function EnvironmentDashboard() {
     notes: "",
   });
 
-  const resetWasteForm = React.useCallback(() => {
+  const resetWasteForm = () => {
     setWasteForm({
       waste_type: "",
       category: "",
@@ -336,7 +336,7 @@ export default function EnvironmentDashboard() {
       date: new Date().toISOString().split("T")[0],
       notes: "",
     });
-  }, []);
+  };
 
   const handleSaveWaste = React.useCallback(() => {
     if (!wasteForm.waste_type || !wasteForm.category || !wasteForm.volume || !wasteForm.disposal_method || !wasteForm.date) return;
@@ -387,7 +387,7 @@ export default function EnvironmentDashboard() {
     notes: "",
   });
 
-  const resetSpillForm = React.useCallback(() => {
+  const resetSpillForm = () => {
     setSpillForm({
       material: "",
       volume: "",
@@ -399,7 +399,7 @@ export default function EnvironmentDashboard() {
       date: new Date().toISOString().split("T")[0],
       notes: "",
     });
-  }, []);
+  };
 
   const handleSaveSpill = React.useCallback(() => {
     if (!spillForm.material || !spillForm.volume || !spillForm.severity || !spillForm.containment_action || !spillForm.date) return;

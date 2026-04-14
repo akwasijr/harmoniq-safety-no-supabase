@@ -430,7 +430,7 @@ export default function DashboardPage() {
   const isManager = ["company_admin", "manager", "super_admin"].includes(user?.role || "");
   const isDirector = user?.role === "viewer";
 
-  const focusTabs = React.useMemo(() => {
+  const focusTabs = (() => {
     const focusNow = new Date();
     const focus7Days = new Date(focusNow.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -559,7 +559,7 @@ export default function DashboardPage() {
       { id: "upcoming" as const, label: "Upcoming", dot: "bg-amber-500", items: focusUpcoming },
       { id: "good_to_know" as const, label: "Good to Know", dot: "bg-blue-500", items: focusGoodToKnow },
     ];
-  }, [incidents, locations, users, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, complianceObligations, checklistSubmissions, checklistTemplates, expiryAlerts, isManager, isDirector, company]);
+  })();
 
   return (
     <RoleGuard allowedRoles={["manager", "company_admin", "super_admin", "viewer"]}>

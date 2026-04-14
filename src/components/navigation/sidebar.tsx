@@ -469,7 +469,7 @@ export function Sidebar({
               const allHidden = [...companyHidden, ...userHidden];
 
               // Apply group ordering from preferences
-              let orderedGroups = [...companyNavGroups];
+              const orderedGroups = [...companyNavGroups];
               if (prefs?.groupOrder?.length) {
                 orderedGroups.sort((a, b) => {
                   const ai = prefs.groupOrder.indexOf(a.groupId || "");
@@ -482,7 +482,7 @@ export function Sidebar({
               }
 
               return orderedGroups.map((group, groupIdx) => {
-                let visibleItems = group.items.filter((item) => {
+                const visibleItems = group.items.filter((item) => {
                   if (item.requiredRoles && !item.requiredRoles.includes(actualRole)) return false;
                   if (item.moduleId && allHidden.includes(item.moduleId)) return false;
                   return true;

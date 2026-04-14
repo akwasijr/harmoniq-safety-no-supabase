@@ -395,7 +395,7 @@ export default function ComplianceDashboard() {
     evidence_type: "manual" as ComplianceObligation["evidence_type"],
   });
 
-  const resetObligationForm = React.useCallback(() => {
+  const resetObligationForm = () => {
     setObligationForm({
       title: "",
       regulation: "",
@@ -406,7 +406,7 @@ export default function ComplianceDashboard() {
       owner_id: "",
       evidence_type: "manual",
     });
-  }, [currentCompany?.country]);
+  };
 
   const handleSaveObligation = React.useCallback(() => {
     if (!obligationForm.title || !obligationForm.regulation || !obligationForm.category || !obligationForm.frequency || !obligationForm.next_due_date) return;
@@ -477,11 +477,11 @@ export default function ComplianceDashboard() {
     tags: "",
   });
 
-  const resetDocForm = React.useCallback(() => {
+  const resetDocForm = () => {
     setDocForm({ title: "", category: "", version: "1.0", review_date: "", owner_id: "", tags: "" });
-  }, []);
+  };
 
-  const handleSaveDocument = React.useCallback(() => {
+  const handleSaveDocument = () => {
     if (!docForm.title || !docForm.category) return;
     const now = new Date().toISOString();
 
@@ -505,7 +505,7 @@ export default function ComplianceDashboard() {
     toast("Document uploaded");
     resetDocForm();
     setShowAddDocument(false);
-  }, [docForm, companyId, currentCompany?.country, documentsStore, toast, resetDocForm]);
+  };
 
   // ── Delete document ──
   const handleDeleteDocument = React.useCallback(

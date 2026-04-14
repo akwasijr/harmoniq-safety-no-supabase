@@ -88,6 +88,7 @@ export default function NewAssessmentPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const draftIdRef = React.useRef<string | null>(null);
+  const [draftSaved, setDraftSaved] = React.useState(false);
 
   const saveDraftToStore = React.useCallback(() => {
     const now = new Date().toISOString();
@@ -97,6 +98,7 @@ export default function NewAssessmentPage() {
 
     if (!draftIdRef.current) {
       draftIdRef.current = crypto.randomUUID();
+      setDraftSaved(true);
       addTemplate({
         id: draftIdRef.current, company_id: companyId, name: name.trim() || "Untitled Assessment",
         description: description.trim() || null, category: "risk_assessment", assignment: "all",
@@ -228,7 +230,7 @@ export default function NewAssessmentPage() {
             <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold">3</span>
             Preview
           </div>
-          {step >= 2 && draftIdRef.current && <span className="ml-auto text-xs text-muted-foreground">Auto-saving draft...</span>}
+          {step >= 2 && draftSaved && <span className="ml-auto text-xs text-muted-foreground">Auto-saving draft...</span>}
         </div>
 
         {/* STEP 1 */}

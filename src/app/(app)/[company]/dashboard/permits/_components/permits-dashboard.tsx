@@ -327,7 +327,7 @@ export default function PermitsDashboard() {
     notes: "",
   });
 
-  const resetPermitForm = React.useCallback(() => {
+  const resetPermitForm = () => {
     setPermitForm({
       type: "",
       title: "",
@@ -339,7 +339,7 @@ export default function PermitsDashboard() {
       workers: [],
       notes: "",
     });
-  }, []);
+  };
 
   const handleSavePermit = React.useCallback(() => {
     if (!permitForm.type || !permitForm.title || !permitForm.start_time || !permitForm.end_time) return;
@@ -432,14 +432,14 @@ export default function PermitsDashboard() {
   );
 
   // ── Worker toggle ──
-  const toggleWorker = React.useCallback((userId: string) => {
+  const toggleWorker = (userId: string) => {
     setPermitForm((prev) => ({
       ...prev,
       workers: prev.workers.includes(userId)
         ? prev.workers.filter((id) => id !== userId)
         : [...prev.workers, userId],
     }));
-  }, []);
+  };
 
   // ── Loading ──
   if (permitsStore.isLoading) {
