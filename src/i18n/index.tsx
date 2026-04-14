@@ -207,7 +207,19 @@ export function I18nProvider({
 
   const t = React.useCallback(
     (key: string, params?: Record<string, string | number>): string => {
-      let text = messages[key] ?? fallback[key] ?? key;
+      let text = messages[key] ?? fallback[key] ?? "";
+      // If key not found, humanize the last segment instead of showing raw dot-path
+      if (!text) {
+        const parts = key.split(".");
+        const last = parts[parts.length - 1] || key;
+        // Skip if last part is a generic field like "name" or "description" — use second-to-last
+        const meaningful = (last === "name" || last === "description") && parts.length > 2
+          ? parts[parts.length - 2]
+          : last;
+        text = meaningful
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+      }
       if (params) {
         for (const [k, v] of Object.entries(params)) {
           text = text.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));

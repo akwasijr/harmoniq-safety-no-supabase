@@ -195,6 +195,205 @@ const s = StyleSheet.create({
   spacer: {
     height: 8,
   },
+
+  // ── Professional document styles ──────────────────────────────────────────
+
+  proHeaderContainer: {
+    marginBottom: 20,
+  },
+  proCompanyName: {
+    fontSize: 18,
+    fontFamily: "Helvetica-Bold",
+    color: "#1E40AF",
+    marginBottom: 2,
+  },
+  proDocTitle: {
+    fontSize: 12,
+    fontFamily: "Helvetica-Bold",
+    color: "#1F2937",
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  accentBar: {
+    height: 2,
+    backgroundColor: "#1E40AF",
+    marginBottom: 12,
+  },
+  metaGrid: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+  },
+  metaGridCell: {
+    width: "50%" as unknown as number,
+    paddingVertical: 3,
+    paddingRight: 8,
+    flexDirection: "row" as const,
+  },
+  metaGridLabel: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    color: "#6B7280",
+    width: 80,
+  },
+  metaGridValue: {
+    fontSize: 9,
+    color: "#111827",
+    flex: 1,
+  },
+
+  proSummaryRow: {
+    flexDirection: "row" as const,
+    gap: 10,
+    marginBottom: 16,
+  },
+  proSummaryCard: {
+    flex: 1,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 4,
+    backgroundColor: "#F9FAFB",
+  },
+  proSummaryLabel: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    color: "#6B7280",
+    textTransform: "uppercase" as const,
+    marginBottom: 4,
+  },
+  proSummaryValue: {
+    fontSize: 16,
+    fontFamily: "Helvetica-Bold",
+  },
+
+  proTableHeader: {
+    flexDirection: "row" as const,
+    backgroundColor: "#1F2937",
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  proThText: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    color: "#FFFFFF",
+    textTransform: "uppercase" as const,
+  },
+  proTableRow: {
+    flexDirection: "row" as const,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#E5E7EB",
+    minHeight: 22,
+  },
+  proTableRowAlt: {
+    backgroundColor: "#F9FAFB",
+  },
+
+  proSectionHeader: {
+    fontSize: 11,
+    fontFamily: "Helvetica-Bold",
+    color: "#1E40AF",
+    marginTop: 18,
+    marginBottom: 8,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+
+  signatureSection: {
+    marginTop: 32,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    paddingTop: 16,
+  },
+  signatureRow: {
+    flexDirection: "row" as const,
+    gap: 40,
+  },
+  signatureCol: {
+    flex: 1,
+  },
+  signatureTitle: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    color: "#1F2937",
+    marginBottom: 8,
+  },
+  signatureName: {
+    fontSize: 9,
+    color: "#374151",
+    marginBottom: 16,
+  },
+  signatureLine: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#374151",
+    marginBottom: 4,
+    height: 20,
+  },
+  signatureLabel: {
+    fontSize: 7,
+    color: "#6B7280",
+    marginBottom: 12,
+  },
+
+  proFooter: {
+    position: "absolute" as const,
+    bottom: 24,
+    left: 40,
+    right: 40,
+    borderTopWidth: 0.5,
+    borderTopColor: "#D1D5DB",
+    paddingTop: 6,
+  },
+  proFooterRow: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    marginBottom: 4,
+  },
+  proFooterText: {
+    fontSize: 7,
+    color: "#6B7280",
+  },
+  confidentialText: {
+    fontSize: 6,
+    color: "#9CA3AF",
+    textAlign: "center" as const,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 2,
+  },
+
+  hazardCard: {
+    marginBottom: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 4,
+    backgroundColor: "#FAFAFA",
+  },
+  hazardCardHeader: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    marginBottom: 6,
+  },
+  hazardStepName: {
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    color: "#1F2937",
+    flex: 1,
+  },
+  hazardDetail: {
+    fontSize: 8,
+    color: "#6B7280",
+    marginBottom: 3,
+  },
+  hazardControls: {
+    fontSize: 9,
+    color: "#374151",
+    marginTop: 4,
+    lineHeight: 1.4,
+  },
 });
 
 // ── Shared components ──────────────────────────────────────────────────────────
@@ -318,50 +517,81 @@ export function ChecklistPDF({
   const applicable = responses.length - naCount;
   const pct = applicable > 0 ? Math.round((passCount / applicable) * 100) : 100;
   const generatedAt = fmtDateTime(new Date());
+  const submittedDate = submission.submitted_at
+    ? new Date(submission.submitted_at)
+    : new Date();
+  const refNumber = `SCR-${submittedDate.toISOString().slice(0, 10).replace(/-/g, "")}`;
 
   return (
     <Document>
-      <Page size="A4" style={s.page}>
-        <PDFHeader
-          companyName={companyName}
-          title={templateName}
-          meta={[
-            { label: "Date", value: fmtDateTime(submission.submitted_at) },
-            { label: "Submitted by", value: submission.submitter_name },
-          ]}
-        />
-
-        {/* Score summary */}
-        <Text style={s.sectionHeader}>Score Summary</Text>
-        <View style={s.summaryRow}>
-          <View style={s.summaryBox}>
-            <Text style={s.summaryLabel}>Compliance</Text>
-            <Text style={[s.summaryValue, { color: pct >= 80 ? colors.green : pct >= 50 ? colors.amber : colors.red }]}>
-              {pct}%
-            </Text>
-          </View>
-          <View style={s.summaryBox}>
-            <Text style={s.summaryLabel}>Passed</Text>
-            <Text style={[s.summaryValue, { color: colors.green }]}>{passCount}</Text>
-          </View>
-          <View style={s.summaryBox}>
-            <Text style={s.summaryLabel}>Failed</Text>
-            <Text style={[s.summaryValue, { color: failCount > 0 ? colors.red : colors.darkGrey }]}>{failCount}</Text>
-          </View>
-          <View style={s.summaryBox}>
-            <Text style={s.summaryLabel}>Total Items</Text>
-            <Text style={s.summaryValue}>{responses.length}</Text>
+      <Page size="A4" style={[s.page, { paddingBottom: 64 }]}>
+        {/* Professional Header */}
+        <View style={s.proHeaderContainer}>
+          <Text style={s.proCompanyName}>{companyName}</Text>
+          <Text style={s.proDocTitle}>SAFETY CHECKLIST REPORT</Text>
+          <View style={s.accentBar} />
+          <View style={s.metaGrid}>
+            <View style={s.metaGridCell}>
+              <Text style={s.metaGridLabel}>Reference:</Text>
+              <Text style={s.metaGridValue}>{refNumber}</Text>
+            </View>
+            <View style={s.metaGridCell}>
+              <Text style={s.metaGridLabel}>Date:</Text>
+              <Text style={s.metaGridValue}>{fmtDateTime(submission.submitted_at)}</Text>
+            </View>
+            <View style={s.metaGridCell}>
+              <Text style={s.metaGridLabel}>Submitted by:</Text>
+              <Text style={s.metaGridValue}>{submission.submitter_name}</Text>
+            </View>
+            <View style={s.metaGridCell}>
+              <Text style={s.metaGridLabel}>Template:</Text>
+              <Text style={s.metaGridValue}>{templateName}</Text>
+            </View>
           </View>
         </View>
 
-        {/* Items table */}
-        <Text style={s.sectionHeader}>Checklist Items</Text>
-        <View style={s.tableHeader}>
-          <Text style={[s.thText, s.colNum]}>#</Text>
-          <Text style={[s.thText, s.colQuestion]}>Question</Text>
-          <Text style={[s.thText, s.colResult]}>Result</Text>
-          <Text style={[s.thText, s.colNotes]}>Notes</Text>
-          <Text style={[s.thText, s.colPhotos]}>Photos</Text>
+        {/* Score Summary */}
+        <Text style={s.proSectionHeader}>Score Summary</Text>
+        <View style={s.proSummaryRow}>
+          <View style={s.proSummaryCard}>
+            <Text style={s.proSummaryLabel}>Compliance</Text>
+            <Text
+              style={[
+                s.proSummaryValue,
+                { color: pct >= 80 ? colors.green : pct >= 50 ? colors.amber : colors.red },
+              ]}
+            >
+              {pct}%
+            </Text>
+          </View>
+          <View style={s.proSummaryCard}>
+            <Text style={s.proSummaryLabel}>Passed</Text>
+            <Text style={[s.proSummaryValue, { color: colors.green }]}>{passCount}</Text>
+          </View>
+          <View style={s.proSummaryCard}>
+            <Text style={s.proSummaryLabel}>Failed</Text>
+            <Text
+              style={[
+                s.proSummaryValue,
+                { color: failCount > 0 ? colors.red : colors.darkGrey },
+              ]}
+            >
+              {failCount}
+            </Text>
+          </View>
+          <View style={s.proSummaryCard}>
+            <Text style={s.proSummaryLabel}>Total Items</Text>
+            <Text style={s.proSummaryValue}>{responses.length}</Text>
+          </View>
+        </View>
+
+        {/* Items Table */}
+        <Text style={s.proSectionHeader}>Checklist Items</Text>
+        <View style={s.proTableHeader}>
+          <Text style={[s.proThText, { width: 28 }]}>#</Text>
+          <Text style={[s.proThText, { flex: 1 }]}>Question / Item</Text>
+          <Text style={[s.proThText, { width: 52, textAlign: "center" as const }]}>Result</Text>
+          <Text style={[s.proThText, { width: 100 }]}>Notes</Text>
         </View>
         {items
           .slice()
@@ -371,36 +601,73 @@ export function ChecklistPDF({
             const result = response
               ? resultLabel(response.value)
               : { text: "—", style: s.badgeNA };
-            const photoCount = response?.photo_urls?.length ?? 0;
 
             return (
               <View
                 key={item.id}
-                style={[s.tableRow, idx % 2 === 1 ? s.tableRowAlt : {}]}
+                style={[s.proTableRow, idx % 2 === 1 ? s.proTableRowAlt : {}]}
                 wrap={false}
               >
-                <Text style={s.colNum}>{idx + 1}</Text>
-                <Text style={s.colQuestion}>{item.question}</Text>
-                <Text style={[s.colResult, result.style]}>{result.text}</Text>
-                <Text style={s.colNotes}>
-                  {response?.comment || "—"}
+                <Text style={{ width: 28, fontSize: 8, color: colors.grey }}>{idx + 1}</Text>
+                <Text style={{ flex: 1, fontSize: 9, color: colors.black }}>{item.question}</Text>
+                <Text
+                  style={[
+                    { width: 52, textAlign: "center" as const, fontSize: 8, fontFamily: "Helvetica-Bold" },
+                    result.style,
+                  ]}
+                >
+                  {result.text}
                 </Text>
-                <Text style={s.colPhotos}>
-                  {photoCount > 0 ? `${photoCount}` : "—"}
+                <Text style={{ width: 100, fontSize: 8, color: colors.darkGrey }}>
+                  {response?.comment || "—"}
                 </Text>
               </View>
             );
           })}
 
-        {/* General comments */}
+        {/* General Comments */}
         {submission.general_comments && (
           <>
-            <Text style={s.sectionHeader}>General Comments</Text>
+            <Text style={s.proSectionHeader}>General Comments</Text>
             <Text style={s.paragraph}>{submission.general_comments}</Text>
           </>
         )}
 
-        <PDFFooter generatedAt={generatedAt} />
+        {/* Signature Block */}
+        <View style={s.signatureSection} wrap={false}>
+          <View style={s.signatureRow}>
+            <View style={s.signatureCol}>
+              <Text style={s.signatureTitle}>Completed by</Text>
+              <Text style={s.signatureName}>{submission.submitter_name}</Text>
+              <View style={s.signatureLine} />
+              <Text style={s.signatureLabel}>Signature</Text>
+              <View style={s.signatureLine} />
+              <Text style={s.signatureLabel}>Date</Text>
+            </View>
+            <View style={s.signatureCol}>
+              <Text style={s.signatureTitle}>Reviewed by</Text>
+              <Text style={s.signatureName}>{" "}</Text>
+              <View style={s.signatureLine} />
+              <Text style={s.signatureLabel}>Signature</Text>
+              <View style={s.signatureLine} />
+              <Text style={s.signatureLabel}>Date</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Professional Footer */}
+        <View style={s.proFooter} fixed>
+          <View style={s.proFooterRow}>
+            <Text style={s.proFooterText}>Generated: {generatedAt}</Text>
+            <Text
+              style={s.proFooterText}
+              render={({ pageNumber, totalPages }) =>
+                `Page ${pageNumber} of ${totalPages}`
+              }
+            />
+          </View>
+          <Text style={s.confidentialText}>CONFIDENTIAL</Text>
+        </View>
       </Page>
     </Document>
   );
@@ -821,6 +1088,386 @@ export function WorkOrderPDF({ companyName, workOrder }: WorkOrderPDFProps) {
 
 
 // ── Download helper ────────────────────────────────────────────────────────────
+
+// ── Risk Assessment Responses PDF ────────────────────────────────────────────
+
+export interface RiskAssessmentResponsesPDFProps {
+  companyName: string;
+  templateName: string;
+  formType: string;
+  submittedBy: string;
+  location: string;
+  date: string;
+  responses: Array<{ key: string; label: string; value: string; isYes: boolean; isNo: boolean }>;
+  hazards: Array<{ step: string; hazard: string; severity: number; probability: number; riskScore: number; controls: string }>;
+}
+
+export function RiskAssessmentResponsesPDF({
+  companyName,
+  templateName,
+  formType,
+  submittedBy,
+  location,
+  date,
+  responses,
+  hazards,
+}: RiskAssessmentResponsesPDFProps) {
+  const generatedAt = fmtDateTime(new Date());
+  const refDate = (() => {
+    try {
+      const d = new Date(date);
+      return isNaN(d.getTime())
+        ? new Date().toISOString().slice(0, 10).replace(/-/g, "")
+        : d.toISOString().slice(0, 10).replace(/-/g, "");
+    } catch {
+      return new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    }
+  })();
+  const refNumber = `RAR-${refDate}`;
+
+  const getRiskColor = (score: number): string => {
+    if (score >= 16) return "#DC2626";
+    if (score >= 10) return "#EA580C";
+    if (score >= 5) return "#D97706";
+    return "#16A34A";
+  };
+
+  const getRiskBgColor = (score: number): string => {
+    if (score >= 16) return "#FEE2E2";
+    if (score >= 10) return "#FFEDD5";
+    if (score >= 5) return "#FEF3C7";
+    return "#DCFCE7";
+  };
+
+  const getRiskLevel = (score: number): string => {
+    if (score >= 16) return "Critical";
+    if (score >= 10) return "High";
+    if (score >= 5) return "Medium";
+    return "Low";
+  };
+
+  return (
+    <Document>
+      <Page size="A4" style={[s.page, { paddingBottom: 64 }]}>
+        {/* Professional Header */}
+        <View style={s.proHeaderContainer}>
+          <Text style={s.proCompanyName}>{companyName}</Text>
+          <Text style={s.proDocTitle}>RISK ASSESSMENT REPORT</Text>
+          <View style={s.accentBar} />
+          <View style={s.metaGrid}>
+            <View style={s.metaGridCell}>
+              <Text style={s.metaGridLabel}>Reference:</Text>
+              <Text style={s.metaGridValue}>{refNumber}</Text>
+            </View>
+            <View style={s.metaGridCell}>
+              <Text style={s.metaGridLabel}>Date:</Text>
+              <Text style={s.metaGridValue}>{date}</Text>
+            </View>
+            <View style={s.metaGridCell}>
+              <Text style={s.metaGridLabel}>Assessor:</Text>
+              <Text style={s.metaGridValue}>{submittedBy}</Text>
+            </View>
+            <View style={s.metaGridCell}>
+              <Text style={s.metaGridLabel}>Location:</Text>
+              <Text style={s.metaGridValue}>{location}</Text>
+            </View>
+            <View style={s.metaGridCell}>
+              <Text style={s.metaGridLabel}>Assessment:</Text>
+              <Text style={s.metaGridValue}>{templateName}</Text>
+            </View>
+            <View style={s.metaGridCell}>
+              <Text style={s.metaGridLabel}>Type:</Text>
+              <Text style={s.metaGridValue}>{formType}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Responses Table */}
+        {responses.length > 0 && (
+          <>
+            <Text style={s.proSectionHeader}>Assessment Responses</Text>
+            <View style={s.proTableHeader}>
+              <Text style={[s.proThText, { width: 28 }]}>#</Text>
+              <Text style={[s.proThText, { flex: 1 }]}>Question / Item</Text>
+              <Text style={[s.proThText, { width: 60, textAlign: "center" as const }]}>
+                Response
+              </Text>
+            </View>
+            {responses.map((r, idx) => (
+              <View
+                key={idx}
+                style={[s.proTableRow, idx % 2 === 1 ? s.proTableRowAlt : {}]}
+                wrap={false}
+              >
+                <Text style={{ width: 28, fontSize: 8, color: colors.grey }}>{idx + 1}</Text>
+                <Text style={{ flex: 1, fontSize: 9, color: colors.black }}>{r.label}</Text>
+                <Text
+                  style={{
+                    width: 60,
+                    textAlign: "center" as const,
+                    fontSize: 8,
+                    fontFamily: "Helvetica-Bold",
+                    color: r.isYes ? colors.green : r.isNo ? colors.red : colors.darkGrey,
+                  }}
+                >
+                  {r.value}
+                </Text>
+              </View>
+            ))}
+          </>
+        )}
+
+        {/* Hazards & Controls */}
+        {hazards.length > 0 && (
+          <>
+            <Text style={s.proSectionHeader}>Hazards &amp; Controls</Text>
+            {hazards.map((h, idx) => (
+              <View key={idx} style={s.hazardCard} wrap={false}>
+                <View style={s.hazardCardHeader}>
+                  <Text style={s.hazardStepName}>{h.step}</Text>
+                  <View
+                    style={{
+                      paddingVertical: 2,
+                      paddingHorizontal: 8,
+                      borderRadius: 10,
+                      backgroundColor: getRiskBgColor(h.riskScore),
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 8,
+                        fontFamily: "Helvetica-Bold",
+                        color: getRiskColor(h.riskScore),
+                      }}
+                    >
+                      {getRiskLevel(h.riskScore)} ({h.riskScore})
+                    </Text>
+                  </View>
+                </View>
+                {h.hazard && (
+                  <Text style={s.hazardDetail}>
+                    <Text style={{ fontFamily: "Helvetica-Bold" }}>Hazard: </Text>
+                    {h.hazard}
+                  </Text>
+                )}
+                <View style={{ flexDirection: "row" as const, gap: 16, marginBottom: 4 }}>
+                  <Text style={s.hazardDetail}>
+                    <Text style={{ fontFamily: "Helvetica-Bold" }}>Severity: </Text>
+                    {h.severity}/5
+                  </Text>
+                  <Text style={s.hazardDetail}>
+                    <Text style={{ fontFamily: "Helvetica-Bold" }}>Likelihood: </Text>
+                    {h.probability}/5
+                  </Text>
+                </View>
+                <Text style={s.hazardControls}>
+                  <Text style={{ fontFamily: "Helvetica-Bold", color: colors.grey, fontSize: 8 }}>
+                    Control Measures:{" "}
+                  </Text>
+                  {h.controls || "None specified"}
+                </Text>
+              </View>
+            ))}
+          </>
+        )}
+
+        {/* Signature Block */}
+        <View style={s.signatureSection} wrap={false}>
+          <View style={s.signatureRow}>
+            <View style={s.signatureCol}>
+              <Text style={s.signatureTitle}>Completed by</Text>
+              <Text style={s.signatureName}>{submittedBy}</Text>
+              <View style={s.signatureLine} />
+              <Text style={s.signatureLabel}>Signature</Text>
+              <View style={s.signatureLine} />
+              <Text style={s.signatureLabel}>Date</Text>
+            </View>
+            <View style={s.signatureCol}>
+              <Text style={s.signatureTitle}>Reviewed by</Text>
+              <Text style={s.signatureName}>{" "}</Text>
+              <View style={s.signatureLine} />
+              <Text style={s.signatureLabel}>Signature</Text>
+              <View style={s.signatureLine} />
+              <Text style={s.signatureLabel}>Date</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Professional Footer */}
+        <View style={s.proFooter} fixed>
+          <View style={s.proFooterRow}>
+            <Text style={s.proFooterText}>Generated: {generatedAt}</Text>
+            <Text
+              style={s.proFooterText}
+              render={({ pageNumber, totalPages }) =>
+                `Page ${pageNumber} of ${totalPages}`
+              }
+            />
+          </View>
+          <Text style={s.confidentialText}>CONFIDENTIAL</Text>
+        </View>
+      </Page>
+    </Document>
+  );
+}
+
+// ── 6. Analytics Report PDF ─────────────────────────────────────────────────────
+
+export interface AnalyticsReportPDFProps {
+  companyName: string;
+  dateRange: string;
+  kpis: {
+    ltir: string;
+    trir: string;
+    severityRate: string;
+    avgResolutionHours: number;
+    complianceRate: number;
+    totalIncidents: number;
+    lostTimeIncidents: number;
+    totalLostDays: number;
+    totalHoursWorked: number;
+    rateLabel: string;
+  };
+  incidents: Array<{
+    reference: string;
+    title: string;
+    type: string;
+    severity: string;
+    status: string;
+    date: string;
+    lostTime: boolean;
+    lostHours: number;
+    location: string;
+  }>;
+  incidentsByType: Array<{ name: string; value: number }>;
+}
+
+export function AnalyticsReportPDF({
+  companyName,
+  dateRange,
+  kpis,
+  incidents,
+  incidentsByType,
+}: AnalyticsReportPDFProps) {
+  const generatedAt = fmtDateTime(new Date());
+  const periodLabel = dateRange.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  return (
+    <Document>
+      <Page size="A4" style={s.page}>
+        {/* Header */}
+        <View style={s.header}>
+          <Text style={{ fontSize: 18, fontFamily: "Helvetica-Bold", color: "#1E40AF" }}>{companyName}</Text>
+          <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: "#374151", marginTop: 2, letterSpacing: 0.5 }}>
+            SAFETY ANALYTICS REPORT
+          </Text>
+          <View style={{ height: 2, backgroundColor: "#1E40AF", marginTop: 6, marginBottom: 6 }} />
+          <View style={s.headerMeta}>
+            <Text style={s.metaItem}>Period: {periodLabel}</Text>
+            <Text style={s.metaItem}>Generated: {generatedAt}</Text>
+            <Text style={s.metaItem}>Total Hours Worked: {kpis.totalHoursWorked.toLocaleString()}</Text>
+          </View>
+        </View>
+
+        {/* KPI Summary */}
+        <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#1F2937", marginBottom: 8 }}>Key Safety Metrics</Text>
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
+          {[
+            { label: "LTIR / LTIFR", value: kpis.ltir, sub: kpis.rateLabel },
+            { label: "TRIR", value: kpis.trir, sub: kpis.rateLabel },
+            { label: "Severity Rate", value: kpis.severityRate, sub: `${kpis.totalLostDays} lost days` },
+            { label: "Compliance", value: `${kpis.complianceRate}%`, sub: "resolved / total" },
+            { label: "Avg Resolution", value: kpis.avgResolutionHours ? `${kpis.avgResolutionHours}h` : "—", sub: "hours" },
+          ].map((kpi, idx) => (
+            <View key={idx} style={{ flex: 1, padding: 8, borderWidth: 0.5, borderColor: "#D1D5DB", borderRadius: 4, backgroundColor: "#F9FAFB" }}>
+              <Text style={{ fontSize: 7, color: "#6B7280", marginBottom: 2 }}>{kpi.label}</Text>
+              <Text style={{ fontSize: 16, fontFamily: "Helvetica-Bold", color: "#111827" }}>{kpi.value}</Text>
+              <Text style={{ fontSize: 6, color: "#9CA3AF" }}>{kpi.sub}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Incident Summary */}
+        <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#1F2937", marginBottom: 6 }}>Incident Summary</Text>
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
+          <View style={{ flex: 1, padding: 8, backgroundColor: "#F9FAFB", borderRadius: 4 }}>
+            <Text style={{ fontSize: 7, color: "#6B7280" }}>Total Incidents</Text>
+            <Text style={{ fontSize: 18, fontFamily: "Helvetica-Bold" }}>{kpis.totalIncidents}</Text>
+          </View>
+          <View style={{ flex: 1, padding: 8, backgroundColor: "#FEF2F2", borderRadius: 4 }}>
+            <Text style={{ fontSize: 7, color: "#6B7280" }}>Lost Time Incidents</Text>
+            <Text style={{ fontSize: 18, fontFamily: "Helvetica-Bold", color: "#DC2626" }}>{kpis.lostTimeIncidents}</Text>
+          </View>
+          <View style={{ flex: 1, padding: 8, backgroundColor: "#F0FDF4", borderRadius: 4 }}>
+            <Text style={{ fontSize: 7, color: "#6B7280" }}>Non-Lost-Time</Text>
+            <Text style={{ fontSize: 18, fontFamily: "Helvetica-Bold", color: "#16A34A" }}>{kpis.totalIncidents - kpis.lostTimeIncidents}</Text>
+          </View>
+        </View>
+
+        {/* Incidents by Type */}
+        {incidentsByType.length > 0 && (
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#1F2937", marginBottom: 6 }}>Incidents by Type</Text>
+            {incidentsByType.map((item, idx) => (
+              <View key={idx} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4, paddingHorizontal: 6, backgroundColor: idx % 2 === 0 ? "#F9FAFB" : "#FFFFFF", borderBottomWidth: 0.5, borderBottomColor: "#E5E7EB" }}>
+                <Text style={{ fontSize: 9 }}>{item.name}</Text>
+                <Text style={{ fontSize: 9, fontFamily: "Helvetica-Bold" }}>{item.value}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Incident Details Table */}
+        <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#1F2937", marginBottom: 6 }}>Incident Register</Text>
+        <View style={{ backgroundColor: "#1F2937", flexDirection: "row", paddingVertical: 5, paddingHorizontal: 6, borderRadius: 2 }}>
+          <Text style={{ width: 55, fontSize: 7, fontFamily: "Helvetica-Bold", color: "#FFFFFF" }}>REF</Text>
+          <Text style={{ flex: 1, fontSize: 7, fontFamily: "Helvetica-Bold", color: "#FFFFFF" }}>TITLE</Text>
+          <Text style={{ width: 55, fontSize: 7, fontFamily: "Helvetica-Bold", color: "#FFFFFF" }}>TYPE</Text>
+          <Text style={{ width: 45, fontSize: 7, fontFamily: "Helvetica-Bold", color: "#FFFFFF" }}>SEVERITY</Text>
+          <Text style={{ width: 45, fontSize: 7, fontFamily: "Helvetica-Bold", color: "#FFFFFF" }}>STATUS</Text>
+          <Text style={{ width: 30, fontSize: 7, fontFamily: "Helvetica-Bold", color: "#FFFFFF", textAlign: "center" }}>LTI</Text>
+          <Text style={{ width: 55, fontSize: 7, fontFamily: "Helvetica-Bold", color: "#FFFFFF" }}>DATE</Text>
+        </View>
+        {incidents.slice(0, 50).map((inc, idx) => (
+          <View key={idx} style={{ flexDirection: "row", paddingVertical: 4, paddingHorizontal: 6, backgroundColor: idx % 2 === 0 ? "#F9FAFB" : "#FFFFFF", borderBottomWidth: 0.5, borderBottomColor: "#E5E7EB" }} wrap={false}>
+            <Text style={{ width: 55, fontSize: 8 }}>{inc.reference}</Text>
+            <Text style={{ flex: 1, fontSize: 8 }}>{inc.title}</Text>
+            <Text style={{ width: 55, fontSize: 8 }}>{capitalize(inc.type)}</Text>
+            <Text style={{ width: 45, fontSize: 8, color: inc.severity === "critical" || inc.severity === "high" ? "#DC2626" : inc.severity === "medium" ? "#D97706" : "#6B7280" }}>{capitalize(inc.severity)}</Text>
+            <Text style={{ width: 45, fontSize: 8 }}>{capitalize(inc.status)}</Text>
+            <Text style={{ width: 30, fontSize: 8, textAlign: "center", fontFamily: "Helvetica-Bold", color: inc.lostTime ? "#DC2626" : "#16A34A" }}>{inc.lostTime ? "Yes" : "No"}</Text>
+            <Text style={{ width: 55, fontSize: 8 }}>{fmtDate(inc.date)}</Text>
+          </View>
+        ))}
+        {incidents.length > 50 && (
+          <Text style={{ fontSize: 8, color: "#6B7280", marginTop: 4, textAlign: "center" }}>
+            Showing 50 of {incidents.length} incidents
+          </Text>
+        )}
+
+        {/* Signature Block */}
+        <View style={{ marginTop: 30, flexDirection: "row", gap: 40 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#374151", marginBottom: 4 }}>Prepared by</Text>
+            <View style={{ borderBottomWidth: 0.5, borderBottomColor: "#9CA3AF", marginBottom: 4, height: 20 }} />
+            <Text style={{ fontSize: 7, color: "#6B7280" }}>Name & Signature</Text>
+            <View style={{ borderBottomWidth: 0.5, borderBottomColor: "#9CA3AF", marginTop: 8, marginBottom: 4, height: 14 }} />
+            <Text style={{ fontSize: 7, color: "#6B7280" }}>Date</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#374151", marginBottom: 4 }}>Reviewed by</Text>
+            <View style={{ borderBottomWidth: 0.5, borderBottomColor: "#9CA3AF", marginBottom: 4, height: 20 }} />
+            <Text style={{ fontSize: 7, color: "#6B7280" }}>Name & Signature</Text>
+            <View style={{ borderBottomWidth: 0.5, borderBottomColor: "#9CA3AF", marginTop: 8, marginBottom: 4, height: 14 }} />
+            <Text style={{ fontSize: 7, color: "#6B7280" }}>Date</Text>
+          </View>
+        </View>
+
+        <PDFFooter generatedAt={generatedAt} />
+      </Page>
+    </Document>
+  );
+}
 
 export async function downloadPDF(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

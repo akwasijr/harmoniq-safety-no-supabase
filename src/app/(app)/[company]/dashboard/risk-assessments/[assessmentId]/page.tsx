@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -21,28 +20,160 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DetailTabs, Tab } from "@/components/ui/detail-tabs";
 import { useTranslation } from "@/i18n";
 import { useCompanyData } from "@/hooks/use-company-data";
-import { useCompanyStore } from "@/stores/company-store";
 import { useToast } from "@/components/ui/toast";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useAuth } from "@/hooks/use-auth";
 
-// Dynamic import for PDF export (client-side only)
-const PdfExportButton = dynamic(
-  () => import("@/components/pdf/pdf-export-button").then(mod => mod.PdfExportButton),
-  { ssr: false, loading: () => <Button variant="outline" disabled><Download className="h-4 w-4 mr-2" />Loading...</Button> }
-);
-
-const mockRiskTemplates: Record<string, {
+const baseRiskTemplates: Record<string, {
   id: string;
   name: string;
   type: string;
   description: string;
   locked: boolean;
   sections: { name: string; description: string; fields: { label: string; type: string; required: boolean }[] }[];
-}> = {};
+}> = {
+  jha: {
+    id: "jha",
+    name: "Job Hazard Analysis (JHA)",
+    type: "jha",
+    description: "Break work into steps, identify hazards, and capture controls before work starts.",
+    locked: true,
+    sections: [
+      {
+        name: "Task breakdown",
+        description: "List each work step and identify the main hazards.",
+        fields: [
+          { label: "Work step", type: "text", required: true },
+          { label: "Hazards", type: "text", required: true },
+          { label: "Controls", type: "text", required: true },
+        ],
+      },
+    ],
+  },
+  jsa: {
+    id: "jsa",
+    name: "Job Safety Analysis (JSA)",
+    type: "jsa",
+    description: "Review job steps, controls, and residual risk before execution.",
+    locked: true,
+    sections: [
+      {
+        name: "Safety analysis",
+        description: "Capture hazards, likelihood, severity, and controls for each step.",
+        fields: [
+          { label: "Job step", type: "text", required: true },
+          { label: "Risk rating", type: "number", required: true },
+          { label: "Control measures", type: "text", required: true },
+        ],
+      },
+    ],
+  },
+  rie: {
+    id: "rie",
+    name: "RI&E Assessment",
+    type: "rie",
+    description: "Document hazards, controls, and compliance measures for the work area.",
+    locked: true,
+    sections: [
+      {
+        name: "Hazards and controls",
+        description: "Summarize hazards, control measures, and affected people.",
+        fields: [
+          { label: "Hazard", type: "text", required: true },
+          { label: "Controls", type: "text", required: true },
+          { label: "Affected workers", type: "text", required: false },
+        ],
+      },
+    ],
+  },
+  arbowet: {
+    id: "arbowet",
+    name: "Arbowet Compliance Audit",
+    type: "arbowet",
+    description: "Review compliance controls, hazards, and mitigation measures.",
+    locked: true,
+    sections: [
+      {
+        name: "Compliance review",
+        description: "Capture obligations, gaps, and corrective controls.",
+        fields: [
+          { label: "Requirement", type: "text", required: true },
+          { label: "Current control", type: "text", required: true },
+          { label: "Action needed", type: "text", required: false },
+        ],
+      },
+    ],
+  },
+  sam: {
+    id: "sam",
+    name: "SAM Assessment",
+    type: "sam",
+    description: "Assess worksite hazards, controls, and supporting PPE.",
+    locked: true,
+    sections: [
+      {
+        name: "Assessment",
+        description: "Record hazards, controls, and PPE requirements.",
+        fields: [
+          { label: "Hazard", type: "text", required: true },
+          { label: "Control", type: "text", required: true },
+          { label: "PPE", type: "text", required: false },
+        ],
+      },
+    ],
+  },
+  osa: {
+    id: "osa",
+    name: "OSA Assessment",
+    type: "osa",
+    description: "Capture operating risks, controls, and safe work precautions.",
+    locked: true,
+    sections: [
+      {
+        name: "Operating risk review",
+        description: "Summarize the operating hazards and key controls.",
+        fields: [
+          { label: "Risk", type: "text", required: true },
+          { label: "Control", type: "text", required: true },
+          { label: "Residual risk", type: "number", required: false },
+        ],
+      },
+    ],
+  },
+};
+
+function buildRiskTemplate(formType: string, responses?: Record<string, unknown>) {
+  const normalizedType = formType.toLowerCase();
+  const baseTemplate = baseRiskTemplates[normalizedType];
+
+  if (baseTemplate) return baseTemplate;
+
+  const jobSteps = responses?.job_steps as Array<{ step?: string; hazards?: string[]; controls?: string[] }> | undefined;
+  const hasJobSteps = Array.isArray(jobSteps) && jobSteps.length > 0;
+
+  return {
+    id: normalizedType,
+    name: getFormTypeName(formType),
+    type: normalizedType,
+    description: "Review the submitted hazards, controls, and supporting details for this assessment.",
+    locked: false,
+    sections: [
+      {
+        name: "Assessment overview",
+        description: hasJobSteps
+          ? "Submitted job steps and controls are available in the hazards and controls tabs."
+          : "Submitted risk details are available in the assessment tabs.",
+        fields: [
+          { label: "Hazards", type: "text", required: true },
+          { label: "Controls", type: "text", required: true },
+          { label: "PPE", type: "text", required: false },
+        ],
+      },
+    ],
+  };
+}
 
 // Risk score calculation helper
 function calculateRiskScore(likelihood: number, severity: number): { score: number; level: string; color: string } {
@@ -94,17 +225,7 @@ export default function RiskAssessmentDetailPage() {
   const { t, formatDate } = useTranslation();
   const [activeTab, setActiveTab] = React.useState("hazards");
   const { toast } = useToast();
-  const { user } = useAuth();
-  const { items: companies } = useCompanyStore();
-  const currentCompany = React.useMemo(
-    () => companies.find((item) => item.slug === company) ?? companies[0] ?? null,
-    [companies, company]
-  );
-
-  const submissionTabs: Tab[] = [
-    { id: "hazards", label: t("riskAssessment.tabs.hazards"), icon: AlertTriangle },
-    { id: "controls", label: t("riskAssessment.tabs.controls"), icon: ShieldAlert },
-  ];
+  const { user, currentCompany } = useAuth();
 
   // Connect to stores
   const { riskEvaluations, users, locations, stores } = useCompanyData();
@@ -140,6 +261,51 @@ export default function RiskAssessmentDetailPage() {
     const responses = storeEvaluation.responses as Record<string, unknown>;
     const ppe = responses.ppe_required as string[] | undefined;
     return Array.isArray(ppe) ? ppe : [];
+  }, [storeEvaluation]);
+
+  const submittedAt = storeEvaluation?.submitted_at || storeEvaluation?.created_at || "";
+
+  // Parse ALL flat responses (key-value pairs from the dashboard form)
+  const flatResponses = React.useMemo(() => {
+    if (!storeEvaluation?.responses) return [];
+    const responses = storeEvaluation.responses as Record<string, unknown>;
+    // Human-readable label mapping for known form field IDs
+    const labelMap: Record<string, string> = {
+      job_title: "Job/Task Title", location: "Work Location", date: "Date",
+      analyst: "Analyst", task_name: "Task Name", department: "Department",
+      supervisor: "Supervisor", workplace: "Workplace", assessor: "Assessor",
+      company: "Company", inspector: "Inspector",
+      hazard_1: "Struck-by hazards", hazard_2: "Fall hazards",
+      hazard_3: "Caught-in/between hazards", hazard_4: "Electrical hazards",
+      hazard_5: "Chemical hazards",
+      ppe_required: "PPE Required", controls: "Control measures",
+      additional_notes: "Additional notes", severity: "Severity",
+      likelihood: "Likelihood", hazard_desc: "Hazard description",
+      physical: "Physical risks", chemical: "Chemical risks",
+      ergonomic: "Ergonomic risks", psychosocial: "Psychosocial risks",
+      measures: "Required measures", priority: "Priority",
+      physical_risks: "Physical risks", organizational_risks: "Organizational risks",
+      social_risks: "Social risks", actions: "Planned actions",
+      responsible: "Responsible person", deadline: "Deadline",
+      art3: "Art. 3 – Arbobeleid", art5: "Art. 5 – RI&E",
+      art8: "Art. 8 – Voorlichting", art13: "Art. 13 – BHV",
+      art14: "Art. 14 – Arbodienst",
+      findings: "Findings", action: "Required action",
+      workload: "Workload manageable", work_hours: "Working hours reasonable",
+      resources: "Adequate resources", support: "Social support available",
+      harassment: "Harassment concerns", balance: "Krav/resources balance",
+      recovery: "Recovery opportunity",
+    };
+    return Object.entries(responses)
+      .filter(([key]) => key !== "job_steps" && key !== "ppe_required")
+      .map(([key, value]) => ({
+        key,
+        label: labelMap[key] || key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+        value: value === "yes" ? "Yes" : value === "no" ? "No" : value === "n/a" ? "N/A" : String(value ?? "—"),
+        isYes: value === "yes",
+        isNo: value === "no",
+        isRating: typeof value === "string" && /^[1-5]$/.test(value),
+      }));
   }, [storeEvaluation]);
 
   // Get the submission from the store
@@ -179,9 +345,9 @@ export default function RiskAssessmentDetailPage() {
   const displayColors = getRiskColorClasses(displayRiskColor);
   
   // Get the template - either directly for template view, or via submission's templateId
-  const template = isTemplate 
-    ? mockRiskTemplates[assessmentId] 
-    : (submission ? mockRiskTemplates[submission.templateId] : null);
+  const template = isTemplate
+    ? buildRiskTemplate(assessmentId)
+    : (submission ? buildRiskTemplate(submission.templateId, submission.responses as Record<string, unknown>) : null);
 
   // Get all submissions for this template from the store (for template view)
   const templateSubmissions = isTemplate 
@@ -239,23 +405,32 @@ export default function RiskAssessmentDetailPage() {
         </div>
         <div className="flex gap-2">
           {submission && (
-            <PdfExportButton
-              data={{
-                id: submission.id,
-                templateId: submission.templateId,
-                templateType: submission.type as "JHA" | "JSA" | "RIE" | "ARBOWET" | "SAM" | "OSA",
-                companyName: currentCompany.name,
-                location: submission.location,
-                department: submission.department,
-                date: submission.date,
-                time: submission.time || undefined,
-                submittedBy: submission.submittedBy,
-                reviewedBy: typeof submission.reviewedBy === "string" ? submission.reviewedBy : undefined,
-                hazards: submission.hazards,
-                ppeRequired: submission.ppeRequired,
-                additionalNotes: submission.comments,
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={async () => {
+                try {
+                  const { RiskAssessmentResponsesPDF, downloadPDF } = await import("@/lib/pdf-export");
+                  const doc = <RiskAssessmentResponsesPDF
+                    companyName={currentCompany?.name || company}
+                    templateName={template?.name || "Risk Assessment"}
+                    formType={submission.type}
+                    submittedBy={submission.submittedBy}
+                    location={submission.location}
+                    date={submission.date}
+                    responses={flatResponses}
+                    hazards={submission.hazards}
+                  />;
+                  const datePart = submission.date || new Date().toISOString().split("T")[0];
+                  await downloadPDF(doc, `risk-assessment-${template?.type || "report"}-${datePart}.pdf`);
+                } catch {
+                  // silently fail
+                }
               }}
-            />
+            >
+              <Download className="h-4 w-4" />
+              Export PDF
+            </Button>
           )}
           {/* Approval buttons for submitted assessments from store */}
           {submission && "_storeData" in submission && submission._storeData && submission._storeData.status === "submitted" && (
@@ -383,16 +558,7 @@ export default function RiskAssessmentDetailPage() {
         </Card>
       )}
 
-      {/* Tabs - Only for submissions */}
-      {submission && (
-        <DetailTabs 
-          tabs={submissionTabs} 
-          activeTab={activeTab} 
-          onTabChange={setActiveTab} 
-        />
-      )}
-
-      {/* Template View - Form Structure (no submissions list here, they're in main list) */}
+      {/* Template View - Form Structure */}
       {isTemplate && (
         <div className="space-y-4">
           {template.sections.map((section, sectionIdx) => (
@@ -429,74 +595,106 @@ export default function RiskAssessmentDetailPage() {
         </div>
       )}
 
-      {/* Submission View - Hazards */}
-      {submission && activeTab === "hazards" && (
-        <div className="space-y-4">
-          {submission.hazards.map((hazard, idx) => {
-            const hazardRisk = calculateRiskScore(hazard.probability, hazard.severity);
-            const hColors = getRiskColorClasses(hazardRisk.color);
-            return (
-            <Card key={idx} className={hColors.border}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-sm font-medium">
-                      {idx + 1}
-                    </span>
-                    <div>
-                      <CardTitle className="text-base">{hazard.step}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{hazard.hazard}</p>
-                    </div>
+      {/* All Responses — flat key-value pairs from the form */}
+      {submission && flatResponses.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">All Responses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {flatResponses.map((r) => (
+                <div
+                  key={r.key}
+                  className={`flex items-start gap-4 p-3 rounded-lg border ${
+                    r.isNo ? "border-destructive/50 bg-destructive/5" : "border-muted"
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{r.label}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={hColors.badgeVariant} className="text-lg px-4 py-1">
-                      {hazardRisk.score}
-                    </Badge>
-                    <Badge variant="outline" className={hColors.text}>
-                      {t(`riskAssessment.${hazardRisk.level}`)}
-                    </Badge>
-                  </div>
+                  <Badge
+                    variant={
+                      r.isYes ? "success"
+                        : r.isNo ? "destructive"
+                        : r.isRating ? "warning"
+                        : "outline"
+                    }
+                  >
+                    {r.value}
+                  </Badge>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 sm:grid-cols-3 mb-4">
-                  <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <p className="text-xs text-muted-foreground">{t("riskAssessment.severity")}</p>
-                    <p className="text-xl font-bold">{hazard.severity}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <p className="text-xs text-muted-foreground">{t("riskAssessment.likelihood")}</p>
-                    <p className="text-xl font-bold">{hazard.probability}</p>
-                  </div>
-                  <div className={`p-3 rounded-lg text-center ${hColors.bg}`}>
-                    <p className="text-xs text-muted-foreground">{t("riskAssessment.riskScoreLabel")}</p>
-                    <p className={`text-xl font-bold ${hColors.text}`}>{hazard.severity} × {hazard.probability} = {hazardRisk.score}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{t("riskAssessment.controlMeasures")}</p>
-                  <p className="mt-1">{hazard.controls}</p>
-                </div>
-              </CardContent>
-            </Card>
-            );
-          })}
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Submission View - Controls */}
-      {submission && activeTab === "controls" && (
+      {/* Hazard details (structured job_steps data) */}
+      {submission && submission.hazards.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t("riskAssessment.tabs.hazards")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {submission.hazards.map((hazard, idx) => {
+              const hazardRisk = calculateRiskScore(hazard.probability, hazard.severity);
+              const hColors = getRiskColorClasses(hazardRisk.color);
+              return (
+                <div key={idx} className={`p-4 rounded-lg border ${hColors.border}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-medium">
+                        {idx + 1}
+                      </span>
+                      <div>
+                        <p className="font-medium">{hazard.step}</p>
+                        <p className="text-sm text-muted-foreground">{hazard.hazard}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={hColors.badgeVariant}>{hazardRisk.score}</Badge>
+                      <Badge variant="outline" className={hColors.text}>{t(`riskAssessment.${hazardRisk.level}`)}</Badge>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-3 mb-3">
+                    <div className="p-2.5 rounded-lg bg-muted/50 text-center">
+                      <p className="text-xs text-muted-foreground">{t("riskAssessment.severity")}</p>
+                      <p className="text-lg font-bold">{hazard.severity}</p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-muted/50 text-center">
+                      <p className="text-xs text-muted-foreground">{t("riskAssessment.likelihood")}</p>
+                      <p className="text-lg font-bold">{hazard.probability}</p>
+                    </div>
+                    <div className={`p-2.5 rounded-lg text-center ${hColors.bg}`}>
+                      <p className="text-xs text-muted-foreground">{t("riskAssessment.riskScoreLabel")}</p>
+                      <p className={`text-lg font-bold ${hColors.text}`}>{hazardRisk.score}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t("riskAssessment.controlMeasures")}</p>
+                    <p className="mt-1 text-sm">{hazard.controls}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Controls & PPE summary */}
+      {submission && (submission.hazards.length > 0 || submission.ppeRequired.length > 0) && (
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t("riskAssessment.controlMeasuresSummary")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+          {submission.hazards.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{t("riskAssessment.controlMeasuresSummary")}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
                 {submission.hazards.map((hazard, idx) => (
-                  <div key={idx} className="p-4 rounded-lg border">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-medium">{hazard.step}</p>
+                  <div key={idx} className="p-3 rounded-lg border">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-medium text-sm">{hazard.step}</p>
                       <Badge variant={hazard.riskScore >= 12 ? "destructive" : hazard.riskScore >= 6 ? "warning" : "success"}>
                         {t("riskAssessment.riskLabel")}: {hazard.riskScore}
                       </Badge>
@@ -504,31 +702,24 @@ export default function RiskAssessmentDetailPage() {
                     <p className="text-sm text-muted-foreground">{hazard.controls}</p>
                   </div>
                 ))}
-                {submission.hazards.length === 0 && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">{t("riskAssessment.hazardsIdentified", { count: "0" })}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t("riskAssessment.requiredPPE")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+              </CardContent>
+            </Card>
+          )}
+          {submission.ppeRequired.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{t("riskAssessment.requiredPPE")}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
                 {submission.ppeRequired.map((ppe, idx) => (
                   <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border">
-                    <CheckCircle className="h-5 w-5 text-success" />
-                    <span>{ppe}</span>
+                    <CheckCircle className="h-4 w-4 text-success shrink-0" />
+                    <span className="text-sm">{ppe}</span>
                   </div>
                 ))}
-                {submission.ppeRequired.length === 0 && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">{t("common.none")}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
     </div>

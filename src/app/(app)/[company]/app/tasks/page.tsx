@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslation } from "@/i18n";
 import { useRouter } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 

@@ -23,12 +23,20 @@ import {
   UserCog,
   LibraryBig,
   Layers,
+  Radio,
+  FileKey,
+  MessageSquare,
+  GraduationCap,
+  Leaf,
+  ClipboardList,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
+import { getSidebarPreferences } from "@/lib/sidebar-preferences";
 
 interface SidebarProps {
   company: string;
@@ -47,77 +55,147 @@ interface NavItem {
   badge?: number;
   exactMatch?: boolean;
   additionalPaths?: string[];
+  requiredRoles?: string[];
+  comingSoon?: boolean;
+  moduleId?: string; // For hide/show toggle: "permits", "training", "environment", "compliance"
 }
 
-const companyNavItems: NavItem[] = [
+type NavGroup = {
+  label: string;
+  groupId?: string; // For reordering
+  items: NavItem[];
+};
+
+const companyNavGroups: NavGroup[] = [
   {
-    title: "Dashboard",
-    titleKey: "nav.dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    exactMatch: true,
+    label: "Operations",
+    groupId: "operations",
+    items: [
+      {
+        title: "Dashboard",
+        titleKey: "nav.dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboard,
+        exactMatch: true,
+      },
+      {
+        title: "Incidents",
+        titleKey: "nav.incidents",
+        href: "/dashboard/incidents",
+        icon: AlertTriangle,
+        additionalPaths: ["/dashboard/tickets"],
+        requiredRoles: ["super_admin", "company_admin", "manager", "safety_officer", "employee"],
+      },
+      {
+        title: "Safety Tasks",
+        href: "/dashboard/checklists",
+        icon: ClipboardCheck,
+        exactMatch: true,
+        additionalPaths: ["/dashboard/risk-assessments", "/dashboard/inspections"],
+        requiredRoles: ["super_admin", "company_admin", "manager", "safety_officer", "employee"],
+      },
+      {
+        title: "Template Library",
+        href: "/dashboard/checklists/my-templates",
+        icon: LibraryBig,
+        additionalPaths: ["/dashboard/checklists/templates", "/dashboard/checklists/procedures"],
+        requiredRoles: ["super_admin", "company_admin", "manager", "safety_officer"],
+      },
+      {
+        title: "Permits to Work",
+        href: "/dashboard/permits",
+        icon: FileKey,
+        requiredRoles: ["super_admin", "company_admin", "manager"],
+        moduleId: "permits",
+      },
+    ],
   },
   {
-    title: "Analytics",
-    titleKey: "nav.analytics",
-    href: "/dashboard/analytics",
-    icon: BarChart3,
+    label: "Reporting",
+    groupId: "reporting",
+    items: [
+      {
+        title: "Analytics",
+        titleKey: "nav.analytics",
+        href: "/dashboard/analytics",
+        icon: BarChart3,
+        requiredRoles: ["super_admin", "company_admin", "manager", "viewer"],
+      },
+      {
+        title: "Documents",
+        href: "/dashboard/content",
+        icon: FileText,
+        requiredRoles: ["super_admin", "company_admin", "manager", "safety_officer"],
+      },
+    ],
   },
   {
-    title: "Incidents",
-    titleKey: "nav.incidents",
-    href: "/dashboard/incidents",
-    icon: AlertTriangle,
-    additionalPaths: ["/dashboard/tickets"],
+    label: "Management",
+    groupId: "management",
+    items: [
+      {
+        title: "Training & Competency",
+        href: "/dashboard/training",
+        icon: GraduationCap,
+        requiredRoles: ["super_admin", "company_admin", "manager"],
+        moduleId: "training",
+      },
+      {
+        title: "Environment",
+        href: "/dashboard/environment",
+        icon: Leaf,
+        requiredRoles: ["super_admin", "company_admin", "manager"],
+        moduleId: "environment",
+      },
+      {
+        title: "Compliance",
+        href: "/dashboard/compliance",
+        icon: ClipboardList,
+        requiredRoles: ["super_admin", "company_admin", "manager", "viewer"],
+        moduleId: "compliance",
+      },
+    ],
   },
   {
-    title: "Safety Tasks",
-    titleKey: "nav.safetyTasks",
-    href: "/dashboard/checklists",
-    icon: ClipboardCheck,
-    exactMatch: true,
-    additionalPaths: ["/dashboard/risk-assessments", "/dashboard/inspections"],
-  },
-  {
-    title: "Task Templates",
-    titleKey: "nav.templates",
-    href: "/dashboard/checklists/my-templates",
-    icon: LibraryBig,
-    additionalPaths: ["/dashboard/checklists/templates"],
-  },
-  {
-    title: "Users & Teams",
-    titleKey: "nav.usersTeams",
-    href: "/dashboard/users",
-    icon: Users,
-  },
-  {
-    title: "Locations",
-    titleKey: "nav.locations",
-    href: "/dashboard/locations",
-    icon: MapPin,
-    additionalPaths: ["/dashboard/qr-codes"],
-  },
-  {
-    title: "Asset Management",
-    titleKey: "nav.assets",
-    href: "/dashboard/assets",
-    icon: Package,
-    additionalPaths: ["/dashboard/corrective-actions", "/dashboard/work-orders", "/dashboard/parts", "/dashboard/inspection-routes"],
-  },
-  {
-    title: "Content",
-    titleKey: "nav.content",
-    href: "/dashboard/content",
-    icon: FileText,
-  },
-  {
-    title: "Settings",
-    titleKey: "nav.settings",
-    href: "/dashboard/settings",
-    icon: Settings,
+    label: "Admin",
+    groupId: "admin",
+    items: [
+      {
+        title: "Asset Management",
+        titleKey: "nav.assets",
+        href: "/dashboard/assets",
+        icon: Package,
+        additionalPaths: ["/dashboard/corrective-actions", "/dashboard/work-orders", "/dashboard/parts", "/dashboard/inspection-routes"],
+        requiredRoles: ["super_admin", "company_admin", "manager", "safety_officer"],
+      },
+      {
+        title: "Locations",
+        titleKey: "nav.locations",
+        href: "/dashboard/locations",
+        icon: MapPin,
+        additionalPaths: ["/dashboard/qr-codes"],
+        requiredRoles: ["super_admin", "company_admin", "manager"],
+      },
+      {
+        title: "Users & Teams",
+        titleKey: "nav.usersTeams",
+        href: "/dashboard/users",
+        icon: Users,
+        requiredRoles: ["super_admin", "company_admin", "manager"],
+      },
+      {
+        title: "Settings",
+        titleKey: "nav.settings",
+        href: "/dashboard/settings",
+        icon: Settings,
+        requiredRoles: ["super_admin", "company_admin"],
+      },
+    ],
   },
 ];
+
+// Flatten for backward compat
+const companyNavItems: NavItem[] = companyNavGroups.flatMap((g) => g.items);
 
 const superAdminPlatformNav: NavItem[] = [
   {
@@ -151,6 +229,32 @@ const superAdminPlatformNav: NavItem[] = [
 
 const PLATFORM_ENTRY_KEY = "harmoniq_platform_entry";
 
+// Collapsible sidebar group
+function SidebarGroup({ label, isCollapsed, children }: { label: string; isCollapsed: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = React.useState(true);
+
+  if (isCollapsed) {
+    return <ul className="space-y-0.5">{children}</ul>;
+  }
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between px-3 py-1.5 text-[12px] font-medium text-sidebar-foreground/50 hover:text-sidebar-foreground/70 transition-colors"
+      >
+        <span>{label}</span>
+        <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <ul className="space-y-0.5 mt-0.5">
+          {children}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export function Sidebar({ 
   company, 
   companyName = "Harmoniq",
@@ -165,9 +269,10 @@ export function Sidebar({
   const [hovered, setHovered] = React.useState(false);
   const [enteredViaPlatform, setEnteredViaPlatform] = React.useState(false);
   const { theme, setTheme } = useTheme();
-  const { isSuperAdmin, isCompanyAdmin, hasSelectedCompany, currentCompany, availableCompanies, switchCompany, logout } = useAuth();
+  const { isSuperAdmin, isCompanyAdmin, hasSelectedCompany, currentCompany, availableCompanies, switchCompany, logout, user } = useAuth();
   const { t } = useTranslation();
   const isCollapsed = collapsed && !hovered;
+  const actualRole = user?.role || "employee";
 
   // Platform nav only shows when user entered via /admin login flow
   // Track platform entry state to avoid hydration mismatch
@@ -354,40 +459,107 @@ export function Sidebar({
           <div className="my-2 mx-2 border-t border-sidebar-border" />
         )}
 
-        {/* Company nav items */}
+        {/* Company nav items — collapsible groups */}
         {(!showPlatformNav || hasSelectedCompany) && (
-          <ul className="space-y-0.5">
-            {companyNavItems.map((item) => {
-              const href = `/${company}${item.href}`;
-              const isActive = isNavItemActive(item);
+          <div className="space-y-1">
+            {(() => {
+              const prefs = user?.id ? getSidebarPreferences(user.id) : null;
+              const companyHidden = currentCompany?.hidden_modules || [];
+              const userHidden = prefs?.hiddenModules || [];
+              const allHidden = [...companyHidden, ...userHidden];
 
+              // Apply group ordering from preferences
+              let orderedGroups = [...companyNavGroups];
+              if (prefs?.groupOrder?.length) {
+                orderedGroups.sort((a, b) => {
+                  const ai = prefs.groupOrder.indexOf(a.groupId || "");
+                  const bi = prefs.groupOrder.indexOf(b.groupId || "");
+                  if (ai === -1 && bi === -1) return 0;
+                  if (ai === -1) return 1;
+                  if (bi === -1) return -1;
+                  return ai - bi;
+                });
+              }
+
+              return orderedGroups.map((group, groupIdx) => {
+                let visibleItems = group.items.filter((item) => {
+                  if (item.requiredRoles && !item.requiredRoles.includes(actualRole)) return false;
+                  if (item.moduleId && allHidden.includes(item.moduleId)) return false;
+                  return true;
+                });
+
+                // Apply item ordering within group
+                const itemOrder = prefs?.itemOrder?.[group.groupId || ""];
+                if (itemOrder?.length) {
+                  visibleItems.sort((a, b) => {
+                    const ai = itemOrder.indexOf(a.href);
+                    const bi = itemOrder.indexOf(b.href);
+                    if (ai === -1 && bi === -1) return 0;
+                    if (ai === -1) return 1;
+                    if (bi === -1) return -1;
+                    return ai - bi;
+                  });
+                }
+
+                if (visibleItems.length === 0) return null;
               return (
-                <li key={item.href}>
-                  <Link
-                    href={href}
-                    className={cn(
-                      "flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors",
-                      "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-                      isActive
-                        ? "bg-primary text-primary-foreground font-semibold"
-                        : "text-sidebar-foreground/60",
-                      isCollapsed && "justify-center px-2"
-                    )}
-                    title={isCollapsed ? getTitle(item) : undefined}
-                  >
-                    <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    {!isCollapsed && <span>{getTitle(item)}</span>}
-                    {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                      <span className="ml-auto rounded-full bg-sidebar-primary px-1.5 py-0.5 text-[10px] text-sidebar-primary-foreground">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                </li>
+                <SidebarGroup
+                  key={groupIdx}
+                  label={group.label}
+                  isCollapsed={isCollapsed}
+                >
+                  {visibleItems.map((item) => {
+                    const href = `/${company}${item.href}`;
+                    const isActive = !item.comingSoon && isNavItemActive(item);
+
+                    if (item.comingSoon) {
+                      return (
+                        <li key={item.href}>
+                          <span
+                            className={cn(
+                              "flex items-center gap-2.5 rounded-md py-1.5 text-[13px] cursor-default opacity-40",
+                              isCollapsed ? "justify-center px-2" : "pl-7 pr-3",
+                            )}
+                            title={isCollapsed ? `${getTitle(item)} (Coming Soon)` : "Coming Soon"}
+                          >
+                            <item.icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            {!isCollapsed && <span>{getTitle(item)}</span>}
+                          </span>
+                        </li>
+                      );
+                    }
+
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={href}
+                          className={cn(
+                            "flex items-center gap-2.5 rounded-md py-1.5 text-[13px] transition-colors",
+                            isCollapsed ? "justify-center px-2" : "pl-7 pr-3",
+                            "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+                            isActive
+                              ? "bg-primary text-primary-foreground font-semibold"
+                              : "text-sidebar-foreground/40"
+                          )}
+                          title={isCollapsed ? getTitle(item) : undefined}
+                        >
+                          <item.icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          {!isCollapsed && <span>{getTitle(item)}</span>}
+                          {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
+                            <span className="ml-auto rounded-full bg-sidebar-primary px-1.5 py-0.5 text-[10px] text-sidebar-primary-foreground">
+                              {item.badge}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </SidebarGroup>
               );
-            })}
-          </ul>
+            });
+            })()}
+          </div>
         )}
       </nav>
 

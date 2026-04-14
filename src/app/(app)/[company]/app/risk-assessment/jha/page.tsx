@@ -142,7 +142,7 @@ export default function JHAFormPage() {
   const [formData, setFormData] = React.useState<JHAFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { toast } = useToast();
   const [expandedStep, setExpandedStep] = React.useState<string | null>("step_1");
   const [showErrors, setShowErrors] = React.useState(false);
@@ -264,7 +264,7 @@ export default function JHAFormPage() {
     const refNumber = `JHA-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const evaluation: RiskEvaluation = {
       id: crypto.randomUUID(),
-      company_id: user.company_id || "",
+      company_id: user.company_id || currentCompany?.id || "",
       submitter_id: user.id,
       country: "US",
       form_type: "JHA",

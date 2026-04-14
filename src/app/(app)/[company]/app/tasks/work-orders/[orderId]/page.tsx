@@ -273,6 +273,7 @@ export default function WorkOrderDetailPage() {
   ];
 
   const isTerminal = order.status === "completed" || order.status === "cancelled";
+  const requiresChecklist = Boolean(order.checklist_template_id && !order.checklist_submission_id);
 
   return (
     <div className="min-h-screen bg-background">
@@ -473,6 +474,13 @@ export default function WorkOrderDetailPage() {
         {/* Actions — at the bottom */}
         {!isTerminal && (
           <div className="space-y-3 pt-2">
+            {requiresChecklist && (
+              <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>Complete the required procedure checklist before closing this work order</span>
+              </div>
+            )}
+
             {/* Primary: begin / resume procedure */}
             {template && (
               <Button className="w-full gap-2 h-12 text-base" onClick={beginProcedure}>

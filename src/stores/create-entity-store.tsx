@@ -189,8 +189,23 @@ export function createEntityStore<T extends IdEntity>(
   const Context = React.createContext<EntityStore<T> | undefined>(undefined);
 
   function Provider({ children }: { children: React.ReactNode }) {
-    const [items, setItems] = React.useState<T[]>(initialData);
-    const [isLoading, setIsLoading] = React.useState(isSupabaseConfigured);
+    // Hydrate items from localStorage synchronously in the state initializer
+    // to avoid a flash of empty content before the useEffect fires.
+    const [items, setItems] = React.useState<T[]>(() => {
+      if (typeof window === "undefined") return initialData;
+      const cached = loadFromStorage<T[]>(storageKey, []);
+      if (cached.length > 0) {
+        const cachedIds = new Set(cached.map((item) => item.id));
+        const newItems = initialData.filter((item) => !cachedIds.has(item.id));
+        return newItems.length > 0 ? [...cached, ...newItems] : cached;
+      }
+      return initialData;
+    });
+    const [isLoading, setIsLoading] = React.useState(() => {
+      if (!isSupabaseConfigured) return false;
+      if (typeof window !== "undefined" && isCacheFresh(storageKey)) return false;
+      return true;
+    });
     const [error, setError] = React.useState<string | null>(null);
     const hasLoadedRef = React.useRef(false);
     const isFetchingRef = React.useRef(false);
@@ -269,7 +284,13 @@ export function createEntityStore<T extends IdEntity>(
               }
               return;
             }
-            console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
+            // Table might not exist in Supabase yet — downgrade to warning (not error)
+            const isTableMissing = error.message?.includes("schema cache") || error.message?.includes("404");
+            if (isTableMissing) {
+              console.warn(`[Harmoniq] Table "${table}" not found in Supabase — using localStorage only`);
+            } else {
+              console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
+            }
             if (isMountedRef.current) setError(error.message);
             // Fallback to localStorage cache only (never mock data in Supabase mode)
             const cached = loadFromStorage<T[]>(storageKey, []);

@@ -204,7 +204,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white overflow-x-hidden">
+    <div className="marketing-page relative flex min-h-screen flex-col bg-black text-white overflow-x-hidden">
       {/* Video background, desktop only */}
       <div className="absolute top-0 left-0 right-0 h-screen z-0 pointer-events-none overflow-hidden hidden md:block">
         <video
@@ -216,10 +216,10 @@ export default function Home() {
         >
           <source src="/bg-loop.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-black/70" />
+        <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      {/* Lightweight mobile background */}
+      {/* Mobile background */}
       <div className="absolute inset-0 z-0 pointer-events-none bg-black md:hidden" />
 
 
@@ -254,27 +254,24 @@ export default function Home() {
       </header>
 
       {/* ── Hero ── */}
-      <section ref={heroRef} className="relative min-h-screen flex items-end z-10">
-        <div className="container mx-auto px-4 lg:px-8 relative z-10 pb-20 lg:pb-28">
+      <section ref={heroRef} className="relative min-h-screen flex items-center md:items-end z-10">
+        <div className="container mx-auto px-4 lg:px-8 relative z-10 pb-8 md:pb-20 lg:pb-28">
           <motion.div
             initial="hidden"
             animate="visible"
             variants={stagger}
-            className="max-w-5xl ml-auto text-right"
+            className="max-w-5xl text-center md:text-right md:ml-auto"
           >
             <motion.h1 variants={fadeUp} className="font-[family-name:var(--font-playfair)] text-4xl sm:text-6xl lg:text-[6.5rem] font-normal tracking-tight leading-[1.0] text-white">
               Safety and asset{"\n"}management, reimagined
             </motion.h1>
-            <motion.p variants={fadeUp} className="mt-8 text-lg lg:text-xl text-zinc-400 max-w-2xl ml-auto leading-relaxed">
+            <motion.p variants={fadeUp} className="mt-8 text-lg lg:text-xl text-zinc-400 max-w-2xl mx-auto md:mx-0 md:ml-auto leading-relaxed">
               {t("hero.description")}
             </motion.p>
-            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-end">
-              <a href="#waitlist" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-black hover:bg-zinc-200 transition-colors">
-                {t("hero.cta_start")}
-                <ArrowRight className="h-4 w-4" />
-              </a>
-              <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-700 px-8 py-3.5 text-base font-medium text-white hover:bg-zinc-600 transition-colors">
+            <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-end">
+              <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-700 px-8 py-3.5 text-base font-semibold text-white hover:bg-zinc-600 transition-colors">
                 {t("hero.cta_demo")}
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </motion.div>
           </motion.div>
@@ -386,7 +383,7 @@ export default function Home() {
             >
               <motion.h2
                 variants={fadeUp}
-                className="text-3xl sm:text-4xl lg:text-6xl font-normal leading-tight text-white"
+                className="text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight text-white"
               >
                 {t("features.heading")}
               </motion.h2>
@@ -641,7 +638,7 @@ export default function Home() {
             whileInView="visible"
             viewport={{ once: false }}
             variants={fadeUp}
-            className="text-4xl sm:text-5xl font-bold text-center mb-16"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-16"
           >
             {t("success.heading")}
           </motion.h2>
@@ -704,7 +701,7 @@ export default function Home() {
           >
             <motion.div variants={fadeUp} className="mb-16">
               <h2
-                className="text-3xl sm:text-4xl lg:text-6xl font-normal leading-tight text-white mb-4"
+                className="text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight text-white mb-4"
               >
                 {t("industries.heading")}
               </h2>
@@ -855,7 +852,7 @@ export default function Home() {
             whileInView="visible"
             viewport={{ once: false }}
             variants={fadeUp}
-            className="text-3xl sm:text-4xl font-bold text-center mb-12"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12"
           >
             {t("faq_section.heading")}
           </motion.h2>
@@ -881,7 +878,7 @@ export default function Home() {
       {/* ── Footer ── */}
       <footer className="py-16 relative z-10">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-10 lg:grid-cols-5">
             <div className="lg:col-span-2">
               <Image src="/logo-white.svg" alt="Harmoniq" width={130} height={30} className="h-6 w-auto" />
               <p className="mt-4 text-sm text-zinc-500 leading-relaxed max-w-xs">
@@ -895,6 +892,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
+            <div className="grid grid-cols-3 gap-6 lg:col-span-3">
             <div>
               <h4 className="font-semibold text-white text-sm mb-4">{t("footer_links.product")}</h4>
               <ul className="space-y-3">
@@ -919,6 +917,7 @@ export default function Home() {
                 <li><Link href="/cookies" className="text-sm text-zinc-500 hover:text-white transition-colors">Cookie Policy</Link></li>
                 <li><Link href="/gdpr" className="text-sm text-zinc-500 hover:text-white transition-colors">GDPR</Link></li>
               </ul>
+            </div>
             </div>
           </div>
           <div className="mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1390,7 +1389,7 @@ function WaitlistSection() {
             className="rounded-3xl bg-zinc-900/40 p-10"
           >
             <CheckCircle2 className="h-12 w-12 text-green-400 mx-auto mb-4" />
-            <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-3">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-3">
               You&apos;re on the list!
             </h2>
             <p className="text-lg text-zinc-400 leading-relaxed">
@@ -1400,7 +1399,7 @@ function WaitlistSection() {
         ) : (
           <div className="rounded-3xl bg-zinc-900/40 p-10">
             <Mail className="h-10 w-10 text-zinc-400 mx-auto mb-4" />
-            <h2 className="text-4xl sm:text-5xl font-bold leading-tight mb-3">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-3">
               {t("cta.heading")}
             </h2>
             <p className="text-lg text-zinc-400 leading-relaxed mb-8">

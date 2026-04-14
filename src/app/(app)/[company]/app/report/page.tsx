@@ -30,7 +30,6 @@ import {
   OctagonAlert,
   Skull,
   Upload,
-  Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCompanyParam } from "@/hooks/use-company-param";
@@ -43,6 +42,7 @@ import { storeFile, getFilesForEntity, deleteFile, FileValidationError, MAX_INCI
 import { BodyMap, type InjuryMarker } from "@/components/incidents/body-map";
 import { enqueueReport, isOnline as isOnlineFn } from "@/lib/offline-queue";
 import { compressImage } from "@/lib/image-compression";
+import { LocationPicker, type LocationPickerValue } from "@/components/ui/location-picker";
 
 const TOTAL_STEPS = 7;
 
@@ -114,13 +114,12 @@ function ReportIncidentPageContent() {
   const company = useCompanyParam();
   const [currentStep, setCurrentStep] = React.useState(1);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isGettingLocation, setIsGettingLocation] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { items: locations } = useLocationsStore();
   const { add: addIncident, items: incidents } = useIncidentsStore({ skipLoad: true });
   const { add: addTicket } = useTicketsStore({ skipLoad: true });
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
 
   const { t } = useTranslation();
 
@@ -159,32 +158,35 @@ function ReportIncidentPageContent() {
     ? locations.find((location) => location.id === locationParam)
     : null;
   
+  const [reportLocationValue, setReportLocationValue] = React.useState<LocationPickerValue>({
+    locationId: selectedLocation?.id || "",
+    manualText: "",
+    gpsLat: null,
+    gpsLng: null,
+  });
+
   const [formData, setFormData] = React.useState({
     type: "",
     severity: "",
     title: "",
     description: "",
-    location: selectedLocation?.name || "",
-    locationId: selectedLocation?.id || "",
     date: new Date().toISOString().split("T")[0],
     time: new Date().toTimeString().slice(0, 5),
     photos: [] as string[],
     photoFileIds: [] as string[],
     lostTime: false,
+    lostTimeDays: "",
     activeHazard: false,
     anonymous: false,
     reporterId: user?.id || "",
-    gpsLat: null as number | null,
-    gpsLng: null as number | null,
   });
 
   const [incidentDraftId] = React.useState(() => `draft_${Date.now()}`);
   const [injuryMarkers, setInjuryMarkers] = React.useState<InjuryMarker[]>([]);
   React.useEffect(() => {
     if (!selectedLocation) return;
-    setFormData((prev) => ({
+    setReportLocationValue((prev) => ({
       ...prev,
-      location: selectedLocation.name,
       locationId: selectedLocation.id,
     }));
   }, [selectedLocation?.id]);
@@ -193,43 +195,6 @@ function ReportIncidentPageContent() {
     if (!user?.id) return;
     setFormData((prev) => ({ ...prev, reporterId: user.id }));
   }, [user?.id]);
-
-  const handleGetCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast("Geolocation is not supported by your browser");
-      return;
-    }
-    
-    setIsGettingLocation(true);
-
-    const onSuccess = (position: GeolocationPosition) => {
-      const { latitude, longitude } = position.coords;
-      const locationText = `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-      setFormData((prev) => ({ 
-        ...prev, 
-        location: locationText,
-        gpsLat: latitude,
-        gpsLng: longitude,
-      }));
-      setIsGettingLocation(false);
-    };
-
-    // Try high accuracy first, fall back to low accuracy on failure
-    navigator.geolocation.getCurrentPosition(
-      onSuccess,
-      () => {
-        navigator.geolocation.getCurrentPosition(
-          onSuccess,
-          () => {
-            setIsGettingLocation(false);
-            toast("Unable to get your location. Please enter it manually.");
-          },
-          { enableHighAccuracy: false, timeout: TIMEOUTS.GPS_LOCATION, maximumAge: 300_000 }
-        );
-      },
-      { enableHighAccuracy: true, timeout: TIMEOUTS.GPS_LOCATION, maximumAge: 60_000 }
-    );
-  };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -315,7 +280,7 @@ function ReportIncidentPageContent() {
     const refNumber = `INC-${now.getFullYear()}-${String(seqNum).padStart(4, "0")}`;
     const incident: Incident = {
       id: crypto.randomUUID(),
-      company_id: user.company_id || "",
+      company_id: user.company_id || currentCompany?.id || "",
       reference_number: refNumber,
       reporter_id: formData.anonymous ? "__anonymous__" : user.id,
       type: formData.type as IncidentType,
@@ -327,16 +292,20 @@ function ReportIncidentPageContent() {
       incident_date: formData.date,
       incident_time: formData.time,
       lost_time: formData.lostTime,
-      lost_time_amount: formData.lostTime ? 1 : null,
+      lost_time_amount: formData.lostTime && formData.lostTimeDays ? parseInt(formData.lostTimeDays, 10) : null,
+      lost_time_restricted_days: null,
+      lost_time_return_date: null,
+      lost_time_updated_at: null,
+      lost_time_updated_by: null,
       active_hazard: formData.activeHazard,
-      location_id: formData.locationId || null,
+      location_id: reportLocationValue.locationId || null,
       building: null,
       floor: null,
       zone: null,
       room: null,
-      gps_lat: formData.gpsLat,
-      gps_lng: formData.gpsLng,
-      location_description: formData.location || null,
+      gps_lat: reportLocationValue.gpsLat,
+      gps_lng: reportLocationValue.gpsLng,
+      location_description: reportLocationValue.manualText || (locations.find((l) => l.id === reportLocationValue.locationId)?.name) || null,
       asset_id: assetParam || null,
       media_urls: formData.photos,
       injury_locations: formData.type === "injury" ? injuryMarkers : [],
@@ -601,6 +570,22 @@ function ReportIncidentPageContent() {
                   <span className={`block w-6 h-6 rounded-full bg-white shadow transform transition-transform ${formData.lostTime ? "translate-x-7" : "translate-x-1"}`} />
                 </button>
               </div>
+              {formData.lostTime && (
+                <div className="ml-0 mt-2">
+                  <label htmlFor="lost-days" className="text-sm text-muted-foreground">Estimated days away from work</label>
+                  <input
+                    id="lost-days"
+                    type="number"
+                    min="1"
+                    max="365"
+                    value={formData.lostTimeDays}
+                    onChange={(e) => setFormData({ ...formData, lostTimeDays: e.target.value })}
+                    placeholder="e.g. 3"
+                    className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Can be updated later by your manager</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -608,46 +593,12 @@ function ReportIncidentPageContent() {
         {/* Step 5: Location */}
         {currentStep === 5 && (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="report-building" className="text-base">{t("report.locationDescription")}</Label>
-              <div className="relative mt-2">
-                <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="report-building"
-                  placeholder={t("report.locationPlaceholder")}
-                  className="h-12 pl-11 text-base"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-background px-2 text-muted-foreground">{t("report.or")}</span>
-              </div>
-            </div>
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="h-14 w-full gap-3 text-base"
-              onClick={handleGetCurrentLocation}
-              disabled={isGettingLocation}
-            >
-              {isGettingLocation ? (
-                <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  {t("report.gettingLocation")}
-                </>
-              ) : (
-                <>
-                  <Navigation className="h-5 w-5" />
-                  {t("report.useCurrentLocation")}
-                </>
-              )}
-            </Button>
+            <LocationPicker
+              locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address }))}
+              value={reportLocationValue}
+              onChange={setReportLocationValue}
+              label={t("report.locationDescription")}
+            />
             <p className="text-center text-sm text-muted-foreground">
               {t("report.locationOptionalHint")}
             </p>

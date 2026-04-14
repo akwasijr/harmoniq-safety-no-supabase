@@ -23,6 +23,7 @@ import { useToast } from "@/components/ui/toast";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { isVisibleToFieldApp } from "@/lib/template-activation";
+import { getDraft as getStoredDraft, saveDraft as saveStoredDraft, deleteDraft as deleteStoredDraft } from "@/lib/draft-store";
 import type { ChecklistResponse } from "@/types";
 
 export default function ChecklistFormPage() {
@@ -49,10 +50,11 @@ function ChecklistFormPageContent() {
   const [showNotes, setShowNotes] = React.useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [generalComments, setGeneralComments] = React.useState("");
+  const [draftSavedAt, setDraftSavedAt] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { items: templates, isLoading: isTemplatesLoading } = useChecklistTemplatesStore();
   const { items: submissions, add: addSubmission } = useChecklistSubmissionsStore();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { toast } = useToast();
 
   const { t } = useTranslation();
@@ -95,6 +97,64 @@ function ChecklistFormPageContent() {
     }
     draftInitialized.current = true;
   }, [draftId, submissions, template?.items]);
+
+  // Restore from draft-store when no ?draft= param
+  const draftStoreInitialized = React.useRef(false);
+  React.useEffect(() => {
+    if (draftStoreInitialized.current || draftId || !template) return;
+    draftStoreInitialized.current = true;
+    const stored = getStoredDraft(checklistId);
+    if (stored && stored.responses) {
+      const saved = stored.responses as Record<string, { value?: unknown; comment?: string }>;
+      const restoredAnswers: Record<string, string> = {};
+      const restoredNotes: Record<string, string> = {};
+      for (const [key, val] of Object.entries(saved)) {
+        if (key === "__meta" || !val) continue;
+        if (val.value === true) restoredAnswers[key] = "yes";
+        else if (val.value === false) restoredAnswers[key] = "no";
+        else if (val.value === null || val.value === "na") restoredAnswers[key] = "na";
+        else if (val.value !== undefined) restoredAnswers[key] = String(val.value);
+        if (val.comment) restoredNotes[key] = val.comment;
+      }
+      if (Object.keys(restoredAnswers).length > 0) {
+        setAnswers(restoredAnswers);
+        setNotes(restoredNotes);
+        setDraftSavedAt(stored.updated_at);
+        const items = template.items || [];
+        const firstUnanswered = items.findIndex((item) => !restoredAnswers[item.id]);
+        if (firstUnanswered > 0) setCurrentItem(firstUnanswered);
+      }
+    }
+  }, [draftId, template, checklistId]);
+
+  // Auto-save to draft-store every 10 seconds
+  React.useEffect(() => {
+    if (!template) return;
+    const interval = setInterval(() => {
+      const items = template.items || [];
+      const answeredCount = Object.keys(answers).length;
+      const progress = items.length > 0 ? Math.round((answeredCount / items.length) * 100) : 0;
+      if (answeredCount === 0) return;
+
+      const responsesMap: Record<string, { value: unknown; comment: string }> = {};
+      for (const [key, val] of Object.entries(answers)) {
+        responsesMap[key] = { value: val, comment: notes[key] || "" };
+      }
+
+      saveStoredDraft({
+        id: checklistId,
+        type: "checklist",
+        template_id: checklistId,
+        template_name: template.name,
+        responses: responsesMap as Record<string, unknown>,
+        progress,
+        updated_at: new Date().toISOString(),
+        created_at: getStoredDraft(checklistId)?.created_at || new Date().toISOString(),
+      });
+      setDraftSavedAt(new Date().toISOString());
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [template, checklistId, answers, notes]);
 
   if (isTemplatesLoading) {
     return <LoadingPage />;
@@ -208,11 +268,12 @@ function ChecklistFormPageContent() {
     try {
       await addSubmission({
         id: crypto.randomUUID(),
-        company_id: user.company_id || "",
+        company_id: user.company_id || currentCompany?.id || "",
         created_at: now.toISOString(),
         ...submission,
       });
       toast("Checklist submitted");
+      deleteStoredDraft(checklistId);
       router.push(`/${company}/app/report/success?ref=${refNumber}&type=checklist`);
     } catch (err) {
       console.error("[Checklist] Submission failed:", err);
@@ -243,6 +304,11 @@ function ChecklistFormPageContent() {
               {t("checklists.itemOf", { current: String(currentItem + 1), total: String(items.length) })}
             </p>
           </div>
+          {draftSavedAt && (
+            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+              {t("checklists.labels.draftSaved") || "Draft saved"} ✓
+            </span>
+          )}
         </div>
         {/* Progress bar */}
         <div className="h-1 bg-muted" role="progressbar" aria-label={t("common.completionProgress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((currentItem + 1) / items.length) * 100)}>

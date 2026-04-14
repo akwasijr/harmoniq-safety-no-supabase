@@ -39,7 +39,11 @@
     "dismiss": "Verwerfen",
     "noPermission": "You don't have permission to perform this action",
     "noEditPermission": "You don't have permission to edit settings. Contact your administrator for access.",
-    "readMore": "Mehr lesen"
+    "readMore": "Mehr lesen",
+    "date": "Datum",
+    "done": "Fertig",
+    "error": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "submitting": "Wird gesendet..."
   },
   "nav": {
     "home": "Startseite",
@@ -946,14 +950,33 @@
       "assessments": "Bewertungen",
       "inspections": "Inspektionen",
       "reports": "Berichte",
-      "tasks": "Aufgaben"
+      "tasks": "Aufgaben",
+      "procedures": "Procedures"
     },
     "labels": {
       "pending": "Ausstehend",
       "inProgress": "In Bearbeitung",
       "completed": "Abgeschlossen",
       "completedToday": "Heute abgeschlossen",
-      "items": "Elemente"
+      "items": "Elemente",
+      "addComment": "Kommentar hinzufügen",
+      "comment": "Kommentar",
+      "draftSaved": "Entwurf gespeichert",
+      "generalComments": "Allgemeine Kommentare",
+      "location": "Standort",
+      "photoNotAvailable": "Foto-Upload in der mobilen App verfügbar",
+      "progress": "Fortschritt",
+      "readyToSubmit": "Alle erforderlichen Punkte beantwortet. Bereit zum Absenden.",
+      "requiredRemaining": "erforderliche(r) Punkt(e) verbleibend",
+      "selectLocation": "Standort auswählen (optional)",
+      "signatureNotAvailable": "Unterschriftenerfassung in der mobilen App verfügbar",
+      "completedThisWeek": "Completed This Week",
+      "overdue": "Overdue",
+      "passRate": "Pass Rate",
+      "totalAssessments": "Total Assessments",
+      "highRiskItems": "High Risk Items",
+      "totalProcedures": "Total Procedures",
+      "cancelled": "Cancelled"
     },
     "buttons": {
       "newAssessment": "Neue Bewertung",
@@ -1000,13 +1023,35 @@
     "nextItem": "Next Item",
     "enterResponse": "Enter your response...",
     "placeholders": {
-      "checklistName": "Daily forklift inspection"
+      "checklistName": "Tägliche Gabelstaplerinspektion",
+      "comment": "Notiz hinzufügen...",
+      "generalComments": "Allgemeine Kommentare hinzufügen...",
+      "select": "Option auswählen...",
+      "text": "Geben Sie Ihre Antwort ein...",
+      "signature": "Geben Sie Ihren vollständigen Namen als Unterschrift ein"
     },
     "approve": "Genehmigen",
     "reject": "Ablehnen",
     "approved": "Genehmigt",
     "rejected": "Rejected",
-    "submittedBy": "Submitted by"
+    "submittedBy": "Eingereicht von",
+    "actions": {
+      "submit": "Checkliste absenden",
+      "uploadPhoto": "Foto hochladen"
+    },
+    "options": {
+      "fail": "Nicht bestanden",
+      "na": "Nicht zutreffend",
+      "no": "Nein",
+      "pass": "Bestanden",
+      "yes": "Ja"
+    },
+    "success": {
+      "submitted": "Checkliste erfolgreich eingereicht!"
+    },
+    "validation": {
+      "requiredFields": "Bitte beantworten Sie alle erforderlichen Fragen vor dem Absenden."
+    }
   },
   "content": {
     "title": "Inhalte",
@@ -1220,6 +1265,8 @@
     "basicInfo": "Basic information about your organization",
     "companyName": "Firmenname",
     "urlSlug": "URL-Kennung",
+    "appDisplayName": "Anzeigename",
+    "appDisplayNameHint": "Benutzerdefinierter Name, der Mitarbeitern im Feld-App-Header angezeigt wird.",
     "countryAndRegulations": "Land & Vorschriften",
     "countryDesc": "Wählen Sie Ihr Einsatzland, um Sicherheitsvorschriften und empfohlene Vorlagen auszurichten",
     "selected": "Selected",
@@ -1530,7 +1577,10 @@
     "riskLabel": "Risiko",
     "standard": "Standard",
     "workerHubHint": "Entwürfe fortsetzen, ausstehende Bewertungen verfolgen und geprüfte Nachweise aufbewahren.",
-    "completedHint": "Geprüfte Bewertungen erscheinen hier mit Prüfer und Datum als Nachweis."
+    "completedHint": "Geprüfte Bewertungen erscheinen hier mit Prüfer und Datum als Nachweis.",
+    "startNew": "Neue Risikobewertung starten",
+    "selectType": "Wählen Sie einen Risikobewertungstyp für Ihre Region.",
+    "basedOnRegulations": "Bewertungstypen basieren auf den gesetzlichen Anforderungen Ihres Landes."
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
@@ -1575,7 +1625,8 @@
     "accountLocked": "Account temporarily locked",
     "attemptsRemaining": "attempts remaining",
     "tryAgainIn": "Try again in",
-    "minutes": "minutes"
+    "minutes": "minutes",
+    "rememberMe": "Remember me"
   },
   "tasks": {
     "title": "Meine Aufgaben",
@@ -2909,6 +2960,87 @@
           "corrective_actions": "Abschlussquoten von Korrekturmaßnahmen werden nachverfolgt"
         }
       }
+    },
+    "generic": {
+      "name": "Allgemein",
+      "description": "Gemeinsame Vorlagen, die branchenübergreifend verwendet werden können.",
+      "workplace_safety": {
+        "name": "Arbeitsplatz-Sicherheitsinspektion",
+        "description": "Tägliche oder wöchentliche Sicherheitsbegehung zur Erkennung und Behebung häufiger Gefahren",
+        "items": {
+          "housekeeping": "Arbeitsbereiche sind sauber, aufgeräumt und frei von unnötigem Material",
+          "emergency_exits_clear": "Notausgänge sind frei zugänglich und deutlich gekennzeichnet",
+          "fire_extinguishers_accessible": "Feuerlöscher sind zugänglich und nicht blockiert",
+          "first_aid_kit_stocked": "Erste-Hilfe-Kasten ist vollständig bestückt und innerhalb des Haltbarkeitsdatums",
+          "lighting_adequate": "Beleuchtung ist in allen Arbeitsbereichen und Verkehrswegen ausreichend",
+          "slip_trip_hazards": "Keine Rutsch-, Stolper- oder Sturzgefahren auf Böden und Verkehrswegen",
+          "electrical_cords_condition": "Elektrische Kabel und Stecker sind in einwandfreiem Zustand ohne Beschädigung",
+          "ventilation_adequate": "Belüftung und Luftqualität sind in allen Arbeitsbereichen ausreichend"
+        }
+      },
+      "ppe_check": {
+        "name": "PSA-Kontrolle",
+        "description": "Überprüfung der Persönlichen Schutzausrüstung um sicherzustellen, dass alle erforderlichen PSA verfügbar und in gutem Zustand sind",
+        "items": {
+          "hard_hat_condition": "Schutzhelm ist unbeschädigt und sitzt sicher",
+          "safety_glasses": "Schutzbrille ist sauber und unbeschädigt",
+          "high_vis_vest": "Warnweste wird getragen und ist in gutem Zustand",
+          "safety_boots": "Sicherheitsschuhe werden getragen und sind in gutem Zustand",
+          "gloves_appropriate": "Handschuhe sind für die Tätigkeit geeignet und in gutem Zustand",
+          "hearing_protection": "Gehörschutz ist verfügbar und wird getragen, wo erforderlich",
+          "respiratory_protection": "Atemschutz ist verfügbar und wird getragen, wo erforderlich (falls zutreffend)"
+        }
+      },
+      "fire_safety": {
+        "name": "Brandschutz-Checkliste",
+        "description": "Checkliste für Brandschutz und Brandbereitschaft zur Überprüfung der Brandschutzmaßnahmen",
+        "items": {
+          "extinguishers_inspected": "Feuerlöscher wurden inspiziert und sind innerhalb des Prüfdatums",
+          "emergency_exits_marked": "Notausgänge sind deutlich mit beleuchteter Beschilderung gekennzeichnet",
+          "evacuation_plan_posted": "Flucht- und Rettungsplan ist ausgehängt und in allen Bereichen sichtbar",
+          "fire_alarm_tested": "Brandmeldeanlage wurde getestet und ist betriebsbereit",
+          "flammable_materials_stored": "Brennbare Materialien sind ordnungsgemäß in vorgesehenen Bereichen gelagert",
+          "fire_blankets_available": "Löschdecken sind vorhanden und zugänglich",
+          "assembly_point_marked": "Sammelplatz ist deutlich markiert und allen Mitarbeitern bekannt"
+        }
+      },
+      "first_aid": {
+        "name": "Erste Hilfe & Notfallbereitschaft",
+        "description": "Überprüfung der Notfallbereitschaft um sicherzustellen, dass Erste-Hilfe-Material und Notfallausrüstung einsatzbereit sind",
+        "items": {
+          "first_aid_kit_complete": "Erste-Hilfe-Kasten ist vollständig mit allen erforderlichen Materialien",
+          "aed_accessible": "AED (Defibrillator) ist zugänglich und voll aufgeladen",
+          "emergency_contacts_posted": "Notrufnummern sind ausgehängt und aktuell",
+          "trained_first_aiders": "Ausgebildete Ersthelfer sind vor Ort anwesend",
+          "emergency_procedures_known": "Mitarbeiter kennen die Notfallverfahren und Protokolle",
+          "spill_kit_available": "Auffangmaterial für Verschüttungen ist verfügbar und vollständig bestückt"
+        }
+      },
+      "safety_induction": {
+        "name": "Sicherheitsunterweisung Neuer Mitarbeiter",
+        "description": "Einarbeitungs-Checkliste für Arbeitssicherheit um sicherzustellen, dass neue Mitarbeiter wesentliche Sicherheitsinformationen erhalten",
+        "items": {
+          "emergency_procedures_explained": "Notfallverfahren wurden dem neuen Mitarbeiter erklärt",
+          "ppe_issued": "Erforderliche PSA wurde ausgegeben und die richtige Verwendung demonstriert",
+          "hazard_areas_identified": "Gefahrenbereiche wurden identifiziert und erläutert",
+          "reporting_procedures_explained": "Melde- und Berichtsverfahren für Vorfälle wurden erklärt",
+          "fire_exits_shown": "Notausgänge und Flucht­wege wurden gezeigt",
+          "first_aid_locations_shown": "Erste-Hilfe-Stationen und Ausrüstungsstandorte wurden gezeigt",
+          "safety_rules_acknowledged": "Mitarbeiter hat die Sicherheitsregeln bestätigt und unterschrieben"
+        }
+      },
+      "toolbox_talk": {
+        "name": "Sicherheitskurzgespräch Protokoll",
+        "description": "Dokumentation der Sicherheitsunterweisung vor Arbeitsbeginn zur Erfassung besprochener Themen und Anwesenheit",
+        "items": {
+          "topic_discussed": "Sicherheitsthema, das in der Unterweisung besprochen wurde",
+          "hazards_identified": "Relevante Gefahren wurden identifiziert und erläutert",
+          "controls_communicated": "Schutzmaßnahmen wurden allen Teilnehmern mitgeteilt",
+          "ppe_requirements_confirmed": "PSA-Anforderungen für die Tätigkeit wurden bestätigt",
+          "questions_addressed": "Fragen der Teilnehmer wurden beantwortet",
+          "attendees_signed": "Alle Teilnehmer haben die Anwesenheitsliste unterschrieben"
+        }
+      }
     }
   },
   "inspections": {
@@ -2963,5 +3095,1142 @@
     "selectDate": "Datum auswählen",
     "startDate": "Startdatum",
     "endDate": "Enddatum"
+  },
+  "training": {
+    "title": "Schulung & Kompetenz",
+    "totalWorkers": "Gesamte Mitarbeiter",
+    "compliant": "Konform",
+    "expiringSoon": "Bald Ablaufend",
+    "overdue": "Überfällig",
+    "addCertification": "Zertifizierung Hinzufügen",
+    "editCertification": "Zertifizierung Bearbeiten",
+    "assignTraining": "Schulung Zuweisen",
+    "certifications": "Zertifizierungen",
+    "assignments": "Schulungen",
+    "complianceMatrix": "Konformitätsmatrix",
+    "worker": "Mitarbeiter",
+    "certType": "Zertifizierungstyp",
+    "certNumber": "Zertifikatsnummer",
+    "issued": "Ausgestellt",
+    "expires": "Läuft ab",
+    "issuer": "Aussteller",
+    "status": "Status",
+    "valid": "Gültig",
+    "expiring": "Ablaufend",
+    "expired": "Abgelaufen",
+    "revoked": "Widerrufen",
+    "courseName": "Kursname",
+    "dueDate": "Fälligkeitsdatum",
+    "assignedBy": "Zugewiesen von",
+    "assigned": "Zugewiesen",
+    "inProgress": "In Bearbeitung",
+    "completed": "Abgeschlossen",
+    "save": "Zertifizierung Speichern",
+    "update": "Zertifizierung Aktualisieren",
+    "assign": "Schulung Zuweisen",
+    "notes": "Notizen",
+    "legend": "Legende",
+    "notRequired": "Nicht Erforderlich"
+  },
+  "compliance": {
+    "title": "Compliance",
+    "compliant": "Konform",
+    "dueSoon": "Bald Fällig",
+    "overdue": "Überfällig",
+    "documents": "Dokumente",
+    "obligationsMet": "Pflichten erfüllt",
+    "within14Days": "Innerhalb von 14 Tagen",
+    "pastDueDate": "Fälligkeitsdatum überschritten",
+    "complianceDocs": "Compliance-Dokumente",
+    "obligations": "Pflichten",
+    "calendar": "Kalender",
+    "addObligation": "Pflicht Hinzufügen",
+    "uploadDocument": "Dokument Hochladen",
+    "obligationTitle": "Titel",
+    "regulation": "Vorschrift",
+    "category": "Kategorie",
+    "frequency": "Häufigkeit",
+    "nextDue": "Nächste Fälligkeit",
+    "owner": "Verantwortlicher",
+    "markComplete": "Als Erledigt Markieren",
+    "evidenceType": "Nachweistyp",
+    "auto": "Automatisch",
+    "manual": "Manuell",
+    "document": "Dokument",
+    "version": "Version",
+    "reviewDate": "Überprüfungsdatum",
+    "tags": "Tags",
+    "upcoming3Months": "Nächste 3 Monate",
+    "noUpcoming": "Keine anstehenden Fristen",
+    "incidentReporting": "Vorfallmeldung",
+    "riskAssessment": "Risikobewertung",
+    "inspection": "Inspektion",
+    "environmental": "Umwelt",
+    "general": "Allgemein"
+  },
+  "permits": {
+    "title": "Arbeitserlaubnisse",
+    "activePermits": "Aktive Genehmigungen",
+    "pendingApproval": "Genehmigung Ausstehend",
+    "expiringToday": "Läuft Heute Ab",
+    "totalThisMonth": "Gesamt Diesen Monat",
+    "currentlyActive": "Derzeit aktiv",
+    "awaitingReview": "Überprüfung ausstehend",
+    "expiresByEndOfDay": "Läuft am Tagesende ab",
+    "permitsCreated": "Genehmigungen erstellt",
+    "allPermits": "Alle Genehmigungen",
+    "history": "Verlauf",
+    "createPermit": "Genehmigung Erstellen",
+    "permitNumber": "Genehmigungsnummer",
+    "type": "Typ",
+    "location": "Standort",
+    "startTime": "Startzeit",
+    "endTime": "Endzeit",
+    "requestedBy": "Angefordert von",
+    "approvedBy": "Genehmigt von",
+    "approve": "Genehmigen",
+    "close": "Schließen",
+    "cancel": "Abbrechen",
+    "precautions": "Vorsichtsmaßnahmen",
+    "workers": "Mitarbeiter",
+    "hotWork": "Feuerarbeiten",
+    "confinedSpace": "Enger Raum",
+    "workingAtHeight": "Arbeiten in der Höhe",
+    "electricalIsolation": "Elektrische Isolation",
+    "excavation": "Ausgrabung",
+    "other": "Sonstiges"
+  },
+  "environment": {
+    "title": "Umwelt",
+    "totalWaste": "Gesamtabfall",
+    "spills": "Verschüttungen",
+    "recyclingRate": "Recyclingquote",
+    "openSpills": "Offene Verschüttungen",
+    "thisMonth": "Diesen Monat",
+    "ofTotalVolume": "Des gesamten Abfallvolumens",
+    "requiringAttention": "Aufmerksamkeit erforderlich",
+    "wasteLog": "Abfallprotokoll",
+    "overview": "Übersicht",
+    "addWasteEntry": "Abfalleintrag Hinzufügen",
+    "addSpillRecord": "Verschüttungseintrag Hinzufügen",
+    "wasteType": "Abfallart",
+    "volume": "Volumen",
+    "unit": "Einheit",
+    "disposalMethod": "Entsorgungsmethode",
+    "contractor": "Auftragnehmer",
+    "material": "Material",
+    "severity": "Schweregrad",
+    "containmentAction": "Eindämmungsmaßnahme",
+    "hazardous": "Gefährlich",
+    "nonHazardous": "Nicht-Gefährlich",
+    "recyclable": "Recycelbar",
+    "special": "Speziell",
+    "clinical": "Klinisch",
+    "minor": "Gering",
+    "moderate": "Mäßig",
+    "major": "Schwerwiegend",
+    "open": "Offen",
+    "contained": "Eingedämmt",
+    "cleaned": "Gereinigt",
+    "closed": "Geschlossen",
+    "wasteByCategory": "Abfall nach Kategorie",
+    "topDisposalMethods": "Häufigste Entsorgungsmethoden",
+    "spillTrend": "Verschüttungstrend (6 Monate)"
+  },
+  "focusStrip": {
+    "title": "Fokusleiste",
+    "fieldFocus": "Feldfokus",
+    "urgent": "Dringend",
+    "upcoming": "Bevorstehend",
+    "goodToKnow": "Gut zu Wissen",
+    "noUrgent": "Keine dringenden Punkte",
+    "nothingUpcoming": "Nichts Bevorstehendes",
+    "allClear": "Alles in Ordnung"
+  },
+  "risk_assessment_templates": {
+    "construction": {
+      "jha": {
+        "name": "Job Hazard Analysis (JHA)",
+        "description": "Systematic hazard identification for specific job tasks, evaluating risk severity and probability to determine controls.",
+        "items": {
+          "hazard_description": "Describe the hazard or task being assessed",
+          "persons_at_risk": "Identify persons at risk and how they may be harmed",
+          "existing_controls": "Are existing control measures in place and adequate?",
+          "severity_rating": "Rate the severity of potential harm (1-5)",
+          "probability_rating": "Rate the probability of occurrence (1-5)",
+          "risk_acceptable": "Is the current risk level acceptable?",
+          "additional_controls": "Describe additional control measures required",
+          "residual_risk_acceptable": "Is the residual risk acceptable after controls?"
+        }
+      },
+      "fall_risk": {
+        "name": "Fall Protection Risk Assessment",
+        "description": "Assessment of fall hazards for work at height, evaluating edge protection, harness systems, and rescue plans.",
+        "items": {
+          "work_at_height": "Does this task involve working at height (above 1.8m/6ft)?",
+          "fall_distance": "What is the potential fall distance in meters?",
+          "edge_protection": "Is adequate edge protection in place?",
+          "harness_available": "Are fall arrest harnesses available and inspected?",
+          "anchor_points": "Are certified anchor points identified and accessible?",
+          "rescue_plan": "Is a rescue plan in place for suspended workers?",
+          "severity_rating": "Rate the severity of a potential fall (1-5)",
+          "probability_rating": "Rate the probability of a fall occurring (1-5)",
+          "controls_adequate": "Are all fall protection controls adequate?"
+        }
+      },
+      "excavation": {
+        "name": "Excavation & Trenching Risk Assessment",
+        "description": "Risk assessment for excavation work covering soil stability, shoring requirements, underground services, and access/egress.",
+        "items": {
+          "hazard_description": "Describe the excavation scope and ground conditions",
+          "persons_at_risk": "Who is at risk from the excavation?",
+          "existing_controls": "Are shoring/benching/sloping measures in place?",
+          "severity_rating": "Rate severity of potential collapse (1-5)",
+          "probability_rating": "Rate probability of ground failure (1-5)",
+          "risk_acceptable": "Is the excavation risk level acceptable?",
+          "additional_controls": "What additional protections are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "hot_work": {
+        "name": "Hot Work Risk Assessment",
+        "description": "Pre-task risk assessment for welding, cutting, brazing, and grinding operations evaluating fire and burn hazards.",
+        "items": {
+          "hazard_description": "Describe the hot work activity and location",
+          "persons_at_risk": "Who is at risk from sparks, flames, or fumes?",
+          "existing_controls": "Are fire blankets, extinguishers, and screens in place?",
+          "severity_rating": "Rate severity of potential fire or burn (1-5)",
+          "probability_rating": "Rate probability of ignition (1-5)",
+          "risk_acceptable": "Is the hot work risk acceptable?",
+          "additional_controls": "What additional fire prevention measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable after controls?"
+        }
+      },
+      "confined_space": {
+        "name": "Confined Space Entry Risk Assessment",
+        "description": "Assessment of atmospheric, engulfment, and entrapment hazards for confined space entry operations.",
+        "items": {
+          "hazard_description": "Describe the confined space and planned work",
+          "persons_at_risk": "Who will enter and who may be affected?",
+          "existing_controls": "Is atmospheric monitoring and ventilation in place?",
+          "severity_rating": "Rate severity of potential atmospheric hazard (1-5)",
+          "probability_rating": "Rate probability of hazardous atmosphere (1-5)",
+          "risk_acceptable": "Is confined space entry risk acceptable?",
+          "additional_controls": "What additional precautions are required?",
+          "residual_risk_acceptable": "Is residual risk acceptable with rescue plan?"
+        }
+      },
+      "crane_lift": {
+        "name": "Crane & Lifting Operations Risk Assessment",
+        "description": "Risk assessment for crane and lifting operations covering load calculations, rigging, exclusion zones, and communications.",
+        "items": {
+          "hazard_description": "Describe the lift operation and load details",
+          "persons_at_risk": "Who is at risk in or near the lift zone?",
+          "existing_controls": "Are exclusion zones, signals, and rigging adequate?",
+          "severity_rating": "Rate severity of potential load drop (1-5)",
+          "probability_rating": "Rate probability of rigging failure (1-5)",
+          "risk_acceptable": "Is the lift risk acceptable?",
+          "additional_controls": "What additional safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "electrical": {
+        "name": "Electrical Work Risk Assessment",
+        "description": "Assessment of electrical hazards including arc flash, shock, and stored energy for electrical installation and maintenance work.",
+        "items": {
+          "hazard_description": "Describe the electrical work and voltage levels",
+          "persons_at_risk": "Who is at risk from electrical hazards?",
+          "existing_controls": "Are isolation, LOTO, and testing procedures in place?",
+          "severity_rating": "Rate severity of potential electrocution/arc flash (1-5)",
+          "probability_rating": "Rate probability of electrical contact (1-5)",
+          "risk_acceptable": "Is the electrical risk acceptable?",
+          "additional_controls": "What additional electrical safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable after isolation?"
+        }
+      },
+      "demolition": {
+        "name": "Demolition Risk Assessment",
+        "description": "Risk assessment for demolition activities covering structural stability, hazardous materials, dust, and falling debris.",
+        "items": {
+          "hazard_description": "Describe the demolition scope and structure",
+          "persons_at_risk": "Who is at risk from demolition activities?",
+          "existing_controls": "Are structural surveys and exclusion zones in place?",
+          "severity_rating": "Rate severity of potential structural collapse (1-5)",
+          "probability_rating": "Rate probability of uncontrolled collapse (1-5)",
+          "risk_acceptable": "Is the demolition risk acceptable?",
+          "additional_controls": "What additional demolition controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      }
+    },
+    "manufacturing": {
+      "machine_guarding": {
+        "name": "Machine Guarding Risk Assessment",
+        "description": "Assessment of machinery hazards including nip points, rotating parts, and flying debris to ensure adequate guarding.",
+        "items": {
+          "hazard_description": "Describe the machine and identified hazards",
+          "persons_at_risk": "Who operates or works near this machine?",
+          "existing_controls": "Are guards, interlocks, and emergency stops in place?",
+          "severity_rating": "Rate severity of potential contact injury (1-5)",
+          "probability_rating": "Rate probability of guard bypass (1-5)",
+          "risk_acceptable": "Is the machine guarding risk acceptable?",
+          "additional_controls": "What additional guarding is required?",
+          "residual_risk_acceptable": "Is residual risk acceptable with guards?"
+        }
+      },
+      "chemical": {
+        "name": "Chemical Handling Risk Assessment",
+        "description": "COSHH/HazCom assessment for chemical substances evaluating exposure routes, storage, PPE, and emergency procedures.",
+        "items": {
+          "hazard_description": "Identify the chemical substance and SDS hazards",
+          "persons_at_risk": "Who handles or may be exposed to this chemical?",
+          "existing_controls": "Are ventilation, PPE, and storage measures adequate?",
+          "severity_rating": "Rate severity of potential exposure (1-5)",
+          "probability_rating": "Rate probability of exposure occurring (1-5)",
+          "risk_acceptable": "Is the chemical handling risk acceptable?",
+          "additional_controls": "What additional chemical controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "ergonomic": {
+        "name": "Ergonomic Risk Assessment",
+        "description": "Assessment of musculoskeletal disorder risks from repetitive tasks, manual handling, and workstation design.",
+        "items": {
+          "hazard_description": "Describe the task and ergonomic concerns",
+          "persons_at_risk": "Who performs this task and how often?",
+          "existing_controls": "Are ergonomic aids and job rotation in place?",
+          "severity_rating": "Rate severity of potential MSD (1-5)",
+          "probability_rating": "Rate probability of injury developing (1-5)",
+          "risk_acceptable": "Is the ergonomic risk acceptable?",
+          "additional_controls": "What ergonomic improvements are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with changes?"
+        }
+      },
+      "noise": {
+        "name": "Noise Exposure Risk Assessment",
+        "description": "Assessment of occupational noise levels, exposure durations, and hearing protection requirements.",
+        "items": {
+          "hazard_description": "Describe the noise source and measured levels",
+          "persons_at_risk": "Who is exposed and for how long per shift?",
+          "existing_controls": "Are engineering controls and hearing protection in use?",
+          "severity_rating": "Rate severity of potential hearing damage (1-5)",
+          "probability_rating": "Rate probability of exceeding exposure limits (1-5)",
+          "risk_acceptable": "Is the noise exposure risk acceptable?",
+          "additional_controls": "What additional noise controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with protection?"
+        }
+      },
+      "loto": {
+        "name": "Lockout/Tagout Risk Assessment",
+        "description": "Assessment of hazardous energy sources and lockout/tagout procedures for machine maintenance and servicing.",
+        "items": {
+          "hazard_description": "Describe the equipment and energy sources",
+          "persons_at_risk": "Who performs maintenance on this equipment?",
+          "existing_controls": "Are LOTO procedures and devices available?",
+          "severity_rating": "Rate severity of unexpected energization (1-5)",
+          "probability_rating": "Rate probability of LOTO failure (1-5)",
+          "risk_acceptable": "Is the LOTO risk acceptable?",
+          "additional_controls": "What additional energy isolation measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable after isolation?"
+        }
+      },
+      "forklift": {
+        "name": "Forklift Operations Risk Assessment",
+        "description": "Assessment of powered industrial truck hazards including pedestrian interaction, load stability, and operating conditions.",
+        "items": {
+          "hazard_description": "Describe the forklift operations and environment",
+          "persons_at_risk": "Who operates forklifts and who are pedestrians nearby?",
+          "existing_controls": "Are traffic routes, training, and inspections adequate?",
+          "severity_rating": "Rate severity of potential collision (1-5)",
+          "probability_rating": "Rate probability of forklift incident (1-5)",
+          "risk_acceptable": "Is the forklift operation risk acceptable?",
+          "additional_controls": "What additional traffic management is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with controls?"
+        }
+      },
+      "fire": {
+        "name": "Fire Risk Assessment",
+        "description": "Assessment of fire hazards, ignition sources, fuel sources, and adequacy of detection, alarm, and suppression systems.",
+        "items": {
+          "hazard_description": "Describe the fire hazards and ignition sources",
+          "persons_at_risk": "Who is at risk and can they evacuate safely?",
+          "existing_controls": "Are detection, alarm, and suppression systems adequate?",
+          "severity_rating": "Rate severity of potential fire (1-5)",
+          "probability_rating": "Rate probability of fire occurring (1-5)",
+          "risk_acceptable": "Is the fire risk acceptable?",
+          "additional_controls": "What additional fire prevention measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all systems?"
+        }
+      }
+    },
+    "oil_gas": {
+      "well_control": {
+        "name": "Well Control Risk Assessment",
+        "description": "Assessment of well control hazards including kicks, blowouts, and BOP system integrity.",
+        "items": {
+          "hazard_description": "Describe the well conditions and operations",
+          "persons_at_risk": "Who is at risk on the rig floor?",
+          "existing_controls": "Are BOP, kill systems, and trained personnel in place?",
+          "severity_rating": "Rate severity of potential blowout (1-5)",
+          "probability_rating": "Rate probability of well control loss (1-5)",
+          "risk_acceptable": "Is the well control risk acceptable?",
+          "additional_controls": "What additional well control measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all barriers?"
+        }
+      },
+      "h2s": {
+        "name": "H₂S Exposure Risk Assessment",
+        "description": "Assessment of hydrogen sulfide exposure risks during drilling and production operations.",
+        "items": {
+          "hazard_description": "Describe the H₂S source and expected concentrations",
+          "persons_at_risk": "Who may be exposed to H₂S?",
+          "existing_controls": "Are gas detectors, wind socks, and breathing apparatus available?",
+          "severity_rating": "Rate severity of H₂S exposure (1-5)",
+          "probability_rating": "Rate probability of H₂S release (1-5)",
+          "risk_acceptable": "Is the H₂S risk acceptable?",
+          "additional_controls": "What additional H₂S precautions are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with detection?"
+        }
+      },
+      "ptw": {
+        "name": "Permit to Work Risk Assessment",
+        "description": "Pre-permit risk assessment for hazardous activities requiring formal authorization and isolation.",
+        "items": {
+          "hazard_description": "Describe the permitted work and hazards",
+          "persons_at_risk": "Who is performing and affected by the work?",
+          "existing_controls": "Are isolations, barriers, and PTW controls in place?",
+          "severity_rating": "Rate severity of potential incident (1-5)",
+          "probability_rating": "Rate probability of control failure (1-5)",
+          "risk_acceptable": "Is the permitted work risk acceptable?",
+          "additional_controls": "What additional permit conditions are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable under permit?"
+        }
+      },
+      "pipeline": {
+        "name": "Pipeline Integrity Risk Assessment",
+        "description": "Assessment of pipeline corrosion, pressure, and third-party damage risks for integrity management.",
+        "items": {
+          "hazard_description": "Describe the pipeline segment and conditions",
+          "persons_at_risk": "Who is at risk from potential pipeline failure?",
+          "existing_controls": "Are inspection, cathodic protection, and monitoring adequate?",
+          "severity_rating": "Rate severity of potential leak/rupture (1-5)",
+          "probability_rating": "Rate probability of pipeline failure (1-5)",
+          "risk_acceptable": "Is the pipeline integrity risk acceptable?",
+          "additional_controls": "What additional integrity measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with monitoring?"
+        }
+      },
+      "rig_move": {
+        "name": "Rig Move Risk Assessment",
+        "description": "Assessment of hazards during rig mobilization, demobilization, and transport operations.",
+        "items": {
+          "hazard_description": "Describe the rig move route and conditions",
+          "persons_at_risk": "Who is involved in the rig move?",
+          "existing_controls": "Are route surveys, escorts, and lifting plans in place?",
+          "severity_rating": "Rate severity of potential transport incident (1-5)",
+          "probability_rating": "Rate probability of incident during move (1-5)",
+          "risk_acceptable": "Is the rig move risk acceptable?",
+          "additional_controls": "What additional rig move precautions are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all plans?"
+        }
+      },
+      "drilling": {
+        "name": "Drilling Operations Risk Assessment",
+        "description": "Assessment of drilling hazards including wellbore instability, high pressure, and mechanical failures.",
+        "items": {
+          "hazard_description": "Describe the drilling operation and well conditions",
+          "persons_at_risk": "Who is at risk on the drill floor?",
+          "existing_controls": "Are drilling barriers and procedures adequate?",
+          "severity_rating": "Rate severity of potential drilling incident (1-5)",
+          "probability_rating": "Rate probability of drilling failure (1-5)",
+          "risk_acceptable": "Is the drilling risk acceptable?",
+          "additional_controls": "What additional drilling safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all barriers?"
+        }
+      }
+    },
+    "healthcare": {
+      "patient_handling": {
+        "name": "Patient Handling Risk Assessment",
+        "description": "Assessment of musculoskeletal risks from patient lifting, transferring, and repositioning activities.",
+        "items": {
+          "hazard_description": "Describe the patient handling task",
+          "persons_at_risk": "Which staff perform this task?",
+          "existing_controls": "Are hoists, slide sheets, and trained staff available?",
+          "severity_rating": "Rate severity of potential back injury (1-5)",
+          "probability_rating": "Rate probability of injury from handling (1-5)",
+          "risk_acceptable": "Is the patient handling risk acceptable?",
+          "additional_controls": "What additional handling aids are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with aids?"
+        }
+      },
+      "sharps": {
+        "name": "Sharps & Needlestick Risk Assessment",
+        "description": "Assessment of sharps injury risks and bloodborne pathogen exposure in clinical settings.",
+        "items": {
+          "hazard_description": "Describe sharps usage and disposal procedures",
+          "persons_at_risk": "Who handles sharps in this area?",
+          "existing_controls": "Are safety-engineered devices and sharps bins available?",
+          "severity_rating": "Rate severity of needlestick exposure (1-5)",
+          "probability_rating": "Rate probability of sharps injury (1-5)",
+          "risk_acceptable": "Is the sharps risk acceptable?",
+          "additional_controls": "What additional sharps safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with safety devices?"
+        }
+      },
+      "infection": {
+        "name": "Infection Control Risk Assessment",
+        "description": "Assessment of infection transmission risks including airborne, contact, and droplet routes.",
+        "items": {
+          "hazard_description": "Describe the infection risk and transmission route",
+          "persons_at_risk": "Which staff and patients are at risk?",
+          "existing_controls": "Are isolation, PPE, and hand hygiene protocols adequate?",
+          "severity_rating": "Rate severity of potential infection (1-5)",
+          "probability_rating": "Rate probability of transmission (1-5)",
+          "risk_acceptable": "Is the infection control risk acceptable?",
+          "additional_controls": "What additional infection controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all protocols?"
+        }
+      },
+      "medication": {
+        "name": "Medication Safety Risk Assessment",
+        "description": "Assessment of medication error risks during prescribing, dispensing, and administration.",
+        "items": {
+          "hazard_description": "Describe the medication process and identified risks",
+          "persons_at_risk": "Which patients and staff are affected?",
+          "existing_controls": "Are double-checks, electronic prescribing, and protocols in place?",
+          "severity_rating": "Rate severity of potential medication error (1-5)",
+          "probability_rating": "Rate probability of error occurring (1-5)",
+          "risk_acceptable": "Is the medication safety risk acceptable?",
+          "additional_controls": "What additional medication safeguards are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all checks?"
+        }
+      },
+      "violence": {
+        "name": "Workplace Violence Risk Assessment",
+        "description": "Assessment of violence and aggression risks from patients, visitors, or intruders in healthcare settings.",
+        "items": {
+          "hazard_description": "Describe the violence/aggression risk factors",
+          "persons_at_risk": "Which staff are at risk of violence?",
+          "existing_controls": "Are panic alarms, training, and security measures in place?",
+          "severity_rating": "Rate severity of potential violence (1-5)",
+          "probability_rating": "Rate probability of violent incident (1-5)",
+          "risk_acceptable": "Is the violence risk acceptable?",
+          "additional_controls": "What additional security measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with controls?"
+        }
+      },
+      "radiation": {
+        "name": "Radiation Exposure Risk Assessment",
+        "description": "Assessment of ionizing radiation risks for diagnostic imaging, therapy, and nuclear medicine activities.",
+        "items": {
+          "hazard_description": "Describe the radiation source and procedures",
+          "persons_at_risk": "Who may be exposed to radiation?",
+          "existing_controls": "Are shielding, dosimetry, and procedures adequate?",
+          "severity_rating": "Rate severity of potential overexposure (1-5)",
+          "probability_rating": "Rate probability of exposure exceeding limits (1-5)",
+          "risk_acceptable": "Is the radiation risk acceptable?",
+          "additional_controls": "What additional radiation protection is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with shielding?"
+        }
+      }
+    },
+    "warehousing": {
+      "manual_handling": {
+        "name": "Manual Handling Risk Assessment",
+        "description": "Assessment of injury risks from lifting, carrying, pushing, and pulling loads in warehouse operations.",
+        "items": {
+          "hazard_description": "Describe the manual handling task and load",
+          "persons_at_risk": "Who performs this task regularly?",
+          "existing_controls": "Are mechanical aids and training in place?",
+          "severity_rating": "Rate severity of potential MSD (1-5)",
+          "probability_rating": "Rate probability of injury (1-5)",
+          "risk_acceptable": "Is the manual handling risk acceptable?",
+          "additional_controls": "What handling aids or changes are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with aids?"
+        }
+      },
+      "racking": {
+        "name": "Racking & Storage Risk Assessment",
+        "description": "Assessment of racking collapse, overloading, and impact damage risks in storage areas.",
+        "items": {
+          "hazard_description": "Describe the racking system and condition",
+          "persons_at_risk": "Who works near the racking?",
+          "existing_controls": "Are load ratings, protectors, and inspections in place?",
+          "severity_rating": "Rate severity of potential collapse (1-5)",
+          "probability_rating": "Rate probability of racking failure (1-5)",
+          "risk_acceptable": "Is the racking risk acceptable?",
+          "additional_controls": "What additional racking protection is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with protections?"
+        }
+      },
+      "loading_dock": {
+        "name": "Loading Dock Risk Assessment",
+        "description": "Assessment of hazards at loading docks including vehicle movements, falls, and manual handling.",
+        "items": {
+          "hazard_description": "Describe the loading dock operations",
+          "persons_at_risk": "Who works at or near the loading dock?",
+          "existing_controls": "Are dock levelers, chocks, and lighting adequate?",
+          "severity_rating": "Rate severity of potential dock incident (1-5)",
+          "probability_rating": "Rate probability of incident (1-5)",
+          "risk_acceptable": "Is the loading dock risk acceptable?",
+          "additional_controls": "What additional dock safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "forklift": {
+        "name": "Forklift Operations Risk Assessment",
+        "description": "Assessment of forklift hazards in warehouse environments including pedestrian segregation and load stability.",
+        "items": {
+          "hazard_description": "Describe the forklift operations",
+          "persons_at_risk": "Who operates and who are pedestrians?",
+          "existing_controls": "Are routes, training, and pre-use checks adequate?",
+          "severity_rating": "Rate severity of potential collision (1-5)",
+          "probability_rating": "Rate probability of forklift incident (1-5)",
+          "risk_acceptable": "Is the forklift risk acceptable?",
+          "additional_controls": "What additional traffic management is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with controls?"
+        }
+      },
+      "fire": {
+        "name": "Warehouse Fire Risk Assessment",
+        "description": "Assessment of fire hazards in warehouse environments including stored goods, ignition sources, and suppression.",
+        "items": {
+          "hazard_description": "Describe the fire hazards in this area",
+          "persons_at_risk": "Who works in or near this area?",
+          "existing_controls": "Are detection, sprinklers, and extinguishers adequate?",
+          "severity_rating": "Rate severity of potential fire (1-5)",
+          "probability_rating": "Rate probability of fire (1-5)",
+          "risk_acceptable": "Is the fire risk acceptable?",
+          "additional_controls": "What additional fire prevention is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all systems?"
+        }
+      }
+    },
+    "mining": {
+      "ground_control": {
+        "name": "Ground Control Risk Assessment",
+        "description": "Assessment of roof fall, ground heave, and rock burst hazards in underground mining operations.",
+        "items": {
+          "hazard_description": "Describe the ground conditions",
+          "persons_at_risk": "Who works in this area?",
+          "existing_controls": "Are roof bolts, mesh, and monitoring adequate?",
+          "severity_rating": "Rate severity of potential ground failure (1-5)",
+          "probability_rating": "Rate probability of ground failure (1-5)",
+          "risk_acceptable": "Is the ground control risk acceptable?",
+          "additional_controls": "What additional ground support is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with support?"
+        }
+      },
+      "ventilation": {
+        "name": "Ventilation & Air Quality Risk Assessment",
+        "description": "Assessment of underground ventilation adequacy, methane accumulation, and respirable dust levels.",
+        "items": {
+          "hazard_description": "Describe the ventilation conditions",
+          "persons_at_risk": "Who works in this ventilation district?",
+          "existing_controls": "Are fans, seals, and monitoring adequate?",
+          "severity_rating": "Rate severity of potential atmosphere hazard (1-5)",
+          "probability_rating": "Rate probability of poor ventilation (1-5)",
+          "risk_acceptable": "Is the ventilation risk acceptable?",
+          "additional_controls": "What additional ventilation is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with monitoring?"
+        }
+      },
+      "blasting": {
+        "name": "Blasting Operations Risk Assessment",
+        "description": "Assessment of blasting hazards including flyrock, vibration, toxic fumes, and misfires.",
+        "items": {
+          "hazard_description": "Describe the blast design and conditions",
+          "persons_at_risk": "Who is in the blast exclusion zone?",
+          "existing_controls": "Are exclusion zones, signals, and procedures adequate?",
+          "severity_rating": "Rate severity of potential blast incident (1-5)",
+          "probability_rating": "Rate probability of misfire or flyrock (1-5)",
+          "risk_acceptable": "Is the blasting risk acceptable?",
+          "additional_controls": "What additional blasting controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "electrical": {
+        "name": "Underground Electrical Risk Assessment",
+        "description": "Assessment of electrical hazards in underground environments including moisture, methane, and cable damage.",
+        "items": {
+          "hazard_description": "Describe the electrical installation",
+          "persons_at_risk": "Who works near electrical equipment?",
+          "existing_controls": "Are flame-proof enclosures and earth leakage protection in place?",
+          "severity_rating": "Rate severity of potential electrical incident (1-5)",
+          "probability_rating": "Rate probability of electrical failure (1-5)",
+          "risk_acceptable": "Is the electrical risk acceptable?",
+          "additional_controls": "What additional electrical protection is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all protections?"
+        }
+      },
+      "mobile_equipment": {
+        "name": "Mobile Equipment Risk Assessment",
+        "description": "Assessment of haul truck, loader, and mobile plant hazards in surface and underground mining.",
+        "items": {
+          "hazard_description": "Describe the mobile equipment and operations",
+          "persons_at_risk": "Who operates and who is nearby?",
+          "existing_controls": "Are pre-starts, cameras, and traffic management adequate?",
+          "severity_rating": "Rate severity of potential collision (1-5)",
+          "probability_rating": "Rate probability of mobile equipment incident (1-5)",
+          "risk_acceptable": "Is the mobile equipment risk acceptable?",
+          "additional_controls": "What additional traffic management is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with controls?"
+        }
+      },
+      "dust": {
+        "name": "Dust Exposure Risk Assessment",
+        "description": "Assessment of respirable dust and silica exposure levels in mining operations.",
+        "items": {
+          "hazard_description": "Describe the dust source and exposure conditions",
+          "persons_at_risk": "Who is exposed to respirable dust?",
+          "existing_controls": "Are water sprays, ventilation, and RPE adequate?",
+          "severity_rating": "Rate severity of potential lung disease (1-5)",
+          "probability_rating": "Rate probability of overexposure (1-5)",
+          "risk_acceptable": "Is the dust exposure risk acceptable?",
+          "additional_controls": "What additional dust suppression is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with controls?"
+        }
+      }
+    },
+    "food_beverage": {
+      "haccp": {
+        "name": "HACCP Hazard Analysis",
+        "description": "Systematic hazard analysis at critical control points for biological, chemical, and physical food safety hazards.",
+        "items": {
+          "hazard_description": "Describe the process step and identified hazards",
+          "persons_at_risk": "Who consumes the product?",
+          "existing_controls": "Are CCP monitoring and corrective actions adequate?",
+          "severity_rating": "Rate severity of potential foodborne illness (1-5)",
+          "probability_rating": "Rate probability of hazard occurring (1-5)",
+          "risk_acceptable": "Is this CCP adequately controlled?",
+          "additional_controls": "What additional controls are needed at this CCP?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all CCPs?"
+        }
+      },
+      "allergen": {
+        "name": "Allergen Cross-Contamination Risk Assessment",
+        "description": "Assessment of allergen cross-contact risks during production, storage, and packaging.",
+        "items": {
+          "hazard_description": "Describe allergens present in this area",
+          "persons_at_risk": "Who may consume products from this line?",
+          "existing_controls": "Are cleaning, segregation, and labeling adequate?",
+          "severity_rating": "Rate severity of allergic reaction (1-5)",
+          "probability_rating": "Rate probability of cross-contact (1-5)",
+          "risk_acceptable": "Is the allergen risk acceptable?",
+          "additional_controls": "What additional allergen controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "cold_chain": {
+        "name": "Cold Chain Risk Assessment",
+        "description": "Assessment of temperature control risks during storage and transportation of perishable products.",
+        "items": {
+          "hazard_description": "Describe the cold chain process and products",
+          "persons_at_risk": "Who consumes temperature-sensitive products?",
+          "existing_controls": "Are temperature monitoring and alarms adequate?",
+          "severity_rating": "Rate severity of temperature abuse (1-5)",
+          "probability_rating": "Rate probability of cold chain break (1-5)",
+          "risk_acceptable": "Is the cold chain risk acceptable?",
+          "additional_controls": "What additional temperature controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with monitoring?"
+        }
+      },
+      "cleaning_chemical": {
+        "name": "Cleaning Chemical Risk Assessment",
+        "description": "Assessment of chemical exposure and contamination risks from cleaning and sanitizing agents.",
+        "items": {
+          "hazard_description": "Describe the cleaning chemicals used",
+          "persons_at_risk": "Who handles these chemicals?",
+          "existing_controls": "Are PPE, ventilation, and dilution controls adequate?",
+          "severity_rating": "Rate severity of chemical exposure (1-5)",
+          "probability_rating": "Rate probability of exposure (1-5)",
+          "risk_acceptable": "Is the cleaning chemical risk acceptable?",
+          "additional_controls": "What additional chemical safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "machinery": {
+        "name": "Food Machinery Risk Assessment",
+        "description": "Assessment of machinery hazards in food processing including entanglement, crushing, and contamination risks.",
+        "items": {
+          "hazard_description": "Describe the machine and identified hazards",
+          "persons_at_risk": "Who operates this machine?",
+          "existing_controls": "Are guards, interlocks, and hygiene controls adequate?",
+          "severity_rating": "Rate severity of potential injury (1-5)",
+          "probability_rating": "Rate probability of machine incident (1-5)",
+          "risk_acceptable": "Is the machinery risk acceptable?",
+          "additional_controls": "What additional guarding or hygiene measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      }
+    },
+    "utilities": {
+      "arc_flash": {
+        "name": "Electrical Arc Flash Risk Assessment",
+        "description": "Assessment of arc flash hazards, incident energy levels, and PPE category requirements for electrical work.",
+        "items": {
+          "hazard_description": "Describe the electrical system and arc flash boundary",
+          "persons_at_risk": "Who works on or near this equipment?",
+          "existing_controls": "Are arc flash labels, PPE, and procedures adequate?",
+          "severity_rating": "Rate severity of potential arc flash (1-5)",
+          "probability_rating": "Rate probability of arc flash event (1-5)",
+          "risk_acceptable": "Is the arc flash risk acceptable?",
+          "additional_controls": "What additional electrical safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with PPE?"
+        }
+      },
+      "line_work": {
+        "name": "Line Work Risk Assessment",
+        "description": "Assessment of hazards for overhead and underground electrical line work including contact and induction risks.",
+        "items": {
+          "hazard_description": "Describe the line work and voltage levels",
+          "persons_at_risk": "Who is working on or near live lines?",
+          "existing_controls": "Are clearances, grounding, and rubber goods adequate?",
+          "severity_rating": "Rate severity of potential contact (1-5)",
+          "probability_rating": "Rate probability of contact with energized line (1-5)",
+          "risk_acceptable": "Is the line work risk acceptable?",
+          "additional_controls": "What additional line work protections are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all protections?"
+        }
+      },
+      "gas_leak": {
+        "name": "Gas Leak Risk Assessment",
+        "description": "Assessment of natural gas leak hazards during excavation, repair, and emergency response operations.",
+        "items": {
+          "hazard_description": "Describe the gas leak location and conditions",
+          "persons_at_risk": "Who is in the hazard zone?",
+          "existing_controls": "Are gas detectors, ventilation, and ignition controls in place?",
+          "severity_rating": "Rate severity of potential explosion (1-5)",
+          "probability_rating": "Rate probability of ignition (1-5)",
+          "risk_acceptable": "Is the gas leak risk acceptable?",
+          "additional_controls": "What additional gas safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "confined_space": {
+        "name": "Confined Space Risk Assessment",
+        "description": "Assessment of confined space hazards in utility infrastructure including manholes, vaults, and tanks.",
+        "items": {
+          "hazard_description": "Describe the confined space and planned work",
+          "persons_at_risk": "Who will enter the confined space?",
+          "existing_controls": "Are atmosphere testing, ventilation, and rescue in place?",
+          "severity_rating": "Rate severity of potential atmosphere hazard (1-5)",
+          "probability_rating": "Rate probability of hazardous atmosphere (1-5)",
+          "risk_acceptable": "Is the confined space risk acceptable?",
+          "additional_controls": "What additional confined space precautions are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with rescue plan?"
+        }
+      },
+      "working_height": {
+        "name": "Working at Height Risk Assessment",
+        "description": "Assessment of fall hazards when working on utility poles, towers, and elevated platforms.",
+        "items": {
+          "hazard_description": "Describe the height work and conditions",
+          "persons_at_risk": "Who will work at height?",
+          "existing_controls": "Are harnesses, lanyards, and rescue equipment adequate?",
+          "severity_rating": "Rate severity of potential fall (1-5)",
+          "probability_rating": "Rate probability of fall (1-5)",
+          "risk_acceptable": "Is the working at height risk acceptable?",
+          "additional_controls": "What additional fall protection is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all protection?"
+        }
+      }
+    },
+    "transportation": {
+      "driver_fatigue": {
+        "name": "Driver Fatigue Risk Assessment",
+        "description": "Assessment of fatigue-related risks for commercial drivers including hours of service and rest adequacy.",
+        "items": {
+          "hazard_description": "Describe the journey and driver schedule",
+          "persons_at_risk": "Who is the driver and who shares the road?",
+          "existing_controls": "Are rest breaks, hours tracking, and fatigue management in place?",
+          "severity_rating": "Rate severity of fatigue-related crash (1-5)",
+          "probability_rating": "Rate probability of driver fatigue (1-5)",
+          "risk_acceptable": "Is the fatigue risk acceptable?",
+          "additional_controls": "What additional fatigue management is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all measures?"
+        }
+      },
+      "vehicle": {
+        "name": "Vehicle Safety Risk Assessment",
+        "description": "Assessment of vehicle condition, fitness for purpose, and roadworthiness risks.",
+        "items": {
+          "hazard_description": "Describe the vehicle type and intended use",
+          "persons_at_risk": "Who drives and who are passengers?",
+          "existing_controls": "Are inspections, maintenance, and safety features adequate?",
+          "severity_rating": "Rate severity of potential vehicle failure (1-5)",
+          "probability_rating": "Rate probability of mechanical failure (1-5)",
+          "risk_acceptable": "Is the vehicle safety risk acceptable?",
+          "additional_controls": "What additional vehicle safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with maintenance?"
+        }
+      },
+      "loading": {
+        "name": "Load Security Risk Assessment",
+        "description": "Assessment of cargo securement risks including shifting loads, overloading, and improper restraint.",
+        "items": {
+          "hazard_description": "Describe the load type and securement method",
+          "persons_at_risk": "Who loads, unloads, and transports?",
+          "existing_controls": "Are restraints, weight limits, and procedures adequate?",
+          "severity_rating": "Rate severity of potential load shift (1-5)",
+          "probability_rating": "Rate probability of load failure (1-5)",
+          "risk_acceptable": "Is the load security risk acceptable?",
+          "additional_controls": "What additional load securement is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all restraints?"
+        }
+      },
+      "hazmat": {
+        "name": "Hazardous Materials Transport Risk Assessment",
+        "description": "Assessment of hazmat transport risks including spills, exposure, and emergency response preparedness.",
+        "items": {
+          "hazard_description": "Describe the hazardous material and quantities",
+          "persons_at_risk": "Who handles and transports this material?",
+          "existing_controls": "Are placards, containment, and training adequate?",
+          "severity_rating": "Rate severity of potential spill/exposure (1-5)",
+          "probability_rating": "Rate probability of hazmat incident (1-5)",
+          "risk_acceptable": "Is the hazmat transport risk acceptable?",
+          "additional_controls": "What additional hazmat controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "route": {
+        "name": "Route Risk Assessment",
+        "description": "Assessment of route-specific hazards including road conditions, weather, terrain, and high-risk areas.",
+        "items": {
+          "hazard_description": "Describe the route and identified hazards",
+          "persons_at_risk": "Who will travel this route?",
+          "existing_controls": "Are route plans, weather checks, and communications adequate?",
+          "severity_rating": "Rate severity of potential route hazard (1-5)",
+          "probability_rating": "Rate probability of route incident (1-5)",
+          "risk_acceptable": "Is the route risk acceptable?",
+          "additional_controls": "What alternative routes or precautions are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable for this journey?"
+        }
+      }
+    },
+    "education": {
+      "lab_safety": {
+        "name": "Laboratory Safety Risk Assessment",
+        "description": "Assessment of hazards in educational laboratories including chemical, biological, and physical risks.",
+        "items": {
+          "hazard_description": "Describe the lab activity and chemicals/equipment",
+          "persons_at_risk": "Which students and staff are in the lab?",
+          "existing_controls": "Are fume hoods, PPE, and emergency equipment adequate?",
+          "severity_rating": "Rate severity of potential lab incident (1-5)",
+          "probability_rating": "Rate probability of lab incident (1-5)",
+          "risk_acceptable": "Is the laboratory risk acceptable?",
+          "additional_controls": "What additional lab safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable for this activity?"
+        }
+      },
+      "field_trip": {
+        "name": "Field Trip Risk Assessment",
+        "description": "Assessment of risks associated with off-site educational visits including transport, supervision, and activities.",
+        "items": {
+          "hazard_description": "Describe the field trip destination and activities",
+          "persons_at_risk": "Which students and staff are attending?",
+          "existing_controls": "Are supervision ratios, consent, and first aid adequate?",
+          "severity_rating": "Rate severity of potential field trip incident (1-5)",
+          "probability_rating": "Rate probability of incident occurring (1-5)",
+          "risk_acceptable": "Is the field trip risk acceptable?",
+          "additional_controls": "What additional precautions are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable for this trip?"
+        }
+      },
+      "playground": {
+        "name": "Playground Safety Risk Assessment",
+        "description": "Assessment of playground equipment condition, surfacing, and supervision to prevent injuries.",
+        "items": {
+          "hazard_description": "Describe the playground equipment and surfacing",
+          "persons_at_risk": "Which age group uses this playground?",
+          "existing_controls": "Are inspections, maintenance, and supervision adequate?",
+          "severity_rating": "Rate severity of potential playground injury (1-5)",
+          "probability_rating": "Rate probability of injury (1-5)",
+          "risk_acceptable": "Is the playground risk acceptable?",
+          "additional_controls": "What repairs or improvements are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with maintenance?"
+        }
+      },
+      "chemical": {
+        "name": "Chemical Storage Risk Assessment",
+        "description": "Assessment of chemical storage, segregation, and disposal practices in educational settings.",
+        "items": {
+          "hazard_description": "Describe the chemicals stored and quantities",
+          "persons_at_risk": "Who accesses the chemical storage area?",
+          "existing_controls": "Are COSHH cabinets, ventilation, and inventory adequate?",
+          "severity_rating": "Rate severity of potential chemical incident (1-5)",
+          "probability_rating": "Rate probability of chemical incident (1-5)",
+          "risk_acceptable": "Is the chemical storage risk acceptable?",
+          "additional_controls": "What additional storage controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "event": {
+        "name": "School Event Risk Assessment",
+        "description": "Assessment of risks for school events including crowd management, fire safety, and first aid provision.",
+        "items": {
+          "hazard_description": "Describe the event type and expected attendance",
+          "persons_at_risk": "Who attends this event (students, parents, public)?",
+          "existing_controls": "Are crowd management, fire routes, and first aid adequate?",
+          "severity_rating": "Rate severity of potential event incident (1-5)",
+          "probability_rating": "Rate probability of incident (1-5)",
+          "risk_acceptable": "Is the event risk acceptable?",
+          "additional_controls": "What additional event safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable for this event?"
+        }
+      }
+    },
+    "airports": {
+      "ramp": {
+        "name": "Ramp Operations Risk Assessment",
+        "description": "Assessment of hazards during aircraft ground handling including GSE movements, jet blast, and noise exposure.",
+        "items": {
+          "hazard_description": "Describe the ramp operation and aircraft type",
+          "persons_at_risk": "Who works on the ramp during this operation?",
+          "existing_controls": "Are marshalling, PPE, and procedures adequate?",
+          "severity_rating": "Rate severity of potential ramp incident (1-5)",
+          "probability_rating": "Rate probability of ramp incident (1-5)",
+          "risk_acceptable": "Is the ramp operations risk acceptable?",
+          "additional_controls": "What additional ramp safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "fueling": {
+        "name": "Aircraft Fueling Risk Assessment",
+        "description": "Assessment of fire and spill hazards during aircraft fueling operations.",
+        "items": {
+          "hazard_description": "Describe the fueling operation and fuel type",
+          "persons_at_risk": "Who is involved in or near the fueling?",
+          "existing_controls": "Are bonding, spill kits, and fire equipment adequate?",
+          "severity_rating": "Rate severity of potential fuel fire (1-5)",
+          "probability_rating": "Rate probability of fuel ignition (1-5)",
+          "risk_acceptable": "Is the fueling risk acceptable?",
+          "additional_controls": "What additional fueling safety measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "jet_blast": {
+        "name": "Jet Blast & Ingestion Risk Assessment",
+        "description": "Assessment of jet blast and engine ingestion hazards near active runways and taxiways.",
+        "items": {
+          "hazard_description": "Describe the aircraft operations and blast zones",
+          "persons_at_risk": "Who works in or crosses blast/ingestion zones?",
+          "existing_controls": "Are exclusion zones, markings, and procedures adequate?",
+          "severity_rating": "Rate severity of jet blast/ingestion (1-5)",
+          "probability_rating": "Rate probability of blast exposure (1-5)",
+          "risk_acceptable": "Is the jet blast risk acceptable?",
+          "additional_controls": "What additional blast protection is needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "terminal_evac": {
+        "name": "Terminal Evacuation Risk Assessment",
+        "description": "Assessment of emergency evacuation risks for terminal buildings including crowd flow and assembly points.",
+        "items": {
+          "hazard_description": "Describe the terminal area and evacuation routes",
+          "persons_at_risk": "Who occupies this terminal area?",
+          "existing_controls": "Are alarms, exits, signage, and marshals adequate?",
+          "severity_rating": "Rate severity of potential evacuation failure (1-5)",
+          "probability_rating": "Rate probability of evacuation required (1-5)",
+          "risk_acceptable": "Is the evacuation risk acceptable?",
+          "additional_controls": "What additional evacuation measures are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all plans?"
+        }
+      },
+      "ground_vehicle": {
+        "name": "Ground Vehicle Operations Risk Assessment",
+        "description": "Assessment of airside vehicle operation hazards including runway incursions and pedestrian conflicts.",
+        "items": {
+          "hazard_description": "Describe the vehicle operations and routes",
+          "persons_at_risk": "Who drives and who is at risk?",
+          "existing_controls": "Are training, route markings, and comms adequate?",
+          "severity_rating": "Rate severity of potential vehicle incident (1-5)",
+          "probability_rating": "Rate probability of airside incident (1-5)",
+          "risk_acceptable": "Is the ground vehicle risk acceptable?",
+          "additional_controls": "What additional vehicle controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      },
+      "hazmat_cargo": {
+        "name": "Hazmat Cargo Handling Risk Assessment",
+        "description": "Assessment of hazardous material cargo handling risks during loading, unloading, and storage at airports.",
+        "items": {
+          "hazard_description": "Describe the hazmat cargo and handling process",
+          "persons_at_risk": "Who handles this hazmat cargo?",
+          "existing_controls": "Are IATA DGR compliance, PPE, and spill kits adequate?",
+          "severity_rating": "Rate severity of potential hazmat incident (1-5)",
+          "probability_rating": "Rate probability of hazmat spill/leak (1-5)",
+          "risk_acceptable": "Is the hazmat cargo risk acceptable?",
+          "additional_controls": "What additional hazmat controls are needed?",
+          "residual_risk_acceptable": "Is residual risk acceptable with all controls?"
+        }
+      }
+    },
+    "generic": {
+      "5step_hse": {
+        "name": "5-Schritte-Gefährdungsbeurteilung (HSE-Methode)",
+        "description": "Systematische 5-Schritte-Gefährdungsbeurteilung basierend auf dem britischen HSE-Rahmenwerk (INDG163) und ISO 45001, anwendbar auf alle Arbeitsplatzaktivitäten.",
+        "items": {
+          "identify_hazards": "Wurden alle wesentlichen Gefährdungen für diese Tätigkeit identifiziert?",
+          "who_might_be_harmed": "Wurde ermittelt, wer gefährdet sein könnte und auf welche Weise?",
+          "evaluate_risks": "Wurden die Risiken bewertet und bestehende Schutzmaßnahmen beurteilt?",
+          "record_findings": "Wurden die wesentlichen Ergebnisse ordnungsgemäß dokumentiert?",
+          "review_assessment": "Wurde ein Überprüfungsdatum festgelegt und wird die Beurteilung aktuell gehalten?"
+        }
+      },
+      "jha_universal": {
+        "name": "Tätigkeitsbezogene Gefährdungsanalyse (Universal)",
+        "description": "International anerkannte tätigkeitsbezogene Gefährdungsanalyse gemäß OSHA 3071 und ISO 45001, bei der Arbeitsaufgaben in Schritte aufgegliedert werden, um Gefährdungen zu erkennen und zu beherrschen.",
+        "items": {
+          "task_defined": "Wurde die Aufgabe oder Tätigkeit klar definiert und abgegrenzt?",
+          "steps_broken_down": "Wurde die Tätigkeit in einzelne Arbeitsschritte aufgegliedert?",
+          "hazards_per_step": "Wurden Gefährdungen für jeden Arbeitsschritt identifiziert?",
+          "controls_identified": "Wurden geeignete Schutzmaßnahmen für jede Gefährdung festgelegt?",
+          "ppe_determined": "Wurde die erforderliche PSA festgelegt und bereitgestellt?",
+          "residual_risk_acceptable": "Ist das Restrisiko nach Umsetzung der Schutzmaßnahmen akzeptabel?",
+          "workers_briefed": "Wurden alle Beschäftigten über die Gefährdungen und Schutzmaßnahmen unterwiesen?"
+        }
+      },
+      "coshh": {
+        "name": "Gefährdungsbeurteilung Gefahrstoffe (COSHH/GHS)",
+        "description": "Gefährdungsbeurteilung für Tätigkeiten mit Gefahrstoffen in Übereinstimmung mit GHS-Einstufung, COSHH-Vorschriften und REACH-Anforderungen.",
+        "items": {
+          "substances_identified": "Wurden alle verwendeten Gefahrstoffe identifiziert?",
+          "sds_available": "Sind aktuelle Sicherheitsdatenblätter (SDB) für alle Stoffe verfügbar?",
+          "exposure_routes_assessed": "Wurden alle Expositionswege (Einatmen, Hautkontakt, Verschlucken) beurteilt?",
+          "controls_adequate": "Sind die bestehenden Schutzmaßnahmen ausreichend, um eine Exposition zu verhindern?",
+          "ppe_specified": "Wurde geeignete PSA festgelegt und bereitgestellt?",
+          "emergency_procedures": "Sind Notfall- und Leckageverfahren vorhanden?",
+          "health_surveillance": "Wurde die Notwendigkeit einer arbeitsmedizinischen Vorsorge geprüft?"
+        }
+      },
+      "manual_handling": {
+        "name": "Gefährdungsbeurteilung Lastenhandhabung",
+        "description": "Ergonomische Gefährdungsbeurteilung für manuelle Lastenhandhabung gemäß EU-Richtlinie 90/269/EWG und NIOSH-Hebe-Richtlinien.",
+        "items": {
+          "task_assessed": "Wurde die Lastenhandhabung vollständig beurteilt (TILE: Tätigkeit, Individuum, Last, Umgebung)?",
+          "load_weight_acceptable": "Liegt das Gewicht der Last innerhalb akzeptabler Grenzen für diese Tätigkeit?",
+          "posture_risk": "Wurden Haltungsrisiken (Drehen, Bücken, Strecken) bewertet?",
+          "frequency_assessed": "Wurden Häufigkeit und Dauer der Handhabung beurteilt?",
+          "environment_factors": "Wurden Umgebungsfaktoren (Platz, Boden, Temperatur) berücksichtigt?",
+          "controls_in_place": "Sind Schutzmaßnahmen zur Reduzierung von Hebe-Risiken vorhanden (mechanische Hilfsmittel, Tätigkeitswechsel)?",
+          "training_provided": "Haben die Beschäftigten eine Unterweisung zur manuellen Lastenhandhabung erhalten?"
+        }
+      },
+      "workplace_inspection": {
+        "name": "Allgemeine Arbeitsplatz-Gefährdungsbeurteilung",
+        "description": "Umfassende Gefährdungsidentifikation und Risikobewertung am Arbeitsplatz gemäß EU-Rahmenrichtlinie 89/391/EWG und der allgemeinen OSHA-Fürsorgepflicht.",
+        "items": {
+          "work_area_inspected": "Wurde der Arbeitsbereich physisch auf Gefährdungen inspiziert?",
+          "hazards_documented": "Wurden alle identifizierten Gefährdungen dokumentiert?",
+          "risk_levels_assigned": "Wurden Risikostufen für jede identifizierte Gefährdung zugewiesen?",
+          "controls_documented": "Wurden bestehende und geplante Schutzmaßnahmen dokumentiert?",
+          "emergency_routes_clear": "Sind Flucht- und Rettungswege frei und gekennzeichnet?",
+          "first_aid_adequate": "Ist die Erste-Hilfe-Ausstattung für den Arbeitsplatz ausreichend?",
+          "review_date_set": "Wurde ein Überprüfungsdatum für diese Beurteilung festgelegt?"
+        }
+      }
+    }
   }
 }

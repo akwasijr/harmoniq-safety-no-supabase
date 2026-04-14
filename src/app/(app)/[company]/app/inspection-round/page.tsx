@@ -56,7 +56,7 @@ function InspectionRoundContent() {
   const company = useCompanyParam();
   const searchParams = useSearchParams();
   const routeId = searchParams.get("route");
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
   const { addToQueue, isOnline } = useSync();
@@ -223,7 +223,7 @@ function InspectionRoundContent() {
     const roundData = {
       id: crypto.randomUUID(),
       route_id: visibleRoute.id,
-      company_id: user?.company_id || "",
+      company_id: user?.company_id || currentCompany?.id || "",
       inspector_id: user?.id || "",
       status: "completed" as const,
       started_at: roundStartedAt,

@@ -128,7 +128,10 @@ export default function IncidentDetailPage() {
 
   const { toast } = useToast();
   const { t, formatDate } = useTranslation();
-  const { user: authUser } = useAuth();
+  const { user: authUser, hasPermission } = useAuth();
+  const canEdit = hasPermission("incidents.edit_own") || hasPermission("incidents.edit_all");
+  const canDelete = hasPermission("incidents.delete");
+  const canAssign = hasPermission("incidents.assign");
   const { items: companiesList } = useCompanyStore();
   const currentCompany = companiesList.find((c) => c.slug === company);
   const { incidents, tickets, correctiveActions, users, teams, locations, stores } = useCompanyData();
@@ -252,10 +255,10 @@ export default function IncidentDetailPage() {
   const isAnonymous = incident?.reporter_id === "__anonymous__";
   const reporter = isAnonymous ? null : users.find((u) => u.id === incident?.reporter_id);
   const reporterName = isAnonymous ? "Anonymous" : (reporter?.full_name || "Unknown");
-  const relatedTickets = tickets.filter((t) => t.incident_ids?.includes(incidentId));
-  const correctiveIncidentActions = actions.filter((action) => action.actionType === "corrective");
-  const openCorrectiveActionCount = correctiveIncidentActions.filter((action) => action.status !== "completed").length;
-  const openTicketCount = relatedTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length;
+  const relatedTickets = React.useMemo(() => tickets.filter((t) => t.incident_ids?.includes(incidentId)), [tickets, incidentId]);
+  const correctiveIncidentActions = React.useMemo(() => actions.filter((action) => action.actionType === "corrective"), [actions]);
+  const openCorrectiveActionCount = React.useMemo(() => correctiveIncidentActions.filter((action) => action.status !== "completed").length, [correctiveIncidentActions]);
+  const openTicketCount = React.useMemo(() => relatedTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length, [relatedTickets]);
   const canResolveIncident = openCorrectiveActionCount === 0 && openTicketCount === 0;
   const [statusValue, setStatusValue] = React.useState("new");
   const [investigatorIdValue, setInvestigatorIdValue] = React.useState("");
@@ -266,9 +269,8 @@ export default function IncidentDetailPage() {
     setInvestigatorIdValue(incident.resolved_by || "");
   }, [incident?.id, incident?.status, incident?.resolved_by]);
 
-  // Calculate if incident can be closed
-  const allActionsComplete = actions.length > 0 && actions.every((a) => a.status === "completed");
-  const completedActions = actions.filter((a) => a.status === "completed").length;
+  const completedActions = React.useMemo(() => actions.filter((a) => a.status === "completed").length, [actions]);
+  const allActionsComplete = actions.length > 0 && completedActions === actions.length;
   const totalActions = actions.length;
 
   if (isLoading && incidents.length === 0) {
@@ -626,17 +628,72 @@ export default function IncidentDetailPage() {
                   </div>
                   <div className="flex items-start gap-3">
                     <Timer className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm text-muted-foreground">{t("incidents.labels.lostTime")}</p>
-                      <p className="font-medium">
-                        {incident.lost_time ? (
-                          <span className="text-destructive">
-                            Yes {incident.lost_time_amount ? `(${incident.lost_time_amount} hours)` : ""}
-                          </span>
-                        ) : (
-                          <span className="text-success">No</span>
-                        )}
-                      </p>
+                      {incident.lost_time ? (
+                        <div className="space-y-2 mt-1">
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Days away</p>
+                              <input
+                                type="number"
+                                min="0"
+                                max="365"
+                                value={incident.lost_time_amount ?? ""}
+                                onChange={(e) => {
+                                  const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                                  updateIncident(incident.id, {
+                                    lost_time_amount: val,
+                                    lost_time_updated_at: new Date().toISOString(),
+                                    lost_time_updated_by: authUser?.id || null,
+                                  });
+                                }}
+                                className="w-20 rounded border border-input bg-background px-2 py-1 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Restricted days</p>
+                              <input
+                                type="number"
+                                min="0"
+                                max="365"
+                                value={incident.lost_time_restricted_days ?? ""}
+                                onChange={(e) => {
+                                  const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                                  updateIncident(incident.id, {
+                                    lost_time_restricted_days: val,
+                                    lost_time_updated_at: new Date().toISOString(),
+                                    lost_time_updated_by: authUser?.id || null,
+                                  });
+                                }}
+                                className="w-20 rounded border border-input bg-background px-2 py-1 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Return date</p>
+                              <input
+                                type="date"
+                                value={incident.lost_time_return_date ?? ""}
+                                onChange={(e) => {
+                                  updateIncident(incident.id, {
+                                    lost_time_return_date: e.target.value || null,
+                                    lost_time_updated_at: new Date().toISOString(),
+                                    lost_time_updated_by: authUser?.id || null,
+                                  });
+                                }}
+                                className="rounded border border-input bg-background px-2 py-1 text-sm"
+                              />
+                            </div>
+                          </div>
+                          {incident.lost_time_updated_at && (
+                            <p className="text-[10px] text-muted-foreground">
+                              Last updated {formatDate(incident.lost_time_updated_at)}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="font-medium text-success">No</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -814,7 +871,7 @@ export default function IncidentDetailPage() {
                             <p className="text-sm text-muted-foreground capitalize">{assignedUser.role.replace("_", " ")}</p>
                           </div>
                         </div>
-                        {!isLocked && (
+                        {!isLocked && canAssign && (
                           <div className="relative">
                             <Button
                               size="sm"
@@ -874,7 +931,7 @@ export default function IncidentDetailPage() {
                             <p className="text-sm text-muted-foreground">Team assignment</p>
                           </div>
                         </div>
-                        {!isLocked && (
+                        {!isLocked && canAssign && (
                           <div className="relative">
                             <Button
                               size="sm"
@@ -923,7 +980,7 @@ export default function IncidentDetailPage() {
                   return (
                     <div className="space-y-3">
                       <p className="text-sm text-muted-foreground">Unassigned</p>
-                      {!isLocked && (
+                      {!isLocked && canAssign && (
                         <div className="relative">
                           <Button
                             size="sm"
@@ -2026,7 +2083,7 @@ export default function IncidentDetailPage() {
         <ComplianceTab incident={incident} companyCountry={currentCompany?.country || "US"} reporter={reporter} />
       )}
 
-      {activeTab === "settings" && !isLocked && (
+      {activeTab === "settings" && !isLocked && canEdit && (
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -2064,7 +2121,7 @@ export default function IncidentDetailPage() {
                   <option value="new">New</option>
                   <option value="in_progress">In Progress</option>
                   <option value="in_review">In Review</option>
-                  <option value="resolved">Resolved</option>
+                  <option value="resolved" disabled={!canResolveIncident}>Resolved{!canResolveIncident ? " (blocked)" : ""}</option>
                 </select>
                 {!canResolveIncident && (
                   <p className="mt-2 text-sm text-destructive">
@@ -2125,6 +2182,7 @@ export default function IncidentDetailPage() {
                   Archive
                 </Button>
               </div>
+              {canDelete && (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Delete Incident</p>
@@ -2138,6 +2196,7 @@ export default function IncidentDetailPage() {
                   <Trash2 className="h-4 w-4" /> Delete
                 </Button>
               </div>
+              )}
             </CardContent>
           </Card>
         </div>

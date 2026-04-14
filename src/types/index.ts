@@ -9,6 +9,7 @@ export type Currency = "USD" | "EUR" | "SEK" | "GBP";
 
 // Industry Types
 export type IndustryCode =
+  | "generic"
   | "construction"
   | "manufacturing"
   | "oil_gas"
@@ -166,12 +167,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "tickets.view_own", "tickets.create",
   ],
   viewer: [
-    "incidents.view_own",
+    "incidents.view_own", "incidents.view_team", "incidents.view_all",
+    "incidents.create", "incidents.edit_own",
     "assets.view",
     "locations.view",
     "checklists.view",
+    "reports.view_own", "reports.view_team", "reports.view_all", "reports.export",
     "users.view_own",
-    "tickets.view_own",
+    "tickets.view_own", "tickets.create",
+    "risk_assessments.view",
+    "corrective_actions.view",
+    "work_orders.view",
   ],
 };
 
@@ -230,11 +236,15 @@ export interface Company {
   hero_image_url: string | null;
   primary_color: string;
   secondary_color: string;
+  tertiary_color?: string;
   font_family: string;
   ui_style: UIStyle;
 
   // Assessment visibility (admin can hide specific form types)
   hidden_assessment_types?: string[]; // e.g. ["osa", "arbowet"]
+
+  // Module visibility — company-wide (admin controls which modules are active)
+  hidden_modules?: string[]; // e.g. ["permits", "training", "environment", "compliance"]
 
   // Subscription
   tier: SubscriptionTier;
@@ -245,6 +255,16 @@ export interface Company {
   created_at: string;
   updated_at: string;
   trial_ends_at: string | null;
+
+  // Workforce data (used for LTIR/LTIFR calculations)
+  total_employees?: number | null;
+  average_hours_per_week?: number | null;
+
+  // Company details (used to pre-fill forms)
+  address?: string | null;
+  phone?: string | null;
+  contact_person?: string | null;
+  registration_number?: string | null;
 
   // Incident configuration
   custom_incident_types?: {
@@ -322,8 +342,15 @@ export interface User {
   // Team membership
   team_ids: string[];
   
+  // Reporting hierarchy
+  reports_to: string | null; // User ID of direct manager/supervisor
+  
   // Custom permissions (in addition to role-based defaults)
   custom_permissions?: Permission[];
+
+  // Sidebar preferences — user-level customization
+  hidden_modules?: string[]; // modules this user has hidden
+  sidebar_order?: { group: string; items: string[] }[]; // custom tab/item ordering
 }
 
 // Team/Group for organizing users
@@ -451,7 +478,11 @@ export interface Incident {
   incident_date: string;
   incident_time: string;
   lost_time: boolean;
-  lost_time_amount: number | null;
+  lost_time_amount: number | null;       // Total calendar days away from work (OSHA standard)
+  lost_time_restricted_days: number | null; // Days on restricted/modified duty
+  lost_time_return_date: string | null;  // Date worker returned to full duty
+  lost_time_updated_at: string | null;   // Last time lost time data was updated
+  lost_time_updated_by: string | null;   // Who last updated lost time data
   active_hazard: boolean;
 
   // Location
@@ -1483,6 +1514,248 @@ export interface InspectionRound {
   alerts_created: string[];
   gps_lat?: number | null;
   gps_lng?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// TRAINING & COMPETENCY
+// ============================================
+
+export interface TrainingCertificationType {
+  id: string;
+  company_id: string;
+  name: string;
+  category: "safety" | "equipment" | "regulatory" | "general";
+  country_specific: Country | null;
+  regulation_ref: string | null;
+  default_validity_days: number | null;
+  renewal_required: boolean;
+  is_builtin: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkerCertification {
+  id: string;
+  company_id: string;
+  user_id: string;
+  certification_type_id: string;
+  certificate_number: string | null;
+  issuer: string | null;
+  issued_date: string;
+  expiry_date: string | null;
+  status: "valid" | "expiring" | "expired" | "revoked";
+  document_url: string | null;
+  notes: string | null;
+  verified_by: string | null;
+  verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrainingAssignment {
+  id: string;
+  company_id: string;
+  course_name: string;
+  description: string | null;
+  user_id: string;
+  assigned_by: string;
+  linked_certification_type_id: string | null;
+  due_date: string;
+  status: "assigned" | "in_progress" | "completed" | "overdue";
+  completed_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// COMPLIANCE
+// ============================================
+
+export type ComplianceObligationFrequency = "one_time" | "daily" | "weekly" | "monthly" | "quarterly" | "annual" | "custom";
+export type ComplianceObligationStatus = "compliant" | "due_soon" | "overdue" | "not_started";
+export type ComplianceEvidenceType = "auto" | "manual" | "document";
+export type ComplianceEvidenceSource = "incident" | "inspection" | "training" | "risk_assessment" | "document" | "manual";
+
+export interface ComplianceObligation {
+  id: string;
+  company_id: string;
+  title: string;
+  description: string | null;
+  regulation: string;
+  country: Country;
+  category: "incident_reporting" | "risk_assessment" | "training" | "inspection" | "environmental" | "general";
+  frequency: ComplianceObligationFrequency;
+  custom_frequency_days: number | null;
+  next_due_date: string;
+  last_completed_date: string | null;
+  owner_id: string | null;
+  evidence_type: ComplianceEvidenceType;
+  auto_evidence_source: string | null;
+  status: ComplianceObligationStatus;
+  is_builtin: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ComplianceEvidence {
+  id: string;
+  company_id: string;
+  obligation_id: string;
+  period_start: string;
+  period_end: string;
+  source_type: ComplianceEvidenceSource;
+  source_id: string | null;
+  document_url: string | null;
+  notes: string | null;
+  submitted_by: string;
+  status: "pending_review" | "accepted" | "rejected";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
+export interface ComplianceDocument {
+  id: string;
+  company_id: string;
+  title: string;
+  category: "policy" | "procedure" | "sds" | "certificate" | "report" | "plan" | "other";
+  document_url: string;
+  version: string;
+  status: "draft" | "current" | "archived";
+  review_date: string | null;
+  owner_id: string | null;
+  tags: string[];
+  applicable_countries: Country[];
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// PERMITS TO WORK
+// ============================================
+
+export type PermitType = "hot_work" | "confined_space" | "working_at_height" | "electrical_isolation" | "excavation" | "other";
+export type PermitStatus = "draft" | "pending_approval" | "approved" | "active" | "expired" | "cancelled" | "closed";
+
+export interface PermitToWork {
+  id: string;
+  company_id: string;
+  permit_number: string;
+  type: PermitType;
+  title: string;
+  description: string | null;
+  location_id: string | null;
+  asset_id: string | null;
+  requested_by: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  start_time: string;
+  end_time: string;
+  status: PermitStatus;
+  precautions: string[];
+  isolation_refs: string[];
+  workers: string[];
+  notes: string | null;
+  closed_by: string | null;
+  closed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// ENVIRONMENT
+// ============================================
+
+export type WasteCategory = "hazardous" | "non_hazardous" | "recyclable" | "special" | "clinical";
+export type SpillSeverity = "minor" | "moderate" | "major";
+
+export interface WasteLog {
+  id: string;
+  company_id: string;
+  waste_type: string;
+  category: WasteCategory;
+  volume: number;
+  unit: string;
+  disposal_method: string;
+  contractor: string | null;
+  location_id: string | null;
+  date: string;
+  notes: string | null;
+  recorded_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SpillRecord {
+  id: string;
+  company_id: string;
+  material: string;
+  volume: number;
+  unit: string;
+  severity: SpillSeverity;
+  location_id: string | null;
+  location_description: string | null;
+  containment_action: string;
+  incident_id: string | null;
+  date: string;
+  reported_by: string;
+  status: "open" | "contained" | "cleaned" | "closed";
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// PROCEDURES
+// ============================================
+
+export type ProcedureRecurrence = "per_event" | "daily" | "weekly" | "monthly" | "quarterly" | "annual";
+
+export interface ProcedureStep {
+  id: string;
+  order: number;
+  type: "checklist" | "risk_assessment";
+  template_id: string;
+  template_name: string;
+  required: boolean;
+}
+
+export interface ProcedureTemplate {
+  id: string;
+  company_id: string;
+  name: string;
+  description: string | null;
+  industry: string | null;
+  steps: ProcedureStep[];
+  recurrence: ProcedureRecurrence;
+  is_builtin: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcedureSubmission {
+  id: string;
+  company_id: string;
+  procedure_template_id: string;
+  submitter_id: string;
+  location_id: string | null;
+  status: "in_progress" | "completed" | "cancelled";
+  current_step: number;
+  step_submissions: {
+    step_id: string;
+    submission_id: string | null;
+    status: "pending" | "in_progress" | "completed" | "skipped";
+    completed_at: string | null;
+  }[];
+  started_at: string;
+  completed_at: string | null;
+  next_due_date: string | null;
   created_at: string;
   updated_at: string;
 }

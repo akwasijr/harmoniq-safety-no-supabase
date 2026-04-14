@@ -35,14 +35,15 @@ export default function DashboardRootLayout({
 
   const { resolvedTheme } = useTheme();
 
-  // Apply saved branding on mount, and re-apply when theme/company changes.
-  // Prefer user's locally-saved settings (which survive even when the DB
-  // can't be updated) over the company record from Supabase.
-  React.useEffect(() => {
-    if (!currentCompany || !resolvedTheme) return;
+  // Apply branding synchronously before paint to avoid FOUC
+  React.useLayoutEffect(() => {
+    if (!currentCompany) return;
 
     let primaryColor = currentCompany.primary_color;
     let secondaryColor = currentCompany.secondary_color;
+    let tertiaryColor = currentCompany.tertiary_color;
+    let fontFamily = currentCompany.font_family;
+    let shape: string | undefined;
 
     // Check if the user has saved branding overrides in localStorage
     try {
@@ -54,6 +55,12 @@ export default function DashboardRootLayout({
         const saved = JSON.parse(raw);
         if (saved.primaryColor) primaryColor = saved.primaryColor;
         if (saved.secondaryColor) secondaryColor = saved.secondaryColor;
+        if (saved.tertiaryColor) tertiaryColor = saved.tertiaryColor;
+        if (saved.fieldApp?.fontId) {
+          const fontMap: Record<string, string> = { geist: "Geist Sans", inter: "Inter", ibm_plex_sans: "IBM Plex Sans", manrope: "Manrope", plus_jakarta_sans: "Plus Jakarta Sans", public_sans: "Public Sans", source_sans_3: "Source Sans 3", work_sans: "Work Sans" };
+          fontFamily = fontMap[saved.fieldApp.fontId] || fontFamily;
+        }
+        if (saved.fieldApp?.shape) shape = saved.fieldApp.shape;
       }
     } catch { /* ignore parse errors */ }
 
@@ -61,10 +68,12 @@ export default function DashboardRootLayout({
       {
         primaryColor,
         secondaryColor,
-        fontFamily: currentCompany.font_family,
+        tertiaryColor: tertiaryColor || undefined,
+        fontFamily,
         uiStyle: currentCompany.ui_style,
+        shape: shape as "square" | "small" | "medium" | "large" | undefined,
       },
-      resolvedTheme
+      resolvedTheme || "light"
     );
     return () => resetBranding();
   }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany]);

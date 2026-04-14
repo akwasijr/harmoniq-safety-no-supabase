@@ -6,10 +6,10 @@ import type { Currency } from "@/types";
 
 export type SettingsTabType =
   | "general"
+  | "modules"
   | "branding"
   | "fieldApp"
-  | "industry"
-  | "incidents"
+  | "accessControl"
   | "notifications"
   | "security"
   | "billing";
@@ -26,6 +26,7 @@ export interface SettingsState {
   measurementSystem: MeasurementSystem;
   primaryColor: string;
   secondaryColor: string;
+  tertiaryColor: string;
   logoUrl: string | null;
   notifCriticalAlerts: boolean;
   notifDailyDigest: boolean;

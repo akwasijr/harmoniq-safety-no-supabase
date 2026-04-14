@@ -2,16 +2,16 @@
 
 import * as React from "react";
 import {
-  AlertTriangle,
   Bell,
   Building,
   Check,
   CreditCard,
-  Factory,
   Palette,
   Save,
   Shield,
+  ShieldCheck,
   Smartphone,
+  ToggleLeft,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -28,6 +28,13 @@ import {
   DEFAULT_BRAND_PRIMARY_COLOR,
   DEFAULT_BRAND_SECONDARY_COLOR,
 } from "@/lib/brand-defaults";
+
+const FONT_MAP: Record<string, string> = {
+  geist: "Geist Sans", inter: "Inter", ibm_plex_sans: "IBM Plex Sans",
+  manrope: "Manrope", plus_jakarta_sans: "Plus Jakarta Sans",
+  public_sans: "Public Sans", source_sans_3: "Source Sans 3", work_sans: "Work Sans",
+};
+
 import {
   buildRegionalDefaults,
   getCompanySettingsKey,
@@ -49,8 +56,8 @@ import type { Company, Country, IndustryCode, Language } from "@/types";
 import { BrandingSettingsSection } from "./_components/branding-settings-section";
 import { FieldAppSettingsSection } from "./_components/field-app-settings-section";
 import { GeneralSettingsSection } from "./_components/general-settings-section";
-import { IndustrySettingsSection } from "./_components/industry-settings-section";
-import { IncidentSettingsSection } from "./_components/incident-settings-section";
+import { SidebarEditorSection } from "./_components/sidebar-editor-section";
+import { AccessControlSection } from "./_components/access-control-section";
 import {
   BillingSettingsSection,
   NotificationsSettingsSection,
@@ -105,6 +112,7 @@ const buildSettingsFromCompany = (
     primaryColor: currentCompany.primary_color || DEFAULT_BRAND_PRIMARY_COLOR,
     secondaryColor:
       currentCompany.secondary_color || DEFAULT_BRAND_SECONDARY_COLOR,
+    tertiaryColor: currentCompany.tertiary_color || "#10B981",
     logoUrl: currentCompany.logo_url,
     notifCriticalAlerts: true,
     notifDailyDigest: true,
@@ -127,7 +135,7 @@ export default function SettingsPage() {
     hasPermission: currentUserCan,
   } = useAuth();
   const canEditSettings = currentUserCan("settings.edit");
-  const { items: companies, setItems: setCompanies } = useCompanyStore();
+  const { items: companies, setItems: setCompanies, update: updateCompany } = useCompanyStore();
   const { resolvedTheme } = useTheme();
   const fallbackCompany = React.useMemo(
     () => companies.find((item) => item.slug === company) ?? null,
@@ -150,21 +158,27 @@ export default function SettingsPage() {
   const { t, setLocale } = useTranslation();
 
   const settingsTabs = React.useMemo<SettingsTabConfig[]>(
-    () => [
-      { value: "general", label: t("settings.tabs.general"), icon: Building },
-      { value: "branding", label: t("settings.tabs.branding"), icon: Palette },
-      { value: "fieldApp", label: "Field App", icon: Smartphone },
-      { value: "industry", label: "Industry", icon: Factory },
-      { value: "incidents", label: "Incidents", icon: AlertTriangle },
-      {
-        value: "notifications",
-        label: t("settings.tabs.notifications"),
-        icon: Bell,
-      },
-      { value: "security", label: t("settings.tabs.security"), icon: Shield },
-      { value: "billing", label: t("settings.tabs.billing"), icon: CreditCard },
-    ],
-    [t],
+    () => {
+      const tabs: SettingsTabConfig[] = [
+        { value: "general", label: t("settings.tabs.general"), icon: Building },
+        { value: "branding", label: t("settings.tabs.branding"), icon: Palette },
+        { value: "modules", label: "Modules & Sidebar", icon: ToggleLeft },
+        { value: "fieldApp", label: "Field App", icon: Smartphone },
+        { value: "accessControl", label: "Access Control", icon: ShieldCheck },
+        {
+          value: "notifications",
+          label: t("settings.tabs.notifications"),
+          icon: Bell,
+        },
+        { value: "security", label: t("settings.tabs.security"), icon: Shield },
+        { value: "billing", label: t("settings.tabs.billing"), icon: CreditCard },
+      ];
+      if (!canEditSettings) {
+        return tabs.filter((tab) => tab.value !== "billing");
+      }
+      return tabs;
+    },
+    [t, canEditSettings],
   );
 
   React.useEffect(() => {
@@ -205,6 +219,10 @@ export default function SettingsPage() {
       {
         primaryColor: nextSettings.primaryColor,
         secondaryColor: nextSettings.secondaryColor,
+        tertiaryColor: nextSettings.tertiaryColor,
+        fontFamily: nextSettings.fieldApp?.fontId ? FONT_MAP[nextSettings.fieldApp.fontId] : undefined,
+        shape: nextSettings.fieldApp?.shape,
+        shadow: nextSettings.fieldApp?.shadow,
       },
       resolvedTheme || "light",
     );
@@ -221,6 +239,10 @@ export default function SettingsPage() {
         {
           primaryColor: settings.primaryColor,
           secondaryColor: settings.secondaryColor,
+          tertiaryColor: settings.tertiaryColor,
+          fontFamily: settings.fieldApp?.fontId ? FONT_MAP[settings.fieldApp.fontId] : undefined,
+          shape: settings.fieldApp?.shape,
+          shadow: settings.fieldApp?.shadow,
         },
         resolvedTheme || "light",
       );
@@ -234,9 +256,11 @@ export default function SettingsPage() {
         app_name: settings.appName || settings.companyName,
         primary_color: settings.primaryColor,
         secondary_color: settings.secondaryColor,
+        tertiary_color: settings.tertiaryColor,
         logo_url: settings.logoUrl,
         language: settings.language as Language,
         country: settings.selectedCountry as Country,
+        industry: settings.selectedIndustry as Company["industry"],
         currency: settings.currency,
       };
       const nextCompanies = companies.map((item) =>
@@ -264,6 +288,7 @@ export default function SettingsPage() {
             currency: settings.currency,
             primaryColor: settings.primaryColor,
             secondaryColor: settings.secondaryColor,
+            tertiaryColor: settings.tertiaryColor,
             logoUrl: settings.logoUrl,
           }),
         });
@@ -447,6 +472,7 @@ export default function SettingsPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold">{t("settings.title")}</h1>
+          {activeTab !== "accessControl" && (
           <Button
             onClick={handleSave}
             disabled={saving || !canEditSettings}
@@ -460,6 +486,7 @@ export default function SettingsPage() {
             )}
             {saved ? t("settings.saved") : t("settings.saveChanges")}
           </Button>
+          )}
         </div>
 
         {!canEditSettings && (
@@ -483,6 +510,10 @@ export default function SettingsPage() {
               t={t}
               updateSetting={updateSetting}
             />
+          )}
+
+          {activeTab === "modules" && (
+            <SidebarEditorSection />
           )}
 
           {activeTab === "branding" && (
@@ -509,26 +540,16 @@ export default function SettingsPage() {
             />
           )}
 
-          {activeTab === "industry" && (
-            <IndustrySettingsSection
-              companySlug={company}
-              companyCountry={activeCompany.country}
-              settings={settings}
-              t={t}
-              updateSetting={updateSetting}
-            />
-          )}
-
-          {activeTab === "incidents" && (
-            <IncidentSettingsSection />
-          )}
-
           {activeTab === "notifications" && (
             <NotificationsSettingsSection
               settings={settings}
               t={t}
               updateSetting={updateSetting}
             />
+          )}
+
+          {activeTab === "accessControl" && (
+            <AccessControlSection t={t} />
           )}
 
           {activeTab === "security" && (

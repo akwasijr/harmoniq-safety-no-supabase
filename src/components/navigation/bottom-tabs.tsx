@@ -9,10 +9,14 @@ import {
   Package,
   Newspaper,
   User,
+  Lock,
 } from "lucide-react";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
+import type { Permission } from "@/types";
 
 interface BottomTabsProps {
   company: string;
@@ -26,6 +30,7 @@ interface TabItem {
   icon: React.ComponentType<{ className?: string }>;
   exactMatch?: boolean;
   alsoMatchPrefixes?: string[];
+  requiredPermission?: Permission;
 }
 
 const tabItems: TabItem[] = [
@@ -44,6 +49,7 @@ const tabItems: TabItem[] = [
     href: "/app/checklists",
     icon: ShieldCheck,
     alsoMatchPrefixes: ["/app/report", "/app/incidents", "/app/risk-assessment", "/app/inspections", "/app/tasks"],
+    requiredPermission: "checklists.view",
   },
   {
     titleKey: "nav.assets",
@@ -51,6 +57,7 @@ const tabItems: TabItem[] = [
     fallback: "Assets",
     href: "/app/assets",
     icon: Package,
+    requiredPermission: "assets.view",
   },
   {
     titleKey: "nav.news",
@@ -72,6 +79,8 @@ export function BottomTabs({ company }: BottomTabsProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
   const { settings } = useFieldAppSettings();
+  const { hasPermission } = useAuth();
+  const { toast } = useToast();
   const visibleTabs = React.useMemo(
     () => tabItems.filter((item) => settings.newsEnabled || item.href !== "/app/news"),
     [settings.newsEnabled]
@@ -82,13 +91,37 @@ export function BottomTabs({ company }: BottomTabsProps) {
       <ul className="flex h-[68px] items-center justify-around">
         {visibleTabs.map((item) => {
           const href = `/${company}${item.href}`;
-          const isActive = item.exactMatch 
+          const isLocked = item.requiredPermission ? !hasPermission(item.requiredPermission) : false;
+          const isActive = !isLocked && (item.exactMatch 
             ? pathname === href
             : pathname === href || pathname.startsWith(`${href}/`)
               || (item.alsoMatchPrefixes?.some(p => {
                 const fullP = `/${company}${p}`;
                 return pathname === fullP || pathname.startsWith(`${fullP}/`);
-              }) ?? false);
+              }) ?? false));
+
+          if (isLocked) {
+            return (
+              <li key={item.href} className="flex-1">
+                <button
+                  type="button"
+                  onClick={() => toast("You don't have access to this feature", "info")}
+                  className={cn(
+                    "flex min-h-[44px] w-full flex-col items-center justify-center px-2 py-1.5",
+                    "text-muted-foreground/30 cursor-not-allowed"
+                  )}
+                >
+                  <div className="relative">
+                    <item.icon className="h-5 w-5" aria-hidden="true" />
+                    <Lock className="absolute -bottom-1 -right-1.5 h-2.5 w-2.5" aria-hidden="true" />
+                  </div>
+                  <span className="text-[11px] max-w-[4.5rem] truncate text-center mt-1 font-normal">
+                    {t(item.shortTitleKey) || item.fallback}
+                  </span>
+                </button>
+              </li>
+            );
+          }
 
           return (
             <li key={item.href} className="flex-1">

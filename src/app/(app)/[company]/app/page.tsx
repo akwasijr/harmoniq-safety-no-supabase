@@ -15,6 +15,12 @@ import {
   ScanLine,
   ShieldCheck,
   Zap,
+  AlertCircle,
+  Clock,
+  Info,
+  Ticket,
+  CheckCircle,
+  TrendingDown,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
@@ -23,6 +29,8 @@ import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
+import { useWorkerCertificationsStore } from "@/stores/worker-certifications-store";
+import { useTrainingAssignmentsStore } from "@/stores/training-assignments-store";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { cn } from "@/lib/utils";
@@ -38,7 +46,7 @@ import {
   getFieldAppTip,
 } from "@/lib/field-app-settings";
 
-const QUICK_ACTION_ICON_MAP: Record<FieldAppQuickActionId, React.ComponentType<{ className?: string }>> = {
+const QUICK_ACTION_ICON_MAP: Record<FieldAppQuickActionId, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
   report_incident: AlertTriangle,
   my_tasks: ClipboardCheck,
   browse_assets: Search,
@@ -48,6 +56,102 @@ const QUICK_ACTION_ICON_MAP: Record<FieldAppQuickActionId, React.ComponentType<{
   checklists: ClipboardCheck,
   news: Newspaper,
 };
+
+/* ── Field Focus ── */
+type FocusItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  time?: string;
+};
+
+type FocusTab = "urgent" | "upcoming" | "good_to_know";
+
+function FieldFocus({
+  urgent,
+  upcoming,
+  goodToKnow,
+  t,
+}: {
+  urgent: FocusItem[];
+  upcoming: FocusItem[];
+  goodToKnow: FocusItem[];
+  t: (key: string) => string;
+}) {
+  const defaultTab: FocusTab = urgent.length === 0 && upcoming.length === 0 ? "good_to_know" : "urgent";
+  const [activeTab, setActiveTab] = React.useState<FocusTab>(defaultTab);
+
+  const tabs: { id: FocusTab; label: string; dot: string; count: number }[] = [
+    { id: "urgent", label: t("focusStrip.urgent"), dot: "bg-red-500", count: urgent.length },
+    { id: "upcoming", label: t("focusStrip.upcoming"), dot: "bg-amber-500", count: upcoming.length },
+    { id: "good_to_know", label: t("focusStrip.goodToKnow"), dot: "bg-blue-500", count: goodToKnow.length },
+  ];
+
+  const items = activeTab === "urgent" ? urgent : activeTab === "upcoming" ? upcoming : goodToKnow;
+
+  return (
+    <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-4">
+      <p className="text-[10px] font-bold text-primary mb-3">{t("focusStrip.fieldFocus")}</p>
+      {/* Tabs */}
+      <div className="flex gap-1 mb-3">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-2 rounded-lg text-center transition-colors",
+              activeTab === tab.id
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground"
+            )}
+          >
+            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", tab.dot)} />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      {/* Items — fixed min height */}
+      <div className="min-h-[180px]">
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-[180px] text-muted-foreground/50">
+            {activeTab === "urgent" ? (
+              <CheckCircle className="h-8 w-8 mb-2" />
+            ) : activeTab === "upcoming" ? (
+              <Clock className="h-8 w-8 mb-2" />
+            ) : (
+              <Info className="h-8 w-8 mb-2" />
+            )}
+            <p className="text-xs">
+              {activeTab === "urgent" ? t("focusStrip.noUrgent") : activeTab === "upcoming" ? t("focusStrip.nothingUpcoming") : t("focusStrip.allClear")}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-0.5">
+          {items.slice(0, 5).map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 active:bg-muted/50 transition-colors"
+            >
+              <item.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <p className="flex-1 text-sm font-normal truncate">{item.title}</p>
+              {item.time && (
+                <span className={cn(
+                  "shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full",
+                  activeTab === "urgent" ? "text-red-500 bg-red-500/10" : "text-amber-500 bg-amber-500/10"
+                )}>{item.time}</span>
+              )}
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+            </Link>
+          ))}
+        </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function getGreetingKey(): string {
   if (typeof window === "undefined") return "app.goodMorning"; // SSR default
@@ -275,6 +379,8 @@ export default function EmployeeAppHomePage() {
   const { items: tickets } = useTicketsStore();
   const { items: workOrders } = useWorkOrdersStore();
   const { items: correctiveActions } = useCorrectiveActionsStore();
+  const { items: workerCertifications } = useWorkerCertificationsStore();
+  const { items: trainingAssignments } = useTrainingAssignmentsStore();
   const { items: checklistTemplates } = useChecklistTemplatesStore();
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { t, formatDate } = useTranslation();
@@ -350,6 +456,235 @@ export default function EmployeeAppHomePage() {
     };
   });
 
+  // Filter quick actions by role
+  const roleAllowedActions: Record<string, FieldAppQuickActionId[]> = {
+    super_admin: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
+    company_admin: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
+    manager: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
+    safety_officer: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
+    employee: ["report_incident", "my_tasks"],
+    viewer: ["my_tasks", "browse_assets"],
+  };
+  const allowedIds = roleAllowedActions[user.role] || roleAllowedActions.employee;
+  const filteredQuickActions = quickActions.filter((a) =>
+    allowedIds.includes(a.id as FieldAppQuickActionId)
+  );
+
+  // ── Field Focus data ──
+  const now = new Date(stableNow);
+  const sevenDaysFromNow = new Date(stableNow + 7 * 24 * 60 * 60 * 1000);
+
+  // Only show critical incidents in focus for manager roles
+  const canManageIncidents = ["super_admin", "company_admin", "manager", "safety_officer"].includes(user.role);
+  const isViewerRole = user.role === "viewer";
+
+  const overdueSince = (date: string) => {
+    const diff = now.getTime() - new Date(date).getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return "Today";
+    if (days === 1) return "1d overdue";
+    return `${days}d overdue`;
+  };
+
+  const focusUrgent: FocusItem[] = [];
+  const focusUpcoming: FocusItem[] = [];
+  const focusGoodToKnow: FocusItem[] = [];
+
+  // Critical/high incidents still open (only for roles that manage incidents)
+  if (canManageIncidents) {
+    incidents
+      .filter((inc) => (inc.severity === "critical" || inc.severity === "high") && inc.status !== "resolved" && inc.status !== "archived")
+      .slice(0, 5)
+      .forEach((inc) => {
+        focusUrgent.push({
+          id: `inc-${inc.id}`,
+          title: inc.title,
+          subtitle: `${inc.severity} incident · ${inc.status}`,
+          href: `/${company}/app/incidents/${inc.id}`,
+          icon: AlertCircle,
+          time: overdueSince(inc.incident_date),
+        });
+      });
+  }
+
+  // Overdue tickets
+  userTickets
+    .filter((tk) => tk.status !== "resolved" && tk.status !== "closed" && tk.due_date && new Date(tk.due_date) < now)
+    .forEach((tk) => {
+      focusUrgent.push({
+        id: `tk-${tk.id}`,
+        title: tk.title,
+        subtitle: `Overdue · was due ${tk.due_date}`,
+        href: `/${company}/app/tasks/tickets/${tk.id}`,
+        icon: Ticket,
+        time: overdueSince(tk.due_date!),
+      });
+    });
+
+  // Overdue work orders
+  userWorkOrders
+    .filter((wo) => wo.status !== "completed" && wo.status !== "cancelled" && wo.due_date && new Date(wo.due_date) < now)
+    .forEach((wo) => {
+      focusUrgent.push({
+        id: `wo-${wo.id}`,
+        title: wo.title,
+        subtitle: `Overdue work order · ${wo.priority}`,
+        href: `/${company}/app/tasks/work-orders/${wo.id}`,
+        icon: Wrench,
+        time: overdueSince(wo.due_date!),
+      });
+    });
+
+  // Overdue corrective actions
+  userActions
+    .filter((ca) => ca.status !== "completed" && ca.due_date && new Date(ca.due_date) < now)
+    .forEach((ca) => {
+      focusUrgent.push({
+        id: `ca-${ca.id}`,
+        title: ca.description?.slice(0, 60) || "Corrective action",
+        subtitle: `Overdue · ${ca.severity} severity`,
+        href: `/${company}/app/tasks/actions/${ca.id}`,
+        icon: AlertTriangle,
+        time: overdueSince(ca.due_date!),
+      });
+    });
+
+  // Due checklists (urgent)
+  dueChecklists.slice(0, 3).forEach((dc) => {
+    focusUrgent.push({
+      id: `cl-${dc.template.id}`,
+      title: dc.template.name,
+      subtitle: dc.label || "Checklist due",
+      href: `/${company}/app/checklists/${dc.template.id}`,
+      icon: ClipboardCheck,
+      time: "Due now",
+    });
+  });
+
+  const dueIn = (date: string) => {
+    const diff = new Date(date).getTime() - now.getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return "Today";
+    if (days === 1) return "Tomorrow";
+    return `In ${days}d`;
+  };
+
+  // Upcoming: tickets/WOs/actions due within 7 days
+  userTickets
+    .filter((tk) => tk.status !== "resolved" && tk.status !== "closed" && tk.due_date && new Date(tk.due_date) >= now && new Date(tk.due_date) <= sevenDaysFromNow)
+    .forEach((tk) => {
+      focusUpcoming.push({
+        id: `tk-${tk.id}`,
+        title: tk.title,
+        subtitle: `Due ${tk.due_date}`,
+        href: `/${company}/app/tasks/tickets/${tk.id}`,
+        icon: Clock,
+        time: dueIn(tk.due_date!),
+      });
+    });
+
+  userWorkOrders
+    .filter((wo) => wo.status !== "completed" && wo.status !== "cancelled" && wo.due_date && new Date(wo.due_date) >= now && new Date(wo.due_date) <= sevenDaysFromNow)
+    .forEach((wo) => {
+      focusUpcoming.push({
+        id: `wo-${wo.id}`,
+        title: wo.title,
+        subtitle: `Due ${wo.due_date} · ${wo.type.replace(/_/g, " ")}`,
+        href: `/${company}/app/tasks/work-orders/${wo.id}`,
+        icon: Wrench,
+        time: dueIn(wo.due_date!),
+      });
+    });
+
+  userActions
+    .filter((ca) => ca.status !== "completed" && ca.due_date && new Date(ca.due_date) >= now && new Date(ca.due_date) <= sevenDaysFromNow)
+    .forEach((ca) => {
+      focusUpcoming.push({
+        id: `ca-${ca.id}`,
+        title: ca.description?.slice(0, 60) || "Corrective action",
+        subtitle: `Due ${ca.due_date}`,
+        href: `/${company}/app/tasks/actions/${ca.id}`,
+        icon: Clock,
+        time: dueIn(ca.due_date!),
+      });
+    });
+
+  // Good to Know: safe days milestone, completed tasks this week, resolved incidents
+  if (safeDays > 0 && safeDays % 7 === 0) {
+    focusGoodToKnow.push({
+      id: "safe-milestone",
+      title: `${safeDays} days without incidents`,
+      subtitle: "Keep up the great work!",
+      href: `/${company}/app`,
+      icon: CheckCircle,
+    });
+  }
+
+  if (completedThisWeek > 0) {
+    focusGoodToKnow.push({
+      id: "completed-week",
+      title: `${completedThisWeek} tasks completed this week`,
+      subtitle: "Your team is on track",
+      href: `/${company}/app/checklists?tab=checklists`,
+      icon: CheckCircle,
+    });
+  }
+
+  incidents
+    .filter((inc) => inc.status === "resolved" && inc.resolved_at && new Date(inc.resolved_at) > oneWeekAgo)
+    .slice(0, 3)
+    .forEach((inc) => {
+      focusGoodToKnow.push({
+        id: `resolved-${inc.id}`,
+        title: `${inc.title} resolved`,
+        subtitle: inc.reference_number || "Incident closed",
+        href: `/${company}/app/incidents/${inc.id}`,
+        icon: Info,
+      });
+    });
+
+  // Training: expired certs for this user → urgent
+  const myCerts = workerCertifications.filter((c) => c.user_id === user.id);
+  myCerts.filter((c) => c.expiry_date && new Date(c.expiry_date) < now && c.status !== "revoked")
+    .slice(0, 2).forEach((c) => {
+      focusUrgent.push({
+        id: `cert-${c.id}`,
+        title: "Certification expired",
+        subtitle: c.issuer || "Renew now",
+        href: `/${company}/app`,
+        icon: AlertCircle,
+        time: overdueSince(c.expiry_date!),
+      });
+    });
+
+  // Training: expiring certs within 30 days → upcoming
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 86400000);
+  myCerts.filter((c) => c.expiry_date && new Date(c.expiry_date) >= now && new Date(c.expiry_date) <= thirtyDaysFromNow)
+    .slice(0, 2).forEach((c) => {
+      focusUpcoming.push({
+        id: `cert-${c.id}`,
+        title: "Certification expiring",
+        subtitle: c.issuer || "",
+        href: `/${company}/app`,
+        icon: Clock,
+        time: dueIn(c.expiry_date!),
+      });
+    });
+
+  // Training: overdue assignments → urgent
+  const myAssignments = trainingAssignments.filter((a) => a.user_id === user.id);
+  myAssignments.filter((a) => a.status !== "completed" && new Date(a.due_date) < now)
+    .slice(0, 2).forEach((a) => {
+      focusUrgent.push({
+        id: `ta-${a.id}`,
+        title: a.course_name,
+        subtitle: "Training overdue",
+        href: `/${company}/app`,
+        icon: AlertTriangle,
+        time: overdueSince(a.due_date),
+      });
+    });
+
   // ── Always show full feed (no early return for empty state) ──
   return (
     <div className="flex flex-col min-h-full" data-animate={shouldAnimate ? "true" : "false"}>
@@ -377,38 +712,40 @@ export default function EmployeeAppHomePage() {
         </div>
       </div>
 
-      {/* ── Tip of the Day ── */}
+      {/* ── Tip of the Day (wide banner) ── */}
       {fieldAppSettings.tipOfTheDayEnabled && (
         <div className="mx-4 -mt-5 relative z-10 home-section" style={{ animationDelay: "0.3s" }}>
-          <div className="field-app-panel field-app-surface bg-card border border-border/50 px-4 py-3.5 flex items-start gap-3">
-            <div className="field-app-control h-8 w-8 bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Zap className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-primary tracking-widest uppercase">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{tipText}</p>
-            </div>
+          <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-4">
+            <p className="text-[10px] font-bold text-primary mb-1">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
+            <p className="text-sm text-foreground leading-relaxed">{tipText}</p>
           </div>
         </div>
       )}
 
-      {/* ── Quick Actions ── */}
+      {/* ── Quick Actions (horizontal circles) ── */}
       <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.2s" }}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold">{t("app.quickActions") || "Quick Actions"}</h2>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {quickActions.map((action, i) => (
+        <div className="flex justify-evenly">
+          {filteredQuickActions.slice(0, 4).map((action, i) => (
             <Link key={action.href + action.labelKey} href={action.href}
-              className="field-app-panel field-app-surface flex items-center gap-3 bg-card px-4 py-4 border border-border/50 active:scale-[0.98] hover:shadow-sm hover:border-border transition-all home-section"
+              className="flex flex-col items-center gap-2 w-[72px] active:scale-95 transition-transform home-section"
               style={{ animationDelay: `${0.15 - Math.min(i * 0.02, 0.12)}s` }}>
-              <div className="field-app-control h-11 w-11 bg-primary/10 flex items-center justify-center shrink-0">
-                <action.icon className="h-5 w-5 text-primary" />
+              <div className="h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center">
+                <action.icon className="h-6 w-6 text-white" strokeWidth={1.5} />
               </div>
-              <span className="text-sm font-medium">{t(action.labelKey) || action.fallbackLabel}</span>
+              <span className="text-[11px] font-medium text-center text-muted-foreground leading-tight">{t(action.labelKey) || action.fallbackLabel}</span>
             </Link>
           ))}
         </div>
+      </div>
+
+      {/* ── Field Focus ── */}
+      <div className="px-4 mt-6 home-section" style={{ animationDelay: "0.1s" }}>
+        <FieldFocus
+          urgent={isViewerRole ? [] : focusUrgent}
+          upcoming={isViewerRole ? [] : focusUpcoming}
+          goodToKnow={focusGoodToKnow}
+          t={t}
+        />
       </div>
 
       {/* ── Content Feed ── */}

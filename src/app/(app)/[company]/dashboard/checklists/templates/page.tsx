@@ -75,6 +75,7 @@ const INDUSTRY_ICONS: Record<
   IndustryCode,
   React.ComponentType<{ className?: string }>
 > = {
+  generic: Shield,
   construction: HardHat,
   manufacturing: Factory,
   oil_gas: Droplets,
@@ -253,6 +254,8 @@ export default function TemplateLibraryPage() {
       groups[tmpl.industry].push(tmpl);
     });
     return Object.entries(groups).sort(([a], [b]) => {
+      if (a === "generic") return -1;
+      if (b === "generic") return 1;
       if (a === companyIndustry) return -1;
       if (b === companyIndustry) return 1;
       return a.localeCompare(b);

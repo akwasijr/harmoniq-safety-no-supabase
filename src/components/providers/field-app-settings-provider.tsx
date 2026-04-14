@@ -5,7 +5,6 @@ import { getCompanySettingsKey } from "@/lib/company-settings";
 import type { IndustryCode, Language } from "@/types";
 import {
   type FieldAppSettings,
-  buildDefaultFieldAppSettings,
   readStoredFieldAppSettings,
 } from "@/lib/field-app-settings";
 
@@ -26,7 +25,10 @@ export function FieldAppSettingsProvider({
   language?: Language | null;
   children: React.ReactNode;
 }) {
-  const [settings, setSettings] = React.useState<FieldAppSettings>(() => buildDefaultFieldAppSettings(industry));
+  // Initialize from localStorage synchronously to avoid flash of default settings
+  const [settings, setSettings] = React.useState<FieldAppSettings>(
+    () => readStoredFieldAppSettings(companyId, industry)
+  );
 
   React.useEffect(() => {
     setSettings(readStoredFieldAppSettings(companyId, industry));

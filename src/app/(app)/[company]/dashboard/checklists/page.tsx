@@ -1,25 +1,24 @@
 "use client";
 
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
-  Plus,
   ClipboardCheck,
   CheckCircle,
   ShieldAlert,
-  Wrench,
-  FileCheck,
-  Eye,
-  EyeOff,
   ChevronLeft,
   ChevronRight,
   Clock,
   AlertTriangle,
-  Lock,
   X,
   Download,
   Trash2,
+  Play,
+  FileText,
+  Eye,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,39 +27,25 @@ import { KPICard } from "@/components/ui/kpi-card";
 import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
-import { useCompanyStore } from "@/stores/company-store";
 import { LoadingPage } from "@/components/ui/loading";
-import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { isWithinDateRange, DateRangeValue } from "@/lib/date-utils";
 import { getTemplatePublishStatus } from "@/lib/template-activation";
-import type { ChecklistTemplate } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { PAGINATION } from "@/lib/constants";
-import { WORK_ORDER_PROCEDURE_TEMPLATES } from "@/data/work-order-procedure-templates";
 import { downloadCsv } from "@/lib/csv";
+import { getDraftsForType, deleteDraft as removeDraft, type Draft } from "@/lib/draft-store";
+import { getBuiltInProcedureTemplates } from "@/data/procedure-templates";
+import { buildProcedureStepFillHref, buildProcedureSubmissionHref, createProcedureSubmissionId } from "@/lib/procedure-flow";
+import { getTemplatesByIndustry } from "@/data/industry-templates";
+import { getRiskAssessmentTemplatesByIndustry } from "@/data/risk-assessment-templates";
+import { activateIndustryTemplate } from "@/lib/template-activation";
+import type { Country } from "@/types";
 
-const mockRiskTemplates: { id: string; name: string; description: string; type: string; status: string; sections: number; submissions: number; lastUpdated?: string; locked: boolean }[] = [];
 const mockRiskAssessments: { id: string; template: string; templateId: string; type: string; location: string; date: string; status: string; by: string; riskLevel: string; riskScore: number }[] = [];
-const mockInspections: InspectionSubmissionRow[] = [];
-const mockInspectionTemplates: { id: string; name: string; category: string; checkpoints: number; used: number; status: string; description: string }[] = [];
 
-type MainTabType = "checklists" | "risk-assessment" | "inspection";
-type SubTabType = "submissions" | "active";
-type InspectionSubmissionRow = {
-  id: string;
-  asset: string;
-  assetId: string;
-  template: string;
-  templateSource?: string;
-  date: string;
-  status: string;
-  by: string;
-  issues: number;
-  followUpCount?: number;
-  nextDue: string;
-};
+type MainTabType = "checklists" | "risk-assessment" | "procedures";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
@@ -77,22 +62,44 @@ function getFormTypeName(formType: string): string {
   return names[formType.toLowerCase()] || formType;
 }
 
+function getRelativeTime(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const seconds = Math.floor((now - then) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "yesterday";
+  return `${days}d ago`;
+}
+
 function ChecklistsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const company = useCompanyParam();
   const [activeTab, setActiveTab] = React.useState<MainTabType>("checklists");
-  const [subTab, setSubTab] = React.useState<SubTabType>("submissions");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [dateRange, setDateRange] = React.useState("last_30_days");
   const [currentPage, setCurrentPage] = React.useState(1);
   const [statusFilter, setStatusFilter] = React.useState("");
-  const [showNewAssessmentModal, setShowNewAssessmentModal] = React.useState(false);
+  const [showTemplatePickerModal, setShowTemplatePickerModal] = React.useState(false);
+  const [showProcedurePickerModal, setShowProcedurePickerModal] = React.useState(false);
+  const [checklistDrafts, setChecklistDrafts] = React.useState<Draft[]>([]);
+
+  // Load drafts on mount + refresh periodically
+  React.useEffect(() => {
+    setChecklistDrafts(getDraftsForType("checklist"));
+    const interval = setInterval(() => setChecklistDrafts(getDraftsForType("checklist")), 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Read tab from URL query params on mount
   React.useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam === "risk-assessment" || tabParam === "inspection" || tabParam === "checklists") {
+    if (tabParam === "risk-assessment" || tabParam === "checklists" || tabParam === "procedures") {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -106,36 +113,20 @@ function ChecklistsPageContent() {
     correctiveActions,
     users,
     locations,
-    workOrders,
+    procedureTemplates,
+    procedureSubmissions,
     stores,
+    companyId,
   } = useCompanyData();
   const { isLoading } = stores.checklistTemplates;
-  const { t, formatDate, formatNumber } = useTranslation();
-  const { currentCompany } = useAuth();
-  const { toast } = useToast();
-  const { update: updateCompany } = useCompanyStore();
-
-  // Toggle assessment type visibility for field app
-  const toggleAssessmentVisibility = React.useCallback((templateId: string) => {
-    if (!currentCompany) return;
-    const hidden = currentCompany.hidden_assessment_types || [];
-    const isHidden = hidden.includes(templateId);
-    const updated = isHidden
-      ? hidden.filter((id) => id !== templateId)
-      : [...hidden, templateId];
-    updateCompany(currentCompany.id, { hidden_assessment_types: updated });
-  }, [currentCompany, updateCompany]);
-
-  const isAssessmentHidden = React.useCallback((templateId: string) => {
-    return (currentCompany?.hidden_assessment_types || []).includes(templateId);
-  }, [currentCompany?.hidden_assessment_types]);
+  const { user, currentCompany } = useAuth();
+  const { t, formatDate } = useTranslation();
 
   // Map store risk evaluations to the display format
   const storeRiskAssessments = React.useMemo(() => {
     return riskEvaluations.map(re => {
       const submitter = users.find(u => u.id === re.submitter_id);
       const location = locations.find(l => l.id === re.location_id);
-      // Parse risk from responses
       const responses = re.responses as Record<string, unknown>;
       const jobSteps = responses?.job_steps as Array<{ severity?: number; probability?: number }> | undefined;
       let riskScore = 0;
@@ -155,7 +146,7 @@ function ChecklistsPageContent() {
         type: re.form_type.toUpperCase(),
         location: location?.name || "Unknown",
         date: re.submitted_at.split("T")[0],
-        status: re.status === "reviewed" ? "completed" : re.status === "submitted" ? "in_progress" : "draft",
+        status: re.status === "reviewed" ? "completed" : re.status === "submitted" ? "completed" : "draft",
         by: submitter?.full_name || "Unknown",
         riskLevel,
         riskScore,
@@ -163,7 +154,6 @@ function ChecklistsPageContent() {
     });
   }, [riskEvaluations, users, locations]);
 
-  // Combine store data with mock data (use store data if available, fall back to mock)
   const combinedRiskAssessments = React.useMemo(() => {
     if (storeRiskAssessments.length > 0) {
       return storeRiskAssessments;
@@ -171,8 +161,8 @@ function ChecklistsPageContent() {
     return mockRiskAssessments;
   }, [storeRiskAssessments]);
 
-  // Map store inspections to the display format
-  const storeInspectionsList = React.useMemo<InspectionSubmissionRow[]>(() => {
+  // Map inspection submissions to checklist-compatible format for merged display
+  const inspectionAsSubmissions = React.useMemo(() => {
     return inspections.map(ins => {
       const asset = assets.find(a => a.id === ins.asset_id);
       const inspector = users.find(u => u.id === ins.inspector_id);
@@ -185,126 +175,44 @@ function ChecklistsPageContent() {
           ? checklistTemplatesStore.find((template) => template.id === ins.checklist_id)
           : null;
       const relatedActions = correctiveActions.filter((action) => action.inspection_id === ins.id);
-      const relatedWorkOrders = workOrders.filter((workOrder) =>
-        workOrder.corrective_action_id != null &&
-        relatedActions.some((action) => action.id === workOrder.corrective_action_id),
-      );
+
       return {
         id: ins.id,
-        asset: asset?.name || "Unknown Asset",
-        assetId: ins.asset_id,
-        template: checklistTemplate?.name || (ins.checklist_id ? "Linked checklist" : "Direct asset inspection"),
-        templateSource: checklistSubmission
-          ? `Submission ${checklistSubmission.id}`
-          : checklistTemplate
-            ? `Template ${checklistTemplate.id}`
-            : ins.checklist_id
-              ? `Checklist ${ins.checklist_id}`
-              : "No checklist linked",
-        date: ins.inspected_at.split("T")[0],
-        status: ins.result === "pass" ? "passed" : ins.result === "fail" ? "failed" : "pending",
+        template: checklistTemplate?.name || "Inspection",
+        location: asset?.name || "Unknown Asset",
+        date: formatDate(new Date(ins.inspected_at)),
+        status: ins.result === "pass" ? "completed" : ins.result === "fail" ? "completed" : "in_progress",
         by: inspector?.full_name || "Unknown",
+        score: ins.result === "pass" ? "Pass" : ins.result === "fail" ? "Fail" : "-",
         issues: relatedActions.length,
-        followUpCount: relatedActions.length + relatedWorkOrders.length,
-        nextDue: "—", // No next inspection date in this type
+        source: "inspection" as const,
       };
     });
-  }, [
-    inspections,
-    assets,
-    users,
-    checklistSubmissionsStore,
-    checklistTemplatesStore,
-    correctiveActions,
-    workOrders,
-  ]);
-
-  // Combine store data with mock data
-  const combinedInspections = React.useMemo<InspectionSubmissionRow[]>(() => {
-    if (storeInspectionsList.length > 0) {
-      return storeInspectionsList;
-    }
-    return mockInspections as InspectionSubmissionRow[];
-  }, [storeInspectionsList]);
-
-  const deriveChecklistCategory = (template: ChecklistTemplate) => {
-    if (template.category) return template.category;
-    const name = template.name.toLowerCase();
-    if (name.includes("fire")) return "fire_safety";
-    if (name.includes("ppe")) return "ppe";
-    if (name.includes("forklift") || name.includes("ladder") || name.includes("equipment")) {
-      return "equipment";
-    }
-    return "general";
-  };
+  }, [inspections, assets, users, checklistSubmissionsStore, checklistTemplatesStore, correctiveActions, formatDate]);
 
   const mainTabs = [
     { id: "checklists" as MainTabType, label: t("checklists.tabs.checklists"), icon: ClipboardCheck },
     { id: "risk-assessment" as MainTabType, label: t("checklists.tabs.assessments"), icon: ShieldAlert },
-    { id: "inspection" as MainTabType, label: t("checklists.tabs.inspections"), icon: Wrench },
-  ];
-
-  const subTabs = [
-    { id: "submissions" as SubTabType, label: "Submissions" },
-    { id: "active" as SubTabType, label: "Templates" },
+    { id: "procedures" as MainTabType, label: t("checklists.tabs.procedures"), icon: Layers },
   ];
 
   const getFilters = () => {
-    const baseFilters = [
+    return [
       {
         id: "status",
         label: "All statuses",
         options: [
-          { value: "active", label: "Active" },
-          { value: "draft", label: "Draft" },
-          { value: "archived", label: "Archived" },
           { value: "completed", label: "Completed" },
           { value: "in_progress", label: "In Progress" },
-          { value: "passed", label: "Passed" },
-          { value: "failed", label: "Failed" },
         ],
         value: statusFilter,
         onChange: (v: string) => { setStatusFilter(v); setCurrentPage(1); },
       },
     ];
-
-    return baseFilters;
   };
 
-  // Get data based on active tab and sub tab
-  const getChecklistTemplates = () => {
-    let data = checklistTemplatesStore.map((template) => {
-      const used = checklistSubmissionsStore.filter((submission) => submission.template_id === template.id).length;
-      return {
-        id: template.id,
-        name: template.name,
-        description: template.description || "",
-        items: template.items.length,
-        used,
-        status:
-          getTemplatePublishStatus(template) === "published"
-            ? "active"
-            : getTemplatePublishStatus(template) === "archived"
-              ? "archived"
-              : "draft",
-        category: deriveChecklistCategory(template),
-      };
-    });
-    if (statusFilter) {
-      data = data.filter((item) => item.status === statusFilter);
-    }
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      data = data.filter((item) =>
-        item.name.toLowerCase().includes(query) ||
-        item.description.toLowerCase().includes(query)
-      );
-    }
-    return data;
-  };
-
-  const getChecklistSubmissions = () => {
-    let data = checklistSubmissionsStore
+  const checklistSubmissions = React.useMemo(() => {
+    const checklistData = checklistSubmissionsStore
       .filter((submission) =>
         isWithinDateRange(submission.submitted_at || submission.created_at, dateRange as DateRangeValue)
       )
@@ -327,8 +235,16 @@ function ChecklistsPageContent() {
           by: submitter?.full_name || "Unknown",
           score,
           issues: failCount,
+          source: "checklist" as const,
         };
       });
+
+    const inspectionData = inspectionAsSubmissions.filter((ins) =>
+      isWithinDateRange(ins.date, dateRange as DateRangeValue)
+    );
+
+    let data = [...checklistData, ...inspectionData];
+
     if (statusFilter) {
       data = data.filter((item) => item.status === statusFilter);
     }
@@ -340,21 +256,9 @@ function ChecklistsPageContent() {
       );
     }
     return data;
-  };
+  }, [checklistSubmissionsStore, checklistTemplatesStore, locations, users, dateRange, statusFilter, searchQuery, inspectionAsSubmissions, formatDate]);
 
-  const getRiskTemplates = () => {
-    let data = [...mockRiskTemplates];
-    if (statusFilter) {
-      data = data.filter((item) => item.status === statusFilter);
-    }
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      data = data.filter((item) => item.name.toLowerCase().includes(query));
-    }
-    return data;
-  };
-
-  const getRiskSubmissions = () => {
+  const riskSubmissions = React.useMemo(() => {
     let data = [...combinedRiskAssessments];
     if (statusFilter) {
       data = data.filter((item) => item.status === statusFilter);
@@ -367,148 +271,242 @@ function ChecklistsPageContent() {
       );
     }
     return data;
-  };
+  }, [combinedRiskAssessments, statusFilter, searchQuery]);
 
-  const getInspectionTemplates = () => {
-    let data = [...mockInspectionTemplates];
-    if (statusFilter) {
-      data = data.filter((item) => item.status === statusFilter);
-    }
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      data = data.filter((item) => 
-        item.name.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query)
+  // Templates visible in field app (published + active)
+  const publishedTemplates = React.useMemo(() => {
+    return checklistTemplatesStore.filter(
+      (t) => getTemplatePublishStatus(t) === "published" && t.is_active !== false
+    );
+  }, [checklistTemplatesStore]);
+
+  // Split by type for context-aware pickers
+  const activeChecklistTemplates = React.useMemo(() => publishedTemplates.filter((t) => t.category !== "risk_assessment"), [publishedTemplates]);
+  const activeAssessmentTemplates = React.useMemo(() => publishedTemplates.filter((t) => t.category === "risk_assessment"), [publishedTemplates]);
+
+  // Fallback: if no published checklist templates exist, show built-in industry templates
+  const companyCountry = (currentCompany?.country as Country | undefined) || "US";
+  const fallbackChecklistTemplates = React.useMemo(() => {
+    if (activeChecklistTemplates.length > 0) return activeChecklistTemplates;
+    const industry = currentCompany?.industry;
+    const builtIns = industry
+      ? getTemplatesByIndustry(industry as Parameters<typeof getTemplatesByIndustry>[0])
+      : [];
+    // Also include generic templates
+    const genericTemplates = getTemplatesByIndustry("generic");
+    const all = [...builtIns, ...genericTemplates];
+    return all
+      .filter((tpl) => tpl.category !== "risk_assessment" && tpl.category !== "hazard_analysis")
+      .map((tpl) =>
+        activateIndustryTemplate(tpl, companyId || "__built_in__", companyCountry, t),
       );
-    }
-    return data;
-  };
+  }, [activeChecklistTemplates, currentCompany?.industry, companyId, companyCountry, t]);
 
-  const getInspectionSubmissions = () => {
-    let data = [...combinedInspections];
-    if (statusFilter) {
-      data = data.filter((item) => item.status === statusFilter);
-    }
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      data = data.filter((item) => 
-        item.asset.toLowerCase().includes(query) ||
-        item.template.toLowerCase().includes(query)
+  // Fallback: if no published risk assessment templates exist, show built-in RA templates
+  const fallbackAssessmentTemplates = React.useMemo(() => {
+    if (activeAssessmentTemplates.length > 0) return activeAssessmentTemplates;
+    const industry = currentCompany?.industry;
+    const builtIns = industry
+      ? getRiskAssessmentTemplatesByIndustry(industry as Parameters<typeof getRiskAssessmentTemplatesByIndustry>[0], companyCountry)
+      : [];
+    const genericTemplates = getRiskAssessmentTemplatesByIndustry("generic", companyCountry);
+    const all = [...builtIns, ...genericTemplates];
+    return all
+      .map((tpl) =>
+        activateIndustryTemplate(tpl, companyId || "__built_in__", companyCountry, t),
       );
-    }
-    return data;
-  };
+  }, [activeAssessmentTemplates, currentCompany?.industry, companyId, companyCountry, t]);
 
-  // Get data counts for each category
-  const checklistTemplates = getChecklistTemplates();
-  const checklistSubmissions = getChecklistSubmissions();
-  const riskTemplates = getRiskTemplates();
-  const riskSubmissions = getRiskSubmissions();
-  const inspectionTemplates = getInspectionTemplates();
-  const inspectionSubmissions = getInspectionSubmissions();
 
-  // Calculate totals and pagination
-  const getTableLength = () => {
-    if (activeTab === "checklists") return subTab === "active" ? checklistTemplates.length : checklistSubmissions.length;
-    if (activeTab === "risk-assessment") return subTab === "active" ? riskTemplates.length : riskSubmissions.length;
-    if (activeTab === "inspection") return subTab === "active" ? inspectionTemplates.length : inspectionSubmissions.length;
-    return 0;
-  };
-
-  const tableLength = getTableLength();
-  const totalPages = Math.ceil(tableLength / ITEMS_PER_PAGE);
-
-  // Get paginated data
-  const paginatedChecklistTemplates = checklistTemplates.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const paginatedChecklistSubmissions = checklistSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const paginatedRiskTemplates = riskTemplates.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const paginatedRiskSubmissions = riskSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const paginatedInspectionTemplates = inspectionTemplates.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const paginatedInspectionSubmissions = inspectionSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
-  // Reset sub tab when main tab changes
+  // Reset filters when main tab changes
   React.useEffect(() => {
-    setSubTab("submissions");
     setCurrentPage(1);
     setSearchQuery("");
     setStatusFilter("");
   }, [activeTab]);
 
-  const getAddButtonLabel = () => {
-    if (activeTab === "checklists") return "New Checklist";
-    if (activeTab === "risk-assessment") return t("checklists.buttons.newAssessment");
-    if (activeTab === "inspection") return "New Inspection";
-    return "Create";
-  };
+  const allProcedureTemplates = React.useMemo(() => {
+    const builtInTemplates = getBuiltInProcedureTemplates().filter(
+      (template) => !template.industry || template.industry === currentCompany?.industry,
+    );
+
+    return [
+      ...procedureTemplates,
+      ...builtInTemplates.filter(
+        (builtInTemplate) => !procedureTemplates.some((template) => template.id === builtInTemplate.id),
+      ),
+    ];
+  }, [procedureTemplates, currentCompany?.industry]);
+
+  // Active procedure templates for "Start Procedure" picker
+  const activeProcedureTemplates = React.useMemo(() => {
+    return allProcedureTemplates.filter((tpl) => tpl.is_active);
+  }, [allProcedureTemplates]);
+
+  // Procedure submissions with display data
+  const procedureSubmissionRows = React.useMemo(() => {
+    return procedureSubmissions.map((sub) => {
+      const tpl = allProcedureTemplates.find((t) => t.id === sub.procedure_template_id);
+      const currentStep = tpl?.steps[sub.current_step - 1];
+      const submitter = users.find((u) => u.id === sub.submitter_id);
+      return {
+        id: sub.id,
+        name: tpl?.name || "Unknown Procedure",
+        progress: `Step ${sub.current_step} of ${sub.step_submissions.length}`,
+        status: sub.status,
+        startedAt: sub.started_at,
+        recurrence: tpl?.recurrence || "per_event",
+        submitter: submitter?.full_name || "Unknown",
+        currentStepHref: buildProcedureStepFillHref({
+          company,
+          step: currentStep,
+          procedureSubmissionId: sub.id,
+        }),
+        submissionHref: buildProcedureSubmissionHref(company, sub.id),
+      };
+    });
+  }, [procedureSubmissions, allProcedureTemplates, users, company]);
+
+  // Pre-compute KPI values once — avoid refiltering every render
+  const kpiData = React.useMemo(() => {
+    // Checklist KPIs
+    const allSubs = checklistSubmissionsStore;
+    const completedThisWeek = allSubs.filter(
+      (s) => s.status === "submitted" && isWithinDateRange(s.submitted_at || s.created_at, "last_7_days")
+    ).length;
+    const pending = allSubs.filter((s) => s.status === "draft").length;
+    const overdue = allSubs.filter(
+      (s) => s.status === "draft" && !isWithinDateRange(s.created_at, "last_30_days")
+    ).length;
+    const booleanResponses = allSubs.flatMap((s) => s.responses.filter((r) => typeof r.value === "boolean"));
+    const passCount = booleanResponses.filter((r) => r.value === true).length;
+    const passRate = booleanResponses.length ? `${Math.round((passCount / booleanResponses.length) * 100)}%` : "\u2014";
+
+    // Risk KPIs
+    const highRisk = combinedRiskAssessments.filter((a) => a.riskLevel === "high").length;
+    const riskCompleted = combinedRiskAssessments.filter((a) => a.status === "completed").length;
+
+    // Procedure KPIs
+    const procInProgress = procedureSubmissionRows.filter((s) => s.status === "in_progress").length;
+    const procCompleted = procedureSubmissionRows.filter((s) => s.status === "completed").length;
+    const procCancelled = procedureSubmissionRows.filter((s) => s.status === "cancelled").length;
+
+    return { completedThisWeek, pending, overdue, passRate, highRisk, riskCompleted, procInProgress, procCompleted, procCancelled };
+  }, [checklistSubmissionsStore, combinedRiskAssessments, procedureSubmissionRows]);
 
   const getKPIs = () => {
-    if (activeTab === "checklists" && subTab === "submissions") {
-      const completedThisWeek = checklistSubmissionsStore.filter(
-        (submission) =>
-          submission.status === "submitted" &&
-          isWithinDateRange(submission.submitted_at || submission.created_at, "last_7_days")
-      ).length;
-      const pending = checklistSubmissionsStore.filter((submission) => submission.status === "draft").length;
-      const overdue = checklistSubmissionsStore.filter(
-        (submission) =>
-          submission.status === "draft" &&
-          !isWithinDateRange(submission.created_at, "last_30_days")
-      ).length;
-      const booleanResponses = checklistSubmissionsStore.flatMap((submission) =>
-        submission.responses.filter((response) => typeof response.value === "boolean")
-      );
-      const passCount = booleanResponses.filter((response) => response.value === true).length;
-      const passRate = booleanResponses.length
-        ? `${Math.round((passCount / booleanResponses.length) * 100)}%`
-        : "—";
+    if (activeTab === "checklists") {
       return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard title={t("checklists.labels.completedToday")} value={completedThisWeek} icon={CheckCircle} />
-          <KPICard title={t("checklists.labels.pending")} value={pending} icon={Clock} />
-          <KPICard title="Overdue" value={overdue} icon={AlertTriangle} />
-          <KPICard title="Pass Rate" value={passRate} icon={ClipboardCheck} />
+          <KPICard title={t("checklists.labels.completedThisWeek")} value={kpiData.completedThisWeek} icon={CheckCircle} />
+          <KPICard title={t("checklists.labels.pending")} value={kpiData.pending} icon={Clock} />
+          <KPICard title={t("checklists.labels.overdue")} value={kpiData.overdue} icon={AlertTriangle} />
+          <KPICard title={t("checklists.labels.passRate")} value={kpiData.passRate} icon={ClipboardCheck} />
         </div>
       );
     }
-    if (activeTab === "risk-assessment" && subTab === "submissions") {
-      const highRisk = combinedRiskAssessments.filter(a => a.riskLevel === "high").length;
-      const completed = combinedRiskAssessments.filter(a => a.status === "completed").length;
+    if (activeTab === "risk-assessment") {
       return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard title="Total Assessments" value={combinedRiskAssessments.length} icon={ShieldAlert} />
-          <KPICard title="High Risk Items" value={highRisk} icon={AlertTriangle} />
-          <KPICard title={t("checklists.labels.inProgress")} value={combinedRiskAssessments.length - completed} icon={Clock} />
-          <KPICard title={t("checklists.labels.completed")} value={completed} icon={CheckCircle} />
+          <KPICard title={t("checklists.labels.totalAssessments")} value={combinedRiskAssessments.length} icon={ShieldAlert} />
+          <KPICard title={t("checklists.labels.highRiskItems")} value={kpiData.highRisk} icon={AlertTriangle} />
+          <KPICard title={t("checklists.labels.inProgress")} value={combinedRiskAssessments.length - kpiData.riskCompleted} icon={Clock} />
+          <KPICard title={t("checklists.labels.completed")} value={kpiData.riskCompleted} icon={CheckCircle} />
         </div>
       );
     }
-    if (activeTab === "inspection" && subTab === "submissions") {
-      const passed = combinedInspections.filter(i => i.status === "passed").length;
-      const failed = combinedInspections.filter(i => i.status === "failed").length;
+    if (activeTab === "procedures") {
       return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard title="Total Inspections" value={combinedInspections.length} icon={ClipboardCheck} />
-          <KPICard title="Due Soon" value={3} icon={Clock} />
-          <KPICard title="Failed" value={failed} icon={AlertTriangle} />
-          <KPICard title="Pass Rate" value={`${Math.round(passed / combinedInspections.length * 100)}%`} icon={CheckCircle} />
+          <KPICard title={t("checklists.labels.totalProcedures")} value={procedureSubmissionRows.length} icon={Layers} />
+          <KPICard title={t("checklists.labels.inProgress")} value={kpiData.procInProgress} icon={Clock} />
+          <KPICard title={t("checklists.labels.completed")} value={kpiData.procCompleted} icon={CheckCircle} />
+          <KPICard title={t("checklists.labels.cancelled")} value={kpiData.procCancelled} icon={AlertTriangle} />
         </div>
       );
     }
     return null;
   };
 
-  const handleAddButtonClick = () => {
+  const handleStartNew = () => {
     if (activeTab === "risk-assessment") {
-      setShowNewAssessmentModal(true);
-    } else if (activeTab === "checklists") {
-      router.push(`/${company}/dashboard/checklists/new`);
-    } else if (activeTab === "inspection") {
-      router.push(`/${company}/dashboard/inspection-routes`);
+      setShowTemplatePickerModal(true);
+    } else if (activeTab === "procedures") {
+      setShowProcedurePickerModal(true);
+    } else {
+      setShowTemplatePickerModal(true);
     }
   };
 
+  const startNewLabel = activeTab === "risk-assessment" ? "Start Assessment" : activeTab === "procedures" ? "Start Procedure" : "Start Checklist";
+
+
+  const filteredProcedureSubmissions = React.useMemo(() => {
+    let data = procedureSubmissionRows;
+    if (statusFilter) {
+      data = data.filter((s) => s.status === statusFilter);
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      data = data.filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          s.submitter.toLowerCase().includes(q)
+      );
+    }
+    return data;
+  }, [procedureSubmissionRows, statusFilter, searchQuery]);
+
+  const handleStartProcedure = (templateId: string) => {
+    const tpl = allProcedureTemplates.find((t) => t.id === templateId);
+    if (!tpl) return;
+    const resolvedCompanyId = companyId || currentCompany?.id || user?.company_id || "";
+    if (!resolvedCompanyId) return;
+    const now = new Date().toISOString();
+    const submissionId = createProcedureSubmissionId();
+    const submission = {
+      id: submissionId,
+      company_id: resolvedCompanyId,
+      procedure_template_id: templateId,
+      submitter_id: user?.id || "",
+      location_id: null,
+      status: "in_progress" as const,
+      current_step: 1,
+      step_submissions: tpl.steps.map((step, index) => ({
+        step_id: step.id,
+        submission_id: null,
+        status: index === 0 ? "in_progress" as const : "pending" as const,
+        completed_at: null,
+      })),
+      started_at: now,
+      completed_at: null,
+      next_due_date: null,
+      created_at: now,
+      updated_at: now,
+    };
+    // flushSync ensures the store state update is committed synchronously
+    // so the overview page sees the new submission immediately after navigation
+    flushSync(() => {
+      stores.procedureSubmissions.add(submission);
+    });
+    setShowProcedurePickerModal(false);
+
+    router.push(buildProcedureSubmissionHref(company, submissionId));
+  };
+
+  const tableLength = activeTab === "checklists"
+    ? checklistSubmissions.length
+    : activeTab === "procedures"
+    ? filteredProcedureSubmissions.length
+    : riskSubmissions.length;
+  const totalPages = Math.ceil(tableLength / ITEMS_PER_PAGE);
+
+  const paginatedChecklistSubmissions = checklistSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const paginatedRiskSubmissions = riskSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const paginatedProcedureSubmissions = filteredProcedureSubmissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   const handleExportCSV = () => {
-    if (activeTab === "checklists" && subTab === "submissions") {
+    if (activeTab === "checklists") {
       downloadCsv("checklist-submissions.csv", checklistSubmissions.map((s) => ({
         template: s.template,
         location: s.location,
@@ -517,17 +515,9 @@ function ChecklistsPageContent() {
         status: s.status,
         score: s.score,
         issues: s.issues,
+        source: s.source,
       })));
-    } else if (activeTab === "checklists" && subTab === "active") {
-      downloadCsv("checklist-templates.csv", checklistTemplates.map((t_) => ({
-        name: t_.name,
-        description: t_.description,
-        category: t_.category,
-        items: t_.items,
-        status: t_.status,
-        times_used: t_.used,
-      })));
-    } else if (activeTab === "risk-assessment" && subTab === "submissions") {
+    } else if (activeTab === "risk-assessment") {
       downloadCsv("risk-assessments.csv", riskSubmissions.map((r) => ({
         template: r.template,
         type: r.type,
@@ -538,20 +528,10 @@ function ChecklistsPageContent() {
         risk_level: r.riskLevel,
         risk_score: r.riskScore,
       })));
-    } else if (activeTab === "inspection" && subTab === "submissions") {
-      downloadCsv("inspection-submissions.csv", inspectionSubmissions.map((i) => ({
-        asset: i.asset,
-        template: i.template,
-        date: i.date,
-        status: i.status,
-        inspected_by: i.by,
-        issues: i.issues,
-        next_due: i.nextDue,
-      })));
     }
   };
 
-  if (isLoading && checklistTemplates.length === 0) {
+  if (isLoading && checklistSubmissions.length === 0) {
     return <LoadingPage />;
   }
 
@@ -565,54 +545,143 @@ function ChecklistsPageContent() {
             <Download className="h-4 w-4" />
             Export
           </Button>
-          <Button size="sm" className="gap-2" onClick={handleAddButtonClick}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            {getAddButtonLabel()}
+          <Button size="sm" className="gap-2" onClick={handleStartNew}>
+            <Play className="h-4 w-4" aria-hidden="true" />
+            {startNewLabel}
           </Button>
         </div>
       </div>
 
-      {/* New Assessment Modal */}
-      {showNewAssessmentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+      {/* Template Picker Modal (context-aware: Checklists or Assessments) */}
+      {showTemplatePickerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowTemplatePickerModal(false)}>
+          <div className="bg-background rounded-xl border shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b p-4">
-              <h2 className="text-lg font-semibold">Start New Risk Assessment</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowNewAssessmentModal(false)} aria-label="Close">
+              <h2 className="text-lg font-semibold">
+                {activeTab === "risk-assessment" ? "Start a new risk assessment" : "Start a new checklist"}
+              </h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowTemplatePickerModal(false)} aria-label="Close">
                 <X className="h-4 w-4" />
               </Button>
             </div>
             <div className="p-4 overflow-y-auto max-h-[60vh]">
               <p className="text-sm text-muted-foreground mb-4">
-                Select a template to start a new risk assessment.
+                Select an active template to fill out.
               </p>
-              
-              <div className="grid gap-3">
-                {mockRiskTemplates.map((template) => (
-                  <button
-                    key={template.id}
-                    onClick={() => {
-                      setShowNewAssessmentModal(false);
-                      router.push(`/${company}/app/risk-assessment/${template.id}`);
-                    }}
-                    className="flex items-start gap-3 p-4 rounded-lg border hover:bg-muted/50 text-left transition-colors"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                      <FileCheck className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium">{template.name}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{template.description}</p>
-                    </div>
-                    <span className="text-sm text-muted-foreground shrink-0">{template.sections} sections</span>
-                  </button>
-                ))}
-              </div>
+              {(() => {
+                const templateList = activeTab === "risk-assessment" ? fallbackAssessmentTemplates : fallbackChecklistTemplates;
+                const isFallback = (activeTab === "risk-assessment"
+                  ? activeAssessmentTemplates.length === 0 && fallbackAssessmentTemplates.length > 0
+                  : activeChecklistTemplates.length === 0 && fallbackChecklistTemplates.length > 0);
+                const IconComp = activeTab === "risk-assessment" ? ShieldAlert : ClipboardCheck;
+                return templateList.length === 0 ? (
+                  <div className="py-8 text-center text-muted-foreground">
+                    <IconComp className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No active templates available.</p>
+                    <p className="text-xs mt-1">Push templates to the field app from the Template Library first.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    {isFallback && (
+                      <p className="text-xs text-muted-foreground">
+                        Showing built-in templates. Publish your own templates from the Template Library.
+                      </p>
+                    )}
+                    {templateList.map((template) => {
+                      // For built-in fallback templates, use source_template_id so the fill page can resolve them
+                      const fillId = template.source_template_id || template.id;
+                      return (
+                      <button
+                        type="button"
+                        key={template.id}
+                        onClick={() => {
+                          setShowTemplatePickerModal(false);
+                          router.push(`/${company}/dashboard/checklists/fill/${fillId}`);
+                        }}
+                        className="flex items-start gap-3 p-4 rounded-lg border hover:bg-muted/50 text-left transition-colors"
+                      >
+                        <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg shrink-0", activeTab === "risk-assessment" ? "bg-orange-500/10" : "bg-primary/10")}>
+                          <IconComp className={cn("h-5 w-5", activeTab === "risk-assessment" ? "text-orange-500" : "text-primary")} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium">{template.name}</p>
+                          {template.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">{template.description}</p>
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground shrink-0">{template.items.length} items</span>
+                      </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
             <div className="border-t p-4 bg-muted/30">
               <p className="text-xs text-muted-foreground text-center">
-                Templates are based on regulatory requirements.
+                Only active templates are shown. Manage templates in{" "}
+                <button
+                  type="button"
+                  className="underline hover:text-foreground"
+                  onClick={() => {
+                    setShowTemplatePickerModal(false);
+                    router.push(`/${company}/dashboard/checklists/my-templates`);
+                  }}
+                >
+                  Template Library
+                </button>.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Procedure Picker Modal (Start Procedure) */}
+      {showProcedurePickerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowProcedurePickerModal(false)}>
+          <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b p-4">
+              <h2 className="text-lg font-semibold">Start a procedure</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowProcedurePickerModal(false)} aria-label="Close">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              <p className="text-sm text-muted-foreground mb-4">
+                Select an active procedure template to begin.
+              </p>
+              {activeProcedureTemplates.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <Layers className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">No active procedure templates available.</p>
+                  <p className="text-xs mt-1">Create or activate a procedure template first.</p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {activeProcedureTemplates.map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      onClick={() => handleStartProcedure(tpl.id)}
+                      className="flex items-start gap-3 p-4 rounded-lg border hover:bg-muted/50 text-left transition-colors"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                        <Layers className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium">{tpl.name}</p>
+                        {tpl.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2">{tpl.description}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-muted-foreground">{tpl.steps.length} steps</span>
+                          <span className="text-xs text-muted-foreground">·</span>
+                          <span className="text-xs text-muted-foreground capitalize">{tpl.recurrence.replace(/_/g, " ")}</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -646,21 +715,6 @@ function ChecklistsPageContent() {
         </div>
       </div>
 
-
-      {/* Sub Tabs */}
-      <div className="flex gap-2">
-        {subTabs.map((tab) => (
-          <Button
-            key={tab.id}
-            variant={subTab === tab.id ? "default" : "outline"}
-            size="sm"
-            onClick={() => { setSubTab(tab.id); setCurrentPage(1); }}
-          >
-            {tab.label}
-          </Button>
-        ))}
-      </div>
-
       {/* KPI Cards */}
       {getKPIs()}
 
@@ -672,15 +726,70 @@ function ChecklistsPageContent() {
         filters={getFilters()}
         dateRange={dateRange}
         onDateRangeChange={(value) => { setDateRange(value); setCurrentPage(1); }}
-        showDateRange={subTab === "submissions"}
+        showDateRange
       />
+
+      {/* Drafts Section */}
+      {activeTab === "checklists" && checklistDrafts.length > 0 && (
+        <Card className="border-dashed">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <span className="text-sm font-medium">
+                {checklistDrafts.length} {checklistDrafts.length === 1 ? "Draft" : "Drafts"}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {checklistDrafts.map((draft) => (
+                <div
+                  key={draft.id}
+                  className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{draft.template_name}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary"
+                          style={{ width: `${draft.progress}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {draft.progress}% — {getRelativeTime(draft.updated_at)}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/${company}/dashboard/checklists/fill/${draft.template_id}`)}
+                  >
+                    Resume
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removeDraft(draft.id);
+                      setChecklistDrafts(getDraftsForType("checklist"));
+                    }}
+                    className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors"
+                    title="Delete draft"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Table */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">
-              {tableLength} {subTab === "active" ? "active task" : "record"}{tableLength !== 1 ? "s" : ""}
+              {tableLength} record{tableLength !== 1 ? "s" : ""}
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages || 1}
@@ -689,80 +798,8 @@ function ChecklistsPageContent() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            {/* Checklists Templates Table */}
-            {activeTab === "checklists" && subTab === "active" && (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-3 font-medium">Template</th>
-                    <th className="pb-3 font-medium">Items</th>
-                    <th className="hidden pb-3 font-medium md:table-cell">Category</th>
-                    <th className="hidden pb-3 font-medium lg:table-cell">Used</th>
-                    <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium w-10"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedChecklistTemplates.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">{t("checklists.empty.noChecklists")}</td>
-                    </tr>
-                  ) : (
-                    paginatedChecklistTemplates.map((template) => (
-                      <tr 
-                        key={template.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
-                        onClick={() => router.push(`/${company}/dashboard/checklists/${template.id}`)}
-                      >
-                        <td className="py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                              <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{template.name}</p>
-                              <p className="text-xs text-muted-foreground line-clamp-1">{template.description}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 text-xs">{template.items} {t("checklists.labels.items")}</td>
-                        <td className="hidden py-3 md:table-cell">
-                          <Badge variant="outline" className="text-xs">{template.category.replace(/_/g, " ")}</Badge>
-                        </td>
-                        <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{template.used} times</td>
-                        <td className="py-3">
-                          <Badge variant={template.status === "active" ? "success" : template.status === "draft" ? "warning" : "secondary"} className="text-xs">
-                            {template.status}
-                          </Badge>
-                        </td>
-                        <td className="py-3">
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <button
-                              type="button"
-                              title="Delete template"
-                              className="p-1 rounded opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm(`Delete "${template.name}"? This cannot be undone.`)) {
-                                  stores.checklistTemplates.remove(template.id);
-                                  toast(`Deleted "${template.name}"`);
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
-
             {/* Checklists Submissions Table */}
-            {activeTab === "checklists" && subTab === "submissions" && (
+            {activeTab === "checklists" && (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
@@ -785,7 +822,11 @@ function ChecklistsPageContent() {
                       <tr 
                         key={submission.id} 
                         className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
-                        onClick={() => router.push(`/${company}/dashboard/checklists/${submission.id}`)}
+                        onClick={() => router.push(
+                          submission.source === "inspection"
+                            ? `/${company}/dashboard/inspections/${submission.id}`
+                            : `/${company}/dashboard/checklists/${submission.id}`
+                        )}
                       >
                         <td className="py-3">
                           <div className="flex items-center gap-3">
@@ -793,7 +834,12 @@ function ChecklistsPageContent() {
                               <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div>
-                              <p className="font-medium">{submission.template}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium">{submission.template}</p>
+                                {submission.source === "inspection" && (
+                                  <Badge variant="outline" className="text-[10px]">Inspection</Badge>
+                                )}
+                              </div>
                               {submission.issues > 0 && (
                                 <p className="text-xs text-warning">{submission.issues} issue{submission.issues > 1 ? "s" : ""} found</p>
                               )}
@@ -804,7 +850,7 @@ function ChecklistsPageContent() {
                         <td className="hidden py-3 md:table-cell text-xs text-muted-foreground">{submission.by}</td>
                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{submission.date}</td>
                         <td className="py-3">
-                          <Badge variant={submission.score === "100%" ? "success" : submission.score === "-" ? "secondary" : "outline"} className="text-xs">
+                          <Badge variant={submission.score === "100%" || submission.score === "Pass" ? "success" : submission.score === "-" ? "secondary" : submission.score === "Fail" ? "destructive" : "outline"} className="text-xs">
                             {submission.score}
                           </Badge>
                         </td>
@@ -823,89 +869,8 @@ function ChecklistsPageContent() {
               </table>
             )}
 
-            {/* Risk Assessment Templates Table */}
-            {activeTab === "risk-assessment" && subTab === "active" && (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-3 font-medium">Template</th>
-                    <th className="hidden pb-3 font-medium md:table-cell">Type</th>
-                    <th className="hidden pb-3 font-medium lg:table-cell">Submissions</th>
-                    <th className="pb-3 font-medium">Standard</th>
-                    <th className="pb-3 font-medium w-20 text-right">Visibility</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedRiskTemplates.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-muted-foreground">{t("checklists.empty.noChecklists")}</td>
-                    </tr>
-                  ) : (
-                    paginatedRiskTemplates.map((template) => {
-                      const hidden = isAssessmentHidden(template.id);
-                      return (
-                      <tr 
-                        key={template.id} 
-                        className={cn(
-                          "border-b last:border-0 hover:bg-muted/50 active:bg-muted transition-colors group",
-                          hidden && "opacity-60"
-                        )}
-                      >
-                        <td 
-                          className="py-3 cursor-pointer"
-                          onClick={() => router.push(`/${company}/dashboard/risk-assessments/${template.id}`)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                              <FileCheck className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium">{template.name}</p>
-                                {hidden && <Badge variant="outline" className="text-[10px] text-muted-foreground">Hidden</Badge>}
-                              </div>
-                              <p className="text-xs text-muted-foreground line-clamp-1 max-w-[300px]">{template.description}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="hidden py-3 md:table-cell">
-                          <Badge variant="outline" className="text-xs">{template.type}</Badge>
-                        </td>
-                        <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{template.submissions}</td>
-                        <td className="py-3">
-                          {template.locked && (
-                            <Badge variant="secondary" className="text-xs gap-1">
-                              <Lock className="h-3 w-3" />
-                              Standard
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="py-3 text-right">
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); toggleAssessmentVisibility(template.id); }}
-                            className={cn(
-                              "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors",
-                              hidden
-                                ? "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                : "text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
-                            )}
-                            title={hidden ? "Show on field app" : "Hide from field app"}
-                          >
-                            {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            <span className="hidden sm:inline">{hidden ? "Show" : "Visible"}</span>
-                          </button>
-                        </td>
-                      </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            )}
-
             {/* Risk Assessment Submissions Table */}
-            {activeTab === "risk-assessment" && subTab === "submissions" && (
+            {activeTab === "risk-assessment" && (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
@@ -962,117 +927,94 @@ function ChecklistsPageContent() {
               </table>
             )}
 
-            {/* Inspection Templates Table */}
-            {activeTab === "inspection" && subTab === "active" && (
+            {/* Procedure Submissions Table */}
+            {activeTab === "procedures" && (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-3 font-medium">Template</th>
-                    <th className="pb-3 font-medium">Category</th>
-                    <th className="hidden pb-3 font-medium md:table-cell">Checkpoints</th>
-                    <th className="hidden pb-3 font-medium lg:table-cell">Used</th>
+                    <th className="pb-3 font-medium">Procedure</th>
+                    <th className="pb-3 font-medium">Progress</th>
+                    <th className="hidden pb-3 font-medium md:table-cell">Started By</th>
+                    <th className="hidden pb-3 font-medium lg:table-cell">Started</th>
+                    <th className="pb-3 font-medium">Recurrence</th>
                     <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedInspectionTemplates.length === 0 ? (
+                  {paginatedProcedureSubmissions.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">{t("checklists.empty.noChecklists")}</td>
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                        <Layers className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                        <p>No procedure submissions yet.</p>
+                        <p className="text-xs mt-1">Start a procedure to begin tracking progress.</p>
+                      </td>
                     </tr>
                   ) : (
-                    paginatedInspectionTemplates.map((template) => (
-                      <tr 
-                        key={template.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
-                        onClick={() => router.push(`/${company}/dashboard/inspections/${template.id}`)}
+                    paginatedProcedureSubmissions.map((sub) => (
+                      <tr
+                        key={sub.id}
+                        className="border-b last:border-0 transition-colors hover:bg-muted/50 cursor-pointer"
+                        onClick={() => router.push(sub.submissionHref)}
                       >
-                        <td className="py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                              <Wrench className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{template.name}</p>
-                              <p className="text-xs text-muted-foreground line-clamp-1">{template.description}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3"><Badge variant="outline" className="text-xs">{template.category.replace("_", " ")}</Badge></td>
-                        <td className="hidden py-3 md:table-cell text-xs">{template.checkpoints} {t("checklists.labels.items")}</td>
-                        <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{template.used} times</td>
-                        <td className="py-3">
-                          <Badge variant={template.status === "active" ? "success" : template.status === "draft" ? "warning" : "secondary"} className="text-xs">{template.status}</Badge>
-                        </td>
-                        <td className="py-3">
-                          <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
-
-            {/* Inspection Submissions Table */}
-            {activeTab === "inspection" && subTab === "submissions" && (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-3 font-medium">Asset</th>
-                    <th className="pb-3 font-medium">Template</th>
-                    <th className="hidden pb-3 font-medium md:table-cell">By</th>
-                    <th className="hidden pb-3 font-medium lg:table-cell">Next Due</th>
-                     <th className="pb-3 font-medium">Follow-up</th>
-                    <th className="pb-3 font-medium">Result</th>
-                    <th className="pb-3 font-medium w-10"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedInspectionSubmissions.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="py-8 text-center text-muted-foreground">{t("checklists.empty.noActiveAssets")}</td>
-                    </tr>
-                  ) : (
-                    paginatedInspectionSubmissions.map((inspection) => (
-                      <tr 
-                        key={inspection.id} 
-                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors group"
-                        onClick={() => router.push(`/${company}/dashboard/inspections/${inspection.id}`)}
-                      >
-                        <td className="py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                              <Wrench className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{inspection.asset}</p>
-                              <p className="text-xs text-muted-foreground">{inspection.date}</p>
-                            </div>
-                          </div>
-                        </td>
                          <td className="py-3">
-                           <div>
-                             <p className="text-xs font-medium">{inspection.template}</p>
-                             <p className="text-[11px] text-muted-foreground">{inspection.templateSource}</p>
-                           </div>
-                         </td>
-                         <td className="hidden py-3 md:table-cell text-xs text-muted-foreground">{inspection.by}</td>
-                         <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">{inspection.nextDue}</td>
-                         <td className="py-3 text-xs">
-                           {(inspection.followUpCount ?? inspection.issues) > 0 ? (
-                             <Badge variant="warning" className="text-xs">
-                               {inspection.followUpCount ?? inspection.issues} linked item{(inspection.followUpCount ?? inspection.issues) > 1 ? "s" : ""}
-                             </Badge>
-                           ) : (
-                             <span className="text-muted-foreground">None</span>
-                           )}
-                         </td>
-                        <td className="py-3">
-                          <Badge variant={inspection.status === "passed" ? "success" : "destructive"} className="text-xs">{inspection.status}</Badge>
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                                <Layers className="h-4 w-4 text-primary" />
+                             </div>
+                             <div className="space-y-1">
+                               <p className="font-medium">{sub.name}</p>
+                                {sub.currentStepHref && sub.status === "in_progress" && (
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="h-auto p-0 text-xs"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      router.push(sub.submissionHref);
+                                    }}
+                                  >
+                                    Open overview
+                                  </Button>
+                                )}
+                                {sub.status === "completed" && (
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="h-auto p-0 text-xs"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      router.push(sub.submissionHref);
+                                    }}
+                                  >
+                                    View completed procedure
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        <td className="py-3 text-xs">{sub.progress}</td>
+                        <td className="hidden py-3 md:table-cell text-xs text-muted-foreground">{sub.submitter}</td>
+                        <td className="hidden py-3 lg:table-cell text-xs text-muted-foreground">
+                          {new Date(sub.startedAt).toLocaleDateString()}
                         </td>
                         <td className="py-3">
-                          <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <Badge variant="secondary" className="text-xs capitalize">
+                            {sub.recurrence.replace(/_/g, " ")}
+                          </Badge>
+                        </td>
+                        <td className="py-3">
+                          <Badge
+                            variant={
+                              sub.status === "completed"
+                                ? "success"
+                                : sub.status === "cancelled"
+                                ? "cancelled"
+                                : "in_progress"
+                            }
+                            className="text-xs"
+                          >
+                            {sub.status.replace(/_/g, " ")}
+                          </Badge>
                         </td>
                       </tr>
                     ))

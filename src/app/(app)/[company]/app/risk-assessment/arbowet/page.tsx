@@ -146,7 +146,7 @@ export default function ArbowetFormPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showErrors, setShowErrors] = React.useState(false);
   const { add: addEvaluation } = useRiskEvaluationsStore();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { toast } = useToast();
   const [expandedArticle, setExpandedArticle] = React.useState<string | null>("artikel_3");
 
@@ -235,7 +235,7 @@ export default function ArbowetFormPage() {
     const refNumber = `ARBO-${now.getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
     const evaluation: RiskEvaluation = {
       id: crypto.randomUUID(),
-      company_id: user.company_id || "",
+      company_id: user.company_id || currentCompany?.id || "",
       submitter_id: user.id,
       country: "NL",
       form_type: "ARBOWET",

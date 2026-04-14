@@ -106,8 +106,11 @@ function sidebarColors(primary: HSL, isDark: boolean) {
 interface BrandingOptions {
   primaryColor?: string;
   secondaryColor?: string;
+  tertiaryColor?: string;
   fontFamily?: string;
   uiStyle?: "rounded" | "square";
+  shape?: "square" | "small" | "medium" | "large";
+  shadow?: "none" | "subtle" | "strong";
 }
 
 /**
@@ -180,9 +183,23 @@ export function applyBranding(options: BrandingOptions, theme: string) {
     root.style.setProperty("--font-sans", `"${options.fontFamily}", system-ui, sans-serif`);
   }
 
-  // UI style → border radius
+  // UI style → border radius (legacy)
   if (options.uiStyle) {
     root.style.setProperty("--radius", options.uiStyle === "square" ? "0.25rem" : "0.5rem");
+  }
+
+  // Shape → more granular border radius
+  if (options.shape) {
+    const radiusMap: Record<string, string> = { square: "0rem", small: "0.25rem", medium: "0.5rem", large: "0.75rem" };
+    root.style.setProperty("--radius", radiusMap[options.shape] || "0.5rem");
+  }
+
+  // Tertiary color
+  if (options.tertiaryColor) {
+    const tertiaryHsl = hexToHslValue(options.tertiaryColor);
+    if (tertiaryHsl) {
+      root.style.setProperty("--tertiary", tertiaryHsl);
+    }
   }
 }
 
@@ -199,7 +216,7 @@ export function resetBranding() {
     "--sidebar-background", "--sidebar-foreground", "--sidebar-primary",
     "--sidebar-primary-foreground", "--sidebar-accent",
     "--sidebar-accent-foreground", "--sidebar-border",
-    "--font-sans", "--radius",
+    "--font-sans", "--radius", "--tertiary",
   ];
   props.forEach((p) => root.style.removeProperty(p));
 }

@@ -82,7 +82,8 @@ export default async function MarketingLayout({
 
   return (
     <>
-      <style>{`html { background-color: #000; }`}</style>
+      <style>{`html { background-color: #000; }
+.marketing-page h1, .marketing-page h2, .marketing-page h3 { font-family: var(--font-playfair), serif; }`}</style>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

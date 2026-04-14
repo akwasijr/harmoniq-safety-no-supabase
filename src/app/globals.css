@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Disable scroll bounce / overscroll on all platforms */
+html, body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+}
+
 /* ============================================
    NPROGRESS — Route transition progress bar
    ============================================ */
@@ -373,6 +379,15 @@ body {
 
 .field-app-shell {
   font-family: var(--field-app-font-family, var(--font-sans));
+}
+
+/* Remove card/panel borders in the field app for a cleaner mobile look */
+.field-app-shell .border {
+  border-color: transparent;
+}
+.field-app-shell .border-b,
+.field-app-shell .border-t {
+  border-color: hsl(var(--border) / 0.3);
 }
 
 .field-app-panel {

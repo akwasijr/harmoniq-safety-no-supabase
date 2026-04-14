@@ -42,6 +42,7 @@ const COUNTRY_INDUSTRY_REGULATION_OVERRIDES: Record<
   Record<IndustryCode, string>
 > = {
   NL: {
+    generic: "Best practice",
     construction: "Arbowet / RI&E",
     manufacturing: "Arbowet / NEN 3140",
     oil_gas: "Arbowet / BRZO",
@@ -55,6 +56,7 @@ const COUNTRY_INDUSTRY_REGULATION_OVERRIDES: Record<
     airports: "Arbowet / ILT / EASA",
   },
   SE: {
+    generic: "Best practice",
     construction: "AFS / SAM",
     manufacturing: "AFS / SAM",
     oil_gas: "AFS / SAM",
@@ -68,6 +70,7 @@ const COUNTRY_INDUSTRY_REGULATION_OVERRIDES: Record<
     airports: "AFS / Transportstyrelsen / EASA",
   },
   GB: {
+    generic: "Best practice",
     construction: "HSE CDM 2015 / RIDDOR",
     manufacturing: "HSE PUWER / LOLER",
     oil_gas: "HSE COMAH / DSEAR",
@@ -81,6 +84,7 @@ const COUNTRY_INDUSTRY_REGULATION_OVERRIDES: Record<
     airports: "CAA / EASA / HSG65",
   },
   DE: {
+    generic: "Best practice",
     construction: "ArbSchG / BaustellV / BetrSichV",
     manufacturing: "ArbSchG / BetrSichV",
     oil_gas: "ArbSchG / BetrSichV / GefStoffV",
@@ -94,6 +98,7 @@ const COUNTRY_INDUSTRY_REGULATION_OVERRIDES: Record<
     airports: "ArbSchG / EASA / LuftSiG",
   },
   FR: {
+    generic: "Best practice",
     construction: "Code du travail / PPSPS",
     manufacturing: "Code du travail / DUERP",
     oil_gas: "Code du travail / ICPE",
@@ -107,6 +112,7 @@ const COUNTRY_INDUSTRY_REGULATION_OVERRIDES: Record<
     airports: "Code du travail / EASA / DGAC",
   },
   ES: {
+    generic: "Best practice",
     construction: "Ley 31/1995 / RD 1627/1997",
     manufacturing: "Ley 31/1995 / RD 1215/1997",
     oil_gas: "Ley 31/1995 / RD 681/2003",
@@ -140,6 +146,7 @@ export const INDUSTRY_METADATA: Record<
   IndustryCode,
   { icon: string; color: string; label_key: string }
 > = {
+  generic:         { icon: "Shield",         color: "#64748B", label_key: "industry_templates.generic.name" },
   construction:    { icon: "HardHat",        color: "#F59E0B", label_key: "industry_templates.construction.name" },
   manufacturing:   { icon: "Factory",        color: "#6366F1", label_key: "industry_templates.manufacturing.name" },
   oil_gas:         { icon: "Flame",          color: "#EF4444", label_key: "industry_templates.oil_gas.name" },
@@ -2665,10 +2672,147 @@ const airportsTemplates: IndustryChecklistTemplate[] = [
 ];
 
 // ==========================================
+// GENERIC (CROSS-INDUSTRY) TEMPLATES
+// ==========================================
+
+const genericTemplates: IndustryChecklistTemplate[] = [
+  // G-1  Generic Workplace Safety Inspection
+  {
+    id: "generic_workplace_safety",
+    industry: "generic",
+    name_key: k("generic", "workplace_safety", "name"),
+    description_key: k("generic", "workplace_safety", "description"),
+    category: "site_inspection",
+    regulation: "Best practice",
+    frequency: "weekly",
+    tags: ["workplace", "safety", "inspection", "housekeeping"],
+    items: [
+      item("generic", "workplace_safety", "housekeeping", "yes_no_na", 1),
+      item("generic", "workplace_safety", "emergency_exits_clear", "yes_no_na", 2),
+      item("generic", "workplace_safety", "fire_extinguishers_accessible", "yes_no_na", 3),
+      item("generic", "workplace_safety", "first_aid_kit_stocked", "yes_no_na", 4),
+      item("generic", "workplace_safety", "lighting_adequate", "yes_no_na", 5),
+      item("generic", "workplace_safety", "slip_trip_hazards", "yes_no_na", 6),
+      item("generic", "workplace_safety", "electrical_cords_condition", "yes_no_na", 7),
+      item("generic", "workplace_safety", "ventilation_adequate", "yes_no_na", 8),
+    ],
+  },
+
+  // G-2  Generic PPE Compliance Check
+  {
+    id: "generic_ppe_check",
+    industry: "generic",
+    name_key: k("generic", "ppe_check", "name"),
+    description_key: k("generic", "ppe_check", "description"),
+    category: "ppe",
+    regulation: "Best practice",
+    frequency: "daily",
+    tags: ["ppe", "compliance", "personal_protection"],
+    items: [
+      item("generic", "ppe_check", "hard_hat_condition", "pass_fail", 1),
+      item("generic", "ppe_check", "safety_glasses", "pass_fail", 2),
+      item("generic", "ppe_check", "high_vis_vest", "pass_fail", 3),
+      item("generic", "ppe_check", "safety_boots", "pass_fail", 4),
+      item("generic", "ppe_check", "gloves_appropriate", "pass_fail", 5),
+      item("generic", "ppe_check", "hearing_protection", "yes_no_na", 6),
+      item("generic", "ppe_check", "respiratory_protection", "yes_no_na", 7, false),
+    ],
+  },
+
+  // G-3  Generic Fire Safety Checklist
+  {
+    id: "generic_fire_safety",
+    industry: "generic",
+    name_key: k("generic", "fire_safety", "name"),
+    description_key: k("generic", "fire_safety", "description"),
+    category: "fire_safety",
+    regulation: "Best practice",
+    frequency: "monthly",
+    tags: ["fire", "safety", "prevention", "evacuation"],
+    items: [
+      item("generic", "fire_safety", "extinguishers_inspected", "yes_no_na", 1),
+      item("generic", "fire_safety", "emergency_exits_marked", "yes_no_na", 2),
+      item("generic", "fire_safety", "evacuation_plan_posted", "yes_no_na", 3),
+      item("generic", "fire_safety", "fire_alarm_tested", "yes_no_na", 4),
+      item("generic", "fire_safety", "flammable_materials_stored", "yes_no_na", 5),
+      item("generic", "fire_safety", "fire_blankets_available", "yes_no_na", 6),
+      item("generic", "fire_safety", "assembly_point_marked", "yes_no_na", 7),
+    ],
+  },
+
+  // G-4  Generic First Aid & Emergency Readiness
+  {
+    id: "generic_first_aid",
+    industry: "generic",
+    name_key: k("generic", "first_aid", "name"),
+    description_key: k("generic", "first_aid", "description"),
+    category: "emergency",
+    regulation: "Best practice",
+    frequency: "monthly",
+    tags: ["first_aid", "emergency", "readiness", "aed"],
+    items: [
+      item("generic", "first_aid", "first_aid_kit_complete", "yes_no_na", 1),
+      item("generic", "first_aid", "aed_accessible", "yes_no_na", 2),
+      item("generic", "first_aid", "emergency_contacts_posted", "yes_no_na", 3),
+      item("generic", "first_aid", "trained_first_aiders", "yes_no_na", 4),
+      item("generic", "first_aid", "emergency_procedures_known", "yes_no_na", 5),
+      item("generic", "first_aid", "spill_kit_available", "yes_no_na", 6),
+    ],
+  },
+
+  // G-5  Generic New Employee Safety Induction
+  {
+    id: "generic_safety_induction",
+    industry: "generic",
+    name_key: k("generic", "safety_induction", "name"),
+    description_key: k("generic", "safety_induction", "description"),
+    category: "training",
+    regulation: "Best practice",
+    frequency: "per_event",
+    tags: ["induction", "onboarding", "training", "new_employee"],
+    items: [
+      item("generic", "safety_induction", "emergency_procedures_explained", "yes_no_na", 1),
+      item("generic", "safety_induction", "ppe_issued", "yes_no_na", 2),
+      item("generic", "safety_induction", "hazard_areas_identified", "yes_no_na", 3),
+      item("generic", "safety_induction", "reporting_procedures_explained", "yes_no_na", 4),
+      item("generic", "safety_induction", "fire_exits_shown", "yes_no_na", 5),
+      item("generic", "safety_induction", "first_aid_locations_shown", "yes_no_na", 6),
+      item("generic", "safety_induction", "safety_rules_acknowledged", "yes_no_na", 7),
+    ],
+  },
+
+  // G-6  Generic Toolbox Talk Record
+  {
+    id: "generic_toolbox_talk",
+    industry: "generic",
+    name_key: k("generic", "toolbox_talk", "name"),
+    description_key: k("generic", "toolbox_talk", "description"),
+    category: "briefing",
+    regulation: "Best practice",
+    frequency: "daily",
+    tags: ["toolbox_talk", "briefing", "safety_meeting"],
+    items: [
+      item("generic", "toolbox_talk", "topic_discussed", "text", 1),
+      item("generic", "toolbox_talk", "hazards_identified", "yes_no_na", 2),
+      item("generic", "toolbox_talk", "controls_communicated", "yes_no_na", 3),
+      item("generic", "toolbox_talk", "ppe_requirements_confirmed", "yes_no_na", 4),
+      item("generic", "toolbox_talk", "questions_addressed", "yes_no_na", 5),
+      item("generic", "toolbox_talk", "attendees_signed", "yes_no_na", 6),
+    ],
+  },
+];
+
+// ==========================================
 // ALL INDUSTRY TEMPLATE PACKS
 // ==========================================
 
 export const industryTemplatePacks: IndustryTemplatePack[] = [
+  {
+    industry: "generic",
+    name_key: "industry_templates.generic.name",
+    description_key: "industry_templates.generic.description",
+    templates: genericTemplates,
+  },
   {
     industry: "construction",
     name_key: "industry_templates.construction.name",

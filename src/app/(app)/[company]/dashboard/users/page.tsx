@@ -25,14 +25,84 @@ import { SearchFilterBar } from "@/components/ui/search-filter-bar";
 import { useFilterOptions } from "@/components/ui/filter-panel";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useCompanyData } from "@/hooks/use-company-data";
+import { useAuth } from "@/hooks/use-auth";
 import { LoadingPage } from "@/components/ui/loading";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n";
 import { PAGINATION } from "@/lib/constants";
 import { addUserToTeam } from "@/lib/assignment-utils";
+import { ROLE_PERMISSIONS, type Permission, type CompanyRole } from "@/types";
+import { ChevronDown } from "lucide-react";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
+
+// Human-readable permission group labels
+const PERMISSION_GROUPS: { label: string; permissions: { id: Permission; label: string }[] }[] = [
+  {
+    label: "Incidents",
+    permissions: [
+      { id: "incidents.view_own", label: "View own incidents" },
+      { id: "incidents.view_team", label: "View team incidents" },
+      { id: "incidents.view_all", label: "View all incidents" },
+      { id: "incidents.create", label: "Report incidents" },
+      { id: "incidents.edit_own", label: "Edit own incidents" },
+      { id: "incidents.edit_all", label: "Edit all incidents" },
+      { id: "incidents.assign", label: "Assign incidents" },
+      { id: "incidents.investigate", label: "Investigate incidents" },
+      { id: "incidents.delete", label: "Delete incidents" },
+    ],
+  },
+  {
+    label: "Checklists & Inspections",
+    permissions: [
+      { id: "checklists.view", label: "View checklists" },
+      { id: "checklists.complete", label: "Complete checklists" },
+      { id: "checklists.create_templates", label: "Create templates" },
+      { id: "checklists.manage", label: "Manage all checklists" },
+    ],
+  },
+  {
+    label: "Work Orders",
+    permissions: [
+      { id: "work_orders.view", label: "View work orders" },
+      { id: "work_orders.view_all", label: "View all work orders" },
+      { id: "work_orders.create", label: "Create work orders" },
+      { id: "work_orders.edit", label: "Edit work orders" },
+      { id: "work_orders.assign", label: "Assign work orders" },
+      { id: "work_orders.complete", label: "Complete work orders" },
+    ],
+  },
+  {
+    label: "Risk & Corrective Actions",
+    permissions: [
+      { id: "risk_assessments.view", label: "View risk assessments" },
+      { id: "risk_assessments.create", label: "Create risk assessments" },
+      { id: "corrective_actions.view", label: "View corrective actions" },
+      { id: "corrective_actions.create", label: "Create corrective actions" },
+    ],
+  },
+  {
+    label: "Reports & Analytics",
+    permissions: [
+      { id: "reports.view_own", label: "View own reports" },
+      { id: "reports.view_team", label: "View team reports" },
+      { id: "reports.view_all", label: "View all reports" },
+      { id: "reports.export", label: "Export reports" },
+    ],
+  },
+  {
+    label: "Users & Settings",
+    permissions: [
+      { id: "users.view", label: "View users" },
+      { id: "users.create", label: "Create users" },
+      { id: "users.edit", label: "Edit users" },
+      { id: "users.manage_roles", label: "Manage roles" },
+      { id: "settings.view", label: "View settings" },
+      { id: "settings.edit", label: "Edit settings" },
+    ],
+  },
+];
 
 interface Invitation {
   id: string;
@@ -53,7 +123,7 @@ export default function UsersPage() {
   const { t, formatDate, formatNumber } = useTranslation();
   const router = useRouter();
   const company = useCompanyParam();
-  const [activeTab, setActiveTab] = React.useState<TabType>("users");
+  const [activeTab, setActiveTab] = React.useState<TabType>("teams");
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [showAddTeamModal, setShowAddTeamModal] = React.useState(false);
   const [isInviting, setIsInviting] = React.useState(false);
@@ -78,7 +148,11 @@ export default function UsersPage() {
     role: "employee",
     department: "",
     team_ids: [] as string[],
+    location_id: "",
+    reports_to: "",
   });
+  const [showPermissions, setShowPermissions] = React.useState(false);
+  const [customPermissions, setCustomPermissions] = React.useState<Permission[]>(() => [...ROLE_PERMISSIONS.employee]);
 
   // New team form
   const [newTeam, setNewTeam] = React.useState({
@@ -89,8 +163,11 @@ export default function UsersPage() {
   });
 
   const { toast } = useToast();
+  const { hasPermission } = useAuth();
+  const canCreateTeam = hasPermission("teams.create");
+  const canManageMembers = hasPermission("teams.manage_members");
   const filterOptions = useFilterOptions();
-  const { companyId, users, teams, stores } = useCompanyData();
+  const { companyId, users, teams, locations, stores } = useCompanyData();
   const { isLoading, add: addUser } = stores.users;
   const { add: addTeam, update: updateTeam } = stores.teams;
 
@@ -263,7 +340,7 @@ export default function UsersPage() {
 
       setShowAddModal(false);
       fetchInvitations();
-      setNewUser({ first_name: "", last_name: "", email: "", role: "employee", department: "", team_ids: [] });
+      setNewUser({ first_name: "", last_name: "", email: "", role: "employee", department: "", team_ids: [], location_id: "", reports_to: "" });
     } catch (err: unknown) {
       toast(err instanceof Error ? err.message : "Failed to create invitation");
     } finally {
@@ -332,6 +409,7 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">{t("users.title")}</h1>
+        {((activeTab === "teams" && canCreateTeam) || (activeTab !== "teams" && canManageMembers)) && (
         <Button 
           size="sm" 
           className="gap-2" 
@@ -343,11 +421,27 @@ export default function UsersPage() {
           <Plus className="h-4 w-4" aria-hidden="true" />
           {activeTab === "teams" ? t("users.buttons.createTeam") : t("users.buttons.addUser")}
         </Button>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="border-b overflow-x-auto">
         <div className="flex gap-4 min-w-max">
+          <button
+            onClick={() => { setActiveTab("teams"); setCurrentPage(1); setSearchQuery(""); setStatusFilter(""); }}
+            className={cn(
+              "flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative whitespace-nowrap",
+              activeTab === "teams"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <UsersRound className="h-4 w-4 shrink-0" />
+            <span className="truncate">Teams / Groups</span>
+            {activeTab === "teams" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
           <button
             onClick={() => { setActiveTab("users"); setCurrentPage(1); setSearchQuery(""); setStatusFilter(""); }}
             className={cn(
@@ -378,21 +472,6 @@ export default function UsersPage() {
               <span className="ml-1 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">{pendingInvitations.length}</span>
             )}
             {activeTab === "invitations" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
-          </button>
-          <button
-            onClick={() => { setActiveTab("teams"); setCurrentPage(1); setSearchQuery(""); setStatusFilter(""); }}
-            className={cn(
-              "flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative whitespace-nowrap",
-              activeTab === "teams"
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <UsersRound className="h-4 w-4 shrink-0" />
-            <span className="truncate">{t("users.tabs.teams")}</span>
-            {activeTab === "teams" && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>
@@ -578,15 +657,125 @@ export default function UsersPage() {
               </div>
               <div>
                 <Label htmlFor="role">{t("users.labels.role")} *</Label>
-                <select id="role" title="Select role" aria-label="Select role" value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select id="role" title="Select role" aria-label="Select role" value={newUser.role} onChange={(e) => {
+                  const role = e.target.value as CompanyRole;
+                  setNewUser({ ...newUser, role });
+                  setCustomPermissions([...ROLE_PERMISSIONS[role]]);
+                }} className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
                   <option value="employee">{t("users.roles.employee")}</option>
+                  <option value="safety_officer">Supervisor / Team Lead</option>
                   <option value="manager">{t("users.roles.manager")}</option>
                   <option value="company_admin">{t("users.roles.companyAdmin")}</option>
+                  <option value="viewer">Viewer / Director</option>
                 </select>
+                <button
+                  type="button"
+                  onClick={() => setShowPermissions(!showPermissions)}
+                  className="flex items-center gap-1 mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", showPermissions && "rotate-180")} />
+                  {showPermissions ? "Hide permissions" : `View permissions (${customPermissions.length})`}
+                </button>
+                {showPermissions && (
+                  <div className="mt-2 max-h-48 overflow-y-auto rounded-md border bg-muted/30 p-3 space-y-3">
+                    {PERMISSION_GROUPS.map((group) => {
+                      const groupPerms = group.permissions.filter((p) => ROLE_PERMISSIONS[newUser.role as CompanyRole]?.includes(p.id) || customPermissions.includes(p.id));
+                      return (
+                        <div key={group.label}>
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{group.label}</p>
+                          <div className="space-y-0.5">
+                            {group.permissions.map((perm) => (
+                              <label key={perm.id} className="flex items-center gap-2 py-0.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={customPermissions.includes(perm.id)}
+                                  onChange={(e) => {
+                                    setCustomPermissions((prev) =>
+                                      e.target.checked ? [...prev, perm.id] : prev.filter((p) => p !== perm.id)
+                                    );
+                                  }}
+                                  className="h-3.5 w-3.5 rounded border-input accent-primary"
+                                />
+                                <span className="text-xs">{perm.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div>
                 <Label htmlFor="department">{t("users.labels.department")}</Label>
                 <Input id="department" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} placeholder={t("users.placeholders.department")} className="mt-1" />
+              </div>
+            </div>
+
+            {/* Location, Reports To, Team */}
+            <div className="grid gap-4 sm:grid-cols-2 mt-4">
+              <div>
+                <Label htmlFor="location">Location / Site</Label>
+                <select
+                  id="location"
+                  value={newUser.location_id}
+                  onChange={(e) => setNewUser({ ...newUser, location_id: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">All locations</option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="reports_to">Reports To</Label>
+                <select
+                  id="reports_to"
+                  value={newUser.reports_to}
+                  onChange={(e) => setNewUser({ ...newUser, reports_to: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">None</option>
+                  {users
+                    .filter((u) => ["company_admin", "manager", "safety_officer"].includes(u.role))
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>{u.full_name} ({u.role.replace(/_/g, " ")})</option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Label>Team / Group</Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {teams.map((team) => (
+                  <button
+                    key={team.id}
+                    type="button"
+                    onClick={() => {
+                      setNewUser((prev) => ({
+                        ...prev,
+                        team_ids: prev.team_ids.includes(team.id)
+                          ? prev.team_ids.filter((id) => id !== team.id)
+                          : [...prev.team_ids, team.id],
+                      }));
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                      newUser.team_ids.includes(team.id)
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: team.color }} />
+                    {team.name}
+                    {team.leader_id && <span className="text-[9px] opacity-60">· {users.find((u) => u.id === team.leader_id)?.first_name || "Lead"}</span>}
+                  </button>
+                ))}
+                {teams.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No teams created yet</p>
+                )}
               </div>
             </div>
 

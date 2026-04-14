@@ -39,7 +39,7 @@ import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
-import { capitalize } from "@/lib/utils";
+import { capitalize, cn } from "@/lib/utils";
 import type { Priority, WorkOrder, WorkOrderStatus, WorkOrderStatusLogEntry } from "@/types";
 import { WORK_ORDER_STATUS_TRANSITIONS, WORK_ORDER_TYPES } from "@/types";
 import { RoleGuard } from "@/components/auth/role-guard";
@@ -90,6 +90,7 @@ export default function WorkOrderDetailPage() {
   const canEdit = hasPermission("work_orders.edit");
   const canAssign = hasPermission("work_orders.assign");
   const canComplete = hasPermission("work_orders.complete");
+  const canDelete = hasPermission("work_orders.delete");
   const { items: statusLogItems, add: addStatusLog } = useWorkOrderStatusLogStore();
 
   const order = orders.find((o) => o.id === workOrderId);
@@ -264,6 +265,7 @@ export default function WorkOrderDetailPage() {
     ? checklistSubmissions.find((submission) => submission.id === order.checklist_submission_id) || null
     : null;
   const linkedProcedureFailCount = linkedProcedureSubmission?.responses.filter((response) => response.value === false).length ?? 0;
+  const requiresChecklist = Boolean(order.checklist_template_id && !order.checklist_submission_id);
   const nextStatuses = (STATUS_FLOW[order.status] || []) as WorkOrderStatus[];
   const totalCost = (order.parts_cost || 0) + (order.labor_cost || 0);
   const woNumber = `WO-${order.id.substring(0, 8).toUpperCase()}`;
@@ -395,21 +397,30 @@ export default function WorkOrderDetailPage() {
                   className="absolute right-0 z-20 mt-2 min-w-[190px] rounded-md border bg-background p-1 shadow-md"
                 >
                   {nextStatuses.length > 0 ? (
-                    nextStatuses.map((status) => (
-                      <button
-                        key={status}
-                        type="button"
-                        role="menuitem"
-                        className="flex w-full items-center rounded-sm px-3 py-2 text-left text-sm hover:bg-muted"
-                        onClick={() => {
-                          setPendingActionStatus(status);
-                          setShowStatusModal(true);
-                          setShowActionMenu(false);
-                        }}
-                      >
-                        {getActionLabel(status)}
-                      </button>
-                    ))
+                    nextStatuses.map((status) => {
+                      const blocked = status === "completed" && requiresChecklist;
+                      return (
+                        <button
+                          key={status}
+                          type="button"
+                          role="menuitem"
+                          className={cn(
+                            "flex w-full items-center rounded-sm px-3 py-2 text-left text-sm",
+                            blocked ? "cursor-not-allowed text-muted-foreground" : "hover:bg-muted",
+                          )}
+                          disabled={blocked}
+                          onClick={() => {
+                            if (blocked) return;
+                            setPendingActionStatus(status);
+                            setShowStatusModal(true);
+                            setShowActionMenu(false);
+                          }}
+                        >
+                          {getActionLabel(status)}
+                          {blocked && <span className="ml-auto text-xs text-amber-500">Checklist required</span>}
+                        </button>
+                      );
+                    })
                   ) : (
                     <div className="px-3 py-2 text-sm text-muted-foreground">No action items available</div>
                   )}
@@ -421,6 +432,13 @@ export default function WorkOrderDetailPage() {
       </div>
 
       <StatusPipeline currentStatus={order.status} />
+
+      {requiresChecklist && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>Complete the required procedure checklist before closing this work order</span>
+        </div>
+      )}
 
       {/* Status change modal */}
         <StatusChangeModal

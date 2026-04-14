@@ -22,6 +22,7 @@ import { storeFile } from "@/lib/file-storage";
 import type { Incident, IncidentType, Severity, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { LocationPicker, type LocationPickerValue } from "@/components/ui/location-picker";
 
 const INCIDENT_TYPES: { value: IncidentType; label: string }[] = [
   { value: "injury", label: "Injury" },
@@ -60,6 +61,13 @@ export default function NewIncidentPage() {
   const { locations, assets: allAssets } = useCompanyData();
   const { add: addIncident } = useIncidentsStore();
   const { toast } = useToast();
+
+  const [incidentLocationValue, setIncidentLocationValue] = React.useState<LocationPickerValue>({
+    locationId: "",
+    manualText: "",
+    gpsLat: null,
+    gpsLng: null,
+  });
   
   // Form state matching IncidentFormData interface
   const [formData, setFormData] = React.useState({
@@ -72,8 +80,9 @@ export default function NewIncidentPage() {
     incident_time: new Date().toTimeString().slice(0, 5),
     lost_time: false,
     lost_time_amount: 0,
+    lost_time_restricted_days: 0,
+    lost_time_return_date: "",
     active_hazard: false,
-    location_id: "",
     building: "",
     floor: "",
     zone: "",
@@ -121,15 +130,19 @@ export default function NewIncidentPage() {
       incident_time: formData.incident_time,
       lost_time: formData.lost_time,
       lost_time_amount: formData.lost_time ? formData.lost_time_amount : null,
+        lost_time_restricted_days: formData.lost_time ? (formData.lost_time_restricted_days || null) : null,
+        lost_time_return_date: formData.lost_time ? (formData.lost_time_return_date || null) : null,
+        lost_time_updated_at: null,
+        lost_time_updated_by: null,
       active_hazard: formData.active_hazard,
-      location_id: formData.location_id || null,
+      location_id: incidentLocationValue.locationId || null,
       building: formData.building || null,
       floor: formData.floor || null,
       zone: formData.zone || null,
       room: formData.room || null,
-      gps_lat: null,
-      gps_lng: null,
-      location_description: formData.location_description || null,
+      gps_lat: incidentLocationValue.gpsLat,
+      gps_lng: incidentLocationValue.gpsLng,
+      location_description: incidentLocationValue.manualText || formData.location_description || null,
       asset_id: formData.asset_id || null,
       media_urls: photos.map((p) => p.url),
       status: "new",
@@ -283,16 +296,41 @@ export default function NewIncidentPage() {
             </div>
 
             {formData.lost_time && (
+              <>
               <div className="space-y-2">
-                <Label htmlFor="lost_time_amount">{t("incidents.labels.hoursLost")}</Label>
+                <Label htmlFor="lost_time_amount">Days Away From Work</Label>
                 <Input
                   id="lost_time_amount"
                   type="number"
                   min="0"
-                  value={formData.lost_time_amount}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, lost_time_amount: Number(e.target.value) }))}
+                  placeholder="Number of calendar days"
+                  value={formData.lost_time_amount || ""}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, lost_time_amount: Number(e.target.value) || 0 }))}
+                />
+                <p className="text-xs text-muted-foreground">Total calendar days the worker was unable to perform normal duties</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lost_time_restricted_days">Restricted Duty Days</Label>
+                <Input
+                  id="lost_time_restricted_days"
+                  type="number"
+                  min="0"
+                  placeholder="Days on modified/restricted duty"
+                  value={formData.lost_time_restricted_days || ""}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, lost_time_restricted_days: Number(e.target.value) || 0 }))}
+                />
+                <p className="text-xs text-muted-foreground">Days the worker was on restricted or modified duty (OSHA DART)</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lost_time_return_date">Expected Return Date</Label>
+                <Input
+                  id="lost_time_return_date"
+                  type="date"
+                  value={formData.lost_time_return_date || ""}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, lost_time_return_date: e.target.value }))}
                 />
               </div>
+              </>
             )}
 
             <div className="flex items-center justify-between rounded-lg border p-3 border-destructive/50 bg-destructive/5">
@@ -316,20 +354,12 @@ export default function NewIncidentPage() {
               <CardTitle>{t("incidents.labels.location")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t("incidents.labels.location")}</Label>
-                <Select 
-                  value={formData.location_id} 
-                  onValueChange={(v) => setFormData((prev) => ({ ...prev, location_id: v }))}
-                >
-                  <SelectTrigger><SelectValue placeholder={t("incidents.placeholders.selectLocation")} /></SelectTrigger>
-                  <SelectContent>
-                    {locations.map((loc) => (
-                      <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <LocationPicker
+                locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address }))}
+                value={incidentLocationValue}
+                onChange={setIncidentLocationValue}
+                label={t("incidents.labels.location")}
+              />
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">

@@ -213,6 +213,10 @@ function ImportPreview({ importData, incidents, user, addIncident, addTicket, to
         incident_time: row.incident_time || "00:00",
         lost_time: row.lost_time?.toLowerCase().trim() === "yes",
         lost_time_amount: null,
+        lost_time_restricted_days: null,
+        lost_time_return_date: null,
+        lost_time_updated_at: null,
+        lost_time_updated_by: null,
         active_hazard: row.active_hazard?.toLowerCase().trim() === "yes",
         location_id: null,
         building: row.building || null,
@@ -363,7 +367,8 @@ export default function IncidentsPage() {
     location_description: "",
   });
 
-  const { user, currentCompany } = useAuth();
+  const { user, currentCompany, hasPermission } = useAuth();
+  const canCreate = hasPermission("incidents.create");
   const { t, formatDate } = useTranslation();
   const filterOptions = useFilterOptions();
   const { toast } = useToast();
@@ -489,6 +494,10 @@ export default function IncidentsPage() {
       incident_time: now.toISOString().split("T")[1]?.slice(0, 5) || "00:00",
       lost_time: false,
       lost_time_amount: null,
+        lost_time_restricted_days: null,
+        lost_time_return_date: null,
+        lost_time_updated_at: null,
+        lost_time_updated_by: null,
       active_hazard: false,
       location_id: newIncident.location_id || null,
       building: null,
@@ -666,13 +675,13 @@ export default function IncidentsPage() {
             <Download className="h-4 w-4" aria-hidden="true" />
             {t("incidents.buttons.export")}
           </Button>
-          {activeSubTab === "incidents" && (
+          {activeSubTab === "incidents" && canCreate && (
             <>
             <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowImport(true)}>
               <Upload className="h-4 w-4" aria-hidden="true" />
               Import
             </Button>
-            <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
+            <Button size="sm" className="gap-2" onClick={() => router.push(`/${company}/dashboard/incidents/new`)}>
               <Plus className="h-4 w-4" aria-hidden="true" />
               {t("incidents.newIncident")}
             </Button>

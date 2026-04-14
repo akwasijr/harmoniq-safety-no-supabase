@@ -1,314 +1,196 @@
 "use client";
 
-import { ArrowDown, ArrowUp, RefreshCw } from "lucide-react";
-
+import * as React from "react";
+import { ArrowDown, ArrowUp, GripVertical, Smartphone, ShieldOff, Lightbulb, Newspaper, Camera } from "lucide-react";
 import { FieldAppHomePreview } from "@/components/settings/field-app-home-preview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  FIELD_APP_FONT_OPTIONS,
   FIELD_APP_MIN_QUICK_ACTIONS,
   FIELD_APP_QUICK_ACTION_DEFINITIONS,
-  FIELD_APP_SHADOW_OPTIONS,
-  FIELD_APP_SHAPE_OPTIONS,
   type FieldAppQuickActionId,
   type FieldAppSettings,
 } from "@/lib/field-app-settings";
-
 import { SettingsToggle } from "./settings-toggle";
 import type { SettingsState } from "./settings-types";
+import { useAuth } from "@/hooks/use-auth";
+import { useCompanyStore } from "@/stores/company-store";
+import { useToast } from "@/components/ui/toast";
 
 interface FieldAppSettingsSectionProps {
   canEditSettings: boolean;
   fieldAppTipPreview: string;
-  moveFieldQuickAction: (
-    actionId: FieldAppQuickActionId,
-    direction: "up" | "down",
-  ) => void;
+  moveFieldQuickAction: (actionId: FieldAppQuickActionId, direction: "up" | "down") => void;
   quickActionLabels: Record<FieldAppQuickActionId, string>;
   resetFieldAppToIndustryPreset: () => void;
   settings: SettingsState;
   toggleFieldQuickAction: (actionId: FieldAppQuickActionId) => void;
-  updateFieldAppSettings: (
-    updater: (previous: FieldAppSettings) => FieldAppSettings,
-  ) => void;
+  updateFieldAppSettings: (updater: (previous: FieldAppSettings) => FieldAppSettings) => void;
 }
 
 export function FieldAppSettingsSection({
-  canEditSettings,
-  fieldAppTipPreview,
-  moveFieldQuickAction,
-  quickActionLabels,
-  resetFieldAppToIndustryPreset,
-  settings,
-  toggleFieldQuickAction,
-  updateFieldAppSettings,
+  canEditSettings, fieldAppTipPreview, moveFieldQuickAction, quickActionLabels,
+  resetFieldAppToIndustryPreset, settings, toggleFieldQuickAction, updateFieldAppSettings,
 }: FieldAppSettingsSectionProps) {
+  const { currentCompany } = useAuth();
+  const { update: updateCompany } = useCompanyStore();
+  const { toast } = useToast();
+  const companyName = settings.companyName || settings.appName || "Company";
+  const isAnonymousEnabled = currentCompany?.allow_anonymous_reporting ?? false;
+
+  const enabledActions = settings.fieldApp.quickActions;
+  const enabledCount = enabledActions.length;
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_340px] xl:items-start">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-start">
       <div className="space-y-6">
+        {/* Home screen features */}
         <Card>
-          <CardHeader>
-            <CardTitle>Field App setup</CardTitle>
-            <CardDescription>
-              Control the mobile home experience without changing dashboard
-              branding or layout.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-lg border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="font-medium">Quick setup from industry</p>
-                <p className="text-sm text-muted-foreground">
-                  Start from your saved industry preset, then fine-tune the
-                  mobile app manually.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-2"
-                onClick={resetFieldAppToIndustryPreset}
-                disabled={!canEditSettings}
-              >
-                <RefreshCw className="h-4 w-4" />
-                Apply industry defaults
-              </Button>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="field-app-font">Mobile font</Label>
-                <select
-                  id="field-app-font"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={settings.fieldApp.fontId}
-                  onChange={(event) =>
-                    updateFieldAppSettings((previous) => ({
-                      ...previous,
-                      fontId: event.target.value as FieldAppSettings["fontId"],
-                    }))
-                  }
-                >
-                  {FIELD_APP_FONT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="field-app-shape">Buttons and cards</Label>
-                <select
-                  id="field-app-shape"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={settings.fieldApp.shape}
-                  onChange={(event) =>
-                    updateFieldAppSettings((previous) => ({
-                      ...previous,
-                      shape: event.target.value as FieldAppSettings["shape"],
-                    }))
-                  }
-                >
-                  {FIELD_APP_SHAPE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <CardTitle>Home Screen</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">Toggle sections visible on the field app home screen.</p>
               </div>
             </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {/* Tip of the Day */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                <Lightbulb className="h-4 w-4 text-amber-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Tip of the Day</p>
+                <p className="text-[11px] text-muted-foreground">Daily safety tips on the home screen.</p>
+              </div>
+              <SettingsToggle
+                checked={settings.fieldApp.tipOfTheDayEnabled}
+                onChange={(checked) => updateFieldAppSettings((prev) => ({ ...prev, tipOfTheDayEnabled: checked }))}
+                label="Toggle tip of the day"
+              />
+            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="field-app-shadow">Shadow style</Label>
-              <select
-                id="field-app-shadow"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={settings.fieldApp.shadow}
-                onChange={(event) =>
-                  updateFieldAppSettings((previous) => ({
-                    ...previous,
-                    shadow: event.target.value as FieldAppSettings["shadow"],
-                  }))
-                }
-              >
-                {FIELD_APP_SHADOW_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+            {/* News */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                <Newspaper className="h-4 w-4 text-blue-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">News & Updates</p>
+                <p className="text-[11px] text-muted-foreground">Show company news feed and announcements.</p>
+              </div>
+              <SettingsToggle
+                checked={settings.fieldApp.newsEnabled}
+                onChange={(checked) => updateFieldAppSettings((prev) => ({ ...prev, newsEnabled: checked }))}
+                label="Toggle news"
+              />
+            </div>
+
+            {/* Anonymous reporting */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
+                <ShieldOff className="h-4 w-4 text-orange-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Anonymous Reporting</p>
+                <p className="text-[11px] text-muted-foreground">Workers can report incidents anonymously.</p>
+              </div>
+              <SettingsToggle
+                checked={isAnonymousEnabled}
+                onChange={(checked) => {
+                  if (currentCompany) {
+                    updateCompany(currentCompany.id, { allow_anonymous_reporting: checked });
+                    toast(checked ? "Anonymous reporting enabled" : "Anonymous reporting disabled");
+                  }
+                }}
+                label="Toggle anonymous reporting"
+              />
+            </div>
+
+            {/* Camera only mode */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500/10">
+                <Camera className="h-4 w-4 text-purple-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Camera Only (No Gallery)</p>
+                <p className="text-[11px] text-muted-foreground">Photos must be taken live — workers cannot upload from camera roll. Ensures authenticity of evidence.</p>
+              </div>
+              <SettingsToggle
+                checked={settings.fieldApp.cameraOnly}
+                onChange={(checked) => updateFieldAppSettings((prev) => ({ ...prev, cameraOnly: checked }))}
+                label="Toggle camera only mode"
+              />
             </div>
           </CardContent>
         </Card>
 
+        {/* Quick actions */}
         <Card>
-          <CardHeader>
-            <CardTitle>Home content</CardTitle>
-            <CardDescription>
-              Choose what appears on the field home screen. Quick actions always
-              keep at least {FIELD_APP_MIN_QUICK_ACTIONS} items.
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Quick Actions</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Reorder and toggle the home screen shortcut buttons ({enabledCount} active, min {FIELD_APP_MIN_QUICK_ACTIONS}).
+                </p>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                  <p className="font-medium">Tip of the Day</p>
-                  <p className="text-sm text-muted-foreground">
-                    Uses the selected company language and industry for the
-                    mobile home tip.
-                  </p>
+          <CardContent className="space-y-1.5">
+            {/* Enabled actions first, ordered */}
+            {enabledActions.map((actionId, idx) => {
+              const action = FIELD_APP_QUICK_ACTION_DEFINITIONS.find((a) => a.id === actionId);
+              if (!action) return null;
+              return (
+                <div key={action.id} className="flex items-center gap-2 rounded-lg border p-2.5 bg-card hover:bg-muted/30 transition-colors">
+                  <GripVertical className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <Badge variant="secondary" className="text-[10px] w-5 h-5 flex items-center justify-center p-0 shrink-0">{idx + 1}</Badge>
+                  <span className="flex-1 text-sm font-medium truncate">{quickActionLabels[actionId] || action.fallbackLabel}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button type="button" disabled={idx <= 0} onClick={() => moveFieldQuickAction(actionId, "up")} className="p-1 rounded hover:bg-muted disabled:opacity-20"><ArrowUp className="h-3 w-3" /></button>
+                    <button type="button" disabled={idx >= enabledCount - 1} onClick={() => moveFieldQuickAction(actionId, "down")} className="p-1 rounded hover:bg-muted disabled:opacity-20"><ArrowDown className="h-3 w-3" /></button>
+                    <SettingsToggle
+                      checked
+                      onChange={() => toggleFieldQuickAction(actionId)}
+                      label={`Disable ${action.fallbackLabel}`}
+                      disabled={enabledCount <= FIELD_APP_MIN_QUICK_ACTIONS}
+                    />
+                  </div>
                 </div>
+              );
+            })}
+
+            {/* Disabled actions */}
+            {FIELD_APP_QUICK_ACTION_DEFINITIONS.filter((a) => !enabledActions.includes(a.id)).map((action) => (
+              <div key={action.id} className="flex items-center gap-2 rounded-lg border border-dashed p-2.5 opacity-50 hover:opacity-80 transition-opacity">
+                <div className="w-3.5" />
+                <div className="w-5" />
+                <span className="flex-1 text-sm truncate">{quickActionLabels[action.id] || action.fallbackLabel}</span>
                 <SettingsToggle
-                  checked={settings.fieldApp.tipOfTheDayEnabled}
-                  onChange={(checked) =>
-                    updateFieldAppSettings((previous) => ({
-                      ...previous,
-                      tipOfTheDayEnabled: checked,
-                    }))
-                  }
-                  label="Toggle tip of the day"
+                  checked={false}
+                  onChange={() => toggleFieldQuickAction(action.id)}
+                  label={`Enable ${action.fallbackLabel}`}
                 />
               </div>
-
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                  <p className="font-medium">News</p>
-                  <p className="text-sm text-muted-foreground">
-                    Hide the News tab and featured news block from the field
-                    app.
-                  </p>
-                </div>
-                <SettingsToggle
-                  checked={settings.fieldApp.newsEnabled}
-                  onChange={(checked) =>
-                    updateFieldAppSettings((previous) => ({
-                      ...previous,
-                      newsEnabled: checked,
-                    }))
-                  }
-                  label="Toggle news in field app"
-                />
-              </div>
-            </div>
-
-            <div className="rounded-lg border">
-              <div className="flex items-center justify-between border-b px-4 py-3">
-                <div>
-                  <p className="font-medium">Quick actions</p>
-                  <p className="text-sm text-muted-foreground">
-                    Reorder the buttons workers see on the home screen.
-                  </p>
-                </div>
-                <Badge variant="secondary">
-                  {settings.fieldApp.quickActions.length} active
-                </Badge>
-              </div>
-
-              <div className="divide-y">
-                {FIELD_APP_QUICK_ACTION_DEFINITIONS.map((action) => {
-                  const enabled = settings.fieldApp.quickActions.includes(
-                    action.id,
-                  );
-                  const activeIndex = settings.fieldApp.quickActions.indexOf(
-                    action.id,
-                  );
-
-                  return (
-                    <div
-                      key={action.id}
-                      className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {quickActionLabels[action.id]}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {enabled
-                            ? `Position ${activeIndex + 1} on the mobile home screen.`
-                            : "Hidden from the mobile home screen."}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {enabled && (
-                          <>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              onClick={() =>
-                                moveFieldQuickAction(action.id, "up")
-                              }
-                              disabled={activeIndex <= 0 || !canEditSettings}
-                              aria-label={`Move ${quickActionLabels[action.id]} up`}
-                            >
-                              <ArrowUp className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              onClick={() =>
-                                moveFieldQuickAction(action.id, "down")
-                              }
-                              disabled={
-                                activeIndex ===
-                                  settings.fieldApp.quickActions.length - 1 ||
-                                !canEditSettings
-                              }
-                              aria-label={`Move ${quickActionLabels[action.id]} down`}
-                            >
-                              <ArrowDown className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                        <Button
-                          type="button"
-                          variant={enabled ? "outline" : "default"}
-                          onClick={() => toggleFieldQuickAction(action.id)}
-                          disabled={
-                            !canEditSettings ||
-                            (enabled &&
-                              settings.fieldApp.quickActions.length <=
-                                FIELD_APP_MIN_QUICK_ACTIONS)
-                          }
-                        >
-                          {enabled ? "Hide" : "Show"}
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            ))}
           </CardContent>
         </Card>
       </div>
 
-      <div className="space-y-6">
-        <Card className="xl:sticky xl:top-24">
-          <CardHeader>
-            <CardTitle>Live preview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FieldAppHomePreview
-              settings={settings.fieldApp}
-              quickActionLabels={quickActionLabels}
-              companyName={settings.appName || settings.companyName}
-              tipText={fieldAppTipPreview}
-            />
-          </CardContent>
-        </Card>
+      {/* Sticky phone preview */}
+      <div className="hidden xl:block sticky top-24">
+        <p className="text-xs font-medium text-muted-foreground font-medium mb-3 text-center">Live Preview</p>
+        <FieldAppHomePreview
+          settings={settings.fieldApp}
+          quickActionLabels={quickActionLabels}
+          companyName={companyName}
+          tipText={fieldAppTipPreview}
+        />
       </div>
     </div>
   );
