@@ -67,7 +67,7 @@ function MessagesIcon({ company }: { company: string }) {
     <Link href={`/${company}/app/messages`} className="relative p-2" aria-label={`${unread} unread messages`}>
       <MessageSquare className="h-5 w-5 text-brand-solid-foreground/80" />
       {unread > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+        <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
           {unread > 99 ? "99+" : unread}
         </span>
       )}
