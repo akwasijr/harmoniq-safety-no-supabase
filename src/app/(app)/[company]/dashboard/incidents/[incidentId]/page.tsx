@@ -57,13 +57,9 @@ import { ImageViewer } from "@/components/ui/image-viewer";
 
 const tabs: Tab[] = [
   { id: "details", label: "Details", icon: Info },
-  { id: "investigation", label: "Investigation", icon: Shield },
-  { id: "timeline", label: "Timeline", icon: Clock },
   { id: "actions", label: "Actions", icon: CheckCircle },
   { id: "comments", label: "Comments", icon: MessageSquare },
   { id: "documents", label: "Documents", icon: FileText },
-  { id: "compliance", label: "Compliance", icon: FileCheck },
-  { id: "settings", label: "Settings", icon: Settings, variant: "danger" },
 ];
 
 // Root cause categories based on industry standards
@@ -845,6 +841,55 @@ export default function IncidentDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Status Control */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Status</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <select
+                  value={incident.status}
+                  onChange={(e) => {
+                    const value = e.target.value as typeof incident.status;
+                    updateIncident(incidentId, {
+                      status: value,
+                      resolved_at: value === "resolved" ? new Date().toISOString() : incident.resolved_at,
+                      resolved_by: value === "resolved" ? (authUser?.id || incident.resolved_by) : incident.resolved_by,
+                      updated_at: new Date().toISOString(),
+                    });
+                    toast(`Status changed to ${value.replace("_", " ")}`);
+                  }}
+                  disabled={isLocked || !canEdit}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="new">New</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="in_review">In Review</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-muted-foreground">Priority</p>
+                    <p className="font-medium capitalize">{incident.priority}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Reporter</p>
+                    <p className="font-medium">{reporterName}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Created</p>
+                    <p className="font-medium">{formatDate(new Date(incident.created_at))}</p>
+                  </div>
+                  {incident.resolved_at && (
+                    <div>
+                      <p className="text-muted-foreground">Resolved</p>
+                      <p className="font-medium">{formatDate(new Date(incident.resolved_at))}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Assigned To</CardTitle>

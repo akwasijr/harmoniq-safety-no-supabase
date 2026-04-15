@@ -184,7 +184,7 @@ function EmployeeChecklistsPageContent() {
 
   const templates = checklistTemplates.filter(
     (template) =>
-      template.company_id === user?.company_id &&
+      (template.company_id === user?.company_id || template.company_id === "__built_in__") &&
       isVisibleToFieldApp(template),
   );
   const activeAssets = assets.filter((a) => a.status === "active");

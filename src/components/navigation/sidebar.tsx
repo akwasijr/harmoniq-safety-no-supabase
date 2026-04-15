@@ -30,6 +30,7 @@ import {
   Leaf,
   ClipboardList,
   ChevronDown,
+  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -92,6 +93,12 @@ const companyNavGroups: NavGroup[] = [
         icon: ClipboardCheck,
         exactMatch: true,
         additionalPaths: ["/dashboard/risk-assessments", "/dashboard/inspections"],
+        requiredRoles: ["super_admin", "company_admin", "manager", "safety_officer", "employee"],
+      },
+      {
+        title: "Calendar",
+        href: "/dashboard/calendar",
+        icon: CalendarDays,
         requiredRoles: ["super_admin", "company_admin", "manager", "safety_officer", "employee"],
       },
       {

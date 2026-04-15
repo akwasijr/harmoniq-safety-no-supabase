@@ -155,11 +155,35 @@ function ChecklistsPageContent() {
   }, [riskEvaluations, users, locations]);
 
   const combinedRiskAssessments = React.useMemo(() => {
-    if (storeRiskAssessments.length > 0) {
-      return storeRiskAssessments;
-    }
-    return mockRiskAssessments;
-  }, [storeRiskAssessments]);
+    // Include RA submissions from the dedicated risk evaluations store
+    const fromStore = [...storeRiskAssessments];
+
+    // Also include checklist submissions that used RA-category templates
+    const raChecklistSubmissions = checklistSubmissionsStore
+      .filter((sub) => {
+        const template = checklistTemplatesStore.find((t) => t.id === sub.template_id);
+        return template && (template.category === "risk_assessment" || template.category === "hazard_analysis");
+      })
+      .map((sub) => {
+        const template = checklistTemplatesStore.find((t) => t.id === sub.template_id);
+        const submitter = users.find((u) => u.id === sub.submitter_id);
+        const location = locations.find((l) => l.id === sub.location_id);
+        return {
+          id: sub.id,
+          template: template?.name || "Risk Assessment",
+          templateId: template?.id || "",
+          type: "RA",
+          location: location?.name || "Unknown",
+          date: (sub.submitted_at || sub.created_at).split("T")[0],
+          status: sub.status === "submitted" ? "completed" : "draft",
+          by: submitter?.full_name || "Unknown",
+          riskLevel: "low" as const,
+          riskScore: 0,
+        };
+      });
+
+    return [...fromStore, ...raChecklistSubmissions];
+  }, [storeRiskAssessments, checklistSubmissionsStore, checklistTemplatesStore, users, locations]);
 
   // Map inspection submissions to checklist-compatible format for merged display
   const inspectionAsSubmissions = React.useMemo(() => {
@@ -213,9 +237,13 @@ function ChecklistsPageContent() {
 
   const checklistSubmissions = React.useMemo(() => {
     const checklistData = checklistSubmissionsStore
-      .filter((submission) =>
-        isWithinDateRange(submission.submitted_at || submission.created_at, dateRange as DateRangeValue)
-      )
+      .filter((submission) => {
+        if (!isWithinDateRange(submission.submitted_at || submission.created_at, dateRange as DateRangeValue)) return false;
+        // Exclude risk assessment submissions from the checklists tab
+        const template = checklistTemplatesStore.find((item) => item.id === submission.template_id);
+        if (template && (template.category === "risk_assessment" || template.category === "hazard_analysis")) return false;
+        return true;
+      })
       .map((submission) => {
         const template = checklistTemplatesStore.find((item) => item.id === submission.template_id);
         const location = locations.find((item) => item.id === submission.location_id);

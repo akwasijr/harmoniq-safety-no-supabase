@@ -12,7 +12,7 @@ import { getPlatformSlugs } from "@/lib/platform-config";
 import type { User, Company, Permission, UserRole, CompanyRole } from "@/types";
 
 const MOCK_AUTH_KEY = "harmoniq_mock_user_email";
-const IS_MOCK_MODE = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true" && !hasSupabasePublicEnv();
+const IS_MOCK_MODE = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true";
 
 const LEGACY_SESSION_STORAGE_KEY = "harmoniq_auth_session";
 const LEGACY_PROFILE_STORAGE_KEY = "harmoniq_auth_profile";
