@@ -31,9 +31,9 @@ const icons: Record<ToastVariant, React.ElementType> = {
 };
 
 const styles: Record<ToastVariant, string> = {
-  success: "border-green-200 bg-white text-green-800 dark:border-green-700 dark:bg-green-950 dark:text-green-100",
-  error: "border-red-200 bg-white text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-100",
-  info: "border-blue-200 bg-white text-blue-800 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-100",
+  success: "bg-white text-green-800 dark:bg-green-950 dark:text-green-100",
+  error: "bg-white text-red-800 dark:bg-red-950 dark:text-red-100",
+  info: "bg-white text-blue-800 dark:bg-blue-950 dark:text-blue-100",
 };
 
 const iconStyles: Record<ToastVariant, string> = {
@@ -55,7 +55,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
     <div
       role="alert"
       className={cn(
-        "pointer-events-auto flex items-center gap-3 overflow-hidden rounded-lg border shadow-xl transition-all animate-in slide-in-from-top-2 fade-in",
+        "pointer-events-auto flex items-center gap-3 overflow-hidden rounded-lg shadow-xl transition-all animate-in slide-in-from-top-2 fade-in",
         styles[toast.variant]
       )}
     >

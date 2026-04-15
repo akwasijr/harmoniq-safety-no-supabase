@@ -198,7 +198,12 @@
     "low": "Laag",
     "medium": "Gemiddeld",
     "high": "Hoog",
-    "critical": "Kritiek"
+    "critical": "Kritiek",
+    "slipTripFall": "Uitglijden / Struikelen / Vallen",
+    "healthIllness": "Gezondheid / Ziekte",
+    "maintenanceRequest": "Onderhoudsverzoek",
+    "vehicleIncident": "Voertuigincident",
+    "spillLeak": "Lekkage / Morsen"
   },
   "profile": {
     "contactInfo": "Contactgegevens",
@@ -3239,7 +3244,7 @@
   },
   "focusStrip": {
     "title": "Focusstrip",
-    "fieldFocus": "Veldfocus",
+    "fieldFocus": "Jouw Overzicht",
     "urgent": "Urgent",
     "upcoming": "Aankomend",
     "goodToKnow": "Goed om te Weten",

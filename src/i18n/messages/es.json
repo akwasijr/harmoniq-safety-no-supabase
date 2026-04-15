@@ -198,7 +198,12 @@
     "low": "Bajo",
     "medium": "Medio",
     "high": "Alto",
-    "critical": "Crítico"
+    "critical": "Crítico",
+    "slipTripFall": "Resbalón / Tropiezo / Caída",
+    "healthIllness": "Salud / Enfermedad",
+    "maintenanceRequest": "Solicitud de mantenimiento",
+    "vehicleIncident": "Incidente vehicular",
+    "spillLeak": "Derrame / Fuga"
   },
   "profile": {
     "contactInfo": "Contact information",
@@ -3239,7 +3244,7 @@
   },
   "focusStrip": {
     "title": "Franja de Enfoque",
-    "fieldFocus": "Enfoque de Campo",
+    "fieldFocus": "Tu Resumen",
     "urgent": "Urgente",
     "upcoming": "Próximo",
     "goodToKnow": "Bueno Saber",

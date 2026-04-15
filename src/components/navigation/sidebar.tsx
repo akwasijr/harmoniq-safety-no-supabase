@@ -88,7 +88,7 @@ const companyNavGroups: NavGroup[] = [
         requiredRoles: ["super_admin", "company_admin", "manager", "safety_officer", "employee"],
       },
       {
-        title: "Safety Tasks",
+        title: "Safety & Compliance",
         href: "/dashboard/checklists",
         icon: ClipboardCheck,
         exactMatch: true,

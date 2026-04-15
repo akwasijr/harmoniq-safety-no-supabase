@@ -21,6 +21,7 @@ import {
   Ticket,
   CheckCircle,
   TrendingDown,
+  MessageSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
@@ -40,6 +41,7 @@ import type { Content } from "@/types";
 import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
 import { getDueChecklists } from "@/lib/checklist-due";
 import { isVisibleToFieldApp } from "@/lib/template-activation";
+import { useUnreadCommentCount } from "@/hooks/use-comment-feed";
 import {
   type FieldAppQuickActionId,
   getFieldAppQuickActionDefinition,
@@ -93,7 +95,7 @@ function FieldFocus({
 
   return (
     <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-4">
-      <p className="text-[10px] font-bold text-primary mb-3">{t("focusStrip.fieldFocus")}</p>
+      <p className="text-xs font-bold text-primary mb-3">{t("focusStrip.fieldFocus")}</p>
       {/* Tabs */}
       <div className="flex gap-1 mb-3">
         {tabs.map((tab) => (
@@ -384,6 +386,7 @@ export default function EmployeeAppHomePage() {
   const { items: checklistTemplates } = useChecklistTemplatesStore();
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
   const { t, formatDate } = useTranslation();
+  const unreadMessages = useUnreadCommentCount();
 
   // Use state for time-dependent values to prevent hydration mismatch
   const [mounted, setMounted] = React.useState(false);
@@ -698,17 +701,20 @@ export default function EmployeeAppHomePage() {
         {/* Stats row - white/glass cards */}
         <div className="grid grid-cols-3 gap-2.5 mt-6">
           <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center home-section" style={{ animationDelay: "0.45s" }}>
+            <ShieldCheck className="h-5 w-5 text-brand-solid-foreground/50 mx-auto mb-1.5" />
             <p className="text-2xl font-bold text-brand-solid-foreground">{safeDays}</p>
             <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.safeDays")}</p>
           </div>
           <Link href={`/${company}/app/checklists?tab=checklists`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center hover:bg-white/20 transition-colors home-section" style={{ animationDelay: "0.4s" }}>
+            <ClipboardCheck className="h-5 w-5 text-brand-solid-foreground/50 mx-auto mb-1.5" />
             <p className="text-2xl font-bold text-brand-solid-foreground">{pendingTaskCount}</p>
-            <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.pendingTasks") || "Pending Tasks"}</p>
+            <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.pendingTasks") || "Pending"}</p>
           </Link>
-          <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center home-section" style={{ animationDelay: "0.35s" }}>
-            <p className="text-2xl font-bold text-brand-solid-foreground">{completedThisWeek}</p>
-            <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">{t("app.completedWeek") || "This Week"}</p>
-          </div>
+          <Link href={`/${company}/app/messages`} className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3.5 text-center hover:bg-white/20 transition-colors home-section" style={{ animationDelay: "0.35s" }}>
+            <MessageSquare className="h-5 w-5 text-brand-solid-foreground/50 mx-auto mb-1.5" />
+            <p className="text-2xl font-bold text-brand-solid-foreground">{unreadMessages}</p>
+            <p className="text-[11px] text-brand-solid-foreground/60 mt-0.5">Messages</p>
+          </Link>
         </div>
       </div>
 

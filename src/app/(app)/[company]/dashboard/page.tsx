@@ -14,6 +14,7 @@ import {
   ChevronRight,
   CheckCircle,
   Info,
+  MessageSquare,
 } from "lucide-react";
 import { KPICard } from "@/components/ui/kpi-card";
 import { FilterPanel, useFilterOptions } from "@/components/ui/filter-panel";
@@ -27,6 +28,7 @@ import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
+import { useUnreadCommentCount } from "@/hooks/use-comment-feed";
 import { cn } from "@/lib/utils";
 
 const PLATFORM_SLUGS =
@@ -162,6 +164,7 @@ export default function DashboardPage() {
   const { isSuperAdmin, hasSelectedCompany, switchCompany, user, currentCompany } = useAuth();
   const { items: allCompanies } = useCompanyStore();
   const { incidents, locations, users, assets: allAssets, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, complianceObligations, checklistSubmissions, checklistTemplates, stores } = useCompanyData();
+  const unreadMessages = useUnreadCommentCount();
 
   // Track platform entry state to avoid hydration mismatch
   const [isPlatformEntry, setIsPlatformEntry] = React.useState(false);
@@ -245,10 +248,15 @@ export default function DashboardPage() {
     const typeLabels: { [key: string]: string } = {
       injury: "Injury",
       near_miss: "Near Miss",
+      slip_trip_fall: "Slip/Trip/Fall",
       hazard: "Hazard",
       property_damage: "Property",
+      health_illness: "Health/Illness",
+      maintenance_request: "Maintenance",
+      vehicle_incident: "Vehicle",
       equipment_failure: "Equipment",
       environmental: "Environmental",
+      spill_leak: "Spill/Leak",
       fire: "Fire",
       security: "Security",
       spill: "Spill",
@@ -581,7 +589,7 @@ export default function DashboardPage() {
       <OnboardingChecklist />
 
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <KPICard
           title={t("nav.incidents")}
           value={`${formatNumber(filteredStats.open_incidents)} open`}
@@ -626,6 +634,19 @@ export default function DashboardPage() {
             label: t("dashboard.fromLastMonth"),
           }}
         />
+        <Link href={`/${company}/dashboard/comments`}>
+          <KPICard
+            title="Messages"
+            value={unreadMessages}
+            icon={MessageSquare}
+            tooltip="Unread comments on incidents and tickets where you are tagged, assigned, or participating."
+            trend={{
+              value: 0,
+              direction: "neutral",
+              label: "unread comments",
+            }}
+          />
+        </Link>
       </div>
 
       {/* Content with transition */}

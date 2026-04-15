@@ -3,10 +3,11 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, Menu, X } from "lucide-react";
+import { ChevronRight, Menu, X, MessageSquare } from "lucide-react";
 import { Sidebar } from "@/components/navigation/sidebar";
 import { Button } from "@/components/ui/button";
 import { CompanySwitcher } from "@/components/auth/company-switcher";
+import { useUnreadCommentCount } from "@/hooks/use-comment-feed";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -100,6 +101,9 @@ export function DashboardLayout({
             <CompanySwitcher />
             <span className="font-semibold lg:hidden">{companyName}</span>
           </div>
+          <div className="flex items-center gap-1">
+            <CommentsHeaderIcon company={company} />
+          </div>
         </header>
         
         <main className="flex-1 overflow-auto p-4 lg:p-6">
@@ -126,6 +130,24 @@ export function DashboardLayout({
         </main>
       </div>
     </div>
+  );
+}
+
+function CommentsHeaderIcon({ company }: { company: string }) {
+  const unread = useUnreadCommentCount();
+  return (
+    <Link
+      href={`/${company}/dashboard/comments`}
+      className="relative p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      aria-label={`${unread} unread comments`}
+    >
+      <MessageSquare className="h-5 w-5" />
+      {unread > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+          {unread > 99 ? "99+" : unread}
+        </span>
+      )}
+    </Link>
   );
 }
 
@@ -297,6 +319,9 @@ function buildDashboardBreadcrumbs(pathname: string | null, company: string): Br
       break;
     case "settings":
       push("Settings", `${base}/settings`);
+      break;
+    case "comments":
+      push("Comments", `${base}/comments`);
       break;
     case "platform":
       if (segments[1] === "overview") {

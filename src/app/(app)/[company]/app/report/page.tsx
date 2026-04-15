@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocationsStore } from "@/stores/locations-store";
+import { useAssetsStore } from "@/stores/assets-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
 import { useTicketsStore } from "@/stores/tickets-store";
 import { useToast } from "@/components/ui/toast";
@@ -30,6 +31,11 @@ import {
   OctagonAlert,
   Skull,
   Upload,
+  Wrench,
+  HeartPulse,
+  Car,
+  Droplets,
+  Footprints,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCompanyParam } from "@/hooks/use-company-param";
@@ -50,8 +56,13 @@ const incidentTypes = [
   { value: "injury", label: "report.injury", icon: Zap, color: "text-red-500" },
   { value: "near_miss", label: "report.nearMiss", icon: ShieldAlert, color: "text-orange-500" },
   { value: "hazard", label: "report.hazard", icon: TriangleAlert, color: "text-yellow-500" },
+  { value: "slip_trip_fall", label: "report.slipTripFall", icon: Footprints, color: "text-orange-600" },
   { value: "property_damage", label: "report.propertyDamage", icon: Package, color: "text-blue-500" },
+  { value: "health_illness", label: "report.healthIllness", icon: HeartPulse, color: "text-pink-500" },
+  { value: "maintenance_request", label: "report.maintenanceRequest", icon: Wrench, color: "text-cyan-500" },
+  { value: "vehicle_incident", label: "report.vehicleIncident", icon: Car, color: "text-indigo-500" },
   { value: "environmental", label: "report.environmental", icon: Leaf, color: "text-green-500" },
+  { value: "spill_leak", label: "report.spillLeak", icon: Droplets, color: "text-teal-500" },
   { value: "fire", label: "report.fire", icon: Flame, color: "text-red-600" },
   { value: "security", label: "report.security", icon: Lock, color: "text-purple-500" },
   { value: "other", label: "report.other", icon: HelpCircle, color: "text-gray-500" },
@@ -116,6 +127,7 @@ function ReportIncidentPageContent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { items: locations } = useLocationsStore();
+  const { items: assets } = useAssetsStore();
   const { add: addIncident, items: incidents } = useIncidentsStore({ skipLoad: true });
   const { add: addTicket } = useTicketsStore({ skipLoad: true });
   const { toast } = useToast();
@@ -124,6 +136,7 @@ function ReportIncidentPageContent() {
   const { t } = useTranslation();
 
   const [stepErrors, setStepErrors] = React.useState<Record<string, string>>({});
+  const [otherTypeText, setOtherTypeText] = React.useState("");
 
   const validateStep = (step: number): boolean => {
     const next: Record<string, string> = {};
@@ -157,9 +170,15 @@ function ReportIncidentPageContent() {
   const selectedLocation = locationParam
     ? locations.find((location) => location.id === locationParam)
     : null;
+
+  // If QR-scanned asset has a location, use it
+  const scannedAsset = assetParam ? assets.find((a) => a.id === assetParam) : null;
+  const assetLocation = scannedAsset?.location_id
+    ? locations.find((l) => l.id === scannedAsset.location_id)
+    : null;
   
   const [reportLocationValue, setReportLocationValue] = React.useState<LocationPickerValue>({
-    locationId: selectedLocation?.id || "",
+    locationId: selectedLocation?.id || assetLocation?.id || "",
     manualText: "",
     gpsLat: null,
     gpsLng: null,
@@ -284,7 +303,7 @@ function ReportIncidentPageContent() {
       reference_number: refNumber,
       reporter_id: formData.anonymous ? "__anonymous__" : user.id,
       type: formData.type as IncidentType,
-      type_other: formData.type === "other" ? "Other" : null,
+      type_other: formData.type === "other" ? (otherTypeText.trim() || "Other") : null,
       severity: formData.severity as Severity,
       priority: (formData.severity === "critical" || formData.severity === "high" ? "high" : formData.severity === "medium" ? "medium" : "low") as Priority,
       title: formData.title,
@@ -402,7 +421,7 @@ function ReportIncidentPageContent() {
         {/* Step 1: Incident Type */}
         {currentStep === 1 && (
           <>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3.5">
             {incidentTypes.map((type) => {
               const Icon = type.icon;
               const isSelected = formData.type === type.value;
@@ -411,20 +430,30 @@ function ReportIncidentPageContent() {
                   key={type.value}
                   type="button"
                   onClick={() => { setFormData({ ...formData, type: type.value }); setStepErrors({}); }}
-                  className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
+                  className={`flex items-center gap-3 rounded-xl p-3.5 transition-all ${
                     isSelected
-                      ? "border-primary bg-primary text-white shadow-sm"
-                      : "border-border hover:border-primary/50 hover:bg-muted/50"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted/50 hover:bg-muted text-foreground"
                   }`}
                 >
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-full ${isSelected ? "bg-white/20" : "bg-muted"}`}>
-                    <Icon className={`h-6 w-6 ${isSelected ? "text-white" : type.color}`} aria-hidden="true" />
-                  </div>
+                  <Icon className={`h-5 w-5 shrink-0 ${isSelected ? "text-primary-foreground" : type.color}`} aria-hidden="true" />
                   <span className="text-sm font-medium">{t(type.label)}</span>
                 </button>
               );
             })}
           </div>
+          {formData.type === "other" && (
+            <div className="mt-3">
+              <input
+                type="text"
+                value={otherTypeText}
+                onChange={(e) => setOtherTypeText(e.target.value)}
+                placeholder="Describe the incident type (1-2 words)..."
+                maxLength={40}
+                className="w-full rounded-xl border-2 border-border bg-muted/20 px-4 py-3 text-sm placeholder:text-muted-foreground"
+              />
+            </div>
+          )}
           {stepErrors.type && <p className="text-sm text-red-500 mt-3">{stepErrors.type}</p>}
 
           <button
@@ -454,21 +483,19 @@ function ReportIncidentPageContent() {
                   key={level.value}
                   type="button"
                   onClick={() => { setFormData({ ...formData, severity: level.value }); setStepErrors({}); }}
-                  className={`flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-all ${
+                  className={`flex w-full items-center gap-4 rounded-xl p-4 text-left transition-all ${
                     isSelected
-                      ? "border-primary bg-primary text-white shadow-sm"
-                      : `border-border hover:border-primary/50 hover:bg-muted/50`
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted/50 hover:bg-muted"
                   }`}
                 >
-                  <div className={`flex h-14 w-14 items-center justify-center rounded-full ${isSelected ? "bg-white/20" : level.bgColor}`}>
-                    <Icon className={`h-7 w-7 ${isSelected ? "text-white" : level.color}`} aria-hidden="true" />
-                  </div>
+                  <Icon className={`h-6 w-6 shrink-0 ${isSelected ? "text-primary-foreground" : level.color}`} aria-hidden="true" />
                   <div className="flex-1">
-                    <p className="font-semibold">{t(level.label)}</p>
-                    <p className={`text-sm ${isSelected ? "text-white/80" : "text-muted-foreground"}`}>{t(level.description)}</p>
+                    <p className={`font-semibold ${isSelected ? "text-primary-foreground" : "text-foreground"}`}>{t(level.label)}</p>
+                    <p className={`text-sm ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{t(level.description)}</p>
                   </div>
                   {isSelected && (
-                    <CheckCircle className="h-6 w-6 text-white" aria-hidden="true" />
+                    <CheckCircle className="h-5 w-5 text-primary-foreground shrink-0" aria-hidden="true" />
                   )}
                 </button>
               );
@@ -502,7 +529,7 @@ function ReportIncidentPageContent() {
                 if (stepErrors.title) setStepErrors({});
               }}
               onBlur={() => validateStep(3)}
-              className={`h-14 text-lg ${stepErrors.title ? "border-red-500" : ""}`}
+              className={`h-14 text-lg border-2 border-border bg-muted/20 ${stepErrors.title ? "border-red-500" : ""}`}
               maxLength={200}
             />
             {stepErrors.title && <p className="text-sm text-red-500">{stepErrors.title}</p>}
@@ -523,7 +550,7 @@ function ReportIncidentPageContent() {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={8}
-              className="text-base"
+              className="text-base border-2 border-border bg-muted/20"
             />
             <p className="text-sm text-muted-foreground">
               {formData.description.length < 10 
@@ -594,10 +621,11 @@ function ReportIncidentPageContent() {
         {currentStep === 5 && (
           <div className="space-y-4">
             <LocationPicker
-              locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address }))}
+              locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address, parent_id: l.parent_id, type: l.type }))}
               value={reportLocationValue}
               onChange={setReportLocationValue}
               label={t("report.locationDescription")}
+              scanUrl={`/${company}/app/scan`}
             />
             <p className="text-center text-sm text-muted-foreground">
               {t("report.locationOptionalHint")}

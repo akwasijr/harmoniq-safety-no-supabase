@@ -351,7 +351,12 @@ export default function ScanAssetPage() {
               <ScanLine className="h-5 w-5" />
               {t("assets.startInspection")}
             </Button>
-            <Button variant="outline" className="w-full h-12 gap-2" onClick={() => router.push(`/${company}/app/report?asset=${foundAssetId}`)}>
+            <Button variant="outline" className="w-full h-12 gap-2" onClick={() => {
+              const params = new URLSearchParams();
+              if (foundAssetId) params.set("asset", foundAssetId);
+              if (foundAsset?.location_id) params.set("location", foundAsset.location_id);
+              router.push(`/${company}/app/report?${params.toString()}`);
+            }}>
               <AlertTriangle className="h-5 w-5" />
               Report incident
             </Button>

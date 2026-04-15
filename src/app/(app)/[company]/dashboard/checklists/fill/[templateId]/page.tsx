@@ -391,7 +391,7 @@ function ChecklistFillContent({ templateId }: { templateId: string }) {
       {/* Location selector */}
       <div className="space-y-1.5">
         <LocationPicker
-          locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address }))}
+          locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address, parent_id: l.parent_id, type: l.type }))}
           value={locationValue}
           onChange={setLocationValue}
           label={t("checklists.labels.location") || "Location"}

@@ -398,7 +398,7 @@ export function mockLogin(email: string): User | null {
     last_name: "",
     full_name: email.split("@")[0],
     role: "company_admin" as const,
-    company_id: "",
+    company_id: "comp_1",
     status: "active",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),

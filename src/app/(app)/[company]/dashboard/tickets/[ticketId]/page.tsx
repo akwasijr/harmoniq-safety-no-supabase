@@ -147,10 +147,7 @@ export default function TicketDetailPage() {
 
   const tabs: Tab[] = [
     { id: "info", label: "Details", icon: Info },
-    { id: "tasks", label: "Tasks", icon: CheckSquare },
     { id: "comments", label: "Comments", icon: MessageSquare, count: comments.length },
-    { id: "documents", label: "Documents", icon: FileText },
-    { id: "settings", label: "Settings", icon: Trash2, variant: "danger" },
   ];
 
   const toggleTask = (taskId: string) => {
@@ -223,12 +220,6 @@ export default function TicketDetailPage() {
               )}
             </>
           )}
-          {canDeleteTicket && (
-            <Button variant="destructive" className="gap-2" onClick={() => setShowDeleteConfirm(true)}>
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
-          )}
         </div>
       </div>
 
@@ -291,8 +282,8 @@ export default function TicketDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">{t("tickets.title")}</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -334,27 +325,20 @@ export default function TicketDetailPage() {
                       {formatDate(new Date(ticket.created_at))}
                     </p>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Progress</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Tasks completed</span>
-                      <span className="font-medium">{completedTasks}/{tasks.length}</span>
+                  {tasks.length > 0 && (
+                    <div>
+                      <Label className="text-muted-foreground">Sub-tasks</Label>
+                      <div className="mt-1 space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span>{completedTasks}/{tasks.length} done</span>
+                          <span>{taskProgress}%</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className="h-full bg-primary transition-all" style={{ width: `${taskProgress}%` }} />
+                        </div>
+                      </div>
                     </div>
-                    <div className="h-2 rounded-full bg-muted overflow-hidden">
-                      <div 
-                        className="h-full bg-primary transition-all"
-                        style={{ width: `${taskProgress}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground text-right">{taskProgress}% complete</p>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -362,7 +346,7 @@ export default function TicketDetailPage() {
         )}
 
         {/* Tasks Tab */}
-        {activeTab === "tasks" && (
+        {activeTab === "info" && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Tasks ({completedTasks}/{tasks.length})</CardTitle>
@@ -481,7 +465,7 @@ export default function TicketDetailPage() {
         )}
 
         {/* Documents Tab */}
-        {activeTab === "documents" && (
+        {activeTab === "info" && (
           <div className="space-y-6">
             <div className="flex justify-end">
               <input
@@ -535,88 +519,7 @@ export default function TicketDetailPage() {
             </Card>
           </div>
         )}
-
-        {/* Settings Tab (Danger Zone) */}
-        {activeTab === "settings" && (
-          <Card className="border-destructive/50">
-            <CardHeader>
-              <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                  <p className="font-medium">Close Ticket</p>
-                  <p className="text-sm text-muted-foreground">
-                    Mark this ticket as closed. It can be reopened later if needed.
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (!ticket) return;
-                    updateTicket(ticket.id, {
-                      status: "closed",
-                      updated_at: new Date().toISOString(),
-                    });
-                    toast("Ticket closed");
-                  }}
-                >
-                  Close Ticket
-                </Button>
-              </div>
-              {canDeleteTicket && (
-              <div className="flex items-center justify-between rounded-lg border border-destructive/50 p-4 bg-destructive/5">
-                <div>
-                  <p className="font-medium text-destructive">Delete Ticket</p>
-                  <p className="text-sm text-muted-foreground">
-                    Permanently delete this ticket and all associated data.
-                  </p>
-                </div>
-                <Button
-                  variant="destructive"
-                  className="gap-2"
-                  onClick={() => setShowDeleteConfirm(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </Button>
-              </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="relative z-50 w-full max-w-md rounded-lg bg-background p-6 shadow-xl mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="rounded-full bg-destructive/10 p-3">
-                <Trash2 className="h-6 w-6 text-destructive" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold">Delete Ticket</h2>
-                <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
-              </div>
-            </div>
-            
-            <p className="text-sm mb-4">
-              Are you sure you want to delete <strong>{ticket.title}</strong>? 
-              All associated data will be permanently removed.
-            </p>
-            
-            <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => setShowDeleteConfirm(false)}>
-                {t("common.cancel")}
-              </Button>
-              <Button variant="destructive" className="flex-1" onClick={handleDeleteTicket}>
-                Delete Ticket
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
     </RoleGuard>
   );

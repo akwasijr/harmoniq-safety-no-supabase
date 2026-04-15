@@ -125,6 +125,7 @@ function EmployeeChecklistsPageContent() {
   const [activeTab, setActiveTab] = React.useState<TabType>(getInitialTab());
   const [subTab, setSubTab] = React.useState<SubTabType>("assigned");
   const [historySearch, setHistorySearch] = React.useState("");
+  const [historySearchOpen, setHistorySearchOpen] = React.useState(false);
   const [historyStatus, setHistoryStatus] = React.useState<string>("all");
   const [historySort, setHistorySort] = React.useState<"newest" | "oldest">("newest");
 
@@ -290,36 +291,56 @@ function EmployeeChecklistsPageContent() {
   // Inline search/filter bar for history tabs
   const historySearchBar = (
     <div className="space-y-2 mb-3">
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-        <Input
-          value={historySearch}
-          onChange={(e) => setHistorySearch(e.target.value)}
-          placeholder="Search history..."
-          className="h-8 pl-8 text-sm"
-        />
-        {historySearch && (
-          <button type="button" onClick={() => setHistorySearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground">
+      {/* Search — toggle */}
+      {historySearchOpen && (
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Input
+            value={historySearch}
+            onChange={(e) => setHistorySearch(e.target.value)}
+            placeholder="Search history..."
+            className="h-8 pl-8 pr-8 text-sm"
+            autoFocus
+          />
+          <button type="button" onClick={() => { setHistorySearchOpen(false); setHistorySearch(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
             <X className="h-3.5 w-3.5" />
           </button>
-        )}
-      </div>
+        </div>
+      )}
+      {/* Filter pills + Sort */}
       <div className="flex items-center gap-2">
-        <select
-          value={historyStatus}
-          onChange={(e) => setHistoryStatus(e.target.value)}
-          className="h-7 rounded-md border bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        >
-          <option value="all">All statuses</option>
-          <option value="submitted">Submitted</option>
-          <option value="draft">Draft</option>
-          <option value="reviewed">Reviewed</option>
-          <option value="completed">Completed</option>
-        </select>
+        {!historySearchOpen && (
+          <button
+            type="button"
+            onClick={() => setHistorySearchOpen(true)}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Search"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+        )}
+        {[
+          { value: "all", label: "All" },
+          { value: "submitted", label: "Submitted" },
+          { value: "draft", label: "Draft" },
+          { value: "completed", label: "Completed" },
+        ].map((filter) => (
+          <button
+            key={filter.value}
+            onClick={() => setHistoryStatus(filter.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 ${
+              historyStatus === filter.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {filter.label}
+          </button>
+        ))}
         <button
           type="button"
           onClick={() => setHistorySort((s) => s === "newest" ? "oldest" : "newest")}
-          className="flex items-center gap-1 rounded-md border bg-background px-2 h-7 text-xs text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 bg-muted text-muted-foreground ml-auto"
         >
           <ArrowUpDown className="h-3 w-3" />
           {historySort === "newest" ? "Newest" : "Oldest"}
@@ -400,15 +421,14 @@ function EmployeeChecklistsPageContent() {
           <div className="space-y-3">
             <Link
               href={`/${company}/app/report`}
-              className="flex items-center gap-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 active:bg-primary/10 transition-colors"
+              className="flex items-center gap-3 rounded-xl bg-card border p-4 active:bg-muted/50 transition-colors"
             >
-              <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-primary" />
-              </div>
-              <div>
+              <AlertTriangle className="h-5 w-5 text-primary shrink-0" />
+              <div className="flex-1">
                 <p className="text-sm font-semibold">Report an Incident</p>
                 <p className="text-xs text-muted-foreground">Tap to start a new incident report</p>
               </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
             </Link>
             {historySearchBar}
             {(() => {

@@ -1,13 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { MapPin, Navigation, Pencil, ChevronDown, X, Loader2 } from "lucide-react";
+import { MapPin, Navigation, Pencil, ChevronDown, X, Loader2, QrCode } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface LocationOption {
   id: string;
   name: string;
   address?: string | null;
+  parent_id?: string | null;
+  type?: string;
 }
 
 export interface LocationPickerValue {
@@ -24,9 +26,10 @@ interface LocationPickerProps {
   label?: string;
   required?: boolean;
   compact?: boolean;
+  scanUrl?: string;
 }
 
-type Mode = "select" | "gps" | "manual";
+type Mode = "select" | "gps" | "manual" | "scan";
 
 export function LocationPicker({
   locations,
@@ -35,6 +38,7 @@ export function LocationPicker({
   label = "Location",
   required = false,
   compact = false,
+  scanUrl,
 }: LocationPickerProps) {
   const [mode, setMode] = React.useState<Mode>(
     value.locationId ? "select" : value.gpsLat ? "gps" : value.manualText ? "manual" : "select",
@@ -101,34 +105,141 @@ export function LocationPicker({
   );
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">
-          {label}{required && <span className="text-destructive ml-0.5">*</span>}
-        </label>
-        {modeButtons}
+    <div className="space-y-3">
+      <label className="text-sm font-medium">
+        {label}{required && <span className="text-destructive ml-0.5">*</span>}
+      </label>
+
+      {/* Mode selection — vertical radio-style */}
+      <div className="space-y-2">
+        {[
+          { id: "select" as Mode, icon: MapPin, label: "Select from locations", desc: "Choose from your organisation's locations" },
+          { id: "scan" as Mode, icon: QrCode, label: "Scan QR code", desc: "Scan an asset or location QR code" },
+          { id: "gps" as Mode, icon: Navigation, label: "Use GPS", desc: "Capture your current coordinates" },
+          { id: "manual" as Mode, icon: Pencil, label: "Enter manually", desc: "Type an address or location name" },
+        ].map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => { setMode(m.id); if (m.id === "gps") handleGPS(); }}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors",
+              mode === m.id
+                ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                : "border-border hover:bg-muted/50",
+            )}
+          >
+            <div className={cn(
+              "flex h-4 w-4 items-center justify-center rounded-full border-2 shrink-0",
+              mode === m.id ? "border-primary" : "border-muted-foreground/30",
+            )}>
+              {mode === m.id && <div className="h-2 w-2 rounded-full bg-primary" />}
+            </div>
+            <m.icon className={cn("h-4 w-4 shrink-0", mode === m.id ? "text-primary" : "text-muted-foreground")} />
+            <div>
+              <p className="text-sm font-medium">{m.label}</p>
+              <p className="text-xs text-muted-foreground">{m.desc}</p>
+            </div>
+          </button>
+        ))}
       </div>
 
-      {/* Select from existing */}
-      {mode === "select" && (
-        <div className="relative">
-          <select
-            value={value.locationId}
-            onChange={(e) => {
-              onChange({ ...value, locationId: e.target.value, manualText: "", gpsLat: null, gpsLng: null });
-            }}
-            className="w-full appearance-none rounded-md border bg-background px-3 py-2 pr-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <option value="">Select a location...</option>
-            {locations.map((loc) => (
-              <option key={loc.id} value={loc.id}>
-                {loc.name}{loc.address ? ` — ${loc.address}` : ""}
-              </option>
+      {/* Select from existing — cascading dropdowns */}
+      {mode === "select" && (() => {
+        const hasHierarchy = locations.some((l) => l.parent_id);
+
+        if (!hasHierarchy) {
+          return (
+            <div className="relative">
+              <select
+                value={value.locationId}
+                onChange={(e) => onChange({ ...value, locationId: e.target.value, manualText: "", gpsLat: null, gpsLng: null })}
+                className="w-full appearance-none rounded-md border-2 border-border bg-muted/20 px-3 py-2 pr-8 text-sm"
+              >
+                <option value="">Select a location...</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>{loc.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            </div>
+          );
+        }
+
+        // Build the selection chain: site → building → floor → zone → room
+        const getChildren = (parentId: string | null) =>
+          parentId ? locations.filter((l) => l.parent_id === parentId) : locations.filter((l) => !l.parent_id);
+
+        // Walk up from current selection to build the chain of selected IDs
+        const chain: Array<{ level: string; selected: string; options: LocationOption[] }> = [];
+        const roots = getChildren(null);
+        if (roots.length > 0) {
+          chain.push({ level: roots[0]?.type || "Site", selected: "", options: roots });
+        }
+
+        // Find which root (or deeper) is selected by walking the value up
+        if (value.locationId) {
+          const path: string[] = [];
+          let cur = locations.find((l) => l.id === value.locationId);
+          while (cur) {
+            path.unshift(cur.id);
+            cur = cur.parent_id ? locations.find((l) => l.id === cur!.parent_id) : undefined;
+          }
+
+          // Rebuild chain from path
+          chain.length = 0;
+          let parentId: string | null = null;
+          for (const id of path) {
+            const options = getChildren(parentId);
+            const selected = locations.find((l) => l.id === id);
+            chain.push({
+              level: selected?.type || (options[0]?.type || "Location"),
+              selected: id,
+              options,
+            });
+            parentId = id;
+          }
+          // Add next level if children exist
+          const nextChildren = getChildren(parentId);
+          if (nextChildren.length > 0) {
+            chain.push({ level: nextChildren[0]?.type || "Location", selected: "", options: nextChildren });
+          }
+        }
+
+        // Handle selection at any level — clear children below
+        const handleSelect = (levelIndex: number, selectedId: string) => {
+          if (!selectedId) {
+            // Cleared this level — use parent as the value
+            const parentValue = levelIndex > 0 ? chain[levelIndex - 1].selected : "";
+            onChange({ ...value, locationId: parentValue, manualText: "", gpsLat: null, gpsLng: null });
+          } else {
+            onChange({ ...value, locationId: selectedId, manualText: "", gpsLat: null, gpsLng: null });
+          }
+        };
+
+        return (
+          <div className="space-y-2">
+            {chain.map((level, idx) => (
+              <div key={idx}>
+                <label className="text-xs text-muted-foreground capitalize mb-1 block">{level.level}</label>
+                <div className="relative">
+                  <select
+                    value={level.selected}
+                    onChange={(e) => handleSelect(idx, e.target.value)}
+                    className="w-full appearance-none rounded-md border-2 border-border bg-muted/20 px-3 py-2 pr-8 text-sm"
+                  >
+                    <option value="">Select {level.level}...</option>
+                    {level.options.map((loc) => (
+                      <option key={loc.id} value={loc.id}>{loc.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                </div>
+              </div>
             ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        </div>
-      )}
+          </div>
+        );
+      })()}
 
       {/* GPS */}
       {mode === "gps" && (
@@ -165,6 +276,27 @@ export function LocationPicker({
           )}
           {gpsError && (
             <p className="text-xs text-destructive">{gpsError}</p>
+          )}
+        </div>
+      )}
+
+      {/* Scan QR code */}
+      {mode === "scan" && (
+        <div className="space-y-2">
+          {scanUrl ? (
+            <a
+              href={scanUrl}
+              className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
+            >
+              <QrCode className="h-6 w-6" />
+              <span>Open QR scanner</span>
+            </a>
+          ) : (
+            <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed p-6">
+              <QrCode className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-center text-muted-foreground">Scan an asset or location QR code to auto-fill the location</p>
+              <p className="text-xs text-muted-foreground">Use your device camera or the QR scanner in the app</p>
+            </div>
           )}
         </div>
       )}

@@ -27,13 +27,17 @@ import { LocationPicker, type LocationPickerValue } from "@/components/ui/locati
 const INCIDENT_TYPES: { value: IncidentType; label: string }[] = [
   { value: "injury", label: "Injury" },
   { value: "near_miss", label: "Near Miss" },
-  { value: "property_damage", label: "Property Damage" },
-  { value: "environmental", label: "Environmental" },
-  { value: "security", label: "Security" },
-  { value: "fire", label: "Fire" },
-  { value: "equipment_failure", label: "Equipment Failure" },
-  { value: "spill", label: "Spill" },
+  { value: "slip_trip_fall", label: "Slip / Trip / Fall" },
   { value: "hazard", label: "Hazard" },
+  { value: "property_damage", label: "Property Damage" },
+  { value: "health_illness", label: "Health / Illness" },
+  { value: "maintenance_request", label: "Maintenance Request" },
+  { value: "vehicle_incident", label: "Vehicle Incident" },
+  { value: "environmental", label: "Environmental" },
+  { value: "spill_leak", label: "Spill / Leak" },
+  { value: "fire", label: "Fire" },
+  { value: "security", label: "Security" },
+  { value: "equipment_failure", label: "Equipment Failure" },
   { value: "other", label: "Other" },
 ];
 
@@ -146,6 +150,7 @@ export default function NewIncidentPage() {
       asset_id: formData.asset_id || null,
       media_urls: photos.map((p) => p.url),
       status: "new",
+      assigned_to: user?.id || null,
       flagged: false,
       resolved_at: null,
       resolved_by: null,
@@ -355,7 +360,7 @@ export default function NewIncidentPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <LocationPicker
-                locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address }))}
+                locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address, parent_id: l.parent_id, type: l.type }))}
                 value={incidentLocationValue}
                 onChange={setIncidentLocationValue}
                 label={t("incidents.labels.location")}

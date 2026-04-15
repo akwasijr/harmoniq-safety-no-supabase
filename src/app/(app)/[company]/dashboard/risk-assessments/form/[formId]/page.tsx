@@ -415,7 +415,7 @@ function DashboardRiskAssessmentFormContent() {
       {currentSection === 0 && (
         <div className="rounded-xl border bg-card p-6 space-y-4">
           <LocationPicker
-            locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address }))}
+            locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address, parent_id: l.parent_id, type: l.type }))}
             value={selectedLocationValue}
             onChange={(val) => {
               setSelectedLocationValue(val);

@@ -66,16 +66,24 @@ const SEVERITY_LEGEND: Record<string, string> = {
   low: "#059669",
 };
 
-type SubTabType = "incidents" | "tickets" | "map";
+type SubTabType = "incidents" | "tasks" | "map";
 
 const ITEMS_PER_PAGE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 const incidentTypes = [
   { value: "injury", label: "Injury", icon: AlertCircle },
   { value: "near_miss", label: "Near Miss", icon: AlertTriangle },
+  { value: "slip_trip_fall", label: "Slip / Trip / Fall", icon: AlertTriangle },
+  { value: "hazard", label: "Hazard", icon: AlertTriangle },
+  { value: "property_damage", label: "Property Damage", icon: Shield },
+  { value: "health_illness", label: "Health / Illness", icon: AlertCircle },
+  { value: "maintenance_request", label: "Maintenance Request", icon: Wrench },
+  { value: "vehicle_incident", label: "Vehicle Incident", icon: AlertTriangle },
   { value: "equipment_failure", label: "Equipment Failure", icon: Wrench },
-  { value: "fire", label: "Fire", icon: Flame },
   { value: "environmental", label: "Environmental", icon: Shield },
+  { value: "spill_leak", label: "Spill / Leak", icon: AlertTriangle },
+  { value: "fire", label: "Fire", icon: Flame },
+  { value: "security", label: "Security", icon: Shield },
   { value: "other", label: "Other", icon: HelpCircle },
 ];
 
@@ -120,8 +128,12 @@ const TYPE_ALIASES: Record<string, string> = {
   "near miss": "near_miss", "nearmiss": "near_miss",
   "equipment failure": "equipment_failure", "equipment": "equipment_failure",
   "property damage": "property_damage", "damage": "property_damage",
-  "slip": "injury", "fall": "injury", "slip/fall": "injury", "cut": "injury", "burn": "injury",
-  "chemical": "environmental", "spill": "spill",
+  "slip": "slip_trip_fall", "trip": "slip_trip_fall", "fall": "slip_trip_fall", "slip/fall": "slip_trip_fall", "slip trip fall": "slip_trip_fall",
+  "health": "health_illness", "illness": "health_illness", "occupational illness": "health_illness",
+  "maintenance": "maintenance_request", "repair": "maintenance_request", "fix": "maintenance_request", "breakdown": "maintenance_request",
+  "vehicle": "vehicle_incident", "car": "vehicle_incident", "truck": "vehicle_incident", "forklift": "vehicle_incident",
+  "spill": "spill_leak", "leak": "spill_leak", "chemical": "spill_leak",
+  "cut": "injury", "burn": "injury",
   "theft": "security", "break-in": "security", "trespass": "security",
 };
 
@@ -155,7 +167,7 @@ function mapImportColumns(data: { headers: string[]; rows: Record<string, string
   return { headers: mappedHeaders, rows: mappedRows };
 }
 
-const VALID_TYPES = ["injury", "near_miss", "equipment_failure", "environmental", "fire", "security", "spill", "hazard", "property_damage", "other"];
+const VALID_TYPES = ["injury", "near_miss", "equipment_failure", "environmental", "fire", "security", "spill", "hazard", "property_damage", "slip_trip_fall", "health_illness", "maintenance_request", "vehicle_incident", "spill_leak", "other"];
 const VALID_SEVERITIES = ["low", "medium", "high", "critical"];
 
 function ImportPreview({ importData, incidents, user, addIncident, addTicket, toast, onBack, onDone }: {
@@ -385,27 +397,9 @@ export default function IncidentsPage() {
   );
 
   // Auto-escalation check
-  const escalationCheckRan = React.useRef(false);
-  React.useEffect(() => {
-    if (escalationCheckRan.current || isLoading) return;
-    escalationCheckRan.current = true;
-    const candidates = getEscalationCandidates(incidents);
-    candidates.forEach((id) => {
-      updateIncident(id, { escalated: true, escalated_at: new Date().toISOString(), updated_at: new Date().toISOString() });
-      const inc = incidents.find((i) => i.id === id);
-      if (inc) {
-        notifyIncidentEscalated(addNotif, {
-          companyId: inc.company_id,
-          incidentTitle: inc.title,
-          incidentId: inc.id,
-          severity: inc.severity,
-        });
-      }
-    });
-    if (candidates.length > 0) {
-      toast(`${candidates.length} incident${candidates.length > 1 ? "s" : ""} auto-escalated`);
-    }
-  }, [isLoading, incidents, updateIncident, toast]);
+  // Auto-escalation disabled — escalation should be triggered by explicit rules/workflows, not on page load
+  // const escalationCheckRan = React.useRef(false);
+  // React.useEffect(() => { ... }, []);
 
   // Filter incidents
   const filteredIncidents = incidents.filter((incident) => {
@@ -518,7 +512,7 @@ export default function IncidentsPage() {
       updated_at: now.toISOString(),
     };
     addIncident(incident);
-    // Auto-create investigation ticket for critical/high incidents
+    // Auto-create investigation task for critical/high incidents
     if (incident.severity === "critical" || incident.severity === "high") {
       addTicket({
         id: crypto.randomUUID(),
@@ -666,7 +660,7 @@ export default function IncidentsPage() {
                       created_at: t_.created_at,
                     }));
               downloadCsv(
-                activeSubTab === "incidents" ? "incidents.csv" : "tickets.csv",
+                activeSubTab === "incidents" ? "incidents.csv" : "tasks.csv",
                 rows
               );
               toast("Export generated");
@@ -709,17 +703,17 @@ export default function IncidentsPage() {
             )}
           </button>
           <button
-            onClick={() => setActiveSubTab("tickets")}
+            onClick={() => setActiveSubTab("tasks")}
             className={cn(
               "flex items-center gap-2 py-3 px-1 text-sm font-medium transition-colors relative",
-              activeSubTab === "tickets" 
+              activeSubTab === "tasks" 
                 ? "text-primary" 
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
             <Ticket className="h-4 w-4" aria-hidden="true" />
             <span>{t("tickets.title")}</span>
-            {activeSubTab === "tickets" && (
+            {activeSubTab === "tasks" && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>
@@ -839,7 +833,6 @@ export default function IncidentsPage() {
                   <SortableTh sortKey="reference_number" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }}>Reference</SortableTh>
                   <SortableTh sortKey="title" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }}>Title</SortableTh>
                   <SortableTh sortKey="type" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }}>Type</SortableTh>
-                  <SortableTh sortKey="severity" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }}>Severity</SortableTh>
                   <SortableTh sortKey="building" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }} className="hidden md:table-cell">Location</SortableTh>
                   <SortableTh sortKey="incident_date" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }} className="hidden lg:table-cell">Date</SortableTh>
                   <SortableTh sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }}>Status</SortableTh>
@@ -883,21 +876,15 @@ export default function IncidentsPage() {
                             </button>
                           )}
                           <span className="font-medium font-mono text-xs">{incident.reference_number}</span>
-                          {incident.escalated && (
-                            <Badge variant="destructive" className="ml-1 text-[9px] px-1.5 py-0">Escalated</Badge>
-                          )}
                           {linkedTickets.length > 0 && !expandedRows.has(incident.id) && (
-                            <span className="text-[10px] text-muted-foreground">{linkedTickets.length} ticket{linkedTickets.length > 1 ? "s" : ""}</span>
+                            <span className="text-[10px] text-muted-foreground">{linkedTickets.length} task{linkedTickets.length > 1 ? "s" : ""}</span>
                           )}
                         </div>
                       </td>
                       <td className="py-3 max-w-[200px] truncate">{incident.title}</td>
-                      <td className="py-3 capitalize text-xs">{t(`incidents.types.${incident.type === "near_miss" ? "nearMiss" : incident.type === "equipment_failure" ? "equipmentFailure" : incident.type === "property_damage" ? "propertyDamage" : incident.type}`)}</td>
-                      <td className="py-3">
-                        <Badge variant={incident.severity} className="text-xs">{incident.severity}</Badge>
-                      </td>
+                      <td className="py-3 capitalize text-xs">{t(`incidents.types.${incident.type === "near_miss" ? "nearMiss" : incident.type === "equipment_failure" ? "equipmentFailure" : incident.type === "property_damage" ? "propertyDamage" : incident.type === "slip_trip_fall" ? "slipTripFall" : incident.type === "health_illness" ? "healthIllness" : incident.type === "maintenance_request" ? "maintenanceRequest" : incident.type === "vehicle_incident" ? "vehicleIncident" : incident.type === "spill_leak" ? "spillLeak" : incident.type}`)}</td>
                       <td className="hidden py-3 md:table-cell text-muted-foreground text-xs">
-                        {incident.building || incident.location_description || (incident.location_id ? locations.find((l) => l.id === incident.location_id)?.name : null) || "—"}
+                        {incident.location_id ? locations.find((l) => l.id === incident.location_id)?.name : incident.building || incident.location_description || ""}
                       </td>
                       <td className="hidden py-3 lg:table-cell text-muted-foreground text-xs">
                         {formatDate(new Date(incident.incident_date))}
@@ -1040,10 +1027,10 @@ export default function IncidentsPage() {
         </>
       )}
 
-      {/* Tickets Tab Content */}
-      {activeSubTab === "tickets" && (
+      {/* Tasks Tab Content */}
+      {activeSubTab === "tasks" && (
         <>
-          {/* Ticket Status summary cards */}
+          {/* Task Status summary cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KPICard
               title={t("tickets.statuses.new")}
@@ -1079,19 +1066,19 @@ export default function IncidentsPage() {
           <SearchFilterBar
             searchQuery={searchQuery}
             onSearchChange={(value) => { setSearchQuery(value); setCurrentPage(1); }}
-            searchPlaceholder="Search tickets by ID or title..."
+            searchPlaceholder="Search tasks by ID or title..."
             filters={ticketFilters}
             dateRange={dateRange}
             onDateRangeChange={(value) => { setDateRange(value); setCurrentPage(1); }}
             showDateRange={true}
           />
 
-          {/* Tickets table */}
+          {/* Tasks table */}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">
-                  {filteredTickets.length} ticket{filteredTickets.length !== 1 ? "s" : ""}
+                  {filteredTickets.length} task{filteredTickets.length !== 1 ? "s" : ""}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   Page {currentPage} of {ticketTotalPages || 1}
@@ -1103,7 +1090,7 @@ export default function IncidentsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="pb-3 font-medium">Ticket ID</th>
+                      <th className="pb-3 font-medium">Task ID</th>
                       <th className="pb-3 font-medium">Title</th>
                       <th className="pb-3 font-medium">Incident</th>
                       <th className="pb-3 font-medium">Assignee</th>
