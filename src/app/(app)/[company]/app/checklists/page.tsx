@@ -404,8 +404,11 @@ function EmployeeChecklistsPageContent() {
                 )}
               >
                 {st === "assigned" ? t("checklists.tabs.assigned") : st === "available" ? t("checklists.tabs.available") : t("checklists.tabs.history")}
+                {st === "assigned" && pendingTemplates.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
+                )}
                 {st === "history" && checklistDraftCount > 0 && activeTab === "checklists" && (
-                  <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-amber-500 text-[8px] text-white flex items-center justify-center font-bold">{checklistDraftCount}</span>
+                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
                 )}
               </button>
             ))}

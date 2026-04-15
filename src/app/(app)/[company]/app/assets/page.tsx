@@ -163,7 +163,7 @@ export default function EmployeeAssetsPage() {
                 <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span className="truncate">{tab.label}</span>
                 {tab.count ? (
-                  <span className="ml-1 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">{tab.count}</span>
+                  <span className="ml-0.5 h-2 w-2 rounded-full bg-blue-500 shrink-0" />
                 ) : null}
               </button>
             );

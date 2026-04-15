@@ -128,6 +128,9 @@ export default function EmployeeIncidentsPage() {
               )}
             >
               {st === "available" ? "Available" : "History"}
+              {st === "history" && myIncidents.filter(i => i.status === "new" || i.status === "in_progress").length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
+              )}
             </button>
           ))}
         </div>
