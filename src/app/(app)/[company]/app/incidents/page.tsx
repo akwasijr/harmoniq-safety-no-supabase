@@ -128,7 +128,7 @@ export default function EmployeeIncidentsPage() {
               )}
             >
               {st === "available" ? "Available" : "History"}
-              {st === "history" && myIncidents.filter(i => i.status === "new" || i.status === "in_progress").length > 0 && (
+              {st === "history" && subTab !== "history" && myIncidents.filter(i => i.status === "new" || i.status === "in_progress").length > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
               )}
             </button>
@@ -236,13 +236,13 @@ export default function EmployeeIncidentsPage() {
                     >
                       <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
                         incident.status === "new" || incident.status === "in_progress" || incident.status === "in_review"
-                          ? "bg-amber-100"
-                          : "bg-green-100"
+                          ? "bg-amber-100 dark:bg-amber-500/20"
+                          : "bg-green-100 dark:bg-green-500/20"
                       }`}>
                         <StatusIcon className={`h-5 w-5 ${
                           incident.status === "new" || incident.status === "in_progress" || incident.status === "in_review"
-                            ? "text-amber-600"
-                            : "text-green-600"
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-green-600 dark:text-green-400"
                         }`} />
                       </div>
                       
