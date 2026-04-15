@@ -321,9 +321,9 @@ function EmployeeChecklistsPageContent() {
         )}
         {[
           { value: "all", label: "All" },
-          { value: "submitted", label: "Submitted" },
-          { value: "draft", label: "Draft" },
-          { value: "completed", label: "Completed" },
+          { value: "new", label: "Open" },
+          { value: "in_progress", label: "In Progress" },
+          { value: "resolved", label: "Resolved" },
         ].map((filter) => (
           <button
             key={filter.value}
@@ -436,12 +436,7 @@ function EmployeeChecklistsPageContent() {
               const myIncidents = (user ? incidents.filter((i) => i.reporter_id === user.id) : incidents);
               const filtered = myIncidents
                 .filter((inc) => {
-                  if (historyStatus !== "all") {
-                    if (historyStatus === "submitted" && inc.status !== "new") return false;
-                    if (historyStatus === "reviewed" && inc.status !== "resolved") return false;
-                    if (historyStatus === "draft" && inc.status !== "new") return false;
-                    if (historyStatus === "completed" && inc.status !== "resolved" && inc.status !== "archived") return false;
-                  }
+                  if (historyStatus !== "all" && inc.status !== historyStatus) return false;
                   if (q && !inc.title.toLowerCase().includes(q) && !inc.severity.toLowerCase().includes(q) && !inc.status.toLowerCase().includes(q)) return false;
                   return true;
                 })
