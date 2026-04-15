@@ -3244,7 +3244,7 @@
   },
   "focusStrip": {
     "title": "Bande de Focus",
-    "fieldFocus": "Votre Aperçu",
+    "fieldFocus": "Actions à Faire",
     "urgent": "Urgent",
     "upcoming": "À Venir",
     "goodToKnow": "Bon à Savoir",
