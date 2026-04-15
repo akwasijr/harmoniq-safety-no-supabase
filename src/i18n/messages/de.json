@@ -3244,7 +3244,7 @@
   },
   "focusStrip": {
     "title": "Fokusleiste",
-    "fieldFocus": "Handlungsbedarf",
+    "fieldFocus": "Auf einen Blick",
     "urgent": "Dringend",
     "upcoming": "Bevorstehend",
     "goodToKnow": "Gut zu Wissen",

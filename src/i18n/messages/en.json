@@ -3248,7 +3248,7 @@
   },
   "focusStrip": {
     "title": "Focus Strip",
-    "fieldFocus": "Action Items",
+    "fieldFocus": "At a Glance",
     "urgent": "Urgent",
     "upcoming": "Upcoming",
     "goodToKnow": "Good to Know",
