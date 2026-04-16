@@ -46,22 +46,25 @@ export function LocationPicker({
   );
   const [isLocating, setIsLocating] = React.useState(false);
   const [gpsError, setGpsError] = React.useState<string | null>(null);
-  const [gpsAddress, setGpsAddress] = React.useState<string | null>(null);
+  const [gpsAddress, setGpsAddress] = React.useState<string | null>(value.gpsAddress || null);
   const [isGeocoding, setIsGeocoding] = React.useState(false);
 
   const selectedLocation = locations.find((l) => l.id === value.locationId);
+
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
 
   const reverseGeocode = async (lat: number, lng: number) => {
     setIsGeocoding(true);
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-        headers: { "Accept-Language": "en" },
+        headers: { "Accept-Language": "en", "User-Agent": "HarmoniqSafety/1.0" },
       });
       if (res.ok) {
         const data = await res.json();
         if (data.display_name) {
           setGpsAddress(data.display_name);
-          onChange({ ...value, gpsLat: lat, gpsLng: lng, gpsAddress: data.display_name });
+          onChange({ ...valueRef.current, gpsLat: lat, gpsLng: lng, gpsAddress: data.display_name });
         }
       }
     } catch {
