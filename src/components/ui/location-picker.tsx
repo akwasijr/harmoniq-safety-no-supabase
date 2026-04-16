@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { MapPin, Navigation, Pencil, ChevronDown, X, Loader2, QrCode } from "lucide-react";
+import { MapPin, Navigation, Pencil, ChevronDown, X, Loader2, QrCode, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface LocationOption {
@@ -95,10 +95,15 @@ export function LocationPicker({
         reverseGeocode(lat, lng);
       },
       (error) => {
-        setGpsError(error.code === 1 ? "Location access denied." : "Unable to get location.");
+        const msg = error.code === 1 
+          ? "Location access denied. Please allow location in your browser settings." 
+          : error.code === 2 
+            ? "Location unavailable. Make sure GPS is enabled." 
+            : "Location request timed out. Please try again.";
+        setGpsError(msg);
         setIsLocating(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 },
+      { enableHighAccuracy: true, timeout: 15000 },
     );
   };
 
@@ -320,7 +325,13 @@ export function LocationPicker({
             </button>
           )}
           {gpsError && (
-            <p className="text-xs text-destructive">{gpsError}</p>
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs text-destructive font-medium">{gpsError}</p>
+                <button type="button" onClick={handleGPS} className="text-xs text-primary font-medium mt-1">Try again</button>
+              </div>
+            </div>
           )}
         </div>
       )}
