@@ -151,7 +151,7 @@ function CommentsPageContent() {
           <CardContent className="py-16 text-center">
             <MessageSquare className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm font-medium text-muted-foreground">{searchQuery ? "No matching messages" : "No messages yet"}</p>
-            <p className="text-xs text-muted-foreground mt-1">Comments on incidents and tasks you're involved with will appear here</p>
+            <p className="text-xs text-muted-foreground mt-1">Comments on incidents and tasks you&apos;re involved with will appear here</p>
           </CardContent>
         </Card>
       ) : (

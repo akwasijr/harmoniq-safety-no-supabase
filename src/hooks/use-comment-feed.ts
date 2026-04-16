@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useState, useCallback } from "react";
+import { useMemo, useEffect, useState, useCallback, useSyncExternalStore } from "react";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useAuth } from "@/hooks/use-auth";
 import { loadComments } from "@/components/tasks/task-comments";
@@ -39,16 +39,16 @@ export function useCommentFeed(basePath: "dashboard" | "app", company?: string) 
   const userId = user?.id ?? "";
   const companySlug = company || "";
 
-  const [lastSeenAt, setLastSeenAt] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  // Read lastSeen from localStorage after mount
-  useEffect(() => {
-    if (!userId) return;
-    const stored = window.localStorage.getItem(getLastSeenKey(userId));
-    setLastSeenAt(stored);
-    setMounted(true);
-  }, [userId]);
+  const [lastSeenAt, setLastSeenAt] = useState<string | null>(() => {
+    if (typeof window === "undefined" || !userId) return null;
+    return window.localStorage.getItem(getLastSeenKey(userId));
+  });
+  // Track client mount via render-safe subscription (avoids setState-in-effect)
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   // Mark comments as seen (call when page opens)
   const markSeen = useCallback(() => {
@@ -162,15 +162,15 @@ export function useUnreadCommentCount(): number {
   const { user } = useAuth();
   const { incidents, tickets } = useCompanyData();
   const userId = user?.id ?? "";
-  const [lastSeenAt, setLastSeenAt] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    if (!userId) return;
-    const stored = window.localStorage.getItem(getLastSeenKey(userId));
-    setLastSeenAt(stored);
-    setMounted(true);
-  }, [userId]);
+  const [lastSeenAt] = useState<string | null>(() => {
+    if (typeof window === "undefined" || !userId) return null;
+    return window.localStorage.getItem(getLastSeenKey(userId));
+  });
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   return useMemo(() => {
     if (!mounted || !userId) return 0;
