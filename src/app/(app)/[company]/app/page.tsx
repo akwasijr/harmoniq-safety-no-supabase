@@ -766,12 +766,14 @@ export default function EmployeeAppHomePage() {
       </div>
 
       <QuickActionFAB
-        actions={quickActions.map((a) => ({
-          id: a.id,
-          label: t(a.labelKey) || a.fallbackLabel,
-          icon: a.icon,
-          href: a.href,
-        }))}
+        actions={quickActions
+          .filter((a) => ["report_incident", "risk_check", "scan_asset", "checklists"].includes(a.id))
+          .map((a) => ({
+            id: a.id,
+            label: t(a.labelKey) || a.fallbackLabel,
+            icon: a.icon,
+            href: a.href,
+          }))}
       />
 
       <style>{`
