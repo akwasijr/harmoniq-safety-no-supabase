@@ -49,17 +49,15 @@ export function QuickActionFAB({ actions }: QuickActionFABProps) {
 
       {/* Bottom Sheet */}
       <BottomSheet open={open} onClose={() => setOpen(false)} title="Quick Actions">
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border/50">
           {actions.map((action) => (
             <Link
               key={action.id}
               href={action.href}
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 py-3.5 active:bg-muted/50 transition-colors -mx-1 px-1 rounded-lg"
+              className="flex items-center gap-3 py-3.5 active:bg-muted/50 transition-colors"
             >
-              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <action.icon className="h-5 w-5 text-primary" />
-              </div>
+              <action.icon className="h-5 w-5 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{action.label}</p>
                 {action.description && (
