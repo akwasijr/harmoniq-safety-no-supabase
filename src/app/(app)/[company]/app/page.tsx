@@ -144,6 +144,7 @@ function FieldFocus({
               {item.time && (
                 <span className={cn(
                   "shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full",
+                  item.time === "Draft" ? "text-amber-600 bg-amber-500/10 dark:text-amber-400" :
                   activeTab === "urgent" ? "text-red-500 bg-red-500/10" : "text-amber-500 bg-amber-500/10"
                 )}>{item.time}</span>
               )}
