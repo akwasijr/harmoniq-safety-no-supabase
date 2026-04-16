@@ -58,7 +58,7 @@
     "dashboard": "Dashboard",
     "analytics": "Analytics",
     "incidents": "Incidents",
-    "safetyTasks": "Safety Tasks",
+    "safetyTasks": "Safety & Compliance",
     "usersTeams": "Users & Teams",
     "locations": "Locations",
     "assets": "Asset Management",
@@ -198,7 +198,12 @@
     "low": "Low",
     "medium": "Medium",
     "high": "High",
-    "critical": "Critical"
+    "critical": "Critical",
+    "slipTripFall": "Slip / Trip / Fall",
+    "healthIllness": "Health / Illness",
+    "maintenanceRequest": "Maintenance Request",
+    "vehicleIncident": "Vehicle Incident",
+    "spillLeak": "Spill / Leak"
   },
   "profile": {
     "contactInfo": "Contact information",
@@ -607,7 +612,7 @@
     "reportAnIncident": "Report an Incident"
   },
   "tickets": {
-    "title": "Tickets",
+    "title": "Tasks",
     "newTicket": "New Ticket",
     "createTicket": "Create Ticket",
     "labels": {
@@ -944,7 +949,7 @@
   },
   "checklists": {
     "title": "Checklists",
-    "safetyTasks": "Safety Tasks",
+    "safetyTasks": "Safety & Compliance",
     "tabs": {
       "checklists": "Checklists",
       "assessments": "Risk Assess.",
@@ -3243,7 +3248,7 @@
   },
   "focusStrip": {
     "title": "Focus Strip",
-    "fieldFocus": "Field Focus",
+    "fieldFocus": "At a Glance",
     "urgent": "Urgent",
     "upcoming": "Upcoming",
     "goodToKnow": "Good to Know",

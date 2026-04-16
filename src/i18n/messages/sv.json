@@ -198,7 +198,12 @@
     "low": "Låg",
     "medium": "Medel",
     "high": "Hög",
-    "critical": "Kritisk"
+    "critical": "Kritisk",
+    "slipTripFall": "Halka / Snubbla / Falla",
+    "healthIllness": "Hälsa / Sjukdom",
+    "maintenanceRequest": "Underhållsbegäran",
+    "vehicleIncident": "Fordonsincident",
+    "spillLeak": "Spill / Läckage"
   },
   "profile": {
     "contactInfo": "Kontaktinformation",
@@ -3239,7 +3244,7 @@
   },
   "focusStrip": {
     "title": "Fokusremsa",
-    "fieldFocus": "Fältfokus",
+    "fieldFocus": "I Korthet",
     "urgent": "Brådskande",
     "upcoming": "Kommande",
     "goodToKnow": "Bra att Veta",

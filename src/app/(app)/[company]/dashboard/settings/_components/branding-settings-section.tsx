@@ -252,7 +252,7 @@ export function BrandingSettingsSection({
               </div>
               {/* Focus strip */}
               <div className="bg-card rounded-xl px-3 py-2.5" style={{ borderRadius: radiusMap[shape], boxShadow: shadowMap[shadow] }}>
-                <p className="text-[8px] font-bold" style={{ color: settings.primaryColor }}>Field Focus</p>
+                <p className="text-[8px] font-bold" style={{ color: settings.primaryColor }}>At a Glance</p>
                 <div className="flex gap-2 mt-1.5">
                   <span className="text-[7px] font-medium flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-red-500" />Urgent</span>
                   <span className="text-[7px] text-muted-foreground flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />Upcoming</span>

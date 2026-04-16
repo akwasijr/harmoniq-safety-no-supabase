@@ -33,6 +33,8 @@ const badgeVariants = cva(
         in_review: "bg-[#7c3aed] text-white dark:bg-[#4c1d95] dark:text-[#c4b5fd]",
         resolved: "bg-[#059669] text-white dark:bg-[#064e3b] dark:text-[#6ee7b7]",
         archived: "bg-[#6b7280] text-white dark:bg-[#374151] dark:text-[#d1d5db]",
+        stalled: "bg-[#d97706] text-white dark:bg-[#78350f] dark:text-[#fcd34d]",
+        closed: "bg-[#6b7280] text-white dark:bg-[#374151] dark:text-[#d1d5db]",
         pending: "bg-[#475569] text-white dark:bg-[#334155] dark:text-[#e2e8f0]",
         // Severity variants
         low: "bg-[#059669] text-white dark:bg-[#064e3b] dark:text-[#6ee7b7]",

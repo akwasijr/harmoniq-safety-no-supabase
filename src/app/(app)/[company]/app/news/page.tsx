@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, ChevronRight, Clock, Tag, Newspaper, Calendar, FolderOpen, GraduationCap } from "lucide-react";
+import { FileText, ChevronRight, Clock, Tag, Newspaper, Calendar, FolderOpen, GraduationCap, Search, X, ArrowUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { useContentStore } from "@/stores/content-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
@@ -21,6 +22,9 @@ export default function EmployeeNewsPage() {
   const { settings } = useFieldAppSettings();
   const { t, formatDate } = useTranslation();
   const [activeTab, setActiveTab] = React.useState<TabType>("news");
+  const [searchOpen, setSearchOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
 
   const { items: contentItems , isLoading } = useContentStore();
 
@@ -72,7 +76,20 @@ export default function EmployeeNewsPage() {
     }
   };
 
-  const activeContent = getActiveContent();
+  const activeContent = getActiveContent()
+    .filter((item) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        item.title.toLowerCase().includes(q) ||
+        (item.category && item.category.toLowerCase().includes(q))
+      );
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.published_at || a.created_at).getTime();
+      const dateB = new Date(b.published_at || b.created_at).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
 
   if (isLoading && contentItems.length === 0) {
     return (
@@ -116,6 +133,28 @@ export default function EmployeeNewsPage() {
 
       {/* Content */}
       <div className="flex-1 px-4 pt-3 pb-20 space-y-3">
+        {searchOpen && (
+          <div className="relative mb-2">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..." className="h-8 pl-8 pr-8 text-sm" autoFocus />
+            <button type="button" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-2 mb-3">
+          {!searchOpen && (
+            <button type="button" onClick={() => setSearchOpen(true)}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" aria-label="Search">
+              <Search className="h-4 w-4" />
+            </button>
+          )}
+          <button type="button" onClick={() => setSortOrder(s => s === "newest" ? "oldest" : "newest")}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 bg-muted text-muted-foreground ml-auto">
+            <ArrowUpDown className="h-3 w-3" />
+            {sortOrder === "newest" ? "Newest" : "Oldest"}
+          </button>
+        </div>
         {activeContent.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">

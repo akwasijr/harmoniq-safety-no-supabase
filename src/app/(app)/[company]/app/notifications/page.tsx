@@ -445,10 +445,7 @@ export default function NotificationsPage() {
                   <Link
                     href={notification.href}
                     onClick={() => handleNotificationClick(notification)}
-                    className={cn(
-                      "flex items-start gap-3 px-4 py-3.5 transition-all relative bg-background",
-                      !notification.read && "bg-primary/5",
-                    )}
+                    className="flex items-start gap-3 px-4 py-3.5 transition-all relative bg-background"
                     style={{ transform: offset ? `translateX(${offset}px)` : undefined }}
                     onTouchStart={(e) => handleTouchStart(notification.id, e.touches[0].clientX)}
                     onTouchMove={(e) => handleTouchMove(notification.id, e.touches[0].clientX)}

@@ -198,7 +198,12 @@
     "low": "Faible",
     "medium": "Moyen",
     "high": "Élevé",
-    "critical": "Critique"
+    "critical": "Critique",
+    "slipTripFall": "Glissade / Trébuchement / Chute",
+    "healthIllness": "Santé / Maladie",
+    "maintenanceRequest": "Demande de maintenance",
+    "vehicleIncident": "Incident véhicule",
+    "spillLeak": "Déversement / Fuite"
   },
   "profile": {
     "contactInfo": "Contact information",
@@ -3239,7 +3244,7 @@
   },
   "focusStrip": {
     "title": "Bande de Focus",
-    "fieldFocus": "Focus Terrain",
+    "fieldFocus": "En un Coup d'Œil",
     "urgent": "Urgent",
     "upcoming": "À Venir",
     "goodToKnow": "Bon à Savoir",

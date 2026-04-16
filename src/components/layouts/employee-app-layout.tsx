@@ -3,12 +3,13 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, Bell, RefreshCw } from "lucide-react";
+import { Shield, Bell, RefreshCw, MessageSquare } from "lucide-react";
 import { BottomTabs } from "@/components/navigation/bottom-tabs";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { getFieldAppShellStyle } from "@/lib/field-app-settings";
 import { useOfflineSync, getPendingReports } from "@/lib/offline-queue";
 import { useIncidentsStore } from "@/stores/incidents-store";
+import { useUnreadCommentCount } from "@/hooks/use-comment-feed";
 
 function SyncIcon({ company }: { company: string }) {
   const count = getPendingReports().length;
@@ -50,15 +51,27 @@ const HEADER_HIDDEN_ROUTES = [
   "/app/maintenance",
   "/app/scan",
   "/app/assets/new",
-  "/app/checklists/",
   "/app/inspection/",
   "/app/inspection-round",
-  "/app/incidents/",
 ];
 
 // Risk assessment form routes — all sub-paths except the index and view pages
 const RISK_ASSESSMENT_FORM_PREFIX = "/app/risk-assessment/";
 const RISK_ASSESSMENT_EXCLUDED = ["/app/risk-assessment/view"];
+
+function MessagesIcon({ company }: { company: string }) {
+  const unread = useUnreadCommentCount();
+  return (
+    <Link href={`/${company}/app/messages`} className="relative p-2" aria-label={`${unread} unread messages`}>
+      <MessageSquare className="h-5 w-5 text-brand-solid-foreground/80" />
+      {unread > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+          {unread > 99 ? "99+" : unread}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 interface EmployeeAppLayoutProps {
   children: React.ReactNode;
@@ -142,6 +155,7 @@ export function EmployeeAppLayout({
           </Link>
           <div className="flex items-center gap-1">
             <SyncIcon company={company} />
+            <MessagesIcon company={company} />
             <Link href={`/${company}/app/notifications`} className="relative p-2" aria-label={`${notificationCount} notifications`}>
               <Bell className="h-5 w-5 text-brand-solid-foreground/80" />
               {notificationCount > 0 && (

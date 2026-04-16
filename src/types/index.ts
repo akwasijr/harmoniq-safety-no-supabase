@@ -184,7 +184,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 // Status Types
 export type CompanyStatus = "trial" | "active" | "suspended" | "cancelled";
 export type UserStatus = "active" | "inactive";
-export type IncidentStatus = "new" | "in_progress" | "in_review" | "resolved" | "archived";
+export type IncidentStatus = "new" | "in_progress" | "in_review" | "stalled" | "resolved" | "closed" | "archived";
 export type TicketStatus = "new" | "in_progress" | "blocked" | "waiting" | "resolved" | "closed";
 export type AssetStatus = "active" | "inactive" | "maintenance" | "retired";
 export type ContentStatus = "draft" | "published" | "scheduled";
@@ -205,6 +205,11 @@ export type IncidentType =
   | "spill"
   | "hazard"
   | "property_damage"
+  | "maintenance_request"
+  | "health_illness"
+  | "vehicle_incident"
+  | "spill_leak"
+  | "slip_trip_fall"
   | "other";
 
 // Location Types
@@ -402,9 +407,12 @@ export interface IncidentDocument {
   name: string;
   type: string;
   url: string;
-  size: number;
-  uploadedAt: string;
-  uploadedBy: string;
+  size?: number;
+  category?: "general" | "investigation" | "compliance";
+  uploaded_by?: string;
+  uploaded_at?: string;
+  uploadedAt?: string;
+  uploadedBy?: string;
 }
 
 export interface IncidentWitness {
@@ -435,7 +443,7 @@ export interface IncidentAction {
   dueDate: string;
   actionType: "corrective" | "preventive";
   status: "pending" | "in_progress" | "completed";
-  ticketId: string;
+  ticketId: string | null;
   correctiveActionId?: string | null;
   ticketStatus: "open" | "in_progress" | "resolved";
   assignee: string;
@@ -450,6 +458,8 @@ export interface IncidentComment {
   text: string;
   date: string;
   avatar: string;
+  mentionedUserIds?: string[];
+  attachments?: Array<{ id: string; name: string; url: string; type: string }>;
 }
 
 export interface IncidentTimelineEvent {
@@ -484,6 +494,14 @@ export interface Incident {
   lost_time_updated_at: string | null;   // Last time lost time data was updated
   lost_time_updated_by: string | null;   // Who last updated lost time data
   active_hazard: boolean;
+
+  // Investigation
+  root_cause?: string | null;
+  contributing_factors?: string[];
+  investigator_id?: string | null;
+  investigation_status?: "not_started" | "in_progress" | "completed";
+  closure_reason?: string | null;
+  related_incident_ids?: string[];
 
   // Location
   location_id: string | null;

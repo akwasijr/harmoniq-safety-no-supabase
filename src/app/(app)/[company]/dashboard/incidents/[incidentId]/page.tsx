@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { getUserDisplayName, getPriorityVariant } from "@/lib/status-utils";
 import {
   AlertCircle,
@@ -31,7 +31,11 @@ import {
   Lock,
   Download,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   FileCheck,
+  Camera,
+  Pencil,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,14 +61,37 @@ import { ImageViewer } from "@/components/ui/image-viewer";
 
 const tabs: Tab[] = [
   { id: "details", label: "Details", icon: Info },
-  { id: "investigation", label: "Investigation", icon: Shield },
   { id: "timeline", label: "Timeline", icon: Clock },
-  { id: "actions", label: "Actions", icon: CheckCircle },
+  { id: "tasks", label: "Tasks", icon: CheckCircle },
   { id: "comments", label: "Comments", icon: MessageSquare },
   { id: "documents", label: "Documents", icon: FileText },
-  { id: "compliance", label: "Compliance", icon: FileCheck },
-  { id: "settings", label: "Settings", icon: Settings, variant: "danger" },
 ];
+
+// Collapsible card wrapper for detail sections
+function CollapsibleCard({ title, icon: Icon, defaultOpen = true, children }: {
+  title: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  return (
+    <Card>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-6 py-3 hover:bg-muted/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+          <span className="text-sm font-semibold">{title}</span>
+        </div>
+        <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", !open && "-rotate-90")} />
+      </button>
+      {open && <CardContent className="pt-0">{children}</CardContent>}
+    </Card>
+  );
+}
 
 // Root cause categories based on industry standards
 const rootCauseCategories = [
@@ -97,9 +124,13 @@ const contributingFactors = [
 export default function IncidentDetailPage() {
   const router = useRouter();
   const routeParams = useParams();
+  const dashSearchParams = useSearchParams();
   const company = routeParams.company as string;
   const incidentId = routeParams.incidentId as string;
-  const [activeTab, setActiveTab] = React.useState("details");
+  const urlTab = dashSearchParams.get("tab");
+  const [activeTab, setActiveTab] = React.useState(
+    urlTab && ["details", "timeline", "tasks", "comments", "documents"].includes(urlTab) ? urlTab : "details"
+  );
   const [newComment, setNewComment] = React.useState("");
   const [showAddActionModal, setShowAddActionModal] = React.useState(false);
   const [newAction, setNewAction] = React.useState<{
@@ -140,7 +171,7 @@ export default function IncidentDetailPage() {
   const { add: addCorrectiveAction, update: updateCorrectiveAction } = stores.correctiveActions;
 
   const incident = incidents.find((i) => i.id === incidentId);
-  const isLocked = incident?.status === "resolved" || incident?.status === "archived";
+  const isLocked = incident?.status === "resolved" || incident?.status === "archived" || incident?.status === "closed";
   const location = incident?.location_id ? locations.find((l) => l.id === incident.location_id) : null;
   
   // Read investigation and actions from store (persisted)
@@ -152,6 +183,16 @@ export default function IncidentDetailPage() {
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const [viewerImage, setViewerImage] = React.useState<{ src: string; index: number } | null>(null);
+  const [showLightbox, setShowLightbox] = React.useState(false);
+  const [lightboxIndex, setLightboxIndex] = React.useState(0);
+  const [showCloseModal, setShowCloseModal] = React.useState(false);
+  const [closeReason, setCloseReason] = React.useState("");
+  const [investigationEditing, setInvestigationEditing] = React.useState(false);
+  const [invDraft, setInvDraft] = React.useState({ rootCause: "", factors: "", findings: "" });
+  const [commentTaggedUsers, setCommentTaggedUsers] = React.useState<string[]>([]);
+  const [showTagPicker, setShowTagPicker] = React.useState(false);
+  const [tagSearch, setTagSearch] = React.useState("");
+  const [commentAttachments, setCommentAttachments] = React.useState<Array<{ id: string; name: string; url: string; type: string }>>([]);
 
   // Documents state
   const documentsInputRef = React.useRef<HTMLInputElement>(null);
@@ -213,6 +254,25 @@ export default function IncidentDetailPage() {
     const currentComments = commentsRef.current;
     const newComments = [...currentComments, comment];
     updateIncident(incidentId, { comments: newComments, updated_at: new Date().toISOString() });
+  };
+
+  const handleCommentFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    for (const file of Array.from(files).slice(0, 3)) {
+      if (file.size > 10 * 1024 * 1024) { toast("File too large (max 10MB)", "error"); continue; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        setCommentAttachments(prev => [...prev, {
+          id: crypto.randomUUID(),
+          name: file.name,
+          url: reader.result as string,
+          type: file.type,
+        }]);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = "";
   };
 
   const handleStartInvestigation = (investigatorId: string) => {
@@ -295,45 +355,44 @@ export default function IncidentDetailPage() {
   const handleAddAction = () => {
     if (!newAction.title || !newAction.assignee || !newAction.dueDate) return;
     
-    const actionId = `act-${crypto.randomUUID().slice(0, 8)}`;
-    const ticketId = `TKT-${crypto.randomUUID().slice(0, 8)}`;
+    const taskId = `task-${crypto.randomUUID().slice(0, 8)}`;
     const correctiveActionId = newAction.actionType === "corrective"
       ? `ca-${crypto.randomUUID().slice(0, 8)}`
       : null;
     
-    const action: IncidentAction = {
-      id: actionId,
-      title: newAction.title,
-      description: newAction.description,
-      priority: newAction.priority,
-      dueDate: newAction.dueDate,
-      status: "pending",
-      ticketId: ticketId,
-      correctiveActionId,
-      ticketStatus: "open",
-      assignee: newAction.assignee,
-      createdAt: new Date().toISOString(),
-      actionType: newAction.actionType,
-    };
-    
-    setActions([...actions, action]);
-
-    // Create actual ticket in store so it appears in tickets list and mobile tasks
+    // Create task in the tickets/tasks store so it appears on the main Tasks page
     addTicket({
-      id: ticketId,
+      id: taskId,
       company_id: incident.company_id,
       title: newAction.title,
-      description: newAction.description || `${newAction.actionType === "corrective" ? "Corrective" : "Preventive"} action from incident`,
+      description: newAction.description || `${newAction.actionType === "corrective" ? "Corrective" : "Preventive"} action from incident ${incident.reference_number}`,
       priority: (newAction.priority === "urgent" ? "critical" : newAction.priority) as Priority,
       status: "new",
       due_date: newAction.dueDate || null,
       assigned_to: newAction.assignee || null,
       assigned_groups: [],
       incident_ids: [incidentId],
-      created_by: incident.reporter_id || "",
+      created_by: authUser?.id || "",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
+
+    // Also keep in the embedded actions array for backward compat
+    const action: IncidentAction = {
+      id: taskId,
+      title: newAction.title,
+      description: newAction.description,
+      priority: newAction.priority,
+      dueDate: newAction.dueDate,
+      status: "pending",
+      ticketId: taskId,
+      correctiveActionId,
+      ticketStatus: "open",
+      assignee: newAction.assignee,
+      createdAt: new Date().toISOString(),
+      actionType: newAction.actionType,
+    };
+    setActions([...actions, action]);
 
     // Sync corrective actions to the corrective actions store
     if (newAction.actionType === "corrective" && correctiveActionId) {
@@ -356,7 +415,7 @@ export default function IncidentDetailPage() {
 
     setShowAddActionModal(false);
     setNewAction({ title: "", description: "", priority: "medium", dueDate: "", assignee: "", actionType: "corrective" });
-    toast(`${action.actionType === 'corrective' ? 'Corrective' : 'Preventive'} action created.`, "success");
+    toast(`Task created and linked to incident.`, "success");
   };
 
   const handleTicketStatusChange = (actionId: string, newStatus: "open" | "in_progress" | "resolved", notes?: string) => {
@@ -504,48 +563,220 @@ export default function IncidentDetailPage() {
       {activeTab === "details" && (
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">{t("incidents.labels.description")}</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <CollapsibleCard title={t("incidents.labels.description")}>
                 <p className="text-muted-foreground">{incident.description}</p>
-                {incident.media_urls && incident.media_urls.length > 0 && (
-                  <div className="mt-4 pt-4 border-t">
-                    <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                      Photos ({incident.media_urls.length})
-                    </p>
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                      {incident.media_urls.map((url, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => url.startsWith("data:image") && setViewerImage({ src: url, index: idx })}
-                          className="aspect-square rounded-lg bg-muted border overflow-hidden hover:ring-2 hover:ring-primary cursor-pointer"
-                        >
-                          {url.startsWith("data:image") ? (
-                            <img src={url} alt={`Photo ${idx + 1}`} className="h-full w-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center">
-                              <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                          )}
-                        </button>
-                      ))}
+            </CollapsibleCard>
+
+            {/* Photo Gallery — always show with add option */}
+            <CollapsibleCard title="Photos & Media" icon={Camera}>
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {(incident.media_urls || []).filter(url => url && url.length > 0).map((url, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => { setLightboxIndex(idx); setShowLightbox(true); }}
+                      className="shrink-0 rounded-lg overflow-hidden border hover:ring-2 hover:ring-primary transition-all"
+                    >
+                      <img src={url} alt={`Photo ${idx + 1}`} className="h-24 w-24 object-cover" />
+                    </button>
+                  ))}
+                  {!isLocked && (
+                    <label className="shrink-0 h-24 w-24 rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
+                      <Camera className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground mt-1">Add</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => {
+                          const files = e.target.files;
+                          if (!files) return;
+                          Array.from(files).slice(0, 5).forEach((file) => {
+                            if (file.size > 10 * 1024 * 1024) return;
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              const existing = incident.media_urls || [];
+                              updateIncident(incidentId, { media_urls: [...existing, reader.result as string], updated_at: new Date().toISOString() });
+                            };
+                            reader.readAsDataURL(file);
+                          });
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+                {(!incident.media_urls || incident.media_urls.length === 0) && (
+                  <p className="text-xs text-muted-foreground text-center py-2">No photos attached</p>
+                )}
+            </CollapsibleCard>
+
+            {/* Investigation — triggered, only shows fields when started */}
+            {(!incident.investigation_status || incident.investigation_status === "not_started") ? (
+              !isLocked && canEdit && (
+                <div className="flex items-center justify-between rounded-lg border border-dashed p-4">
+                  <div>
+                    <p className="text-sm font-medium">Investigation</p>
+                    <p className="text-xs text-muted-foreground">Start an investigation to document root cause and contributing factors</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      updateIncident(incidentId, {
+                        investigation_status: "in_progress",
+                        investigator_id: authUser?.id || null,
+                        updated_at: new Date().toISOString(),
+                      });
+                      toast("Investigation started");
+                    }}
+                  >
+                    Start Investigation
+                  </Button>
+                </div>
+              )
+            ) : (
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-base">Investigation</CardTitle>
+                      <Badge variant={incident.investigation_status === "completed" ? "success" : "warning"}>
+                        {incident.investigation_status === "completed" ? "Completed" : "In Progress"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {canEdit && !isLocked && !investigationEditing && (
+                        <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => {
+                          setInvDraft({
+                            rootCause: incident.root_cause || "",
+                            factors: (incident.contributing_factors || []).join("\n"),
+                            findings: incident.resolution_notes || "",
+                          });
+                          setInvestigationEditing(true);
+                        }}>
+                          <Pencil className="h-3 w-3" /> Edit
+                        </Button>
+                      )}
+                      {canEdit && incident.investigation_status !== "completed" && !investigationEditing && (
+                        <Button variant="outline" size="sm" className="text-xs" onClick={() => {
+                          updateIncident(incidentId, { investigation_status: "completed", updated_at: new Date().toISOString() });
+                          toast("Investigation marked complete");
+                        }}>
+                          Mark Complete
+                        </Button>
+                      )}
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Investigator */}
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground shrink-0">Investigator</Label>
+                    <select
+                      value={incident.investigator_id || authUser?.id || ""}
+                      onChange={(e) => updateIncident(incidentId, { investigator_id: e.target.value, updated_at: new Date().toISOString() })}
+                      disabled={isLocked}
+                      className="rounded-md border border-input bg-background px-2 py-1 text-xs flex-1"
+                    >
+                      {users.map((u) => (
+                        <option key={u.id} value={u.id}>{u.full_name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {investigationEditing ? (
+                    <>
+                      <div className="space-y-1.5">
+                        <Label className="text-sm">Root Cause</Label>
+                        <Textarea value={invDraft.rootCause} onChange={(e) => setInvDraft({ ...invDraft, rootCause: e.target.value })} placeholder="What was the underlying cause?" rows={3} className="border-2 border-border" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-sm">Contributing Factors</Label>
+                        <Textarea value={invDraft.factors} onChange={(e) => setInvDraft({ ...invDraft, factors: e.target.value })} placeholder="One per line..." rows={3} className="border-2 border-border" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-sm">Findings Summary</Label>
+                        <Textarea value={invDraft.findings} onChange={(e) => setInvDraft({ ...invDraft, findings: e.target.value })} placeholder="Summarize findings and recommendations..." rows={3} className="border-2 border-border" />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setInvestigationEditing(false)}>Cancel</Button>
+                        <Button size="sm" onClick={() => {
+                          updateIncident(incidentId, {
+                            root_cause: invDraft.rootCause,
+                            contributing_factors: invDraft.factors.split("\n").filter(f => f.trim()),
+                            resolution_notes: invDraft.findings,
+                            updated_at: new Date().toISOString(),
+                          });
+                          setInvestigationEditing(false);
+                          toast("Investigation saved");
+                        }}>Save</Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Root Cause</p>
+                        <p className="text-sm rounded-md border bg-muted/30 p-2.5">{incident.root_cause || "Not documented yet"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Contributing Factors</p>
+                        <p className="text-sm rounded-md border bg-muted/30 p-2.5">{(incident.contributing_factors || []).join(", ") || "None identified yet"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Findings Summary</p>
+                        <p className="text-sm rounded-md border bg-muted/30 p-2.5">{incident.resolution_notes || "Not documented yet"}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Evidence attachments */}
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">Evidence</Label>
+                    {incident.documents && incident.documents.filter(d => d.category === "investigation").length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {incident.documents.filter(d => d.category === "investigation").map((doc) => (
+                          <a key={doc.id} href={doc.url} download={doc.name} className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs hover:bg-muted transition-colors">
+                            {doc.type?.startsWith("image/") ? (
+                              <img src={doc.url} alt={doc.name} className="h-8 w-8 rounded object-cover" />
+                            ) : (
+                              <FileText className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <span className="truncate max-w-[120px]">{doc.name}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {canEdit && !isLocked && (
+                      <label className="inline-flex items-center gap-1.5 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground cursor-pointer hover:bg-muted/50 transition-colors">
+                        <Plus className="h-3.5 w-3.5" />
+                        Add evidence
+                        <input type="file" accept="image/*,.pdf" multiple className="hidden" onChange={(e) => {
+                          const files = e.target.files;
+                          if (!files) return;
+                          Array.from(files).slice(0, 5).forEach((file) => {
+                            if (file.size > 10 * 1024 * 1024) return;
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              const doc = { id: crypto.randomUUID(), name: file.name, url: reader.result as string, type: file.type, category: "investigation" as const, uploaded_by: authUser?.id || "", uploaded_at: new Date().toISOString() };
+                              updateIncident(incidentId, { documents: [...(incident.documents || []), doc], updated_at: new Date().toISOString() });
+                            };
+                            reader.readAsDataURL(file);
+                          });
+                          e.target.value = "";
+                        }} />
+                      </label>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Body map — injury incidents only */}
             {incident.type === "injury" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Injury location</CardTitle>
-                </CardHeader>
-                <CardContent>
+              <CollapsibleCard title="Injury location">
                   {(incident.injury_locations && incident.injury_locations.length > 0) ? (
                     <BodyMap
                       markers={incident.injury_locations}
@@ -580,15 +811,10 @@ export default function IncidentDetailPage() {
                       readOnly={isLocked}
                     />
                   )}
-                </CardContent>
-              </Card>
+              </CollapsibleCard>
             )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Incident Details</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <CollapsibleCard title="Incident Details">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="h-5 w-5 text-muted-foreground mt-0.5" />
@@ -713,15 +939,10 @@ export default function IncidentDetailPage() {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+            </CollapsibleCard>
 
             {/* Location Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">{t("incidents.labels.location")}</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <CollapsibleCard title={t("incidents.labels.location")} icon={MapPin}>
                 <div className="space-y-4">
                   {/* Resolved location from location_id */}
                   {location && (
@@ -779,8 +1000,7 @@ export default function IncidentDetailPage() {
                     <p className="text-sm text-muted-foreground">No location data captured</p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+            </CollapsibleCard>
 
             {/* Related Asset */}
             {incident.asset_id && (
@@ -804,47 +1024,65 @@ export default function IncidentDetailPage() {
                 </CardContent>
               </Card>
             )}
-
-            {/* Actions Summary - Quick view of action progress */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">Actions Progress</CardTitle>
-                <Button size="sm" variant="outline" className="gap-1" onClick={() => setActiveTab("actions")}>
-                  View All
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Completed</span>
-                    <span className="font-medium">{completedActions} of {totalActions}</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-success h-2 rounded-full transition-all" 
-                      style={{ width: totalActions > 0 ? `${(completedActions / totalActions) * 100}%` : "0%" }}
-                    />
-                  </div>
-                  {canResolveIncident && totalActions > 0 ? (
-                    <p className="text-sm text-success flex items-center gap-1">
-                      <CheckCircle className="h-4 w-4" /> Corrective follow-up is complete - incident can be closed
-                    </p>
-                  ) : totalActions === 0 ? (
-                    <p className="text-sm text-muted-foreground">No actions created yet</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {openCorrectiveActionCount > 0
-                        ? `${openCorrectiveActionCount} corrective action(s) still block closure`
-                        : `${totalActions - completedActions} action(s) pending`}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Status Control */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Status</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <select
+                  value={incident.status}
+                  onChange={(e) => {
+                    const value = e.target.value as typeof incident.status;
+                    if (value === "closed") {
+                      setShowCloseModal(true);
+                      return;
+                    }
+                    updateIncident(incidentId, {
+                      status: value,
+                      resolved_at: value === "resolved" ? new Date().toISOString() : incident.resolved_at,
+                      resolved_by: value === "resolved" ? (authUser?.id || incident.resolved_by) : incident.resolved_by,
+                      updated_at: new Date().toISOString(),
+                    });
+                    toast(`Status changed to ${value.replace("_", " ")}`);
+                  }}
+                  disabled={isLocked || !canEdit}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="new">New</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="in_review">In Review</option>
+                  <option value="stalled">Stalled</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-muted-foreground">Priority</p>
+                    <p className="font-medium capitalize">{incident.priority}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Reporter</p>
+                    <p className="font-medium">{reporterName}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Created</p>
+                    <p className="font-medium">{formatDate(new Date(incident.created_at))}</p>
+                  </div>
+                  {incident.resolved_at && (
+                    <div>
+                      <p className="text-muted-foreground">Resolved</p>
+                      <p className="font-medium">{formatDate(new Date(incident.resolved_at))}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Assigned To</CardTitle>
@@ -1031,43 +1269,56 @@ export default function IncidentDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Follow-up tickets */}
+            {/* Linked Tasks */}
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">Follow-up tickets</CardTitle>
+                  <CardTitle className="text-sm">Linked Tasks</CardTitle>
                   {!isLocked && (
                     <Button
                       variant="outline"
                       size="sm"
                       className="h-7 text-xs gap-1"
                       onClick={() => {
-                        const ticketId = crypto.randomUUID();
+                        const taskId = crypto.randomUUID();
                         addTicket({
-                          id: ticketId,
+                          id: taskId,
                           company_id: incident.company_id,
                           title: `Follow-up: ${incident.title}`,
                           description: "",
                           priority: incident.priority,
                           status: "new",
                           due_date: null,
-                          assigned_to: incident.assigned_to || null,
+                          assigned_to: authUser?.id || incident.assigned_to || null,
                           assigned_groups: [],
                           incident_ids: [incidentId],
                           created_by: authUser?.id || "",
                           created_at: new Date().toISOString(),
                           updated_at: new Date().toISOString(),
                         });
-                        toast("Ticket created");
-                        router.push(`/${company}/dashboard/tickets/${ticketId}`);
+                        toast("Task created and linked");
                       }}
                     >
-                      <Plus className="h-3 w-3" /> Create
+                      <Plus className="h-3 w-3" /> Create Task
                     </Button>
                   )}
                 </div>
               </CardHeader>
               <CardContent>
+                {relatedTickets.length > 0 && (
+                  <div className="mb-3 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Progress</span>
+                      <span className="font-medium">{relatedTickets.filter(t => t.status === "resolved" || t.status === "closed").length}/{relatedTickets.length}</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-1.5">
+                      <div
+                        className="bg-primary h-1.5 rounded-full transition-all"
+                        style={{ width: `${relatedTickets.length > 0 ? Math.round((relatedTickets.filter(t => t.status === "resolved" || t.status === "closed").length / relatedTickets.length) * 100) : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
                 {relatedTickets.length > 0 ? (
                   <div className="space-y-2">
                     {relatedTickets.map((ticket) => (
@@ -1087,7 +1338,7 @@ export default function IncidentDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">No tickets linked</p>
+                  <p className="text-xs text-muted-foreground">No tasks linked yet</p>
                 )}
               </CardContent>
             </Card>
@@ -1102,20 +1353,70 @@ export default function IncidentDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="relative space-y-0">
-              {timelineEvents.map((event, idx) => (
-                <div key={event.id} className="flex gap-4 pb-6">
-                  <div className="flex flex-col items-center">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <Clock className="h-4 w-4" />
+              {(() => {
+                const events: Array<{ id: string; date: string; label: string; detail: string; type: string }> = [];
+                
+                // Core lifecycle events
+                events.push({ id: "created", date: incident.created_at, label: "Incident reported", detail: `Reported by ${reporterName}`, type: "create" });
+                
+                if (incident.assigned_to) {
+                  const assignee = users.find(u => u.id === incident.assigned_to);
+                  events.push({ id: "assigned", date: incident.updated_at, label: "Assigned", detail: `Assigned to ${assignee?.full_name || "someone"}`, type: "assign" });
+                }
+                
+                // Investigation events
+                if (incident.investigation_status === "in_progress" || incident.investigation_status === "completed") {
+                  const investigator = incident.investigator_id ? users.find(u => u.id === incident.investigator_id)?.full_name : "Investigator";
+                  events.push({ id: "inv_start", date: incident.updated_at, label: "Investigation started", detail: `${investigator || "Someone"} began investigating`, type: "investigation" });
+                }
+                if (incident.investigation_status === "completed") {
+                  events.push({ id: "inv_done", date: incident.updated_at, label: "Investigation completed", detail: incident.root_cause ? `Root cause: ${incident.root_cause.slice(0, 80)}${incident.root_cause.length > 80 ? "..." : ""}` : "Findings documented", type: "investigation" });
+                }
+                
+                // Task events
+                relatedTickets.forEach((ticket) => {
+                  events.push({ id: `task_${ticket.id}`, date: ticket.created_at, label: "Task created", detail: ticket.title, type: "task" });
+                  if (ticket.status === "resolved" || ticket.status === "closed") {
+                    events.push({ id: `task_done_${ticket.id}`, date: ticket.updated_at, label: "Task completed", detail: ticket.title, type: "task_done" });
+                  }
+                });
+                
+                // Comments
+                (incident.comments || []).forEach((c) => {
+                  events.push({ id: c.id, date: c.date, label: `${c.user} commented`, detail: c.text.slice(0, 100) + (c.text.length > 100 ? "..." : ""), type: "comment" });
+                });
+                
+                // Resolution
+                if (incident.resolved_at) {
+                  events.push({ id: "resolved", date: incident.resolved_at, label: "Resolved", detail: "Incident marked as resolved", type: "resolve" });
+                }
+                if (incident.status === "closed") {
+                  events.push({ id: "closed", date: incident.updated_at, label: "Closed", detail: incident.closure_reason || "Incident closed", type: "close" });
+                }
+                
+                return events
+                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                  .map((event, idx, arr) => (
+                    <div key={event.id} className="flex gap-4 pb-6">
+                      <div className="flex flex-col items-center">
+                        <div className={cn(
+                          "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold",
+                          (event.type === "resolve" || event.type === "close" || event.type === "task_done")
+                            ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-muted text-muted-foreground",
+                        )}>
+                          <Clock className="h-3.5 w-3.5" />
+                        </div>
+                        {idx < arr.length - 1 && <div className="w-px flex-1 bg-border mt-2" />}
+                      </div>
+                      <div className="flex-1 pt-1">
+                        <p className="text-sm font-medium">{event.label}</p>
+                        <p className="text-xs text-muted-foreground">{event.detail}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{formatDate(new Date(event.date))}</p>
+                      </div>
                     </div>
-                    {idx < timelineEvents.length - 1 && <div className="w-px flex-1 bg-border mt-2" />}
-                  </div>
-                  <div className="flex-1 pt-1">
-                    <p className="font-medium">{event.description}</p>
-                    <p className="text-sm text-muted-foreground">{event.user} • {formatDate(new Date(event.date), { dateStyle: "medium", timeStyle: "short" })}</p>
-                  </div>
-                </div>
-              ))}
+                  ));
+              })()}
             </div>
           </CardContent>
         </Card>
@@ -1632,7 +1933,7 @@ export default function IncidentDetailPage() {
         </div>
       )}
 
-      {activeTab === "actions" && (
+      {activeTab === "tasks" && (
         <div className="space-y-6">
           {/* Summary */}
           <Card>
@@ -1915,6 +2216,27 @@ export default function IncidentDetailPage() {
                       <span className="text-xs text-muted-foreground">{formatDate(new Date(comment.date))}</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">{comment.text}</p>
+                    {comment.mentionedUserIds && comment.mentionedUserIds.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {comment.mentionedUserIds.map((uid) => {
+                          const u = users.find((x) => x.id === uid);
+                          return u ? <span key={uid} className="text-xs text-primary font-medium">@{u.full_name}</span> : null;
+                        })}
+                      </div>
+                    )}
+                    {comment.attachments && comment.attachments.length > 0 && (
+                      <div className="flex gap-2 mt-2">
+                        {comment.attachments.map(att => (
+                          att.type.startsWith("image/") ? (
+                            <img key={att.id} src={att.url} alt={att.name} className="h-16 w-16 rounded border object-cover" />
+                          ) : (
+                            <a key={att.id} href={att.url} download={att.name} className="flex items-center gap-1 rounded border px-2 py-1 text-xs hover:bg-muted">
+                              <FileText className="h-3 w-3" /> {att.name}
+                            </a>
+                          )
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1925,7 +2247,97 @@ export default function IncidentDetailPage() {
                   {authUser?.full_name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "?"}
                 </div>
                 <div className="flex-1 space-y-2">
-                  <Textarea placeholder={t("incidents.placeholders.addComment")} value={newComment} onChange={(e) => setNewComment(e.target.value)} rows={3} />
+                  <Textarea placeholder={t("incidents.placeholders.addComment")} value={newComment} onChange={(e) => setNewComment(e.target.value)} rows={3} className="border-2 border-border" />
+                  {/* Tagged users */}
+                  {commentTaggedUsers.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {commentTaggedUsers.map((uid) => {
+                        const u = users.find((x) => x.id === uid);
+                        return u ? (
+                          <span key={uid} className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium">
+                            @{u.full_name}
+                            <button type="button" onClick={() => setCommentTaggedUsers((prev) => prev.filter((id) => id !== uid))} className="hover:text-primary/70">
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    {/* Tag person */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowTagPicker(!showTagPicker)}
+                        className="cursor-pointer text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 border rounded px-2 py-1"
+                      >
+                        <User className="h-3 w-3" /> Tag
+                      </button>
+                      {showTagPicker && (
+                        <div className="absolute bottom-full mb-1 left-0 z-20 w-56 rounded-lg border bg-popover shadow-lg max-h-48 overflow-y-auto">
+                          <div className="p-2">
+                            <input
+                              type="text"
+                              placeholder="Search users..."
+                              value={tagSearch}
+                              onChange={(e) => setTagSearch(e.target.value)}
+                              className="w-full rounded-md border px-2 py-1 text-xs mb-1"
+                              autoFocus
+                            />
+                          </div>
+                          {users
+                            .filter((u) => {
+                              // Only show users who can view incidents
+                              const viewableRoles = ["super_admin", "company_admin", "manager", "safety_officer", "employee"];
+                              if (!viewableRoles.includes(u.role)) return false;
+                              if (commentTaggedUsers.includes(u.id)) return false;
+                              if (tagSearch && !u.full_name.toLowerCase().includes(tagSearch.toLowerCase())) return false;
+                              return true;
+                            })
+                            .slice(0, 8)
+                            .map((u) => (
+                              <button
+                                key={u.id}
+                                type="button"
+                                onClick={() => {
+                                  setCommentTaggedUsers((prev) => [...prev, u.id]);
+                                  setShowTagPicker(false);
+                                  setTagSearch("");
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left hover:bg-muted transition-colors"
+                              >
+                                <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[9px] font-medium shrink-0">
+                                  {u.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                                </div>
+                                <span>{u.full_name}</span>
+                                <span className="text-muted-foreground capitalize ml-auto">{u.role.replace("_", " ")}</span>
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                    {/* Attach file */}
+                    <label className="cursor-pointer text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 border rounded px-2 py-1">
+                      <Upload className="h-3 w-3" /> Attach
+                      <input type="file" multiple accept="image/*,.pdf,.doc,.docx" className="hidden" onChange={handleCommentFileUpload} />
+                    </label>
+                    {commentAttachments.length > 0 && (
+                      <span className="text-xs text-muted-foreground">{commentAttachments.length} file(s)</span>
+                    )}
+                  </div>
+                  {commentAttachments.length > 0 && (
+                    <div className="flex gap-2 flex-wrap">
+                      {commentAttachments.map(att => (
+                        <div key={att.id} className="flex items-center gap-1 rounded border px-2 py-1 text-xs">
+                          {att.name}
+                          <button type="button" onClick={() => setCommentAttachments(prev => prev.filter(a => a.id !== att.id))} className="text-muted-foreground hover:text-foreground">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <Button 
                     size="sm" 
                     disabled={!newComment.trim()}
@@ -1938,9 +2350,13 @@ export default function IncidentDetailPage() {
                         text: newComment.trim(),
                         date: new Date().toISOString(),
                         avatar: authUser?.full_name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "?",
+                        attachments: commentAttachments.length > 0 ? commentAttachments : undefined,
+                        mentionedUserIds: commentTaggedUsers.length > 0 ? commentTaggedUsers : undefined,
                       };
                       addComment(comment);
                       setNewComment("");
+                      setCommentAttachments([]);
+                      setCommentTaggedUsers([]);
                       toast("Comment posted.", "success");
                     }}
                   >
@@ -1955,36 +2371,7 @@ export default function IncidentDetailPage() {
 
       {activeTab === "documents" && (
         <div className="space-y-6">
-          {/* Photos & Media from incident report */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <ImageIcon className="h-4 w-4" />
-                Photos & Media
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {incident.media_urls && incident.media_urls.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {incident.media_urls.map((url, idx) => (
-                    <div key={idx} className="aspect-square rounded-lg bg-muted border overflow-hidden">
-                      {url.startsWith("data:image") ? (
-                        <img src={url} alt={`Photo ${idx + 1}`} className="h-full w-full object-cover" loading="lazy" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center">
-                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No photos attached</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Documents */}
+          {/* Documents only — PDFs, compliance docs, etc. */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
@@ -1998,7 +2385,7 @@ export default function IncidentDetailPage() {
                 ref={documentsInputRef}
                 type="file"
                 className="hidden"
-                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
                 multiple
                 onChange={async (e) => {
                   const files = Array.from(e.target.files || []);
@@ -2045,7 +2432,7 @@ export default function IncidentDetailPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{doc.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {(doc.size / 1024).toFixed(1)} KB • {doc.uploadedBy}
+                          {((doc.size || 0) / 1024).toFixed(1)} KB • {doc.uploadedBy || doc.uploaded_by || "Unknown"}
                         </p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
@@ -2122,6 +2509,7 @@ export default function IncidentDetailPage() {
                   <option value="in_progress">In Progress</option>
                   <option value="in_review">In Review</option>
                   <option value="resolved" disabled={!canResolveIncident}>Resolved{!canResolveIncident ? " (blocked)" : ""}</option>
+                  <option value="closed">Closed</option>
                 </select>
                 {!canResolveIncident && (
                   <p className="mt-2 text-sm text-destructive">
@@ -2249,6 +2637,63 @@ export default function IncidentDetailPage() {
             setViewerImage(null);
           } : undefined}
         />
+      )}
+
+      {/* Lightbox */}
+      {showLightbox && incident.media_urls && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={() => setShowLightbox(false)}>
+          <button className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2" onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => Math.max(0, i - 1)); }}>
+            <ChevronLeft className="h-8 w-8" />
+          </button>
+          <img
+            src={incident.media_urls.filter(url => url.startsWith("data:image"))[lightboxIndex]}
+            alt="Photo"
+            className="max-h-[85vh] max-w-[85vw] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2" onClick={(e) => { e.stopPropagation(); const photos = incident.media_urls!.filter(url => url.startsWith("data:image")); setLightboxIndex((i) => Math.min(photos.length - 1, i + 1)); }}>
+            <ChevronRight className="h-8 w-8" />
+          </button>
+          <button className="absolute top-4 right-4 text-white/70 hover:text-white p-2" onClick={() => setShowLightbox(false)}>
+            <X className="h-6 w-6" />
+          </button>
+          <p className="absolute bottom-4 text-white/50 text-sm">{lightboxIndex + 1} / {incident.media_urls.filter(url => url.startsWith("data:image")).length}</p>
+        </div>
+      )}
+
+      {/* Close Incident Modal */}
+      {showCloseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-background rounded-xl border shadow-2xl max-w-md w-full mx-4 p-6">
+            <h3 className="font-semibold text-lg mb-2">Close Incident</h3>
+            <p className="text-sm text-muted-foreground mb-4">Please provide a reason for closing this incident. This is required for compliance records.</p>
+            <Textarea
+              value={closeReason}
+              onChange={(e) => setCloseReason(e.target.value)}
+              placeholder="Enter closure reason..."
+              rows={3}
+              className="mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setShowCloseModal(false); setCloseReason(""); }}>Cancel</Button>
+              <Button
+                disabled={!closeReason.trim()}
+                onClick={() => {
+                  updateIncident(incidentId, {
+                    status: "closed",
+                    closure_reason: closeReason.trim(),
+                    resolved_at: new Date().toISOString(),
+                    resolved_by: authUser?.id || null,
+                    updated_at: new Date().toISOString(),
+                  });
+                  setShowCloseModal(false);
+                  setCloseReason("");
+                  toast("Incident closed");
+                }}
+              >Close Incident</Button>
+            </div>
+          </div>
+        </div>
       )}
     </RoleGuard>
   );

@@ -19,9 +19,12 @@ import {
   Wrench,
   ClipboardCheck,
   ScanLine,
+  X,
+  ArrowUpDown,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useLocationsStore } from "@/stores/locations-store";
@@ -31,6 +34,7 @@ import { useTranslation } from "@/i18n";
 import { LoadingPage } from "@/components/ui/loading";
 import { NoDataEmptyState } from "@/components/ui/empty-state";
 import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
+import { QuickActionFAB } from "@/components/ui/quick-action-fab";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ComponentType<{ className?: string }> }> = {
   active: { color: "text-success", icon: CheckCircle },
@@ -59,6 +63,7 @@ export default function EmployeeAssetsPage() {
   });
   const [search, setSearch] = React.useState("");
   const [browseSearch, setBrowseSearch] = React.useState("");
+  const [browseSearchOpen, setBrowseSearchOpen] = React.useState(false);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
 
@@ -159,7 +164,7 @@ export default function EmployeeAssetsPage() {
                 <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span className="truncate">{tab.label}</span>
                 {tab.count ? (
-                  <span className="ml-1 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">{tab.count}</span>
+                  <span className="ml-0.5 h-2 w-2 rounded-full bg-blue-500 shrink-0" />
                 ) : null}
               </button>
             );
@@ -172,61 +177,60 @@ export default function EmployeeAssetsPage() {
         <div>
           {/* Filters bar */}
           <div className="px-4 pt-3 pb-2 space-y-2">
-            {/* Search within browse + scan button */}
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder={t("assets.placeholders.searchByNameSerialTag")}
+            {/* Search — toggle */}
+            {browseSearchOpen && (
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                <Input
                   value={browseSearch}
-                  onChange={e => setBrowseSearch(e.target.value)}
-                  className="w-full rounded-lg border bg-muted/50 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  onChange={(e) => setBrowseSearch(e.target.value)}
+                  placeholder={t("assets.placeholders.searchByNameSerialTag")}
+                  className="h-8 pl-8 pr-8 text-sm"
+                  autoFocus
                 />
+                <button type="button" onClick={() => { setBrowseSearchOpen(false); setBrowseSearch(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </div>
-              <Link
-                href={`/${company}/app/scan`}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                aria-label="Scan QR code"
-              >
-                <ScanLine className="h-4.5 w-4.5" />
-              </Link>
-            </div>
+            )}
 
-            {/* Filter chips */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {/* Status filter */}
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="all">{t("assets.allStatuses")}</option>
-                {["active", "maintenance", "inactive", "retired"].map(s => (
-                  <option key={s} value={s}>{t(`assets.statuses.${s}`)}</option>
-                ))}
-              </select>
-
-              {/* Category filter */}
-              <select
-                value={categoryFilter}
-                onChange={e => setCategoryFilter(e.target.value)}
-                className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="all">{t("assets.allCategories")}</option>
-                {categories.map(c => (
-                  <option key={c} value={c}>{c.replace(/_/g, " ")}</option>
-                ))}
-              </select>
-
-              {(statusFilter !== "all" || categoryFilter !== "all") && (
+            {/* Filter pills + Sort + Scan */}
+            <div className="flex items-center gap-2">
+              {!browseSearchOpen && (
                 <button
-                  onClick={() => { setStatusFilter("all"); setCategoryFilter("all"); }}
-                  className="text-xs text-primary font-medium whitespace-nowrap px-2"
+                  type="button"
+                  onClick={() => setBrowseSearchOpen(true)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Search"
                 >
-                  {t("common.clear")}
+                  <Search className="h-4 w-4" />
                 </button>
               )}
+              {[
+                { value: "all", label: t("common.all") || "All" },
+                { value: "active", label: t("assets.statuses.active") || "Active" },
+                { value: "maintenance", label: t("assets.statuses.maintenance") || "Maintenance" },
+                { value: "inactive", label: t("assets.statuses.inactive") || "Inactive" },
+              ].map((filter) => (
+                <button
+                  key={filter.value}
+                  onClick={() => setStatusFilter(filter.value)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 ${
+                    statusFilter === filter.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+              <Link
+                href={`/${company}/app/scan`}
+                className="ml-auto p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                aria-label="Scan QR code"
+              >
+                <ScanLine className="h-4 w-4" />
+              </Link>
             </div>
           </div>
 
@@ -361,14 +365,13 @@ export default function EmployeeAssetsPage() {
         </div>
       )}
 
-      {/* Scan FAB — always visible above bottom tabs */}
-      <Link
-        href={`/${company}/app/scan`}
-        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
-        aria-label="Scan asset QR code"
-      >
-        <ScanLine className="h-6 w-6" />
-      </Link>
+      {/* Assets FAB */}
+      <QuickActionFAB
+        actions={[
+          { id: "scan", label: "Scan QR Code", icon: ScanLine, href: `/${company}/app/scan` },
+          { id: "browse", label: "Add New Asset", icon: Plus, href: `/${company}/app/assets/new` },
+        ]}
+      />
     </div>
   );
 }

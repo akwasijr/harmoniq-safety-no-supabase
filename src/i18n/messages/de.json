@@ -198,7 +198,12 @@
     "low": "Niedrig",
     "medium": "Mittel",
     "high": "Hoch",
-    "critical": "Kritisch"
+    "critical": "Kritisch",
+    "slipTripFall": "Ausrutschen / Stolpern / Fallen",
+    "healthIllness": "Gesundheit / Krankheit",
+    "maintenanceRequest": "Wartungsanfrage",
+    "vehicleIncident": "Fahrzeugunfall",
+    "spillLeak": "Verschüttung / Leck"
   },
   "profile": {
     "contactInfo": "Contact information",
@@ -3239,7 +3244,7 @@
   },
   "focusStrip": {
     "title": "Fokusleiste",
-    "fieldFocus": "Feldfokus",
+    "fieldFocus": "Auf einen Blick",
     "urgent": "Dringend",
     "upcoming": "Bevorstehend",
     "goodToKnow": "Gut zu Wissen",

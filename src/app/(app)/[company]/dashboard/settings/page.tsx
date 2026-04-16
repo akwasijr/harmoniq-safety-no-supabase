@@ -224,7 +224,7 @@ export default function SettingsPage() {
         shape: nextSettings.fieldApp?.shape,
         shadow: nextSettings.fieldApp?.shadow,
       },
-      resolvedTheme || "light",
+      resolvedTheme || "dark",
     );
     applyDocumentLanguage(nextSettings.language);
   }, [activeCompany, resolvedTheme, toast]);
@@ -244,7 +244,7 @@ export default function SettingsPage() {
           shape: settings.fieldApp?.shape,
           shadow: settings.fieldApp?.shadow,
         },
-        resolvedTheme || "light",
+        resolvedTheme || "dark",
       );
       applyDocumentLanguage(settings.language);
     }

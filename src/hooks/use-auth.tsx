@@ -12,7 +12,7 @@ import { getPlatformSlugs } from "@/lib/platform-config";
 import type { User, Company, Permission, UserRole, CompanyRole } from "@/types";
 
 const MOCK_AUTH_KEY = "harmoniq_mock_user_email";
-const IS_MOCK_MODE = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true" && !hasSupabasePublicEnv();
+const IS_MOCK_MODE = process.env.NEXT_PUBLIC_ENABLE_MOCK_MODE === "true";
 
 const LEGACY_SESSION_STORAGE_KEY = "harmoniq_auth_session";
 const LEGACY_PROFILE_STORAGE_KEY = "harmoniq_auth_profile";
@@ -398,7 +398,7 @@ export function mockLogin(email: string): User | null {
     last_name: "",
     full_name: email.split("@")[0],
     role: "company_admin" as const,
-    company_id: "",
+    company_id: "comp_1",
     status: "active",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),

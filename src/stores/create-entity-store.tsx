@@ -11,6 +11,7 @@ import { subscribeToRealtimeInvalidation } from "@/lib/supabase/realtime-invalid
 // Persists across Provider re-mounts so tab navigation never re-fetches
 // fresh data from Supabase unless stale.
 const globalLoadedCache = new Map<string, number>();
+const globalFailedTables = new Set<string>();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 function isCacheFresh(key: string): boolean {
@@ -241,6 +242,14 @@ export function createEntityStore<T extends IdEntity>(
     const ensureLoaded = React.useCallback(() => {
       if (!isSupabaseConfigured) return;
       if (isFetchingRef.current) return;
+      // Skip tables that have already failed (404 / missing)
+      if (globalFailedTables.has(table)) {
+        if (!hasLoadedRef.current) {
+          setIsLoading(false);
+          hasLoadedRef.current = true;
+        }
+        return;
+      }
       // Defer fetch if writes are in flight to avoid overwriting optimistic data
       if (writeInFlightRef.current > 0) return;
       // Skip fetch entirely if cache is fresh
@@ -257,9 +266,9 @@ export function createEntityStore<T extends IdEntity>(
 
       const fetchData = async () => {
         try {
-          // 10-second timeout to prevent infinite loading
+          // 3-second timeout to prevent slow loading
           const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 10_000);
+          const timeout = setTimeout(() => controller.abort(), 3_000);
 
           const { data, error } = await supabase
             .from(table)
@@ -276,6 +285,7 @@ export function createEntityStore<T extends IdEntity>(
               return;
             }
             if (opts.allowMissingTable && isMissingSupabaseTable(error.message)) {
+              globalFailedTables.add(table);
               if (isMountedRef.current) {
                 setError(null);
                 const cached = loadFromStorage<T[]>(storageKey, []);
@@ -287,6 +297,7 @@ export function createEntityStore<T extends IdEntity>(
             // Table might not exist in Supabase yet — downgrade to warning (not error)
             const isTableMissing = error.message?.includes("schema cache") || error.message?.includes("404");
             if (isTableMissing) {
+              globalFailedTables.add(table);
               console.warn(`[Harmoniq] Table "${table}" not found in Supabase — using localStorage only`);
             } else {
               console.error(`[Harmoniq] Error fetching ${table}:`, error.message);
@@ -342,7 +353,8 @@ export function createEntityStore<T extends IdEntity>(
             return;
           }
           if (opts.allowMissingTable && isMissingSupabaseTable(msg)) {
-            if (isMountedRef.current) {
+              globalFailedTables.add(table);
+              if (isMountedRef.current) {
               setError(null);
               const cached = loadFromStorage<T[]>(storageKey, []);
               setItems(cached);

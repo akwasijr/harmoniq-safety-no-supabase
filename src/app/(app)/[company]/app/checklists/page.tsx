@@ -48,9 +48,10 @@ import { useToast } from "@/components/ui/toast";
 import { isVisibleToFieldApp } from "@/lib/template-activation";
 import { getChecklistDueInfo, getFrequencyLabel, getDueChecklists } from "@/lib/checklist-due";
 import type { ChecklistTemplate, ChecklistSubmission, ChecklistResponse, User, Incident } from "@/types";
+import { QuickActionFAB } from "@/components/ui/quick-action-fab";
 
 type TabType = "incidents" | "checklists" | "risk-assessment" | "procedures";
-type SubTabType = "assigned" | "available" | "history";
+type SubTabType = "assigned" | "history";
 
 // Country-specific risk assessment forms
 const riskAssessmentForms = {
@@ -78,7 +79,7 @@ function ReportHistoryInline({ company, incidents, user, formatDate }: {
 }) {
   const myIncidents = React.useMemo(() => {
     if (!user) return incidents.slice(0, 20);
-    return incidents.filter((i) => i.reporter_id === user.id).slice(0, 20);
+    return incidents.filter((i) => i.reporter_id === user.id || i.assigned_to === user.id).slice(0, 20);
   }, [incidents, user]);
 
   if (myIncidents.length === 0) {
@@ -125,6 +126,7 @@ function EmployeeChecklistsPageContent() {
   const [activeTab, setActiveTab] = React.useState<TabType>(getInitialTab());
   const [subTab, setSubTab] = React.useState<SubTabType>("assigned");
   const [historySearch, setHistorySearch] = React.useState("");
+  const [historySearchOpen, setHistorySearchOpen] = React.useState(false);
   const [historyStatus, setHistoryStatus] = React.useState<string>("all");
   const [historySort, setHistorySort] = React.useState<"newest" | "oldest">("newest");
 
@@ -184,7 +186,7 @@ function EmployeeChecklistsPageContent() {
 
   const templates = checklistTemplates.filter(
     (template) =>
-      template.company_id === user?.company_id &&
+      (template.company_id === user?.company_id || template.company_id === "__built_in__") &&
       isVisibleToFieldApp(template),
   );
   const activeAssets = assets.filter((a) => a.status === "active");
@@ -290,36 +292,56 @@ function EmployeeChecklistsPageContent() {
   // Inline search/filter bar for history tabs
   const historySearchBar = (
     <div className="space-y-2 mb-3">
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-        <Input
-          value={historySearch}
-          onChange={(e) => setHistorySearch(e.target.value)}
-          placeholder="Search history..."
-          className="h-8 pl-8 text-sm"
-        />
-        {historySearch && (
-          <button type="button" onClick={() => setHistorySearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground">
+      {/* Search — toggle */}
+      {historySearchOpen && (
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Input
+            value={historySearch}
+            onChange={(e) => setHistorySearch(e.target.value)}
+            placeholder="Search history..."
+            className="h-8 pl-8 pr-8 text-sm"
+            autoFocus
+          />
+          <button type="button" onClick={() => { setHistorySearchOpen(false); setHistorySearch(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
             <X className="h-3.5 w-3.5" />
           </button>
-        )}
-      </div>
+        </div>
+      )}
+      {/* Filter pills + Sort */}
       <div className="flex items-center gap-2">
-        <select
-          value={historyStatus}
-          onChange={(e) => setHistoryStatus(e.target.value)}
-          className="h-7 rounded-md border bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        >
-          <option value="all">All statuses</option>
-          <option value="submitted">Submitted</option>
-          <option value="draft">Draft</option>
-          <option value="reviewed">Reviewed</option>
-          <option value="completed">Completed</option>
-        </select>
+        {!historySearchOpen && (
+          <button
+            type="button"
+            onClick={() => setHistorySearchOpen(true)}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Search"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+        )}
+        {[
+          { value: "all", label: "All" },
+          { value: "new", label: "Open" },
+          { value: "in_progress", label: "In Progress" },
+          { value: "resolved", label: "Resolved" },
+        ].map((filter) => (
+          <button
+            key={filter.value}
+            onClick={() => setHistoryStatus(filter.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 ${
+              historyStatus === filter.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {filter.label}
+          </button>
+        ))}
         <button
           type="button"
           onClick={() => setHistorySort((s) => s === "newest" ? "oldest" : "newest")}
-          className="flex items-center gap-1 rounded-md border bg-background px-2 h-7 text-xs text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 bg-muted text-muted-foreground ml-auto"
         >
           <ArrowUpDown className="h-3 w-3" />
           {historySort === "newest" ? "Newest" : "Oldest"}
@@ -372,7 +394,7 @@ function EmployeeChecklistsPageContent() {
       {activeTab !== "incidents" && (
         <div className="px-4 pt-2">
           <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
-            {(["assigned", "available", "history"] as SubTabType[]).map((st) => (
+            {(["assigned", "history"] as SubTabType[]).map((st) => (
               <button
                 key={st}
                 type="button"
@@ -382,9 +404,12 @@ function EmployeeChecklistsPageContent() {
                   subTab === st ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
                 )}
               >
-                {st === "assigned" ? t("checklists.tabs.assigned") : st === "available" ? t("checklists.tabs.available") : t("checklists.tabs.history")}
-                {st === "history" && checklistDraftCount > 0 && activeTab === "checklists" && (
-                  <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-amber-500 text-[8px] text-white flex items-center justify-center font-bold">{checklistDraftCount}</span>
+                {st === "assigned" ? t("checklists.tabs.assigned") : t("checklists.tabs.history")}
+                {st === "assigned" && subTab !== "assigned" && pendingTemplates.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
+                )}
+                {st === "history" && subTab !== "history" && checklistDraftCount > 0 && activeTab === "checklists" && (
+                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
                 )}
               </button>
             ))}
@@ -395,33 +420,16 @@ function EmployeeChecklistsPageContent() {
       {/* Content */}
       <div className="flex-1 px-4 pt-3 pb-20 space-y-1">
 
-        {/* INCIDENTS TAB — start report + history */}
+        {/* INCIDENTS TAB — history */}
         {activeTab === "incidents" && (
           <div className="space-y-3">
-            <Link
-              href={`/${company}/app/report`}
-              className="flex items-center gap-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 active:bg-primary/10 transition-colors"
-            >
-              <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Report an Incident</p>
-                <p className="text-xs text-muted-foreground">Tap to start a new incident report</p>
-              </div>
-            </Link>
             {historySearchBar}
             {(() => {
               const q = historySearch.toLowerCase();
-              const myIncidents = (user ? incidents.filter((i) => i.reporter_id === user.id) : incidents);
+              const myIncidents = (user ? incidents.filter((i) => i.reporter_id === user.id || i.assigned_to === user.id) : incidents);
               const filtered = myIncidents
                 .filter((inc) => {
-                  if (historyStatus !== "all") {
-                    if (historyStatus === "submitted" && inc.status !== "new") return false;
-                    if (historyStatus === "reviewed" && inc.status !== "resolved") return false;
-                    if (historyStatus === "draft" && inc.status !== "new") return false;
-                    if (historyStatus === "completed" && inc.status !== "resolved" && inc.status !== "archived") return false;
-                  }
+                  if (historyStatus !== "all" && inc.status !== historyStatus) return false;
                   if (q && !inc.title.toLowerCase().includes(q) && !inc.severity.toLowerCase().includes(q) && !inc.status.toLowerCase().includes(q)) return false;
                   return true;
                 })
@@ -465,20 +473,6 @@ function EmployeeChecklistsPageContent() {
                   <p className="text-sm font-medium truncate">{tpl.name}</p>
                   <p className="text-[10px] text-muted-foreground">{tpl.recurrence || "Daily"} · {tpl.items.length} items</p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              </Link>
-            ))}
-          </div>
-        )}
-        {activeTab === "checklists" && subTab === "available" && (
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground mb-2">Templates available to start</p>
-            {templates.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground"><ClipboardCheck className="h-7 w-7 mx-auto mb-2 opacity-30" /><p className="text-xs">No checklist templates available.</p></div>
-            ) : templates.filter((t) => t.category !== "risk_assessment").map((tpl) => (
-              <Link key={tpl.id} href={`/${company}/app/checklists/${tpl.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><ClipboardCheck className="h-4 w-4 text-primary" /></div>
-                <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{tpl.name}</p><p className="text-[10px] text-muted-foreground">{tpl.items.length} items</p></div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </Link>
             ))}
@@ -548,31 +542,6 @@ function EmployeeChecklistsPageContent() {
             ))}
           </div>
         )}
-        {activeTab === "risk-assessment" && subTab === "available" && (
-          <div className="space-y-2">
-            {(() => {
-              const fieldAppRA = templates.filter((t) => t.category === "risk_assessment" || t.category === "hazard_analysis");
-              return fieldAppRA.length === 0 ? (
-                <div className="py-8 text-center text-muted-foreground">
-                  <ShieldAlert className="h-7 w-7 mx-auto mb-2 opacity-30" />
-                  <p className="text-xs">No risk assessment templates activated.</p>
-                  <p className="text-[10px] mt-1">Ask your admin to publish risk assessment templates for the field app.</p>
-                </div>
-              ) : (
-                <>
-                  <p className="text-xs text-muted-foreground mb-2">Active risk assessment templates</p>
-                  {fieldAppRA.map((tpl) => (
-                    <Link key={tpl.id} href={`/${company}/app/checklists/${tpl.id}`} className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50">
-                      <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0"><ShieldAlert className="h-4 w-4 text-orange-500" /></div>
-                      <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{tpl.name}</p><p className="text-[10px] text-muted-foreground">{tpl.items.length} items</p></div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                    </Link>
-                  ))}
-                </>
-              );
-            })()}
-          </div>
-        )}
         {activeTab === "risk-assessment" && subTab === "history" && (
           <div className="space-y-2">
             {historySearchBar}
@@ -609,55 +578,6 @@ function EmployeeChecklistsPageContent() {
         )}
 
         {/* PROCEDURES TAB */}
-        {activeTab === "procedures" && subTab === "available" && (
-          <div className="space-y-3">
-            {activeProcedures.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground"><Layers className="h-8 w-8 mx-auto mb-2 opacity-40" /><p className="text-sm font-medium">No active procedures</p></div>
-            ) : activeProcedures.map((proc) => (
-              <div key={proc.id} className="rounded-xl border bg-card p-4 space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div><p className="text-sm font-semibold">{proc.name}</p>{proc.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{proc.description}</p>}</div>
-                  <Badge variant="secondary" className="text-[10px] shrink-0">{proc.steps.length} steps</Badge>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {proc.steps.map((step, idx) => (<Badge key={step.id} variant="outline" className="text-[10px] gap-1"><span className="font-semibold">{idx + 1}.</span><span className="truncate max-w-[120px]">{step.template_name}</span></Badge>))}
-                </div>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-[10px] text-muted-foreground capitalize">{proc.recurrence.replace(/_/g, " ")}</span>
-                  <button type="button" onClick={() => {
-                    const resolvedCid = user?.company_id || currentCompany?.id;
-                    if (!resolvedCid) { toast("Company not configured. Contact admin.", "error"); return; }
-                    const now = new Date().toISOString();
-                    const subId = `proc_sub_${crypto.randomUUID()}`;
-                    addProcedureSubmission({ id: subId, company_id: resolvedCid, procedure_template_id: proc.id, submitter_id: user?.id || "", location_id: null, status: "in_progress", current_step: 1, step_submissions: proc.steps.map((s) => ({ step_id: s.id, submission_id: null, status: "pending" as const, completed_at: null })), started_at: now, completed_at: null, next_due_date: null, created_at: now, updated_at: now });
-                    // Navigate to fill the first step — find activated template
-                    const firstStep = proc.steps[0];
-                    if (firstStep) {
-                      const allTpls = checklistTemplates;
-                      // Find activated template by source_template_id
-                      const activated = allTpls.find((t) => t.source_template_id === firstStep.template_id)
-                        || allTpls.find((t) => t.id === firstStep.template_id);
-                      if (activated) {
-                        router.push(`/${company}/app/checklists/${activated.id}`);
-                        return;
-                      }
-                      // Fallback: try known RA form IDs
-                      const knownRAForms = ["jha", "jsa", "rie", "arbowet", "sam", "osa"];
-                      const formIdMatch = knownRAForms.find((f) => firstStep.template_id.includes(f));
-                      if (firstStep.type === "risk_assessment" && formIdMatch) {
-                        router.push(`/${company}/app/risk-assessment/${formIdMatch}`);
-                        return;
-                      }
-                    }
-                    toast("Procedure started — activate the step templates first");
-                  }} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground active:scale-95 transition-transform">
-                    <Play className="h-3 w-3" />Start
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
         {activeTab === "procedures" && subTab === "assigned" && (
           <div className="space-y-2">
             {procedureSubmissionItems.filter((s) => s.submitter_id === user?.id && s.status === "in_progress").length === 0 ? (
@@ -732,6 +652,52 @@ function EmployeeChecklistsPageContent() {
         )}
 
       </div>
+
+      {/* Context-aware FAB */}
+      <QuickActionFAB
+        actions={(() => {
+          if (activeTab === "incidents") {
+            return [{
+              id: "report",
+              label: "Report Incident",
+              description: "Start a new incident report",
+              icon: AlertTriangle,
+              href: `/${company}/app/report`,
+            }];
+          }
+          if (activeTab === "checklists") {
+            return pendingTemplates
+              .filter((tpl) => tpl.category !== "risk_assessment")
+              .map((tpl) => ({
+                id: tpl.id,
+                label: tpl.name,
+                description: `${tpl.items.length} items · ${tpl.recurrence || "Daily"}`,
+                icon: ClipboardCheck,
+                href: `/${company}/app/checklists/${tpl.id}`,
+              }));
+          }
+          if (activeTab === "risk-assessment") {
+            const fieldAppRA = templates.filter((tpl) => tpl.category === "risk_assessment" || tpl.category === "hazard_analysis");
+            return fieldAppRA.map((tpl) => ({
+              id: tpl.id,
+              label: tpl.name,
+              description: `${tpl.items.length} items`,
+              icon: ShieldCheck,
+              href: `/${company}/app/checklists/${tpl.id}`,
+            }));
+          }
+          if (activeTab === "procedures") {
+            return activeProcedures.map((proc) => ({
+              id: proc.id,
+              label: proc.name,
+              description: `${proc.steps?.length || 0} steps`,
+              icon: FileCheck,
+              href: `/${company}/app/checklists/procedures/${proc.id}`,
+            }));
+          }
+          return [];
+        })()}
+      />
     </div>
   );
 }
