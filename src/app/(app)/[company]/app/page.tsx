@@ -739,7 +739,7 @@ export default function EmployeeAppHomePage() {
       </div>
 
       {/* ── Content Feed ── */}
-      <div className="px-4 pt-4 pb-24 space-y-1 home-section" style={{ animationDelay: "0s" }}>
+      <div className="px-4 pt-4 pb-20 space-y-1 home-section" style={{ animationDelay: "0s" }}>
 
         {/* Featured News Carousel */}
         {fieldAppSettings.newsEnabled && (
