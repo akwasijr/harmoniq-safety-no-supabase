@@ -154,7 +154,7 @@ export default function EmployeeAppRootLayout({
         uiStyle: currentCompany.ui_style,
         shape: shape as "square" | "small" | "medium" | "large" | undefined,
       },
-      resolvedTheme || "light"
+      resolvedTheme || "dark"
     );
 
     return () => {

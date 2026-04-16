@@ -73,7 +73,7 @@ export default function DashboardRootLayout({
         uiStyle: currentCompany.ui_style,
         shape: shape as "square" | "small" | "medium" | "large" | undefined,
       },
-      resolvedTheme || "light"
+      resolvedTheme || "dark"
     );
     return () => resetBranding();
   }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany]);
