@@ -33,6 +33,7 @@ import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useWorkerCertificationsStore } from "@/stores/worker-certifications-store";
 import { useTrainingAssignmentsStore } from "@/stores/training-assignments-store";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
+import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -386,6 +387,7 @@ export default function EmployeeAppHomePage() {
   const { items: trainingAssignments } = useTrainingAssignmentsStore();
   const { items: checklistTemplates } = useChecklistTemplatesStore();
   const { items: checklistSubmissions } = useChecklistSubmissionsStore();
+  const { items: riskEvaluations } = useRiskEvaluationsStore();
   const { t, formatDate } = useTranslation();
   const unreadMessages = useUnreadCommentCount();
 
@@ -493,6 +495,62 @@ export default function EmployeeAppHomePage() {
   const focusUrgent: FocusItem[] = [];
   const focusUpcoming: FocusItem[] = [];
   const focusGoodToKnow: FocusItem[] = [];
+
+  // ── Draft items (show at top of urgent list) ──
+
+  // Unfinished incident report draft (localStorage)
+  if (mounted) {
+    try {
+      const draftRaw = localStorage.getItem(`harmoniq_incident_draft_${company}`);
+      if (draftRaw) {
+        const draft = JSON.parse(draftRaw);
+        if (draft.formData?.type || draft.step > 1) {
+          const savedAt = draft.savedAt ? new Date(draft.savedAt) : new Date();
+          const ago = Math.floor((Date.now() - savedAt.getTime()) / 60000);
+          const timeLabel = ago < 60 ? `${ago}m ago` : ago < 1440 ? `${Math.floor(ago / 60)}h ago` : `${Math.floor(ago / 1440)}d ago`;
+          focusUrgent.push({
+            id: "incident-draft",
+            title: draft.formData.title || "Incident report draft",
+            subtitle: `Started ${timeLabel} · Tap to continue`,
+            href: `/${company}/app/report`,
+            icon: AlertTriangle,
+            time: "Draft",
+          });
+        }
+      }
+    } catch { /* ignore corrupt drafts */ }
+  }
+
+  // Draft checklist submissions
+  const draftSubmissions = checklistSubmissions.filter(
+    (s) => s.status === "draft" && s.submitter_id === user?.id
+  );
+  draftSubmissions.slice(0, 3).forEach((sub) => {
+    const tpl = checklistTemplates.find((t) => t.id === sub.template_id);
+    focusUrgent.push({
+      id: `checklist-draft-${sub.id}`,
+      title: tpl?.name || "Checklist draft",
+      subtitle: "In progress · Tap to continue",
+      href: `/${company}/app/checklists/submission/${sub.id}`,
+      icon: ClipboardCheck,
+      time: "Draft",
+    });
+  });
+
+  // Draft risk evaluations
+  const draftEvaluations = riskEvaluations.filter(
+    (e) => e.status === "draft" && e.submitter_id === user?.id
+  );
+  draftEvaluations.slice(0, 3).forEach((ev) => {
+    focusUrgent.push({
+      id: `ra-draft-${ev.id}`,
+      title: ev.form_type || "Risk assessment draft",
+      subtitle: "In progress · Tap to continue",
+      href: `/${company}/app/risk-assessment/view/${ev.id}`,
+      icon: ShieldCheck,
+      time: "Draft",
+    });
+  });
 
   // Critical/high incidents still open (only for roles that manage incidents)
   if (canManageIncidents) {

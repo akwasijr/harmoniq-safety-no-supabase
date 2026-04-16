@@ -202,6 +202,37 @@ function ReportIncidentPageContent() {
 
   const [incidentDraftId] = React.useState(() => `draft_${Date.now()}`);
   const [injuryMarkers, setInjuryMarkers] = React.useState<InjuryMarker[]>([]);
+
+  // ── Draft restore on mount ──
+  const draftRestoredRef = React.useRef(false);
+  React.useEffect(() => {
+    if (draftRestoredRef.current) return;
+    draftRestoredRef.current = true;
+    try {
+      const raw = localStorage.getItem(`harmoniq_incident_draft_${company}`);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft.formData) {
+          setFormData((prev) => ({
+            ...prev,
+            ...draft.formData,
+            photos: [],
+            photoFileIds: [],
+          }));
+          if (draft.step && draft.step > 1) setCurrentStep(draft.step);
+        }
+      }
+    } catch { /* ignore corrupt drafts */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Auto-save draft to localStorage ──
+  React.useEffect(() => {
+    if (currentStep > 1 || formData.type) {
+      const draftData = { ...formData, photos: [], photoFileIds: [] };
+      const draft = { formData: draftData, step: currentStep, savedAt: new Date().toISOString() };
+      localStorage.setItem(`harmoniq_incident_draft_${company}`, JSON.stringify(draft));
+    }
+  }, [formData, currentStep, company]);
   React.useEffect(() => {
     if (!selectedLocation) return;
     setReportLocationValue((prev) => ({
@@ -362,11 +393,13 @@ function ReportIncidentPageContent() {
         enqueueReport(incident, formData.photoFileIds);
         toast("Saved offline — will sync when connected");
       }
+      localStorage.removeItem(`harmoniq_incident_draft_${company}`);
       router.push(`/${company}/app/report/success?ref=${refNumber}&id=${incident.id}`);
     } catch (err) {
       console.error("[Report] Submission failed:", err);
       enqueueReport(incident, formData.photoFileIds);
       toast("Saved offline — will sync when connected");
+      localStorage.removeItem(`harmoniq_incident_draft_${company}`);
       router.push(`/${company}/app/report/success?ref=${refNumber}&id=${incident.id}`);
     }
   };
