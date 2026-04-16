@@ -140,7 +140,12 @@ function FieldFocus({
               className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 active:bg-muted/50 transition-colors"
             >
               <item.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <p className="flex-1 text-sm font-normal truncate">{item.title}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-normal truncate">{item.title}</p>
+                {item.subtitle && (
+                  <p className="text-[10px] text-muted-foreground truncate">{item.subtitle}</p>
+                )}
+              </div>
               {item.time && (
                 <span className={cn(
                   "shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full",
