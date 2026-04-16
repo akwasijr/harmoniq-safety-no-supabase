@@ -153,7 +153,7 @@ function MessagesContent() {
           grouped.map(([group, comments]) => (
             <div key={group}>
               <p className="text-xs text-muted-foreground font-medium mb-2 mt-3">{group}</p>
-              <div className="space-y-2">
+              <div className="divide-y divide-border">
                 {comments.map((comment) => {
                   const sourceHref = comment.sourceType === "incident"
                     ? `/${company}/app/incidents/${comment.sourceId}?tab=comments`
@@ -171,7 +171,7 @@ function MessagesContent() {
                     <Link
                       key={comment.id}
                       href={sourceHref}
-                      className="flex items-center gap-3 rounded-xl border bg-card p-3 active:bg-muted/50 transition-colors"
+                      className="flex items-center gap-3 px-1 py-3.5 active:bg-muted/50 transition-colors"
                     >
                       {/* Avatar */}
                       <div className="relative shrink-0">

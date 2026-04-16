@@ -102,7 +102,7 @@ function MobileProcedureContent() {
   return (
     <div className="flex flex-col min-h-full">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-[60px] z-30 border-b bg-background">
         <div className="flex h-14 items-center gap-3 px-4">
           <Button variant="ghost" size="icon" className="shrink-0" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />

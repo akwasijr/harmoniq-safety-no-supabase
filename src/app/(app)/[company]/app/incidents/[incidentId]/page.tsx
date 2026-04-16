@@ -239,7 +239,7 @@ export default function EmployeeIncidentDetailPage() {
   return (
     <div className="flex flex-col min-h-full bg-background">
       {/* ── Sticky Header ── */}
-      <header className="sticky top-0 z-30 border-b bg-background">
+      <header className="sticky top-[60px] z-30 border-b bg-background">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
@@ -257,7 +257,7 @@ export default function EmployeeIncidentDetailPage() {
       </header>
 
       {/* ── Sticky Tab Bar ── */}
-      <nav className="sticky top-[57px] z-20 bg-background px-4 pt-3 pb-2">
+      <nav className="sticky top-[117px] z-20 bg-background px-4 pt-3 pb-2">
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;

@@ -51,10 +51,8 @@ const HEADER_HIDDEN_ROUTES = [
   "/app/maintenance",
   "/app/scan",
   "/app/assets/new",
-  "/app/checklists/",
   "/app/inspection/",
   "/app/inspection-round",
-  "/app/incidents/",
 ];
 
 // Risk assessment form routes — all sub-paths except the index and view pages
