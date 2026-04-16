@@ -782,12 +782,21 @@ export default function EmployeeAppHomePage() {
         </div>
       </div>
 
-      {/* ── Tip of the Day (wide banner) ── */}
+      {/* ── Tip of the Day (banner card) ── */}
       {fieldAppSettings.tipOfTheDayEnabled && (
         <div className="mx-4 -mt-4 relative z-10 home-section" style={{ animationDelay: "0.3s" }}>
-          <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-3">
-            <p className="text-[10px] font-bold text-primary mb-1">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
-            <p className="text-sm text-foreground leading-relaxed">{tipText}</p>
+          <div className="field-app-panel overflow-hidden rounded-2xl bg-foreground dark:bg-card border dark:border-border">
+            <div className="flex items-center">
+              <div className="flex-1 px-5 py-4">
+                <p className="text-xs font-bold text-background/60 dark:text-muted-foreground mb-1">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
+                <p className="text-sm font-medium text-background dark:text-foreground leading-snug">{tipText}</p>
+              </div>
+              <div className="shrink-0 w-20 h-full flex items-center justify-center pr-4">
+                <div className="h-14 w-14 rounded-2xl bg-background/10 dark:bg-primary/10 flex items-center justify-center">
+                  <ShieldCheck className="h-7 w-7 text-background/40 dark:text-primary/40" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
