@@ -17,6 +17,7 @@ export interface LocationPickerValue {
   manualText: string;
   gpsLat: number | null;
   gpsLng: number | null;
+  gpsAddress?: string;
 }
 
 interface LocationPickerProps {
@@ -60,6 +61,7 @@ export function LocationPicker({
         const data = await res.json();
         if (data.display_name) {
           setGpsAddress(data.display_name);
+          onChange({ ...value, gpsLat: lat, gpsLng: lng, gpsAddress: data.display_name });
         }
       }
     } catch {

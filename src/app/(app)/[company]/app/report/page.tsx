@@ -355,7 +355,7 @@ function ReportIncidentPageContent() {
       room: null,
       gps_lat: reportLocationValue.gpsLat,
       gps_lng: reportLocationValue.gpsLng,
-      location_description: reportLocationValue.manualText || (locations.find((l) => l.id === reportLocationValue.locationId)?.name) || null,
+      location_description: reportLocationValue.manualText || reportLocationValue.gpsAddress || (locations.find((l) => l.id === reportLocationValue.locationId)?.name) || null,
       asset_id: assetParam || null,
       media_urls: formData.photos,
       injury_locations: formData.type === "injury" ? injuryMarkers : [],
