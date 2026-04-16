@@ -30,7 +30,7 @@ function getSentryConnectSource() {
   }
 }
 
-const connectSrc = [getSupabaseConnectSources(), getSentryConnectSource()].filter(Boolean).join(" ");
+const connectSrc = ["'self'", getSupabaseConnectSources(), getSentryConnectSource(), "https://nominatim.openstreetmap.org"].filter(Boolean).join(" ");
 
 function buildContentSecurityPolicy() {
   const scriptSrc = ["'self'", "'unsafe-inline'"];

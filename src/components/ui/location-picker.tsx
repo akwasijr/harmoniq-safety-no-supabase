@@ -54,7 +54,11 @@ export function LocationPicker({
   const valueRef = React.useRef(value);
   valueRef.current = value;
 
+  const geocodingRef = React.useRef(false);
+
   const reverseGeocode = async (lat: number, lng: number) => {
+    if (geocodingRef.current) return;
+    geocodingRef.current = true;
     setIsGeocoding(true);
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
@@ -71,6 +75,7 @@ export function LocationPicker({
       // silently fail — coordinates still work
     } finally {
       setIsGeocoding(false);
+      geocodingRef.current = false;
     }
   };
 
