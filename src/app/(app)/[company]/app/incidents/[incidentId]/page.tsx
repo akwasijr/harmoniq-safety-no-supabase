@@ -294,16 +294,6 @@ export default function EmployeeIncidentDetailPage() {
         {/* ════════════ OVERVIEW TAB ════════════ */}
         {activeTab === "overview" && (
           <>
-            {/* Flags — only if active hazard */}
-            {incident.active_hazard && (
-              <div className="flex flex-wrap gap-2">
-                <div className="flex items-center gap-1.5 rounded-full bg-red-500/10 px-2.5 py-0.5">
-                  <Zap className="h-3 w-3 text-red-500" />
-                  <span className="text-xs font-medium text-red-600 dark:text-red-400">Active Hazard</span>
-                </div>
-              </div>
-            )}
-
             {/* Key Details */}
             <Card>
               <CardContent className="p-4 space-y-3.5">
@@ -388,6 +378,19 @@ export default function EmployeeIncidentDetailPage() {
                             </p>
                           ))}
                         </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {incident.active_hazard && (
+                  <>
+                    <div className="border-t" />
+                    <div className="flex items-center gap-3">
+                      <Zap className="h-4 w-4 text-red-500 shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">Active Hazard</p>
+                        <p className="text-sm font-medium text-red-600 dark:text-red-400">Yes — hazard is still present</p>
                       </div>
                     </div>
                   </>
