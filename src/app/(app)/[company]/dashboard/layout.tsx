@@ -34,10 +34,12 @@ export default function DashboardRootLayout({
   );
 
   const { resolvedTheme } = useTheme();
+  const [themeMounted, setThemeMounted] = React.useState(false);
+  React.useEffect(() => { setThemeMounted(true); }, []);
 
   // Apply branding synchronously before paint to avoid FOUC
   React.useLayoutEffect(() => {
-    if (!currentCompany) return;
+    if (!currentCompany || !themeMounted || !resolvedTheme) return;
 
     let primaryColor = currentCompany.primary_color;
     let secondaryColor = currentCompany.secondary_color;
@@ -73,10 +75,10 @@ export default function DashboardRootLayout({
         uiStyle: currentCompany.ui_style,
         shape: shape as "square" | "small" | "medium" | "large" | undefined,
       },
-      resolvedTheme || "dark"
+      resolvedTheme
     );
     return () => resetBranding();
-  }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany]);
+  }, [currentCompany?.primary_color, currentCompany?.secondary_color, currentCompany?.font_family, currentCompany?.ui_style, resolvedTheme, currentCompany, themeMounted]);
 
   React.useEffect(() => {
     applyDocumentLanguage(currentCompany?.language ?? user?.language);
