@@ -694,9 +694,8 @@ export default function EmployeeAppHomePage() {
     <div className="flex flex-col min-h-full" data-animate={shouldAnimate ? "true" : "false"}>
       {/* ── Hero Section — no animation, visible immediately to avoid white flash ── */}
       <div className="bg-brand-solid px-5 pt-4 pb-8">
-        <p className="text-brand-solid-foreground/60 text-sm home-section" style={{ animationDelay: "0.55s" }}>{greeting}</p>
-        <h1 className="text-2xl font-bold text-brand-solid-foreground mt-1 home-section" style={{ animationDelay: "0.5s" }}>
-          {user?.first_name || t("app.welcome")}
+        <h1 className="text-xl font-bold text-brand-solid-foreground home-section" style={{ animationDelay: "0.5s" }}>
+          {greeting}{greeting ? ", " : ""}{user?.first_name || t("app.welcome")}
         </h1>
 
         {/* Stats row - white/glass cards */}
