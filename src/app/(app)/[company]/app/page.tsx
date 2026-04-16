@@ -47,6 +47,7 @@ import {
   getFieldAppQuickActionDefinition,
   getFieldAppTip,
 } from "@/lib/field-app-settings";
+import { QuickActionFAB } from "@/components/ui/quick-action-fab";
 
 const QUICK_ACTION_ICON_MAP: Record<FieldAppQuickActionId, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
   report_incident: AlertTriangle,
@@ -763,6 +764,15 @@ export default function EmployeeAppHomePage() {
         )}
 
       </div>
+
+      <QuickActionFAB
+        actions={filteredQuickActions.map((a) => ({
+          id: a.id,
+          label: t(a.labelKey) || a.fallbackLabel,
+          icon: a.icon,
+          href: a.href,
+        }))}
+      />
 
       <style>{`
         [data-animate="true"] .home-section {

@@ -34,6 +34,7 @@ import { useTranslation } from "@/i18n";
 import { LoadingPage } from "@/components/ui/loading";
 import { NoDataEmptyState } from "@/components/ui/empty-state";
 import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
+import { QuickActionFAB } from "@/components/ui/quick-action-fab";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ComponentType<{ className?: string }> }> = {
   active: { color: "text-success", icon: CheckCircle },
@@ -364,14 +365,13 @@ export default function EmployeeAssetsPage() {
         </div>
       )}
 
-      {/* Scan FAB — always visible above bottom tabs */}
-      <Link
-        href={`/${company}/app/scan`}
-        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
-        aria-label="Scan asset QR code"
-      >
-        <ScanLine className="h-6 w-6" />
-      </Link>
+      {/* Assets FAB */}
+      <QuickActionFAB
+        actions={[
+          { id: "scan", label: "Scan QR Code", icon: ScanLine, href: `/${company}/app/scan` },
+          { id: "browse", label: "Add New Asset", icon: Plus, href: `/${company}/app/assets/new` },
+        ]}
+      />
     </div>
   );
 }
