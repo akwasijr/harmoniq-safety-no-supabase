@@ -313,9 +313,16 @@ export default function EmployeeIncidentDetailPage() {
                   <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="flex-1">
                     <p className="text-xs text-muted-foreground">Location</p>
-                    <p className="text-sm font-medium">{location?.name || "Not specified"}</p>
+                    <p className="text-sm font-medium">
+                      {incident.location_description || location?.name || "Not specified"}
+                    </p>
                     {locationParts.length > 0 && (
                       <p className="text-xs text-muted-foreground mt-0.5">{locationParts.join(" · ")}</p>
+                    )}
+                    {incident.gps_lat && incident.gps_lng && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        GPS: {incident.gps_lat.toFixed(6)}, {incident.gps_lng.toFixed(6)}
+                      </p>
                     )}
                   </div>
                 </div>
