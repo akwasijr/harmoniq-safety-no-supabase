@@ -79,7 +79,7 @@ function ReportHistoryInline({ company, incidents, user, formatDate }: {
 }) {
   const myIncidents = React.useMemo(() => {
     if (!user) return incidents.slice(0, 20);
-    return incidents.filter((i) => i.reporter_id === user.id).slice(0, 20);
+    return incidents.filter((i) => i.reporter_id === user.id || i.assigned_to === user.id).slice(0, 20);
   }, [incidents, user]);
 
   if (myIncidents.length === 0) {
@@ -426,7 +426,7 @@ function EmployeeChecklistsPageContent() {
             {historySearchBar}
             {(() => {
               const q = historySearch.toLowerCase();
-              const myIncidents = (user ? incidents.filter((i) => i.reporter_id === user.id) : incidents);
+              const myIncidents = (user ? incidents.filter((i) => i.reporter_id === user.id || i.assigned_to === user.id) : incidents);
               const filtered = myIncidents
                 .filter((inc) => {
                   if (historyStatus !== "all" && inc.status !== historyStatus) return false;

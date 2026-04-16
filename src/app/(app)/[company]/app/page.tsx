@@ -766,7 +766,7 @@ export default function EmployeeAppHomePage() {
       </div>
 
       <QuickActionFAB
-        actions={filteredQuickActions.map((a) => ({
+        actions={quickActions.map((a) => ({
           id: a.id,
           label: t(a.labelKey) || a.fallbackLabel,
           icon: a.icon,
