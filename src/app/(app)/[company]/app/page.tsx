@@ -449,7 +449,7 @@ export default function EmployeeAppHomePage() {
     (currentCompany?.language ?? user.language) || "en",
     getDayOfYear()
   );
-  const greeting = t(getGreetingKey());
+  const greeting = mounted ? t(getGreetingKey()) : "";
 
   const quickActions = fieldAppSettings.quickActions.map((actionId) => {
     const definition = getFieldAppQuickActionDefinition(actionId);
@@ -693,7 +693,7 @@ export default function EmployeeAppHomePage() {
   return (
     <div className="flex flex-col min-h-full" data-animate={shouldAnimate ? "true" : "false"}>
       {/* ── Hero Section — no animation, visible immediately to avoid white flash ── */}
-      <div className="bg-brand-solid px-5 pt-8 pb-10">
+      <div className="bg-brand-solid px-5 pt-4 pb-10">
         <p className="text-brand-solid-foreground/60 text-sm home-section" style={{ animationDelay: "0.55s" }}>{greeting}</p>
         <h1 className="text-2xl font-bold text-brand-solid-foreground mt-1 home-section" style={{ animationDelay: "0.5s" }}>
           {user?.first_name || t("app.welcome")}
