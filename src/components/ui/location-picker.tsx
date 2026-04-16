@@ -45,8 +45,29 @@ export function LocationPicker({
   );
   const [isLocating, setIsLocating] = React.useState(false);
   const [gpsError, setGpsError] = React.useState<string | null>(null);
+  const [gpsAddress, setGpsAddress] = React.useState<string | null>(null);
+  const [isGeocoding, setIsGeocoding] = React.useState(false);
 
   const selectedLocation = locations.find((l) => l.id === value.locationId);
+
+  const reverseGeocode = async (lat: number, lng: number) => {
+    setIsGeocoding(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+        headers: { "Accept-Language": "en" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.display_name) {
+          setGpsAddress(data.display_name);
+        }
+      }
+    } catch {
+      // silently fail — coordinates still work
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
 
   const handleGPS = () => {
     if (!navigator.geolocation) {
@@ -55,17 +76,21 @@ export function LocationPicker({
     }
     setIsLocating(true);
     setGpsError(null);
+    setGpsAddress(null);
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
         onChange({
           ...value,
           locationId: "",
-          gpsLat: position.coords.latitude,
-          gpsLng: position.coords.longitude,
+          gpsLat: lat,
+          gpsLng: lng,
           manualText: "",
         });
         setMode("gps");
         setIsLocating(false);
+        reverseGeocode(lat, lng);
       },
       (error) => {
         setGpsError(error.code === 1 ? "Location access denied." : "Unable to get location.");
@@ -250,19 +275,37 @@ export function LocationPicker({
               Getting your location...
             </div>
           ) : value.gpsLat && value.gpsLng ? (
-            <div className="flex items-center justify-between rounded-md border bg-green-50 dark:bg-green-950/20 p-3">
-              <div className="flex items-center gap-2">
-                <Navigation className="h-4 w-4 text-green-600" />
-                <div>
-                  <p className="text-sm font-medium text-green-800 dark:text-green-400">Location captured</p>
-                  <p className="text-xs text-muted-foreground">
-                    {value.gpsLat.toFixed(6)}, {value.gpsLng.toFixed(6)}
-                  </p>
+            <div className="rounded-xl border bg-card overflow-hidden">
+              <div className="p-3.5 space-y-2">
+                <div className="flex items-start gap-2">
+                  <Navigation className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground">Selected location</p>
+                    {isGeocoding ? (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Looking up address...</span>
+                      </div>
+                    ) : gpsAddress ? (
+                      <p className="text-sm font-medium mt-0.5">{gpsAddress}</p>
+                    ) : (
+                      <p className="text-sm font-medium mt-0.5">Location captured</p>
+                    )}
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      {value.gpsLat.toFixed(6)}, {value.gpsLng.toFixed(6)}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <button type="button" onClick={() => { clearValue(); handleGPS(); }} className="text-xs text-muted-foreground hover:text-foreground underline">
-                Refresh
-              </button>
+              <div className="flex border-t divide-x divide-border">
+                <button
+                  type="button"
+                  onClick={() => { setGpsAddress(null); clearValue(); handleGPS(); }}
+                  className="flex-1 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+                >
+                  Refresh
+                </button>
+              </div>
             </div>
           ) : (
             <button
