@@ -28,7 +28,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
       {/* Overlay */}
       <div
         className={cn(
-          "fixed inset-0 z-50 bg-black/40 transition-opacity duration-300",
+          "fixed inset-0 z-[60] bg-black/40 transition-opacity duration-300",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={onClose}
@@ -38,7 +38,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
       {/* Sheet */}
       <div
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-background transition-transform duration-300 ease-out",
+          "fixed inset-x-0 bottom-0 z-[60] rounded-t-2xl bg-background transition-transform duration-300 ease-out",
           open ? "translate-y-0" : "translate-y-full",
         )}
         style={{ maxHeight: "70vh" }}
@@ -58,7 +58,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
         )}
 
         {/* Scrollable content */}
-        <div className="overflow-y-auto px-5 pb-[env(safe-area-inset-bottom,16px)]">
+        <div className="overflow-y-auto px-5 pb-24" style={{ maxHeight: "calc(70vh - 60px)" }}>
           {children}
         </div>
       </div>
