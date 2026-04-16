@@ -791,10 +791,8 @@ export default function EmployeeAppHomePage() {
                 <p className="text-xs font-bold text-background/60 dark:text-muted-foreground mb-1">{t("app.tipOfTheDay") || "Tip of the Day"}</p>
                 <p className="text-sm font-medium text-background dark:text-foreground leading-snug">{tipText}</p>
               </div>
-              <div className="shrink-0 w-20 h-full flex items-center justify-center pr-4">
-                <div className="h-14 w-14 rounded-2xl bg-background/10 dark:bg-primary/10 flex items-center justify-center">
-                  <ShieldCheck className="h-7 w-7 text-background/40 dark:text-primary/40" />
-                </div>
+              <div className="shrink-0 pr-4">
+                <ShieldCheck className="h-10 w-10 text-background/20 dark:text-muted-foreground/20" />
               </div>
             </div>
           </div>
