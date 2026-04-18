@@ -22,8 +22,11 @@ import {
   CheckCircle,
   TrendingDown,
   MessageSquare,
+  MoreHorizontal,
+  Bell,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
 import { useContentStore } from "@/stores/content-store";
 import { useIncidentsStore } from "@/stores/incidents-store";
@@ -48,7 +51,6 @@ import {
   getFieldAppQuickActionDefinition,
   getFieldAppTip,
 } from "@/lib/field-app-settings";
-import { QuickActionFAB } from "@/components/ui/quick-action-fab";
 
 const QUICK_ACTION_ICON_MAP: Record<FieldAppQuickActionId, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
   report_incident: AlertTriangle,
@@ -117,9 +119,9 @@ function FieldFocus({
         ))}
       </div>
       {/* Items — fixed min height */}
-      <div className="min-h-[180px]">
+      <div className="min-h-[160px]">
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[180px] text-muted-foreground/50">
+          <div className="flex flex-col items-center justify-center h-[160px] text-muted-foreground/50">
             {activeTab === "urgent" ? (
               <CheckCircle className="h-8 w-8 mb-2" />
             ) : activeTab === "upcoming" ? (
@@ -133,7 +135,7 @@ function FieldFocus({
           </div>
         ) : (
           <div className="space-y-0.5">
-          {items.slice(0, 5).map((item) => (
+          {items.slice(0, 4).map((item) => (
             <Link
               key={item.id}
               href={item.href}
@@ -400,6 +402,7 @@ export default function EmployeeAppHomePage() {
   // Use state for time-dependent values to prevent hydration mismatch
   const [mounted, setMounted] = React.useState(false);
   const [stableNow] = React.useState(() => Date.now());
+  const [moreOpen, setMoreOpen] = React.useState(false);
   const [shouldAnimate] = React.useState(() => {
     if (typeof window === "undefined") return false;
     const key = "harmoniq_home_animated";
@@ -470,12 +473,12 @@ export default function EmployeeAppHomePage() {
 
   // Filter quick actions by role
   const roleAllowedActions: Record<string, FieldAppQuickActionId[]> = {
-    super_admin: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
-    company_admin: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
-    manager: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
-    safety_officer: ["report_incident", "my_tasks", "risk_check", "browse_assets"],
-    employee: ["report_incident", "my_tasks"],
-    viewer: ["my_tasks", "browse_assets"],
+    super_admin: ["report_incident", "risk_check", "browse_assets"],
+    company_admin: ["report_incident", "risk_check", "browse_assets"],
+    manager: ["report_incident", "risk_check", "browse_assets"],
+    safety_officer: ["report_incident", "risk_check", "browse_assets"],
+    employee: ["report_incident", "risk_check"],
+    viewer: ["browse_assets"],
   };
   const allowedIds = roleAllowedActions[user.role] || roleAllowedActions.employee;
   const filteredQuickActions = quickActions.filter((a) =>
@@ -757,13 +760,13 @@ export default function EmployeeAppHomePage() {
   return (
     <div className="flex flex-col min-h-full" data-animate={shouldAnimate ? "true" : "false"}>
       {/* ── Hero Section — no animation, visible immediately to avoid white flash ── */}
-      <div className="bg-brand-solid px-5 pt-4 pb-8">
+      <div className="bg-brand-solid px-5 pt-2 pb-8">
         <h1 className="text-xl font-bold text-brand-solid-foreground home-section" style={{ animationDelay: "0.5s" }}>
           {greeting}{greeting ? ", " : ""}{user?.first_name || t("app.welcome")}
         </h1>
 
         {/* Stats row - white/glass cards */}
-        <div className="grid grid-cols-3 gap-2.5 mt-4">
+        <div className="grid grid-cols-3 gap-2.5 mt-3">
           <div className="field-app-panel field-app-surface bg-white/10 backdrop-blur-sm px-3 py-3 text-center home-section" style={{ animationDelay: "0.45s" }}>
             <ShieldCheck className="h-5 w-5 text-brand-solid-foreground/50 mx-auto mb-1" />
             <p className="text-2xl font-bold text-brand-solid-foreground">{safeDays}</p>
@@ -792,6 +795,49 @@ export default function EmployeeAppHomePage() {
         </div>
       )}
 
+      {/* ── Quick Actions Grid ── */}
+      <div className="px-4 mt-4 home-section" style={{ animationDelay: "0.2s" }}>
+        <div className="grid grid-cols-4 gap-2">
+          {filteredQuickActions.slice(0, 3).map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link
+                key={action.id}
+                href={action.href}
+                className="flex flex-col items-center justify-start gap-2 py-1 active:scale-95 transition-transform select-none touch-manipulation"
+              >
+                <span
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-sm"
+                  aria-hidden="true"
+                >
+                  <Icon className="h-6 w-6 text-primary-foreground" />
+                </span>
+                <p className="text-[12px] font-medium text-foreground text-center leading-tight line-clamp-2 max-w-[84px]">
+                  {t(action.labelKey) || action.fallbackLabel}
+                </p>
+              </Link>
+            );
+          })}
+          {/* More button — opens bottom sheet */}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-label="More actions"
+            className="flex flex-col items-center justify-start gap-2 py-1 active:scale-95 transition-transform select-none touch-manipulation"
+          >
+            <span
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-sm"
+              aria-hidden="true"
+            >
+              <MoreHorizontal className="h-6 w-6 text-primary-foreground" />
+            </span>
+            <p className="text-[12px] font-medium text-foreground text-center leading-tight">
+              {t("app.more") || "More"}
+            </p>
+          </button>
+        </div>
+      </div>
+
       {/* ── Field Focus ── */}
       <div className="px-4 mt-4 home-section" style={{ animationDelay: "0.1s" }}>
         <FieldFocus
@@ -812,16 +858,33 @@ export default function EmployeeAppHomePage() {
 
       </div>
 
-      <QuickActionFAB
-        actions={quickActions
-          .filter((a) => ["report_incident", "risk_check", "scan_asset", "checklists", "browse_assets"].includes(a.id))
-          .map((a) => ({
-            id: a.id,
-            label: t(a.labelKey) || a.fallbackLabel,
-            icon: a.icon,
-            href: a.href,
-          }))}
-      />
+      {/* ── More Actions Bottom Sheet ── */}
+      <BottomSheet open={moreOpen} onClose={() => setMoreOpen(false)} title={t("app.moreActions") || "More actions"}>
+        <div className="divide-y divide-border/50">
+          {[
+            { id: "my_tasks", label: t("app.myTasks") || "My Tasks", description: "View and complete assigned tasks", href: `/${company}/app/tasks`, icon: ClipboardCheck },
+            { id: "scan_asset", label: t("app.scanAsset") || "Scan Asset", description: "Scan a QR code on equipment", href: `/${company}/app/scan`, icon: ScanLine },
+            { id: "request_fix", label: t("app.requestFix") || "Request Fix", description: "Log a maintenance request", href: `/${company}/app/maintenance`, icon: Wrench },
+            { id: "checklists", label: t("nav.safety") || "Checklists", description: "Complete safety checklists", href: `/${company}/app/checklists`, icon: ClipboardCheck },
+            { id: "news", label: t("nav.news") || "News", description: "Read latest updates", href: `/${company}/app/news`, icon: Newspaper },
+            { id: "notifications", label: t("app.notifications") || "Notifications", description: "View alerts and messages", href: `/${company}/app/notifications`, icon: Bell },
+          ].map((action) => (
+            <Link
+              key={action.id}
+              href={action.href}
+              onClick={() => setMoreOpen(false)}
+              className="flex items-center gap-3 py-3.5 active:bg-muted/50 transition-colors"
+            >
+              <action.icon className="h-5 w-5 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{action.label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </Link>
+          ))}
+        </div>
+      </BottomSheet>
 
       <style>{`
         [data-animate="true"] .home-section {

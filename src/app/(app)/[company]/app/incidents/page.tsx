@@ -11,6 +11,7 @@ import {
   Search,
   X,
   ArrowUpDown,
+  Wrench,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,7 @@ export default function EmployeeIncidentsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
+  const [kindFilter, setKindFilter] = React.useState<"all" | "incidents" | "fixes">("all");
   const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
 
   // Show incidents reported by the worker or assigned to them / their team.
@@ -67,14 +69,20 @@ export default function EmployeeIncidentsPage() {
       .sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime());
   }, [incidents, user]);
 
-  // Apply search and status filters
+  // Apply search, status, and kind filters
   const filteredIncidents = React.useMemo(() => {
     let result = myIncidents;
-    
+
+    if (kindFilter === "incidents") {
+      result = result.filter((i) => i.type !== "maintenance_request");
+    } else if (kindFilter === "fixes") {
+      result = result.filter((i) => i.type === "maintenance_request");
+    }
+
     if (statusFilter !== "all") {
       result = result.filter((i) => i.status === statusFilter);
     }
-    
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -83,15 +91,15 @@ export default function EmployeeIncidentsPage() {
           i.description?.toLowerCase().includes(query)
       );
     }
-    
+
     result.sort((a, b) => {
       const da = new Date(a.incident_date).getTime();
       const db = new Date(b.incident_date).getTime();
       return sortOrder === "newest" ? db - da : da - db;
     });
-    
+
     return result;
-  }, [myIncidents, statusFilter, searchQuery, sortOrder]);
+  }, [myIncidents, kindFilter, statusFilter, searchQuery, sortOrder]);
 
   if (!user || isLoading) {
     return <LoadingPage />;
@@ -136,6 +144,28 @@ export default function EmployeeIncidentsPage() {
             </div>
           )}
 
+          {/* Kind filter: Reports vs Fix Requests */}
+          <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1">
+            {[
+              { value: "all" as const, label: "All" },
+              { value: "incidents" as const, label: "Safety reports" },
+              { value: "fixes" as const, label: "Fix requests" },
+            ].map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setKindFilter(f.value)}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95",
+                  kindFilter === f.value
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
           {/* Status Filter Pills + Sort */}
           <div className="flex items-center gap-2">
             {[
@@ -179,8 +209,9 @@ export default function EmployeeIncidentsPage() {
                 onClearFilters={() => {
                   setSearchQuery("");
                   setStatusFilter("all");
+                  setKindFilter("all");
                 }}
-                hasFilters={!!searchQuery || statusFilter !== "all"}
+                hasFilters={!!searchQuery || statusFilter !== "all" || kindFilter !== "all"}
               />
             )
           ) : (
@@ -190,6 +221,9 @@ export default function EmployeeIncidentsPage() {
                 const statusConfig = STATUS_CLASSES[incident.status] || STATUS_CLASSES.new;
                 const StatusIcon = statusConfig.icon;
                 const statusLabel = t(STATUS_TRANSLATION_KEYS[incident.status] ?? "incidents.statuses.new");
+                const isFix = incident.type === "maintenance_request";
+                const openStatus = incident.status === "new" || incident.status === "in_progress" || incident.status === "in_review";
+                const RowIcon = isFix ? Wrench : StatusIcon;
 
                 return (
                   <Link
@@ -197,20 +231,36 @@ export default function EmployeeIncidentsPage() {
                     href={`/${company}/app/incidents/${incident.id}`}
                     className="flex items-center gap-3.5 p-3.5 rounded-xl border bg-card transition-colors active:bg-muted/50 hover:bg-muted/30"
                   >
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
-                      incident.status === "new" || incident.status === "in_progress" || incident.status === "in_review"
+                    <div className={cn(
+                      "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
+                      isFix
+                        ? "bg-blue-100 dark:bg-blue-500/20"
+                        : openStatus
                         ? "bg-amber-100 dark:bg-amber-500/20"
-                        : "bg-green-100 dark:bg-green-500/20"
-                    }`}>
-                      <StatusIcon className={`h-5 w-5 ${
-                        incident.status === "new" || incident.status === "in_progress" || incident.status === "in_review"
+                        : "bg-green-100 dark:bg-green-500/20",
+                    )}>
+                      <RowIcon className={cn(
+                        "h-5 w-5",
+                        isFix
+                          ? "text-blue-600 dark:text-blue-400"
+                          : openStatus
                           ? "text-amber-600 dark:text-amber-400"
-                          : "text-green-600 dark:text-green-400"
-                      }`} />
+                          : "text-green-600 dark:text-green-400",
+                      )} />
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{incident.title}</p>
+                      <div className="flex items-center gap-1.5">
+                        {isFix && (
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] px-1.5 py-0 h-4 border-blue-500/40 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 shrink-0"
+                          >
+                            Fix
+                          </Badge>
+                        )}
+                        <p className="font-medium text-sm truncate">{incident.title}</p>
+                      </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xs text-muted-foreground">
                           {formatDate(incident.incident_date)}
@@ -231,7 +281,7 @@ export default function EmployeeIncidentsPage() {
                         {statusLabel}
                       </Badge>
                     )}
-                    
+
                     <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                   </Link>
                 );
@@ -242,13 +292,22 @@ export default function EmployeeIncidentsPage() {
       </div>
 
       <QuickActionFAB
-        actions={[{
-          id: "report",
-          label: t("incidents.reportAnIncident"),
-          description: "Start a new incident report",
-          icon: AlertTriangle,
-          href: `/${company}/app/report`,
-        }]}
+        actions={[
+          {
+            id: "report",
+            label: t("incidents.reportAnIncident"),
+            description: "Start a new incident report",
+            icon: AlertTriangle,
+            href: `/${company}/app/report`,
+          },
+          {
+            id: "request-fix",
+            label: "Request a fix",
+            description: "Report something that needs maintenance",
+            icon: Wrench,
+            href: `/${company}/app/maintenance`,
+          },
+        ]}
       />
     </div>
   );
