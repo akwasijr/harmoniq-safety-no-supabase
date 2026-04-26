@@ -4,7 +4,6 @@ import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   AlertTriangle,
-  ArrowLeft,
   CalendarClock,
   ClipboardCheck,
   Download,
@@ -22,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingPage } from "@/components/ui/loading";
+import { SheetPageShell } from "@/components/layouts/sheet-page-shell";
 import { useTranslation } from "@/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { useWorkOrdersStore } from "@/stores/work-orders-store";
@@ -270,20 +270,10 @@ export default function WorkOrderDetailPage() {
   const requiresChecklist = Boolean(order.checklist_template_id && !order.checklist_submission_id);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="sticky top-[60px] z-10 border-b bg-background">
-        <div className="mx-auto flex h-14 max-w-lg items-center gap-3 px-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push(`/${company}/app/assets?tab=work`)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate font-semibold">{order.title}</h1>
-            <p className="text-xs text-muted-foreground">{workOrderReference} · {typeLabel}</p>
-          </div>
-          <Badge variant={statusBadgeVariant}>{capitalize(order.status.replace(/_/g, " "))}</Badge>
-        </div>
-      </div>
-
+    <SheetPageShell
+      title={order.title}
+      topRight={<Badge variant={statusBadgeVariant}>{capitalize(order.status.replace(/_/g, " "))}</Badge>}
+    >
       <div className="mx-auto max-w-lg space-y-4 p-4 pb-8">
 
         {/* Work order details */}
@@ -579,6 +569,6 @@ export default function WorkOrderDetailPage() {
           </div>
         )}
       </div>
-    </div>
+    </SheetPageShell>
   );
 }

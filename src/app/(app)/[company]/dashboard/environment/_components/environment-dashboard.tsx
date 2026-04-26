@@ -494,10 +494,7 @@ export default function EnvironmentDashboard() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{t("environment.title")}</h1>
-            <p className="text-sm text-muted-foreground">Track waste disposal, spill incidents, and environmental metrics</p>
-          </div>
+          <div />
           <div className="flex gap-2">
             <Button
               variant="outline"

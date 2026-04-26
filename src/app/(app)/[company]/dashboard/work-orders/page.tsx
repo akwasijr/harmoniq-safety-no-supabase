@@ -490,7 +490,7 @@ export default function WorkOrdersPage() {
     <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold truncate">Work Orders</h1>
+        <div />
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowImport(true)}>
             <Upload className="h-4 w-4" />

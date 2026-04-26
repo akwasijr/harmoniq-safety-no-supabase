@@ -3,11 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, Menu, X, MessageSquare } from "lucide-react";
+import { ChevronRight, Menu, X, MessageSquare, Bell } from "lucide-react";
 import { Sidebar } from "@/components/navigation/sidebar";
 import { Button } from "@/components/ui/button";
 import { CompanySwitcher } from "@/components/auth/company-switcher";
 import { useUnreadCommentCount } from "@/hooks/use-comment-feed";
+import { useNotificationCount } from "@/hooks/use-notification-count";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -100,36 +101,55 @@ export function DashboardLayout({
             {/* Company switcher (super admin) or company name */}
             <CompanySwitcher />
             <span className="font-semibold lg:hidden">{companyName}</span>
+
+            {/* Page title from last breadcrumb */}
+            {breadcrumbs.length > 0 && (
+              <h1 className="hidden lg:block text-sm font-semibold text-foreground">
+                {breadcrumbs[breadcrumbs.length - 1].label}
+              </h1>
+            )}
           </div>
           <div className="flex items-center gap-1">
+            <NotificationsHeaderIcon company={company} />
             <CommentsHeaderIcon company={company} />
           </div>
         </header>
         
         <main className="flex-1 overflow-auto p-4 lg:p-6">
-          {breadcrumbs.length > 0 && (
-            <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
-              {breadcrumbs.map((crumb, index) => {
-                const isLast = index === breadcrumbs.length - 1;
-                return (
-                  <React.Fragment key={`${crumb.href}-${crumb.label}`}>
-                    {index > 0 && <ChevronRight className="h-4 w-4" aria-hidden="true" />}
-                    {isLast ? (
-                      <span className="font-medium text-foreground">{crumb.label}</span>
-                    ) : (
-                      <Link href={crumb.href} className="transition-colors hover:text-foreground hover:underline">
-                        {crumb.label}
-                      </Link>
-                    )}
-                  </React.Fragment>
-                );
-              })}
+          {breadcrumbs.length > 2 && (
+            <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+              {breadcrumbs.slice(0, -1).map((crumb, index) => (
+                <React.Fragment key={`${crumb.href}-${crumb.label}`}>
+                  {index > 0 && <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />}
+                  <Link href={crumb.href} className="transition-colors hover:text-foreground hover:underline">
+                    {crumb.label}
+                  </Link>
+                </React.Fragment>
+              ))}
             </nav>
           )}
           {children}
         </main>
       </div>
     </div>
+  );
+}
+
+function NotificationsHeaderIcon({ company }: { company: string }) {
+  const count = useNotificationCount();
+  return (
+    <Link
+      href={`/${company}/dashboard/notifications`}
+      className="relative p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      aria-label={`${count} notifications`}
+    >
+      <Bell className="h-5 w-5" />
+      {count > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
+    </Link>
   );
 }
 

@@ -55,23 +55,38 @@ export default function EmployeeAppRootLayout({
     router.prefetch(`/${company}/app`);
   }, [company, router]);
 
+  // Track derived-notification dismissals (sessionStorage-backed) reactively
+  const [readDerivedCount, setReadDerivedCount] = React.useState(0);
+  React.useEffect(() => {
+    const read = () => {
+      try {
+        const stored = sessionStorage.getItem("harmoniq_read_derived");
+        if (stored) {
+          const ids = JSON.parse(stored) as string[];
+          setReadDerivedCount(ids.length);
+        } else {
+          setReadDerivedCount(0);
+        }
+      } catch { setReadDerivedCount(0); }
+    };
+    read();
+    window.addEventListener("harmoniq:derived-read", read);
+    window.addEventListener("storage", read);
+    return () => {
+      window.removeEventListener("harmoniq:derived-read", read);
+      window.removeEventListener("storage", read);
+    };
+  }, []);
+
   // Compute notification count from real DB notifications + derived
   const notificationCount = React.useMemo(() => {
     if (!user) return 0;
 
-    // Read derived notification IDs that were already dismissed this session
-    let readDerivedCount = 0;
-    try {
-      const stored = typeof window !== "undefined" ? sessionStorage.getItem("harmoniq_read_derived") : null;
-      if (stored) {
-        const ids = JSON.parse(stored) as string[];
-        readDerivedCount = ids.length;
-      }
-    } catch { /* ignore */ }
-
-    // Count unread DB notifications
+    // Count unread DB notifications — only personal ones inflate the badge.
+    // Company-wide notifications (user_id === null) still appear on the page,
+    // but should not nudge every employee individually.
     const unreadDb = dbNotifications.filter(
-      (n) => !n.read && (n.user_id === null || n.user_id === user.id)
+      (n) => !n.read && n.user_id === user.id
     ).length;
     // Count pending tasks not covered by DB notifications
     const completedIds = new Set(
@@ -112,7 +127,7 @@ export default function EmployeeAppRootLayout({
     ).length;
     const totalDerived = pendingTasks + openTickets + openWorkOrders + openActions + assessmentFollowUp;
     return unreadDb + Math.max(0, totalDerived - readDerivedCount);
-  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, workOrders, correctiveActions, riskEvaluations]);
+  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, workOrders, correctiveActions, riskEvaluations, readDerivedCount]);
 
   const { resolvedTheme } = useTheme();
   const [themeMounted, setThemeMounted] = React.useState(false);

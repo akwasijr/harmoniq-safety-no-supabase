@@ -44,6 +44,16 @@ const BOTTOM_NAV_HIDDEN_ROUTES = [
   "/app/inspection/",
   "/app/inspection-round",
   "/app/incidents/",
+  "/app/messages",
+  "/app/notifications",
+  "/app/asset",
+  "/app/location/",
+  "/app/news/",
+  "/app/tasks/actions/",
+  "/app/tasks/work-orders/",
+  "/app/tasks/tickets/",
+  "/app/risk-assessment/view/",
+  "/app/calendar",
 ];
 
 const HEADER_HIDDEN_ROUTES = [
@@ -53,6 +63,17 @@ const HEADER_HIDDEN_ROUTES = [
   "/app/assets/new",
   "/app/inspection/",
   "/app/inspection-round",
+  "/app/messages",
+  "/app/notifications",
+  "/app/incidents/",
+  "/app/asset",
+  "/app/location/",
+  "/app/news/",
+  "/app/tasks/actions/",
+  "/app/tasks/work-orders/",
+  "/app/tasks/tickets/",
+  "/app/risk-assessment/view/",
+  "/app/calendar",
 ];
 
 // Risk assessment form routes — all sub-paths except the index and view pages
@@ -172,7 +193,7 @@ export function EmployeeAppLayout({
       <OfflineBanner />
 
       {/* Main content */}
-      <main className={`flex-1 bg-muted ${hideBottomNav ? "pb-0" : "pb-[72px]"}`}>{children}</main>
+      <main className={`flex-1 bg-muted ${hideBottomNav ? "pb-0" : "pb-[88px]"}`}>{children}</main>
 
       {/* Bottom navigation — hidden on full-page flows like report incident */}
       {!hideBottomNav && <BottomTabs company={company} />}

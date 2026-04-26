@@ -408,7 +408,7 @@ export default function UsersPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">{t("users.title")}</h1>
+        <div />
         {((activeTab === "teams" && canCreateTeam) || (activeTab !== "teams" && canManageMembers)) && (
         <Button 
           size="sm" 

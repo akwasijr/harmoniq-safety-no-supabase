@@ -29,6 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { useUnreadCommentCount } from "@/hooks/use-comment-feed";
+import { useCalendarEvents } from "@/hooks/use-calendar-events";
 import { cn } from "@/lib/utils";
 
 const PLATFORM_SLUGS =
@@ -83,9 +84,10 @@ function DashboardFocusStrip({ tabs, company }: {
   tabs: { id: string; label: string; dot: string; items: { id: string; title: string; subtitle?: string; type?: string; href: string; time?: string }[] }[];
   company: string;
 }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = React.useState(tabs[0]?.id || "urgent");
-  const active = tabs.find((t) => t.id === activeTab) || tabs[0];
-  const totalItems = tabs.reduce((sum, t) => sum + t.items.length, 0);
+  const active = tabs.find((tab) => tab.id === activeTab) || tabs[0];
+  const totalItems = tabs.reduce((sum, tab) => sum + tab.items.length, 0);
 
   if (totalItems === 0) return null;
 
@@ -93,7 +95,7 @@ function DashboardFocusStrip({ tabs, company }: {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Focus Strip</CardTitle>
+          <CardTitle className="text-base">{t("focusStrip.fieldFocus")}</CardTitle>
           <div className="flex gap-1">
             {tabs.map((tab) => (
               <button
@@ -165,6 +167,7 @@ export default function DashboardPage() {
   const { items: allCompanies } = useCompanyStore();
   const { incidents, locations, users, assets: allAssets, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, complianceObligations, checklistSubmissions, checklistTemplates, stores } = useCompanyData();
   const unreadMessages = useUnreadCommentCount();
+  const calendarEvents = useCalendarEvents(company);
 
   // Track platform entry state to avoid hydration mismatch
   const [isPlatformEntry, setIsPlatformEntry] = React.useState(false);
@@ -562,19 +565,45 @@ export default function DashboardPage() {
         });
     }
 
+    // Calendar events: surface training/certification/compliance/custom events not already covered
+    const existingIds = new Set([...focusUrgent, ...focusUpcoming, ...focusGoodToKnow].map((item) => item.id));
+    const calendarTypes = new Set(["training", "certification", "compliance", "custom"]);
+
+    calendarEvents.forEach((ev) => {
+      if (!calendarTypes.has(ev.type)) return;
+      const focusId = `cal-${ev.id}`;
+      if (existingIds.has(focusId)) return;
+
+      const evDate = ev.date.toISOString();
+      const item: FocusStripItem = {
+        id: focusId,
+        title: ev.title,
+        subtitle: ev.type.charAt(0).toUpperCase() + ev.type.slice(1).replace(/_/g, " "),
+        type: ev.type.charAt(0).toUpperCase() + ev.type.slice(1).replace(/_/g, " "),
+        href: ev.href,
+        time: ev.status === "overdue" ? daysOverdue(evDate) : daysUntil(evDate),
+      };
+
+      if (ev.status === "overdue") {
+        focusUrgent.push(item);
+      } else if (ev.status === "due_soon") {
+        focusUpcoming.push(item);
+      }
+    });
+
     return [
       { id: "urgent" as const, label: "Urgent", dot: "bg-red-500", items: focusUrgent },
       { id: "upcoming" as const, label: "Upcoming", dot: "bg-amber-500", items: focusUpcoming },
       { id: "good_to_know" as const, label: "Good to Know", dot: "bg-blue-500", items: focusGoodToKnow },
     ];
-  }, [incidents, locations, users, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, complianceObligations, checklistSubmissions, checklistTemplates, expiryAlerts, isManager, isDirector, company]);
+  }, [incidents, locations, users, tickets, workOrders, correctiveActions, workerCertifications, trainingAssignments, complianceObligations, checklistSubmissions, checklistTemplates, expiryAlerts, isManager, isDirector, company, calendarEvents]);
 
   return (
     <RoleGuard allowedRoles={["manager", "company_admin", "super_admin", "viewer"]}>
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">{t("nav.dashboard")}</h1>
+        <div />
         <div className="flex gap-2 sm:ml-auto">
           <FilterPanel
             filters={filters}

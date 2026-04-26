@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { 
   ClipboardCheck, 
   ChevronRight, 
@@ -108,6 +108,7 @@ function ReportHistoryInline({ company, incidents, user, formatDate }: {
 function EmployeeChecklistsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const tabParam = searchParams.get("tab");
   const locationParam = searchParams.get("location");
   
@@ -125,6 +126,16 @@ function EmployeeChecklistsPageContent() {
   
   const [activeTab, setActiveTab] = React.useState<TabType>(getInitialTab());
   const [subTab, setSubTab] = React.useState<SubTabType>("assigned");
+
+  // Keep ?tab= in sync so back-navigation from a detail page restores the right tab.
+  React.useEffect(() => {
+    const current = searchParams.get("tab");
+    if (current === activeTab) return;
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("tab", activeTab);
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
   const [historySearch, setHistorySearch] = React.useState("");
   const [historySearchOpen, setHistorySearchOpen] = React.useState(false);
   const [historyStatus, setHistoryStatus] = React.useState<string>("all");
@@ -405,12 +416,6 @@ function EmployeeChecklistsPageContent() {
                 )}
               >
                 {st === "assigned" ? t("checklists.tabs.assigned") : t("checklists.tabs.history")}
-                {st === "assigned" && subTab !== "assigned" && pendingTemplates.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
-                )}
-                {st === "history" && subTab !== "history" && checklistDraftCount > 0 && activeTab === "checklists" && (
-                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
-                )}
               </button>
             ))}
           </div>
@@ -655,6 +660,15 @@ function EmployeeChecklistsPageContent() {
 
       {/* Context-aware FAB */}
       <QuickActionFAB
+        emptyMessage={
+          activeTab === "risk-assessment"
+            ? "No risk assessment templates available yet. Ask your administrator to publish one."
+            : activeTab === "procedures"
+              ? "No procedures available yet. Ask your administrator to publish one."
+              : activeTab === "checklists"
+                ? "No checklist templates available yet. Ask your administrator to publish one."
+                : undefined
+        }
         actions={(() => {
           if (activeTab === "incidents") {
             return [{

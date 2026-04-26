@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Bell,
   Newspaper,
   ClipboardCheck,
@@ -12,7 +11,9 @@ import {
   Wrench,
   ShieldAlert,
   Clock,
+  Calendar as CalendarIcon,
 } from "lucide-react";
+import { SheetPageShell } from "@/components/layouts/sheet-page-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { useChecklistTemplatesStore, useChecklistSubmissionsStore } from "@/stores/checklists-store";
 import { useTicketsStore } from "@/stores/tickets-store";
@@ -20,6 +21,7 @@ import { useWorkOrdersStore } from "@/stores/work-orders-store";
 import { useCorrectiveActionsStore } from "@/stores/corrective-actions-store";
 import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
 import { useNotificationsStore } from "@/stores/notifications-store";
+import { useCustomEventsStore } from "@/stores/custom-events-store";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -76,6 +78,7 @@ export default function NotificationsPage() {
   const { items: correctiveActions } = useCorrectiveActionsStore();
   const { items: riskEvaluations } = useRiskEvaluationsStore();
   const { items: dbNotifications, update: updateNotification, isLoading } = useNotificationsStore();
+  const customEventsStore = useCustomEventsStore();
   const { t, formatDate } = useTranslation();
   const [fallbackTimestamp] = React.useState(() => Date.now());
 
@@ -293,13 +296,42 @@ export default function NotificationsPage() {
         });
       });
 
+    // Shared custom events (upcoming, not created by current user)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const companyCustomEvents = customEventsStore.itemsForCompany(user.company_id);
+    companyCustomEvents
+      .filter((ce) => {
+        if (ce.creator_id === user.id) return false;
+        if (!ce.share_all && !(ce.shared_with || []).includes(user.id)) return false;
+        const d = new Date(ce.date);
+        return d >= today;
+      })
+      .forEach((ce) => {
+        const derivedId = `custom-event-${ce.id}`;
+        if (dbIds.has(derivedId)) return;
+        items.push({
+          id: derivedId,
+          type: "custom",
+          title: ce.title,
+          description: ce.description || "Upcoming event",
+          timestamp: new Date(ce.created_at || fallbackTimestamp),
+          read: readDerivedIds.has(derivedId),
+          href: `/${company}/app/calendar`,
+          icon: CalendarIcon,
+          iconColor: "text-teal-700 bg-teal-100 dark:bg-teal-900/40 dark:text-teal-300",
+          audienceLabel: ce.share_all ? "Everyone" : "Shared with you",
+          urgencyWeight: 1,
+        });
+      });
+
     items.sort((a, b) => {
       if (b.urgencyWeight !== a.urgencyWeight) return b.urgencyWeight - a.urgencyWeight;
       if (a.read !== b.read) return a.read ? 1 : -1;
       return b.timestamp.getTime() - a.timestamp.getTime();
     });
     return items;
-  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, workOrders, correctiveActions, riskEvaluations, company, fallbackTimestamp, t, readDerivedIds]);
+  }, [user, dbNotifications, checklistTemplates, checklistSubmissions, tickets, workOrders, correctiveActions, riskEvaluations, customEventsStore, company, fallbackTimestamp, t, readDerivedIds]);
 
 
   const handleNotificationClick = (notification: NotificationItem) => {
@@ -309,7 +341,8 @@ export default function NotificationsPage() {
         notification.id.startsWith("ticket-") ||
         notification.id.startsWith("work-order-") ||
         notification.id.startsWith("action-") ||
-        notification.id.startsWith("risk-evaluation-"))
+        notification.id.startsWith("risk-evaluation-") ||
+        notification.id.startsWith("custom-event-"))
     ) {
       setReadDerivedIds((prev) => {
         const next = new Set(prev);
@@ -373,54 +406,41 @@ export default function NotificationsPage() {
     return <LoadingPage />;
   }
 
+  const topRight = unreadCount > 0 ? (
+    <button
+      type="button"
+      onClick={handleMarkAllRead}
+      className="text-xs font-medium text-primary"
+    >
+      Mark all read
+    </button>
+  ) : null;
+
+  const toolbar = (
+    <div className="flex gap-1 bg-muted rounded-lg p-1">
+      <button
+        onClick={() => setFilter("all")}
+        className={cn(
+          "flex-1 py-1.5 text-xs font-medium rounded-md transition-colors",
+          filter === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+        )}
+      >
+        All
+      </button>
+      <button
+        onClick={() => setFilter("unread")}
+        className={cn(
+          "flex-1 py-1.5 text-xs font-medium rounded-md transition-colors",
+          filter === "unread" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+        )}
+      >
+        Unread {unreadCount > 0 && `(${unreadCount})`}
+      </button>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col min-h-full pb-20">
-      {/* Header */}
-      <div className="sticky top-[60px] z-10 bg-background border-b px-4 pt-4 pb-3 space-y-3">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted transition-colors"
-            aria-label={t("common.goBack")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-lg font-bold flex-1">{t("notifications.title") || "Notifications"}</h1>
-          {unreadCount > 0 && (
-            <button
-              type="button"
-              onClick={handleMarkAllRead}
-              className="text-xs font-medium text-primary"
-            >
-              Mark all read
-            </button>
-          )}
-        </div>
-
-        {/* Filter tabs */}
-        <div className="flex gap-1 bg-muted rounded-lg p-1">
-          <button
-            onClick={() => setFilter("all")}
-            className={cn(
-              "flex-1 py-1.5 text-xs font-medium rounded-md transition-colors",
-              filter === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            )}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilter("unread")}
-            className={cn(
-              "flex-1 py-1.5 text-xs font-medium rounded-md transition-colors",
-              filter === "unread" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            )}
-          >
-            Unread {unreadCount > 0 && `(${unreadCount})`}
-          </button>
-        </div>
-      </div>
-
-      {/* Notification list */}
+    <SheetPageShell title={t("notifications.title") || "Notifications"} topRight={topRight} toolbar={toolbar}>
       <div className="flex-1">
         {filteredNotifications.length === 0 ? (
           <div className="text-center py-16">
@@ -473,6 +493,6 @@ export default function NotificationsPage() {
           </ul>
         )}
       </div>
-    </div>
+    </SheetPageShell>
   );
 }

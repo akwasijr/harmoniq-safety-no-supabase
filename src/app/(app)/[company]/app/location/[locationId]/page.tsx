@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { SheetPageShell } from "@/components/layouts/sheet-page-shell";
 import { useLocationsStore } from "@/stores/locations-store";
 import { useAuth } from "@/hooks/use-auth";
 import { LocationType } from "@/types";
@@ -93,16 +94,7 @@ export default function LocationLandingPage() {
   const LocationIcon = LOCATION_TYPE_ICONS[location.type] || Building;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="sticky top-[60px] z-10 border-b bg-background">
-        <div className="mx-auto flex h-14 max-w-lg items-center gap-3 px-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="truncate font-semibold">Location details</h1>
-        </div>
-      </div>
-
+    <SheetPageShell title="Location details">
       <div className="mx-auto max-w-lg p-4">
         <Card>
           <CardContent className="pt-6">
@@ -143,6 +135,6 @@ export default function LocationLandingPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </SheetPageShell>
   );
 }

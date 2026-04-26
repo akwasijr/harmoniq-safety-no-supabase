@@ -248,7 +248,7 @@ function SidebarGroup({ label, isCollapsed, children }: { label: string; isColla
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-3 py-1.5 text-[12px] font-medium text-sidebar-foreground/50 hover:text-sidebar-foreground/70 transition-colors"
+        className="flex w-full items-center justify-between px-3 py-1.5 text-[12px] font-medium text-muted-foreground/50 hover:text-muted-foreground/70 transition-colors"
       >
         <span>{label}</span>
         <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
@@ -524,7 +524,7 @@ export function Sidebar({
                         <li key={item.href}>
                           <span
                             className={cn(
-                              "flex items-center gap-2.5 rounded-md py-1.5 text-[13px] cursor-default opacity-40",
+                              "flex items-center gap-2.5 rounded-md py-1.5 text-[12px] cursor-default opacity-40",
                               isCollapsed ? "justify-center px-2" : "pl-7 pr-3",
                             )}
                             title={isCollapsed ? `${getTitle(item)} (Coming Soon)` : "Coming Soon"}
@@ -541,13 +541,13 @@ export function Sidebar({
                         <Link
                           href={href}
                           className={cn(
-                            "flex items-center gap-2.5 rounded-md py-1.5 text-[13px] transition-colors",
+                            "flex items-center gap-2.5 rounded-md py-1.5 text-[12px] transition-colors",
                             isCollapsed ? "justify-center px-2" : "pl-7 pr-3",
                             "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                             isActive
                               ? "bg-primary text-primary-foreground font-semibold"
-                              : "text-sidebar-foreground/40"
+                              : "text-sidebar-foreground/60"
                           )}
                           title={isCollapsed ? getTitle(item) : undefined}
                         >

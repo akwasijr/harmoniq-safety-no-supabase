@@ -81,8 +81,6 @@ export default function PartsPage() {
   return (
     <RoleGuard requiredPermission="work_orders.view">
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Parts Inventory</h1>
-
       <div className="grid gap-4 sm:grid-cols-3">
         <KPICard title={t("parts.title")} value={totalParts} icon={Package} />
         <KPICard title={t("parts.labels.inventoryValue")} value={`$${formatNumber(totalValue)}`} icon={Package} />

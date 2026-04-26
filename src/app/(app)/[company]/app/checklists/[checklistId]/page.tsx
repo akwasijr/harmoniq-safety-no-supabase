@@ -63,7 +63,8 @@ function ChecklistFormPageContent() {
   const template =
     matchedTemplate &&
     user?.company_id &&
-    matchedTemplate.company_id === user.company_id &&
+    (matchedTemplate.company_id === user.company_id ||
+      matchedTemplate.company_id === "__built_in__") &&
     isVisibleToFieldApp(matchedTemplate)
       ? matchedTemplate
       : undefined;

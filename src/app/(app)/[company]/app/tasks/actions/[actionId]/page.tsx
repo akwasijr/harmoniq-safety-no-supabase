@@ -15,7 +15,8 @@ import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
-import { TaskDetailHeader, PRIORITY_CONFIG } from "@/components/tasks/task-detail-header";
+import { SheetPageShell } from "@/components/layouts/sheet-page-shell";
+import { PRIORITY_CONFIG } from "@/components/tasks/task-detail-header";
 import { TaskInfoCard } from "@/components/tasks/task-info-card";
 import { TaskStatusActions } from "@/components/tasks/task-status-actions";
 import { SubTabs } from "@/components/ui/sub-tabs";
@@ -24,7 +25,6 @@ import { TaskDocuments } from "@/components/tasks/task-documents";
 import { ActionResolution } from "@/components/tasks/action-resolution";
 import { getFilesForEntity } from "@/lib/file-storage";
 import { isAssignedToUserOrTeam } from "@/lib/assignment-utils";
-import { ArrowLeft } from "lucide-react";
 import type { CorrectiveActionStatus } from "@/types";
 
 export default function CorrectiveActionDetailPage() {
@@ -92,7 +92,7 @@ export default function CorrectiveActionDetailPage() {
         icon={AlertTriangle}
         title="Corrective Action Not Found"
         description="This action may have been deleted or you don't have access."
-        action={<Button variant="outline" onClick={() => router.back()}><ArrowLeft className="h-4 w-4 mr-2" />Go Back</Button>}
+        action={<Button variant="outline" onClick={() => router.back()}>Go Back</Button>}
       />
     );
   }
@@ -107,8 +107,10 @@ export default function CorrectiveActionDetailPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-full bg-background">
-      <TaskDetailHeader title="Corrective Action" subtitle={`#${actionId.slice(0, 10)}`} status={action.status} overdue={isOverdue} />
+    <SheetPageShell
+      title="Corrective Action"
+      toolbar={<SubTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} size="sm" />}
+    >
 
       {isOverdue && (
         <div className="mx-4 mt-3 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-3 py-2">
@@ -119,9 +121,7 @@ export default function CorrectiveActionDetailPage() {
         </div>
       )}
 
-      <SubTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} size="sm" className="px-4 pt-3" />
-
-      <div className="flex-1 px-4 py-4 space-y-4">
+      <div className="px-4 py-4 space-y-4">
         {activeTab === "details" && (
           <>
             <div>
@@ -195,6 +195,6 @@ export default function CorrectiveActionDetailPage() {
         {activeTab === "activity" && <TaskComments entityType="corrective-action" entityId={actionId} formatDate={formatDate} />}
         {activeTab === "files" && <TaskDocuments entityType="corrective-action" entityId={actionId} formatDate={formatDate} />}
       </div>
-    </div>
+    </SheetPageShell>
   );
 }

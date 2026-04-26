@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -55,12 +55,23 @@ export default function EmployeeAssetsPage() {
   const { items: inspectionRoutes } = useInspectionRoutesStore();
   const { t, formatDate } = useTranslation();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const [activeTab, setActiveTab] = React.useState<SubTab>(() => {
     const tabParam = searchParams.get("tab");
     if (tabParam === "work" || tabParam === "rounds" || tabParam === "browse") return tabParam;
     return "browse";
   });
+
+  // Sync ?tab= so back-navigation from a deep page restores the tab.
+  React.useEffect(() => {
+    const current = searchParams.get("tab");
+    if (current === activeTab) return;
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("tab", activeTab);
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
   const [search, setSearch] = React.useState("");
   const [browseSearch, setBrowseSearch] = React.useState("");
   const [browseSearchOpen, setBrowseSearchOpen] = React.useState(false);

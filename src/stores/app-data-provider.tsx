@@ -31,6 +31,7 @@ import { SpillRecordsProvider } from "@/stores/spill-records-store";
 import { ProcedureTemplatesProvider } from "@/stores/procedure-templates-store";
 import { ProcedureSubmissionsProvider } from "@/stores/procedure-submissions-store";
 import { NotificationsStoreProvider } from "@/stores/notifications-store";
+import { CustomEventsStoreProvider } from "@/stores/custom-events-store";
 
 type DataProvider = React.ComponentType<{ children: React.ReactNode }>;
 
@@ -66,6 +67,7 @@ const APP_DATA_PROVIDERS: DataProvider[] = [
   ProcedureTemplatesProvider,
   ProcedureSubmissionsProvider,
   NotificationsStoreProvider,
+  CustomEventsStoreProvider,
 ];
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {

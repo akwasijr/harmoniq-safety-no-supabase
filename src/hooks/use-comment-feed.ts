@@ -33,6 +33,8 @@ function getLastSeenKey(userId: string): string {
   return `harmoniq_comments_seen_${userId}`;
 }
 
+const COMMENTS_SEEN_EVENT = "harmoniq:comments-seen";
+
 export function useCommentFeed(basePath: "dashboard" | "app", company?: string) {
   const { user } = useAuth();
   const { incidents, tickets, stores } = useCompanyData();
@@ -56,6 +58,7 @@ export function useCommentFeed(basePath: "dashboard" | "app", company?: string) 
     const now = new Date().toISOString();
     window.localStorage.setItem(getLastSeenKey(userId), now);
     setLastSeenAt(now);
+    window.dispatchEvent(new Event(COMMENTS_SEEN_EVENT));
   }, [userId]);
 
   // Build the comment feed
@@ -73,7 +76,9 @@ export function useCommentFeed(basePath: "dashboard" | "app", company?: string) 
       const userAssigned = incident.assigned_to === userId;
 
       incComments.forEach((c) => {
+        const isMine = c.userId === userId;
         const isForUser =
+          isMine ||
           c.mentionedUserIds?.includes(userId) ||
           userAssigned ||
           userCommented;
@@ -91,7 +96,7 @@ export function useCommentFeed(basePath: "dashboard" | "app", company?: string) 
           sourceId: incident.id,
           sourceTitle: `${incident.reference_number}: ${incident.title}`,
           sourceHref: companySlug ? `/${companySlug}/dashboard/incidents/${incident.id}` : "",
-          isForUser: true,
+          isForUser: !isMine,
         });
       });
     });
@@ -105,7 +110,8 @@ export function useCommentFeed(basePath: "dashboard" | "app", company?: string) 
       const userAssigned = ticket.assigned_to === userId;
 
       ticketComments.forEach((c) => {
-        const isForUser = userAssigned || userCommented;
+        const isMine = c.userId === userId;
+        const isForUser = isMine || userAssigned || userCommented;
 
         if (!isForUser) return;
 
@@ -120,7 +126,7 @@ export function useCommentFeed(basePath: "dashboard" | "app", company?: string) 
           sourceId: ticket.id,
           sourceTitle: `Ticket: ${ticket.title}`,
           sourceHref: companySlug ? `/${companySlug}/dashboard/tickets/${ticket.id}` : "",
-          isForUser: true,
+          isForUser: !isMine,
         });
       });
     });
@@ -133,9 +139,9 @@ export function useCommentFeed(basePath: "dashboard" | "app", company?: string) 
 
   // Compute unread count
   const unreadCount = useMemo(() => {
-    if (!mounted || !lastSeenAt) return feed.length;
+    if (!mounted || !lastSeenAt) return feed.filter((c) => c.isForUser).length;
     const seenTime = new Date(lastSeenAt).getTime();
-    return feed.filter((c) => new Date(c.date).getTime() > seenTime).length;
+    return feed.filter((c) => c.isForUser && new Date(c.date).getTime() > seenTime).length;
   }, [feed, lastSeenAt, mounted]);
 
   // Count unique items with activity
@@ -170,6 +176,17 @@ export function useUnreadCommentCount(): number {
     const stored = window.localStorage.getItem(getLastSeenKey(userId));
     setLastSeenAt(stored);
     setMounted(true);
+
+    const refresh = () => {
+      const next = window.localStorage.getItem(getLastSeenKey(userId));
+      setLastSeenAt(next);
+    };
+    window.addEventListener(COMMENTS_SEEN_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(COMMENTS_SEEN_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
   }, [userId]);
 
   return useMemo(() => {
@@ -184,6 +201,7 @@ export function useUnreadCommentCount(): number {
       const userAssigned = incident.assigned_to === userId;
 
       incComments.forEach((c) => {
+        if (c.userId === userId) return;
         const isForUser =
           c.mentionedUserIds?.includes(userId) ||
           userAssigned ||
@@ -199,6 +217,7 @@ export function useUnreadCommentCount(): number {
       const userAssigned = ticket.assigned_to === userId;
 
       ticketComments.forEach((c) => {
+        if (c.userId === userId) return;
         const isForUser = userAssigned || userCommented;
         if (isForUser) dates.push(c.date);
       });

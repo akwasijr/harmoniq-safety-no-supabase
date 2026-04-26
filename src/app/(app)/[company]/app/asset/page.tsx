@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import {
-  ArrowLeft,
   Wrench,
   AlertTriangle,
   ClipboardCheck,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { SheetPageShell } from "@/components/layouts/sheet-page-shell";
 import { useAssetsStore } from "@/stores/assets-store";
 import { useTranslation } from "@/i18n";
 import { useAssetInspectionsStore } from "@/stores/inspections-store";
@@ -70,14 +70,7 @@ function AssetQuickViewPageContent() {
   const conditionColor = conditionColors[asset.condition] || "text-muted-foreground";
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="sticky top-[60px] z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="font-semibold">{t("assets.assetDetails")}</h1>
-      </div>
-
+    <SheetPageShell title={t("assets.assetDetails")}>
       <div className="p-4 space-y-4 max-w-lg mx-auto">
         {/* Asset Summary Card */}
         <Card>
@@ -213,7 +206,7 @@ function AssetQuickViewPageContent() {
           </Card>
         )}
       </div>
-    </div>
+    </SheetPageShell>
   );
 }
 

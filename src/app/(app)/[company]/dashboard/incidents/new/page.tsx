@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCompanyData } from "@/hooks/use-company-data";
 import { useCompanyParam } from "@/hooks/use-company-param";
-import { AlertTriangle, Camera, X, Loader2 } from "lucide-react";
+import { AlertTriangle, Camera, X, Loader2, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { LIMITS } from "@/lib/constants";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import { useIncidentsStore } from "@/stores/incidents-store";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/hooks/use-auth";
 import { storeFile } from "@/lib/file-storage";
+import { cn } from "@/lib/utils";
 import type { Incident, IncidentType, Severity, Priority } from "@/types";
 import { useTranslation } from "@/i18n";
 import { RoleGuard } from "@/components/auth/role-guard";
@@ -55,13 +56,19 @@ function derivePriority(severity: Severity): Priority {
   return "low";
 }
 
+const STEPS = [
+  { n: 1, label: "What happened" },
+  { n: 2, label: "Details & evidence" },
+] as const;
+
 export default function NewIncidentPage() {
   const router = useRouter();
   const company = useCompanyParam();
+  const [step, setStep] = React.useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { user } = useAuth();
-  const { t, formatDate } = useTranslation();
+  const { t } = useTranslation();
   const { locations, assets: allAssets } = useCompanyData();
   const { add: addIncident } = useIncidentsStore();
   const { toast } = useToast();
@@ -72,8 +79,7 @@ export default function NewIncidentPage() {
     gpsLat: null,
     gpsLng: null,
   });
-  
-  // Form state matching IncidentFormData interface
+
   const [formData, setFormData] = React.useState({
     type: "near_miss" as IncidentType,
     type_other: "",
@@ -99,7 +105,7 @@ export default function NewIncidentPage() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    
+
     const filesToProcess = Array.from(files).slice(0, 5 - photos.length);
     for (const file of filesToProcess) {
       try {
@@ -116,7 +122,33 @@ export default function NewIncidentPage() {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const step1Valid =
+    formData.title.trim().length > 0 &&
+    formData.description.trim().length > 0 &&
+    formData.incident_date &&
+    formData.incident_time &&
+    (formData.type !== "other" || formData.type_other.trim().length > 0);
+
+  const handleNext = () => {
+    if (!step1Valid) {
+      toast("Please complete all required fields", "error");
+      return;
+    }
+    setStep(2);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleBack = () => {
+    setStep(1);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleSubmit = async () => {
+    if (!step1Valid) {
+      setStep(1);
+      toast("Please complete all required fields", "error");
+      return;
+    }
     setIsSubmitting(true);
     const now = new Date();
     const incident: Incident = {
@@ -134,10 +166,10 @@ export default function NewIncidentPage() {
       incident_time: formData.incident_time,
       lost_time: formData.lost_time,
       lost_time_amount: formData.lost_time ? formData.lost_time_amount : null,
-        lost_time_restricted_days: formData.lost_time ? (formData.lost_time_restricted_days || null) : null,
-        lost_time_return_date: formData.lost_time ? (formData.lost_time_return_date || null) : null,
-        lost_time_updated_at: null,
-        lost_time_updated_by: null,
+      lost_time_restricted_days: formData.lost_time ? (formData.lost_time_restricted_days || null) : null,
+      lost_time_return_date: formData.lost_time ? (formData.lost_time_return_date || null) : null,
+      lost_time_updated_at: null,
+      lost_time_updated_by: null,
       active_hazard: formData.active_hazard,
       location_id: incidentLocationValue.locationId || null,
       building: formData.building || null,
@@ -164,361 +196,418 @@ export default function NewIncidentPage() {
     router.push(`/${company}/dashboard/incidents`);
   };
 
-  const isValid = formData.title.trim() && formData.description.trim();
-
   return (
     <RoleGuard requiredPermission="incidents.create">
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="heading-2">{t("incidents.reportIncident")}</h1>
-          <p className="text-sm text-muted-foreground">
-            Complete form to report a safety incident
-          </p>
+      <div className="mx-auto w-full max-w-3xl space-y-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="heading-2">{t("incidents.reportIncident")}</h1>
+            <p className="text-sm text-muted-foreground">
+              Step {step} of {STEPS.length} · {STEPS[step - 1].label}
+            </p>
+          </div>
+          <Link href={`/${company}/dashboard/incidents`}>
+            <Button variant="outline">{t("common.back")}</Button>
+          </Link>
         </div>
-        <Link href={`/${company}/dashboard/incidents`}>
-          <Button variant="outline">{t("common.back")}</Button>
-        </Link>
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left Column - Basic Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("incidents.newIncident")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">{t("incidents.labels.title")} *</Label>
-              <Input 
-                id="title" 
-                placeholder={t("incidents.placeholders.briefDescription")}
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                maxLength={200}
-              />
-            </div>
+        {/* Stepper */}
+        <ol className="flex items-center gap-2">
+          {STEPS.map((s, i) => {
+            const active = step === s.n;
+            const complete = step > s.n;
+            return (
+              <React.Fragment key={s.n}>
+                <li className="flex items-center gap-2">
+                  <div
+                    className={cn(
+                      "flex h-7 w-7 items-center justify-center rounded-full border text-xs font-medium",
+                      complete && "border-primary bg-primary text-primary-foreground",
+                      active && "border-primary bg-background text-primary",
+                      !active && !complete && "border-border bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {complete ? <Check className="h-4 w-4" /> : s.n}
+                  </div>
+                  <span
+                    className={cn(
+                      "text-sm",
+                      active ? "font-medium text-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    {s.label}
+                  </span>
+                </li>
+                {i < STEPS.length - 1 && (
+                  <li aria-hidden="true" className="h-px flex-1 bg-border" />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </ol>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>{t("incidents.labels.type")} *</Label>
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(v) => setFormData((prev) => ({ ...prev, type: v as IncidentType }))}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {INCIDENT_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formData.type === "other" && (
-                <div className="space-y-2">
-                  <Label htmlFor="type_other">Specify type</Label>
-                  <Input
-                    id="type_other"
-                    placeholder={t("incidents.placeholders.describeType")}
-                    value={formData.type_other}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, type_other: e.target.value }))}
-                    maxLength={100}
-                  />
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label>{t("incidents.labels.severity")} *</Label>
-                <Select 
-                  value={formData.severity} 
-                  onValueChange={(v) => setFormData((prev) => ({ ...prev, severity: v as Severity }))}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SEVERITY_LEVELS.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t("incidents.labels.priority")}</Label>
-                <div className="flex h-10 items-center rounded-md border bg-muted/50 px-3 text-sm capitalize text-muted-foreground">
-                  {derivePriority(formData.severity)}
-                  <span className="ml-auto text-xs text-muted-foreground/60">Auto from severity</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="incident_date">{t("incidents.labels.date")} *</Label>
-                <Input
-                  id="incident_date"
-                  type="date"
-                  value={formData.incident_date}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, incident_date: e.target.value }))}
-                  max={new Date().toISOString().split("T")[0]}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="incident_time">{t("incidents.labels.time")} *</Label>
-                <Input
-                  id="incident_time"
-                  type="time"
-                  value={formData.incident_time}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, incident_time: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">{t("incidents.labels.description")} *</Label>
-              <Textarea
-                id="description"
-                placeholder={t("incidents.placeholders.describeWhatHappened")}
-                rows={5}
-                value={formData.description}
-                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                maxLength={LIMITS.MAX_DESCRIPTION_LENGTH}
-              />
-              <p className="text-xs text-muted-foreground text-right">{formData.description.length}/{LIMITS.MAX_DESCRIPTION_LENGTH}</p>
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div>
-                <Label htmlFor="lost_time" className="cursor-pointer">{t("incidents.labels.lostTime")}?</Label>
-                <p className="text-xs text-muted-foreground">Did this result in time away from work?</p>
-              </div>
-              <Switch
-                id="lost_time"
-                checked={formData.lost_time}
-                onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, lost_time: checked }))}
-              />
-            </div>
-
-            {formData.lost_time && (
-              <>
-              <div className="space-y-2">
-                <Label htmlFor="lost_time_amount">Days Away From Work</Label>
-                <Input
-                  id="lost_time_amount"
-                  type="number"
-                  min="0"
-                  placeholder="Number of calendar days"
-                  value={formData.lost_time_amount || ""}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, lost_time_amount: Number(e.target.value) || 0 }))}
-                />
-                <p className="text-xs text-muted-foreground">Total calendar days the worker was unable to perform normal duties</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lost_time_restricted_days">Restricted Duty Days</Label>
-                <Input
-                  id="lost_time_restricted_days"
-                  type="number"
-                  min="0"
-                  placeholder="Days on modified/restricted duty"
-                  value={formData.lost_time_restricted_days || ""}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, lost_time_restricted_days: Number(e.target.value) || 0 }))}
-                />
-                <p className="text-xs text-muted-foreground">Days the worker was on restricted or modified duty (OSHA DART)</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lost_time_return_date">Expected Return Date</Label>
-                <Input
-                  id="lost_time_return_date"
-                  type="date"
-                  value={formData.lost_time_return_date || ""}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, lost_time_return_date: e.target.value }))}
-                />
-              </div>
-              </>
-            )}
-
-            <div className="flex items-center justify-between rounded-lg border p-3 border-destructive/50 bg-destructive/5">
-              <div>
-                <Label htmlFor="active_hazard" className="cursor-pointer text-destructive">{t("incidents.labels.activeHazard")}?</Label>
-                <p className="text-xs text-muted-foreground">Is there still an active danger at the location?</p>
-              </div>
-              <Switch
-                id="active_hazard"
-                checked={formData.active_hazard}
-                onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, active_hazard: checked }))}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Right Column - Location & Photos */}
-        <div className="space-y-6">
+        {step === 1 && (
           <Card>
             <CardHeader>
-              <CardTitle>{t("incidents.labels.location")}</CardTitle>
+              <CardTitle>{t("incidents.newIncident")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <LocationPicker
-                locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address, parent_id: l.parent_id, type: l.type }))}
-                value={incidentLocationValue}
-                onChange={setIncidentLocationValue}
-                label={t("incidents.labels.location")}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="title">{t("incidents.labels.title")} *</Label>
+                <Input
+                  id="title"
+                  placeholder={t("incidents.placeholders.briefDescription")}
+                  value={formData.title}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                  maxLength={200}
+                />
+              </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="building">Building</Label>
+                  <Label>{t("incidents.labels.type")} *</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(v) => setFormData((prev) => ({ ...prev, type: v as IncidentType }))}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {INCIDENT_TYPES.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.type === "other" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="type_other">Specify type *</Label>
+                    <Input
+                      id="type_other"
+                      placeholder={t("incidents.placeholders.describeType")}
+                      value={formData.type_other}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, type_other: e.target.value }))}
+                      maxLength={100}
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label>{t("incidents.labels.severity")} *</Label>
+                  <Select
+                    value={formData.severity}
+                    onValueChange={(v) => setFormData((prev) => ({ ...prev, severity: v as Severity }))}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {SEVERITY_LEVELS.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{t("incidents.labels.priority")}</Label>
+                  <div className="flex h-10 items-center rounded-md border bg-muted/50 px-3 text-sm capitalize text-muted-foreground">
+                    {derivePriority(formData.severity)}
+                    <span className="ml-auto text-xs text-muted-foreground/60">Auto from severity</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="incident_date">{t("incidents.labels.date")} *</Label>
                   <Input
-                    id="building"
-                    placeholder={t("incidents.placeholders.building")}
-                    value={formData.building}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, building: e.target.value }))}
-                    maxLength={100}
+                    id="incident_date"
+                    type="date"
+                    value={formData.incident_date}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, incident_date: e.target.value }))}
+                    max={new Date().toISOString().split("T")[0]}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="floor">Floor</Label>
+                  <Label htmlFor="incident_time">{t("incidents.labels.time")} *</Label>
                   <Input
-                    id="floor"
-                    placeholder={t("incidents.placeholders.floor")}
-                    value={formData.floor}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, floor: e.target.value }))}
-                    maxLength={100}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zone">Zone</Label>
-                  <Input
-                    id="zone"
-                    placeholder={t("incidents.placeholders.zone")}
-                    value={formData.zone}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, zone: e.target.value }))}
-                    maxLength={100}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="room">Room</Label>
-                  <Input
-                    id="room"
-                    placeholder={t("incidents.placeholders.room")}
-                    value={formData.room}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, room: e.target.value }))}
-                    maxLength={100}
+                    id="incident_time"
+                    type="time"
+                    value={formData.incident_time}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, incident_time: e.target.value }))}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location_description">Location description</Label>
+                <Label htmlFor="description">{t("incidents.labels.description")} *</Label>
                 <Textarea
-                  id="location_description"
-                  placeholder={t("incidents.placeholders.locationDescription")}
-                  rows={2}
-                  value={formData.location_description}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, location_description: e.target.value }))}
-                  maxLength={2000}
+                  id="description"
+                  placeholder={t("incidents.placeholders.describeWhatHappened")}
+                  rows={5}
+                  value={formData.description}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                  maxLength={LIMITS.MAX_DESCRIPTION_LENGTH}
                 />
-                <p className="text-xs text-muted-foreground text-right">{formData.location_description.length}/2000</p>
+                <p className="text-xs text-muted-foreground text-right">{formData.description.length}/{LIMITS.MAX_DESCRIPTION_LENGTH}</p>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3 border-destructive/50 bg-destructive/5">
+                <div>
+                  <Label htmlFor="active_hazard" className="cursor-pointer text-destructive">{t("incidents.labels.activeHazard")}?</Label>
+                  <p className="text-xs text-muted-foreground">Is there still an active danger at the location?</p>
+                </div>
+                <Switch
+                  id="active_hazard"
+                  checked={formData.active_hazard}
+                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, active_hazard: checked }))}
+                />
               </div>
             </CardContent>
           </Card>
+        )}
 
-          {/* Related Asset */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("incidents.labels.relatedAsset")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Label>Asset involved (optional)</Label>
-              <Select 
-                value={formData.asset_id} 
-                onValueChange={(v) => setFormData((prev) => ({ ...prev, asset_id: v }))}
-              >
-                <SelectTrigger><SelectValue placeholder={t("incidents.placeholders.selectAsset")} /></SelectTrigger>
-                <SelectContent>
-                  {allAssets.filter(a => a.status !== "retired").map((asset) => (
-                    <SelectItem key={asset.id} value={asset.id}>
-                      {asset.name} ({asset.asset_tag})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {formData.asset_id && (
-                <Button variant="ghost" size="sm" className="text-xs" onClick={() => setFormData((prev) => ({ ...prev, asset_id: "" }))}>
-                  Clear selection
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("incidents.labels.photos")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">Add up to 5 photos of the incident scene</p>
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/gif,image/webp"
-                multiple
-                className="hidden"
-                onChange={handlePhotoUpload}
-              />
-              
-              {photos.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                  {photos.map((photo, index) => (
-                    <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden border">
-                      <img src={photo.url} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-1 right-1 h-6 w-6"
-                        onClick={() => removePhoto(index)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
+        {step === 2 && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Impact</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <Label htmlFor="lost_time" className="cursor-pointer">{t("incidents.labels.lostTime")}?</Label>
+                    <p className="text-xs text-muted-foreground">Did this result in time away from work?</p>
+                  </div>
+                  <Switch
+                    id="lost_time"
+                    checked={formData.lost_time}
+                    onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, lost_time: checked }))}
+                  />
                 </div>
-              )}
-              
-              {photos.length < 5 && (
-                <Button
-                  variant="outline"
-                  className="w-full gap-2"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Camera className="h-4 w-4" />
-                  Add photo ({photos.length}/5)
-                </Button>
-              )}
-            </CardContent>
-          </Card>
 
+                {formData.lost_time && (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="lost_time_amount">Days Away From Work</Label>
+                      <Input
+                        id="lost_time_amount"
+                        type="number"
+                        min="0"
+                        placeholder="Number of calendar days"
+                        value={formData.lost_time_amount || ""}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, lost_time_amount: Number(e.target.value) || 0 }))}
+                      />
+                      <p className="text-xs text-muted-foreground">Total calendar days unable to perform normal duties</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lost_time_restricted_days">Restricted Duty Days</Label>
+                      <Input
+                        id="lost_time_restricted_days"
+                        type="number"
+                        min="0"
+                        placeholder="Days on modified duty"
+                        value={formData.lost_time_restricted_days || ""}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, lost_time_restricted_days: Number(e.target.value) || 0 }))}
+                      />
+                      <p className="text-xs text-muted-foreground">Days on restricted/modified duty (OSHA DART)</p>
+                    </div>
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label htmlFor="lost_time_return_date">Expected Return Date</Label>
+                      <Input
+                        id="lost_time_return_date"
+                        type="date"
+                        value={formData.lost_time_return_date || ""}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, lost_time_return_date: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("incidents.labels.location")}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <LocationPicker
+                  locations={locations.map((l) => ({ id: l.id, name: l.name, address: l.address, parent_id: l.parent_id, type: l.type }))}
+                  value={incidentLocationValue}
+                  onChange={setIncidentLocationValue}
+                  label={t("incidents.labels.location")}
+                />
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="building">Building</Label>
+                    <Input
+                      id="building"
+                      placeholder={t("incidents.placeholders.building")}
+                      value={formData.building}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, building: e.target.value }))}
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="floor">Floor</Label>
+                    <Input
+                      id="floor"
+                      placeholder={t("incidents.placeholders.floor")}
+                      value={formData.floor}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, floor: e.target.value }))}
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zone">Zone</Label>
+                    <Input
+                      id="zone"
+                      placeholder={t("incidents.placeholders.zone")}
+                      value={formData.zone}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, zone: e.target.value }))}
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="room">Room</Label>
+                    <Input
+                      id="room"
+                      placeholder={t("incidents.placeholders.room")}
+                      value={formData.room}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, room: e.target.value }))}
+                      maxLength={100}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location_description">Location description</Label>
+                  <Textarea
+                    id="location_description"
+                    placeholder={t("incidents.placeholders.locationDescription")}
+                    rows={2}
+                    value={formData.location_description}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, location_description: e.target.value }))}
+                    maxLength={2000}
+                  />
+                  <p className="text-xs text-muted-foreground text-right">{formData.location_description.length}/2000</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("incidents.labels.relatedAsset")}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Label>Asset involved (optional)</Label>
+                <Select
+                  value={formData.asset_id}
+                  onValueChange={(v) => setFormData((prev) => ({ ...prev, asset_id: v }))}
+                >
+                  <SelectTrigger><SelectValue placeholder={t("incidents.placeholders.selectAsset")} /></SelectTrigger>
+                  <SelectContent>
+                    {allAssets.filter(a => a.status !== "retired").map((asset) => (
+                      <SelectItem key={asset.id} value={asset.id}>
+                        {asset.name} ({asset.asset_tag})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formData.asset_id && (
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => setFormData((prev) => ({ ...prev, asset_id: "" }))}>
+                    Clear selection
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("incidents.labels.photos")}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Add up to 5 photos of the incident scene</p>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  multiple
+                  className="hidden"
+                  onChange={handlePhotoUpload}
+                />
+
+                {photos.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {photos.map((photo, index) => (
+                      <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden border">
+                        <img src={photo.url} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-6 w-6"
+                          onClick={() => removePhoto(index)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {photos.length < 5 && (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Camera className="h-4 w-4" />
+                    Add photo ({photos.length}/5)
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Footer nav */}
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            {step === 2 && (
+              <Button variant="outline" className="gap-2" onClick={handleBack}>
+                <ChevronLeft className="h-4 w-4" />
+                Back
+              </Button>
+            )}
+          </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
             <Link href={`/${company}/dashboard/incidents`}>
-              <Button variant="outline" className="w-full sm:w-auto">{t("common.cancel")}</Button>
+              <Button variant="ghost" className="w-full sm:w-auto">{t("common.cancel")}</Button>
             </Link>
-            <Button 
-              className="gap-2" 
-              disabled={!isValid || isSubmitting}
-              onClick={handleSubmit}
-            >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <AlertTriangle className="h-4 w-4" />
-              )}
-              {isSubmitting ? t("common.loading") : t("incidents.buttons.submitIncident")}
-            </Button>
+            {step === 1 ? (
+              <Button className="gap-2" disabled={!step1Valid} onClick={handleNext}>
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                className="gap-2"
+                disabled={!step1Valid || isSubmitting}
+                onClick={handleSubmit}
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4" />
+                )}
+                {isSubmitting ? t("common.loading") : t("incidents.buttons.submitIncident")}
+              </Button>
+            )}
           </div>
         </div>
       </div>
-    </div>
     </RoleGuard>
   );
 }

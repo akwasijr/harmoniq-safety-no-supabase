@@ -133,9 +133,7 @@ export default function PlatformCompaniesPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="heading-2">{t("companies.allCompanies")}</h1>
-          </div>
+          <div />
           <Button className="gap-2" onClick={() => setShowAddModal(true)}>
             <Plus className="h-4 w-4" />
             {t("companies.addCompany")}

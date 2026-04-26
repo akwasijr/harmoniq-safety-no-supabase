@@ -38,6 +38,7 @@ import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { storeFile, getFilesForEntity, type StoredFile } from "@/lib/file-storage";
 import { ImageViewer } from "@/components/ui/image-viewer";
+import { SheetPageShell } from "@/components/layouts/sheet-page-shell";
 
 type TabKey = "overview" | "tasks" | "comments";
 
@@ -236,60 +237,49 @@ export default function EmployeeIncidentDetailPage() {
     incident.room ? `Room ${incident.room}` : null,
   ].filter(Boolean);
 
+  const tabToolbar = (
+    <div className="flex gap-2 overflow-x-auto no-scrollbar">
+      {TABS.map((tab) => {
+        const isActive = activeTab === tab.key;
+        const count = tab.key === "tasks" ? taskCount : tab.key === "comments" ? commentCount : 0;
+        return (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 ${
+              isActive
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            <tab.icon className="h-3.5 w-3.5" />
+            {tab.label}
+            {count > 0 && (
+              <span className={`rounded-full px-1.5 text-[10px] font-medium leading-4 min-w-[18px] text-center ${
+                isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-background text-muted-foreground"
+              }`}>
+                {count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const statusBadge = incident.status !== "new" ? (
+    <Badge variant={statusConfig.variant as BadgeProps["variant"]}>{statusConfig.label}</Badge>
+  ) : undefined;
+
   return (
-    <div className="flex flex-col min-h-full bg-background">
-      {/* ── Sticky Header ── */}
-      <header className="sticky top-[60px] z-30 border-b bg-background">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-base font-semibold truncate">{incident.title}</h1>
-            <p className="text-xs text-muted-foreground">
-              {incident.reference_number || `#${incident.id.slice(0, 8)}`}
-            </p>
-          </div>
-          {incident.status !== "new" && (
-            <Badge variant={statusConfig.variant as BadgeProps["variant"]}>{statusConfig.label}</Badge>
-          )}
-        </div>
-      </header>
-
-      {/* ── Sticky Tab Bar ── */}
-      <nav className="sticky top-[117px] z-20 bg-background px-4 pt-3 pb-2">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.key;
-            const count = tab.key === "tasks" ? taskCount : tab.key === "comments" ? commentCount : 0;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 ${
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                <tab.icon className="h-3.5 w-3.5" />
-                {tab.label}
-                {count > 0 && (
-                  <span className={`rounded-full px-1.5 text-[10px] font-medium leading-4 min-w-[18px] text-center ${
-                    isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-background text-muted-foreground"
-                  }`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
+    <SheetPageShell
+      title={incident.title}
+      topRight={statusBadge}
+      toolbar={tabToolbar}
+    >
       {/* ── Tab Content ── */}
-      <div className="flex-1 px-4 py-4 space-y-4">
+      <div className="px-4 py-4 space-y-4">
 
         {/* ════════════ OVERVIEW TAB ════════════ */}
         {activeTab === "overview" && (
@@ -841,6 +831,6 @@ export default function EmployeeIncidentDetailPage() {
           }}
         />
       )}
-    </div>
+    </SheetPageShell>
   );
 }

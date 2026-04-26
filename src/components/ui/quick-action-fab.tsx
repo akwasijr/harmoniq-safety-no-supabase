@@ -17,9 +17,10 @@ export interface QuickAction {
 
 interface QuickActionFABProps {
   actions: QuickAction[];
+  emptyMessage?: string;
 }
 
-export function QuickActionFAB({ actions }: QuickActionFABProps) {
+export function QuickActionFAB({ actions, emptyMessage }: QuickActionFABProps) {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
 
@@ -28,7 +29,7 @@ export function QuickActionFAB({ actions }: QuickActionFABProps) {
     setOpen(false);
   }, [pathname]);
 
-  if (actions.length === 0) return null;
+  if (actions.length === 0 && !emptyMessage) return null;
 
   return (
     <>
@@ -49,25 +50,31 @@ export function QuickActionFAB({ actions }: QuickActionFABProps) {
 
       {/* Bottom Sheet */}
       <BottomSheet open={open} onClose={() => setOpen(false)} title="Quick Actions">
-        <div className="divide-y divide-border/50">
-          {actions.map((action) => (
-            <Link
-              key={action.id}
-              href={action.href}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 py-3.5 active:bg-muted/50 transition-colors"
-            >
-              <action.icon className="h-5 w-5 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{action.label}</p>
-                {action.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
-                )}
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </Link>
-          ))}
-        </div>
+        {actions.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border/50">
+            {actions.map((action) => (
+              <Link
+                key={action.id}
+                href={action.href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 py-3.5 active:bg-muted/50 transition-colors"
+              >
+                <action.icon className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">{action.label}</p>
+                  {action.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
+                  )}
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </Link>
+            ))}
+          </div>
+        )}
       </BottomSheet>
     </>
   );

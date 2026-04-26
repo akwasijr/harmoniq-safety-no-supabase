@@ -137,7 +137,7 @@ export default function InspectionRoutesPage() {
     <RoleGuard requiredPermission="checklists.view">
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">{t("inspectionRoutes.title")}</h1>
+        <div />
         <Button size="sm" className="gap-2" onClick={() => setShowCreateModal(true)}>
           <Plus className="h-4 w-4" />
           {t("inspectionRoutes.createRoute")}

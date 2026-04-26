@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
+import { SheetPageShell } from "@/components/layouts/sheet-page-shell";
 import {
-  ArrowLeft,
   Calendar,
   Tag,
   Share2,
@@ -198,16 +198,10 @@ export default function NewsDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
-      <header className="sticky top-[60px] z-30 border-b bg-background">
-        <div className="flex h-14 items-center gap-4 px-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex-1">
-            <span className="text-sm text-muted-foreground capitalize">{article.type}</span>
-          </div>
+    <SheetPageShell
+      title={article.title}
+      topRight={
+        <div className="flex items-center gap-1">
           <Button 
             variant="ghost" 
             size="icon" 
@@ -233,7 +227,8 @@ export default function NewsDetailPage() {
             )}
           </Button>
         </div>
-      </header>
+      }
+    >
 
       {/* Content */}
       <div className="flex-1">
@@ -342,6 +337,6 @@ export default function NewsDetailPage() {
           </Button>
         </div>
       )}
-    </div>
+    </SheetPageShell>
   );
 }

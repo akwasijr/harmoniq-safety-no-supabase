@@ -75,7 +75,7 @@ const workSans = Work_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Harmoniq Safety — Workplace Safety & Asset Management Platform",
+    default: "Harmoniq Safety | Workplace Safety & Asset Management Platform",
     template: "%s | Harmoniq Safety",
   },
   description:
@@ -116,13 +116,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     alternateLocale: ["nl_NL", "sv_SE"],
     siteName: "Harmoniq Safety",
-    title: "Harmoniq Safety — Workplace Safety & Asset Management Platform",
+    title: "Harmoniq Safety | Workplace Safety & Asset Management Platform",
     description: "Report incidents, run inspections, track assets, and ensure compliance. All-in-one EHS platform for industrial organizations.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Harmoniq Safety — Workplace Safety & Asset Management Platform" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Harmoniq Safety | Workplace Safety & Asset Management Platform" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Harmoniq Safety — All-in-one EHS Platform",
+    title: "Harmoniq Safety | All-in-one EHS Platform",
     description: "Report incidents, run safety inspections, track assets & ensure compliance. OSHA, Arbowet, ISO 45001 ready.",
     images: ["/og-image.png"],
   },

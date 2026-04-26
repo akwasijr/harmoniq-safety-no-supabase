@@ -80,11 +80,13 @@ function FieldFocus({
   upcoming,
   goodToKnow,
   t,
+  company,
 }: {
   urgent: FocusItem[];
   upcoming: FocusItem[];
   goodToKnow: FocusItem[];
   t: (key: string) => string;
+  company: string;
 }) {
   const defaultTab: FocusTab = urgent.length === 0 && upcoming.length === 0 ? "good_to_know" : "urgent";
   const [activeTab, setActiveTab] = React.useState<FocusTab>(defaultTab);
@@ -99,7 +101,12 @@ function FieldFocus({
 
   return (
     <div className="field-app-panel field-app-surface bg-card rounded-2xl px-4 py-4">
-      <p className="text-xs font-bold text-primary mb-3">{t("focusStrip.fieldFocus")}</p>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-bold text-primary">{t("focusStrip.fieldFocus")}</p>
+        <Link href={`/${company}/app/calendar`} className="text-xs font-medium text-primary">
+          View all
+        </Link>
+      </div>
       {/* Tabs */}
       <div className="flex gap-1 mb-3">
         {tabs.map((tab) => (
@@ -130,7 +137,11 @@ function FieldFocus({
               <Info className="h-8 w-8 mb-2" />
             )}
             <p className="text-xs">
-              {activeTab === "urgent" ? t("focusStrip.noUrgent") : activeTab === "upcoming" ? t("focusStrip.nothingUpcoming") : t("focusStrip.allClear")}
+              {activeTab === "urgent"
+                ? "All clear — no urgent items"
+                : activeTab === "upcoming"
+                  ? "Nothing due in the next 7 days"
+                  : "Keep up the good work!"}
             </p>
           </div>
         ) : (
@@ -422,9 +433,9 @@ export default function EmployeeAppHomePage() {
     );
   }
 
-  const userIncidents = incidents.filter((incident) => incident.reporter_id === user.id);
-  const lastIncidentDate = userIncidents.length > 0
-    ? new Date(Math.max(...userIncidents.map((incident) => new Date(incident.incident_date).getTime())))
+  const companyIncidents = incidents.filter((incident) => incident.company_id === user.company_id);
+  const lastIncidentDate = companyIncidents.length > 0
+    ? new Date(Math.max(...companyIncidents.map((incident) => new Date(incident.incident_date).getTime())))
     : new Date(stableNow - 30 * 24 * 60 * 60 * 1000);
   // Only compute time-sensitive values after mount to prevent hydration mismatch
   const safeDays = mounted ? Math.floor((stableNow - lastIncidentDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
@@ -447,9 +458,16 @@ export default function EmployeeAppHomePage() {
     + userActions.filter((ca) => ca.status !== "completed").length
     + dueChecklists.length;
   const oneWeekAgo = new Date(stableNow - 7 * 24 * 60 * 60 * 1000);
-  const completedThisWeek = userTickets.filter(
-    (ticket) => ticket.updated_at && new Date(ticket.updated_at) > oneWeekAgo
-  ).length;
+  const completedThisWeek =
+    userTickets.filter(
+      (ticket) => (ticket.status === "resolved" || ticket.status === "closed") && ticket.updated_at && new Date(ticket.updated_at) > oneWeekAgo
+    ).length +
+    userWorkOrders.filter(
+      (wo) => wo.status === "completed" && wo.updated_at && new Date(wo.updated_at) > oneWeekAgo
+    ).length +
+    userActions.filter(
+      (ca) => ca.status === "completed" && ca.updated_at && new Date(ca.updated_at) > oneWeekAgo
+    ).length;
   
   // Data feeds
   const recentNews = fieldAppSettings.newsEnabled
@@ -845,6 +863,7 @@ export default function EmployeeAppHomePage() {
           upcoming={isViewerRole ? [] : focusUpcoming}
           goodToKnow={focusGoodToKnow}
           t={t}
+          company={company}
         />
       </div>
 

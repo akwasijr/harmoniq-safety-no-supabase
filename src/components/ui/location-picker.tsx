@@ -48,6 +48,10 @@ export function LocationPicker({
   const [gpsError, setGpsError] = React.useState<string | null>(null);
   const [gpsAddress, setGpsAddress] = React.useState<string | null>(value.gpsAddress || null);
   const [isGeocoding, setIsGeocoding] = React.useState(false);
+  const [addressDraft, setAddressDraft] = React.useState<string>(value.manualText || value.gpsAddress || "");
+  const [addressEdited, setAddressEdited] = React.useState<boolean>(
+    Boolean(value.manualText) && value.manualText !== (value.gpsAddress || ""),
+  );
 
   const selectedLocation = locations.find((l) => l.id === value.locationId);
 
@@ -56,19 +60,37 @@ export function LocationPicker({
 
   const geocodingRef = React.useRef(false);
 
+  // Detect insecure context once. Geolocation only works on HTTPS or localhost.
+  const isSecure = React.useMemo(() => {
+    if (typeof window === "undefined") return true;
+    return window.isSecureContext === true;
+  }, []);
+
   const reverseGeocode = async (lat: number, lng: number) => {
     if (geocodingRef.current) return;
     geocodingRef.current = true;
     setIsGeocoding(true);
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-        headers: { "Accept-Language": "en", "User-Agent": "HarmoniqSafety/1.0" },
+        headers: { "Accept-Language": "en" },
       });
       if (res.ok) {
         const data = await res.json();
         if (data.display_name) {
           setGpsAddress(data.display_name);
-          onChange({ ...valueRef.current, gpsLat: lat, gpsLng: lng, gpsAddress: data.display_name });
+          // Only seed the draft if the user hasn't started editing it yet.
+          if (!addressEdited) {
+            setAddressDraft(data.display_name);
+            onChange({
+              ...valueRef.current,
+              gpsLat: lat,
+              gpsLng: lng,
+              gpsAddress: data.display_name,
+              manualText: data.display_name,
+            });
+          } else {
+            onChange({ ...valueRef.current, gpsLat: lat, gpsLng: lng, gpsAddress: data.display_name });
+          }
         }
       }
     } catch {
@@ -80,39 +102,61 @@ export function LocationPicker({
   };
 
   const handleGPS = () => {
-    if (!navigator.geolocation) {
+    if (!isSecure) {
+      setGpsError(
+        "Location requires a secure connection. Open the app over HTTPS (or localhost) to use GPS on this device.",
+      );
+      return;
+    }
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
       setGpsError("Geolocation is not supported by this browser.");
       return;
     }
     setIsLocating(true);
     setGpsError(null);
     setGpsAddress(null);
+    setAddressDraft("");
+    setAddressEdited(false);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         onChange({
-          ...value,
+          ...valueRef.current,
           locationId: "",
           gpsLat: lat,
           gpsLng: lng,
           manualText: "",
+          gpsAddress: undefined,
         });
         setMode("gps");
         setIsLocating(false);
         reverseGeocode(lat, lng);
       },
       (error) => {
-        const msg = error.code === 1 
-          ? "Location access denied. Please allow location in your browser settings." 
-          : error.code === 2 
-            ? "Location unavailable. Make sure GPS is enabled." 
+        const msg = error.code === 1
+          ? "Location access denied. Allow location for this site in your browser settings, then try again."
+          : error.code === 2
+            ? "Location unavailable. Make sure GPS / location services are enabled on your device."
             : "Location request timed out. Please try again.";
         setGpsError(msg);
         setIsLocating(false);
       },
-      { enableHighAccuracy: true, timeout: 15000 },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
+  };
+
+  const handleAddressChange = (next: string) => {
+    setAddressDraft(next);
+    setAddressEdited(next.trim() !== (gpsAddress || "").trim());
+    onChange({ ...valueRef.current, manualText: next });
+  };
+
+  const resetAddressToDetected = () => {
+    if (!gpsAddress) return;
+    setAddressDraft(gpsAddress);
+    setAddressEdited(false);
+    onChange({ ...valueRef.current, manualText: gpsAddress });
   };
 
   const clearValue = () => {
@@ -284,6 +328,20 @@ export function LocationPicker({
       {/* GPS */}
       {mode === "gps" && (
         <div className="space-y-2">
+          {!isSecure && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-900">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-xs font-medium">GPS unavailable on this connection</p>
+                <p className="text-[11px] leading-relaxed">
+                  Browsers only allow location access over HTTPS or localhost. If you&apos;re testing on a phone over LAN
+                  (e.g. http://192.168.x.x), the prompt won&apos;t appear. Use HTTPS, a tunnel (e.g. ngrok), or pick the
+                  location manually below.
+                </p>
+              </div>
+            </div>
+          )}
+
           {isLocating ? (
             <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -291,23 +349,43 @@ export function LocationPicker({
             </div>
           ) : value.gpsLat && value.gpsLng ? (
             <div className="rounded-xl border bg-card overflow-hidden">
-              <div className="p-3.5 space-y-2">
+              <div className="p-3.5 space-y-3">
                 <div className="flex items-start gap-2">
                   <Navigation className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">Selected location</p>
-                    {isGeocoding ? (
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Looking up address...</span>
-                      </div>
-                    ) : gpsAddress ? (
-                      <p className="text-sm font-medium mt-0.5">{gpsAddress}</p>
-                    ) : (
-                      <p className="text-sm font-medium mt-0.5">Location captured</p>
-                    )}
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      {value.gpsLat.toFixed(6)}, {value.gpsLng.toFixed(6)}
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-muted-foreground">Detected address</p>
+                      {isGeocoding && (
+                        <div className="flex items-center gap-1.5">
+                          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                          <span className="text-[10px] text-muted-foreground">Looking up…</span>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={addressDraft}
+                      onChange={(e) => handleAddressChange(e.target.value)}
+                      placeholder={isGeocoding ? "Looking up address…" : "Address"}
+                      className="mt-1 w-full rounded-md border bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Auto-filled from GPS. You can correct the street number, unit, or building name if it&apos;s off.
+                      {addressEdited && gpsAddress && (
+                        <>
+                          {" "}
+                          <button
+                            type="button"
+                            onClick={resetAddressToDetected}
+                            className="text-primary font-medium underline-offset-2 hover:underline"
+                          >
+                            Reset to detected
+                          </button>
+                        </>
+                      )}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1.5">
+                      Coordinates: {value.gpsLat.toFixed(6)}, {value.gpsLng.toFixed(6)}
                     </p>
                   </div>
                 </div>
@@ -318,7 +396,7 @@ export function LocationPicker({
                   onClick={() => { setGpsAddress(null); clearValue(); handleGPS(); }}
                   className="flex-1 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
                 >
-                  Refresh
+                  Refresh GPS
                 </button>
               </div>
             </div>
@@ -326,10 +404,16 @@ export function LocationPicker({
             <button
               type="button"
               onClick={handleGPS}
-              className="w-full flex items-center justify-center gap-2 rounded-md border border-dashed p-3 text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
+              disabled={!isSecure}
+              className={cn(
+                "w-full flex items-center justify-center gap-2 rounded-md border border-dashed p-3 text-sm transition-colors",
+                isSecure
+                  ? "text-muted-foreground hover:bg-muted/50"
+                  : "text-muted-foreground/50 cursor-not-allowed",
+              )}
             >
               <Navigation className="h-4 w-4" />
-              Tap to get current location
+              {isSecure ? "Tap to get current location" : "GPS unavailable on this connection"}
             </button>
           )}
           {gpsError && (
@@ -337,7 +421,9 @@ export function LocationPicker({
               <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs text-destructive font-medium">{gpsError}</p>
-                <button type="button" onClick={handleGPS} className="text-xs text-primary font-medium mt-1">Try again</button>
+                {isSecure && (
+                  <button type="button" onClick={handleGPS} className="text-xs text-primary font-medium mt-1">Try again</button>
+                )}
               </div>
             </div>
           )}

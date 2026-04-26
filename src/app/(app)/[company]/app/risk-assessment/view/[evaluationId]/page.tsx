@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useCompanyParam } from "@/hooks/use-company-param";
 import { useRiskEvaluationsStore } from "@/stores/risk-evaluations-store";
@@ -10,7 +10,7 @@ import { useUsersStore } from "@/stores/users-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
 import {
-  ArrowLeft, ShieldCheck, MapPin, Calendar, User, FileText,
+  ShieldCheck, MapPin, Calendar, User, FileText,
   HardHat, AlertTriangle, CheckCircle, XCircle, Minus, Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SheetPageShell } from "@/components/layouts/sheet-page-shell";
 
 /* ─── Helpers ──────────────────────────────────────────── */
 
@@ -744,7 +745,6 @@ function GenericRenderer({ data }: { data: AnyData }) {
 
 export default function RiskAssessmentViewPage() {
   const params = useParams();
-  const router = useRouter();
   const company = useCompanyParam();
   const { user } = useAuth();
   const { formatDate } = useTranslation();
@@ -806,21 +806,7 @@ export default function RiskAssessmentViewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header — not sticky, app nav is already sticky */}
-      <div className="border-b bg-background">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-semibold text-base truncate">
-              {assessmentLabels[evaluation.form_type] || evaluation.form_type}
-            </h1>
-          </div>
-        </div>
-      </div>
-
+    <SheetPageShell title={assessmentLabels[evaluation.form_type] || evaluation.form_type}>
       <div className="px-4 pt-4 space-y-4">
         {/* Overview Card */}
         <Card>
@@ -900,6 +886,6 @@ export default function RiskAssessmentViewPage() {
           <GenericRenderer data={responses} />
         )}
       </div>
-    </div>
+    </SheetPageShell>
   );
 }

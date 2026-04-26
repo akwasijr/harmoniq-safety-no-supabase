@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { FileText, ChevronRight, Clock, Tag, Newspaper, Calendar, FolderOpen, GraduationCap, Search, X, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useFieldAppSettings } from "@/components/providers/field-app-settings-provider";
@@ -18,13 +18,29 @@ type TabType = "news" | "events" | "documents" | "training";
 export default function EmployeeNewsPage() {
   const company = useCompanyParam();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { settings } = useFieldAppSettings();
   const { t, formatDate } = useTranslation();
-  const [activeTab, setActiveTab] = React.useState<TabType>("news");
+  const [activeTab, setActiveTab] = React.useState<TabType>(() => {
+    const p = searchParams.get("tab");
+    if (p === "news" || p === "events" || p === "documents" || p === "training") return p;
+    return "news";
+  });
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [sortOrder, setSortOrder] = React.useState<"newest" | "oldest">("newest");
+
+  // Sync ?tab= so back-navigation from a deep page restores the tab.
+  React.useEffect(() => {
+    const current = searchParams.get("tab");
+    if (current === activeTab) return;
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("tab", activeTab);
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const { items: contentItems , isLoading } = useContentStore();
 

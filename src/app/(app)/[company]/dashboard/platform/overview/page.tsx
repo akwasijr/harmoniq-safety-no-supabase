@@ -122,7 +122,7 @@ export default function PlatformOverviewPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Platform Overview</h1>
+
             <p className="mt-1 text-sm text-muted-foreground">
               Tenant operations, platform health, and administrator coverage across the live platform.
             </p>

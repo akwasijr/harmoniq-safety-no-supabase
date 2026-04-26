@@ -101,7 +101,7 @@ function CommentsPageContent() {
         <div className="flex items-center gap-3">
           <MessageSquare className="h-6 w-6 text-muted-foreground" />
           <div>
-            <h1 className="text-2xl font-semibold">Messages</h1>
+
             <p className="text-sm text-muted-foreground">{totalComments} message{totalComments !== 1 ? "s" : ""}{unreadCount > 0 ? ` · ${unreadCount} new` : ""}</p>
           </div>
         </div>
